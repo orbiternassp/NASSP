@@ -167,7 +167,7 @@ void DockingProbe::DockEvent(int dock, OBJHANDLE connected)
 		DOCKHANDLE dock = OurVessel->GetDockHandle(ourPort);
 		OurVessel->GetDockParams(dock, Dockparam[0], Dockparam[1], Dockparam[2]);
 		if (!Enabled || Status != DOCKINGPROBE_STATUS_EXTENDED) {
-			DockFailedSound.play(NOLOOP, 200);
+			DockFailedSound.play(NOLOOP, 200.0 / 255.0);
 			UndockNextTimestep = true;
 		} else {
 			Status = 0.9;

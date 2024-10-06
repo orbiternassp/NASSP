@@ -125,7 +125,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0.LandingSiteIndicator = false;
 		sv0.VectorCode = "APIC001";
 
-		PMSVCT(4, RTCC_MPT_CSM, &sv0);
+		PMSVCT(4, RTCC_MPT_CSM, sv0);
 
 		//Add TLI to MPT
 		if (GETEval2(3.0*3600.0))
@@ -196,22 +196,21 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		EntryTargeting(&entopt, &res); //Target Load for uplink
 
+		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		opt.TIG = res.P30TIG;
-		opt.vessel = calcParams.src;
-		opt.vesseltype = 0;
-		opt.useSV = true;
-		opt.RV_MCC = sv1;
+		opt.RV_MCC = ConvertSVtoEphemData(sv1);
+		opt.WeightsTable.CC[RTCC_CONFIG_C] = true;
+		opt.WeightsTable.ConfigWeight = opt.WeightsTable.CSMWeight = sv1.mass;
 
-		AP11ManeuverPAD(&opt, *form);
+		AP11ManeuverPAD(opt, *form);
+
 		form->lat = res.latitude*DEG;
 		form->lng = res.longitude*DEG;
 		form->RTGO = res.RTGO;
 		form->VI0 = res.VIO / 0.3048;
-		form->Weight = PZMPTCSM.mantable[1].CommonBlock.CSMMass / 0.45359237;
 		form->GET05G = res.GET05G;
 
 		sprintf(form->purpose, "TLI+90");
@@ -299,15 +298,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11MNV * form = (AP11MNV *)pad;
 
+		opt.TIG = calcParams.TLI + 2.0*3600.0;
 		opt.dV_LVLH = _V(5.1, 0.0, 19.0)*0.3048;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		opt.TIG = calcParams.TLI + 2.0*3600.0;
-		opt.vessel = calcParams.src;
-		opt.vesseltype = 1;
+		opt.RV_MCC = StateVectorCalcEphem(calcParams.src);
+		opt.WeightsTable = GetWeightsTable(calcParams.src, true, true);
 
-		AP11ManeuverPAD(&opt, *form);
+		AP11ManeuverPAD(opt, *form);
 
 		sprintf(form->purpose, "Evasive");
 		sprintf(form->remarks, "No ullage");
@@ -501,15 +500,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 				char buffer1[1000];
 				char buffer2[1000];
 
+				manopt.WeightsTable = GetWeightsTable(calcParams.src, true, true);
+				manopt.TIG = P30TIG;
 				manopt.dV_LVLH = dV_LVLH;
-				manopt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), dV_LVLH);
+				manopt.enginetype = SPSRCSDecision(SPS_THRUST / manopt.WeightsTable.ConfigWeight, dV_LVLH);
 				manopt.HeadsUp = true;
 				manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-				manopt.TIG = P30TIG;
-				manopt.vessel = calcParams.src;
-				manopt.vesseltype = 1;
+				manopt.RV_MCC = sv;
 
-				AP11ManeuverPAD(&manopt, *form);
+				AP11ManeuverPAD(manopt, *form);
 				sprintf(form->purpose, manname);
 				if (manopt.enginetype == RTCC_ENGINETYPE_CSMSPS) sprintf(form->remarks, "No ullage");
 
@@ -547,16 +546,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		RTEMoonTargeting(&entopt, &res);
 
-		opt.R_LLS = BZLAND.rad[0];
+		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		opt.TIG = res.P30TIG;
-		opt.vessel = calcParams.src;
-		opt.vesseltype = 1;
+		opt.RV_MCC = ConvertSVtoEphemData(sv);
+		opt.WeightsTable = GetWeightsTable(calcParams.src, true, true);
 
-		AP11ManeuverPAD(&opt, *form);
+		AP11ManeuverPAD(opt, *form);
 
 		sprintf(form->purpose, "Flyby");
 		sprintf(form->remarks, "No ullage. Height of pericynthion is %.0f NM", res.FlybyAlt / 1852.0);
@@ -587,12 +585,14 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11ManPADOpt manopt;
 		VECTOR3 dV_LVLH, dv;
 		EphemerisData sv_ephem;
-		double P30TIG, tig, CSMmass, LMmass;
+		PLAWDTOutput WeightsTable;
+		double P30TIG, tig;
 		int engine, loisol;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
 		sv_ephem = StateVectorCalcEphem(calcParams.src);
+		WeightsTable = GetWeightsTable(calcParams.src, true, true);
 
 		//Calculate MCC-3
 		PZMCCPLN.MidcourseGET = calcParams.LOI - 22.0*3600.0;
@@ -600,10 +600,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PZMCCPLN.Column = 1;
 		PZMCCPLN.SFPBlockNum = 2;
 		PZMCCPLN.Mode = 1;
-		CSMmass = calcParams.src->GetMass();
-		LMmass = calcParams.tgt->GetMass();
 
-		TranslunarMidcourseCorrectionProcessor(sv_ephem, CSMmass, LMmass);
+		TranslunarMidcourseCorrectionProcessor(sv_ephem, WeightsTable.CSMWeight, WeightsTable.LMAscWeight + WeightsTable.LMDscWeight);
 
 		tig = GETfromGMT(PZMCCXFR.sv_man_bef[0].GMT);
 		dv = PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V;
@@ -672,18 +670,18 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			calcParams.LOI = PZMCCDIS.data[0].GET_LOI;
 
-			engine = SPSRCSDecision(SPS_THRUST / (CSMmass + LMmass), dv);
-			PoweredFlightProcessor(sv_ephem, CSMmass, tig, engine, LMmass, dv, false, P30TIG, dV_LVLH);
+			engine = SPSRCSDecision(SPS_THRUST / WeightsTable.ConfigWeight, dv);
+			PoweredFlightProcessor(sv_ephem, WeightsTable.CSMWeight, tig, engine, WeightsTable.LMAscWeight + WeightsTable.LMDscWeight, dv, false, P30TIG, dV_LVLH);
 
+			manopt.TIG = P30TIG;
 			manopt.dV_LVLH = dV_LVLH;
 			manopt.enginetype = engine;
 			manopt.HeadsUp = false;
 			manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-			manopt.TIG = P30TIG;
-			manopt.vessel = calcParams.src;
-			manopt.vesseltype = 1;
+			manopt.RV_MCC = sv_ephem;
+			manopt.WeightsTable = WeightsTable;
 
-			AP11ManeuverPAD(&manopt, *form);
+			AP11ManeuverPAD(manopt, *form);
 			sprintf(form->purpose, "MCC-3");
 			if (manopt.enginetype == RTCC_ENGINETYPE_CSMSPS) sprintf(form->remarks, "No ullage");
 
@@ -705,7 +703,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		VECTOR3 dV_LVLH;
 		EphemerisData sv;
 		MATRIX3 REFSMMAT;
-		double P30TIG, h_peri, h_node, CSMmass, LMmass, ApsidRot;
+		double P30TIG, h_peri, h_node, ApsidRot;
 		int engine, loisol;
 
 		AP11MNV * form = (AP11MNV *)pad;
@@ -785,33 +783,33 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			char buffer3[1000];
 			double tig;
 			VECTOR3 dv;
+			PLAWDTOutput WeightsTable;
 
 			PZMCCPLN.MidcourseGET = calcParams.LOI - 5.0*3600.0;
 			PZMCCPLN.Config = true;
 			PZMCCPLN.Column = 1;
 			PZMCCPLN.SFPBlockNum = 2;
 			PZMCCPLN.Mode = 1;
-			CSMmass = calcParams.src->GetMass();
-			LMmass = calcParams.tgt->GetMass();
+			WeightsTable = GetWeightsTable(calcParams.src, true, true);
 
-			TranslunarMidcourseCorrectionProcessor(sv, CSMmass, LMmass);
+			TranslunarMidcourseCorrectionProcessor(sv, WeightsTable.CSMWeight, WeightsTable.LMAscWeight + WeightsTable.LMDscWeight);
 			calcParams.LOI = PZMCCDIS.data[0].GET_LOI;
 
 			tig = GETfromGMT(PZMCCXFR.sv_man_bef[0].GMT);
 			dv = PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V;
 
-			engine = SPSRCSDecision(SPS_THRUST / (CSMmass + LMmass), dv);
-			PoweredFlightProcessor(sv, CSMmass, tig, engine, LMmass, dv, false, P30TIG, dV_LVLH);
+			engine = SPSRCSDecision(SPS_THRUST / WeightsTable.ConfigWeight, dv);
+			PoweredFlightProcessor(sv, WeightsTable.CSMWeight, tig, engine, WeightsTable.LMAscWeight + WeightsTable.LMDscWeight, dv, false, P30TIG, dV_LVLH);
 
+			manopt.TIG = P30TIG;
 			manopt.dV_LVLH = dV_LVLH;
 			manopt.enginetype = engine;
 			manopt.HeadsUp = false;
 			manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-			manopt.TIG = P30TIG;
-			manopt.vessel = calcParams.src;
-			manopt.vesseltype = 1;
+			manopt.RV_MCC = sv;
+			manopt.WeightsTable = WeightsTable;
 
-			AP11ManeuverPAD(&manopt, *form);
+			AP11ManeuverPAD(manopt, *form);
 			sprintf(form->purpose, "MCC-4");
 			if (engine == RTCC_ENGINETYPE_CSMSPS) sprintf(form->remarks, "No ullage");
 
@@ -852,16 +850,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Reset to default
 		PZREAP.VRMAX = 36323.0;
 
-		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
+		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		opt.TIG = res.P30TIG;
-		opt.vessel = calcParams.src;
-		opt.vesseltype = 0;
+		opt.RV_MCC = ConvertSVtoEphemData(sv);
+		opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
-		AP11ManeuverPAD(&opt, *form);
+		AP11ManeuverPAD(opt, *form);
 
 		if (!REFSMMATDecision(form->Att*RAD))
 		{
@@ -877,7 +874,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			opt.HeadsUp = true;
 			opt.REFSMMAT = REFSMMAT;
-			AP11ManeuverPAD(&opt, *form);
+			AP11ManeuverPAD(opt, *form);
 
 			sprintf(form->remarks, "Requires realignment to preferred REFSMMAT");
 		}
@@ -900,16 +897,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 21:	// MISSION F LOI-1 MANEUVER
 	{
 		AP11ManPADOpt manopt;
-		double P30TIG, tig, CSMmass, LMmass;
+		double P30TIG, tig;
 		VECTOR3 dV_LVLH, dv;
 		int loisol;
 		EphemerisData sv;
+		PLAWDTOutput WeightsTable;
 
 		AP11MNV * form = (AP11MNV *)pad;
 
 		sv = StateVectorCalcEphem(calcParams.src); //State vector for uplink
-		CSMmass = calcParams.src->GetMass();
-		LMmass = calcParams.tgt->GetMass();
+		WeightsTable = GetWeightsTable(calcParams.src, true, true);
 
 		PMMLRBTI(sv);
 
@@ -925,18 +922,17 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		tig = GETfromGMT(PZLRBELM.sv_man_bef[loisol].GMT);
 		dv = PZLRBELM.V_man_after[loisol] - PZLRBELM.sv_man_bef[loisol].V;
-		PoweredFlightProcessor(sv, CSMmass, tig, RTCC_ENGINETYPE_CSMSPS, LMmass, dv, false, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv, WeightsTable.CSMWeight, tig, RTCC_ENGINETYPE_CSMSPS, WeightsTable.LMAscWeight + WeightsTable.LMDscWeight, dv, false, P30TIG, dV_LVLH);
 
-		manopt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
+		manopt.TIG = P30TIG;
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		manopt.HeadsUp = false;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		manopt.TIG = P30TIG;
-		manopt.vessel = calcParams.src;
-		manopt.vesseltype = 1;
+		manopt.RV_MCC = sv;
+		manopt.WeightsTable = WeightsTable;
 
-		AP11ManeuverPAD(&manopt, *form);
+		AP11ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "LOI-1");
 		sprintf(form->remarks, "No ullage. LM weight is %.0f", form->LMWeight);
 
@@ -966,12 +962,14 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double P30TIG;
 		VECTOR3 dV_LVLH;
 		SV sv;
+		PLAWDTOutput WeightsTable;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+		WeightsTable = GetWeightsTable(calcParams.src, true, true);
 
 		med_k16.Mode = 2;
 		med_k16.Sequence = 3;
@@ -979,19 +977,18 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = med_k16.GETTH1;
 		med_k16.DesiredHeight = 60.0*1852.0;
 
-		LunarDescentPlanningProcessor(sv);
-		PoweredFlightProcessor(sv, PZLDPDIS.GETIG[0], RTCC_ENGINETYPE_CSMSPS, 0.0, PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
+		LunarDescentPlanningProcessor(ConvertSVtoEphemData(sv), 0.0);
+		PoweredFlightProcessor(sv, PZLDPDIS.GETIG[0], RTCC_ENGINETYPE_CSMSPS, WeightsTable.LMAscWeight + WeightsTable.LMDscWeight, PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH);
 
-		manopt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
+		manopt.TIG = P30TIG;
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		manopt.HeadsUp = false;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		manopt.TIG = P30TIG;
-		manopt.vessel = calcParams.src;
-		manopt.vesseltype = 1;
+		manopt.RV_MCC = ConvertSVtoEphemData(sv);
+		manopt.WeightsTable = WeightsTable;
 
-		AP11ManeuverPAD(&manopt, *form);
+		AP11ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "LOI-2");
 		sprintf(form->remarks, "Two-jet ullage for 17 seconds");
 
@@ -1132,19 +1129,18 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Reset to default
 		PZREAP.VRMAX = 36323.0;
 
-		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
+		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		opt.RV_MCC = sv1;
-		opt.TIG = res.P30TIG;
-		opt.useSV = true;
-		opt.vessel = calcParams.src;
-		opt.vesseltype = 0;
 		opt.sxtstardtime = -15.0*60.0; //15 minutes before TIG
+		opt.RV_MCC = ConvertSVtoEphemData(sv1);
+		opt.WeightsTable.CC[RTCC_CONFIG_C] = true;
+		opt.WeightsTable.ConfigWeight = opt.WeightsTable.CSMWeight = sv1.mass;
 
-		AP11ManeuverPAD(&opt, *form);
+		AP11ManeuverPAD(opt, *form);
+
 		sprintf(form->purpose, manname);
 		sprintf(form->remarks, "Two-jet ullage for 14 seconds");
 		form->lat = res.latitude*DEG;
@@ -1184,17 +1180,20 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 40: //REV 1 MAP UPDATE
 	{
-		SV2 sv0, sv1, sv2;
+		EphemerisData sv0, sv1, sv2;
+		PLAWDTOutput WeightsTable, WeightsTable2;
 		AP10MAPUPDATE upd_hyper, upd_ellip;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalc2(calcParams.src);
-		LunarOrbitMapUpdate(sv0.sv, upd_hyper);
+		sv0 = StateVectorCalcEphem(calcParams.src);
+		WeightsTable = GetWeightsTable(calcParams.src, true, true);
 
-		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
-		sv2.sv = coast(sv1.sv, -30.0*60.0);
-		LunarOrbitMapUpdate(sv2.sv, upd_ellip);
+		LunarOrbitMapUpdate(sv0, upd_hyper);
+
+		ExecuteManeuver(sv0, WeightsTable, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS, sv1, WeightsTable2);
+		sv2 = coast(sv1, -30.0*60.0);
+		LunarOrbitMapUpdate(sv2, upd_ellip);
 
 		form->Rev = 1;
 		form->AOSGET = upd_ellip.AOSGET;
@@ -1272,16 +1271,19 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 42: //REV 3 MAP UPDATE
 	{
-		SV2 sv0, sv1;
+		EphemerisData sv0, sv1;
+		PLAWDTOutput WeightsTable, WeightsTable2;
 		AP10MAPUPDATE upd_preloi, upd_postloi;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalc2(calcParams.src);
-		LunarOrbitMapUpdate(sv0.sv, upd_preloi);
+		sv0 = StateVectorCalcEphem(calcParams.src);
+		WeightsTable = GetWeightsTable(calcParams.src, true, true);
 
-		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
-		LunarOrbitMapUpdate(sv0.sv, upd_postloi);
+		LunarOrbitMapUpdate(sv0, upd_preloi);
+
+		ExecuteManeuver(sv0, WeightsTable, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS, sv1, WeightsTable2);
+		LunarOrbitMapUpdate(sv1, upd_postloi);
 
 		form->Rev = 3;
 		form->AOSGET = upd_postloi.AOSGET;
@@ -1291,16 +1293,20 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 144: //TEI MAP UPDATE
 	{
-		SV2 sv0, sv1;
+		EphemerisData sv0, sv1;
+		PLAWDTOutput WeightsTable, WeightsTable2;
 		AP10MAPUPDATE upd_pretei, upd_posttei;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
 
-		sv0 = StateVectorCalc2(calcParams.src);
-		LunarOrbitMapUpdate(sv0.sv, upd_pretei);
+		sv0 = StateVectorCalcEphem(calcParams.src);
+		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
-		sv1 = ExecuteManeuver(sv0, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS);
-		LunarOrbitMapUpdate(sv1.sv, upd_posttei);
+		LunarOrbitMapUpdate(sv0, upd_pretei);
+
+		ExecuteManeuver(sv0, WeightsTable, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS, sv1, WeightsTable2);
+
+		LunarOrbitMapUpdate(sv1, upd_posttei);
 
 		form->Rev = 32;
 		form->AOSGET = upd_posttei.AOSGET;
@@ -1318,11 +1324,11 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 57: //REV 30 LANDMARK TRACKING PADs
 	{
 		LMARKTRKPADOpt opt;
-		SV sv0;
+		EphemerisData sv0;
 
 		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
 
-		sv0 = StateVectorCalc(calcParams.src);
+		sv0 = StateVectorCalcEphem(calcParams.src);
 
 		opt.sv0 = sv0;
 
@@ -1423,7 +1429,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.entries = 2;
 		}
 
-		LandmarkTrackingPAD(&opt, *form);
+		LandmarkTrackingPAD(opt, *form);
 	}
 	break;
 	case 60: //STATE VECTOR and LLS 2 REFSMMAT UPLINK
@@ -1446,7 +1452,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.Sequence = 1;
 		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = OrbMech::HHMMSSToSS(99, 0, 0);
 
-		LunarDescentPlanningProcessor(sv);
+		LunarDescentPlanningProcessor(ConvertSVtoEphemData(sv), 0.0);
 
 		calcParams.DOI = GETfromGMT(PZLDPELM.sv_man_bef[0].GMT);
 		CZTDTGTU.GETTD = PZLDPDIS.PD_GETTD;
@@ -1565,7 +1571,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 70: //CSM SEPARATION BURN
 	{
 		AP11ManPADOpt opt;
-		SV sv;
+		EphemerisData sv;
 		VECTOR3 dV_LVLH;
 		double t_P, t_Sep;
 		char buffer1[1000];
@@ -1573,26 +1579,25 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+		sv = StateVectorCalcEphem(calcParams.src); //State vector for uplink
 
 		t_P = OrbMech::period(sv.R, sv.V, OrbMech::mu_Moon);
 		t_Sep = floor(calcParams.DOI - t_P / 2.0);
 		dV_LVLH = _V(0, 0, -2.5)*0.3048;
 
-		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
+		opt.TIG = t_Sep;
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMRCSPLUS4;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		opt.TIG = t_Sep;
-		opt.vessel = calcParams.src;
-		opt.vesseltype = 0;
+		opt.RV_MCC = sv;
+		opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
-		AP11ManeuverPAD(&opt, *form);
+		AP11ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "Separation");
 
-		AGCStateVectorUpdate(buffer1, sv, true);
-		AGCStateVectorUpdate(buffer2, sv, false);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv);
+		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -1609,6 +1614,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		VECTOR3 DV;
 		double GETbase, t_DOI_imp, t_TPI_guess;
 		SV sv_CSM, sv, sv_DOI;
+		PLAWDTOutput WeightsTable;
 		char GETbuffer[64];
 		char TLANDbuffer[64];
 		char buffer1[1000];
@@ -1619,6 +1625,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_CSM = StateVectorCalc(calcParams.src);
 		sv = StateVectorCalc(calcParams.tgt);
 		GETbase = CalcGETBase();
+		WeightsTable = GetWeightsTable(calcParams.tgt, false, false);
 
 		//MED K17
 		GZGENCSN.LDPPAzimuth = 0.0;
@@ -1630,7 +1637,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		med_k16.Sequence = 1;
 		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = OrbMech::HHMMSSToSS(99, 0, 0);
 
-		LunarDescentPlanningProcessor(sv);
+		LunarDescentPlanningProcessor(ConvertSVtoEphemData(sv), 0.0);
 
 		calcParams.DOI = t_DOI_imp = GETfromGMT(PZLDPELM.sv_man_bef[0].GMT);
 		CZTDTGTU.GETTD = PZLDPDIS.PD_GETTD;
@@ -1638,16 +1645,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		PoweredFlightProcessor(sv, t_DOI_imp, RTCC_ENGINETYPE_LMDPS, 0.0, DV, false, TimeofIgnition, DeltaV_LVLH);
 
-		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
-		opt.csmlmdocked = false;
+		opt.TIG = TimeofIgnition;
 		opt.dV_LVLH = DeltaV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_LMDPS;
 		opt.HeadsUp = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		opt.TIG = TimeofIgnition;
-		opt.vessel = calcParams.tgt;
+		opt.RV_MCC = ConvertSVtoEphemData(sv);
+		opt.WeightsTable = WeightsTable;
 
-		AP11LMManeuverPAD(&opt, *form);
+		AP11LMManeuverPAD(opt, *form);
 		sprintf(form->purpose, "DOI");
 
 		//Rendezvous Plan
@@ -1686,7 +1692,9 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManPADOpt opt;
 		LambertMan lamopt;
 		TwoImpulseResuls res;
-		SV sv_CSM, sv_LM, sv_DOI;
+		EphemerisData sv_CSM, sv_LM, sv_DOI;
+		SV sv_DOI2;
+		PLAWDTOutput WeightsTable_CSM, WeightsTable_LM, WeightsTable_LM2;
 		VECTOR3 dV_LVLH;
 		double GETbase, MJD_LS, t_LS, P30TIG, MJD_100E, t_100E;
 		char GETbuffer[64];
@@ -1695,49 +1703,52 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMMNV * form = (AP11LMMNV *)pad;
 		GETbase = CalcGETBase();
 
-		sv_CSM = StateVectorCalc(calcParams.src);
-		sv_LM = StateVectorCalc(calcParams.tgt);
+		sv_CSM = StateVectorCalcEphem(calcParams.src);
+		WeightsTable_CSM = GetWeightsTable(calcParams.src, true, false);
+
+		sv_LM = StateVectorCalcEphem(calcParams.tgt);
+		WeightsTable_LM = GetWeightsTable(calcParams.tgt, false, false);
 
 		if (preliminary)
 		{
-			sv_DOI = ExecuteManeuver(sv_LM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
+			ExecuteManeuver(sv_LM, WeightsTable_LM, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_LMDPS, sv_DOI, WeightsTable_LM2);
 		}
 		else
 		{
 			sv_DOI = sv_LM;
+			WeightsTable_LM2 = WeightsTable_LM;
 		}
+		sv_DOI2 = ConvertEphemDatatoSV(sv_DOI, WeightsTable_LM2.ConfigWeight);
 
 		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
 		lamopt.mode = 0;
 		lamopt.N = 0;
 		lamopt.Offset = _V(-270.0*1852.0, 0.0, 60.0*1852.0 - 60000.0*0.3048);
 		lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;
-		lamopt.sv_A = sv_DOI;
-		lamopt.sv_P = sv_CSM;
+		lamopt.sv_A = sv_DOI2;
+		lamopt.sv_P = ConvertEphemDatatoSV(sv_CSM, WeightsTable_CSM.ConfigWeight);
 		lamopt.T1 = calcParams.Phasing;
 		lamopt.T2 = calcParams.Insertion;
 
 		LambertTargeting(&lamopt, res);
-		PoweredFlightProcessor(sv_DOI, lamopt.T1, RTCC_ENGINETYPE_LMDPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(sv_DOI2, lamopt.T1, RTCC_ENGINETYPE_LMDPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 
-		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
+		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_LMDPS;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.RV_MCC = sv_DOI;
-		opt.TIG = P30TIG;
-		opt.useSV = true;
-		opt.vessel = calcParams.tgt;
+		opt.WeightsTable = WeightsTable_LM2;
 
-		AP11LMManeuverPAD(&opt, *form);
+		AP11LMManeuverPAD(opt, *form);
 		sprintf(form->purpose, "Phasing");
 
 		if (preliminary)
 		{
-			MJD_LS = OrbMech::P29TimeOfLongitude(SystemParameters.MAT_J2000_BRCS, sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, BZLAND.lng[RTCC_LMPOS_BEST]);
+			MJD_LS = OrbMech::P29TimeOfLongitude(SystemParameters.MAT_J2000_BRCS, sv_DOI.R, sv_DOI.V, sv_DOI2.MJD, sv_DOI2.gravref, BZLAND.lng[RTCC_LMPOS_BEST]);
 			t_LS = (MJD_LS - GETbase)*24.0*3600.0;
-			MJD_100E = OrbMech::P29TimeOfLongitude(SystemParameters.MAT_J2000_BRCS, sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, 100.0*RAD);
+			MJD_100E = OrbMech::P29TimeOfLongitude(SystemParameters.MAT_J2000_BRCS, sv_DOI.R, sv_DOI.V, sv_DOI2.MJD, sv_DOI2.gravref, 100.0*RAD);
 			t_100E = (MJD_100E - GETbase)*24.0*3600.0;
 
 			OrbMech::format_time_MMSS(GETbuffer, P30TIG - t_100E);
@@ -1750,7 +1761,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11LMManPADOpt opt;
 		DKIOpt dkiopt;
-		SV sv_LM, sv_CSM, sv_DOI, sv_Phasing;
+		EphemerisData sv_LM, sv_CSM, sv_DOI, sv_Phasing;
+		PLAWDTOutput WeightsTable_LM, WeightsTable_LM2;
 		VECTOR3 dV_LVLH;
 		double GETbase, dt_peri, t_Abort, t_TPI_guess, t_TPI_Abort, P30TIG;
 		char GETbuffer[64], GETbuffer2[64];
@@ -1758,21 +1770,23 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMMNV * form = (AP11LMMNV *)pad;
 		GETbase = CalcGETBase();
 
-		sv_CSM = StateVectorCalc(calcParams.src);
-		sv_LM = StateVectorCalc(calcParams.tgt);
-		sv_DOI = ExecuteManeuver(sv_LM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
+		sv_CSM = StateVectorCalcEphem(calcParams.src);
+		sv_LM = StateVectorCalcEphem(calcParams.tgt);
+		WeightsTable_LM = GetWeightsTable(calcParams.tgt, false, false);
 
-		dt_peri = OrbMech::timetoperi_integ(SystemParameters.AGCEpoch, sv_DOI.R, sv_DOI.V, sv_DOI.MJD, sv_DOI.gravref, sv_DOI.gravref);
-		t_Abort = (sv_DOI.MJD - GETbase)*24.0*3600.0 + dt_peri;
+		ExecuteManeuver(sv_LM, WeightsTable_LM, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_LMDPS, sv_DOI, WeightsTable_LM2);
+
+		dt_peri = OrbMech::timetoperi(sv_DOI.R, sv_DOI.V, OrbMech::mu_Moon);
+		t_Abort = sv_DOI.GMT + dt_peri;
 
 		t_TPI_guess = OrbMech::HHMMSSToSS(103, 9, 0);
-		t_TPI_Abort = FindOrbitalMidnight(sv_CSM, t_TPI_guess);
+		t_TPI_Abort = FindOrbitalMidnight(ConvertEphemDatatoSV(sv_CSM, 10000.0), t_TPI_guess);
 
 		dkiopt.DHSR = 15.0*1852.0;
 		dkiopt.Elev = 26.6*RAD;
 		dkiopt.IPUTNA = 1;
 		dkiopt.PUTNA = 0.5;
-		dkiopt.PUTTNA = GMTfromGET(t_Abort);
+		dkiopt.PUTTNA = t_Abort;
 		dkiopt.NC1 = 0.5;
 		dkiopt.NH = 1.0;
 		dkiopt.NSR = 1.5;
@@ -1780,8 +1794,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		dkiopt.WT = 130.0*RAD;
 		dkiopt.MI = 2.0;
 		dkiopt.MV = 2;
-		dkiopt.sv_CSM = ConvertSVtoEphemData(sv_CSM);
-		dkiopt.sv_LM = ConvertSVtoEphemData(sv_DOI);
+		dkiopt.sv_CSM = sv_CSM;
+		dkiopt.sv_LM = sv_DOI;
 		dkiopt.TTPI = GMTfromGET(t_TPI_Abort);
 
 		DockingInitiationProcessor(dkiopt);
@@ -1792,7 +1806,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		in.CONFIG = RTCC_CONFIG_A + RTCC_CONFIG_D;
 		in.VC = RTCC_MANVEHICLE_LM;
 		in.CSMWeight = 0.0;
-		in.LMWeight = sv_DOI.mass;
+		in.LMWeight = WeightsTable_LM2.ConfigWeight;
 		in.VehicleArea = 0.0;
 		in.IterationFlag = false;
 		in.IgnitionTimeOption = false;
@@ -1809,18 +1823,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PoweredFlightProcessor(in, GMT_TIG, dV_LVLH);
 		P30TIG = GETfromGMT(GMT_TIG);
 
-		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
-		opt.csmlmdocked = false;
+		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_LMDPS;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		opt.TIG = P30TIG;
-		opt.vessel = calcParams.tgt;
-		opt.useSV = true;
 		opt.RV_MCC = sv_DOI;
+		opt.WeightsTable = WeightsTable_LM2;
 
-		AP11LMManeuverPAD(&opt, *form);
+		AP11LMManeuverPAD(opt, *form);
 		sprintf(form->purpose, "PDI Abort");
 
 		OrbMech::format_time_HHMMSS(GETbuffer, GETfromGMT(PZDKIT.Block[0].Display[1].ManGMT));
@@ -1857,16 +1868,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LambertTargeting(&lamopt, res);
 		PoweredFlightProcessor(sv_CSM, lamopt.T1, RTCC_ENGINETYPE_CSMSPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 
-		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
+		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		opt.TIG = P30TIG;
-		opt.vessel = calcParams.src;
-		opt.vesseltype = 0;
+		opt.RV_MCC = ConvertSVtoEphemData(sv_CSM);
+		opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
-		AP11ManeuverPAD(&opt, *form);
+		AP11ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "Backup Insertion");
 		sprintf(form->remarks, "Four-jet ullage for 10 seconds");
 
@@ -1937,17 +1947,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LambertTargeting(&lamopt, res);
 		PoweredFlightProcessor(sv_LM, lamopt.T1, RTCC_ENGINETYPE_LMAPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 
-		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
+		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_LMAPS;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		opt.RV_MCC = sv_LM;
-		opt.TIG = P30TIG;
-		opt.useSV = true;
-		opt.vessel = calcParams.tgt;
+		opt.RV_MCC = ConvertSVtoEphemData(sv_LM);
+		opt.WeightsTable.CC[RTCC_CONFIG_A] = true;
+		opt.WeightsTable.ConfigWeight = opt.WeightsTable.LMAscWeight = sv_LM.mass;
 
-		AP11LMManeuverPAD(&opt, *form);
+		AP11LMManeuverPAD(opt, *form);
 		sprintf(form->purpose, "Insertion");
 
 		if (preliminary == false)
@@ -1971,15 +1980,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP10CSIPADOpt manopt;
 		SPQOpt opt;
 		SPQResults res;
-		SV sv_CSM, sv_LM, sv_CSI;
-		MATRIX3 Q_Xx;
+		SV sv_CSM, sv_LM;
 		VECTOR3 dV_LVLH;
 		double GETbase, dt_apo;
+		PLAWDTOutput WeightsTable;
 
 		AP10CSI * form = (AP10CSI *)pad;
 
 		sv_CSM = StateVectorCalc(calcParams.src);
 		sv_LM = StateVectorCalc(calcParams.tgt);
+		WeightsTable = GetWeightsTable(calcParams.tgt, false, false);
 		GETbase = CalcGETBase();
 
 		//CSI at apolune
@@ -1995,19 +2005,21 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.t_TPI = calcParams.TPI;
 
 		ConcentricRendezvousProcessor(opt, res);
-
-		sv_CSI = coast(sv_LM, opt.t_CSI - OrbMech::GETfromMJD(sv_LM.MJD, GETbase));
-		Q_Xx = OrbMech::LVLH_Matrix(sv_CSI.R, sv_CSI.V);
 		dV_LVLH = res.dV_CSI;
+
+		//Use nominal AGS K-Factor for now
+		SystemParameters.MCGZSS = SystemParameters.MCGZSL + 90.0;
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_LMAPS;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		manopt.sv0 = sv_LM;
+		manopt.sv0 = ConvertSVtoEphemData(sv_LM);
+		manopt.WeightsTable = WeightsTable;
 		manopt.t_CSI = calcParams.CSI;
 		manopt.t_TPI = calcParams.TPI;
 
-		AP10CSIPAD(&manopt, *form);
+		AP10CSIPAD(manopt, *form);
+		form->type = 0;
 	}
 	break;
 	case 80: //APS DEPLETION UPDATE
@@ -2047,15 +2059,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		V_G = DV_C;
 		dV_LVLH = mul(Q_Xx, V_G);
 
-		opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
+		opt.TIG = t_Depletion;
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_LMAPS;
 		opt.HeadsUp = false;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		opt.TIG = t_Depletion;
-		opt.vessel = calcParams.tgt;
+		opt.RV_MCC = ConvertSVtoEphemData(sv);
+		opt.WeightsTable = GetWeightsTable(calcParams.tgt, false, false);
 
-		AP11LMManeuverPAD(&opt, *form);
+		AP11LMManeuverPAD(opt, *form);
 
 		AGCStateVectorUpdate(buffer1, sv, false);
 
@@ -2183,15 +2195,15 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 		else
 		{
+			opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
+			opt.TIG = res.P30TIG;
 			opt.dV_LVLH = res.dV_LVLH;
-			opt.enginetype = SPSRCSDecision(SPS_THRUST / calcParams.src->GetMass(), res.dV_LVLH);
+			opt.enginetype = SPSRCSDecision(SPS_THRUST / opt.WeightsTable.ConfigWeight, res.dV_LVLH);
 			opt.HeadsUp = false;
 			opt.REFSMMAT = REFSMMAT;
-			opt.TIG = res.P30TIG;
-			opt.vessel = calcParams.src;
-			opt.vesseltype = 0;
+			opt.RV_MCC = ConvertSVtoEphemData(sv);
 
-			AP11ManeuverPAD(&opt, *form);
+			AP11ManeuverPAD(opt, *form);
 			sprintf(form->purpose, manname);
 			if (opt.enginetype == RTCC_ENGINETYPE_CSMSPS) sprintf(form->remarks, "Two-jet ullage for 14 seconds");
 			form->lat = res.latitude*DEG;
@@ -2343,7 +2355,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.REFSMMAT = REFSMMAT;
 		entopt.sv0 = sv;
 
-		LunarEntryPAD(&entopt, *form);
+		LunarEntryPAD(entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");
 		if (entopt.direct == false)
 		{
@@ -2435,20 +2447,22 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double t_TIG, double t_TPI, double &t_Ins, double &CSI)
 {
-	//Plan: Phasing (fixed TIG), Insertion, CSI at apolune, CDH, TPI at midnight (Apollo 10)
+	//Plan: Phasing (fixed TIG), Insertion, CSI 50 minutes after Insertion, CDH, TPI at orbital midnight (Apollo 10)
 
 	LambertMan lamopt, lamopt2;
 	TwoImpulseResuls lamres;
-	double GETbase, t_sv0, t_Phasing, t_Insertion, dt, t_CSI, dt2, ddt, ddt2, T_P, DH, dv_CSI, t_CDH, dt_TPI, t_TPI_apo;
+	double GETbase, t_sv0, t_Phasing, t_Insertion, dt, t_CSI, ddt, T_P, dv_CSI, t_CDH, dt_TPI, t_TPI_apo;
 	VECTOR3 dV_Phasing, dV_Insertion, R_P_CDH1, V_P_CDH1;
 	SV sv_P0, sv_P_CSI, sv_Phasing, sv_Phasing_apo, sv_Insertion, sv_Insertion_apo, sv_CSI, sv_CSI_apo, sv_CDH, sv_CDH_apo, sv_P_CDH;
 
+	//Constants
+	const double dt2 = 50.0*60.0; //Insertion to CSI
+	const double DH = 15.0*1852.0;
+
 	GETbase = CalcGETBase();
 	t_Phasing = t_TIG;
-	dt = 7017.0;
-	dt2 = 3028.0;
+	dt = 7017.0; //Phasing to Insertion
 	dv_CSI = 50.0*0.3048;
-	DH = 15.0*1852.0;
 	ddt = 10.0;
 
 	sv_P0 = StateVectorCalc(target);
@@ -2469,6 +2483,7 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 	//Loop
 	while (abs(ddt) > 1.0)
 	{
+		//Phasing Targeting
 		t_Insertion = t_Phasing + dt;
 
 		lamopt.T2 = t_Insertion;
@@ -2480,34 +2495,21 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 		sv_Phasing_apo = sv_Phasing;
 		sv_Phasing_apo.V += dV_Phasing;
 
-		ddt2 = 1.0;
+		//Insertion Targeting
+		t_CSI = t_Insertion + dt2;
 
-		//Loop
-		while (abs(ddt2) > 0.1)
-		{
-			t_CSI = t_Insertion + dt2;
+		lamopt2.T1 = t_Insertion;
+		lamopt2.T2 = t_CSI;
+		lamopt2.sv_A = sv_Phasing_apo;
 
-			lamopt2.T1 = t_Insertion;
-			lamopt2.T2 = t_CSI;
-			lamopt2.sv_A = sv_Phasing_apo;
+		LambertTargeting(&lamopt2, lamres);
+		dV_Insertion = lamres.dV;
 
-			LambertTargeting(&lamopt2, lamres);
-			dV_Insertion = lamres.dV;
+		sv_Insertion = coast(sv_Phasing_apo, t_Insertion - t_Phasing);
+		sv_Insertion_apo = sv_Insertion;
+		sv_Insertion_apo.V += dV_Insertion;
 
-			sv_Insertion = coast(sv_Phasing_apo, t_Insertion - t_Phasing);
-			sv_Insertion_apo = sv_Insertion;
-			sv_Insertion_apo.V += dV_Insertion;
-
-			sv_CSI = coast(sv_Insertion_apo, t_CSI - t_Insertion);
-			T_P = OrbMech::period(sv_CSI.R, sv_CSI.V, OrbMech::mu_Moon);
-			ddt2 = OrbMech::timetoapo(sv_CSI.R, sv_CSI.V, OrbMech::mu_Moon);
-
-			if (ddt2 > T_P / 2.0)
-			{
-				ddt2 = ddt2 - T_P;
-			}
-			dt2 += ddt2;
-		}
+		sv_CSI = coast(sv_Insertion_apo, t_CSI - t_Insertion);
 
 		//CSI Targeting
 		sv_P_CSI = coast(sv_P0, t_CSI - OrbMech::GETfromMJD(sv_P0.MJD, GETbase));
@@ -2533,4 +2535,64 @@ void RTCC::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, doub
 
 	t_Ins = t_Insertion;
 	CSI = t_CSI;
+
+	/*
+	//Debug prints
+	SV sv_before, sv_after;
+	MATRIX3 Rot;
+	VECTOR3 DV_LVLH;
+	double tig, r_apo, r_peri, h_apo, h_peri;
+	char Buffer[128], Buffer2[128];
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (i == 0)
+		{
+			sprintf(Buffer, "Phasing");
+			tig = t_TIG;
+			sv_before = sv_Phasing;
+			sv_after = sv_Phasing_apo;
+		}
+		else if (i == 1)
+		{
+			sprintf(Buffer, "Insertion");
+			tig = t_Insertion;
+			sv_before = sv_Insertion;
+			sv_after = sv_Insertion_apo;
+		}
+		else if (i == 2)
+		{
+			sprintf(Buffer, "CSI");
+			tig = t_CSI;
+			sv_before = sv_CSI;
+			sv_after = sv_CSI_apo;
+		}
+		else if (i == 3)
+		{
+			sprintf(Buffer, "CDH");
+			tig = t_CDH;
+			sv_before = sv_CDH;
+			sv_after = sv_CDH_apo;
+		}
+
+		oapiWriteLog(Buffer);
+
+		OrbMech::format_time_HHMMSS(Buffer2, tig);
+		Rot = OrbMech::LVLH_Matrix(sv_before.R, sv_before.V);
+		DV_LVLH = mul(Rot, sv_after.V - sv_before.V) / 0.3048;
+
+		sprintf(Buffer, "TIG %s DV %.1lf %.1lf %.1lf", Buffer2, DV_LVLH.x, DV_LVLH.y, DV_LVLH.z);
+		oapiWriteLog(Buffer);
+		OrbMech::periapo(sv_after.R, sv_after.V, OrbMech::mu_Moon, r_apo, r_peri);
+		h_apo = r_apo - BZLAND.rad[0];
+		h_peri = r_peri - BZLAND.rad[0];
+		sprintf(Buffer, "HA %.2lf HP %.2lf", h_apo / 1852.0, h_peri / 1852.0);
+		oapiWriteLog(Buffer);
+	}
+
+	oapiWriteLog("TPI");
+	OrbMech::format_time_HHMMSS(Buffer2, t_TPI);
+	sprintf(Buffer, "TIG %s", Buffer2);
+	oapiWriteLog(Buffer);
+	*/
 }

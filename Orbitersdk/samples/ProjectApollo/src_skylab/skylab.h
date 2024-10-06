@@ -46,6 +46,8 @@ public:
 	void clbkLoadStateEx(FILEHANDLE scn, void *vstatus);
 	bool clbkDrawHUD(int mode, const HUDPAINTSPEC *hps, oapi::Sketchpad *skp);
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
+	void clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel);
+	void clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos);
 
 	ATMDC *GetATMDC() { return &atmdc; }
 private:
@@ -85,6 +87,7 @@ private:
 	SkylabAnimations skylabanimations;
 	UINT skylabmeshID;
 	MESHHANDLE skylabmesh;
+	double visibilitySize;
 };
 
 

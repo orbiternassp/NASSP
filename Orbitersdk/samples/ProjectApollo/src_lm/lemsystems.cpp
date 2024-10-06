@@ -383,7 +383,7 @@ void LEM::SystemsInit()
 	// The DSKY brightness IS controlled by the ANUN/NUM knob on panel 5, but by means of an isolated section of it.
 	// The source of the isolated section is coming from the LGC supply.
 	NumDockCompLTGFeeder.WireToBuses(&CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB); //This should be handled in the LCA, powermerger for temporary functionality
-	dsky.Init(&NumDockCompLTGFeeder, &LGC_DSKY_CB, &LtgAnunNumKnob);
+	dsky.Init(&NumDockCompLTGFeeder, &LGC_DSKY_CB, &LtgAnunNumKnob, &LtgIntegralKnob, &LtgORideAnunSwitch, &LtgORideIntegralSwitch);
 	agc.InitHeat((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT"));
 
 	// AGS stuff
@@ -1467,6 +1467,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	}
 
 	SystemsInternalTimestep(simdt);
+	Failures.Timestep();
 
 	// After that come all other systems simesteps
 	agc.Timestep(MissionTime, simdt);						// Do work
@@ -1656,7 +1657,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//Suit Fan Sound
 	if (SuitFan1->pumping || SuitFan2->pumping) {
-		SuitFanSound.play(220);
+		SuitFanSound.play(220.0 / 255.0);
 	}
 	else
 	{
@@ -2140,7 +2141,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "CAB %lf SUIT %lf OVHDFLOW %lf OVHDFLOWMAX %lf OVHDSIZE %f TUNNELPRESS %lf TUNNELFLOW %lf", ecs.GetCabinPressurePSI(), (*SuitCircuitPress)*PSI, *ovhdHatchFlow*LBH, *ovhdHatchFlowmax*LBH, *ovhdHatchSize, *lmtunnelpress*PSI, *lmtunnelflow*LBH);
 
 	///sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFI %lf SFO %lf HXC %lf WSI %lf WSO %lf SFF %lf CDRF %lf LMPF %lf", *hxheatingPress* PSI, *cdrsuitpress* PSI, *lmpsuitpress* PSI, *SuitCircuitPress* PSI, *SGDPress* PSI, *CO2ManifoldPress* PSI, *primCO2CanisterPress* PSI, *suitfanmanifoldinPress* PSI, *suitfanmanifoldoutPress* PSI, *hxcoolingPress* PSI, *WSMinPress* PSI, *WSMoutPress* PSI, *SuitFanOutFlow*LBH, *CDRSuitFlow *LBH, *LMPSuitFlow*LBH);
-	sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFI %lf SFO %lf HXC %lf WSI %lf WSO %lf SFF %lf CDRF %lf LMPF %lf", KelvinToFahrenheit(*hxheatingTemp) , KelvinToFahrenheit(*cdrsuittemp), KelvinToFahrenheit(*lmpsuittemp), KelvinToFahrenheit(*SuitCircuitTemp), KelvinToFahrenheit(*SGDTemp), KelvinToFahrenheit(*CO2ManifoldTemp), KelvinToFahrenheit(*primCO2CanisterTemp), KelvinToFahrenheit(*suitfanmanifoldinTemp), KelvinToFahrenheit(*suitfanmanifoldoutTemp), KelvinToFahrenheit(*hxcoolingTemp), KelvinToFahrenheit(*WSMinTemp), KelvinToFahrenheit(*WSMoutTemp), *SuitFanOutFlow*LBH, *CDRSuitFlow *LBH, *LMPSuitFlow*LBH);
+	//sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFI %lf SFO %lf HXC %lf WSI %lf WSO %lf SFF %lf CDRF %lf LMPF %lf", KelvinToFahrenheit(*hxheatingTemp) , KelvinToFahrenheit(*cdrsuittemp), KelvinToFahrenheit(*lmpsuittemp), KelvinToFahrenheit(*SuitCircuitTemp), KelvinToFahrenheit(*SGDTemp), KelvinToFahrenheit(*CO2ManifoldTemp), KelvinToFahrenheit(*primCO2CanisterTemp), KelvinToFahrenheit(*suitfanmanifoldinTemp), KelvinToFahrenheit(*suitfanmanifoldoutTemp), KelvinToFahrenheit(*hxcoolingTemp), KelvinToFahrenheit(*WSMinTemp), KelvinToFahrenheit(*WSMoutTemp), *SuitFanOutFlow*LBH, *CDRSuitFlow *LBH, *LMPSuitFlow*LBH);
 	//sprintf(oapiDebugString(), "HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf CO2F %lf CO2REM %lf GRV %d", *hxheatingPress*PSI, *cdrsuitpress*PSI, *lmpsuitpress*PSI, *SuitCircuitPress*PSI, *SGDPress*PSI, *CO2ManifoldPress*PSI, *primCO2CanisterPress*PSI, *suitfanmanifoldoutPress*PSI, *hxcoolingPress*PSI, *primCO2Flow, *primCO2Removal, *gasreturnvlv);
 	//sprintf(oapiDebugString(), "CAB %lf RVF %lf RVFM %lf HXH %lf CDRS %lf LMPS %lf SC %lf SGD %lf CO2M %lf PCO2 %lf SFM %lf HXC %lf", *CabinMass, *suitReliefflow, *suitReliefflowmax, *hxheatingMass, *cdrsuitmass, *lmpsuitmass, *SuitCircuitMass, *SGDMass, *CO2ManifoldMass, *primCO2Mass, *suitfanmanifoldoutMass, *hxcoolingMass);
 	//sprintf(oapiDebugString(), "Diverter: Flow to Cabin %lf, Flow to Co2Manifold %lf", *suitGasDiverterCabinFlow * LBH, *suitGasDiverterCO2ManifoldFlow * LBH);
@@ -2161,7 +2162,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "P1 %lf P2 %lf Reg1 %lf WGHX %lf SHX %lf SHXBP %lf", *Pump1OutFlow*LBH, *Pump2OutFlow*LBH, *primGlyReg1Flow*LBH, *waterGlyHXFlow*LBH, *suitHXGlyFlow*LBH, *suitHXGlyBypassFlow*LBH);
 	//sprintf(oapiDebugString(), "AT %.3f PT %.3f GCT %.3f SCT %.3f HXCP %.3f L1 %.3f HXT %.3f L2 %.3f GHT %.3f SHT %.3f HXHP %.3f EI %.3f EO %.3f A %.3f D %.3f", KelvinToFahrenheit(*primglycoltemp), KelvinToFahrenheit(*glycolpumpmanifoldtemp), KelvinToFahrenheit(*glycolsuitcooltemp), KelvinToFahrenheit(*hxcoolingTemp), *hxcoolingPower, KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*waterglycolhxtemp), KelvinToFahrenheit(*primloop2temp), KelvinToFahrenheit(*glycolsuitheattemp), KelvinToFahrenheit(*hxheatingTemp), *hxheatingPower, KelvinToFahrenheit(*primevaptempin), KelvinToFahrenheit(*primevaptempout), KelvinToFahrenheit(*ascbatglycoltemp), KelvinToFahrenheit(*desbatglycoltemp));
 	
-	//sprintf(oapiDebugString(), "Cabin: %.3f캟 Cabin Structure: %.3f캟 Primary Glycol Loop %.3f캟 ASA: %.3f캟 ASAPWM %lf", KelvinToFahrenheit(*CabinTemp), KelvinToFahrenheit(*CabinStructureTemp), KelvinToFahrenheit(*primloop2temp), KelvinToFahrenheit(*ASARad), *ASAFineHtrPWM);
+	//sprintf(oapiDebugString(), "Cabin: %.3f째F Cabin Structure: %.3f째F Primary Glycol Loop %.3f째F ASA: %.3f째F ASAPWM %lf", KelvinToFahrenheit(*CabinTemp), KelvinToFahrenheit(*CabinStructureTemp), KelvinToFahrenheit(*primloop2temp), KelvinToFahrenheit(*ASARad), *ASAFineHtrPWM);
 																											
 	//sprintf(oapiDebugString(), "LCG %lf SEC %lf", LCGPump->Voltage(), SecGlyPump->Voltage());
 	//sprintf(oapiDebugString(), "CM %lf CP %lf CT %lf CE %lf LM %lf LP %lf LT %lf LE %lf", *cdrsuitmass, (*cdrsuitpress)*PSI, (*cdrsuittemp)* 1.8 - 459.67, *cdrsuitenergy, *lmpsuitmass, (*lmpsuitpress)*PSI, (*lmpsuittemp)* 1.8 - 459.67, *lmpsuitenergy);
@@ -2198,6 +2199,29 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		CDRVolts,CDRAmps,ACBusA.Voltage(), ACBusB.Voltage());
 	*/
 
+
+	//Water Tank Debug Lines
+
+/*
+	double *PLSSH2OMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:MASS");
+	double *PLSSH2OVapMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:H2O_VAPORMASS");
+	double *PLSSH2OTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:TEMP");
+	double *PLSSH2OPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:PRESS");
+	double *DrinkPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DRINKPIPE:FLOW");
+	double *DrinkPipeFlowmax = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DRINKPIPE:FLOWMAX");
+	double *CDRDrinkPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:CDRDRINKPIPE:FLOW");
+	double *CDRDrinkPipeFlowmax = (double *)Panelsdk.GetPointerByString("HYDRAULIC:CDRDRINKPIPE:FLOWMAX");
+	double *LMPDrinkPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:LMPDRINKPIPE:FLOW");
+	double *LMPDrinkPipeFlowmax = (double *)Panelsdk.GetPointerByString("HYDRAULIC:LMPDRINKPIPE:FLOWMAX");
+	int *PLSSH2OLeakVlv = (int *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:LEAK:ISOPEN");
+	int *CDRPLSSH2OLeakVlv = (int *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:OUT:ISOPEN");
+	int *LMPPLSSH2OLeakVlv = (int *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:OUT2:ISOPEN");
+
+	int *NumCrew = (int *)Panelsdk.GetPointerByString("HYDRAULIC:CREW:NUMBER");
+
+	sprintf(oapiDebugString(), "Mass: %lf VapMass: %.5f Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *PLSSH2OMass, *PLSSH2OVapMass, KelvinToFahrenheit(*PLSSH2OTemp), *PLSSH2OPress *PSI, *DrinkPipeFlow, *DrinkPipeFlowmax, *PLSSH2OLeakVlv, *NumCrew);
+	sprintf(oapiDebugString(), "Mass: %.3f CABFlow %.5f CABMax %.5f CABPVlv %d CDRFlow %.5f CDRMax %.5f CDRPVlv %d LMPFlow %.5f LMPMax %.5f LMPPVlv %d", *PLSSH2OMass, *DrinkPipeFlow, *DrinkPipeFlowmax, *PLSSH2OLeakVlv, *CDRDrinkPipeFlow, *CDRDrinkPipeFlowmax, *CDRPLSSH2OLeakVlv, *LMPDrinkPipeFlow, *LMPDrinkPipeFlowmax, *LMPPLSSH2OLeakVlv);
+	*/
 }
 
 void LEM::SetPipeMaxFlow(char *pipe, double flow) {
@@ -2440,10 +2464,14 @@ void LEM::CreateMissionSpecificSystems()
 
 	agc.SetMissionInfo(pMission->GetLGCVersion());
 	aea.SetMissionInfo(pMission->GetAEAVersion());
+	imu.SetDriftRates(pMission->GetLM_IMU_Drift());
+	imu.SetPIPABias(pMission->GetLM_PIPA_Bias());
+	imu.SetPIPAScale(pMission->GetLM_PIPA_Scale());
 	if (pMission->LMHasAscEngArmAssy())
 	{
 		aeaa = new LEM_AEAA();
 	}
+	EventTimerDisplay.SetReverseAtZero(pMission->IsLMEventTimerReversingAtZero());
 }
 
 // SYSTEMS COMPONENTS
@@ -2960,10 +2988,14 @@ void CrossPointer::DefineMeshGroup(UINT _grpX, UINT _grpY)
 	grpY = _grpY;
 }
 
-void CrossPointer::DefineVCAnimations(UINT vc_idx)
+void CrossPointer::DefineVCAnimations(UINT vc_idx, bool left)
 {
-	xtrans = new MGROUP_TRANSLATE(vc_idx, &grpX, 1, xvector);
-	ytrans = new MGROUP_TRANSLATE(vc_idx, &grpY, 1, yvector);
+	VECTOR3 rot_point = _V(0.380, 0.673, 1.819);
+	if (left == true) {
+		rot_point.x *= -1;
+	}
+	xtrans = new MGROUP_ROTATE(vc_idx, &grpX, 1, rot_point, _V(1, 0, 0), (float)(37 * RAD));
+	ytrans = new MGROUP_ROTATE(vc_idx, &grpY, 1, rot_point, _V(0, -1, 0), (float)(37 * RAD));
 	anim_xpointerx = lem->CreateAnimation(0.5);
 	anim_xpointery = lem->CreateAnimation(0.5);
 	lem->AddAnimationComponent(anim_xpointerx, 0.0f, 1.0f, xtrans);

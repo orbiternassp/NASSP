@@ -67,11 +67,12 @@ SPSPropellantSource::~SPSPropellantSource() {
 	// Nothing for now.
 }
 
-void SPSPropellantSource::Init(e_object *dc1, e_object *dc2, e_object *ac, h_Radiator *propline) {
+void SPSPropellantSource::Init(e_object *dc1, e_object *dc2, e_object *ac, h_Radiator *inj1, h_Radiator *inj2) {
 
 	DCPower.WireToBuses(dc1, dc2);
 	ACPower = ac;
-	propellantLine = propline;
+	OXInjectorFlange1 = inj1;
+	FUInjectorFlange2 = inj2;
 }
 
 void SPSPropellantSource::Timestep(double simt, double simdt) {
@@ -349,13 +350,21 @@ bool SPSPropellantSource::IsGaugingPowered() {
 	return true;
 }
 
-double SPSPropellantSource::GetPropellantLineTempF() {
+//Other temperature sensors moved to correct transducers
+double SPSPropellantSource::GetInjectorFlangeTempF(int i) {
 
 	if (!our_vessel) return 0;
 	if (our_vessel->GetStage() > CSM_LEM_STAGE) return 0;
 
-	
-	return KelvinToFahrenheit(propellantLine->GetTemp());
+	if (i == 1)
+	{
+		return KelvinToFahrenheit(OXInjectorFlange1->GetTemp());
+	}
+
+	else
+	{
+		return KelvinToFahrenheit(FUInjectorFlange2->GetTemp());
+	}
 }
 
 void SPSPropellantSource::SaveState(FILEHANDLE scn) {
@@ -487,9 +496,10 @@ SPSEngine::~SPSEngine() {
 	// Nothing for now.
 }
 
-void SPSEngine::Init(Saturn *s) {
+void SPSEngine::Init(Saturn *s, h_HeatLoad *h) {
 
 	saturn = s;
+	spsThrustHeat = h;
 }
 
 void SPSEngine::DefineAnimations(UINT idx) {
@@ -803,6 +813,8 @@ void SPSEngine::SystemTimestep(double simdt) {
 
 	pitchGimbalActuator.SystemTimestep(simdt);
 	yawGimbalActuator.SystemTimestep(simdt);
+
+	spsThrustHeat->GenerateHeat(GetChamberPressurePSI()*3.0); //Heat proportional to chamber pressure, right now maximum 300 heat watts for safety but will likely need adjusting in the future
 }
 
 double SPSEngine::GetChamberPressurePSI() {
@@ -817,6 +829,23 @@ double SPSEngine::GetChamberPressurePSI() {
 	//
 
 	return saturn->GetThrusterLevel(spsThruster) * 100.0;
+}
+
+
+double SPSEngine::GetInjectorValvePosition(int i)
+{
+	if (!saturn) return 0.0;
+	if (saturn->GetStage() != CSM_LEM_STAGE) return 0.0;
+
+	if (i == 1 || i == 2)
+	{
+		return (injectorValves12Open ? 90.0 : 0.0);
+	}
+
+	else
+	{
+		return (injectorValves34Open ? 90.0 : 0.0);
+	}
 }
 
 void SPSEngine::clbkPostCreation() {

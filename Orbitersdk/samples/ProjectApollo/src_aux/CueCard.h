@@ -37,7 +37,8 @@ public:
 	void ResetMeshIndex();
 	//Update visible state of cue card
 	void ManageCueCard(bool on);
-
+	//Get mesh index
+	int GetMeshIndex();
 protected:
 
 	//Vessel pointer

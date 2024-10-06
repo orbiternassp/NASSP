@@ -148,8 +148,6 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	}
 	liftoffStreamLevel = 0;
 
-	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
-
 	sat = NULL;
 
 	IuUmb = new IUUmbilical(this);
@@ -240,6 +238,8 @@ void ML::clbkPostCreation()
 		SetAnimation(mastAnim, mastState.pos);
 		SetAnimation(mastcoversAnim, mastcoversState.pos);
 	}
+
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void ML::SetAnimations(double simdt)
@@ -834,11 +834,6 @@ void ML::clbkPostStep (double simt, double simdt, double mjd) {
 
 void ML::DoFirstTimestep()
 {
-	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
 	firstTimestepDone = true;
 }

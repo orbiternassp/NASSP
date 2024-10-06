@@ -187,10 +187,9 @@ bool ChecklistDataInterface::ReceiveMessage(Connector *from, ConnectorMessage &m
 
 // Original stuff
 // Todo: Verify
-ChecklistController::ChecklistController(SoundLib sound)
+ChecklistController::ChecklistController(SoundLib &sound) : soundLib(sound)
 {
 	initCalled = false;
-	soundLib = sound;
 	FileName[0] = 0;
 	init(false);
 }
@@ -761,8 +760,13 @@ void ChecklistController::timestep(double missiontime, SaturnEvents eventControl
 	}
 
 	// Flashing
-	if (active.program.group != -1 && active.sequence->checkExec(missiontime + 1, active.startTime, lastItemTime, eventController, true)) {
-		active.sequence->setFlashing(&conn, flashing);
+	if (active.program.group != -1) {
+		if (active.set.size() == 0) {
+			oapiWriteLogError("Invalid/empty checklist group! Something is wrong with your scenario.");
+		}
+		else if (active.sequence->checkExec(missiontime + 1, active.startTime, lastItemTime, eventController, true)) {
+			active.sequence->setFlashing(&conn, flashing);
+		}
 	}
 
 	// Even on "non executing" timesteps, we want to allow to complete at least one checklist item

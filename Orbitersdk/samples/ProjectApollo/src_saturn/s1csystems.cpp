@@ -272,11 +272,6 @@ SICSystems::SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 {
 	vessel = v;
 
-	for (int i = 0;i < 5;i++)
-	{
-		EarlySICutoff[i] = false;
-		FirstStageFailureTime[i] = 0.0;
-	}
 	for (int i = 0;i < 15;i++)
 	{
 		ThrustOK[i] = false;
@@ -312,15 +307,6 @@ void SICSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 	papiWriteScenario_bool(scn, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
 	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 15);
-	for (int i = 0;i < 5;i++)
-	{
-		if (EarlySICutoff[i])
-		{
-			papiWriteScenario_boolarr(scn, "EarlySICutoff", EarlySICutoff, 5);
-			papiWriteScenario_doublearr(scn, "FirstStageFailureTime", FirstStageFailureTime, 5);
-			break;
-		}
-	}
 
 	f1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	f1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -343,8 +329,6 @@ void SICSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "POINTLEVELSENSORARMED", PointLevelSensorArmed);
 		papiReadScenario_bool(line, "TWOADJACENTOUTBOARDENGINESOUTCUTOFF", TwoAdjacentOutboardEnginesOutCutoff);
 		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 15);
-		papiReadScenario_boolarr(line, "EarlySICutoff", EarlySICutoff, 5);
-		papiReadScenario_doublearr(line, "FirstStageFailureTime", FirstStageFailureTime, 5);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			f1engine1.LoadState(scn, "ENGINE_END");
@@ -412,16 +396,6 @@ void SICSystems::Timestep(double misst, double simdt)
 		for (int i = 0;i < 5;i++)
 		{
 			if (f1engines[i]->GetThrustOK() == false) f1engines[i]->SetProgrammedEngineCutoff();
-		}
-	}
-
-	//Failure code
-
-	for (int i = 0;i < 5;i++)
-	{
-		if (EarlySICutoff[i] && (misst > FirstStageFailureTime[i]) && !f1engines[i]->GetFailed())
-		{
-			f1engines[i]->SetFailed();
 		}
 	}
 
@@ -508,29 +482,12 @@ void SICSystems::GetThrustOK(bool *ok)
 	}
 }
 
-void SICSystems::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
+void SICSystems::SetEngineFailed(int n)
 {
-	for (int i = 0;i < 5;i++)
+	if (n >= 0 && n <= 4)
 	{
-		EarlySICutoff[i] = SICut[i];
-		FirstStageFailureTime[i] = SICutTimes[i];
+		f1engines[n]->SetFailed();
 	}
-}
-
-void SICSystems::SetEngineFailureParameters(int n, double SICutTimes, bool fail)
-{
-	if (n < 1 || n > 5) return;
-
-	EarlySICutoff[n - 1] = fail;
-	FirstStageFailureTime[n - 1] = SICutTimes;
-}
-
-void SICSystems::GetEngineFailureParameters(int n, bool &fail, double &failtime)
-{
-	if (n < 1 || n > 5) return;
-
-	fail = EarlySICutoff[n - 1];
-	failtime = FirstStageFailureTime[n - 1];
 }
 
 double SICSystems::GetSumThrust()
@@ -554,7 +511,7 @@ void SICSystems::SwitchSelector(int channel)
 	{
 	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
 		if (LaunchSound.isValid() && !LaunchSound.isPlaying()) {			// And play launch sound			
-			LaunchSound.play(NOLOOP, 255);
+			LaunchSound.play(NOLOOP);
 			LaunchSound.done();
 		}
 		break;
@@ -575,7 +532,7 @@ void SICSystems::SwitchSelector(int channel)
 		break;
 	case 8: //Inboard Engine Cutoff
 		InboardEngineCutoff();
-		SShutSound.play(NOLOOP, 235);
+		SShutSound.play(NOLOOP, 235.0 / 255.0);
 		SShutSound.done();
 		break;
 	case 9: //Outboard Engines Cutoff Enable

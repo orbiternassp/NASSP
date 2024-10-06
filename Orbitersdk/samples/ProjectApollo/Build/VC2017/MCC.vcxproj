@@ -63,7 +63,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../XRSound%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;_DEBUG;_WINDOWS;_USRDLL;MCC_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\Debug\MCC/MCC.pch</PrecompiledHeaderOutputFile>
@@ -83,7 +83,7 @@
       <AdditionalDependencies>../../src_aux/dsound.lib;winmm.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;opengl32.lib;glu32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;lua5.1.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/MCC.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>;../../../../lib/Lua;.\Debug\PanelSDK;../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>;../../../../lib/Lua;.\Debug\PanelSDK;../../../../lib;../../../../XRSound%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBCMT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Debug\MCC/MCC.pdb</ProgramDatabaseFile>
@@ -112,7 +112,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../XRSound%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;NDEBUG;_WINDOWS;_USRDLL;MCC_EXPORTS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -133,7 +133,7 @@
       <AdditionalDependencies>../../src_aux/dsound.lib;winmm.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;lua5.1.lib;opengl32.lib;glu32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/MCC.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>.\Release\PanelSDK;../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;../../../../lib/Lua;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\Release\PanelSDK;../../../../lib;../../../../XRSound;../../../../lib/Lua;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCD;libci;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ProgramDatabaseFile>.\Release\MCC/MCC.pdb</ProgramDatabaseFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -142,6 +142,7 @@
       <ImportLibrary>.\Release\MCC/MCC.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -149,6 +150,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src_aux\Mission.cpp" />
     <ClCompile Include="..\..\src_launch\mccvessel.cpp" />
     <ClCompile Include="..\..\src_launch\MCC_Mission_B.cpp" />
     <ClCompile Include="..\..\src_launch\MCC_Mission_C.cpp" />
@@ -172,6 +174,7 @@
     <ClCompile Include="..\..\src_launch\TelemetryDownlink.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\AnalyticEphemerisGenerator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ApolloGeneralizedOpticsProgram.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\AscentRendezvousMonitor.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CoastNumericalIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EnckeIntegrator.cpp" />
@@ -186,6 +189,7 @@
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_launch\mcc.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ReentryNumericalIntegrator.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\RTCCDisplayFormatting.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\RTCCModule.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\RTCC_EMSMISS.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\rtcc_intermediate_library_programs.cpp" />
@@ -198,6 +202,7 @@
     <ClCompile Include="..\..\src_launch\mccvc.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_aux\Mission.h" />
     <ClInclude Include="..\..\src_aux\paCBGmessageID.h" />
     <ClInclude Include="..\..\src_launch\mccvessel.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_B.h" />
@@ -212,6 +217,7 @@
     <ClInclude Include="..\..\src_launch\rtcc.h" />
     <ClInclude Include="..\..\src_rtccmfd\AnalyticEphemerisGenerator.h" />
     <ClInclude Include="..\..\src_rtccmfd\ApolloGeneralizedOpticsProgram.h" />
+    <ClInclude Include="..\..\src_rtccmfd\AscentRendezvousMonitor.h" />
     <ClInclude Include="..\..\src_rtccmfd\CoastNumericalIntegrator.h" />
     <ClInclude Include="..\..\src_rtccmfd\CSMLMGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\EnckeIntegrator.h" />
@@ -226,7 +232,9 @@
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
     <ClInclude Include="..\..\src_launch\mcc.h" />
     <ClInclude Include="..\..\src_rtccmfd\ReentryNumericalIntegrator.h" />
+    <ClInclude Include="..\..\src_rtccmfd\RTCCDisplayFormatting.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCModule.h" />
+    <ClInclude Include="..\..\src_rtccmfd\RTCCUtilities.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCC_EMSMISS.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLIGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLIProcessor.h" />

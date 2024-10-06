@@ -110,6 +110,12 @@ bool DCS::Uplink(int type, void *upl)
 
 			return iu->GetLVDA()->TLITargetingUpdate(targeting->T_RP, targeting->C_3, targeting->Inclination, targeting->theta_N, targeting->e, targeting->alpha_D, targeting->f);
 		}
+		else if (type == DCSUPLINK_GENERALIZED_MANEUVER)
+		{
+			DCSGENMANEUVER *man = static_cast<DCSGENMANEUVER*>(upl);
+
+			return iu->GetLVDA()->GeneralizedManeuver(man->T, man->X, man->Y, man->Z, man->Type);
+		}
 	}
 
 	return false;

@@ -41,6 +41,8 @@ public:
 	void LoadCueCard();
 	//Called when meshes were deleted externally
 	void ResetMeshIndizes();
+	//Get vector of all mesh indices
+	void GetMeshIndexList(std::vector<UINT> &vec);
 
 	unsigned GetState() { return state; }
 	void SetState(unsigned s) { state = s; }

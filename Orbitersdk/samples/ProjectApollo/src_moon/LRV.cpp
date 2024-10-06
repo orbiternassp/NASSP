@@ -738,7 +738,7 @@ void LRV::DoFirstTimestep()
 	//
 
 	if (StateSet) {
-		soundlib.InitSoundLib(GetHandle(), SOUND_DIRECTORY);
+		// Probably a better way but I'm not familiar with the API
 		SetMissionPath();
 
 		//
@@ -747,17 +747,6 @@ void LRV::DoFirstTimestep()
 
 		if (!SLEVAPlayed)
 			soundlib.LoadMissionSound(SLEVA, LEVA_SOUND, LEVA_SOUND);
-
-		//
-		// Turn off pretty much everything that Orbitersound does by default.
-		//
-
-		soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-		soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-		soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
-		soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
-		soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-		soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
 		VESSELSTATUS2 evaV2;
 		memset(&evaV2, 0, sizeof(evaV2));
@@ -988,6 +977,11 @@ void LRV::clbkPreStep (double SimT, double SimDT, double mjd)
 	
 	// touchdown point test
 	// sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
+}
+
+void LRV::clbkPostCreation()
+{
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void LRV::DoAnimations ()

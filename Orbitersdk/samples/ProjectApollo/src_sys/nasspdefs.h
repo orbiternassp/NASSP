@@ -279,6 +279,7 @@ static const double LBH   = 7.93665;				///< g/s to lb/h
 static const double FPS   = 3.2808399;				///< m/s to ft/s
 static const double LBS = 0.0022046226218;			///< g to lbs
 static const double LBF = 0.2248089431;				///< N to lbf
+static const double LBS2KG = 0.45359237;			///< lbs to kg
 
 static const double TWO_PI = (PI * 2.);				///< Twice Pi.
 
@@ -391,6 +392,7 @@ static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
 #define PAYLOAD_LTA2R				6	///< Payload is LTA-2R (Apollo 6).
 #define PAYLOAD_EMPTY				7	///< Payload is empty (i.e. no payload).
 #define PAYLOAD_DOCKING_ADAPTER		8	///< Payload is SIVB docking adapter (i.e. Apollo to Venus).
+#define PAYLOAD_CUSTOM				9   ///< Payload is a vessel specified by the user.
 
 //
 // Saturn types.
@@ -425,5 +427,11 @@ static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
 #define TEXTURES_8K 4
 
 const int TexMul = TEXTURES_4K;
+
+#ifdef OAPI_MSGTYPE
+#define _OPENORBITER
+#endif
+
+//#define _OPENORBITER
 
 #endif

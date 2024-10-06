@@ -278,54 +278,246 @@ void fDot_and_gDot_ta(VECTOR3 R0, VECTOR3 V0, double dt, double &fdot, double &g
 	gdot = 1 - mu*r0 / (h*h) * (1 - c);
 }
 
-double time_theta(VECTOR3 R, VECTOR3 V, double dtheta, double mu)
+int MarscherEquationInversion(double sin_theta, double cos_theta, double cot_gamma, double r1, double alpha_N, double p_N, double &x, double &xi, double &c1, double &c2)
 {
-	double r, v, alpha, a, f, g, fdot, gdot, sigma0, r1, dt, h, p;
+	// Marscher equation inversion
+	// INPUTS:
+	// sin_theta: sine of true anomaly difference
+	// cos_theta: cosine of true anomaly difference
+	// cot_gamma: cotangent of flight path angle (measured from local vertical)
+	// r1: Radius magnitude at initial position
+	// alpha_N: Ratio of magnitude of initial position vector to semi-major axis
+	// p_N: Ratio of semi-latus rectum to initial position vector magnitude
+	// OUTPUTS:
+	// x: Universal anomaly
+	// xi: Product of alpha_N and x squared
+	// c1 and c2: Intermediate variables
 
-	//double h, v_r, cotg, x, p;
+	double W[4], a;
+	int n;
+	bool W1MAX; //W[0] is near infinite
 
-	r = length(R);
-	v = length(V);
-	alpha = 2.0 / r - v*v / mu;
-	a = 1.0 / alpha;
-	f_and_g_ta(R, V, dtheta, f, g, mu);
-	fDot_and_gDot_ta(R, V, dtheta, fdot, gdot, mu);
-	sigma0 = dotp(R, V) / sqrt(mu);
+	const double C_A_MAX = 79.0;
+	const double C_TOL = 1e-7;
 
-	h = length(crossp(R, V));
-	p = h*h / mu;
+	//Divisor safety
+	W[0] = 1.0 - cos_theta;
 
-	r1 = r*p / (r + (p - r)*cos(dtheta) - sqrt(p)*sigma0*sin(dtheta));
-
-	if (alpha > 0)
+	W1MAX = false;
+	if (abs(W[0]) < 1e-10)
 	{
-		double dE, cos_dE, sin_dE;
-
-		cos_dE = 1.0 - r / a*(1.0 - f);
-		sin_dE = -r*r1*fdot / sqrt(mu*a);
-		dE = atan2(sin_dE, cos_dE);
-		
-		dt = g + sqrt(power(a, 3.0) / mu)*(dE - sin_dE);
-	}
-	else if (alpha == 0.0)
-	{
-		double c, s;
-
-		c = sqrt(r*r + r1*r1 - 2 * r*r1*cos(dtheta));
-		s = (r + r1 + c) / 2.0;
-
-		dt =  2.0 / 3.0*sqrt(power(s, 3.0) / 2.0 / mu)*(1.0 - power((s - c) / s, 3.0 / 2.0));
+		W1MAX = true;
+		if (sin_theta >= 0.0)
+		{
+			W[0] = 1e10;
+		}
+		else
+		{
+			W[0] = -1e10;
+		}
 	}
 	else
 	{
-		double dH;
-
-		dH = acosh(1.0 - r / a*(1.0 - f));
-
-		dt = g + sqrt(power(-a, 3.0) / mu)*(sinh(dH) - dH);
+		W[0] = sqrt(p_N) * (sin_theta / W[0] - cot_gamma);
 	}
 
-	return dt;
+	// Error checking for physically impossible solution
+	if (alpha_N < 0.0)
+	{
+		if (W[0] <= 0.0)
+		{
+			return 1;
+		}
+		if (!W1MAX && W[0] * W[0] + alpha_N <= 0.0)
+		{
+			return 2;
+		}
+	}
+
+	if (abs(W[0]) <= 1.0)
+	{
+		for (n = 0; n < 3; n++)
+		{
+			W[n + 1] = sqrt(W[n] * W[n] + alpha_N) + abs(W[n]);
+		}
+		a = 1.0 / W[3];
+	}
+	else
+	{
+		double V[4], W1inv;
+
+		W1inv = abs(sin_theta / (sqrt(p_N) * (1.0 + cos_theta - sin_theta * cot_gamma)));
+		V[0] = 1.0;
+
+		for (n = 0; n < 3; n++)
+		{
+			V[n + 1] = sqrt(V[n] * V[n] + alpha_N * W1inv * W1inv) + V[n];
+		}
+		a = W1inv / V[3];
+	}
+
+	double C_A, C_B, C_C, C_D, X_N;
+
+	C_A = C_B = X_N = 1.0;
+	C_C = alpha_N * a * a;
+	do
+	{
+		C_A += 2.0;
+		C_B = -C_B * C_C;
+		C_D = C_B / C_A;
+		X_N = X_N + C_D;
+		if (C_A >= C_A_MAX)
+		{
+			//Series nonconvergent
+			return 3;
+		}
+	} while (abs(C_D) >= C_TOL);
+
+	X_N = 16.0 * a * X_N;
+	if (W[0] <= 0.0)
+	{
+		X_N = PI2 / sqrt(alpha_N) - X_N;
+	}
+	xi = alpha_N * X_N * X_N;
+	x = sqrt(r1) * X_N;
+	c1 = sqrt(r1 * p_N) * cot_gamma;
+	c2 = 1.0 - alpha_N;
+
+	return 0;
+}
+
+int time_theta(VECTOR3 R1, VECTOR3 V1, double dtheta, double mu, double &dt)
+{
+	//Wrapper function in case the output state vector isn't needed
+	VECTOR3 R2, V2;
+
+	return time_theta(R1, V1, dtheta, mu, R2, V2, dt);
+}
+
+int time_theta(VECTOR3 R1, VECTOR3 V1, double dtheta, double mu, VECTOR3 &R2, VECTOR3 &V2, double &dt)
+{
+	// INPUTS:
+	// R1: Input position vector
+	// V1: Input velocity vector
+	// dtheta: Change in true anomaly
+	// mu: specific gravitation parameter
+	// OUTPUTS:
+	// return: 0 = no errors, 1 = multiple orbits requested for hyperbolic orbit, 2 = orbit too nearly rectilinear, 3 and 4 = no physically realizable solution (hyperbolic)
+	// R2: Output position vector
+	// V2: Output velocity vector
+	// dt: time equivalent to input angle dtheta
+
+	// Handle zero case first
+	if (dtheta == 0.0)
+	{
+		dt = 0.0;
+		R2 = R1;
+		V2 = V1;
+		return 0;
+	}
+
+	// Internally this function will only handle positive dtheta, so set a flag if the angle is negative
+	bool negative;
+
+	// Handle negative angle
+	if (dtheta < 0)
+	{
+		dtheta = -dtheta;
+		V1 = -V1;
+		negative = true;
+	}
+	else
+	{
+		negative = false;
+	}
+
+	int n;
+
+	// Number of orbits
+	n = (int)(dtheta / PI2);
+	dtheta = fmod(dtheta, PI2);
+
+	double r1, v1, alpha;
+
+	// Initial position magnitude
+	r1 = length(R1);
+	// Initial velocity magnitude
+	v1 = length(V1);
+	// Reciprocal of semi-major axis
+	alpha = 2.0 / r1 - v1*v1 / mu;
+
+	// Error check: Cannot request multiple orbits for hyperbolic orbit
+	if (n > 0 && alpha <= 0.0)
+	{
+		return 1;
+	}
+
+	//Geometric parameters
+	VECTOR3 I_R_1, I_V_1;
+	double sin_gamma, cos_gamma, cot_gamma, C3, alpha_N, p_N, x, xi, c1, c2, S, C, r2;
+	int err;
+
+	//Unit position vector
+	I_R_1 = R1 / r1;
+	//Unit velocity vector
+	I_V_1 = V1 / v1;
+
+	//Sine of flight path angle (measured from local vertical)
+	sin_gamma = length(crossp(I_R_1, I_V_1));
+
+	//Rectilinear orbit check
+	if (abs(sin_gamma) < 1e-12)
+	{
+		return 2;
+	}
+
+	//Cosine of flight path angle (measured from local vertical)
+	cos_gamma = dotp(I_R_1, I_V_1);
+	//Cotangent of flight path angle (measured from local vertical)
+	cot_gamma = cos_gamma / sin_gamma;
+	//Energy
+	C3 = r1*v1*v1 / mu;
+	//Ratio of magnitude of initial position vector to semi-major axis
+	alpha_N = 2.0 - C3;
+	//Ratio of semi-latus rectum to initial position vector magnitude
+	p_N = C3 * pow(sin_gamma, 2);
+
+	//Marscher equation inversion
+	err = MarscherEquationInversion(sin(dtheta), cos(dtheta), cot_gamma, r1, alpha_N, p_N, x, xi, c1, c2);
+	if (err)
+	{
+		//Error return. Plus 2 so that time_theta returns a unique error code for each error type
+		return err + 2;
+	}
+
+	//Stumpff functions. TBD: These Stumpff functions can run into numerical trouble very close to parabolic orbits
+	S = stumpS(xi);
+	C = stumpC(xi);
+	dt = (c1*x*x*C + x * (c2*x*x*S + r1)) / sqrt(mu);
+
+	//State vector
+	R2 = R1 * (1.0 - x*x / r1 * C) + V1 * (dt - x*x*x / sqrt(mu)*S);
+	r2 = length(R2);
+	V2 = R1 * (sqrt(mu) / (r1*r2)*x*(xi*S - 1.0)) + V1 * (1.0 - x * x / r2 * C);
+
+	//Multiple orbits
+	if (n > 0)
+	{
+		double P;
+
+		//Calculate orbital period
+		P = PI2 / (pow(alpha, 1.5) * sqrt(mu));
+		dt = dt + P * (double)n;
+	}
+
+	//If input angle was negative, reverse the output
+	if (negative)
+	{
+		dt = -dt;
+		V2 = -V2;
+	}
+
+	return 0;
 }
 
 void ra_and_dec_from_r(VECTOR3 R, double &ra, double &dec)
@@ -1698,38 +1890,6 @@ double timetoperi_integ(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE g
 	return dt_total;
 }
 
-double timetonode_integ(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, VECTOR3 u_node, VECTOR3 &R2, VECTOR3 &V2)
-{
-	VECTOR3 R1, V1;
-	double mu, dt, dt_total, theta;
-	int n, nmax;
-
-	mu = GGRAV*oapiGetMass(gravref);
-	dt_total = 0.0;
-	n = 0;
-	nmax = 10;
-
-	theta = OrbMech::sign(dotp(crossp(R, u_node), crossp(R, V)))*acos2(dotp(R / length(R), u_node));
-	dt = OrbMech::time_theta(R, V, theta, mu);
-
-	oneclickcoast(Epoch, R, V, MJD, dt, R1, V1, gravref, gravref);
-	dt_total += dt;
-
-	do
-	{
-		theta = OrbMech::sign(dotp(crossp(R1, u_node), crossp(R1, V1)))*acos2(dotp(unit(R1), u_node));
-		dt = OrbMech::time_theta(R1, V1, theta, mu);
-		oneclickcoast(Epoch, R1, V1, MJD + dt_total / 24.0 / 3600.0, dt, R1, V1, gravref, gravref);
-		dt_total += dt;
-		n++;
-	} while (abs(dt) > 0.1 && nmax >= n);
-
-	R2 = R1;
-	V2 = V1;
-
-	return dt_total;
-}
-
 double timetoperi(VECTOR3 R, VECTOR3 V, double mu)
 {
 	OELEMENTS coe;
@@ -2238,21 +2398,34 @@ void umbra(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, doubl
 
 bool sight(VECTOR3 R1, VECTOR3 R2, double R_E)
 {
+	//Returns true if position vectors R1 and R2 have a line-of-sight, considering the body radius R_E
 	VECTOR3 R1n, R2n;
 	bool los;
-	double tau_min;
+	double r12, r22, tau_min, dot_r1r2;
 
+	//Preliminary calculations
+	//Normalized position vectors
 	R1n = R1 / R_E;
 	R2n = R2 / R_E;
+	//Squares of radius magnitudes
+	r12 = dotp(R1n, R1n);
+	r22 = dotp(R2n, R2n);
+	//Dot product between normalized vectors
+	dot_r1r2 = dotp(R1n, R2n);
 
-	tau_min = (length(R1n)*length(R1n) - dotp(R1n, R2n)) / (length(R1n)*length(R1n) + length(R2n)*length(R2n) - 2.0*dotp(R1n,R2n));
+	//Location on line connecting R1 and R2 where the distance from the center of the body to the line is minimized
+	tau_min = (r12 - dot_r1r2) / (r12 + r22 - 2.0*dot_r1r2);
+	//Default to no line-of-sight
 	los = false;
-	if (tau_min < 0 || tau_min>1)
+	//Is there a line of sight?
+	if (tau_min < 0.0 || tau_min > 1.0)
 	{
+		//Yes, because both vectors have to be in the same quadrant
 		los = true;
 	}
-	else if ((1.0 - tau_min)*length(R1n)*length(R1n) + dotp(R1n, R2n)*tau_min >= 1.0)
+	else if ((1.0 - tau_min)*r12 + dot_r1r2 * tau_min >= 1.0)
 	{
+		//Yes, because minimum distance from center of body to line connecting R1 and R2 is greater than R_E (R1 and R2 having been normalized)
 		los = true;
 	}
 	return los;
@@ -2360,7 +2533,7 @@ double P29TimeOfLongitude(MATRIX3 Rot_J_B, VECTOR3 R0, VECTOR3 V0, double MJD, O
 	MATRIX3 Rot2;
 	VECTOR3 mu_N, mu_S, mu_Z, U_Z, mu_E, mu_C, R, V, mu_D, mu_E_apo;
 	double mu, F, dphi, t, phi, lambda, eps_phi, absphidminphi, phidminphi, phi_0, theta_P, theta, t_F;
-	int n, s_G, body;
+	int n, s_G, body, err;
 	OBJHANDLE hEarth;
 
 	n = 0;
@@ -2458,11 +2631,12 @@ double P29TimeOfLongitude(MATRIX3 Rot_J_B, VECTOR3 R0, VECTOR3 V0, double MJD, O
 		s_G = sign(dotp(mu_D, mu_S));
 		theta = PI*(1 - s_G) + s_G*acos(dotp(mu_D, R0) / length(R0)) + theta_P;
 
-		t_F = time_theta(R0, V0, theta, mu);
-		if (t_F < 0.0)
+		err = time_theta(R0, V0, theta, mu, t_F);
+		if (err)
 		{
-			t_F += period(R0, V0, mu);
+			return t;
 		}
+
 		t = MJD + t_F / 24.0 / 3600.0;
 		rv_from_r0v0(R0, V0, (t - MJD)*24.0*3600.0, R, V, mu);
 		n++;
@@ -2700,7 +2874,7 @@ double sunrise(MATRIX3 Rot_J_B, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE plan
 
 	OELEMENTS coe;
 	double h, e, theta0, a, dt, dt_old;
-	int i, imax;
+	int i, imax, err;
 
 	dt = 0;
 	dt_old = 1;
@@ -2776,7 +2950,12 @@ double sunrise(MATRIX3 Rot_J_B, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE plan
 			theta0 = coe.TA;
 
 			dt_old = dt;
-			ddt = time_theta(R1, V1, calculateDifferenceBetweenAngles(theta0, v1), mu);
+			err = time_theta(R1, V1, calculateDifferenceBetweenAngles(theta0, v1), mu, ddt);
+			//Error return with current best estimate
+			if (err)
+			{
+				return dt;
+			}
 			dt += ddt;
 		}
 		else
@@ -2787,8 +2966,12 @@ double sunrise(MATRIX3 Rot_J_B, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE plan
 			T = PI2 / sqrt(mu)*OrbMech::power(a, 3.0 / 2.0);
 
 			dt_old = dt;
-			dt = time_theta(R, V, calculateDifferenceBetweenAngles(theta0, v1), mu);
-
+			err = time_theta(R, V, calculateDifferenceBetweenAngles(theta0, v1), mu, dt);
+			//Error return with current best estimate
+			if (err)
+			{
+				return dt;
+			}
 			if (dt < 0 && future)
 			{
 				dt += T;
@@ -4123,7 +4306,7 @@ void RADUP(VECTOR3 R_W, VECTOR3 V_W, VECTOR3 R_C, double mu, VECTOR3 &R_W1, VECT
 	double theta, dt;
 
 	theta = sign(dotp(crossp(R_W, R_C), crossp(R_W, V_W)))*acos(dotp(R_W / length(R_W), R_C / length(R_C)));
-	dt = time_theta(R_W, V_W, theta, mu);
+	time_theta(R_W, V_W, theta, mu, dt);
 	rv_from_r0v0(R_W, V_W, dt, R_W1, V_W1, mu);
 }
 
@@ -4175,7 +4358,7 @@ void ITER(double &c, int &s, double e, double &p, double &x, double &eo, double 
 	}
 }
 
-bool QDRTPI(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double mu, double dh, double E_L, int s, VECTOR3 &R_J, VECTOR3 &V_J)
+bool QDRTPI(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, int gravref, double mu, double dh, double E_L, int s, VECTOR3 &R_J, VECTOR3 &V_J)
 {
 	int s_F;
 	double c, t, e_T, e_To, to, eps1, p;
@@ -5186,6 +5369,10 @@ double CMCEMSRangeToGo(MATRIX3 Rot_J_B, VECTOR3 R05G, double MJD05G, double lat,
 
 void EMXINGElev(VECTOR3 R, VECTOR3 R_S, VECTOR3 &N, VECTOR3 &rho, double &sinang)
 {
+	//R: Position vector of the satellite in true coordinates (ECT or MCT)
+	//R_S: Position vector of ground station in true coordinates (ECT or MCT)
+	//sinang: sine of elevation angle
+
 	VECTOR3 rho_apo;
 
 	N = unit(R_S);
@@ -5219,6 +5406,32 @@ double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S, int body)
 	N_dot = V_S / length(R_S);
 
 	return (dotp(rho_dot, N) + dotp(rho_apo, N_dot))*length(rho);
+}
+
+double LongitudeConversion(double lng, double T, double w_E, double lng_0, bool inertial_to_geographic)
+{
+	//For ECI to ECEF conversion
+
+	//lng: inertial or ECEF longitude
+	//T: Current time
+	//w_E: Body rotation rate
+	//lng_0: hour angle at T = 0
+	//inertial_to_geographic: conversion direction
+
+	double K;
+	if (inertial_to_geographic)
+	{
+		K = -1.0;
+	}
+	else
+	{
+		K = 1.0;
+	}
+
+	lng = lng + K*(lng_0 + w_E * T);
+
+	normalizeAngle(lng, false);
+	return lng;
 }
 
 CELEMENTS KeplerToEquinoctial(CELEMENTS kep)
@@ -5620,7 +5833,7 @@ void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double
 	sin_lat = sin(u)*sin(coe_osc.i);
 	R = coe_osc.a*(1.0 - coe_osc.e*coe_osc.e) / (1.0 + coe_osc.e*cos(f));
 	ainv = 1.0 / coe_osc.a + J2 * pow(R_e, 2) / pow(R, 3)*(1.0 - 3.0*pow(sin_lat, 2)) + J3 * pow(R_e, 3) / pow(R, 4)*(3.0*sin_lat - 5.0*pow(sin_lat, 3)) -
-		J4 * pow(R_e, 4) / pow(R, 5)*(1.0 - 10.0*pow(sin_lat, 2) + 35.0 / 3.0*pow(sin_lat, 4));
+		J4 * pow(R_e, 4) / (4.0*pow(R, 5))*(3.0 - 30.0*pow(sin_lat, 2) + 35.0*pow(sin_lat, 4));
 	l_dot = sqrt(mu*pow(ainv, 3));
 
 	//l_dot = n0 + n0 * cn*(gmp2*(3.0 / 2.0*(3.0*theta2 - 1.0) + 3.0 / 32.0*gmp2*(25.0*cn2 + 16.0*cn - 15.0 + (30.0 - 96.0*cn - 90.0*cn2)*theta2
@@ -6032,9 +6245,12 @@ SV PositionMatch(int Epoch, SV sv_A, SV sv_P, double mu)
 	SV sv_A1, sv_P1;
 	VECTOR3 u, R_A1, U_L;
 	double phase, n, dt, ddt;
+	int nmax, nn;
 	bool error;
 
 	dt = 0.0;
+	nn = 0;
+	nmax = 100;
 
 	u = unit(crossp(sv_P.R, sv_P.V));
 	U_L = unit(crossp(u, sv_P.R));
@@ -6043,7 +6259,7 @@ SV PositionMatch(int Epoch, SV sv_A, SV sv_P, double mu)
 	do
 	{
 		R_A1 = unit(sv_A1.R - u * dotp(sv_A1.R, u))*length(sv_A1.R);
-		phase = acos(dotp(unit(R_A1), unit(sv_P.R)));
+		phase = acos2(dotp(unit(R_A1), unit(sv_P.R)));
 		if (dotp(U_L, R_A1) > 0)
 		{
 			phase = -phase;
@@ -6052,7 +6268,8 @@ SV PositionMatch(int Epoch, SV sv_A, SV sv_P, double mu)
 		ddt = phase / n;
 		sv_A1 = coast(Epoch, sv_A1, ddt);
 		dt += ddt;
-	} while (abs(ddt) > 0.01);
+		nn++;
+	} while (abs(ddt) > 0.01 && nmax > nn);
 
 	return sv_A1;
 }

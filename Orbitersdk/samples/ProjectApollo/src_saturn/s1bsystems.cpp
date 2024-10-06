@@ -263,8 +263,6 @@ SIBSystems::SIBSystems(VESSEL *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop
 	for (int i = 0;i < 8;i++)
 	{
 		ThrustOK[i] = false;
-		EarlySICutoff[i] = false;
-		FirstStageFailureTime[i] = 0.0;
 		EngineCutoffRelay[i] = false;
 	}
 
@@ -345,15 +343,6 @@ void SIBSystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
 	papiWriteScenario_bool(scn, "SIBSIVBSEPARATIONCMDLATCH", SIB_SIVB_SeparationCmdLatch);
 	papiWriteScenario_boolarr(scn, "THRUSTOK", ThrustOK, 24);
-	for (int i = 0;i < 8;i++)
-	{
-		if (EarlySICutoff[i])
-		{
-			papiWriteScenario_boolarr(scn, "EarlySICutoff", EarlySICutoff, 8);
-			papiWriteScenario_doublearr(scn, "FirstStageFailureTime", FirstStageFailureTime, 8);
-			break;
-		}
-	}
 
 	h1engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	h1engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -404,8 +393,6 @@ void SIBSystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "OUTBOARDENGINESCUTOFFSIGNAL", OutboardEnginesCutoffSignal);
 		papiReadScenario_bool(line, "SIBSIVBSEPARATIONCMDLATCH", SIB_SIVB_SeparationCmdLatch);
 		papiReadScenario_boolarr(line, "THRUSTOK", ThrustOK, 24);
-		papiReadScenario_boolarr(line, "EarlySICutoff", EarlySICutoff, 8);
-		papiReadScenario_doublearr(line, "FirstStageFailureTime", FirstStageFailureTime, 8);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			h1engine1.LoadState(scn, "ENGINE_END");
@@ -663,15 +650,6 @@ void SIBSystems::Timestep(double misst, double simdt)
 		}
 	}
 
-	//Failure code
-	for (int i = 0;i < 8;i++)
-	{
-		if (EarlySICutoff[i] && (misst > FirstStageFailureTime[i]) && !h1engines[i]->GetFailed())
-		{
-			h1engines[i]->SetFailed();
-		}
-	}
-
 	//sprintf(oapiDebugString(), "Startup: %f %f %f %f %f %f %f %f", h1engine1.GetThrustLevel(), h1engine2.GetThrustLevel(),
 	//	h1engine3.GetThrustLevel(), h1engine4.GetThrustLevel(), h1engine5.GetThrustLevel(), h1engine6.GetThrustLevel(),
 	//	h1engine7.GetThrustLevel(), h1engine8.GetThrustLevel());
@@ -761,29 +739,11 @@ double SIBSystems::GetSumThrust()
 	return thrust;
 }
 
-void SIBSystems::SetEngineFailureParameters(bool *SICut, double *SICutTimes)
+void SIBSystems::SetEngineFailed(int n)
 {
-	for (int i = 0;i < 8;i++)
-	{
-		EarlySICutoff[i] = SICut[i];
-		FirstStageFailureTime[i] = SICutTimes[i];
-	}
-}
+	if (n < 0 || n > 7) return;
 
-void SIBSystems::SetEngineFailureParameters(int n, double SICutTimes, bool fail)
-{
-	if (n < 1 || n > 8) return;
-
-	EarlySICutoff[n - 1] = fail;
-	FirstStageFailureTime[n - 1] = SICutTimes;
-}
-
-void SIBSystems::GetEngineFailureParameters(int n, bool &fail, double &failtime)
-{
-	if (n < 1 || n > 8) return;
-
-	fail = EarlySICutoff[n - 1];
-	failtime = FirstStageFailureTime[n - 1];
+	h1engines[n]->SetFailed();
 }
 
 bool SIBSystems::GetEngineStop()
@@ -799,7 +759,7 @@ void SIBSystems::SwitchSelector(int channel)
 	{
 	case 0: //Liftoff (NOT A REAL SWITCH SELECTOR EVENT)
 		if (LaunchSound.isValid() && !LaunchSound.isPlaying()) {	// And play launch sound
-			LaunchSound.play(NOLOOP, 255);
+			LaunchSound.play(NOLOOP);
 			LaunchSound.done();
 		}
 		break;
@@ -827,7 +787,7 @@ void SIBSystems::SwitchSelector(int channel)
 		break;
 	case 98: //Inboard Engines Cutoff
 		SetInboardEnginesCutoff();
-		SShutSound.play(NOLOOP, 235);
+		SShutSound.play(NOLOOP, 235.0 / 255.0);
 		SShutSound.done();
 		break;
 	case 100: //Single Engine Cutoff Enable

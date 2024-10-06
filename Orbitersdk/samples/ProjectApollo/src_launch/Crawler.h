@@ -38,6 +38,7 @@ public:
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkPreStep (double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
+	void clbkPostCreation();
 	void clbkVisualCreated(VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 	bool clbkLoadGenericCockpit();

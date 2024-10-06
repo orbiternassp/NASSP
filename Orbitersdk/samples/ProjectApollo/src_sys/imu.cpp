@@ -59,7 +59,6 @@ IMU::~IMU()
 }
 
 void IMU::Init() 
-
 {
 	Operate = false;
 	TurnedOn = false;
@@ -74,6 +73,25 @@ void IMU::Init()
 	Gimbal.X = 0;
 	Gimbal.Y = 0;
 	Gimbal.Z = 0;
+
+	imuDriftRates.NBD_X = 0.0;
+	imuDriftRates.NBD_Y = 0.0;
+	imuDriftRates.NBD_Z = 0.0;
+	imuDriftRates.ADSRA_X = 0.0;
+	imuDriftRates.ADSRA_Y = 0.0;
+	imuDriftRates.ADSRA_Z = 0.0;
+	imuDriftRates.ADIA_X = 0.0;
+	imuDriftRates.ADIA_Y = 0.0;
+	imuDriftRates.ADIA_Z = 0.0;
+
+
+	pipaBiasScale.PIPA_BiasX = 0.0;;
+	pipaBiasScale.PIPA_BiasY = 0.0;;
+	pipaBiasScale.PIPA_BiasZ = 0.0;;
+	pipaBiasScale.PIPA_ScalePPM_X = 0.0;;
+	pipaBiasScale.PIPA_ScalePPM_Y = 0.0;;
+	pipaBiasScale.PIPA_ScalePPM_Z = 0.0;;
+
 
 	Orbiter.Attitude_v2g = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
 	Orbiter.Attitude_g2v = _M(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0);
@@ -108,6 +126,40 @@ void IMU::SetVessel(VESSEL *v, bool LEMFlag)
 void IMU::SetVesselFlag(bool LEMFlag)
 {
 	LEM = LEMFlag;
+}
+
+void IMU::SetDriftRates(const MATRIX3 DriftRateMatrix)
+{
+	imuDriftRates.NBD_X = DriftRateMatrix.m11 * MERU;
+	imuDriftRates.NBD_Y = DriftRateMatrix.m12 * MERU;
+	imuDriftRates.NBD_Z = DriftRateMatrix.m13 * MERU;
+
+	imuDriftRates.ADSRA_X = DriftRateMatrix.m21 * MERU;
+	imuDriftRates.ADSRA_Y = DriftRateMatrix.m22 * MERU;
+	imuDriftRates.ADSRA_Z = DriftRateMatrix.m23 * MERU;
+
+	imuDriftRates.ADIA_X = DriftRateMatrix.m31 * MERU;
+	imuDriftRates.ADIA_Y = DriftRateMatrix.m32 * MERU;
+	imuDriftRates.ADIA_Z = DriftRateMatrix.m33 * MERU;
+}
+
+void IMU::SetPIPABias(const VECTOR3 PIPABias) // input is in cm/sec
+{
+	pipaBiasScale.PIPA_BiasX = PIPABias.x / 100.0;
+	pipaBiasScale.PIPA_BiasY = PIPABias.y / 100.0;
+	pipaBiasScale.PIPA_BiasZ = PIPABias.z / 100.0;
+}
+
+void IMU::SetPIPAScale(const VECTOR3 PIPAScale) // input is in ppm
+{
+	pipaBiasScale.PIPA_ScalePPM_X = (PIPAScale.x / 1E6) + 1;
+	pipaBiasScale.PIPA_ScalePPM_Y = (PIPAScale.y / 1E6) + 1;
+	pipaBiasScale.PIPA_ScalePPM_Z = (PIPAScale.z / 1E6) + 1;
+}
+
+VECTOR3 IMU::GetNBDriftRates()
+{
+	return _V(imuDriftRates.NBD_X, imuDriftRates.NBD_Y, imuDriftRates.NBD_Z);
 }
 
 bool IMU::IsCaged()
@@ -280,7 +332,13 @@ bool IMU::IsPowered()
 	return true;
 }
 
-void IMU::WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s) 
+VECTOR3 IMU::getPlatformEulerAnglesZYX()
+{
+	VECTOR3 RotationDeviation = getRotationAnglesZYX(Orbiter.AttitudeReference);
+	return(_V(RotationDeviation.x, RotationDeviation.z, RotationDeviation.y));
+}
+
+void IMU::WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s)
 
 { 
 	DCPower.WireToBuses(a, b); 
@@ -388,7 +446,7 @@ void IMU::Timestep(double simdt)
 
 	// orbiter earth rotation
 	//imuState->Orbiter.Y = imuState->Orbiter.Y + (deltaTime * TwoPI / 86164.09);
-
+	
 	// Process channel bits
 	val12 = agc.GetOutputChannel(012);
 	if (val12[ZeroIMUCDUs]) {
@@ -405,25 +463,46 @@ void IMU::Timestep(double simdt)
 
 		TRACE("CHANNEL 12 NORMAL");
 
-		// Gimbals
-		MATRIX3 t = Orbiter.AttitudeReference;
-		t = mul(Orbiter.Attitude_g2v, t);
-		t = mul(getOrbiterLocalToNavigationBaseTransformation(), t);
-	  		
-		// calculate the new gimbal angles
-		VECTOR3 newAngles = getRotationAnglesXZY(t);
-
-		// drive gimbals to new angles
-		// CAUTION: gimbal angles are left-handed
-		DriveGimbalX(-newAngles.x - Gimbal.X);
-		DriveGimbalY(-newAngles.y - Gimbal.Y);
-		DriveGimbalZ(-newAngles.z - Gimbal.Z);
-
 		// PIPAs
 		VECTOR3 accel;
 		inertialData.getAcceleration(accel);
 		accel = mul(Orbiter.Attitude_v2g, -accel);
 		accel = tmul(Orbiter.AttitudeReference, accel);
+		
+		//IMU Drift calculation
+		double DriftX = (imuDriftRates.NBD_X - (imuDriftRates.ADSRA_X * accel.y / 9.80665) + (imuDriftRates.ADIA_X * accel.x / 9.80665)) * simdt;
+		double DriftY = (imuDriftRates.NBD_Y - (imuDriftRates.ADSRA_Y * accel.z / 9.80665) + (imuDriftRates.ADIA_Y * accel.y / 9.80665)) * simdt;
+		double DriftZ = (imuDriftRates.NBD_Z - (imuDriftRates.ADSRA_Z * accel.y / 9.80665) - (imuDriftRates.ADIA_Z * accel.z / 9.80665)) * simdt;
+
+		// convert drift rates to rotation matrices
+		MATRIX3 DriftXRot = getRotationMatrixX(DriftX);
+		MATRIX3 DriftYRot = getRotationMatrixY(DriftY);
+		MATRIX3 DriftZRot = getRotationMatrixZ(-DriftZ);
+
+		MATRIX3 DriftXYZRot =  mul(DriftZRot, mul(DriftYRot, DriftXRot));
+		
+		// Gimbals
+		MATRIX3 t = Orbiter.AttitudeReference;
+		t = mul(Orbiter.Attitude_g2v, t);
+		t = mul(getOrbiterLocalToNavigationBaseTransformation(), t);
+		t = mul(t,DriftXYZRot);
+		VECTOR3 newAngles = getRotationAnglesXZY(t);
+		
+		//Calculate resolver outputs before the gimbals get moved to their new position
+		VECTOR3 GimbalPositionforPhase = _V(Gimbal.X, Gimbal.Y, Gimbal.Z);
+
+		// drive gimbals to new angles
+		// CAUTION: gimbal angles are left-handed
+
+		DriveGimbalX(-newAngles.x - Gimbal.X);
+		DriveGimbalY(-newAngles.y - Gimbal.Y);
+		DriveGimbalZ(-newAngles.z - Gimbal.Z);
+		SetOrbiterAttitudeReference();
+		calculatePhase(-GimbalPositionforPhase);
+
+		accel.x = pipaBiasScale.PIPA_BiasX + accel.x * pipaBiasScale.PIPA_ScalePPM_X;
+		accel.y = pipaBiasScale.PIPA_BiasY + accel.y * pipaBiasScale.PIPA_ScalePPM_Y;
+		accel.z = pipaBiasScale.PIPA_BiasZ + accel.z * pipaBiasScale.PIPA_ScalePPM_Z;
 
 		// pulse PIPAs
 		pulses = RemainingPIPA.X + (accel.x * LastSimDT / pipaRate);
@@ -611,6 +690,28 @@ void IMU::DoZeroIMUGimbals()
 	SetOrbiterAttitudeReference();
 }
 
+void IMU::calculatePhase(const VECTOR3 NewAngles)
+{
+	SineGimbal.x = 2.5 + sin(Gimbal.X) * 26 * 2.5 / 20.25;	//FIXME: This should be fed by 28V 800cps Resolver Phase Excitation. Output is +/- 21VRMS
+	SineGimbal.y = 2.5 + sin(Gimbal.Y) * 26 * 2.5 / 20.25;
+	SineGimbal.z = 2.5 + sin(Gimbal.Z) * 26 * 2.5 / 20.25;
+	CosineGimbal.x = 2.5 + cos(Gimbal.X) * 26 * 2.5 / 20.25;
+	CosineGimbal.y = 2.5 + cos(Gimbal.Y) * 26 * 2.5 / 20.25;
+	CosineGimbal.z = 2.5 + cos(Gimbal.Z) * 26 * 2.5 / 20.25;
+
+	ResolverPhaseError.x = (-NewAngles.x - Gimbal.X);
+	ResolverPhaseError.y = (-NewAngles.y - Gimbal.Y);
+	ResolverPhaseError.z = (-NewAngles.z - Gimbal.Z);
+
+	if (ResolverPhaseError.x < -PI) { ResolverPhaseError.x = - (TWO_PI + ResolverPhaseError.x); }
+	if (ResolverPhaseError.y < -PI) { ResolverPhaseError.y = - (TWO_PI + ResolverPhaseError.y); }
+	if (ResolverPhaseError.z < -PI) { ResolverPhaseError.z = - (TWO_PI + ResolverPhaseError.z); }
+
+	ResolverPhaseError.x *= 1000.0;
+	ResolverPhaseError.y *= 1000.0;
+	ResolverPhaseError.z *= 1000.0;
+}
+
 VECTOR3 IMU::GetTotalAttitude() 
 
 {
@@ -723,6 +824,51 @@ void IMU::LoadState(FILEHANDLE scn)
 			TurnedOn = (state.u.TurnedOn != 0);
 			Caged = (state.u.Caged != 0);
 		}
+		else if (!strnicmp(line, "NBD_X", 5)) {
+			sscanf(line + 5, "%lf", &imuDriftRates.NBD_X);
+		}
+		else if (!strnicmp(line, "NBD_Y", 5)) {
+			sscanf(line + 5, "%lf", &imuDriftRates.NBD_Y);
+		}
+		else if (!strnicmp(line, "NBD_Z", 5)) {
+			sscanf(line + 5, "%lf", &imuDriftRates.NBD_Z);
+		}
+		else if (!strnicmp(line, "ADIA_X", 6)) {
+			sscanf(line + 5, "%lf", &imuDriftRates.ADIA_X);
+		}
+		else if (!strnicmp(line, "ADIA_Y", 6)) {
+			sscanf(line + 5, "%lf", &imuDriftRates.ADIA_Y);
+		}
+		else if (!strnicmp(line, "ADIA_Z", 6)) {
+			sscanf(line + 5, "%lf", &imuDriftRates.ADIA_Z);
+		}
+		else if (!strnicmp(line, "ADSRA_X", 7)) {
+			sscanf(line + 5, "%lf", &imuDriftRates.ADSRA_X);
+		}
+		else if (!strnicmp(line, "ADSRA_Y", 7)) {
+			sscanf(line + 5, "%lf", &imuDriftRates.ADSRA_Y);
+		}
+		else if (!strnicmp(line, "ADSRA_Z", 7)) {
+			sscanf(line + 5, "%lf", &imuDriftRates.ADSRA_Z);
+		}
+		else if (!strnicmp(line, "PBIAS_X", 7)) {
+			sscanf(line + 5, "%lf", &pipaBiasScale.PIPA_BiasX);
+		}
+		else if (!strnicmp(line, "PBIAS_Y", 7)) {
+			sscanf(line + 5, "%lf", &pipaBiasScale.PIPA_BiasY);
+		}
+		else if (!strnicmp(line, "PBIAS_Z", 7)) {
+			sscanf(line + 5, "%lf", &pipaBiasScale.PIPA_BiasZ);
+		}
+		else if (!strnicmp(line, "PSCALE_X", 8)) {
+			sscanf(line + 5, "%lf", &pipaBiasScale.PIPA_ScalePPM_X);
+		}
+		else if (!strnicmp(line, "PSCALE_Y", 8)) {
+			sscanf(line + 5, "%lf", &pipaBiasScale.PIPA_ScalePPM_Y);
+		}
+		else if (!strnicmp(line, "PSCALE_Z", 8)) {
+			sscanf(line + 5, "%lf", &pipaBiasScale.PIPA_ScalePPM_Z);
+		}
 	}
 }
 
@@ -761,6 +907,24 @@ void IMU::SaveState(FILEHANDLE scn)
 	state.u.Caged = Caged;
 
 	oapiWriteScenario_int (scn, "STATE", state.word);
+
+	//Drift rates and biases
+	papiWriteScenario_double(scn, "NBD_X", imuDriftRates.NBD_X);
+	papiWriteScenario_double(scn, "NBD_Y", imuDriftRates.NBD_Y);
+	papiWriteScenario_double(scn, "NBD_Z", imuDriftRates.NBD_Z);
+	papiWriteScenario_double(scn, "ADIA_X", imuDriftRates.ADIA_X);
+	papiWriteScenario_double(scn, "ADIA_Y", imuDriftRates.ADIA_Y);
+	papiWriteScenario_double(scn, "ADIA_Z", imuDriftRates.ADIA_Z);
+	papiWriteScenario_double(scn, "ADSRA_X", imuDriftRates.ADSRA_X);
+	papiWriteScenario_double(scn, "ADSRA_Y", imuDriftRates.ADSRA_Y);
+	papiWriteScenario_double(scn, "ADSRA_Z", imuDriftRates.ADSRA_Z);
+	papiWriteScenario_double(scn, "PBIAS_X", pipaBiasScale.PIPA_BiasX);
+	papiWriteScenario_double(scn, "PBIAS_Y", pipaBiasScale.PIPA_BiasY);
+	papiWriteScenario_double(scn, "PBIAS_Z", pipaBiasScale.PIPA_BiasZ);
+	papiWriteScenario_double(scn, "PSCALE_X", pipaBiasScale.PIPA_ScalePPM_X);
+	papiWriteScenario_double(scn, "PSCALE_Y", pipaBiasScale.PIPA_ScalePPM_Y);
+	papiWriteScenario_double(scn, "PSCALE_Z", pipaBiasScale.PIPA_ScalePPM_Z);
+
 
 	oapiWriteLine(scn, IMU_END_STRING);
 }

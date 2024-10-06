@@ -46,6 +46,11 @@ void Skylab::InitSkylab() {
 	SetMeshVisibilityMode(skylabmeshID, MESHVIS_ALWAYS);
 	skylabanimations.DefineAnimations();
 
+	visibilitySize = 31.1; //Tuned so Skylab disappears in the CSM optics at 400nm range
+
+	if (oapiGetFocusObject() == GetHandle()) { SetSize(15); }
+	else { SetSize(visibilitySize); }
+
 	RegisterConnector(VIRTUAL_CONNECTOR_PORT, &skylab_vhf2csm_vhf_connector);
 }
 
@@ -81,6 +86,8 @@ void Skylab::clbkPreStep(double simt, double simdt, double mjd)
 	{
 		skylab_vhf2csm_vhf_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, VHF_RNG));
 	}
+
+	//sprintf(oapiDebugString(), "size %0.1f", GetSize());
 }
 
 void Skylab::clbkSetClassCaps(FILEHANDLE cfg)
@@ -142,6 +149,9 @@ void Skylab::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 			ParseScenarioLineEx(line, vstatus);
 		}
 	}
+
+	if (oapiGetFocusObject() == GetHandle()) { SetSize(15); }
+	else { SetSize(visibilitySize); }
 }
 
 bool Skylab::clbkDrawHUD(int mode, const HUDPAINTSPEC *hps, oapi::Sketchpad *skp)
@@ -244,6 +254,38 @@ int Skylab::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate)
 		}
 	}
 	return 0;
+}
+
+void Skylab::clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel)
+{
+	OBJHANDLE hSkylab = GetHandle();
+	if (hNewVessel == hSkylab) { //Skylab gains focus
+
+		bool fixCamera = false;
+		if (oapiCameraInternal() == false) {
+			fixCamera = true;
+			oapiCameraAttach(hSkylab, 0);
+		}
+
+		SetSize(15);
+
+		if (fixCamera == true) {
+			oapiCameraAttach(hSkylab, 1);
+		}
+	}
+	else if (hOldVessel == hSkylab) { //S-IVB loses focus
+		SetSize(visibilitySize);
+	}
+}
+
+void Skylab::clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos)
+{
+	double size = 15;
+	double cs = size * size;  // simplified cross section
+	double albedo = 1.5;    // simplistic albedo (mixture of absorption, reflection)
+
+	F = mflux * (cs * albedo);
+	pos = _V(0, 0, 0);        // don't induce torque
 }
 
 void Skylab::AddTACS()

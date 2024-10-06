@@ -40,6 +40,8 @@
 #include "saturn.h"
 #include "LEM.h"
 #include "Crawler.h"
+#include "MCCVessel.h"
+#include "MCC.h"
 #include "sivb.h"
 #include "iu.h"
 #include "papi.h"
@@ -95,6 +97,8 @@ static struct ProjectApolloMFDData {  // global data storage
 	double iuUplinkDT;
 	double iuUplinkPitch;
 	double iuUplinkYaw;
+	VECTOR3 iuUplinkGenManAtt;
+	int iuUplinkGenManType;
 	bool lmAlignType;	//true = same REFSMMAT; false = nominal alignments
 
 	VECTOR3 V42angles;
@@ -159,6 +163,8 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.iuUplinkDT = 0.0;
 	g_Data.iuUplinkPitch = 0.0;
 	g_Data.iuUplinkYaw = 0.0;
+	g_Data.iuUplinkGenManAtt = _V(0, 0, 0);
+	g_Data.iuUplinkGenManType = 0;
 }
 
 void ProjectApolloMFDopcDLLExit (HINSTANCE hDLL)
@@ -639,6 +645,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 	FailureSubpage = 0;
 	crawler = NULL;
 	lem = NULL;
+	mcc = NULL;
 	width = w;
 	height = h;
 	HBITMAP hBmpLogo = LoadBitmap(g_hDLL, MAKEINTRESOURCE (IDB_LOGO));
@@ -681,6 +688,22 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 				g_Data.planet = lem->GetGravityRef();
 			else
 				g_Data.planet = oapiGetGbodyByName("Earth");
+	}
+
+	mcc = NULL;
+	OBJHANDLE hMCC = oapiGetVesselByName("MCC");
+	if (hMCC != NULL) {
+		VESSEL* pVessel = oapiGetVesselInterface(hMCC);
+		if (pVessel) {
+			if (utils::IsVessel(pVessel, utils::MCC))
+			{
+				MCCVessel *pMCCVessel = static_cast<MCCVessel*>(pVessel);
+				if (pMCCVessel->mcc)
+				{
+					mcc = pMCCVessel->mcc;
+				}
+			}
+		}
 	}
 }
 
@@ -759,9 +782,17 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 	skp->Text(width / 2, (int) (height * 0.1), "Ground Elapsed Time", 19);
 
 	double mt = 0;
-	if (saturn){ mt = saturn->GetMissionTime(); }
-	if (crawler){ mt = crawler->GetMissionTime(); }
-	if (lem){ mt = lem->GetMissionTime(); }
+	if (mcc)
+	{
+		mt = mcc->GetMissionTime();
+	}
+	
+	if (mt <= 0.0) //Mission time from MCC might be nonsense before liftoff
+	{
+		if (saturn) { mt = saturn->GetMissionTime(); }
+		if (crawler) { mt = crawler->GetMissionTime(); }
+		if (lem) { mt = lem->GetMissionTime(); }
+	}
 
 	int secs = abs((int) mt);
 	int hours = (secs / 3600);
@@ -1009,7 +1040,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Switch Selector", 15);
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.1), (int)(height * 0.45), "Stage:", 6);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "1: Stage:", 9);
 
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			if (g_Data.iuUplinkSwitSelStage == 0)
@@ -1030,7 +1061,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			}
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.1), (int)(height * 0.5), "Channel:", 8);
+			skp->Text((int)(width * 0.1), (int)(height * 0.5), "2: Channel:", 11);
 
 			sprintf(buffer, "%d", g_Data.iuUplinkSwitSelChannel);
 			skp->Text((int)(width * 0.7), (int)(height * 0.5), buffer, strlen(buffer));
@@ -1041,7 +1072,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Timebase Update", 15);
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.1), (int)(height * 0.45), "Delta T:", 8);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "1: Delta T:", 11);
 
 			sprintf(buffer, "%+.1f s", g_Data.iuUplinkTimebaseUpdateTime);
 			skp->Text((int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
@@ -1082,10 +1113,10 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			skp->Text((int)(width * 0.7), (int)(height * 0.35), "S-IVB/IU Lunar Impact", 21);
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.1), (int)(height * 0.45), "TIG:", 4);
-			skp->Text((int)(width * 0.1), (int)(height * 0.5), "BT:", 3);
-			skp->Text((int)(width * 0.1), (int)(height * 0.55), "Pitch:", 6);
-			skp->Text((int)(width * 0.1), (int)(height * 0.6), "Yaw:", 4);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "1: TIG:", 7);
+			skp->Text((int)(width * 0.1), (int)(height * 0.5), "2: BT:", 6);
+			skp->Text((int)(width * 0.1), (int)(height * 0.55), "3: Pitch:", 9);
+			skp->Text((int)(width * 0.1), (int)(height * 0.6), "4: Yaw:", 7);
 
 			sprintf(buffer, "TB8+%.0f s", g_Data.iuUplinkTIG);
 			skp->Text((int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
@@ -1100,6 +1131,46 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 		{
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			skp->Text((int)(width * 0.7), (int)(height * 0.35), "Remove Inhibit Mnv. 4", 21);
+		}
+		else if (g_Data.iuUplinkType == DCSUPLINK_GENERALIZED_MANEUVER)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * 0.65), (int)(height * 0.35), "SIB Generalized Maneuver", 24);
+
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.45), "1: Type", 7);
+
+			switch (g_Data.iuUplinkGenManType)
+			{
+			case 0:
+				skp->Text((int)(width * 0.5), (int)(height * 0.45), "Local Reference", 15);
+				break;
+			case 1:
+				skp->Text((int)(width * 0.5), (int)(height * 0.45), "Inertial Reference", 18);
+				break;
+			case 2:
+				skp->Text((int)(width * 0.5), (int)(height * 0.45), "Return to Timeline", 18);
+				break;
+			case 3:
+				skp->Text((int)(width * 0.5), (int)(height * 0.45), "Special Maneuver A", 18);
+				break;
+			case 4:
+				skp->Text((int)(width * 0.5), (int)(height * 0.45), "Special Maneuver B", 18);
+				break;
+			}
+
+			skp->Text((int)(width * 0.1), (int)(height * 0.5), "2: Time", 7);
+
+			sprintf(buffer, "TB4+%.0f s", g_Data.iuUplinkTIG);
+			skp->Text((int)(width * 0.5), (int)(height * 0.5), buffer, strlen(buffer));
+
+			if (g_Data.iuUplinkGenManType == 0 || g_Data.iuUplinkGenManType == 1)
+			{
+				skp->Text((int)(width * 0.1), (int)(height * 0.55), "3: Attitude", 11);
+
+				sprintf(buffer, "%.1f %.1f %.1f", g_Data.iuUplinkGenManAtt.x*DEG, g_Data.iuUplinkGenManAtt.y*DEG, g_Data.iuUplinkGenManAtt.z*DEG);
+				skp->Text((int)(width * 0.5), (int)(height * 0.55), buffer, strlen(buffer));
+			}
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
@@ -1339,93 +1410,63 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 	}
 	else if (screen == m_buttonPages.page.Failures)
 	{
+		skp->Text(width / 2, (int)(height * 0.3), "Failure Simulation", 18);
+
 		if (saturn)
 		{
-			skp->SetTextAlign(oapi::Sketchpad::CENTER);
-
-			if (FailureSubpage == 0)
+			if (saturn->GetDamageModel() == false)
 			{
-				skp->Text(width / 2, (int)(height * 0.3), "CSM SECS Failures", 17);
-
-				sprintf(buffer, "1: LET AutoJet Fail: %d", saturn->LaunchFail.LETAutoJetFail);
-				skp->Text(width / 2, (int)(height * 0.4), buffer, strlen(buffer));
-				sprintf(buffer, "2: LES Jet Motor Fail: %d", saturn->LaunchFail.LESJetMotorFail);
-				skp->Text(width / 2, (int)(height * 0.45), buffer, strlen(buffer));
-				if (saturn->stage < CSM_LEM_STAGE)
-				{
-					sprintf(buffer, "3: Liftoff Signal A Fail: %d", saturn->GetIU()->GetEDS()->GetLiftoffCircuitAFailure());
-					skp->Text(width / 2, (int)(height * 0.5), buffer, strlen(buffer));
-					sprintf(buffer, "4: Liftoff Signal B Fail: %d", saturn->GetIU()->GetEDS()->GetLiftoffCircuitBFailure());
-					skp->Text(width / 2, (int)(height * 0.55), buffer, strlen(buffer));
-				}
-				sprintf(buffer, "5: Auto Abort Enable Fail: %d", saturn->LaunchFail.AutoAbortEnableFail);
-				skp->Text(width / 2, (int)(height * 0.6), buffer, strlen(buffer));
-				sprintf(buffer, "6: Tower Jett 1 Fail: %d", saturn->SwitchFail.TowerJett1Fail);
-				skp->Text(width / 2, (int)(height * 0.65), buffer, strlen(buffer));
-				sprintf(buffer, "7: Tower Jett 2 Fail: %d", saturn->SwitchFail.TowerJett2Fail);
-				skp->Text(width / 2, (int)(height * 0.7), buffer, strlen(buffer));
-				sprintf(buffer, "8: SM Jett 1 Fail: %d", saturn->SwitchFail.SMJett1Fail);
-				skp->Text(width / 2, (int)(height * 0.75), buffer, strlen(buffer));
-				sprintf(buffer, "9: SM Jett 2 Fail: %d", saturn->SwitchFail.SMJett2Fail);
-				skp->Text(width / 2, (int)(height * 0.8), buffer, strlen(buffer));
-				sprintf(buffer, "10: Auto Apex Cover Deploy Fail: %d", saturn->LandFail.CoverFail);
-				skp->Text(width / 2, (int)(height * 0.85), buffer, strlen(buffer));
-				sprintf(buffer, "11: Auto Drogue Chute Deploy Fail: %d", saturn->LandFail.DrogueFail);
-				skp->Text(width / 2, (int)(height * 0.9), buffer, strlen(buffer));
-				sprintf(buffer, "12: Auto Main Chute Deploy Fail: %d", saturn->LandFail.MainFail);
-				skp->Text(width / 2, (int)(height * 0.95), buffer, strlen(buffer));
+				skp->Text(width / 2, (int)(height * 0.6), "Failures disabled in Orbiter Launchpad", 38);
 			}
-			else if (FailureSubpage == 1)
+			else
 			{
-				if (isSaturnV)
-				{
-					skp->Text(width / 2, (int)(height * 0.3), "Saturn V Failures", 17);
+				skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
-					bool fail = 0.0;
-					double failtime = 0.0;
-					if (saturn->stage < LAUNCH_STAGE_TWO)
-					{
-						for (int i = 0;i < 5;i++)
-						{
-							saturn->GetEngineFailure(1, i + 1, fail, failtime);
-							sprintf(buffer, "S-IC Eng %d Fail: %d at T%+.1lf s", i + 1, fail, failtime);
-							skp->Text(width / 2, (int)(height * (0.5 + 0.04 * (double)i)), buffer, strlen(buffer));
-						}
-					}
-					if (saturn->stage < LAUNCH_STAGE_SIVB)
-					{
-						sprintf(buffer, "13: S-II Auto Sep Fail: %d", saturn->LaunchFail.SIIAutoSepFail);
-						skp->Text(width / 2, (int)(height * 0.45), buffer, strlen(buffer));
+				unsigned int offset = FailureSubpage * 10U; //Per per page
+				unsigned j, len = 0;
 
-						for (int i = 0;i < 5;i++)
-						{
-							saturn->GetEngineFailure(2, i + 1, fail, failtime);
-							sprintf(buffer, "S-II Eng %d Fail: %d at Ign%+.1lf s", i + 1, fail, failtime);
-							skp->Text(width / 2, (int)(height * (0.75 + 0.04 * (double)i)), buffer, strlen(buffer));
-						}
-					}
-				}
-				else
+				for (unsigned i = 0; i < 10; i++)
 				{
-					skp->Text(width / 2, (int)(height * 0.3), "Saturn IB Failures", 18);
+					j = i + offset;
 
-					bool fail = 0.0;
-					double failtime = 0.0;
-					if (saturn->stage < LAUNCH_STAGE_TWO)
+					if (j >= saturn->Failures.GetNumberOfMalfunctions()) break;
+
+					len = sprintf(buffer, "%d: %s: ", j + 1, saturn->Failures.GetName(j).c_str());// , saturn->Failures.IsFailureArmed(j));
+
+					if (saturn->Failures.IsFailureArmed(j))
 					{
-						for (int i = 0;i < 8;i++)
+						switch (saturn->Failures.GetCondition(j))
 						{
-							saturn->GetEngineFailure(1, i + 1, fail, failtime);
-							sprintf(buffer, "S-IB Eng %d Fail: %d at T%+.1lf s", i + 1, fail, failtime);
-							skp->Text(width / 2, (int)(height* (0.5 + 0.04 * (double)i)), buffer, strlen(buffer));
+						case 0:
+							len += sprintf(buffer + len, "MT+");
+							break;
+						case 1:
+							len += sprintf(buffer + len, "SimT+");
+							break;
+						case 2:
+							len += sprintf(buffer + len, "S-II+");
+							break;
+						case 3:
+							len += sprintf(buffer + len, "S-IVB+");
+							break;
+						case 4:
+							len += sprintf(buffer + len, "Ins+");
+							break;
+						case 5:
+							len += sprintf(buffer + len, "TB6+");
+							break;
+						case 6:
+							len += sprintf(buffer + len, "TLI+");
+							break;
 						}
+						len += sprintf(buffer + len, " %.0lf s", saturn->Failures.GetConditionValue(j));
 					}
-				}
-				
-				if (saturn->stage < CSM_LEM_STAGE)
-				{
-					sprintf(buffer, "IU Platform Fail: %d at T%+.1lf s", saturn->GetIU()->GetEDS()->GetPlatformFail() ? 1 : 0, saturn->GetIU()->GetEDS()->GetPlatformFailTime());
-					skp->Text(width / 2, (int)(height * 0.4), buffer, strlen(buffer));
+					else
+					{
+						len += sprintf(buffer + len, "Off");
+					}
+
+					skp->Text(width / 16, (9 + i)*height / 20, buffer, strlen(buffer));
 				}
 			}
 		}
@@ -1684,62 +1725,13 @@ bool ProjectApolloMFD::SetTimebaseUpdate(char *rstr)
 	return false;
 }
 
-bool ProjectApolloMFD::SetSaturnSwitchFailure(int n)
+bool ProjectApolloMFD::SaturnSetFailureInput(unsigned n, int Condition, double ConditionValue)
 {
 	if (saturn)
 	{
-		switch (n)
+		if (n >= 1 && n <= saturn->Failures.GetNumberOfMalfunctions())
 		{
-		case 1:
-			saturn->LaunchFail.LETAutoJetFail = !saturn->LaunchFail.LETAutoJetFail;
-			return true;
-		case 2:
-			saturn->LaunchFail.LESJetMotorFail = !saturn->LaunchFail.LESJetMotorFail;
-			return true;
-		case 3:
-			if (saturn->stage < CSM_LEM_STAGE)
-			{
-				bool fail = saturn->GetIU()->GetEDS()->GetLiftoffCircuitAFailure();
-				saturn->GetIU()->GetEDS()->SetLiftoffCircuitAFailure(!fail);
-			}
-			return true;
-		case 4:
-			if (saturn->stage < CSM_LEM_STAGE)
-			{
-				bool fail = saturn->GetIU()->GetEDS()->GetLiftoffCircuitBFailure();
-				saturn->GetIU()->GetEDS()->SetLiftoffCircuitBFailure(!fail);
-			}
-			return true;
-		case 5:
-			saturn->LaunchFail.AutoAbortEnableFail = !saturn->LaunchFail.AutoAbortEnableFail;
-			return true;
-		case 6:
-			saturn->SwitchFail.TowerJett1Fail = !saturn->SwitchFail.TowerJett1Fail;
-			saturn->TowerJett1Switch.SetFailed(saturn->SwitchFail.TowerJett1Fail != 0);
-			return true;
-		case 7:
-			saturn->SwitchFail.TowerJett2Fail = !saturn->SwitchFail.TowerJett2Fail;
-			saturn->TowerJett2Switch.SetFailed(saturn->SwitchFail.TowerJett2Fail != 0);
-			return true;
-		case 8:
-			saturn->SwitchFail.SMJett1Fail = !saturn->SwitchFail.SMJett1Fail;
-			saturn->CmSmSep1Switch.SetFailed(saturn->SwitchFail.SMJett1Fail != 0);
-			return true;
-		case 9:
-			saturn->SwitchFail.SMJett2Fail = !saturn->SwitchFail.SMJett2Fail;
-			saturn->CmSmSep2Switch.SetFailed(saturn->SwitchFail.SMJett2Fail != 0);
-			return true;
-		case 10:
-			saturn->LandFail.CoverFail = !saturn->LandFail.CoverFail;
-			return true;
-		case 11:
-			saturn->LandFail.DrogueFail = !saturn->LandFail.DrogueFail;
-			return true;
-		case 12:
-			saturn->LandFail.MainFail = !saturn->LandFail.MainFail;
-			return true;
-		case 13:
-			saturn->LaunchFail.SIIAutoSepFail = !saturn->LaunchFail.SIIAutoSepFail;
+			saturn->Failures.ArmFailure(n - 1, Condition, ConditionValue);
 			return true;
 		}
 	}
@@ -1747,283 +1739,24 @@ bool ProjectApolloMFD::SetSaturnSwitchFailure(int n)
 	return false;
 }
 
-bool ProjectApolloMFD::SetIUPlatformFailure(double misst)
+bool ProjectApolloMFD::SaturnResetFailureInput(unsigned n)
 {
-	if (saturn == NULL) return false;
-	if (saturn->stage >= CSM_LEM_STAGE) return false;
-
-	if (misst == 0.0)
+	if (saturn)
 	{
-		saturn->GetIU()->GetEDS()->SetPlatformFailureParameters(false, 0.0);
-	}
-	else
-	{
-		saturn->GetIU()->GetEDS()->SetPlatformFailureParameters(true, misst);
-	}
-
-	return true;
-}
-
-void ProjectApolloMFD::SetSIEngineFailure(int n, double misst)
-{
-	if (saturn && saturn->stage < LAUNCH_STAGE_TWO)
-	{
-		if (misst == 0.0)
+		if (n >= 1 && n <= saturn->Failures.GetNumberOfMalfunctions())
 		{
-			saturn->SetEngineFailure(1, n, 0, false);
-		}
-		else
-		{
-			saturn->SetEngineFailure(1, n, misst, true);
+			saturn->Failures.ResetFailureArm(n - 1);
+			return true;
 		}
 	}
-}
-
-void ProjectApolloMFD::SetSIIEngineFailure(int n, double misst)
-{
-	if (saturn && saturn->stage < LAUNCH_STAGE_SIVB && isSaturnV)
-	{
-		if (misst == 0.0)
-		{
-			saturn->SetEngineFailure(2, n, 0, false);
-		}
-		else
-		{
-			saturn->SetEngineFailure(2, n, misst, true);
-		}
-	}
+	return false;
 }
 
 void ProjectApolloMFD::SetRandomFailures(double FailureMultiplier)
 {
 	if (saturn == false) return;
 
-	if (!(rand() & (int)(127.0 / FailureMultiplier)))
-	{
-		saturn->LandFail.CoverFail = 1;
-	}
-	else
-	{
-		saturn->LandFail.CoverFail = 0;
-	}
-	if (!(rand() & (int)(127.0 / FailureMultiplier)))
-	{
-		saturn->LandFail.DrogueFail = 1;
-	}
-	else
-	{
-		saturn->LandFail.DrogueFail = 0;
-	}
-	if (!(rand() & (int)(127.0 / FailureMultiplier)))
-	{
-		saturn->LandFail.MainFail = 1;
-	}
-	else
-	{
-		saturn->LandFail.MainFail = 0;
-	}
-
-	//
-	// Set up switch failures.
-	//
-
-	if (!(rand() & (int)(127.0 / FailureMultiplier)))
-	{
-		saturn->SwitchFail.TowerJett1Fail = 1;
-	}
-	else
-	{
-		saturn->SwitchFail.TowerJett1Fail = 0;
-	}
-	saturn->TowerJett1Switch.SetFailed(saturn->SwitchFail.TowerJett1Fail != 0);
-
-	if (!(rand() & (int)(127.0 / FailureMultiplier)))
-	{
-		saturn->SwitchFail.TowerJett2Fail = 1;
-	}
-	else
-	{
-		saturn->SwitchFail.TowerJett2Fail = 0;
-	}
-	saturn->TowerJett2Switch.SetFailed(saturn->SwitchFail.TowerJett2Fail != 0);
-
-	if (!(rand() & (int)(127.0 / FailureMultiplier)))
-	{
-		saturn->SwitchFail.SMJett1Fail = 1;
-	}
-	else
-	{
-		saturn->SwitchFail.SMJett1Fail = 0;
-	}
-	saturn->CmSmSep1Switch.SetFailed(saturn->SwitchFail.SMJett1Fail != 0);
-
-	if (!(rand() & (int)(127.0 / FailureMultiplier)))
-	{
-		saturn->SwitchFail.SMJett2Fail = 1;
-	}
-	else
-	{
-		saturn->SwitchFail.SMJett2Fail = 0;
-	}
-	saturn->CmSmSep2Switch.SetFailed(saturn->SwitchFail.SMJett2Fail != 0);
-
-	//
-	// Random CWS light failures.
-	//
-	for (int i = 0;i < 60;i++)
-	{
-		saturn->cws.FailLight(i, false);
-	}
-
-	if (!(rand() & (int)(15.0 / FailureMultiplier)))
-	{
-		int i, n = (rand() & 7) + 1;
-		
-		for (i = 0; i < n; i++)
-		{
-			saturn->cws.FailLight(rand() & 63, true);
-		}
-	}
-
-	if (saturn->stage < CSM_LEM_STAGE)
-	{
-		double PlatformFailureTime;
-
-		if (!(rand() & (int)(127.0 / FailureMultiplier)))
-		{
-			PlatformFailureTime = 20.0 + ((double)(rand() & 1023) / 2.0);
-
-			saturn->GetIU()->GetEDS()->SetPlatformFailureParameters(true, PlatformFailureTime);
-		}
-		else
-		{
-			saturn->GetIU()->GetEDS()->SetPlatformFailureParameters(false, 0.0);
-		}
-	}
-
-	//
-	// Set up launch failures.
-	//
-	if (!(rand() & (int)(127.0 / FailureMultiplier)))
-	{
-		saturn->LaunchFail.LETAutoJetFail = 1;
-	}
-	else
-	{
-		saturn->LaunchFail.LETAutoJetFail = 0;
-	}
-
-	if (!(rand() & (int)(255.0 / FailureMultiplier)))
-	{
-		saturn->LaunchFail.LESJetMotorFail = 1;
-	}
-	else
-	{
-		saturn->LaunchFail.LESJetMotorFail = 0;
-	}
-
-	if (!(rand() & (int)(255.0 / FailureMultiplier)))
-	{
-		saturn->LaunchFail.AutoAbortEnableFail = 1;
-	}
-	else
-	{
-		saturn->LaunchFail.AutoAbortEnableFail = 0;
-	}
-
-	if (saturn->stage < CSM_LEM_STAGE)
-	{
-		if (!(rand() & (int)(255.0 / FailureMultiplier)))
-		{
-			saturn->GetIU()->GetEDS()->SetLiftoffCircuitAFailure(true);
-		}
-		else
-		{
-			saturn->GetIU()->GetEDS()->SetLiftoffCircuitAFailure(false);
-		}
-
-		if (!(rand() & (int)(255.0 / FailureMultiplier)))
-		{
-			saturn->GetIU()->GetEDS()->SetLiftoffCircuitBFailure(true);
-		}
-		else
-		{
-			saturn->GetIU()->GetEDS()->SetLiftoffCircuitBFailure(false);
-		}
-	}
-
-	if (isSaturnV)
-	{
-		if (saturn->stage < LAUNCH_STAGE_TWO)
-		{
-			double FirstStageFailureTime;
-
-			for (int i = 0;i < 5;i++)
-			{
-				if (!(rand() & (int)(127.0 / FailureMultiplier)))
-				{
-					FirstStageFailureTime = 20.0 + ((double)(rand() & 1023) / 10.0);
-
-					saturn->SetEngineFailure(1, i + 1, FirstStageFailureTime, true);
-				}
-				else
-				{
-					saturn->SetEngineFailure(1, i + 1, 0.0, false);
-				}
-			}
-		}
-
-		if (saturn->stage < LAUNCH_STAGE_SIVB)
-		{
-			double SecondStageFailureTime;
-
-			for (int i = 0;i < 5;i++)
-			{
-				if (!(rand() & (int)(127.0 / FailureMultiplier)))
-				{
-					SecondStageFailureTime = 10.0 + ((double)(rand() & 3071) / 10.0);
-					saturn->SetEngineFailure(2, i + 1, SecondStageFailureTime, true);
-				}
-				else
-				{
-					saturn->SetEngineFailure(2, i + 1, 0.0, false);
-				}
-			}
-		}
-
-		if (!(rand() & (int)(127.0 / FailureMultiplier)))
-		{
-			saturn->LaunchFail.SIIAutoSepFail = 1;
-		}
-		else
-		{
-			saturn->LaunchFail.SIIAutoSepFail = 0;
-		}
-	}
-	else
-	{
-		if (saturn->stage < STAGE_ORBIT_SIVB)
-		{
-			//
-			// Engine failure times for first stage.
-			//
-
-			double FirstStageFailureTime;
-
-			for (int i = 0;i < 8;i++)
-			{
-				if (!(rand() & (int)(127.0 / FailureMultiplier)))
-				{
-					FirstStageFailureTime = 20.0 + ((double)(rand() & 1023) / 10.0);
-					saturn->SetEngineFailure(1, i + 1, FirstStageFailureTime, true);
-				}
-				else
-				{
-					saturn->SetEngineFailure(1, i + 1, 0.0, false);
-				}
-			}
-		}
-	}
+	saturn->Failures.SetRandomFailures(FailureMultiplier);
 }
 
 void ProjectApolloMFD::SetAEAACommands(int arm, int set)
@@ -2116,8 +1849,8 @@ void ProjectApolloMFD::menuPressPROOnCMCLGC()
 
 	if (lem && saturn)
 	{
-		lem->DskySwitchProg.SetState(true);
-		saturn->DskySwitchProg.SetState(true);
+		lem->DskySwitchProceed.SetState(true);
+		saturn->DskySwitchProceed.SetState(true);
 	}
 
 	saturn = NULL;
@@ -2174,6 +1907,8 @@ void ProjectApolloMFD::menuSetLGCPage()
 
 void ProjectApolloMFD::menuSetFailuresPage()
 {
+	FailureSubpage = 0;
+
 	screen = m_buttonPages.page.Failures;
 	m_buttonPages.SelectPage(this, screen);
 }
@@ -2401,7 +2136,7 @@ void ProjectApolloMFD::menuSetIUSource()
 
 void ProjectApolloMFD::menuCycleIUUplinkType()
 {
-	if (g_Data.iuUplinkType < 9)
+	if (g_Data.iuUplinkType < 10)
 	{
 		g_Data.iuUplinkType++;
 	}
@@ -2413,7 +2148,7 @@ void ProjectApolloMFD::menuCycleIUUplinkType()
 	g_Data.iuUplinkResult = 0;
 }
 
-void ProjectApolloMFD::menuCycleSwitSelStage()
+void ProjectApolloMFD::menuSetIUUplinkInp1()
 {
 	if (g_Data.iuUplinkType == DCSUPLINK_SWITCH_SELECTOR)
 	{
@@ -2425,42 +2160,78 @@ void ProjectApolloMFD::menuCycleSwitSelStage()
 		{
 			g_Data.iuUplinkSwitSelStage = 0;
 		}
-
-		g_Data.iuUplinkResult = 0;
 	}
-}
-
-void ProjectApolloMFD::menuSetSwitSelChannel()
-{
-	if (g_Data.iuUplinkType == DCSUPLINK_SWITCH_SELECTOR)
+	else if (g_Data.iuUplinkType == DCSUPLINK_TIMEBASE_UPDATE)
 	{
-		g_Data.iuUplinkResult = 0;
-
-		bool SwitchSelectorChannelInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Switch selector channel [1-112]:", SwitchSelectorChannelInput, 0, 20, (void*)this);
-	}
-}
-
-void ProjectApolloMFD::menuSetTBUpdateTime()
-{
-	if (g_Data.iuUplinkType == DCSUPLINK_TIMEBASE_UPDATE)
-	{
-		g_Data.iuUplinkResult = 0;
-
 		bool TimebaseUpdateInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Increment the current LVDC timebase time [4-124 seconds]:", TimebaseUpdateInput, 0, 20, (void*)this);
 	}
-}
-
-void ProjectApolloMFD::menuSetImpactTIG()
-{
-	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+	else if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
 	{
-		g_Data.iuUplinkResult = 0;
-
 		bool ImpactTIGInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Time of ignition of S-IVB/IU impact burn:", ImpactTIGInput, 0, 20, (void*)this);
 	}
+	else if (g_Data.iuUplinkType == DCSUPLINK_GENERALIZED_MANEUVER)
+	{
+		if (g_Data.iuUplinkGenManType < 4)
+		{
+			g_Data.iuUplinkGenManType++;
+		}
+		else
+		{
+			g_Data.iuUplinkGenManType = 0;
+		}
+	}
+
+	g_Data.iuUplinkResult = 0;
+}
+
+void ProjectApolloMFD::menuSetIUUplinkInp2()
+{
+	if (g_Data.iuUplinkType == DCSUPLINK_SWITCH_SELECTOR)
+	{
+		bool SwitchSelectorChannelInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Switch selector channel [1-112]:", SwitchSelectorChannelInput, 0, 20, (void*)this);
+	}
+	else if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+	{
+		bool ImpactBTInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Burntime of S-IVB/IU impact burn:", ImpactBTInput, 0, 20, (void*)this);
+	}
+	else if (g_Data.iuUplinkType == DCSUPLINK_GENERALIZED_MANEUVER)
+	{
+		bool ImpactTIGInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Time of maneuver in TB4:", ImpactTIGInput, 0, 20, (void*)this);
+	}
+
+	g_Data.iuUplinkResult = 0;
+}
+
+void ProjectApolloMFD::menuSetIUUplinkInp3()
+{
+	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+	{
+		bool ImpactPitchInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Pitch of S-IVB/IU impact burn:", ImpactPitchInput, 0, 20, (void*)this);
+	}
+	else if (g_Data.iuUplinkType == DCSUPLINK_GENERALIZED_MANEUVER)
+	{
+		bool GeneralizedManeuverAttitudeInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Enter attitude in degrees:", GeneralizedManeuverAttitudeInput, 0, 20, (void*)this);
+	}
+
+	g_Data.iuUplinkResult = 0;
+}
+
+void ProjectApolloMFD::menuSetIUUplinkInp4()
+{
+	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
+	{
+		bool ImpactYawInput(void *id, char *str, void *data);
+		oapiOpenInputBox("Yaw of S-IVB/IU impact burn:", ImpactYawInput, 0, 20, (void*)this);
+	}
+
+	g_Data.iuUplinkResult = 0;
 }
 
 bool ProjectApolloMFD::SetImpactTIG(char *rstr)
@@ -2475,17 +2246,6 @@ bool ProjectApolloMFD::SetImpactTIG(char *rstr)
 	return false;
 }
 
-void ProjectApolloMFD::menuSetImpactBT()
-{
-	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
-	{
-		g_Data.iuUplinkResult = 0;
-
-		bool ImpactBTInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Burntime of S-IVB/IU impact burn:", ImpactBTInput, 0, 20, (void*)this);
-	}
-}
-
 bool ProjectApolloMFD::SetImpactBT(char *rstr)
 {
 	double f;
@@ -2496,17 +2256,6 @@ bool ProjectApolloMFD::SetImpactBT(char *rstr)
 		return true;
 	}
 	return false;
-}
-
-void ProjectApolloMFD::menuSetImpactPitch()
-{
-	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
-	{
-		g_Data.iuUplinkResult = 0;
-
-		bool ImpactPitchInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Pitch of S-IVB/IU impact burn:", ImpactPitchInput, 0, 20, (void*)this);
-	}
 }
 
 bool ProjectApolloMFD::SetImpactPitch(char *rstr)
@@ -2521,23 +2270,24 @@ bool ProjectApolloMFD::SetImpactPitch(char *rstr)
 	return false;
 }
 
-void ProjectApolloMFD::menuSetImpactYaw()
-{
-	if (g_Data.iuUplinkType == DCSUPLINK_SIVBIU_LUNAR_IMPACT)
-	{
-		g_Data.iuUplinkResult = 0;
-
-		bool ImpactYawInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Yaw of S-IVB/IU impact burn:", ImpactYawInput, 0, 20, (void*)this);
-	}
-}
-
 bool ProjectApolloMFD::SetImpactYaw(char *rstr)
 {
 	double f;
 
 	if (sscanf(rstr, "%lf", &f) == 1) {
 		g_Data.iuUplinkYaw = f*RAD;
+		InvalidateDisplay();
+		return true;
+	}
+	return false;
+}
+
+bool  ProjectApolloMFD::SetGeneralizedManeuverAttitude(char *rstr)
+{
+	VECTOR3 Att;
+
+	if (sscanf(rstr, "%lf %lf %lf", &Att.x, &Att.y, &Att.z) == 3) {
+		g_Data.iuUplinkGenManAtt = Att * RAD;
 		InvalidateDisplay();
 		return true;
 	}
@@ -2623,6 +2373,38 @@ void ProjectApolloMFD::menuIUUplink()
 		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
 	}
 	break;
+	case DCSUPLINK_GENERALIZED_MANEUVER:
+	{
+		DCSGENMANEUVER upl;
+
+		upl.T = g_Data.iuUplinkTIG;
+		upl.X = g_Data.iuUplinkGenManAtt.x;
+		upl.Y = g_Data.iuUplinkGenManAtt.y;
+		upl.Z = g_Data.iuUplinkGenManAtt.z;
+
+		switch (g_Data.iuUplinkGenManType)
+		{
+		case 0:
+			upl.Type = 16;
+			break;
+		case 1:
+			upl.Type = 8;
+			break;
+		case 2:
+			upl.Type = 4;
+			break;
+		case 3:
+			upl.Type = 2;
+			break;
+		case 4:
+			upl.Type = 1;
+			break;
+		}
+
+		uplink = &upl;
+		uplinkaccepted = iu->DCSUplink(g_Data.iuUplinkType, uplink);
+	}
+	break;
 	}
 
 	if (uplinkaccepted)
@@ -2635,28 +2417,16 @@ void ProjectApolloMFD::menuIUUplink()
 	}
 }
 
-void ProjectApolloMFD::menuSetSaturnSwitchFailure()
+void ProjectApolloMFD::menuSetFailure()
 {
-	bool SaturnSwitchFailureInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Number of failure type:", SaturnSwitchFailureInput, 0, 20, (void*)this);
+	bool SaturnFailureInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter the number of failure type. Optional: condition for failure (0 = mission time, 1 = simulation time, 2+ vessel specific) and condition (time)", SaturnFailureInput, 0, 30, (void*)this);
 }
 
-void ProjectApolloMFD::menuSetIUPlatformFailure()
+void ProjectApolloMFD::menuResetFailure()
 {
-	bool IUPlatformFailureInput(void *id, char *str, void *data);
-	oapiOpenInputBox("IU platform failure time in seconds (0 to disable):", IUPlatformFailureInput, 0, 20, (void*)this);
-}
-
-void ProjectApolloMFD::menuSetSIEngineFailure()
-{
-	bool SIEngineFailureInput(void *id, char *str, void *data);
-	oapiOpenInputBox("S-IB/S-IC engine failure (number of engine, time of failure, 0 to disable):", SIEngineFailureInput, 0, 20, (void*)this);
-}
-
-void ProjectApolloMFD::menuSetSIIEngineFailure()
-{
-	bool SIIEngineFailureInput(void *id, char *str, void *data);
-	oapiOpenInputBox("S-II engine failure (number of engine, time of failure, 0 to disable):", SIIEngineFailureInput, 0, 20, (void*)this);
+	bool SaturnResetFailureInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Enter the number of failure type to reset:", SaturnResetFailureInput, 0, 30, (void*)this);
 }
 
 void ProjectApolloMFD::menuSetRandomFailures()
@@ -2665,15 +2435,28 @@ void ProjectApolloMFD::menuSetRandomFailures()
 	oapiOpenInputBox("Randomize failures, input multiplier (1.0 for standard failure rate):", RandomFailuresInput, 0, 20, (void*)this);
 }
 
+void ProjectApolloMFD::menuClearAllFailures()
+{
+	if (saturn) saturn->Failures.ClearAllFailures();
+}
+
 void ProjectApolloMFD::menuCycleFailuresSubpage()
 {
-	if (FailureSubpage < 1)
+	if (saturn)
 	{
-		FailureSubpage++;
-	}
-	else
-	{
-		FailureSubpage = 0;
+		unsigned num = saturn->Failures.GetNumberOfMalfunctions();
+		if (num == 0) return;
+
+		unsigned pages = (num - 1) / 10;
+
+		if (FailureSubpage < pages)
+		{
+			FailureSubpage++;
+		}
+		else
+		{
+			FailureSubpage = 0;
+		}
 	}
 }
 
@@ -2755,38 +2538,27 @@ bool ImpactYawInput(void *id, char *str, void *data)
 	return ((ProjectApolloMFD*)data)->SetImpactYaw(str);
 }
 
-bool SaturnSwitchFailureInput(void *id, char *str, void *data)
+bool GeneralizedManeuverAttitudeInput(void *id, char *str, void *data)
 {
-	return ((ProjectApolloMFD*)data)->SetSaturnSwitchFailure(atoi(str));
+	return ((ProjectApolloMFD*)data)->SetGeneralizedManeuverAttitude(str);
 }
 
-bool IUPlatformFailureInput(void *id, char *str, void *data)
+bool SaturnFailureInput(void *id, char *str, void *data)
 {
-	return ((ProjectApolloMFD*)data)->SetIUPlatformFailure(atof(str));
-}
+	unsigned type;
+	int Condition = 1; //Simulation Time
+	double ConditionValue = 0.0; //Immediately
 
-bool SIEngineFailureInput(void *id, char *str, void *data)
-{
-	int eng;
-	double failtime;
-	if (sscanf(str, "%d %lf", &eng, &failtime) == 2)
+	if (sscanf(str, "%d %d %lf", &type, &Condition, &ConditionValue) >= 1)
 	{
-		((ProjectApolloMFD*)data)->SetSIEngineFailure(eng, failtime);
-		return true;
+		return ((ProjectApolloMFD*)data)->SaturnSetFailureInput(type, Condition, ConditionValue);
 	}
 	return false;
 }
 
-bool SIIEngineFailureInput(void *id, char *str, void *data)
+bool SaturnResetFailureInput(void *id, char *str, void *data)
 {
-	int eng;
-	double failtime;
-	if (sscanf(str, "%d %lf", &eng, &failtime) == 2)
-	{
-		((ProjectApolloMFD*)data)->SetSIIEngineFailure(eng, failtime);
-		return true;
-	}
-	return false;
+	return ((ProjectApolloMFD*)data)->SaturnResetFailureInput(atoi(str));
 }
 
 bool RandomFailuresInput(void *id, char *str, void *data)

@@ -416,7 +416,7 @@ protected:
 	void DVMINQ(int FLAG, int QE, int Q0, double beta_r, double &DV, int &QA, double &V_a, double &beta_a);
 	void FCUA(int FLAG, VECTOR3 R_a, double &beta_r, double &DV, double &U_r, double &V_a, double &beta_a);
 	void MSDS(double VR_a, double VT_a, double beta_r, double theta, double &delta, double &phi, double &phi_z, double &lambda, double &theta_z);
-	bool RUBR(int QA, int QE, double R_a, double U_0, double U_r, double beta_r, double &A, double &DV, double &e, double &T, double &V_a, double &beta_a);
+	bool RUBR(int QA, int QE, double R_a, double U_0, double U_r, double beta_r, double &AINV, double &DV, double &e, double &T, double &V_a, double &beta_a);
 	void VELCOM(double T, double R_a, double &beta_r, double &dt, double &p, bool &QA, int &sw6, double &U_r, double &VR_a, double &VT_a, double &beta_a, double &eta_ar, double &DV);
 	void VARMIN();
 	void TCOMP(double dv, double delta, double &T, double &TP);
@@ -567,46 +567,134 @@ struct RTEMoonStoredSolution
 	double t_z;
 };
 
+struct RTEMoonInputsArray
+{
+	//BASIC INPUTS
+	//Mode indicator
+	//12 = PTP discrete, 14 = ATP discrete, 16 = UA discrete, 22 = PTP tradeoff, 24 = ATP tradeoff, 32 = PTP search, 34 = ATP search, 36 = UA search
+	int SMODEI = 0;
+	//An array of premaneuver states spaced along the preabort trajectory
+	EphemerisDataTable2 STAVEC;
+	//Sidereal angle
+	double alpha_SID0 = 0.0;
+	//Maximum allowable landing time in GMT; this is used in tradeoff displays and the UA submode
+	double TZMAXI = 0.0;
+	//Approaximate landing time in GMT for PTP and ATP discrete and search cases; also used as the minimum allowable landing time for tradeoff displays and all UA submodes
+	double TZMINI = 0.0;
+	//GENERAL PROGRAM OPTIONS
+	//Maximum allowable return inclination, degrees
+	double IRMAXI = 40.0;
+	//Maximum allowable reentry speed, feet per second
+	double URMAXI = 36323.0;
+	//Relative range override, nautical miles
+	double RRBI = 0.0;
+	//Motion flag. 0 = postmaneuver direction of motion is selected internal to the program, 1 = only noncircumlinar motion is allowed, 2 = only circumlinar motion is allowed
+	int CIRI = 0;
+	//Minimum altitude allowed at closest approach to the moon, nautical miles
+	double HMINI = 50.0;
+	//Reentry flag. 0 = guided reentry to the steep target line, 1 = manual reentry to the shallow target line, 2 = manual reentry to the steep target line
+	int EPI = 2;
+	//Lift-to-drag ratio
+	double L2DI = 0.29332;
+	//Maximum allowable DV, feet per second
+	double DVMAXI = 10000.0;
+	//LANDING AREA IDENTIFICATION
+	//PTP submode options
+	//Longitude of the desired site, radians
+	double LAMZI = 0.0;
+	//Latitude of the desired site, radians
+	double MUZI = 0.0;
+	//Maximum allowable miss distance from the target site, nautical miles
+	double MDMAXI = 0.0;
+	//ATP submode options
+	//The latitude, longitude coordinates of the target line; the order of input is latitude of point one, longitude of point one, latitude of point two etc; as many as five points maybe be used
+	double LINE[10];
+	//The desired return inclination is abs(IRKI); when IRKI < 0 the azimuth at reentry is greater than the azimuth at reentry for the minimum possible return inclination
+	//When IRKI > 0, the reentry azimuth is less than that for the minimum possible return inclination
+	//In degrees
+	double IRKI = 0.0;
+};
+
 class RTEMoon : public RTCCModule
 {
 public:
-	RTEMoon(RTCC *r, EphemerisData2 sv0, double GMTBASE, double alpha_SID0);
-	void ATP(double *line);
-	void READ(int SMODEI, double IRMAXI, double URMAXI, double RRBI, int CIRI, double HMINI, int EPI, double L2DI, double DVMAXI, double MUZI, double IRKI, double MDMAXI, double TZMINI, double TZMAXI);
-	bool MASTER();
-	
-	void MCSSLM(bool &REP, double t_z_apo);
+	RTEMoon(RTCC *r);
+	//Moon-Centered Return-to-Earth Subprocessor main control routine
+	bool MASTER(const RTEMoonInputsArray &opt);
 
-	int precision;
+	//OUTPUTS:
+	//Actual landing coordinates
 	double EntryLatcor, EntryLngcor;
-	VECTOR3 DV, Entry_DV;
-	VECTOR3 R_EI, V_EI;
-	double EntryAng;
-	VECTOR3 Vig_apo;
-	double ReturnInclination;
-	double FlybyPeriAlt;
-	double t_R, t_Landing;
+	//State vector at ignition
 	EphemerisData2 sv0;
+	//Velocity vector after the maneuver
+	VECTOR3 Vig_apo;
+	//Inertial Delta V vector
+	VECTOR3 DV;
+	//LVLH Delta V vector
+	VECTOR3 Entry_DV;
+	//Lunar flyby altitude
+	double FlybyPeriAlt;
+	//Reentry state
+	VECTOR3 R_EI, V_EI;
+	double t_R;
+	//Reentry flight-path angle
+	double EntryAng;
+	//Earth-centered return inclination (negative if azimuth is TBD)
+	double ReturnInclination;
+	//Splashdown time
+	double t_Landing;
 private:
 
+	struct RTEMoonSEARCHArray
+	{
+		//IPART: Flag to control interval of search. 1 = initial call, 2 = searching for local minimum, 3 = testing between left limit and current minimum, 4 = testing between current minimum and right limit
+		int IPART = 1;
+		//Arrays::
+		//0 = left limit, 2 = current best, 4 = right limit
+		//1 = test between left limit and local minimum, 3 = test between local minimum and right limit
+		//5 = local minimum, 6 == global minimum?
+		//Array of DV values
+		double TEST[7];
+		//Array of state vectors
+		EphemerisData2 STAVEX[7];
+		//Convergence flag
+		bool IOUT = false;
+		unsigned J;
+		//Indicator for continuing the local minimum search before the 3rd state vector in the ephemeris table
+		int K;
+		//State vector counter
+		int L;
+		double TEST5;
+		EphemerisData2 STAVC5;
+		double dt;
+	};
+
+	//Read program inputs and transfers them to internal variables
+	void READ(const RTEMoonInputsArray &opt);
+
+	//PTP control logic
 	void MCSS();
+	//PTP accessibility logic
+	void MCSSLM(bool &REP, double t_z_apo);
+	//ATP control logic
 	bool CLL(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv);
+	//UA control logic
 	bool MCUA(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv);
 
 	VECTOR3 ThreeBodyAbort(VECTOR3 R_I, VECTOR3 V_I, double t_I, double t_EI, bool q_m, double Incl, double INTER, VECTOR3 &R_EI, VECTOR3 &V_EI);
 	int MCDRIV(VECTOR3 Y_0, VECTOR3 V_0, double t_0, double var, bool q_m, double Incl, double INTER, bool KIP, double t_zmin, VECTOR3 &V_a, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, bool &NIR, double &Incl_apo, double &y_p, bool &q_d);
-	double SEARCH(int &IPART, VECTOR3 &DVARR, VECTOR3 &TIGARR, double tig, double dv, bool &IOUT);
+	void SEARCH(RTEMoonSEARCHArray &arr, double dv);
 	bool FINDUX(VECTOR3 X_x, double t_x, double r_r, double u_r, double beta_r, double i_r, double INTER, bool q_a, double mu, VECTOR3 &U_x, VECTOR3 &R_EI, VECTOR3 &V_EI, double &T_EI, double &Incl_apo) const;
-	void INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, double &a, double &e, double &p, double &theta, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2, bool &q_m, bool &k_1, double &beta_1, double &beta_2) const;
+	void INRFV(VECTOR3 R_1, VECTOR3 V_2, double r_2, double mu, bool k3, double &ainv, double &e, double &p, double &theta, VECTOR3 &V_1, VECTOR3 &R_2, double &dt_2, bool &q_m, bool &k_1, double &beta_1, double &beta_2) const;
 	void STORE(int opt, double &dv, double &i_r, double &INTER, double &t_z, bool &q_m);
-	void PSTATE(double a_H, double e_H, double p_H, double t_0, double T_x, VECTOR3 Y_0, VECTOR3 &Y_a_apo, VECTOR3 V_x, double theta, double beta_a, double beta_x, double T_a, VECTOR3 &V_a, double &t_x_aaapo, VECTOR3 &Y_x_apo, double &Dy_0, double &deltat, VECTOR3 &X_mx, VECTOR3 &U_mx) const;
+	void PSTATE(double ainv_H, double e_H, double p_H, double t_0, double T_x, VECTOR3 Y_0, VECTOR3 &Y_a_apo, VECTOR3 V_x, double theta, double beta_a, double beta_x, double T_a, VECTOR3 &V_a, double &t_x_aaapo, VECTOR3 &Y_x_apo, double &Dy_0, double &deltat, VECTOR3 &X_mx, VECTOR3 &U_mx) const;
 
 	int hMoon;
 	double mu_E, mu_M, w_E, R_E, R_M;
 	//double r_s; //Pseudostate sphere
 	double EntryLng;
 	double dlngapo, dtapo;
-	double dTIG, GMTBASE;
 	double i_rmax, u_rmax;
 	//12 = PTP discrete, 14 = ATP discrete, 16 = UA discrete
 	//22 = PTP tradeoff, 24 = ATP tradeoff
@@ -659,9 +747,10 @@ private:
 	double r_s;
 	//Position and velocity vector of the Moon at abort time
 	VECTOR3 X_m0, U_m0;
-	
 	//Alternate target line (lat, lng, lat, lng etc.)
 	double LINE[10];
+	//State vector array
+	EphemerisDataTable2 STAVEC;
 
 	RTEMoonStoredSolution solution;
 

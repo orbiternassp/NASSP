@@ -1672,7 +1672,9 @@ void DECA::Timestep(double simdt) {
 	}
 
 	//Gimbal Failure Indication
-	if (powered && (K1 || K23) && lem->DPS.pitchGimbalActuator.GimbalFail())
+	bool GmblPwr = (lem->DECA_GMBL_AC_CB.Voltage() > SP_MIN_ACVOLTAGE) && K25;
+	bool InitialReset = GmblPwr && K2 && K24;
+	if (powered && (InitialReset && !K4) && (K21 || lem->DPS.pitchGimbalActuator.GimbalFail()))
 	{
 		K21 = true;
 	}
@@ -1681,7 +1683,7 @@ void DECA::Timestep(double simdt) {
 		K21 = false;
 	}
 
-	if (powered && (K1 || K23) && lem->DPS.rollGimbalActuator.GimbalFail())
+	if (powered && (InitialReset && !K5) && (K22 || lem->DPS.rollGimbalActuator.GimbalFail()))
 	{
 		K22 = true;
 	}

@@ -59,6 +59,16 @@ void CueCardLocation::ResetMeshIndizes()
 	}
 }
 
+void CueCardLocation::GetMeshIndexList(std::vector<UINT> &vec)
+{
+	UINT idx;
+	for (unsigned i = 0; i < CueCards.size(); i++)
+	{
+		idx = CueCards[i].GetMeshIndex();
+		if (idx != -1) vec.push_back(idx);
+	}
+}
+
 void CueCardLocation::CreateCueCard(std::string name, VECTOR3 offs)
 {
 	CueCard c(this, name, offs);

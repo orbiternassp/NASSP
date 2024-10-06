@@ -40,6 +40,8 @@ public:
 	void ResetCueCards();
 	//Reset mesh indizes if meshes were deleted externally
 	void ResetMeshIndizes();
+	//Get vector of all mesh indices
+	void GetMeshIndexList(std::vector<UINT> &vec);
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);

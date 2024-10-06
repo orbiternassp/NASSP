@@ -91,6 +91,23 @@ protected:
 	e_object **sources;
 };
 
+//Class that combines three AC phase power sources
+class ThreePhasePowerMerge : public PowerSource {
+public:
+	ThreePhasePowerMerge(char *i_name, PanelSDK &p);
+	double Voltage();
+	void DrawPower(double watts);
+	void WireToBuses(e_object *a, e_object *b, e_object *c) { Phase1 = a; Phase2 = b; Phase3 = c; };
+	double Current();
+
+protected:
+	PanelSDK &sdk;
+
+	e_object *Phase1;
+	e_object *Phase2;
+	e_object *Phase3;
+};
+
 class PowerBreaker : public PowerSource {
 
 public:

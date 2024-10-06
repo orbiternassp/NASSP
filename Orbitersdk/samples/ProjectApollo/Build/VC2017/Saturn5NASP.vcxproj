@@ -63,7 +63,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../XRSound%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;_DEBUG;_WINDOWS;_USRDLL;SATURN5NASP_EXPORTS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeaderOutputFile>.\Debug\Saturn5NASP/Saturn5NASP.pch</PrecompiledHeaderOutputFile>
@@ -80,10 +80,10 @@
       <Culture>0x040c</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>../../src_aux/dsound.lib;winmm.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;opengl32.lib;glu32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;lua5.1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../../src_aux/dsound.lib;winmm.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;opengl32.lib;glu32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;lua5.1.lib;XRSoundD.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/Saturn5.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>;../../../../lib/Lua;.\Debug\PanelSDK;../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>;../../../../lib/Lua;.\Debug\PanelSDK;../../../../lib;../../../../XRSound%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBCMT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Debug\Saturn5NASP/Saturn5.pdb</ProgramDatabaseFile>
@@ -112,7 +112,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../XRSound%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>DIRECTSOUNDENABLED;WIN32;NDEBUG;_WINDOWS;_USRDLL;SATURN5NASP_EXPORTS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -131,10 +131,10 @@
       <Culture>0x040c</Culture>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>../../src_aux/dsound.lib;winmm.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;lua5.1.lib;opengl32.lib;glu32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>../../src_aux/dsound.lib;winmm.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;lua5.1.lib;opengl32.lib;glu32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;XRSound.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/ProjectApollo/Saturn5.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>.\Release\PanelSDK;../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;../../../../lib/Lua;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\Release\PanelSDK;../../../../lib;../../../../XRSound;../../../../lib/Lua;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>LIBC;LIBCD;libci;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ProgramDatabaseFile>.\Release\Saturn5NASP/Saturn5.pdb</ProgramDatabaseFile>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -143,6 +143,7 @@
       <ImportLibrary>.\Release\Saturn5NASP/Saturn5.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -156,7 +157,9 @@
     <ClCompile Include="..\..\src_aux\CueCardManager.cpp" />
     <ClCompile Include="..\..\src_aux\Mission.cpp" />
     <ClCompile Include="..\..\src_aux\vesim.cpp" />
+    <ClCompile Include="..\..\src_csm\CSMMalfunctionSimulation.cpp" />
     <ClCompile Include="..\..\src_csm\csmsensors.cpp" />
+    <ClCompile Include="..\..\src_csm\eps.cpp" />
     <ClCompile Include="..\..\src_csm\rhc.cpp" />
     <ClCompile Include="..\..\src_csm\sce.cpp" />
     <ClCompile Include="..\..\src_csm\smjc.cpp" />
@@ -267,6 +270,8 @@
     <ClCompile Include="..\..\src_saturn\lvimu.cpp" />
     <ClCompile Include="..\..\src_mfd\MFDconnector.cpp" />
     <ClCompile Include="..\..\src_sys\inertial.cpp" />
+    <ClCompile Include="..\..\src_sys\Malfunction.cpp" />
+    <ClCompile Include="..\..\src_sys\MalfunctionSimulation.cpp" />
     <ClCompile Include="..\..\src_sys\MechanicalAccelerometer.cpp" />
     <ClCompile Include="..\..\src_sys\missiontimer.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -414,7 +419,12 @@
     <ClInclude Include="..\..\src_aux\vesim.h" />
     <ClInclude Include="..\..\src_csm\CM_VC_Resource.h" />
     <ClInclude Include="..\..\src_aux\RF_calc.h" />
+    <ClInclude Include="..\..\src_csm\CSMMalfunctionSimulation.h" />
     <ClInclude Include="..\..\src_csm\csmsensors.h" />
+    <ClInclude Include="..\..\src_csm\CM-VC-SeatsFolded_Resource.h" />
+    <ClInclude Include="..\..\src_csm\CM-VC-SeatsUnfolded_Resource.h" />
+    <ClInclude Include="..\..\src_csm\EmissionListCMVC.h" />
+    <ClInclude Include="..\..\src_csm\eps.h" />
     <ClInclude Include="..\..\src_csm\rhc.h" />
     <ClInclude Include="..\..\src_csm\sce.h" />
     <ClInclude Include="..\..\src_csm\smjc.h" />
@@ -455,6 +465,8 @@
     <ClInclude Include="..\..\src_lm\LEMcomputer.h" />
     <ClInclude Include="..\..\src_saturn\LVIMU.h" />
     <ClInclude Include="..\..\src_mfd\MFDconnector.h" />
+    <ClInclude Include="..\..\src_sys\Malfunction.h" />
+    <ClInclude Include="..\..\src_sys\MalfunctionSimulation.h" />
     <ClInclude Include="..\..\src_sys\MechanicalAccelerometer.h" />
     <ClInclude Include="..\..\src_sys\missiontimer.h" />
     <ClInclude Include="..\..\src_sys\nasspdefs.h" />

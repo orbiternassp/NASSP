@@ -1305,7 +1305,8 @@ double LEM_LCA::GetAnnunVoltage()
 		}
 		else
 		{
-			return 3.0 / 8.0*(double)lem->LtgAnunNumKnob.GetState() + 2.0;
+			//2-5V
+			return (3.0 / 8.0*lem->LtgAnunNumKnob.GetValue() + 2.0);
 		}
 	}
 
@@ -1331,7 +1332,8 @@ double LEM_LCA::GetNumericVoltage()
 		}
 		else
 		{
-			return 90.0 / 8.0*(double)lem->LtgAnunNumKnob.GetState() + 20.0;
+			//20-110V
+			return (90.0 / 8.0*lem->LtgAnunNumKnob.GetValue() + 20.0);
 		}
 	}
 
@@ -1348,7 +1350,8 @@ double LEM_LCA::GetIntegralVoltage()
 		}
 		else
 		{
-			return 60.0 / 8.0*(double)lem->LtgIntegralKnob.GetState() + 15.0;
+			//15-75V
+			return (60.0 / 8.0*lem->LtgIntegralKnob.GetValue() + 15.0);
 		}
 	}
 
@@ -1485,7 +1488,7 @@ LEM_FloodLights::LEM_FloodLights()
 	FloodHeat = 0;
 }
 
-void LEM_FloodLights::Init(LEM *l, e_object *flood_cb, ThreePosSwitch *flood_sw, RotationalSwitch *pnl_3_rty, RotationalSwitch *pnl_5_rty, h_HeatLoad *flood_h)
+void LEM_FloodLights::Init(LEM *l, e_object *flood_cb, ThreePosSwitch *flood_sw, ContinuousRotationalSwitch *pnl_3_rty, ContinuousRotationalSwitch *pnl_5_rty, h_HeatLoad *flood_h)
 {
 	lem = l;
 	FloodCB = flood_cb;
@@ -1515,18 +1518,18 @@ double LEM_FloodLights::GetLMPRotaryVoltage()
 {
 	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() != THREEPOSSWITCH_CENTER))
 	{
-			return ((double)LMPRotary->GetState() + 0.6154) / 0.3077;	//Returns 2V-28V, need to check if max dim is actually 2V
+		return (LMPRotary->GetValue() + 0.6154) / 0.3077;	//Returns 2V-28V, need to check if max dim is actually 2V
 	}
-		return 0.0;
+	return 0.0;
 }
 
 double LEM_FloodLights::GetCDRRotaryVoltage()
 {
 	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() != THREEPOSSWITCH_CENTER))
 	{
-		return ((double)CDRRotary->GetState() + 0.6154) / 0.3077;	//Returns 2V-28V, need to check if max dim is actually 2V
+		return (CDRRotary->GetValue() + 0.6154) / 0.3077;	//Returns 2V-28V, need to check if max dim is actually 2V
 	}
-		return 0.0;
+	return 0.0;
 }
 
 double LEM_FloodLights::GetALLPowerDraw()	//These lamps are not dimmable

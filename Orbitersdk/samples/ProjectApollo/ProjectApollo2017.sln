@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.33027.164
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34525.116
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ASTP", "Build\VC2017\ASTP.vcxproj", "{BAE34D87-5EAE-491C-AE6D-73B6B1E487D2}"
 EndProject
@@ -41,6 +41,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VAB", "Build\VC2017\VAB.vcxproj", "{9A4119F5-6936-4C1A-8A40-EBDA0808348A}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "s1b", "Build\VC2017\s1b.vcxproj", "{0A2BCE86-18E7-43DF-9BBF-F11EA7EB3469}"
+	ProjectSection(ProjectDependencies) = postProject
+		{98EC3BF0-C9FF-4C38-91E1-159D8F3700C1} = {98EC3BF0-C9FF-4C38-91E1-159D8F3700C1}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "s1c", "Build\VC2017\s1c.vcxproj", "{6CD92808-91D8-4A49-BCF9-6FADD43FBC83}"
 EndProject
@@ -75,6 +78,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LCC", "Build\VC2017\LCC.vcxproj", "{828862FD-26AA-46FB-9F5B-92C6F522FE4F}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Skylab", "Build\VC2017\Skylab.vcxproj", "{123BD935-CDF4-440C-B113-DB3448B08DE8}"
+	ProjectSection(ProjectDependencies) = postProject
+		{98EC3BF0-C9FF-4C38-91E1-159D8F3700C1} = {98EC3BF0-C9FF-4C38-91E1-159D8F3700C1}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

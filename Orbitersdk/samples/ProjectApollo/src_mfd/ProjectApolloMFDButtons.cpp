@@ -76,35 +76,35 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 
 	static const MFDBUTTONMENU mnuIU[12] = {
 		{ "Back", 0, 'B' },
-		{ "Request Burn Data", 0, 'R' },
-		{ "Switch selector stage", 0, 'A' },
-		{ "Switch selector channel",0,'C' },
-		{ "Timebase update",0,'D' },
+		{ "Input data 1", 0, 'A' },
+		{ "Input data 2",0,'C' },
+		{ "Input data 3",0,'D' },
+		{ "Input data 4", 0, 'R' },
 		{ "Change Source",0,'S' },
 
 		{ "IU uplink type",0,'T' },
 		{ "Uplink to IU",0,'U' },
-		{ "Impact TIG",0,'I' },
-		{ "Impact burntime",0,'E' },
-		{ "Pitch angle",0,'P' },
-		{ "Yaw angle", 0, 'Y'}
+		{ "", 0,' ' },
+		{ "", 0,' ' },
+		{ "", 0,' ' },
+		{ "", 0, ' '}
 	};
 
 	page.IU = RegisterPage(mnuIU, sizeof(mnuIU) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
-	RegisterFunction("REQ", OAPI_KEY_R, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("STA", OAPI_KEY_A, &ProjectApolloMFD::menuCycleSwitSelStage);
-	RegisterFunction("CHA", OAPI_KEY_C, &ProjectApolloMFD::menuSetSwitSelChannel);
-	RegisterFunction("TIM", OAPI_KEY_D, &ProjectApolloMFD::menuSetTBUpdateTime);
+	RegisterFunction("IN1", OAPI_KEY_A, &ProjectApolloMFD::menuSetIUUplinkInp1);
+	RegisterFunction("IN2", OAPI_KEY_C, &ProjectApolloMFD::menuSetIUUplinkInp2);
+	RegisterFunction("IN3", OAPI_KEY_D, &ProjectApolloMFD::menuSetIUUplinkInp3);
+	RegisterFunction("IN4", OAPI_KEY_R, &ProjectApolloMFD::menuSetIUUplinkInp4);
 	RegisterFunction("SRC", OAPI_KEY_S, &ProjectApolloMFD::menuSetIUSource);
 
 	RegisterFunction("TYP", OAPI_KEY_T, &ProjectApolloMFD::menuCycleIUUplinkType);
 	RegisterFunction("UPL", OAPI_KEY_U, &ProjectApolloMFD::menuIUUplink);
-	RegisterFunction("TIG", OAPI_KEY_I, &ProjectApolloMFD::menuSetImpactTIG);
-	RegisterFunction("BT", OAPI_KEY_E, &ProjectApolloMFD::menuSetImpactBT);
-	RegisterFunction("PIT", OAPI_KEY_P, &ProjectApolloMFD::menuSetImpactPitch);
-	RegisterFunction("YAW", OAPI_KEY_Y, &ProjectApolloMFD::menuSetImpactYaw);
+	RegisterFunction("", OAPI_KEY_I, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Y, &ProjectApolloMFD::menuVoid);
 
 	static const MFDBUTTONMENU mnuTELE[11] = {
 		{ "Back", 0, 'B' },
@@ -188,8 +188,8 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 
 
 	static const MFDBUTTONMENU mnuFailures[12] = {
-		{ "SECS failures",0,'S' },
-		{ 0,0,0 },
+		{ "Set failure",0,'S' },
+		{ "Clear failure",0,'D' },
 		{ 0,0,0 },
 		{ 0,0,0 },
 		{ 0,0,0 },
@@ -198,24 +198,24 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "Cycle through pages",0,'P' },
 		{ 0,0,0 },
 		{ 0,0,0 },
-		{ 0,0,0 },
+		{ "Clear all failures",0,'C' },
 		{ "Randomize failures",0,'R' },
 		{ "Back",0,'B' }
 	};
 
 	page.Failures = RegisterPage(mnuFailures, sizeof(mnuFailures) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("SEQ", OAPI_KEY_S, &ProjectApolloMFD::menuSetSaturnSwitchFailure);
-	RegisterFunction("PLAT", OAPI_KEY_D, &ProjectApolloMFD::menuSetIUPlatformFailure);
-	RegisterFunction("SI", OAPI_KEY_E, &ProjectApolloMFD::menuSetSIEngineFailure);
-	RegisterFunction("SII", OAPI_KEY_G, &ProjectApolloMFD::menuSetSIIEngineFailure);
+	RegisterFunction("SET", OAPI_KEY_S, &ProjectApolloMFD::menuSetFailure);
+	RegisterFunction("RES", OAPI_KEY_D, &ProjectApolloMFD::menuResetFailure);
+	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_I, &ProjectApolloMFD::menuVoid);
 
 	RegisterFunction("PAG", OAPI_KEY_P, &ProjectApolloMFD::menuCycleFailuresSubpage);
 	RegisterFunction("", OAPI_KEY_J, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_C, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("CLR", OAPI_KEY_C, &ProjectApolloMFD::menuClearAllFailures);
 	RegisterFunction("RAN", OAPI_KEY_R, &ProjectApolloMFD::menuSetRandomFailures);
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
 }

@@ -226,7 +226,7 @@ IDB_BORDER_194x324                          BITMAP  "..\\Bitmaps\\border194x324.
 IDB_BORDER_36x69                            BITMAP  "..\\Bitmaps\\border36x69.bmp"
 IDB_BORDER_62x31                            BITMAP  "..\\Bitmaps\\border62x31.bmp"
 IDB_CSM_CABINPRESSTESTSWITCH                BITMAP  "..\\Bitmaps\\csm_cabinpresstestswitch.bmp"
-IDB_ORDEAL_PANEL                            BITMAP  "..\\Bitmaps\\ordeal_panel.bmp"
+IDB_ORDEAL_PANEL                            BITMAP  "..\\Bitmaps\\csm_ORDEAL.bmp"
 IDB_DIGITAL2                                BITMAP  "..\\Bitmaps\\digitaldisp_2.bmp"
 IDB_CSM_TELESCOPECOVER                      BITMAP  "..\\Bitmaps\\csm_telescope_panel_cover.bmp"
 IDB_CSM_SEXTANTCOVER                        BITMAP  "..\\Bitmaps\\csm_sextant_panel_cover.bmp"

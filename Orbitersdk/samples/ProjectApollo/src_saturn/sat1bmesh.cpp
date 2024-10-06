@@ -602,7 +602,7 @@ void Saturn1b::SetSecondStageEngines (double offset)
 		AddExhaust(th_ver[i], 7.0, 0.2, exhaust_tex);
 		AddExhaustStream(th_ver[i], &solid_exhaust);
 	}
-	thg_ver = CreateThrusterGroup (th_ver, 3,THGROUP_USER);
+	thg_ver = CreateThrusterGroup (th_ver, 3, (THGROUP_TYPE)(THGROUP_USER + 1));
 }
 
 void Saturn1b::SeparateStage (int new_stage)

@@ -3199,34 +3199,49 @@ void RJEC::TimeStep(double simdt){
 	bool CMTransferMotor2 = sat->secs.rcsc.GetCMTransferMotor2();
 	if (CMTransferMotor1 || CMTransferMotor2) sm_sep = true;
 
-	if ((S18_2 || thc_cw) && !sm_sep) {
-		if (sat->eca.thc_x < 16384) { // PLUS X
-			td[14] = true;
-			td[15] = true;
+	if (!sm_sep) {
+		//Pitch SCS-CMC Reaction Jet Control Logic
+		if (S18_2 || thc_cw || S8_1) {
+			if (sat->eca.thc_y > 49152) { // MINUS Y (FORWARD)
+				td[1] = true;
+				td[2] = true;
+			}
+			if (sat->eca.thc_y < 16384) { // PLUS Y (BACKWARD)
+				td[3] = true;
+				td[4] = true;
+			}
 		}
-		if (sat->eca.thc_x > 49152) { // MINUS X
-			td[16] = true;
-			td[13] = true;
+
+		//Yaw SCS-CMC Reaction Jet Control Logic
+		if (S18_2 || thc_cw || S9_1) {
+			if (sat->eca.thc_y > 49152) { // MINUS Y (FORWARD)
+				td[5] = true;
+				td[6] = true;
+			}
+			if (sat->eca.thc_y < 16384) { // PLUS Y (BACKWARD)
+				td[7] = true;
+				td[8] = true;
+			}
 		}
-		if (sat->eca.thc_y > 49152) { // MINUS Y (FORWARD)
-			td[1] = true;
-			td[2] = true;
-			td[5] = true;
-			td[6] = true;
-		}
-		if (sat->eca.thc_y < 16384) { // PLUS Y (BACKWARD)
-			td[3] = true;
-			td[4] = true;
-			td[7] = true;
-			td[8] = true;
-		}
-		if (sat->eca.thc_z > 49152) { // MINUS Z (UP)
-			td[11] = true;
-			td[12] = true;
-		}
-		if (sat->eca.thc_z < 16384) { // PLUS Z (DOWN)
-			td[9] = true;
-			td[10] = true;
+
+		//Roll SCS-CMC Reaction Jet Control Logic
+		if (S18_2 || thc_cw || S10_1) {
+			if (sat->eca.thc_x < 16384) { // PLUS X
+				td[14] = true;
+				td[15] = true;
+			}
+			if (sat->eca.thc_x > 49152) { // MINUS X
+				td[16] = true;
+				td[13] = true;
+			}
+			if (sat->eca.thc_z > 49152) { // MINUS Z (UP)
+				td[11] = true;
+				td[12] = true;
+			}
+			if (sat->eca.thc_z < 16384) { // PLUS Z (DOWN)
+				td[9] = true;
+				td[10] = true;
+			}
 		}
 	}
 
@@ -4545,16 +4560,16 @@ void TVSA::TimeStep(double simdt)
 	//Trim
 	if (acpower1)
 	{
-		pitchGimbalTrim1 = (sat->SPSGimbalPitchThumbwheel.GetPosition() - 40.0) / 10.0*RAD;
-		yawGimbalTrim1 = (sat->SPSGimbalYawThumbwheel.GetPosition() - 40.0) / 10.0*RAD;
+		pitchGimbalTrim1 = sat->SPSGimbalPitchThumbwheel.GetValue()*RAD;
+		yawGimbalTrim1 = sat->SPSGimbalYawThumbwheel.GetValue()*RAD;
 	}
 	else
 		pitchGimbalTrim1 = yawGimbalTrim1 = 0.0;
 
 	if (acpower2)
 	{
-		pitchGimbalTrim2 = (sat->SPSGimbalPitchThumbwheel.GetPosition() - 40.0) / 10.0*RAD;
-		yawGimbalTrim2 = (sat->SPSGimbalYawThumbwheel.GetPosition() - 40.0) / 10.0*RAD;
+		pitchGimbalTrim2 = sat->SPSGimbalPitchThumbwheel.GetValue()*RAD;
+		yawGimbalTrim2 = sat->SPSGimbalYawThumbwheel.GetValue()*RAD;
 	}
 	else
 		pitchGimbalTrim2 = yawGimbalTrim2 = 0.0;
@@ -4873,7 +4888,7 @@ EMS::~EMS()
 	if (rsirot) delete rsirot;
 }
 
-void EMS::Init(Saturn *vessel, e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c) {
+void EMS::Init(Saturn *vessel, e_object *a, e_object *b, ContinuousRotationalSwitch *dimmer, e_object *c) {
 	sat = vessel;
 	DCPower.WireToBuses(a, b);
 	WireTo(c);

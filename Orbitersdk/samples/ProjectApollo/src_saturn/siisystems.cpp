@@ -50,8 +50,6 @@ SIISystems::SIISystems(VESSEL *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop
 	for (i = 0;i < 5;i++)
 	{
 		ThrustOK[i] = false;
-		EarlySIICutoff[i] = false;
-		SecondStageFailureTime[i] = 0.0;
 	}
 
 	PUValveState = PUVALVE_NULL;
@@ -64,7 +62,6 @@ SIISystems::SIISystems(VESSEL *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop
 	StartPhaseLimiterCutoffArm = false;
 	LH2StepPressurization = false;
 
-	FailureTimer = 0.0;
 	J2DefaultThrust = 0.0;
 
 	LH2TankUllagePressurePSI = 50.0;
@@ -87,15 +84,6 @@ void SIISystems::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "LH2STEPPRESSURIZATION", LH2StepPressurization);
 	oapiWriteScenario_int(scn, "PUVALVESTATE", PUValveState);
 	papiWriteScenario_double(scn, "J2DEFAULTTHRUST", J2DefaultThrust);
-	for (int i = 0;i < 5;i++)
-	{
-		if (EarlySIICutoff[i])
-		{
-			papiWriteScenario_boolarr(scn, "EarlySIICutoff", EarlySIICutoff, 5);
-			papiWriteScenario_doublearr(scn, "SecondStageFailureTime", SecondStageFailureTime, 5);
-			break;
-		}
-	}
 
 	j2engine1.SaveState(scn, "ENGINE1_BEGIN", "ENGINE_END");
 	j2engine2.SaveState(scn, "ENGINE2_BEGIN", "ENGINE_END");
@@ -121,8 +109,6 @@ void SIISystems::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "LH2STEPPRESSURIZATION", LH2StepPressurization);
 		papiReadScenario_int(line, "PUVALVESTATE", PUValveState);
 		papiReadScenario_double(line, "J2DEFAULTTHRUST", J2DefaultThrust);
-		papiReadScenario_boolarr(line, "EarlySIICutoff", EarlySIICutoff, 5);
-		papiReadScenario_doublearr(line, "SecondStageFailureTime", SecondStageFailureTime, 5);
 
 		if (!strnicmp(line, "ENGINE1_BEGIN", sizeof("ENGINE1_BEGIN"))) {
 			j2engine1.LoadState(scn, "ENGINE_END");
@@ -180,7 +166,7 @@ void SIISystems::Timestep(double simdt)
 		if (vessel->GetThrusterGroupLevel(ullage) < 1.0 && UllageTrigger)
 		{
 			vessel->SetThrusterGroupLevel(ullage, 1.0);
-			sepSound.play(LOOP, 130);
+			sepSound.play(LOOP, 130.0 / 255.0);
 			UllageTrigger = false;
 		}
 	}
@@ -189,42 +175,13 @@ void SIISystems::Timestep(double simdt)
 	{
 		sepSound.stop();
 	}
-
-	//Failure code
-	FailureTimer += simdt;
-
-	for (int i = 0;i < 5;i++)
-	{
-		if (EarlySIICutoff[i] && (FailureTimer > SecondStageFailureTime[i]) && !j2engines[i]->GetFailed())
-		{
-			j2engines[i]->SetFailed();
-		}
-	}
 }
 
-void SIISystems::SetEngineFailureParameters(bool *SIICut, double *SIICutTimes)
+void SIISystems::SetEngineFailed(int n)
 {
-	for (int i = 0;i < 5;i++)
-	{
-		EarlySIICutoff[i] = SIICut[i];
-		SecondStageFailureTime[i] = SIICutTimes[i];
-	}
-}
+	if (n < 0 || n > 4) return;
 
-void SIISystems::SetEngineFailureParameters(int n, double SIICutTimes, bool fail)
-{
-	if (n < 1 || n > 5) return;
-
-	EarlySIICutoff[n - 1] = fail;
-	SecondStageFailureTime[n - 1] = SIICutTimes;
-}
-
-void SIISystems::GetEngineFailureParameters(int n, bool &fail, double &failtime)
-{
-	if (n < 1 || n > 5) return;
-
-	fail = EarlySIICutoff[n - 1];
-	failtime = SecondStageFailureTime[n - 1];
+	j2engines[n]->SetFailed();
 }
 
 #define MR_STATS 5
@@ -436,7 +393,7 @@ void SIISystems::SwitchSelector(int channel)
 		break;
 	case 56: //Low (4.5) Engine MR Ratio On
 		SetPUValve(PUVALVE_OPEN);
-		puShiftSound.play(NOLOOP, 255);
+		puShiftSound.play(NOLOOP);
 		puShiftSound.done();
 		break;
 	case 58: //High (5.5) Engine MR Ratio Off

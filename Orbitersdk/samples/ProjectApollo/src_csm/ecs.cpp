@@ -394,10 +394,10 @@ void CabinPressureReliefValve::SystemTimestep(double simdt) {
 		}
 		if (postLandingVent->IsUp()) {
 			postLandingPower->DrawPower(25.5);	// systems handbook
-			postLandingVentSound.play(LOOP, 255); 
+			postLandingVentSound.play(LOOP); 
 		} else {
 			postLandingPower->DrawPower(22.1);	// systems handbook
-			postLandingVentSound.play(LOOP, 170); 
+			postLandingVentSound.play(LOOP, 170.0 / 255.0); 
 		}
 		return;
 	}
@@ -1354,6 +1354,8 @@ SaturnForwardHatch::SaturnForwardHatch(Sound &opensound, Sound &closesound) :
 {
 	open = false;
 	toggle = 0;
+	isHoseConnected = false;
+	FirstTimeStepDone = false;
 	pipe = NULL;
 	saturn = NULL;
 
@@ -1408,6 +1410,11 @@ void SaturnForwardHatch::Toggle()
 
 void SaturnForwardHatch::Timestep(double simdt) {
 
+	if (!FirstTimeStepDone) {
+		DoFirstTimeStep();
+		FirstTimeStepDone = true;
+	}
+
 	if (toggle > 0) {
 		toggle--;
 		if (toggle == 0) {
@@ -1419,19 +1426,40 @@ void SaturnForwardHatch::Timestep(double simdt) {
 	saturn->SetAnimation(anim_pressequalvlv, equalvalve_state / 3);
 }
 
+void SaturnForwardHatch::DoFirstTimeStep()
+{
+	if (isHoseConnected)
+	{
+		saturn->ConnectCSMO2Hose();
+	}
+}
+
 void SaturnForwardHatch::LoadState(char *line) {
 
-	int i1;
+	int i1, i2;
 
-	sscanf(line + 12, "%d %d", &i1, &toggle);
+	i2 = 0;
+
+	sscanf(line + 12, "%d %d %d", &i1, &toggle, &i2);
 	open = (i1 != 0);
+	isHoseConnected = (i2 != 0);
 }
 
 void SaturnForwardHatch::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
+	bool hose;
 
-	sprintf(buffer, "%i %i", (open ? 1 : 0), toggle);
+	if (saturn->GetCSMO2Hose()->out != NULL)
+	{
+		hose = true;
+	}
+	else
+	{
+		hose = false;
+	}
+
+	sprintf(buffer, "%i %i %i", (open ? 1 : 0), toggle, (hose ? 1 : 0));
 	oapiWriteScenario_string(scn, "FORWARDHATCH", buffer);
 }
 

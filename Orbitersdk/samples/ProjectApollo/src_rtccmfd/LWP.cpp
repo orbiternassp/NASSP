@@ -592,7 +592,7 @@ void LaunchWindowProcessor::TARGT()
 	AZL = inp.LAZCOE[0] + inp.LAZCOE[1] * IIGM + inp.LAZCOE[2] * TIGM + inp.LAZCOE[3] * IIGM*TIGM;
 
 	aegdata.coe_osc.i = IIGM;
-	aegdata.coe_osc.h = DN + PI + inp.DELNO + GLOCON.w_E*GMTLO;
+	aegdata.coe_osc.h = DN + PI + inp.DELNO + GLOCON.w_E*TGRR;
 	OrbMech::GIMKIC(aegdata.coe_osc, GLOCON.mu, RP, VP);
 	//Compute GPAZ
 	TRS = DN / (GLOCON.w_E + sv_T.h_dot) + TINS;

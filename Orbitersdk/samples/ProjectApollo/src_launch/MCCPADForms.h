@@ -70,6 +70,23 @@ struct AP7MNV {
 // APOLLO 7 - TERMINAL PHASE INITIATE
 // (The form doesn't match the field list?)
 struct AP7TPI {
+	AP7TPI::AP7TPI()
+	{
+		GETI = 0.0;
+		Vg = _V(0, 0, 0);
+		Backup_dV = _V(0.0, 0.0, 0.0);
+		dH_TPI = 0.0;
+		R = 0.0;
+		Rdot = 0.0;
+		EL = 0.0;
+		AZ = 0.0;
+		E = 0.0;
+		dTT = 0.0;
+		Backup_bT = _V(0.0, 0.0, 0.0);
+		dH_Max = 0.0;
+		dH_Min = 0.0;
+		GET = 0.0;
+	}
 	// ON THE FORM:
 	double GETI;		// TIG
 	VECTOR3 Vg;			// P40 velocity to be gained
@@ -223,6 +240,32 @@ struct P27PAD {
 
 // APOLLO 11 - MANEUVER
 struct AP11MNV {
+	AP11MNV()
+	{
+		Trun = 0.0;
+		Shaft = 0.0;
+		Star = 0;
+		BSSStar = 0;
+		SPA = 0.0;
+		SXP = 0.0;
+		Att = _V(0, 0, 0);
+		GDCangles = _V(0, 0, 0);
+		SetStars[0] = 0;
+		SetStars[1] = 0;
+		HA = 0.0;
+		HP = 0.0;
+		Weight = 0.0;
+		burntime = 0.0;
+		Vt = 0.0;
+		Vc = 0.0;
+		pTrim = 0.0;
+		yTrim = 0.0;
+		LMWeight = 0.0;
+		dV = _V(0, 0, 0);
+		GETI = 0.0;
+		sprintf(remarks, "");
+	}
+
 	char purpose[64];	// PURPOSE
 	char PropGuid[64];	// Propulsion & Guidance System
 	double Weight;		// Vehicle weight
@@ -253,7 +296,25 @@ struct AP11MNV {
 
 // APOLLO 11 LM - MANEUVER
 struct AP11LMMNV {
-	AP11LMMNV() : type(0) {}
+	AP11LMMNV::AP11LMMNV()
+	{
+		type = 0;
+		Att = _V(0, 0, 0);
+		BSSStar = 0;
+		burntime = 0.0;
+		CSMWeight = 0.0;
+		dV = _V(0, 0, 0);
+		dVR = 0.0;
+		dV_AGS = _V(0, 0, 0);
+		GETI = 0.0;
+		HA = 0.0;
+		HP = 0.0;
+		LMWeight = 0.0;
+		SPA = 0.0;
+		SXP = 0.0;
+		IMUAtt = _V(0, 0, 0);
+		sprintf(remarks, "");
+	}
 
 	char purpose[64];	// PURPOSE
 	double GETI;		// TIG
@@ -320,11 +381,11 @@ struct AP10MAPUPDATE
 	double PMGET;	//Time of meridian crossing (150° or 180° W), alternative: AOS without burn
 	double SSGET;	//Time of sunset
 	double SRGET;	//Time of sunrise
-	double LOSGET2;
-	double SSGET2;
-	double PMGET2;
-	double AOSGET2;
-	int type;		//0 = Only LOS/AOS and PM, 1 = Display all parameters, 2 = LOS, AOS with and AOS without LOI
+	double LOSGET2; //Time of LOS for a second rev (type = 3)
+	double SSGET2;  //Time of sunset for a second rev (type = 3)
+	double PMGET2;	//Time of meridian crossing (150° or 180°W) for a second rev (type = 3)
+	double AOSGET2; //Time of AOS for a second rev (type = 3) or taking LOI into account (type = 2) or TEI (type = 5)
+	int type;		//0 = Only LOS/AOS and PM, 1 = Display all parameters, 2 = LOS, AOS with and AOS without LOI, 3 = Like 1 but for two revs, 4 = Like 0 but shows 180° instead of PM, 5 = like 2 but for TEI
 };
 
 // APOLLO 11 LANDMARK TRACKING PAD

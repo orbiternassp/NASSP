@@ -38,6 +38,9 @@ struct EMMENIInputTable
 	double MinEphemDT = 0.0;
 	//Integration direction indicator (+X-forward, -X-backward)
 	double IsForwardIntegration = 1.0;
+	//Fixed integration step length
+	bool UseFixedStepLength = false;
+	double FixedStepLength = 10.0;
 	//Desired value of stopping parameter relative to the Earth
 	double EarthRelStopParam = 0.0;
 	//Desired value of stopping parameter relative to the Moon
@@ -141,7 +144,7 @@ private:
 	double VAR;
 	//Maximum time to integrate
 	double TMAX;
-	//Stop condition (1 = time, 2 = radial distance, 3 = altitude above Earth or moon, 4 = flight-path angle, 5 = first reference switch, 6 = first ascending node relative to the Earth)
+	//Stop condition (1 = time, 2 = radial distance, 3 = altitude above Earth or moon, 4 = flight-path angle, 5 = first reference switch, 6 = first ascending node relative to the Earth, 7 = longitude, 8 = latitude)
 	int ISTOPS;
 	//Reference frame of desired stopping parameter (0 = Earth, 1 = Moon, 2 = both)
 	int StopParamRefFrame;
@@ -149,6 +152,9 @@ private:
 	double r_SPH;
 	//Direction control and step size multiplier
 	double HMULT;
+	//Fixed integration step length
+	bool UseFixedStepLength;
+	double FixedStepLength;
 	//Divisor for termination control
 	double DEV;
 	//Density multiplier (0 if no drag)

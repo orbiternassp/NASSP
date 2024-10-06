@@ -254,6 +254,8 @@ double RTCC::PIAIES(double hour)
 
 int RTCC::PIATSU(AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double &isg, double &gsg, double &hsg)
 {
+	//Input AEGIN has to contain orbit-defining elements, a counter (DN, Item10) and a desired selenographic argument of latitude (UD, Item8)
+
 	PMMLAEG aeg(this);
 	AEGHeader header;
 	MATRIX3 Rot;
@@ -279,6 +281,7 @@ RTCC_PIATSU_1A:
 	PIVECT(P_apo, W_apo, isg, gsg, hsg);
 	if (isg < eps_i || isg > PI - eps_i)
 	{
+		//Orbit plane essentially equatorial
 		KE = 2;
 		return KE;
 	}
@@ -542,7 +545,7 @@ void RTCC::PIFAAP(double a, double e, double i, double f, double u, double r, do
 {
 	double a_ref, e_ref, p_ref, p, K1, K2, df, r1, r2;
 
-	a_ref = r + OrbMech::J2_Earth / OrbMech::R_Earth*(1.0 - 3.0 / 2.0*pow(sin(i), 2) + 5.0 / 6.0*pow(sin(i), 2)*cos(2.0*u));
+	a_ref = r + 1.5*OrbMech::J2_Earth * OrbMech::R_Earth*(1.0 - 3.0 / 2.0*pow(sin(i), 2) + 5.0 / 6.0*pow(sin(i), 2)*cos(2.0*u));
 	e_ref = 1.0 - r / a_ref;
 	p_ref = a_ref * (1.0 - e_ref * e_ref);
 	p = a * (1.0 - e * e);
@@ -675,74 +678,58 @@ void RTCC::PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &
 	}
 }
 
-void RTCC::PITFPC(double MU, int K, double AORP, double ECC, double rad, double &TIME, double &P, bool erunits)
+void RTCC::PITFPC(double MU, int K, double AINV, double p, double rad, double &TIME, double &PER, double &e) const
 {
 	//INPUT:
 	//MU: gravitational constant
-	//K: outward leg (0.) and return lef (1.) flag. k is input as a floating point number
-	//AORP: semimajor axis or semilatus rectum (abs(e-1) < 0.00001 is the deciding number)
-	//ECC: eccentricity
+	//K: outward leg (0.) and return lef (1.) flag
+	//AINV: inverse of semimajor axis
+	//p: semi-latus rectum
 	//rad: radial distance from focus
 	//erunits: Input units are Earth radii
 	//OUTPUT:
 	//TIME: Time from periapsis to the desired radial distance
-	//P: Orbital period, only calculared if orbit is eccentric
+	//P: Orbital period, only calculated if orbit is elliptic
+	//e = Eccentricity
 
-	double eps;
+	const double tol = 1e-12;
 
-	if (erunits)
+	//Calculate eccentricity
+	e = sqrt(1.0 - p * AINV);
+	//Set period to zero
+	PER = 0.0;
+
+	if (e > (1.0 + tol))
 	{
-		eps = 1.e-5;
-	}
-	else
-	{
-		eps = 63.78165;
-	}
+		//Hyperbolic
+		double coshE, a, E;
 
-	//Parabolic case
-	if (abs(ECC - 1.0) < 0.00001)
-	{
-		double C3;
-
-		//Calculate characteristic energy
-		C3 = MU * (ECC*ECC - 1.0) / AORP;
-		if (abs(C3) < eps)
-		{
-			//Calculate true anomaly at given distance r
-			double eta_apo = acos(abs(AORP) / rad - 1.0);
-			double TEMP1 = tan(eta_apo / 2.0);
-			//Calculate time
-			TIME = abs(AORP) / 2.0*sqrt(abs(AORP) / MU)*(TEMP1 + 1.0 / 3.0*pow(TEMP1, 3.0));
-
-			if (K != 0)
-			{
-				TIME = -TIME;
-			}
-			return;
-		}
-		else
-		{
-			//Calculate semi major axis, use non parabolic calculations
-			AORP = AORP / (1.0 - ECC * ECC);
-		}
-	}
-
-	double E;
-
-	//Elliptical case
-	if (ECC < 1.0)
-	{
-		E = acos(1.0 / ECC * (1.0 - rad / AORP));
-		P = PI2 * AORP*sqrt(AORP / MU);
-		TIME = AORP * sqrt(AORP / MU)*(E - ECC * sin(E));
-	}
-	//Hyperbolic case
-	else
-	{
-		double coshE;
-		coshE = 1.0 / ECC * (1.0 - rad / AORP);
+		a = 1.0 / AINV;
+		coshE = 1.0 / e * (1.0 - rad * AINV);
 		E = log(coshE + sqrt(coshE*coshE - 1.0));
-		TIME = AORP * sqrt(abs(AORP) / MU)*(E - ECC * (exp(E) - exp(-E)) / 2.0);
+		TIME = a * sqrt(abs(a) / MU)*(E - e * (exp(E) - exp(-E)) / 2.0);
+	}
+	else if (e < (1.0 - tol))
+	{
+		//Elliptical
+		double a, E;
+
+		a = 1.0 / AINV;
+		E = acos(1.0 / e * (1.0 - rad * AINV));
+		PER = PI2 * a * sqrt(a / MU);
+		TIME = a * sqrt(a / MU)*(E - e * sin(E));
+	}
+	else
+	{
+		//Parabolic
+		double eta_apo, TEMP1;
+
+		//Calculate true anomaly at given distance r
+		eta_apo = acos(p / rad - 1.0);
+		//Temporary variable
+		TEMP1 = tan(eta_apo / 2.0);
+		//Time
+		TIME = p / 2.0*sqrt(p / MU)*(TEMP1 + 1.0 / 3.0*pow(TEMP1, 3.0));
 	}
 
 	if (K != 0)
@@ -755,10 +742,11 @@ int RTCC::PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &
 {
 	//Output: 0 = no error, 1 = essentially circular orbit, 2 = unrecoverable AEG error, 3 = requested height not in orbit, 4 = failed to converge on radius
 
-	double cos_f_CI, f_CI, dt, sgn, ddt, eps_t;
-	int I;
+	double cos_f_CI, f_CI, dt, sgn, ddt, eps_t, l2, dl;
+	int I, IMAX;
 	bool fail;
 
+	IMAX = 10;
 	eps_t = 0.01;
 
 	if (in.ENTRY == 0)
@@ -846,26 +834,28 @@ int RTCC::PITCIR(AEGHeader header, AEGDataBlock in, double R_CIR, AEGDataBlock &
 			f_CI += PI2;
 		}
 		//Calculate angle difference
-		ddt = f_CI - out.f;
-		if (ddt > PI)
+		l2 = OrbMech::TrueToMeanAnomaly(f_CI, out.coe_osc.e);
+		dl = l2 - out.coe_osc.l;
+		if (dl > PI)
 		{
-			ddt -= PI2;
+			dl -= PI2;
 		}
-		else if (ddt < -PI)
+		else if (dl < -PI)
 		{
-			ddt += PI2;
+			dl += PI2;
 		}
+
 		//Calculate ddt
-		ddt = ddt / (out.g_dot + out.l_dot);
+		ddt = dl / (out.g_dot + out.l_dot);
 		if (abs(ddt) > eps_t)
 		{
 			dt = dt + ddt;
 		}
 		I++;
-	} while (abs(ddt) > eps_t && I < 10);
+	} while (abs(ddt) > eps_t && I < IMAX);
 
 	//Failed to converge
-	if (I == 10)
+	if (I >= IMAX)
 	{
 		PMXSPT("PITCIR", 19);
 		return 4;

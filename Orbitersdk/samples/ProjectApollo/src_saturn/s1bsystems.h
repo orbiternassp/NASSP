@@ -82,9 +82,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
-	void SetEngineFailureParameters(bool *SICut, double *SICutTimes);
-	void SetEngineFailureParameters(int n, double SICutTimes, bool fail);
-	void GetEngineFailureParameters(int n, bool &fail, double &failtime);
+	void SetEngineFailed(int n);
 
 	virtual void SetEngineStart(int n);
 	void SwitchSelector(int channel);
@@ -202,9 +200,6 @@ protected:
 	bool ThrustOK[24];
 
 	bool OutboardEnginesCutoffSignal;
-
-	bool EarlySICutoff[8];
-	double FirstStageFailureTime[8];
 
 	SCMUmbilical *SCMUmb;
 };

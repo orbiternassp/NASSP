@@ -25,6 +25,8 @@
 
 #include "Orbitersdk.h"
 
+#define NUM_ELEMENTS(x) (sizeof((x))/sizeof((x)[0]))
+
 namespace nassp
 {
 	namespace utils

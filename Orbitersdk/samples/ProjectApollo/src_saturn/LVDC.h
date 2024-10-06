@@ -72,6 +72,7 @@ public:
 	virtual bool TLITargetingUpdate(double T_RP, double C_3, double Inclination, double theta_N, double e, double alpha_D, double f) { return false; }
 	virtual bool DiscreteOutputTest(int bit, bool on) = 0;
 	virtual bool NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM) = 0;
+	virtual bool GeneralizedManeuver(double T, double X, double Y, double Z, int type) { return false; }
 	void PrepareToLaunch();
 
 	//Mathematical functions
@@ -939,6 +940,7 @@ public:
 	bool LaunchTargetingUpdate(double v_t, double r_t, double theta_t, double inc, double dsc, double dsc_dot, double t_grr0);
 	bool DiscreteOutputTest(int bit, bool on);
 	bool NavigationUpdate(VECTOR3 DCSRVEC, VECTOR3 DCSVVEC, double DCSNUPTIM);
+	bool GeneralizedManeuver(double T, double X, double Y, double Z, int type);
 
 	//Public Variables
 	double Azimuth;									// Azimuth
@@ -948,6 +950,41 @@ private:
 
 	VECTOR3 GravitationSubroutine(VECTOR3 Rvec, bool J2only);
 	VECTOR3 DragSubroutine(VECTOR3 Rvec, VECTOR3 Vvec, VECTOR3 Att);
+
+	// APPLICATION MODULES
+
+	// Accelerometer Read (AR)
+	void AccelerometerRead();
+	// F/M Calculations (DV)
+	void FMCalculations();
+	// Boost Navigation (BN)
+	void BoostNavigation();
+	// Chi Computations (CC)
+	void ChiComputations(int entry);
+	// Discrete Processor (DP)
+	void DiscreteProcessor();
+	// Absolute/Command Freeze Utility (FR)
+	void AttitudeFreze(int entry);
+	// Orbital Guidance Maneuver Processor (MP)
+	void OrbitalGuidanceManeuverProcessor(bool timefordcs);
+	// Orbital Guidance (OG)
+	void OrbitalGuidance();
+	//Compute positions in orbit plane
+	void OrbitalGuidance040();
+	//Process Orbital Guidance after SC control return
+	void OrbitalGuidance280();
+	void OrbitalGuidance340();
+	//Compute unit thrust vector
+	VECTOR3 OrbitalGuidance480();
+	void OrbitalGuidance580(VECTOR3 P_S);
+	void OrbitalGuidance680();
+	void OrbitalGuidance700();
+	//Inertial attitude hold
+	void OrbitalGuidance860();
+	//Special local reference track
+	void OrbitalGuidance940();
+	//Minor Loop Support (MS)
+	void MinorLoopSupport();
 
 	bool Initialized;								// Clobberness flag
 	char FSPFileName[256];
@@ -1058,8 +1095,8 @@ private:
 	// LVDC software variables, NOT PAD-LOADED
 	double Inclination;								// Inclination
 	double DescNodeAngle;							// Descending Node Angle -- THETA_N
-	VECTOR3 CommandedAttitude;						// Commanded Attitude (RADIANS)
-	VECTOR3 PCommandedAttitude;						// Previous Commanded Attitude (RADIANS)
+	VECTOR3 CommandedAttitude;						// Commanded Attitude (RADIANS) -- D.VGCX, Y and Z
+	VECTOR3 PCommandedAttitude;						// Previous Commanded Attitude (RADIANS) -- D.VCCX, Y and Z
 	VECTOR3 CurrentAttitude;						// Current Attitude   (RADIANS)
 	VECTOR3 MidPointAttitude;						// Midpoint attitude for orbital navigation (RADIANS)
 	double F;										// Force in Newtons, I assume.	
@@ -1144,11 +1181,12 @@ private:
 	double DT_B;									// Time bias to compensate for S-IVB engine thrust decay after cutoff
 	double TAS;										// Time from GRR
 	double t_clock;									// Time from liftoff
-	double X_Zi,X_Yi;								// Generated Pitch and Yaw Command
-	double sin_chi_Yit;
-	double cos_chi_Yit;
-	double sin_chi_Zit;
-	double cos_chi_Zit;
+	double X_Yi;									// Guidance Chi Y (Desired pitch gimbal angle, D.VGCY)
+	double X_Zi;									// Guidance Chi Z (Desired yaw gimbal angle, D.VGCZ)
+	double sin_chi_Yit;								// Sine Chi Y in 4-system (D.VTP3)
+	double cos_chi_Yit;								// Cosine Chi Y in 4-system (D.VTP1)
+	double sin_chi_Zit;								// Sine Chi Z in 4-system (D.VTP2)
+	double cos_chi_Zit;								// Cosine Chi Z in 4-system (D.VTP4)
 	double DT_N;									// Nominal value of DT
 	double MLR;										// Minor loop rate
 	double MS25DT;									// Number of minor loops per DT_N through minor loop support
@@ -1191,6 +1229,11 @@ private:
 	//DCS commands, indicating orbital maneuver type.
 	std::bitset<5> GOMTYP;
 	double T_SOM;
+	bool FSLR;										// Special local reference maneuver first pass flag
+	int FMANT;										// Maneuver type flag, +1 = inertial reference, 0 = chi freeze, -1 = local reference, -2 = inertial hold of local reference
+	bool FSCAH;										// Flag to indicate S/C returned control
+	bool FSCIC;										// First pass flag for spacecraft control return
+	bool FFPIH;										// First pass flag for inertial hold
 
 	//Switch Selector Tables
 	std::vector<SwitchSelectorSet> SSTTB[5];	// [1...4] 0 never used!

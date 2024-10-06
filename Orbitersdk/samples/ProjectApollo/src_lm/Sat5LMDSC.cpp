@@ -222,6 +222,7 @@ void Sat5LMDSC::DefineAnimations(UINT idx) {
 	static UINT meshgroup_Struts[4] = { DS_GRP_SupportStruts2, DS_GRP_SupportStruts2Aft, DS_GRP_SupportStruts2Left, DS_GRP_SupportStruts2Right };
 	static UINT meshgroup_Locks[4] = { DS_GRP_Downlock, DS_GRP_DownlockAft, DS_GRP_DownlockLeft, DS_GRP_DownlockRight };
 	static UINT meshgroup_Ladder = DS_GRP_Ladder;
+	static UINT meshgroup_Plaque = DS_GRP_Plaque;
 	static UINT meshgroup_Probes1[3] = { DS_GRP_Probes1Aft, DS_GRP_Probes1Left, DS_GRP_Probes1Right };
 	static UINT meshgroup_Probes2[3] = { DS_GRP_Probes2Aft, DS_GRP_Probes2Left, DS_GRP_Probes2Right };
 
@@ -249,6 +250,9 @@ void Sat5LMDSC::DefineAnimations(UINT idx) {
 
 	static MGROUP_ROTATE mgt_Ladder(idx, &meshgroup_Ladder, 1, DES_LEG_PIVOT[0], DES_LEG_AXIS[0], (float)(45 * RAD));
 	AddAnimationComponent(anim_Gear, 0.0, 1, &mgt_Ladder);
+
+	static MGROUP_ROTATE mgt_Plaque(idx, &meshgroup_Plaque, 1, DES_LEG_PIVOT[0], DES_LEG_AXIS[0], (float)(45 * RAD));
+	AddAnimationComponent(anim_Gear, 0.0, 1, &mgt_Plaque);
 
 	SetAnimation(anim_Gear, 0.0);
 }

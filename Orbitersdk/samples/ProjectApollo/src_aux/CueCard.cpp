@@ -36,6 +36,11 @@ void CueCard::ResetMeshIndex()
 	meshidx = -1;
 }
 
+int CueCard::GetMeshIndex()
+{
+	return meshidx;
+}
+
 void CueCard::ManageCueCard(bool on)
 {
 	//Should mesh be loaded?

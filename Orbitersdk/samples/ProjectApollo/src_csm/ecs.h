@@ -361,8 +361,12 @@ public:
 
 	void DefineAnimationsVC(UINT idx);
 protected:
+	void DoFirstTimeStep();
+
 	bool open;
 	int toggle;
+	bool isHoseConnected; //Only used as a temporary variable to store the state of the hose connection from LoadState to clbkPostCreation, doesn't keep track of the connection after loading
+	bool FirstTimeStepDone;
 
 	Saturn *saturn;
 	h_Pipe *pipe;

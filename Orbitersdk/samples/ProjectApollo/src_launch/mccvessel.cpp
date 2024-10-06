@@ -25,6 +25,7 @@
 #include "rtcc.h"
 #include "mcc.h"
 #include "paCBGmessageID.h"
+#include "Mission.h"
 
 #define ORBITER_MODULE
 
@@ -62,6 +63,10 @@ MCCVessel::MCCVessel(OBJHANDLE hVessel, int flightmodel) : VESSEL4(hVessel, flig
 	LVName[0] = 0;
 	rtcc = new RTCC();
 	mcc = NULL;
+
+	//Mission File
+	InitMissionManagementMemory();
+	pMission = paGetDefaultMission();
 }
 
 MCCVessel::~MCCVessel()
@@ -137,6 +142,7 @@ void MCCVessel::clbkSaveState(FILEHANDLE scn)
 {
 	VESSEL4::clbkSaveState(scn);
 
+	if (strMission.length() > 0) oapiWriteScenario_string(scn, "MISSION", (char*)strMission.c_str());
 	if (CSMName[0])
 		oapiWriteScenario_string(scn, "CSMNAME", CSMName);
 
@@ -163,6 +169,13 @@ void MCCVessel::clbkLoadStateEx(FILEHANDLE scn, void *status)
 				CreateMCC();
 				mcc->enableMissionTracking();
 			}
+		}
+		else if (!_strnicmp(line, "MISSION ", 8))
+		{
+			CreateMCC();
+			strMission = line + 8;
+			LoadMissionFile();
+			SetConfiguration();
 		}
 		else if (!_strnicmp(line, "CSMNAME", 7))
 		{
@@ -210,6 +223,7 @@ void MCCVessel::clbkPostCreation()
 	{
 		if (mcc) mcc->SetLM(LEMName);
 	}
+	if (rtcc) rtcc->clbkPostCreation();
 }
 
 void MCCVessel::CreateMCC()
@@ -217,5 +231,77 @@ void MCCVessel::CreateMCC()
 	if (mcc == NULL)
 	{
 		mcc = new MCC(rtcc);
+	}
+}
+
+void MCCVessel::LoadMissionFile()
+{
+	pMission->LoadMission(strMission);
+}
+
+void MCCVessel::SetConfiguration()
+{
+	if (mcc)
+	{
+		//Additional ground station
+		std::vector<mission::GroundStationData> data = pMission->GetGroundStationData();
+
+		if (data.size() != 0)
+		{
+			GroundStation temp;
+
+			for (unsigned i = 0; i < data.size(); i++)
+			{
+				strcpy(temp.Name, data[i].Name);
+				strcpy(temp.Code, data[i].Code);
+				temp.Position[0] = data[i].Position[0];
+				temp.Position[1] = data[i].Position[1];
+				temp.Active = data[i].Active;
+				temp.TrackingCaps = data[i].TrackingCaps;
+				temp.USBCaps = data[i].USBCaps;
+				temp.SBandAntenna = data[i].SBandAntenna;
+				temp.TelemetryCaps = data[i].TelemetryCaps;
+				temp.CommCaps = data[i].CommCaps;
+				temp.HasRadar = data[i].HasRadar;
+				temp.HasAcqAid = data[i].HasAcqAid;
+				temp.DownTlmCaps = data[i].DownTlmCaps;
+				temp.UpTlmCaps = data[i].UpTlmCaps;
+				temp.StationType = data[i].StationType;
+				temp.StationPurpose = data[i].StationPurpose;
+				temp.AOS[0] = temp.AOS[1] = 0;
+
+				mcc->SetGroundStation(data[i].Num, temp);
+			}
+		}
+
+		//Overload ground station position
+		std::vector<mission::GroundStationPosition> data2 = pMission->GetGroundStationPosition();
+
+		if (data2.size() != 0)
+		{
+			for (unsigned i = 0; i < data2.size(); i++)
+			{
+				if (mcc->GroundStations.size() > (unsigned)data2[i].Num)
+				{
+					mcc->GroundStations[data2[i].Num].Active = true; //Assumes we want to set the station active, if we are loading new positions
+					mcc->GroundStations[data2[i].Num].Position[0] = data2[i].Position[0];
+					mcc->GroundStations[data2[i].Num].Position[1] = data2[i].Position[1];
+				}
+			}
+		}
+
+		//Set stations active/inactive
+		std::vector<mission::GroundStationActive> data3 = pMission->GetGroundStationActive();
+
+		if (data3.size() != 0)
+		{
+			for (unsigned i = 0; i < data3.size(); i++)
+			{
+				if (mcc->GroundStations.size() > (unsigned)data3[i].Num)
+				{
+					mcc->GroundStations[data3[i].Num].Active = data3[i].Active;
+				}
+			}
+		}
 	}
 }

@@ -40,23 +40,6 @@ S1C::S1C (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 
 {
 	InitS1c();
-
-	//
-	// We need to turn off most of the Orbitersound options.
-	//
-
-#if 0
-	/// \todo The sound initialization seems to take a lot of time (up to 5s on my system) 
-    /// causing problems during creation of the S1C. Since the sound inside the S1C isn't very important
-	/// it's disabled for the moment. 
-	
-	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
-	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
-	soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-#endif
 }
 
 S1C::~S1C()
@@ -186,6 +169,26 @@ void S1C::clbkPreStep(double simt, double simdt, double mjd)
 	default:
 		break;
 	}
+}
+
+void S1C::clbkPostCreation()
+{
+	//
+// We need to turn off most of the Orbitersound options.
+//
+
+#if 0
+	/// \todo The sound initialization seems to take a lot of time (up to 5s on my system) 
+	/// causing problems during creation of the S1C. Since the sound inside the S1C isn't very important
+	/// it's disabled for the moment. 
+
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
+	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
+	soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
+	soundlib.SoundOptionOnOff(PLAYRADIOATC, FALSE);
+	soundlib.SoundOptionOnOff(PLAYWHENATTITUDEMODECHANGE, FALSE);
+	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
+#endif
 }
 
 void S1C::clbkSaveState (FILEHANDLE scn)

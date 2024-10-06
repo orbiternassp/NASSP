@@ -90,7 +90,7 @@ int SoundEvent::makeInvalid()
 
 
 
-int SoundEvent::play(SoundLib soundlib,
+int SoundEvent::play(const SoundLib &soundlib,
 					 VESSEL   *Vessel,
 					  char    *names ,
 					  double  *offset,
@@ -320,7 +320,7 @@ int SoundEvent::play(SoundLib soundlib,
 }
 
 
-int SoundEvent::LoadMissionLandingSoundArray(SoundLib soundlib,char *soundname)
+int SoundEvent::LoadMissionLandingSoundArray(const SoundLib &soundlib,char *soundname)
 
 {
 	char	SoundPath[256];
@@ -616,7 +616,7 @@ TRACE(SoundPath);
 // This uses only the MET.
 //
 
-int SoundEvent::LoadMissionTimeSoundArray(SoundLib soundlib, char *soundname, double MissionTime)
+int SoundEvent::LoadMissionTimeSoundArray(const SoundLib &soundlib, char *soundname, double MissionTime)
 
 {
 	char	SoundPath[256];
@@ -744,7 +744,7 @@ int SoundEvent::LoadMissionTimeSoundArray(SoundLib soundlib, char *soundname, do
 	return true;
 }
 
-int SoundEvent::InitDirectSound(SoundLib soundlib)
+int SoundEvent::InitDirectSound()
 {
 
 //    LPDIRECTSOUND8  m_pDS;

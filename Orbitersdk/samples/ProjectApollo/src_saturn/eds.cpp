@@ -106,8 +106,6 @@ EDS::EDS(IU *iu)
 
 	AbortLightSignal = false;
 
-	PlatformFailure = false;
-	PlatformFailureTime = 0.0;
 	LiftoffCircuitAFailure = false;
 	LiftoffCircuitBFailure = false;
 
@@ -396,12 +394,6 @@ void EDS::Timestep(double simdt)
 		LiftoffB = false;
 	}
 
-	//Failure code
-	if (PlatformFailure && iu->GetLVCommandConnector()->GetMissionTime() > PlatformFailureTime && !iu->GetLVIMU()->IsFailed())
-	{
-		iu->GetLVIMU()->SetFailed();
-	}
-
 	//Guidance Reference Release
 	if (iu->ESEGetGuidanceReferenceRelease())
 		iu->GetCommandConnector()->SetAGCInputChannelBit(030, GuidanceReferenceRelease, true);
@@ -478,12 +470,6 @@ void EDS::AutoAbortCircuits()
 	}
 
 	//sprintf(oapiDebugString(), "Relays: %d %d %d %d %d %d Signals: %d %d %d", AutoAbort1AToSC, AutoAbort1BToSC, AutoAbort2AToSC, AutoAbort2BToSC, AutoAbort3AToSC, AutoAbort3BToSC, EDSAbortSignal1, EDSAbortSignal2, EDSAbortSignal3);
-}
-
-void EDS::SetPlatformFailureParameters(bool PlatFail, double PlatFailTime)
-{
-	PlatformFailure = PlatFail;
-	PlatformFailureTime = PlatFailTime;
 }
 
 bool EDS::GetEDSAbort(int n)
@@ -601,11 +587,7 @@ void EDS::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_bool(scn, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
 	papiWriteScenario_bool(scn, "ABORTLIGHTSIGNAL", AbortLightSignal);
 	papiWriteScenario_bool(scn, "LIFTOFFRELAY", LiftoffRelay);
-	if (PlatformFailure)
-	{
-		papiWriteScenario_bool(scn, "PlatformFailure", PlatformFailure);
-		papiWriteScenario_double(scn, "PlatformFailureTime", PlatformFailureTime);
-	}
+
 	if (LiftoffCircuitAFailure) papiWriteScenario_bool(scn, "LiftoffCircuitAFailure", LiftoffCircuitAFailure);
 	if (LiftoffCircuitBFailure) papiWriteScenario_bool(scn, "LiftoffCircuitBFailure", LiftoffCircuitBFailure);
 }
@@ -633,8 +615,6 @@ void EDS::LoadState(char *line)
 	papiReadScenario_bool(line, "IUCOMMANDSYSTEMENABLE", IUCommandSystemEnable);
 	papiReadScenario_bool(line, "ABORTLIGHTSIGNAL", AbortLightSignal);
 	papiReadScenario_bool(line, "LIFTOFFRELAY", LiftoffRelay);
-	papiReadScenario_bool(line, "PlatformFailure", PlatformFailure);
-	papiReadScenario_double(line, "PlatformFailureTime", PlatformFailureTime);
 	papiReadScenario_bool(line, "LiftoffCircuitAFailure", LiftoffCircuitAFailure);
 	papiReadScenario_bool(line, "LiftoffCircuitBFailure", LiftoffCircuitBFailure);
 }

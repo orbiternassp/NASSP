@@ -279,6 +279,22 @@ struct PLAWDTInput
 
 struct PLAWDTOutput
 {
+	PLAWDTOutput()
+	{
+		Err = 0;
+		ConfigArea = 0.0;
+		ConfigWeight = 0.0;
+		CSMArea = 0.0;
+		SIVBArea = 0.0;
+		LMAscArea = 0.0;
+		LMDscArea = 0.0;
+		CSMWeight = 0.0;
+		SIVBWeight = 0.0;
+		LMAscWeight = 0.0;
+		LMDscWeight = 0.0;
+		KFactor = 1.0;
+	}
+
 	//0: No error
 	//1: Request time within a maneuver - previous maneuver values used
 	//2: Maneuver not current - last current values used
@@ -360,7 +376,7 @@ struct EMSMISSInputTable
 	int ManCutoffIndicator;
 	//Descent burn indicator
 	bool DescentBurnIndicator = false;
-	//Cut-off indicator (1 = Time, 2 = radial distance, 3 = altitude above Earth or moon, 4 = flight-path angle, 5 = first reference switch)
+	//Cut-off indicator (1 = Time, 2 = radial distance, 3 = altitude above Earth or moon, 4 = flight-path angle, 5 = first reference switch, 6 = first ascending node relative to the Earth, 7 = longitude, 8 = latitude)
 	int CutoffIndicator = 1;
 	//Integration direction indicator (+X-forward, -X-backward)
 	double IsForwardIntegration = 1.0;
@@ -622,8 +638,14 @@ struct RetrofireTransferTable
 
 struct SpacecraftSettingTable
 {
-	int Indicator = 1; //-1 = bad data, 0 = good data, 1 = no data
-	bool IsRTE = false; //true = RTE, false = TTF
+	SpacecraftSettingTable();
+	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
+	void LoadState(FILEHANDLE scn, char *end_str);
+
+	int Indicator; //-1 = bad data, 0 = good data, 1 = no data
+	bool IsRTE; //true = RTE, false = TTF
+	double lat_T; //Latitude of splashdown target
+	double lng_T; //Longitude of splashdown target
 };
 
 struct REFSMMATData
@@ -678,4 +700,48 @@ struct SLVTargetingParametersTable
 	double BIAS = 0.0;
 	double LATLS = 0.0;
 	double LONGLS = 0.0;
+};
+
+struct StationData
+{
+	std::string code;
+	//Geodetic longitude
+	double lng;
+	//Geodetic latitude
+	double lat_geod;
+	//Geocentric latitude
+	double lat_geoc;
+	//sin((lng))
+	double sin_lng;
+	//cos((lng))
+	double cos_lng;
+	//sin((lat_geod))
+	double sin_lat_geod;
+	//cos((lat_geod))
+	double cos_lat_geod;
+	//sin((lat_geoc))
+	double sin_lat_geoc;
+	//cos((lat_geoc))
+	double cos_lat_geoc;
+	//R_E*sin((lat_geod)-(lat_geoc))
+	double R_sin_dlat;
+	//R_E*cos((lat_geod)-(lat_geoc))
+	double R_cos_dlat;
+	//Inertial longitude at reference time
+	double lng_iner;
+	//Altitude above ellipsoid (H)
+	double H;
+	//Station radius R(S)
+	double R_S;
+	//Ellipsoid radius R(E)
+	double R_E;
+	//R(E)*cos((lat_geoc)) + H*cos(lat_geod))
+	double R_E_cos_lat;
+	//R(E)*sin((lat_geoc)) + H*sin(lat_geod))
+	double R_E_sin_lat;
+};
+
+struct StationTable
+{
+	std::vector<StationData> table;
 };

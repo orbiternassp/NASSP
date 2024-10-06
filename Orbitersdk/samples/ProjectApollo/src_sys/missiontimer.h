@@ -34,7 +34,7 @@
 #define EVENTTIMER_END_STRING "EVENTTIMER_END"
 
 class Saturn;
-class RotationalSwitch;
+class ContinuousRotationalSwitch;
 class ToggleSwitch;
 
 class MissionTimer : public e_object {
@@ -43,7 +43,7 @@ public:
 	MissionTimer(PanelSDK &p);
 	virtual ~MissionTimer();
 
-	void Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c, ToggleSwitch *overide);
+	void Init(e_object *a, e_object *b, ContinuousRotationalSwitch *dimmer, e_object *c, ToggleSwitch *overide);
 	void Timestep(double simt, double deltat, bool persistent);
 	virtual void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool persistent);
@@ -74,6 +74,10 @@ public:
 	virtual void Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm = false, int xTexMul =1);
 
 protected:
+
+	//Function that controls what happens when the timer counts down through zero
+	virtual void CountingThroughZero(double &t);
+
 	//
 	// These are expected to be saved by the owning class.
 	//
@@ -93,7 +97,7 @@ protected:
 	// Don't need to be saved.
 	//
 
-	RotationalSwitch *DimmerRotationalSwitch;
+	ContinuousRotationalSwitch *DimmerRotationalSwitch;
 	ToggleSwitch *DimmerOverride;
 	PowerMerge DCPower;
 };
@@ -111,6 +115,7 @@ public:
 	void SystemTimestep(double simdt);
 
 protected:
+	virtual void CountingThroughZero(double &t);
 };
 
 //
@@ -124,7 +129,12 @@ public:
 	void Render(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);
 	void SystemTimestep(double simdt);
 
+	void SetReverseAtZero(bool dir) { ReverseDirection = dir; }
 protected:
+	void CountingThroughZero(double &t);
+
+	//If timer counts down and reaches zero, start counting up
+	bool ReverseDirection;
 };
 
 

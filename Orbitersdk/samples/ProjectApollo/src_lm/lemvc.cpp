@@ -30,6 +30,14 @@
 #include "lmresource.h"
 
 #include "nasspdefs.h"
+#include "nassputils.h"
+
+#ifdef _OPENORBITER
+#include <gcCoreAPI.h>
+#else
+#include <gcConst.h>
+#endif
+
 #include "nasspsound.h"
 
 #include "soundlib.h"
@@ -37,6 +45,7 @@
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "LM_VC_Resource.h"
+#include "EmissionListLMVC.h"
 #include "Mission.h"
 
 #include "LEM.h"
@@ -129,6 +138,7 @@ const VECTOR3	P14_ROT_AXIS = { -sin((90 * RAD) - P14_TILT), cos((90 * RAD) - P14
 
 // Clickspot radius
 const double SWITCH = 0.015;
+const double ROT = 0.02;
 
 // Switch clickspot offset
 const VECTOR3	P1_CLICK = { 0, 0.0011, -0.0078 };
@@ -406,6 +416,9 @@ const VECTOR3 FwdHatchHandleLocation = { -0.3440, -0.5710, 1.5847 };
 const VECTOR3 FwdHatchReliefValveLocation = { 0.2370, -0.5113, 1.5987 };
 const VECTOR3 FwdHatchInnerLocation = { -0.0164, -0.5784, 1.6599 };
 
+// Window Shades
+const VECTOR3 WindowShadesLocation = { -0.48, 0.69, 1.8 };
+
 // Utility Lights
 const VECTOR3 UtilityLights_CDRLocation = { 0.0162, 1.0318, 0.8908 };
 const VECTOR3 UtilityLights_LMPLocation = { 0.1030, 1.0318, 0.8908 };
@@ -415,7 +428,6 @@ const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
 const VECTOR3 AOT_ShaftSelectorLocation = { 0.0640, 0.8800, 1.4792 };
 
 // Subtracted from total material count to find L01 location.
-const int mat_L01 = 47;
 
 void LEM::JostleViewpoint(double amount)
 
@@ -704,6 +716,10 @@ bool LEM::clbkLoadVC (int id)
 	//Reset Clip Radius settings
 	SetClipRadius(0.0);
 
+	// Init the 2D panel switches to fix XRSound not giving us switch clicks if we load directly into the VC.
+	// Calling InitPanel(LMPANEL_MAIN) also works, since that function calls SetSwitches() as well.
+	SetSwitches(LMPANEL_MAIN);	// Use main panel as a placeholder, it doesn't actually matter
+
 	//Reset VC free camera to default
 	vcFreeCamx = 0;
 	vcFreeCamy = 0;
@@ -953,8 +969,9 @@ void LEM::RegisterActiveAreas()
 	//
 	ReleaseSurfacesVC();
 
-	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hLMVC, 3);
-	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hLMVC, 2);
+
+	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hLMVC, VC_TEX_LMVC_dds);
+	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hLMVC, VC_TEX_LMVC_2_dds);
 
 	// Panel 1
 
@@ -975,6 +992,10 @@ void LEM::RegisterActiveAreas()
 		oapiVCRegisterArea(AID_VC_ROT_P1_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P1_01 + i, P1_ROT_POS[i] + ofs, 0.02);
 	}
+
+	oapiVCRegisterArea(AID_LMVC_INTEGRAL_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_LMVC_FLOOD_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_LMVC_NUMERICS_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238*TexMul, 27*TexMul, 559*TexMul, 153*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(60*TexMul, 259*TexMul, 202*TexMul, 281*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
@@ -1039,11 +1060,14 @@ void LEM::RegisterActiveAreas()
 		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_SWITCH_P3_01 + i, P3_TOGGLE_POS[i] + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + P3_CLICK + ofs, P3_TOGGLE_POS[i] + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + P3_CLICK + ofs, P3_TOGGLE_POS[i] + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + P3_CLICK + ofs, P3_TOGGLE_POS[i] + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + P3_CLICK + ofs);
 	}
 
-	for (i = 0; i < P3_ROTCOUNT; i++)
+	for (i = 0; i < 4; i++)
 	{
 		oapiVCRegisterArea(AID_VC_ROT_P3_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P3_01 + i, P3_ROT_POS[i] + ofs, 0.02);
 	}
+
+	oapiVCRegisterArea(AID_VC_ROT_P3_05, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ROT_P3_05, P3_ROT_POS[4] + UL * ROT + P3_CLICK + ofs, P3_ROT_POS[4] + UR * ROT + P3_CLICK + ofs, P3_ROT_POS[4] + DL * ROT + P3_CLICK + ofs, P3_ROT_POS[4] + DR * ROT + P3_CLICK + ofs);
 
 	oapiVCRegisterArea(AID_VC_RR_NOTRACK, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_CONTACTLIGHT2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -1087,8 +1111,8 @@ void LEM::RegisterActiveAreas()
 
 	for (i = 0; i < P5_ROTCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_VC_ROT_P5_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P5_01 + i, P5_ROT_POS[i] + ofs, 0.02);
+		oapiVCRegisterArea(AID_VC_ROT_P5_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ROT_P5_01 + i, P5_ROT_POS[i] + UL * ROT + P5_CLICK + ofs, P5_ROT_POS[i] + UR * ROT + P5_CLICK + ofs, P5_ROT_POS[i] + DL * ROT + P5_CLICK + ofs, P5_ROT_POS[i] + DR * ROT + P5_CLICK + ofs);
 	}
 
 	oapiVCRegisterArea(AID_VC_START_BUTTON, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
@@ -1191,7 +1215,13 @@ void LEM::RegisterActiveAreas()
 		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_SWITCH_P12_01 + i, P12_TOGGLE_POS[i] + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + P12_CLICK + ofs, P12_TOGGLE_POS[i] + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + P12_CLICK + ofs, P12_TOGGLE_POS[i] + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + P12_CLICK + ofs, P12_TOGGLE_POS[i] + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + P12_CLICK + ofs);
 	}
 
-	for (i = 0; i < P12_ROTCOUNT; i++)
+	for (i = 0; i < 2; i++)
+	{
+		oapiVCRegisterArea(AID_VC_ROT_P12_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ROT_P12_01 + i, P12_ROT_POS[i] + UL * ROT + P12_CLICK + ofs, P12_ROT_POS[i] + UR * ROT + P12_CLICK + ofs, P12_ROT_POS[i] + DL * ROT + P12_CLICK + ofs, P12_ROT_POS[i] + DR * ROT + P12_CLICK + ofs);
+	}
+
+	for (i = 2; i < P12_ROTCOUNT; i++)
 	{
 		oapiVCRegisterArea(AID_VC_ROT_P12_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P12_01 + i, P12_ROT_POS[i] + ofs, 0.02);
@@ -1360,6 +1390,10 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_ACTOVRDLMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_ACTOVRDLMP, _V(0.560577, 0.172482, 0.554511) + ofs, 0.008);
 
+	// Window Shades
+	oapiVCRegisterArea(AID_VC_WINDOWSHADES, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_WINDOWSHADES, WindowShadesLocation + ofs, 0.05);
+
 	// Hatches
 	oapiVCRegisterArea(AID_VC_OVERHEADHATCH, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_OVERHEADHATCH, UpperHatchLocation + ofs, 0.1);
@@ -1481,6 +1515,20 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 			ForwardHatch.Toggle();
 			return true;
 
+		case AID_VC_WINDOWSHADES:
+			if (LEMWindowShades)
+			{
+				LEMWindowShades = false;
+			}
+			else
+			{
+				LEMWindowShades = true;
+			}
+			//Maybe define a custom sound to play here?
+			//SwitchClick();
+			SetWindowShades();
+			return true;
+
 		case AID_VC_COAS1:
 			if (LEMCoas1Enabled)
 			{
@@ -1516,6 +1564,44 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 {
 	switch (id) {
+
+#ifdef _OPENORBITER
+	case AID_LMVC_INTEGRAL_LIGHT:
+        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC, MatProp::Emission, lca.GetIntegralVoltage() / 100.0, NUM_ELEMENTS(IntegralLights_LMVC));
+//		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MatProp::Light, lca.GetIntegralVoltage() / 100.0, NUM_ELEMENTS(IntegralLights_LMVC_NoTex)));
+		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MatProp::Light, ( (lca.GetIntegralVoltage() / 100.0) + (FloodLights.GetCDRRotaryVoltage() / 28.0) )/2.0, NUM_ELEMENTS(IntegralLights_LMVC_NoTex));
+//		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MatProp::Emission, lca.GetIntegralVoltage() / 100.0, NUM_ELEMENTS(IntegralLights_LMVC_NoTex));
+        return true;
+
+	case AID_LMVC_FLOOD_LIGHT:
+        SetLMVCIntegralLight(vcidx, FloodLights_LMVC, MatProp::Light, FloodLights.GetCDRRotaryVoltage() / 28.0, NUM_ELEMENTS(FloodLights_LMVC));
+        SetLMVCIntegralLight(xpointershadesidx, FloodLights_XPointer_Shades, MatProp::Light, FloodLights.GetCDRRotaryVoltage() / 28.0, NUM_ELEMENTS(FloodLights_XPointer_Shades));
+        return true;
+
+	case AID_LMVC_NUMERICS_LIGHT:
+		SetLMVCIntegralLight(vcidx, NumericLights_LMVC, MatProp::Light, ( (lca.GetNumericVoltage() / 115.0) + (FloodLights.GetCDRRotaryVoltage() / 28.0) )/2, NUM_ELEMENTS(NumericLights_LMVC));
+		return true;
+
+#else
+	case AID_LMVC_INTEGRAL_LIGHT:
+        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC, MESHM_EMISSION2, lca.GetIntegralVoltage() / 75.0, NUM_ELEMENTS(IntegralLights_LMVC));
+		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MESHM_EMISSION, lca.GetIntegralVoltage() / 75.0, NUM_ELEMENTS(IntegralLights_LMVC_NoTex));
+        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MESHM_EMISSION2, lca.GetIntegralVoltage() / 75.0, NUM_ELEMENTS(IntegralLights_LMVC_NoTex));
+		return true;
+
+	case AID_LMVC_FLOOD_LIGHT:
+        SetLMVCIntegralLight(vcidx, FloodLights_LMVC, MESHM_EMISSION, FloodLights.GetCDRRotaryVoltage() / 28.0, NUM_ELEMENTS(FloodLights_LMVC));
+        SetLMVCIntegralLight(xpointershadesidx, FloodLights_XPointer_Shades, MESHM_EMISSION, FloodLights.GetCDRRotaryVoltage() / 28.0, NUM_ELEMENTS(FloodLights_XPointer_Shades));
+        return true;
+
+	case AID_LMVC_NUMERICS_LIGHT:
+		SetLMVCIntegralLight(vcidx, NumericLights_LMVC, MESHM_EMISSION, ( (lca.GetNumericVoltage() / 115.0) + (FloodLights.GetCDRRotaryVoltage() / 28.0) )/2, NUM_ELEMENTS(NumericLights_LMVC));
+
+//		sprintf(oapiDebugString(), "Numerics Voltage = %lf", lca.GetNumericVoltage());
+		
+        return true;
+
+#endif
 
 	case AID_VC_LM_CWS_LEFT:
 		CWEA.RedrawLeft(surf, srf[SFR_VC_CW_LIGHTS], TexMul);
@@ -1582,21 +1668,21 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_CONTACTLIGHT1:
 		if (SCS_ENG_CONT_CB.IsPowered() && (scca3.GetContactLightLogic() || LampToneTestRotary.GetState() == 6)) {
-			SetContactLight(0, true); // Light On
+			SetContactLight(VC_MAT_L10_ContactLight1, true); // Light On
 		}
 		else
 		{
-			SetContactLight(0, false); // Light On
+			SetContactLight(VC_MAT_L10_ContactLight1, false); // Light On
 		}
 		return true;
 
 	case AID_VC_CONTACTLIGHT2:
 		if (SCS_ATCA_CB.IsPowered() && (scca3.GetContactLightLogic() || LampToneTestRotary.GetState() == 6)) {
-			SetContactLight(1, true); // Light On
+			SetContactLight(VC_MAT_L11_ContactLight2, true); // Light On
 		}
 		else
 		{
-			SetContactLight(1, false); // Light On
+			SetContactLight(VC_MAT_L11_ContactLight2, false); // Light On
 		}
 		return true;
 
@@ -1734,155 +1820,155 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_RR_NOTRACK:
 		if (lca.GetAnnunVoltage() > 2.25 && (RR.GetNoTrackSignal() || LampToneTestRotary.GetState() == 6)) { // The AC side is only needed for the transmitter
-			SetCompLight(LM_VC_COMP_LIGHT_1, true); // Light On
+			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, true); // Light On
 		}
 		else {
-			SetCompLight(LM_VC_COMP_LIGHT_1, false); // Light Off
+			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, false); // Light Off
 		}
 		return true;
 
 	case AID_VC_PANEL2_COMPLIGHTS:
 		if (lca.GetAnnunVoltage() > 2.25 && (scera2.GetSwitch(12, 2)->IsClosed() || PrimGlycolPumpController.GetPressureSwitch() == true || LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(LM_VC_COMP_LIGHT_2, true); // Light On
+			SetCompLight(VC_MAT_L13_CompLight2_Glycol, true); // Light On
 		}
 		else {
-			SetCompLight(LM_VC_COMP_LIGHT_2, false); // Light Off
+			SetCompLight(VC_MAT_L13_CompLight2_Glycol, false); // Light Off
 		}
 
 		if (lca.GetAnnunVoltage() > 2.25 && (SuitFanDPSensor.GetSuitFanFail() == true || LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(LM_VC_COMP_LIGHT_3, true); // Light On
+			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, true); // Light On
 		}
 		else {
-			SetCompLight(LM_VC_COMP_LIGHT_3, false); // Light Off
+			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, false); // Light Off
 		}
 
 		if (lca.GetAnnunVoltage() > 2.25) {
 			if (INST_CWEA_CB.IsPowered() && ECS_CO2_SENSOR_CB.IsPowered() && (scera1.GetVoltage(5, 2) >= (7.6 / 6))) {
-				SetCompLight(LM_VC_COMP_LIGHT_4, true); // Light On
+				SetCompLight(VC_MAT_L15_CompLight4_CO2, true); // Light On
 			}
 			else if (CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6) {
-				SetCompLight(LM_VC_COMP_LIGHT_4, true); // Light On
+				SetCompLight(VC_MAT_L15_CompLight4_CO2, true); // Light On
 			}
 			else {
-				SetCompLight(LM_VC_COMP_LIGHT_4, false); // Light Off
+				SetCompLight(VC_MAT_L15_CompLight4_CO2, false); // Light Off
 			}
 		}
 		else {
-			SetCompLight(LM_VC_COMP_LIGHT_4, false); // Light Off
+			SetCompLight(VC_MAT_L15_CompLight4_CO2, false); // Light Off
 		}
 
 		if (lca.GetAnnunVoltage() > 2.25 && INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < (792.5 / 720.0) || LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(LM_VC_COMP_LIGHT_5, true); // Light On
+			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, true); // Light On
 		}
 		else {
-			SetCompLight(LM_VC_COMP_LIGHT_5, false); // Light Off
+			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, false); // Light Off
 		}
 		return true;
 
 	case AID_VC_PANEL14_COMPLIGHTS:
 		if (lca.GetCompDockVoltage() > 2.25 && (LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(LM_VC_COMP_LIGHT_6, true); // Light On
+			SetCompLight(VC_MAT_L17_CompLight6_DCBus, true); // Light On
 		}
 		else {
-			SetCompLight(LM_VC_COMP_LIGHT_6, false); // Light Off
+			SetCompLight(VC_MAT_L17_CompLight6_DCBus, false); // Light Off
 		}
 
 		if (lca.GetAnnunVoltage() > 2.25 && (LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(LM_VC_COMP_LIGHT_7, true); // Light On
+			SetCompLight(VC_MAT_L18_CompLight7_BatFault, true); // Light On
 		}
 		else {
-			SetCompLight(LM_VC_COMP_LIGHT_7, false); // Light Off
+			SetCompLight(VC_MAT_L18_CompLight7_BatFault, false); // Light Off
 		}
 		return true;
 
 	case AID_VC_SEQ_LIGHTS:
 		if (lca.GetCompDockVoltage() > 2.25 && (scera1.GetVoltage(12, 11) > 2.5 && stage < 2 || LampToneTestRotary.GetState() == 6)) {
-			SetStageSeqRelayLight(LM_VC_STG_SEQ_A, true); // Light On
+			SetStageSeqRelayLight(VC_MAT_L19_StageSeq_SysA, true); // Light On
 		}
 		else {
-			SetStageSeqRelayLight(LM_VC_STG_SEQ_A, false); // Light Off
+			SetStageSeqRelayLight(VC_MAT_L19_StageSeq_SysA, false); // Light Off
 		}
 
 		if (lca.GetCompDockVoltage() > 2.25 && (scera1.GetVoltage(12, 12) > 2.5 || LampToneTestRotary.GetState() == 6)) {
-			SetStageSeqRelayLight(LM_VC_STG_SEQ_B, true); // Light On
+			SetStageSeqRelayLight(VC_MAT_L20_StageSeq_SysB, true); // Light On
 		}
 		else {
-			SetStageSeqRelayLight(LM_VC_STG_SEQ_B, false); // Light Off
+			SetStageSeqRelayLight(VC_MAT_L20_StageSeq_SysB, false); // Light Off
 		}
 		return true;
 
 	case AID_VC_PWRFAIL_LIGHTS_P1:
 		if (!pfira.GetCDRXPointerRelay() && lca.GetAnnunVoltage() > 2.25) {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_1, true); // Light On
+			SetPowerFailureLight(VC_MAT_L01_PwrFail_XpointerL, true); // Light On
 		}
 		else {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_1, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L01_PwrFail_XpointerL, false); // Light Off
 		}
 
 		if (!pfira.GetThrustIndRelay() && lca.GetAnnunVoltage() > 2.25) {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_2, true); // Light On
+			SetPowerFailureLight(VC_MAT_L02_PwrFail_Thrust, true); // Light On
 		}
 		else {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_2, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L02_PwrFail_Thrust, false); // Light Off
 		}
 
 		if (!pfira.GetPropPressIndRelay() && lca.GetAnnunVoltage() > 2.25) {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_3, true); // Light On
+			SetPowerFailureLight(VC_MAT_L03_PwrFail_DPSpress, true); // Light On
 		}
 		else {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_3, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L03_PwrFail_DPSpress, false); // Light Off
 		}
 
 		if (RadarTape.PowerSignalMonOn() == true) {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_10, true); // Light On
+			SetPowerFailureLight(VC_MAT_L21_PwrFail_RangeRate, true); // Light On
 		}
 		else {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_10, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L21_PwrFail_RangeRate, false); // Light Off
 		}
 		return true;
 
 	case AID_VC_PWRFAIL_LIGHTS_P2:
 
 		if (!pfira.GetRCSPressIndRelay() && lca.GetAnnunVoltage() > 2.25) {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_4, true); // Light On
+			SetPowerFailureLight(VC_MAT_L04_PwrFail_RCSpress, true); // Light On
 		}
 		else {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_4, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L04_PwrFail_RCSpress, false); // Light Off
 		}
 
 		if (!pfira.GetRCSQtyIndRelay() && lca.GetAnnunVoltage() > 2.25) {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_5, true); // Light On
+			SetPowerFailureLight(VC_MAT_L05_PwrFail_RCSquan, true); // Light On
 		}
 		else {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_5, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L05_PwrFail_RCSquan, false); // Light Off
 		}
 
 		if (!pfira.GetSuitCabinPressIndRelay() && lca.GetAnnunVoltage() > 2.25) {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_6, true); // Light On
+			SetPowerFailureLight(VC_MAT_L06_PwrFail_ECSpress, true); // Light On
 		}
 		else {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_6, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L06_PwrFail_ECSpress, false); // Light Off
 		}
 
 		if (!pfira.GetGlyTempPressIndRelay() && lca.GetAnnunVoltage() > 2.25) {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_7, true); // Light On
+			SetPowerFailureLight(VC_MAT_L07_PwrFail_Glycol, true); // Light On
 		}
 		else {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_7, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L07_PwrFail_Glycol, false); // Light Off
 		}
 
 		if (!pfira.GetO2H2OQtyIndRelay() && lca.GetAnnunVoltage() > 2.25) {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_8, true); // Light On
+			SetPowerFailureLight(VC_MAT_L08_PwrFail_ECSquan, true); // Light On
 		}
 		else {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_8, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L08_PwrFail_ECSquan, false); // Light Off
 		}
 
 		if (!pfira.GetLMPXPointerRelay() && lca.GetAnnunVoltage() > 2.25) {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_9, true); // Light On
+			SetPowerFailureLight(VC_MAT_L09_PwrFail_XpointerR, true); // Light On
 		}
 		else {
-			SetPowerFailureLight(LM_VC_PWRFAIL_LIGHT_9, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L09_PwrFail_XpointerR, false); // Light Off
 		}
 		return true;
 
@@ -2386,9 +2472,15 @@ void LEM::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&FloodRotary, AID_VC_ROT_P3_05);
 	FloodRotary.SetReference(P3_ROT_POS[4], P3_ROT_AXIS);
 	FloodRotary.DefineMeshGroup(VC_GRP_Rot_P3_05);
+	FloodRotary.SetInitialAnimState(0.5);
+
+	NEEDLE_POS = {0,0.179865,1.699588};
 
 	MainPanelVC.AddSwitch(&TempMonitorInd);
-	TempMonitorInd.SetDirection(_V(0.00, 0.0625*cos(P3_TILT), 0.0625*sin(P3_TILT)));
+	//TempMonitorInd.SetDirection(_V(0.00, 0.0625 * cos(P3_TILT), 0.0625 * sin(P3_TILT)));
+	//TempMonitorInd.DefineMeshGroup(VC_GRP_Needle_P3_01);
+	TempMonitorInd.SetReference(NEEDLE_POS);
+	TempMonitorInd.SetRotationRange(RAD * 38.6);
 	TempMonitorInd.DefineMeshGroup(VC_GRP_Needle_P3_01);
 
 	MainPanelVC.AddSwitch(&RadarSignalStrengthMeter);
@@ -2464,9 +2556,9 @@ void LEM::DefineVCAnimations()
 	DskySwitchClear.SetDirection(P4_PB_VECT);
 	DskySwitchClear.DefineMeshGroup(VC_GRP_PB_P4_15);
 
-	MainPanelVC.AddSwitch(&DskySwitchProg, AID_VC_PUSHB_P4_16);
-	DskySwitchProg.SetDirection(P4_PB_VECT);
-	DskySwitchProg.DefineMeshGroup(VC_GRP_PB_P4_16);
+	MainPanelVC.AddSwitch(&DskySwitchProceed, AID_VC_PUSHB_P4_16);
+	DskySwitchProceed.SetDirection(P4_PB_VECT);
+	DskySwitchProceed.DefineMeshGroup(VC_GRP_PB_P4_16);
 
 	MainPanelVC.AddSwitch(&DskySwitchKeyRel, AID_VC_PUSHB_P4_17);
 	DskySwitchKeyRel.SetDirection(P4_PB_VECT);
@@ -2533,14 +2625,17 @@ void LEM::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&LtgFloodOhdFwdKnob, AID_VC_ROT_P5_01);
 	LtgFloodOhdFwdKnob.SetReference(P5_ROT_POS[0], P5_ROT_AXIS);
 	LtgFloodOhdFwdKnob.DefineMeshGroup(VC_GRP_Rot_P5_01);
+	LtgFloodOhdFwdKnob.SetInitialAnimState(0.5);
 
 	MainPanelVC.AddSwitch(&LtgAnunNumKnob, AID_VC_ROT_P5_02);
 	LtgAnunNumKnob.SetReference(P5_ROT_POS[1], P5_ROT_AXIS);
 	LtgAnunNumKnob.DefineMeshGroup(VC_GRP_Rot_P5_02);
+	LtgAnunNumKnob.SetInitialAnimState(0.5);
 
 	MainPanelVC.AddSwitch(&LtgIntegralKnob, AID_VC_ROT_P5_03);
 	LtgIntegralKnob.SetReference(P5_ROT_POS[2], P5_ROT_AXIS);
 	LtgIntegralKnob.DefineMeshGroup(VC_GRP_Rot_P5_03);
+	LtgIntegralKnob.SetInitialAnimState(0.5);
 
 	MainPanelVC.AddSwitch(&ManualEngineStart, AID_VC_START_BUTTON);
 	ManualEngineStart.SetDirection(_V(0.00, -0.004*cos(P5_TILT - (90.0 * RAD)), -0.004*sin(P5_TILT - (90.0 * RAD))));
@@ -2750,8 +2845,8 @@ void LEM::DefineVCAnimations()
 	const VECTOR3 p11row4_vector = { 0.003 * sin(P11R4_TILT - (90.0 * RAD)), 0.003 * -cos(P11R4_TILT - (90.0 * RAD)), 0.0 };
 	const VECTOR3 p11row5_vector = { 0.003 * sin(P11R5_TILT - (90.0 * RAD)), 0.003 * -cos(P11R5_TILT - (90.0 * RAD)), 0.0 };
 
-	CircuitBrakerSwitch* breakerrow1[P11R1_CBCOUNT] = { &SE_WND_HTR_AC_CB, &HE_PQGS_PROP_DISP_AC_CB, &SBD_ANT_AC_CB, &ORDEAL_AC_CB, &AGS_AC_CB, &AOT_LAMP_ACB_CB, &LMP_FDAI_AC_CB, &NUM_LTG_AC_CB, &AC_B_INV_1_FEED_CB,
-		&AC_B_INV_2_FEED_CB, &AC_A_INV_1_FEED_CB, &AC_A_INV_2_FEED_CB, &AC_A_BUS_VOLT_CB, &CDR_WND_HTR_AC_CB, &TAPE_RCDR_AC_CB, &AOT_LAMP_ACA_CB, &RDZ_RDR_AC_CB, &DECA_GMBL_AC_CB, &INTGL_LTG_AC_CB };
+	CircuitBrakerSwitch* breakerrow1[P11R1_CBCOUNT] = { &SE_WND_HTR_AC_CB, &HE_PQGS_PROP_DISP_AC_CB, &SBD_ANT_AC_CB, &ORDEAL_AC_CB, &AGS_AC_CB, &AOT_LAMP_ACB_CB, &LMP_FDAI_AC_CB, &NUM_LTG_AC_CB, &AC_B_INV_2_FEED_CB,
+		&AC_B_INV_1_FEED_CB, &AC_A_INV_2_FEED_CB, &AC_A_INV_1_FEED_CB, &AC_A_BUS_VOLT_CB, &CDR_WND_HTR_AC_CB, &TAPE_RCDR_AC_CB, &AOT_LAMP_ACA_CB, &RDZ_RDR_AC_CB, &DECA_GMBL_AC_CB, &INTGL_LTG_AC_CB };
 
 	for (int i = 0;i < P11R1_CBCOUNT;i++)
 	{
@@ -2819,10 +2914,12 @@ void LEM::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&Panel12AntPitchKnob, AID_VC_ROT_P12_01);
 	Panel12AntPitchKnob.SetReference(P12_ROT_POS[0], P12_ROT_AXIS);
 	Panel12AntPitchKnob.DefineMeshGroup(VC_GRP_Rot_P12_01);
+	Panel12AntPitchKnob.SetInitialAnimState(0.5);
 
 	MainPanelVC.AddSwitch(&Panel12AntYawKnob, AID_VC_ROT_P12_02);
 	Panel12AntYawKnob.SetReference(P12_ROT_POS[1], P12_ROT_AXIS);
 	Panel12AntYawKnob.DefineMeshGroup(VC_GRP_Rot_P12_02);
+	Panel12AntYawKnob.SetInitialAnimState(0.5);
 
 	MainPanelVC.AddSwitch(&Panel12SBandAntSelKnob, AID_VC_ROT_P12_03);
 	Panel12SBandAntSelKnob.SetReference(P12_ROT_POS[2], P12_ROT_AXIS);
@@ -2972,6 +3069,7 @@ void LEM::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&ORDEALAltSetRotary, AID_VC_ROT_ORDEAL_01);
 	ORDEALAltSetRotary.SetReference(ORDEAL_RotLocation, ORDEAL_ROT_AXIS);
 	ORDEALAltSetRotary.DefineMeshGroup(VC_GRP_ORDEAL_Rot);
+	ORDEALAltSetRotary.SetInitialAnimState(133.0 / 285.0); //133° from 10 NM to 150 NM, 285° total range
 
 	// ECS Panels
 	const VECTOR3 ECSRotAxisOCM = { -0.12642632210213, 0.0, 0.991976000253902 };
@@ -3116,8 +3214,8 @@ void LEM::DefineVCAnimations()
 	RRGyroSelSwitch.DefineMeshGroup(VC_GRP_Sw_RRGyro);
 
 	MainPanelVC.DefineVCAnimations(vcidx);
-	crossPointerLeft.DefineVCAnimations(vcidx);
-	crossPointerRight.DefineVCAnimations(vcidx);
+	crossPointerLeft.DefineVCAnimations(vcidx, true);
+	crossPointerRight.DefineVCAnimations(vcidx, false);
 
 	InitFDAI(vcidx);
 }
@@ -3241,9 +3339,7 @@ void LEM::SetCompLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - mat_L01 + 12;
-
-	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
+	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
 
 	if (state == true)
 	{   // ON
@@ -3260,7 +3356,7 @@ void LEM::SetCompLight(int m, bool state) {
 		mat->emissive.a = 1;
 	}
 
-	oapiSetMaterial(vcmesh, lightmat + m, mat);
+	oapiSetMaterial(vcmesh, m, mat);
 }
 
 void LEM::SetContactLight(int m, bool state) {
@@ -3268,9 +3364,7 @@ void LEM::SetContactLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - mat_L01 + 10;
-
-	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
+	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
 
 	if (state == true)
 	{   // ON
@@ -3287,7 +3381,7 @@ void LEM::SetContactLight(int m, bool state) {
 		mat->emissive.a = 1;
 	}
 
-	oapiSetMaterial(vcmesh, lightmat + m, mat);
+	oapiSetMaterial(vcmesh, m, mat);
 }
 
 void LEM::SetPowerFailureLight(int m, bool state) {
@@ -3295,9 +3389,7 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - mat_L01 + 1;
-
-	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
+	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
 
 	if (state == true)
 	{   // ON
@@ -3314,7 +3406,7 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 		mat->emissive.a = 1;
 	}
 
-	oapiSetMaterial(vcmesh, lightmat + m, mat);
+	oapiSetMaterial(vcmesh, m, mat);
 }
 
 void LEM::SetStageSeqRelayLight(int m, bool state) {
@@ -3322,9 +3414,7 @@ void LEM::SetStageSeqRelayLight(int m, bool state) {
 	if (!vcmesh)
 		return;
 
-	int lightmat = VC_NMAT - mat_L01 + 19;
-
-	MATERIAL *mat = oapiMeshMaterial(hLMVC, lightmat + m);
+	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
 
 	if (state == true)
 	{   // ON
@@ -3341,6 +3431,37 @@ void LEM::SetStageSeqRelayLight(int m, bool state) {
 		mat->emissive.a = 1;
 	}
 
-	oapiSetMaterial(vcmesh, lightmat + m, mat);
+	oapiSetMaterial(vcmesh, m, mat);
 }
 
+#ifdef _OPENORBITER
+void LEM::SetLMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt)
+#else
+void LEM::SetLMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt)
+#endif
+
+{
+	if (vis == NULL || meshidx == -1) return;
+	DEVMESHHANDLE hMesh = GetDevMesh(vis, meshidx);
+
+    if (!hMesh)
+        return;
+
+	for (int i = 0; i < cnt; i++)
+	{
+		gcCore *pCore = gcGetCoreInterface();
+		if (pCore) {
+			FVECTOR4 value;
+			value.r = (float)state;
+			value.g = (float)state;
+			value.b = (float)state;
+			value.a = 1.0;
+#ifdef _OPENORBITER
+			pCore->SetMeshMaterial(hMesh, matList[i], EmissionMode, &value);
+#else
+			pCore->MeshMaterial(hMesh, matList[i], EmissionMode, &value, true);
+#endif
+		}
+	}
+    //sprintf(oapiDebugString(), "%d %lf", m, state);
+}

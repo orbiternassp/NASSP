@@ -486,7 +486,7 @@ struct SaturnEvents
 class ChecklistController
 {
 public:
-	ChecklistController(SoundLib);
+	ChecklistController(SoundLib &);
 	~ChecklistController();
 /// -------------------------------------------------------------
 /// Pass in a ChecklistItem with group and index initialized.
@@ -668,7 +668,7 @@ private:
 
 protected:	
 	/// Access to the vessels sound handler
-	SoundLib soundLib;
+	SoundLib &soundLib;
 	/// Sound that needs to be played.
 	Sound checkSound;
 	/// Whether we have a sound cued up to be played.

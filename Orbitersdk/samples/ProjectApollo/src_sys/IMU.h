@@ -35,18 +35,28 @@
 class IMU {
 
 public:
-	IMU(ApolloGuidance &comp, PanelSDK &p, InertialData &inertialData);
+	IMU(ApolloGuidance& comp, PanelSDK& p, InertialData& inertialData);
 	~IMU();
+
+	const double MERU = 7.29211586E-8; //rad/sec 
 
 	void Init();
 	void ChannelOutput(int address, ChannelValue value);
 	void Timestep(double simdt);
-	void SystemTimestep(double simdt); 
+	void SystemTimestep(double simdt);
 	void TurnOn();
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);
-	void SetVessel(VESSEL *v, bool LEMFlag);
+	void SetVessel(VESSEL* v, bool LEMFlag);
 	void SetVesselFlag(bool LEMFlag);
+	void SetDriftRates(const MATRIX3 DriftRateMatrix);
+	void SetPIPABias(const VECTOR3 PIPABias);
+	void SetPIPAScale(const VECTOR3 PIPAScale);
+	VECTOR3 GetNBDriftRates();
+	inline VECTOR3 getResolverPhaseError() { return ResolverPhaseError; };
+	inline VECTOR3 getResolverSineGimbal() { return SineGimbal; };
+	inline VECTOR3 getResolverCosineGimbal() { return CosineGimbal; };
+	VECTOR3 getPlatformEulerAnglesZYX();
 	virtual VECTOR3 GetTotalAttitude();
 
 	void WireToBuses(e_object *a, e_object *b, GuardedToggleSwitch *s);
@@ -62,6 +72,28 @@ public:
 	void LoadState(FILEHANDLE scn);
 	void SaveState(FILEHANDLE scn);
 
+
+	typedef struct {
+		double NBD_X;
+		double NBD_Y;
+		double NBD_Z;
+		double ADSRA_X;
+		double ADSRA_Y;
+		double ADSRA_Z;
+		double ADIA_X;
+		double ADIA_Y;
+		double ADIA_Z;
+	} IMU_DriftRates;
+
+	typedef struct {
+		double PIPA_BiasX;
+		double PIPA_BiasY;
+		double PIPA_BiasZ;
+		double PIPA_ScalePPM_X;
+		double PIPA_ScalePPM_Y;
+		double PIPA_ScalePPM_Z;
+	} PIPA_BiasScale;
+
 protected:
 	
 	void DriveCDUX(int cducmd);
@@ -76,6 +108,7 @@ protected:
 	void SetOrbiterAttitudeReference();
 	void DoZeroIMUCDUs();
 	void DoZeroIMUGimbals();
+	void calculatePhase(const VECTOR3 NewAngles);
 
 	//
 	// Logging.
@@ -101,6 +134,7 @@ protected:
 	double radToDeg(double angle);
 	double gyroPulsesToRad(int pulses);
 	int radToGyroPulses(double angle);
+	void clampTo2pi(double angle);
 
 	MATRIX3 getNavigationBaseToOrbiterLocalTransformation();
 	MATRIX3 getOrbiterLocalToNavigationBaseTransformation();
@@ -124,11 +158,18 @@ protected:
 		double Gimbals[3];
 	};
 
+	VECTOR3 SineGimbal;
+	VECTOR3 CosineGimbal;
+	VECTOR3 ResolverPhaseError;
+
 	struct {
 		double X;
 		double Y;
 		double Z;
 	} RemainingPIPA;
+
+	IMU_DriftRates imuDriftRates;
+	PIPA_BiasScale pipaBiasScale;
 
 	struct {
 		MATRIX3 Attitude_v2g;

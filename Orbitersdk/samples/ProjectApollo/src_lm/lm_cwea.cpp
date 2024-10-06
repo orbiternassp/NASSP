@@ -41,7 +41,6 @@ LEM_CWEA::LEM_CWEA(SoundLib &s) : soundlib(s) {
 	lem = NULL;
 	CWEAHeat = 0;
 
-	s.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND);
 	MasterAlarm = false;
 	Operate = false;
 	ECSFailureCount = 0;
@@ -56,12 +55,15 @@ void LEM_CWEA::Init(LEM *l, e_object *cwea, e_object *ma, h_HeatLoad *cweah) {
 		}
 		row = 0; col++;
 	}
-	soundlib.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND, INTERNAL_ONLY);
 
 	cwea_pwr = cwea;
 	ma_pwr = ma;
 	lem = l;
 	CWEAHeat = cweah;
+}
+
+void LEM_CWEA::LoadSounds() {
+	soundlib.LoadSound(MasterAlarmSound, LM_MASTERALARM_SOUND, INTERNAL_ONLY);
 }
 
 bool LEM_CWEA::IsCWEAPowered() {
@@ -99,10 +101,13 @@ void LEM_CWEA::SetMasterAlarm(bool alarm) {
 
 void LEM_CWEA::Timestep(double simdt) {
 	bool lightlogic;
+	double max = 0.0;
+	double min = 0.0;
+	double voltage = 0.0;
 
 	if (MasterAlarm && IsMAPowered()) {
 		if (!MasterAlarmSound.isPlaying()) {
-			MasterAlarmSound.play(LOOP, 255);
+			MasterAlarmSound.play(LOOP);
 		}
 	}
 	else if (!IsMAPowered() ){
@@ -135,7 +140,7 @@ void LEM_CWEA::Timestep(double simdt) {
 			lightlogic = true;
 		}
 		// Fuel and oxidizer pressure < 119.8 psia prior to staging, cut and capped from the CWEA on LM-8 and subsequent
-		if ((lem->pMission->GetLMCWEAVersion() == 0 && lem->stage < 2) && (lem->APSPropellant.GetFuelTrimOrificeOutletPressurePSI() < 119.8 || lem->APSPropellant.GetOxidTrimOrificeOutletPressurePSI() < 119.8)) {
+		if ((lem->pMission->GetLMNumber() < 8 && lem->stage < 2) && (lem->APSPropellant.GetFuelTrimOrificeOutletPressurePSI() < 119.8 || lem->APSPropellant.GetOxidTrimOrificeOutletPressurePSI() < 119.8)) {
 			lightlogic = true;
 		}
 
@@ -403,27 +408,64 @@ void LEM_CWEA::Timestep(double simdt) {
 
 		// 6DS33 HEATER FAILURE CAUTION
 		// On when:
-		// LR temp cut and capped from CW logic
 
-		// RR Assembly < -54.07F or > 147.69F
+		// LR Antenna
+		// LM-3: < -15.0F or > 150.0F 
+		// LM-4 and subsequent: < 15.6F or > 148.9F, cut and capped
+		if (lem->pMission->GetLMNumber() < 3)
+		{
+			min = 2.313; // -15.0F
+			max = 4.375; // 150.0F
+			voltage = lem->scera1.GetVoltage(21, 3);
+		}
+		else
+		{
+			min = 2.305; // -15.6F
+			max = 4.361; // 148.9F
+			voltage = 0.0;
+		}
+
+		LRHeaterCautFF.Set(voltage < min || voltage > max);
+		LRHeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 1);
+
+		// RR Antenna < -54.07F or > 147.69F
 		RRHeaterCautFF.Set(lem->scera1.GetVoltage(21, 4) < 1.869 || lem->scera1.GetVoltage(21, 4) > 4.361);
 		RRHeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 0);
 
-		// RCS Quads < 118.8F  or > 190.5F, cut and capped on LM-8 and subsequent
+		// RCS Quads
+		// LM-3: < 119.0F or > 190.0F 
+		// LM-4: < 113.0F or > 241.0F 
+		// Cut and capped on LM-5 and subsequent
+
+		if (lem->pMission->GetLMNumber() < 4)
+		{
+			min = 2.750; // 119.0F
+			max = 4.723; // 190.0F
+		}
+		else
+		{
+			min = 2.703; // 113.0F
+			max = 4.703; // 241.0F
+		}
+
 		//Quad 1
-		QD1HeaterCautFF.Set(lem->pMission->GetLMCWEAVersion() == 0 && (lem->scera1.GetVoltage(20, 4) < 2.79 || lem->scera1.GetVoltage(20, 4) > 4.725));
+		voltage = lem->pMission->GetLMNumber() <= 4 ? lem->scera1.GetVoltage(20, 4) : 0.0;
+		QD1HeaterCautFF.Set(voltage < min || voltage > max);
 		QD1HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 2);
 
 		//Quad 2
-		QD2HeaterCautFF.Set(lem->pMission->GetLMCWEAVersion() == 0 && (lem->scera1.GetVoltage(20, 3) < 2.79 || lem->scera1.GetVoltage(20, 3) > 4.725));
+		voltage = lem->pMission->GetLMNumber() <= 4 ? lem->scera1.GetVoltage(20, 3) : 0.0;
+		QD2HeaterCautFF.Set(voltage < min || voltage > max);
 		QD2HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 3);
 
 		//Quad 3
-		QD3HeaterCautFF.Set(lem->pMission->GetLMCWEAVersion() == 0 && (lem->scera1.GetVoltage(20, 2) < 2.79 || lem->scera1.GetVoltage(20, 2) > 4.725));
+		voltage = lem->pMission->GetLMNumber() <= 4 ? lem->scera1.GetVoltage(20, 2) : 0.0;
+		QD3HeaterCautFF.Set(voltage < min || voltage > max);
 		QD3HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 4);
 
 		//Quad 4
-		QD4HeaterCautFF.Set(lem->pMission->GetLMCWEAVersion() == 0 && (lem->scera1.GetVoltage(20, 1) < 2.79 || lem->scera1.GetVoltage(20, 1) > 4.725));
+		voltage = lem->pMission->GetLMNumber() <= 4 ? lem->scera1.GetVoltage(20, 1) : 0.0;
+		QD4HeaterCautFF.Set(voltage < min || voltage > max);
 		QD4HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 5);
 
 		// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
@@ -431,7 +473,7 @@ void LEM_CWEA::Timestep(double simdt) {
 		SBDHeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 6);
 
 		//Set CW Light
-		if (RRHeaterCautFF.IsSet() || SBDHeaterCautFF.IsSet() || QD1HeaterCautFF.IsSet() || QD2HeaterCautFF.IsSet() || QD3HeaterCautFF.IsSet() || QD4HeaterCautFF.IsSet())
+		if (LRHeaterCautFF.IsSet() || RRHeaterCautFF.IsSet() || SBDHeaterCautFF.IsSet() || QD1HeaterCautFF.IsSet() || QD2HeaterCautFF.IsSet() || QD3HeaterCautFF.IsSet() || QD4HeaterCautFF.IsSet())
 			SetLight(2, 6, 1);
 		else
 			SetLight(2, 6, 0);
@@ -632,6 +674,7 @@ void LEM_CWEA::TurnOn()
 		CESACWarnFF.HardReset();
 		RCSCautFF1.HardReset();
 		RCSCautFF2.HardReset();
+		LRHeaterCautFF.HardReset();
 		RRHeaterCautFF.HardReset();
 		SBDHeaterCautFF.HardReset();
 		QD1HeaterCautFF.HardReset();
@@ -683,6 +726,7 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	AGSWarnFF.SaveState(scn, "AGSWARNFF");
 	RCSCautFF1.SaveState(scn, "RCSCAUTFF1");
 	RCSCautFF2.SaveState(scn, "RCSCAUTFF2");
+	LRHeaterCautFF.SaveState(scn, "LRHEATERCAUTFF");
 	RRHeaterCautFF.SaveState(scn, "RRHEATERCAUTFF");
 	SBDHeaterCautFF.SaveState(scn, "SBDHEATERCAUTFF");
 	QD1HeaterCautFF.SaveState(scn, "QD1HEATERCAUTFF");
@@ -735,6 +779,9 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		}
 		else if (!strnicmp(line, "RCSCAUTFF2", 10)) {
 			RCSCautFF2.LoadState(line, 10);
+		}
+		else if (!strnicmp(line, "LRHEATERCAUTFF", 14)) {
+			LRHeaterCautFF.LoadState(line, 14);
 		}
 		else if (!strnicmp(line, "RRHEATERCAUTFF", 14)) {
 			RRHeaterCautFF.LoadState(line, 14);

@@ -32,6 +32,7 @@ class LEM_CWEA : public e_object {
 public:
 	LEM_CWEA(SoundLib &s);
 	void Init(LEM *l, e_object *cwea, e_object *ma, h_HeatLoad *cweah);
+	void LoadSounds();
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	bool IsCWEAPowered();
@@ -77,6 +78,7 @@ protected:
 	CWEA_FlipFlop CESACWarnFF;
 	CWEA_FlipFlop RCSCautFF1;
 	CWEA_FlipFlop RCSCautFF2;
+	CWEA_FlipFlop LRHeaterCautFF;
 	CWEA_FlipFlop RRHeaterCautFF;
 	CWEA_FlipFlop SBDHeaterCautFF;
 	CWEA_FlipFlop QD1HeaterCautFF;

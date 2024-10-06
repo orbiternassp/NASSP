@@ -63,3 +63,4 @@
 #define DS_GRP_SupportStruts2Aft 47
 #define DS_GRP_SupportStruts2Left 48
 #define DS_GRP_SupportStruts2Right 49
+#define DS_GRP_Plaque 50

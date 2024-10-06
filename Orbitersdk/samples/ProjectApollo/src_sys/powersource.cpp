@@ -408,6 +408,73 @@ void NWayPowerMerge::WireToBus(int bus, e_object* e)
 		sources[bus - 1] = e;
 }
 
+ThreePhasePowerMerge::ThreePhasePowerMerge(char *i_name, PanelSDK &p) : sdk(p)
+{
+	if (i_name)
+		strcpy(name, i_name);
+
+	Phase1 = 0;
+	Phase2 = 0;
+	Phase3 = 0;
+
+	//
+	// Register with the Panel SDK so it will call our update function.
+	//
+
+	sdk.AddElectrical(this, false);
+}
+
+double ThreePhasePowerMerge::Voltage()
+{
+	//Require two of the three input sources to have sufficient voltage
+
+
+	double Volts1 = Phase1->Voltage();
+	double Volts2 = Phase2->Voltage();
+	double Volts3 = Phase3->Voltage();
+
+	if (Volts1 != 0 && Volts2 != 0 && Volts3 != 0) return (Volts1 + Volts2 + Volts3) / 3.0;
+
+	if (Volts1 != 0 && Volts2 != 0) return (Volts1 + Volts2) / 2.0;
+	if (Volts1 != 0 && Volts3 != 0) return (Volts1 + Volts3) / 2.0;
+	if (Volts2 != 0 && Volts3 != 0) return (Volts2 + Volts3) / 2.0;
+
+	return 0;
+}
+
+void ThreePhasePowerMerge::DrawPower(double watts)
+
+{
+	double Volts = 0.0;
+	double VoltsA = Phase1->Voltage();
+	double VoltsB = Phase2->Voltage();
+	double VoltsC = Phase3->Voltage();
+
+	power_load += watts;
+
+	Volts = VoltsA + VoltsB + VoltsC;
+
+	if (Volts > 0.0) {
+		if (VoltsA != 0.0)
+			Phase1->DrawPower(watts * VoltsA / Volts);
+		if (VoltsB != 0.0)
+			Phase2->DrawPower(watts * VoltsB / Volts);
+		if (VoltsC != 0.0)
+			Phase3->DrawPower(watts * VoltsC / Volts);
+	}
+}
+
+double ThreePhasePowerMerge::Current()
+
+{
+	double Volts = Voltage();
+
+	if (Volts > 0.0) {
+		return power_load / Volts;
+	}
+	return 0.0;
+}
+
 DCBusController::DCBusController(char *i_name, PanelSDK &p) : 
 	sdk(p), fcPower(0, p), batPower(0, p), busPower(0, p, 3)
 

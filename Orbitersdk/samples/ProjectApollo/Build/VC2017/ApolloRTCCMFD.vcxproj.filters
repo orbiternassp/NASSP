@@ -102,6 +102,12 @@
     <ClInclude Include="..\..\src_rtccmfd\ApolloGeneralizedOpticsProgram.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\AscentRendezvousMonitor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src_rtccmfd\RTCCDisplayFormatting.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_rtccmfd\ApollomfdButtons.cpp">
@@ -120,9 +126,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_launch\rtcc.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src_rtccmfd\EphemProg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_rtccmfd\ARoapiModule.cpp">
@@ -195,6 +198,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src_rtccmfd\ApolloGeneralizedOpticsProgram.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\AscentRendezvousMonitor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src_rtccmfd\RTCCDisplayFormatting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

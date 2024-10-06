@@ -188,7 +188,6 @@ TwoPositionSwitch::TwoPositionSwitch() {
 }
 
 TwoPositionSwitch::~TwoPositionSwitch() {
-	Sclick.done();
 }
 
 void TwoPositionSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int springloaded, char *dname) {
@@ -378,7 +377,7 @@ void TwoPositionSwitch::VesimSwitchTo(int newState)
 void TwoPositionSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 
 {
-	if (IsUp())
+	if (state == TOGGLESWITCH_UP)
 	{
 		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset, width, height, SURF_PREDEF_CK);
 	}
@@ -399,7 +398,7 @@ void TwoPositionSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
 	if (!bHasAnimations) return;
 
-	if (IsUp()) {
+	if (state == TOGGLESWITCH_UP) {
 		OurVessel->SetAnimation(anim_switch, 1.0);
 	}
 	else
@@ -956,10 +955,10 @@ bool PushSwitch::CheckMouseClick(int event, int mx, int my) {
 	SHORT ctrlState = GetKeyState(VK_SHIFT);
 	SetHeld((ctrlState & 0x8000) != 0);
 
-	if (event == PANEL_MOUSE_LBDOWN) {
+	if (event & PANEL_MOUSE_LBDOWN) {
 		SwitchTo(1, true);
 		Sclick.play();
-	} else if (event == PANEL_MOUSE_LBUP && !IsHeld()) {
+	} else if (event & PANEL_MOUSE_LBUP && !IsHeld()) {
 		SwitchTo(0, true);
 	}
 	return true;
@@ -977,11 +976,11 @@ bool PushSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 	SHORT ctrlState = GetKeyState(VK_SHIFT);
 	SetHeld((ctrlState & 0x8000) != 0);
 
-	if (event == PANEL_MOUSE_LBDOWN) {
+	if (event & PANEL_MOUSE_LBDOWN) {
 		SwitchTo(1, true);
 		Sclick.play();
 	}
-	else if (event == PANEL_MOUSE_LBUP && !IsHeld()) {
+	else if (event & PANEL_MOUSE_LBUP && !IsHeld()) {
 		SwitchTo(0, true);
 	}
 	return true;
@@ -1044,7 +1043,7 @@ bool CircuitBrakerSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
 
 double CircuitBrakerSwitch::Voltage()
 {
-	if ((state != 0) && SRC)
+	if ((GetState() != 0) && SRC)
 		return SRC->Voltage();
 
 	return 0.0;
@@ -1052,7 +1051,7 @@ double CircuitBrakerSwitch::Voltage()
 
 double CircuitBrakerSwitch::Current()
 {	
-	if ((state != 0) && SRC && SRC->IsEnabled()) {
+	if ((GetState() != 0) && SRC && SRC->IsEnabled()) {
 		Volts = SRC->Voltage();
 		if (Volts > 0.0)
 			Amperes = (power_load / Volts);
@@ -1067,7 +1066,7 @@ double CircuitBrakerSwitch::Current()
 
 double CircuitBrakerSwitch::Frequency()
 {
-	if ((state != 0) && SRC)
+	if ((GetState() != 0) && SRC)
 		return SRC->Frequency();
 
 	return 0.0;
@@ -1091,7 +1090,7 @@ void CircuitBrakerSwitch::DrawPower(double watts)
 	// Do nothing if the breaker is open.
 	//
 
-	if (state == 0){
+	if (GetState() == 0){
 		return;
 	}
 
@@ -1687,7 +1686,6 @@ GuardedToggleSwitch::GuardedToggleSwitch() {
 }
 
 GuardedToggleSwitch::~GuardedToggleSwitch() {
-	guardClick.done();
 }
 
 void GuardedToggleSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, int springloaded) 
@@ -1894,7 +1892,6 @@ GuardedPushSwitch::GuardedPushSwitch() {
 }
 
 GuardedPushSwitch::~GuardedPushSwitch() {
-	guardClick.done();
 }
 
 void GuardedPushSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, int lxoffset, int lyoffset)
@@ -2108,7 +2105,6 @@ GuardedThreePosSwitch::GuardedThreePosSwitch() {
 }
 
 GuardedThreePosSwitch::~GuardedThreePosSwitch() {
-	guardClick.done();
 }
 
 void GuardedThreePosSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int defaultGuardState, 
@@ -2279,6 +2275,492 @@ void GuardedThreePosSwitch::LoadState(char *line) {
 	}
 }
 
+ContinuousSwitch::ContinuousSwitch()
+{
+	state = 0.0;
+	minValue = 0.0;
+	maxValue = 1.0;
+	slope = 1.0;
+	Wraparound = false;
+
+	grpIndex = NULL;
+	pswitchrot = NULL;
+	anim_switch = NULL;
+
+	OurVessel = NULL;
+
+	x = 0;
+	y = 0;
+	width = 0;
+	height = 0;
+	maxState = 1;
+	switchSurface = 0;
+	switchBorder = 0;
+	switchRow = 0;
+
+	RotationRange = 0.0;
+}
+
+ContinuousSwitch::~ContinuousSwitch()
+{
+	if (pswitchrot)
+		delete pswitchrot;
+}
+
+void ContinuousSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, double defaultVal, double minVal, double maxVal)
+{
+	//defaultValue: default display value (e.g. 0°)
+	//minValue: minimum displayed value (e.g. -4°)
+	//maxValue: maximum displayed value (e.g. +4°)
+	//maxState: maximum number of bitmap positions
+
+	minValue = minVal;
+	maxValue = maxVal;
+
+	slope = 1.0 / (maxValue - minValue);
+
+	name = n;
+	SetValue(DisplayToAngle(defaultVal));
+	scnh.RegisterSwitch(this);
+}
+
+void ContinuousSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row)
+{
+	x = xp;
+	y = yp;
+	width = w;
+	height = h;
+
+	switchSurface = surf;
+	switchBorder = bsurf;
+
+	row.AddSwitch(this);
+	switchRow = &row;
+
+	OurVessel = switchRow->panelSwitches->vessel;
+}
+
+void ContinuousSwitch::SetWraparound(bool _Wraparound)
+{
+	Wraparound = _Wraparound;
+}
+
+double ContinuousSwitch::GetValue()
+{
+	//Returns value of displayed state
+	return AngletoDisplay(state);
+}
+
+double ContinuousSwitch::GetOutput()
+{
+	return state;
+}
+
+void ContinuousSwitch::SetRotationRange(double _range)
+{
+	RotationRange = _range;
+}
+
+void ContinuousSwitch::SetState(int value)
+{
+	//This function called by checklist controller
+	SwitchTo(DisplayToAngle((double)value));
+}
+
+int ContinuousSwitch::GetState()
+{
+	//Return to checklist controller
+	double value = AngletoDisplay(state);
+
+	if (value < 0.0)
+	{
+		return (int)(value - 0.5);
+	}
+	return (int)(value + 0.5);
+}
+
+bool ContinuousSwitch::SwitchTo(double newPosition)
+{
+	//Remember old state
+	double oldState = state;
+	//Actually change state
+	SetValue(newPosition);
+	//Did it change?
+	if (state != oldState)
+	{
+		//Play sound
+		if (sclick.isValid()) sclick.play();
+		return true;
+	}
+	return false;
+}
+
+void ContinuousSwitch::SetValue(double newAngle)
+{
+	//Limit
+	if (Wraparound)
+	{
+		while (newAngle < 0.0)
+		{
+			newAngle += 1.0;
+		}
+		while (newAngle >= 1.0)
+		{
+			newAngle -= 1.0;
+		}
+	}
+	else
+	{
+		if (newAngle < 0.0)
+		{
+			newAngle = 0.0;
+		}
+		else if (newAngle > 1.0)
+		{
+			newAngle = 1.0;
+		}
+	}
+
+	state = newAngle;
+}
+
+double ContinuousSwitch::DisplayToAngle(double value) const
+{
+	return slope * (value - minValue);
+}
+
+double ContinuousSwitch::AngletoDisplay(double angle) const
+{
+	return minValue + angle / slope;
+}
+
+void ContinuousSwitch::DefineMeshGroup(UINT _grpIndex)
+{
+	grpIndex = _grpIndex;
+}
+
+void ContinuousSwitch::DefineVCAnimations(UINT vc_idx)
+{
+	if (bHasReference && bHasDirection && !bHasAnimations)
+	{
+		pswitchrot = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), GetDirection(), (float)(RotationRange));
+		anim_switch = OurVessel->CreateAnimation(InitialAnimState());
+		OurVessel->AddAnimationComponent(anim_switch, 0.0f, 1.0f, pswitchrot);
+		VerifyAnimations();
+	}
+}
+
+void ContinuousSwitch::DrawFlash(SURFHANDLE drawSurface)
+{
+	if (!visible)
+		return;
+
+	if (switchBorder)
+		oapiBlt(drawSurface, switchBorder, x, y, 0, 0, width, height, SURF_PREDEF_CK);
+}
+
+void ContinuousSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface)
+{
+	if (!bHasAnimations) return;
+	OurVessel->SetAnimation(anim_switch, state);
+}
+
+void ContinuousSwitch::SaveState(FILEHANDLE scn)
+{
+	oapiWriteScenario_float(scn, name, state);
+}
+
+void ContinuousSwitch::LoadState(char *line)
+{
+	char buffer[100];
+	double st;
+
+	sscanf(line, "%s %lf", buffer, &st);
+	if (!strnicmp(buffer, name, strlen(name)))
+	{
+		SetValue(st);
+	}
+}
+
+void ContinuousSwitch::LoadSound(char *soundname)
+{
+	if (!sclick.isValid()) {
+		switchRow->panelSwitches->soundlib->LoadSound(sclick, soundname);
+	}
+}
+
+ContinuousThumbwheelSwitch::ContinuousThumbwheelSwitch()
+{
+	maxState = 17;
+	isHorizontal = false;
+	clickIncrement = 0.0;
+}
+
+ContinuousThumbwheelSwitch::~ContinuousThumbwheelSwitch()
+{
+
+}
+
+void ContinuousThumbwheelSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, double defaultValue, double minValue, double maxValue, double clickIncr, bool horizontal)
+{
+	ContinuousSwitch::Register(scnh, n, defaultValue, minValue, maxValue);
+
+	isHorizontal = horizontal;
+	clickIncrement = clickIncr * abs(slope); //clickIncrement in units of actual state 0.0-1.0
+}
+
+void ContinuousThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row)
+{
+	ContinuousSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+
+	LoadSound(THUMBWHEEL_SOUND);
+}
+
+void ContinuousThumbwheelSwitch::SetState(int value)
+{
+	//This function called by checklist controller. Input is integer, so to get fine control this assumes the checklist has a value of 10x the desired one
+	SwitchTo(DisplayToAngle((double)(value) / 10.0));
+}
+
+int ContinuousThumbwheelSwitch::GetState()
+{
+	//Return to checklist controller
+	double value = AngletoDisplay(state)*10.0;
+
+	if (value < 0.0)
+	{
+		return (int)(value - 0.5);
+	}
+	return (int)(value + 0.5);
+}
+
+void ContinuousThumbwheelSwitch::DrawSwitch(SURFHANDLE drawSurface)
+{
+	//Scaled to number of bitmap positions
+	double val2 = state * (double)(maxState - 1);
+	//Same in integer
+	int srcx = (int)(val2 + 0.5);
+
+	oapiBlt(drawSurface, switchSurface, x, y, srcx * width, 0, width, height, SURF_PREDEF_CK);
+}
+
+bool ContinuousThumbwheelSwitch::CheckMouseClick(int event, int mx, int my)
+{
+	//
+	// Check whether it's actually in our switch region.
+	//
+
+	if (mx < x || my < y)
+		return false;
+
+	if (mx > (x + width) || my > (y + height))
+		return false;
+
+	//
+	// Yes, so now we just need to check whether it's an on or
+	// off click.
+	//
+
+	if (event == PANEL_MOUSE_LBDOWN || event == PANEL_MOUSE_RBDOWN)
+	{
+		//Choose increment
+		double incr = clickIncrement;
+		if (event == PANEL_MOUSE_RBDOWN) incr *= 0.2;
+
+		bool positive = false;
+
+		if (isHorizontal)
+		{
+			if (mx < (x + (width / 2.0))) positive = true;
+		}
+		else
+		{
+			if (my < (y + (height / 2.0))) positive = true;
+		}
+
+		if (positive)
+		{
+			SwitchTo(state + incr);
+		}
+		else
+		{
+			SwitchTo(state - incr);
+		}
+	}
+
+	return true;
+}
+
+bool ContinuousThumbwheelSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
+{
+	if (event == PANEL_MOUSE_LBDOWN || event == PANEL_MOUSE_RBDOWN)
+	{
+		//Choose increment
+		double incr = clickIncrement;
+		if (event == PANEL_MOUSE_RBDOWN) incr *= 0.2;
+
+		bool positive = false;
+
+		if (isHorizontal)
+		{
+			if (p.x < 0.5) positive = true;
+		}
+		else
+		{
+			if (p.y < 0.5) positive = true;
+		}
+
+		if (positive)
+		{
+			SwitchTo(state + incr);
+		}
+		else
+		{
+			SwitchTo(state - incr);
+		}
+	}
+
+	return true;
+}
+
+
+ContinuousRotationalSwitch::ContinuousRotationalSwitch()
+{
+	maxState = 24;
+	lastX = 0.0;
+	mouseDown = false;
+	rotOffset = 0.0;
+}
+
+ContinuousRotationalSwitch::~ContinuousRotationalSwitch()
+{
+
+}
+
+void ContinuousRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row)
+{
+	ContinuousSwitch::Init(xp, yp, w, h, surf, bsurf, row);
+}
+
+void ContinuousRotationalSwitch::SetOffset(double Offset)
+{
+	//Angle by which the switch has to be rotated from the up position to an animation state of zero, i.e. usually the minimum position
+	rotOffset = Offset;
+}
+
+void ContinuousRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface)
+{
+	//Convert animation state to bitmap state (0-1)
+	double val = (rotOffset + state * RotationRange) / PI2;
+	if (val < 0.0)
+	{
+		val += 1.0;
+	}
+	//Scaled to number of bitmap positions
+	double val2 = val * (double)(maxState);
+	//Same in integer
+	int srcx = (int)(val2 + 0.5);
+	//Overflow
+	if (srcx < 0)
+	{
+		srcx = 0;
+	}
+	if (srcx >= maxState)
+	{
+		srcx -= maxState;
+	}
+	//Default bitmap has alternating 15° positions up and down
+	int srcx2, srcy;
+	if (maxState > 12)
+	{
+		if (srcx % 2 == 0)
+		{
+			srcy = 0;
+		}
+		else
+		{
+			srcy = 1;
+		}
+		srcx2 = srcx / 2;
+	}
+	else
+	{
+		//Bitmap with only 12 switch positions
+		srcx2 = srcx;
+		srcy = 0;
+	}
+
+	oapiBlt(drawSurface, switchSurface, x, y, srcx2 * width, srcy*height, width, height, SURF_PREDEF_CK);
+}
+
+bool ContinuousRotationalSwitch::CheckMouseClick(int event, int mx, int my)
+{
+	if (event & PANEL_MOUSE_LBDOWN)
+	{
+		// Check whether it's actually in our switch region.
+		if (mx < x || my < y)
+			return false;
+
+		if (mx > (x + width) || my > (y + height))
+			return false;
+
+		//Mouse click to start
+		lastX = ((double)(mx - x)) / ((double)(width));
+		mouseDown = true;
+
+		return true;
+	}
+	else if (((event & PANEL_MOUSE_LBPRESSED) != 0) && mouseDown)
+	{
+		//Process held left mouse button
+		double px;
+		px = ((double)(mx - x)) / ((double)(width));
+
+		ChangeSwitchState(px);
+		return true;
+	}
+	else if (event & PANEL_MOUSE_LBUP && mouseDown)
+	{
+		//Stop
+		mouseDown = false;
+		return false;
+	}
+	return false;
+}
+
+bool ContinuousRotationalSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
+{
+	if (event & PANEL_MOUSE_LBDOWN)
+	{
+		//Mouse click to start
+		lastX = p.x;
+		mouseDown = true;
+	}
+	else if (((event & PANEL_MOUSE_LBPRESSED) != 0) && mouseDown)
+	{
+		ChangeSwitchState(p.x);
+	}
+	else if (event & PANEL_MOUSE_LBUP)
+	{
+		//Stop
+		mouseDown = false;
+		return false;
+	}
+	return true;
+}
+
+void ContinuousRotationalSwitch::ChangeSwitchState(double px)
+{
+	if (abs(px - lastX) >= 0.01)
+	{
+		//Increase state by difference in mouse position
+		double incr = 60.0*RAD / RotationRange * (px - lastX);
+		//Update state
+		SwitchTo(state + incr);
+		//Save last position
+		lastX = px;
+	}
+}
 
 //
 // Rotational Switch
@@ -2407,7 +2889,6 @@ RotationalSwitch::~RotationalSwitch() {
 	if (pswitchrot)
 		delete pswitchrot;
 	DeletePositions();
-	sclick.done();
 }
 
 void RotationalSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultValue) {
@@ -2731,12 +3212,16 @@ void PowerStateRotationalSwitch::LoadState(char *line)
 
 void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 
-	RotationalSwitch::DrawSwitch(drawSurface);
+	ContinuousRotationalSwitch::DrawSwitch(drawSurface);
 
 	if (mouseDown) {
 		RECT rt;
+		double value;
+		int rotstate;
 		char label[100];
-		sprintf(label, "%d", value);
+		value = GetValue();
+		sprintf(label, "%.0lf", value);
+		rotstate = (int)(value*19.0 / 600.0 - 0.25); //31.57894736842105
 
 		oapi::Sketchpad* skp = oapiGetSketchpad(drawSurface);
 		oapi::Font* font = oapiCreateFont(22, true, "Arial", FONT_BOLD);
@@ -2750,149 +3235,75 @@ void OrdealRotationalSwitch::DrawSwitch(SURFHANDLE drawSurface) {
 		skp->SetBackgroundMode(oapi::Sketchpad::BK_OPAQUE);
 		skp->SetBackgroundColor(RGB(146, 146, 146));
 
-		if (GetState() == 0) {
+		switch (rotstate)
+		{
+		case 0: //-120°
 			rt.left = 29 + x;
 			rt.top = 24 + y;
 			rt.right = 60 + x;
 			rt.bottom = 55 + y;
 			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
 			skp->Text(44 + x, 28 + y, label, strlen(label));
-
-		}
-		else if (GetState() == 1) {
+			break;
+		case 1: //-90°
 			rt.left = 35 + x;
 			rt.top = 30 + y;
 			rt.right = 59 + x;
 			rt.bottom = 52 + y;
 			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
 			skp->Text(49 + x, 31 + y, label, strlen(label));
-
-		}
-		else if (GetState() == 2) {
+			break;
+		case 2: //-60°
+			rt.left = 32 + x;
+			rt.top = 29 + y;
+			rt.right = 63 + x;
+			rt.bottom = 59 + y;
+			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
+			skp->Text(47 + x, 34 + y, label, strlen(label));
+			break;
+		case 3: //-30°
 			rt.left = 29 + x;
 			rt.top = 29 + y;
 			rt.right = 60 + x;
 			rt.bottom = 59 + y;
 			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
 			skp->Text(44 + x, 34 + y, label, strlen(label));
-
-		}
-		else if (GetState() == 3) {
+			break;
+		case 4: //0°
 			rt.left = 29 + x;
 			rt.top = 35 + y;
 			rt.right = 57 + x;
 			rt.bottom = 59 + y;
 			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
 			skp->Text(42 + x, 36 + y, label, strlen(label));
-
-		}
-		else if (GetState() == 4) {
+			break;
+		case 5: //30°
+		case 6: //60°
 			rt.left = 28 + x;
 			rt.top = 30 + y;
 			rt.right = 54 + x;
 			rt.bottom = 60 + y;
 			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
 			skp->Text(37 + x, 34 + y, label, strlen(label));
-
-		}
-		else if (GetState() == 5) {
+			break;
+		case 7: //90°
 			skp->Text(32 + x, 31 + y, label, strlen(label));
-
-		}
-		else if (GetState() == 6) {
+			break;
+		case 8: //120°
+		case 9: //150°
 			rt.left = 25 + x;
 			rt.top = 24 + y;
 			rt.right = 55 + x;
 			rt.bottom = 54 + y;
 			skp->Rectangle(rt.left, rt.top, rt.right, rt.bottom);
 			skp->Text(39 + x, 28 + y, label, strlen(label));
+			break;
 		}
 
 		oapiReleaseFont(font);
 		oapiReleaseBrush(brush);
 		oapiReleasePen(pen);
 		oapiReleaseSketchpad(skp);
-	}
-}
-
-void OrdealRotationalSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface) {
-
-	OurVessel->SetAnimation(anim_switch, ((double)value / 310) * 0.78);
-	//sprintf(oapiDebugString(), "ALT %d", value);
-}
-
-bool OrdealRotationalSwitch::CheckMouseClick(int event, int mx, int my) {
-
-	if (event & PANEL_MOUSE_LBDOWN) {
-		// Check whether it's actually in our switch region.
-		if (mx < x || my < y)
-			return false;
-
-		if (mx >(x + width) || my >(y + height))
-			return false;
-
-		lastX = mx;
-		mouseDown = true;
-
-	}
-	else if (((event & PANEL_MOUSE_LBPRESSED) != 0) && mouseDown) {
-		if (abs(mx - lastX) >= 2) {
-			value += (int)((mx - lastX) / 2.);
-			value = min(max(value, 10), 310);
-			lastX = mx;
-		}
-
-	}
-	else if (event & PANEL_MOUSE_LBUP) {
-		mouseDown = false;
-		return false;
-	}
-	SetValue((int)((value / 50.) + 0.5));
-	return true;
-}
-
-bool OrdealRotationalSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
-
-	int mx = (int)(p.x * (x + width));
-
-	if (event & PANEL_MOUSE_LBDOWN) {
-
-		lastX = mx;
-		mouseDown = true;
-
-	}
-	else if (((event & PANEL_MOUSE_LBPRESSED) != 0) && mouseDown) {
-		if (abs(mx - lastX) >= 2) {
-			value += (int)((mx - lastX) / 2.);
-			value = min(max(value, 10), 310);
-			lastX = mx;
-		}
-
-	}
-	else if (event & PANEL_MOUSE_LBUP) {
-		mouseDown = false;
-		return false;
-	}
-	SetValue((int)((value / 50.) + 0.5));
-	return true;
-}
-
-void OrdealRotationalSwitch::SaveState(FILEHANDLE scn) {
-
-	if (position) {
-		oapiWriteScenario_int(scn, name, value);
-	}
-}
-
-void OrdealRotationalSwitch::LoadState(char *line) {
-
-	char buffer[100];
-	int val;
-
-	sscanf(line, "%s %i", buffer, &val);
-	if (!strnicmp(buffer, name, strlen(name))) {
-		value = val;
-		SetValue((int)((value / 50.) + 0.5));
 	}
 }
 
@@ -2921,7 +3332,6 @@ ThumbwheelSwitch::ThumbwheelSwitch() {
 ThumbwheelSwitch::~ThumbwheelSwitch() {
 	if (pswitchrot)
 		delete pswitchrot;
-	sclick.done();
 }
 
 void ThumbwheelSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState) {
@@ -3042,8 +3452,6 @@ void ThumbwheelSwitch::DefineVCAnimations(UINT vc_idx)
 
 bool ThumbwheelSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
 
-	int OldState = state;
-
 	if (event == PANEL_MOUSE_LBDOWN) {
 		if (state < maxState) {
 			SwitchTo(state + 1);
@@ -3112,227 +3520,6 @@ void ThumbwheelSwitch::LoadState(char *line) {
 void ThumbwheelSwitch::SetState(int value)
 {
 	SwitchTo(value);
-}
-
-ContinuousThumbwheelSwitch::ContinuousThumbwheelSwitch()
-{
-	numPositions = 0;
-	multiplicator = 0;
-	position = 0;
-}
-
-void ContinuousThumbwheelSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal, int multPos)
-{
-	if (horizontal)
-		ThumbwheelSwitch::Register(scnh, n, defaultState, maximumState, horizontal);
-	else
-		ThumbwheelSwitch::Register(scnh, n, defaultState, maximumState);
-
-	multiplicator = multPos;
-	numPositions = maximumState * multPos;
-	position = StateToPosition(defaultState);
-}
-
-bool ContinuousThumbwheelSwitch::CheckMouseClick(int event, int mx, int my) {
-
-	//
-	// Check whether it's actually in our switch region.
-	//
-
-	if (mx < x || my < y)
-		return false;
-
-	if (mx > (x + width) || my > (y + height))
-		return false;
-
-	//
-	// Yes, so now we just need to check whether it's an on or
-	// off click.
-	//
-
-	if (event == PANEL_MOUSE_LBDOWN) {
-		if (isHorizontal) {
-			if (mx < (x + (width / 2.0))) {
-				if (position + multiplicator <= numPositions) {
-					SwitchTo(position + multiplicator);
-					sclick.play();
-				}
-			}
-			else {
-				if (position - multiplicator >= 0) {
-					SwitchTo(position - multiplicator);
-					sclick.play();
-				}
-			}
-		}
-		else {
-			if (my < (y + (height / 2.0))) {
-				if (position + multiplicator <= numPositions) {
-					SwitchTo(position + multiplicator);
-					sclick.play();
-				}
-			}
-			else {
-				if (position - multiplicator >= 0) {
-					SwitchTo(position - multiplicator);
-					sclick.play();
-				}
-			}
-		}
-	}
-	else if (event == PANEL_MOUSE_RBDOWN)
-	{
-		if (isHorizontal) {
-			if (mx < (x + (width / 2.0))) {
-				if (position < numPositions) {
-					SwitchTo(position + 1);
-					sclick.play();
-				}
-			}
-			else {
-				if (position > 0) {
-					SwitchTo(position - 1);
-					sclick.play();
-				}
-			}
-		}
-		else {
-			if (my < (y + (height / 2.0))) {
-				if (position < numPositions) {
-					SwitchTo(position + 1);
-					sclick.play();
-				}
-			}
-			else {
-				if (position > 0) {
-					SwitchTo(position - 1);
-					sclick.play();
-				}
-			}
-		}
-	}
-
-	return true;
-}
-
-bool ContinuousThumbwheelSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
-
-	if (event == PANEL_MOUSE_LBDOWN) {
-		if (isHorizontal) {
-			if (p.x < 0.5) {
-				if (position + multiplicator <= numPositions) {
-					SwitchTo(position + multiplicator);
-					sclick.play();
-				}
-			}
-			else {
-				if (position - multiplicator >= 0) {
-					SwitchTo(position - multiplicator);
-					sclick.play();
-				}
-			}
-		}
-		else {
-			if (p.y < 0.5) {
-				if (position + multiplicator <= numPositions) {
-					SwitchTo(position + multiplicator);
-					sclick.play();
-				}
-			}
-			else {
-				if (position - multiplicator >= 0) {
-					SwitchTo(position - multiplicator);
-					sclick.play();
-				}
-			}
-		}
-	}
-	else if (event == PANEL_MOUSE_RBDOWN)
-	{
-		if (isHorizontal) {
-			if (p.x < 0.5) {
-				if (position < numPositions) {
-					SwitchTo(position + 1);
-					sclick.play();
-				}
-			}
-			else {
-				if (position > 0) {
-					SwitchTo(position - 1);
-					sclick.play();
-				}
-			}
-		}
-		else {
-			if (p.y < 0.5) {
-				if (position < numPositions) {
-					SwitchTo(position + 1);
-					sclick.play();
-				}
-			}
-			else {
-				if (position > 0) {
-					SwitchTo(position - 1);
-					sclick.play();
-				}
-			}
-		}
-	}
-
-	return true;
-}
-
-void ContinuousThumbwheelSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface) {
-
-	double s = position / (double)numPositions;
-	OurVessel->SetAnimation(anim_switch, s);
-}
-
-bool ContinuousThumbwheelSwitch::SwitchTo(int newPosition) {
-
-	if (newPosition >= 0 && newPosition <= numPositions && position != newPosition) {
-		position = newPosition;
-		state = PositionToState(position);
-		sclick.play();
-		if (callback)
-			callback->call(this);
-		return true;
-	}
-	return false;
-}
-
-int ContinuousThumbwheelSwitch::StateToPosition(int st)
-{
-	return st * multiplicator;
-}
-
-int ContinuousThumbwheelSwitch::PositionToState(int pos)
-{
-	double temp = ((double)pos) / ((double)multiplicator);
-	return (int)round(temp);
-}
-
-void ContinuousThumbwheelSwitch::LoadState(char *line) {
-
-	char buffer[100];
-	int st;
-
-	sscanf(line, "%s %i", buffer, &st);
-	if (!strnicmp(buffer, name, strlen(name))) {
-		state = st;
-	}
-
-	position = StateToPosition(state);
-}
-
-int ContinuousThumbwheelSwitch::GetPosition() {
-
-	return position;
-}
-
-void ContinuousThumbwheelSwitch::SetState(int value)
-{
-	SwitchTo(StateToPosition(value));
 }
 
 //
@@ -5066,7 +5253,6 @@ HandcontrollerSwitch::HandcontrollerSwitch() {
 }
 
 HandcontrollerSwitch::~HandcontrollerSwitch() {
-	sclick.done();
 }
 
 void HandcontrollerSwitch::Register(PanelSwitchScenarioHandler &scnh, char *n, bool hasyawaxis) {

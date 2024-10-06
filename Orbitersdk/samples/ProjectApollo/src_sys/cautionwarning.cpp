@@ -159,7 +159,7 @@ void CautionWarningSystem::TimeStep(double simt)
 
 	if (MasterAlarm && IsPowered() && PlaySounds) {
 		if (!MasterAlarmSound.isPlaying()) {
-			MasterAlarmSound.play(LOOP, 255);
+			MasterAlarmSound.play(LOOP);
 		}
 	} else {
 		MasterAlarmSound.stop();
@@ -235,7 +235,7 @@ void CautionWarningSystem::PushMasterAlarm()
 		MasterAlarmSound.stop();
 		SetMasterAlarm(false);
 	}
-	ButtonSound.play(NOLOOP, 255);
+	ButtonSound.play(NOLOOP);
 }
 
 

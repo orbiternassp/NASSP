@@ -37,18 +37,20 @@ struct AEGHeader
 
 struct AEGDataBlock
 {
+	AEGDataBlock();
+
 	//Item 1, 11 is Keplerian to Keplerian (only used in AEG service routine)
-	int InputOutputInd = 11;
+	int InputOutputInd;
 	//Item 2, initialize/update indicator (0 = Osculating elements provided, 1 = osc and mean elements provided, use low e form., 2 = same as 1, but high e)
-	int ENTRY = 0;
+	int ENTRY;
 	//Item 3, update option indicator (0 = to time, 1 = to mean anomaly, 2 = to argument of latitude, 3 = to maneuver counter line...)
-	int TIMA = 0;
+	int TIMA;
 	//Item 4, 0 for J2 and J4, 1 for J2, J3, J4 and -1 for J2 and J3 (only 1 should be used in the real time system)
-	int HarmonicsInd = 1;
+	int HarmonicsInd;
 	//Item 5, drag indicator. If nonzero it is the K-Factor
-	double ICSUBD = 0.0;
+	double ICSUBD;
 	//Item 6, vehicle area
-	double VehArea = 0.0;
+	double VehArea;
 	//Item 7, vehicle weight for Earth AEG
 	double Item7;
 	//Item 8, Input: Mean anomaly (option 1), argument of latitude (option 2-3), Output: DH (options 5-6) otherwise same as input

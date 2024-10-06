@@ -51,7 +51,7 @@ public:
 	int  makeInvalid();
 
 	bool AlreadyPlayed();
-	int  play(SoundLib soundlib,
+	int  play(const SoundLib &soundlib,
 		      VESSEL   *vessel,
 			  char     *names,
 			  double   *offset,
@@ -62,9 +62,9 @@ public:
 		      int flags = NOLOOP, int volume = 255);
 	int  Stop();
 	int  Done();
-    int  LoadMissionLandingSoundArray(SoundLib soundlib,char *soundname);
-    int  LoadMissionTimeSoundArray(SoundLib soundlib, char *soundname, double MissionTime);
-    int  InitDirectSound(SoundLib soundlib);
+    int  LoadMissionLandingSoundArray(const SoundLib &soundlib,char *soundname);
+    int  LoadMissionTimeSoundArray(const SoundLib &soundlib, char *soundname, double MissionTime);
+    int  InitDirectSound();
     int  PlaySound(char *filenames,int newbuffer,double offset);
     int	IsPlaying();
 	int	Finish(double offsetfinish);

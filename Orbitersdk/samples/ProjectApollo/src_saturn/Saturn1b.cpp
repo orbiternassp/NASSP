@@ -70,7 +70,6 @@ GDIParams g_Param;
 
 static int refcount = 0;
 static MESHHANDLE hCOAStarget;
-static MESHHANDLE hastp;
 
 Saturn1b::Saturn1b (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
 	SIBSIVBSepPyros("SIB-SIVB-Separation-Pyros", Panelsdk)
@@ -110,15 +109,7 @@ void Saturn1b::initSaturn1b()
 	initSaturn();
 
 	SaturnType = SAT_SATURN1B;
-	RelPos = _V(0.0,0.0,0.0);
-	hSoyuz = 0;
-	hAstpDM = 0;
 	Burned = false;
-
-	if (strcmp(GetName(), "AS-211")==0)
-	{
-		ASTPMission = true;
-	}
 
 	//
 	// Apollo 7 ISP and thrust values.
@@ -169,6 +160,8 @@ void Saturn1b::initSaturn1b()
 	// Default to not separating SLA panels.
 	//
 	SLAWillSeparate = false;
+
+	UseWideSLA = false;
 
 	// Moved to instantiation time
 	// lvdc.init(this);
@@ -228,13 +221,10 @@ void Saturn1b::DoFirstTimestep(double simt)
 	hs4b4=oapiGetVesselByName(VName);
 	GetApolloName(VName); strcat (VName, "-SM");
 	hSMJet = oapiGetVesselByName(VName);
-	GetApolloName(VName); strcat (VName, "-ASTPDM");
-	hAstpDM = oapiGetVesselByName(VName);
 	GetApolloName(VName); strcat (VName, "-DCKPRB");
 	hPROBE = oapiGetVesselByName(VName);
 	GetApolloName(VName); strcat (VName, "-EVA");
 	hEVA = oapiGetVesselByName(VName);
-	hSoyuz = oapiGetVesselByName("SOYUZ19");
 	GetApolloName(VName); strcat (VName, "-INTSTG");
 	hintstg = oapiGetVesselByName(VName);
 	GetApolloName(VName); strcat (VName, "-APEX");
@@ -280,7 +270,7 @@ void Saturn1b::Timestep (double simt, double simdt, double mjd)
 	// CSM/LV separation
 	//
 
-	if (CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
+	if (!Failures.GetFailure(CSMFailures_CSM_LV_Separation_Failure) && CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
 		SeparateStage(CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
 	}
@@ -652,18 +642,22 @@ int Saturn1b::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	return Saturn::clbkConsumeBufferedKey(key, down, kstate);
 }
 
-void Saturn1b::SetEngineFailure(int failstage, int faileng, double failtime, bool fail)
+void Saturn1b::SetFailure(int failuretype, bool condition)
 {
-	if (failstage == 1)
+	switch (failuretype)
 	{
-		sib->SetEngineFailureParameters(faileng, failtime, fail);
-	}
-}
-
-void Saturn1b::GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime)
-{
-	if (failstage == 1 && sib)
-	{
-		sib->GetEngineFailureParameters(faileng, fail, failtime);
+	case CSMFailures_SI_Engine_1_Failure:
+	case CSMFailures_SI_Engine_2_Failure:
+	case CSMFailures_SI_Engine_3_Failure:
+	case CSMFailures_SI_Engine_4_Failure:
+	case CSMFailures_SI_Engine_5_Failure:
+	case CSMFailures_SI_Engine_6_Failure:
+	case CSMFailures_SI_Engine_7_Failure:
+	case CSMFailures_SI_Engine_8_Failure:
+		if (sib) sib->SetEngineFailed(failuretype - CSMFailures_SI_Engine_1_Failure);
+		break;
+	case CSMFailures_SIVB_Engine_Failure:
+		if (sivb) sivb->SetEngineFailed();
+		break;
 	}
 }

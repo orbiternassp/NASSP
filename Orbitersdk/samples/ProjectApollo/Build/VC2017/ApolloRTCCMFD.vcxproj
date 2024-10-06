@@ -20,6 +20,7 @@
     <ClInclude Include="..\..\src_rtccmfd\ApolloRTCCMFD.h" />
     <ClInclude Include="..\..\src_rtccmfd\ARCore.h" />
     <ClInclude Include="..\..\src_rtccmfd\ARoapiModule.h" />
+    <ClInclude Include="..\..\src_rtccmfd\AscentRendezvousMonitor.h" />
     <ClInclude Include="..\..\src_rtccmfd\CoastNumericalIntegrator.h" />
     <ClInclude Include="..\..\src_rtccmfd\CSMLMGuidanceSim.h" />
     <ClInclude Include="..\..\src_rtccmfd\EnckeIntegrator.h" />
@@ -33,6 +34,7 @@
     <ClInclude Include="..\..\src_rtccmfd\LWP.h" />
     <ClInclude Include="..\..\src_rtccmfd\OrbMech.h" />
     <ClInclude Include="..\..\src_rtccmfd\ReentryNumericalIntegrator.h" />
+    <ClInclude Include="..\..\src_rtccmfd\RTCCDisplayFormatting.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCModule.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCSystemParameters.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCC_EMSMISS.h" />
@@ -51,11 +53,11 @@
     <ClCompile Include="..\..\src_rtccmfd\ApolloRTCCMFD_Display.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ARCore.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ARoapiModule.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\AscentRendezvousMonitor.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CoastNumericalIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\CSMLMGuidanceSim.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EnckeIntegrator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\EntryCalculations.cpp" />
-    <ClCompile Include="..\..\src_rtccmfd\EphemProg.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\GeneralizedIterator.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\GeneralPurposeManeuver.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\LDPP.cpp" />
@@ -65,6 +67,7 @@
     <ClCompile Include="..\..\src_rtccmfd\LWP.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\ReentryNumericalIntegrator.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\RTCCDisplayFormatting.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\RTCCModule.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\RTCC_EMSMISS.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\rtcc_intermediate_library_programs.cpp" />
@@ -125,7 +128,7 @@
     </Midl>
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>../../../LaunchMFD/libMFD;../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../../LaunchMFD/libMFD;../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../XRSound%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_CRT_NONSTDC_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -145,7 +148,7 @@
       <AdditionalDependencies>orbiter.lib;orbitersdk.lib;User32.lib;Gdi32.lib;WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/Plugin/ApolloRTCCMFD.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>;../../../../lib/Lua;../../src_sys/PanelSDK;../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>;../../../../lib/Lua;../../src_sys/PanelSDK;../../../../lib;../../../../XRSound%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>MSVCRT;msvcirt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\Debug\ApolloRTCCMFD/ApolloRTCCMFD.pdb</ProgramDatabaseFile>
@@ -174,7 +177,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../XRSound%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions);_CRT_SECURE_NO_WARNINGS</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -195,7 +198,7 @@
       <AdditionalDependencies>orbiter.lib;orbitersdk.lib;User32.lib;Gdi32.lib;WS2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>../../../../../Modules/Plugin/ApolloRTCCMFD.dll</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>../../../../lib;../../../../../Sound/OrbiterSound_SDK/VESSELSOUND_SDK/ShuttlePB_project;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../../../../lib;../../../../XRSound%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>msvcirt;LIBCMT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <ProgramDatabaseFile>.\Release\ApolloRTCCMFD/ApolloRTCCMFD.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -204,6 +207,7 @@
       </DataExecutionPrevention>
       <ImportLibrary>.\Release\ApolloRTCCMFD/ApolloRTCCMFD.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalOptions>/ignore:4099 %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>

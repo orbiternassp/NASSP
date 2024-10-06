@@ -60,6 +60,20 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 	STOPVAE = in.EarthRelStopParam;
 	STOPVAM = in.MoonRelStopParam;
 	HMULT = in.IsForwardIntegration;
+	UseFixedStepLength = in.UseFixedStepLength;
+	FixedStepLength = in.FixedStepLength;
+	if (UseFixedStepLength)
+	{
+		//With integration fixed step length, turn off step size multiplier
+		if (HMULT >= 0.0)
+		{
+			HMULT = 1.0;
+		}
+		else
+		{
+			HMULT = -1.0;
+		}
+	}
 	DRAG = in.DensityMultiplier;
 	VENT = in.VentPerturbationFactor;
 	CSA = -0.5*in.Area*pRTCC->SystemParameters.MCADRG;
@@ -116,7 +130,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 		//1 meter tolerance for radius and height
 		DEV = 1.0;
 	}
-	else if (ISTOPS == 4 || ISTOPS == 6)
+	else if (ISTOPS == 4 || ISTOPS == 6 || ISTOPS == 7 || ISTOPS == 8)
 	{
 		//0.0001° tolerance
 		DEV = 0.0001*RAD;
@@ -201,7 +215,22 @@ void EnckeFreeFlightIntegrator::Edit()
 EMMENI_Edit_3B:
 	TIME = abs(TRECT + tau);
 	rr = length(R);
-	dt_max = min(dt_lim, K*OrbMech::power(rr, 1.5) / sqrt(mu));
+	if (UseFixedStepLength)
+	{
+		dt_max = FixedStepLength;
+	}
+	else
+	{
+		if (DRAG > 0.0 && P == BODY_EARTH && rr < 6499920.0)
+		{
+			//Special atmospheric integration step logic
+			dt_max = 10.0;
+		}
+		else
+		{
+			dt_max = min(dt_lim, K*OrbMech::power(rr, 1.5) / sqrt(mu));
+		}
+	}
 
 	//Should we even check?
 	if (ISTOPS == 1)
@@ -216,6 +245,7 @@ EMMENI_Edit_3B:
 	{
 		if (ISTOPS == 2 || ISTOPS == 5)
 		{
+			//Radius
 			FUNCT = length(R);
 			if (P == BODY_EARTH)
 			{
@@ -228,6 +258,7 @@ EMMENI_Edit_3B:
 		}
 		else if (ISTOPS == 3)
 		{
+			//Altitude
 			if (P == BODY_EARTH)
 			{
 				FUNCT = length(R) - OrbMech::R_Earth;
@@ -241,6 +272,7 @@ EMMENI_Edit_3B:
 		}
 		else if (ISTOPS == 4)
 		{
+			//Sine of flight path angle
 			FUNCT = dotp(unit(R), unit(V));
 			if (P == BODY_EARTH)
 			{
@@ -253,6 +285,7 @@ EMMENI_Edit_3B:
 		}
 		else if (ISTOPS == 6)
 		{
+			//Ascending node
 			VECTOR3 NVEC, H_ECT;
 			EphemerisData2 sv_temp, sv_ECT;
 
@@ -265,6 +298,47 @@ EMMENI_Edit_3B:
 			H_ECT = unit(crossp(sv_ECT.R, sv_ECT.V));
 			NVEC = unit(crossp(_V(0, 0, 1), H_ECT));
 			RCALC = OrbMech::PHSANG(sv_ECT.R, sv_ECT.V, NVEC);
+		}
+		else if (ISTOPS == 7)
+		{
+			//Longitude
+			double lat;
+			OrbMech::latlong_from_r(R_EF, lat, FUNCT);
+
+			if (P == BODY_EARTH)
+			{
+				RCALC = FUNCT - STOPVAE - OrbMech::w_Earth*CurrentTime();
+			}
+			else
+			{
+				RCALC = FUNCT - STOPVAM;
+			}
+
+			//modulo between -PI and PI
+			if (RCALC > 0)
+			{
+				RCALC = fmod(RCALC + PI, PI2) - PI;
+			}
+			else
+			{
+				RCALC = fmod(RCALC - PI, PI2) + PI;
+			}
+		}
+		else if (ISTOPS == 8)
+		{
+			//Latitude
+
+			double lng;
+			OrbMech::latlong_from_r(R_EF, FUNCT, lng);
+
+			if (P == BODY_EARTH)
+			{
+				RCALC = FUNCT - STOPVAE;
+			}
+			else
+			{
+				RCALC = FUNCT - STOPVAM;
+			}
 		}
 	}
 
@@ -299,8 +373,20 @@ EMMENI_Edit_3B:
 	else if (INITE == -1)
 	{
 		//Not bounded
-		if (RCALC*RES1 >= 0)
+		bool found = false;
+
+		if (RCALC*RES1 < 0.0)
 		{
+			//For longitude search, prevent ambiguity
+			if (!(ISTOPS == 7 && abs(RCALC) > PI05))
+			{
+				found = true;
+			}
+		}
+
+		if (!found)
+		{
+			//No sign switch, not bounded
 			goto EMMENI_Edit_4A;
 		}
 
@@ -329,6 +415,8 @@ EMMENI_Edit_4A:
 		{
 			RestoreVariables();
 		}
+		//Mark as bounding
+		INITE = 1;
 		//Go back to find new dt
 		goto EMMENI_Edit_3B;
 	}
@@ -479,7 +567,7 @@ void EnckeFreeFlightIntegrator::adfunc()
 			//Get Earth rotation matrix only during initialization. For the Moon the libration matrix is updated by the PLEFEM call below
 			if (P == BODY_EARTH)
 			{
-				pRTCC->ELVCNV(CurrentTime(), RTCC_COORDINATES_ECT, RTCC_COORDINATES_ECI, Rot);
+				pRTCC->ELVCNV(CurrentTime(), RTCC_COORDINATES_ECI, RTCC_COORDINATES_ECT, Rot);
 				U_Z = tmul(Rot, _V(0, 0, 1));
 			}
 		}
@@ -549,7 +637,19 @@ void EnckeFreeFlightIntegrator::adfunc()
 		}
 		if (VENT > 0.0)
 		{
-			VECTOR3 VENTDIR = unit(crossp(unit(crossp(R, V)), R));
+			VECTOR3 VENTDIR = crossp(R, V);
+			//Protect against radial trajectories
+			if (length(VENTDIR) < 1e-10)
+			{
+				//Apply along velocity vector instead
+				VENTDIR = unit(V);
+			}
+			else
+			{
+				//Normal case
+				VENTDIR = unit(crossp(unit(VENTDIR), R));
+			}
+
 			double TV = CurrentTime() - pRTCC->GetGMTLO()*3600.0 - pRTCC->SystemParameters.MCGVEN;
 
 			if (TV < 0.0)

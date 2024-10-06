@@ -111,10 +111,19 @@ namespace mission {
 		iCMtoLMPowerConnectionVersion = 0;
 		EmptySMCG = _V(914.5916, -6.6712, 12.2940); //Includes: empty SM and SLA ring, but no SM RCS
 		bHasRateAidedOptics = false;
-		iLMCWEAVersion = 0;
+
+		CM_IMUDriftRates = _M(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+		CM_PIPABias = _V(0.0, 0.0, 0.0);
+		CM_PIPAScale = _V(0.0, 0.0, 0.0);
+
+		LM_IMUDriftRates = _M(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
+		LM_PIPABias = _V(0.0, 0.0, 0.0);;
+		LM_PIPAScale = _V(0.0, 0.0, 0.0);
 		bCrossPointerReversePolarity = false;
 		bCrossPointerShades = false;
-		iLMSystemsVersion = 5; //LM-5
+		iLMNumber = 5; //LM-5
+		bLMEventTimerReverseAtZero = false;
+		bApollo13Failures = false;
 		strCDRName = "CDR";
 		strCMPName = "CMP";
 		strLMPName = "LMP";
@@ -175,6 +184,10 @@ namespace mission {
 		}
 
 		char line[256];
+
+		AdditionalGroundStations.clear();
+		GroundStationsPositions.clear();
+		GroundStationsActive.clear();
 
 		while (hFile.getline(line, sizeof line))
 		{
@@ -265,9 +278,6 @@ namespace mission {
 				strncpy(buffer, line + 19, 255);
 				bHasRateAidedOptics = !_strnicmp(buffer, "TRUE", 4);
 			}
-			else if (!_strnicmp(line, "LMCWEAVersion=", 14)) {
-				sscanf(line + 14, "%d", &iLMCWEAVersion);
-			}
 			else if (!_strnicmp(line, "CrossPointerReversePolarity=", 28)) {
 				strncpy(buffer, line + 28, 255);
 				bCrossPointerReversePolarity = !_strnicmp(buffer, "TRUE", 4);
@@ -279,8 +289,16 @@ namespace mission {
 			else if (!_strnicmp(line, "TEPHEM0=", 8)) {
 				sscanf(line + 8, "%lf", &dTEPHEM0);
 			}
-			else if (!_strnicmp(line, "LMSystemsConfig=", 16)) {
-				sscanf(line + 16, "%d", &iLMSystemsVersion);
+			else if (!_strnicmp(line, "LMNumber=", 9)) {
+				sscanf(line + 9, "%d", &iLMNumber);
+			}
+			else if (!_strnicmp(line, "LMEventTimerReverseAtZero=", 26)) {
+				strncpy(buffer, line + 26, 255);
+				bLMEventTimerReverseAtZero = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "Apollo13Failures=", 17)) {
+				strncpy(buffer, line + 17, 255);
+				bApollo13Failures = !_strnicmp(buffer, "TRUE", 4);
 			}
 			else if (!_strnicmp(line, "CDRVesselName=", 14)) {
 				strncpy(buffer, line + 14, 255);
@@ -312,10 +330,138 @@ namespace mission {
 			else if (!_strnicmp(line, "LMCueCard=", 10)) {
 				ReadCueCardLine(line + 10, 1);
 			}
+			else if (!_strnicmp(line, "CMNBDX=", 7)) {
+				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m11);
+			}
+			else if (!_strnicmp(line, "CMNBDY=", 7)) {
+				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m12);
+			}
+			else if (!_strnicmp(line, "CMNBDZ=", 7)) {
+				sscanf(line + 7, "%lf", &CM_IMUDriftRates.m13);
+			}
+			else if (!_strnicmp(line, "CMADSRAX=", 9)) {
+				sscanf(line + 9, "%lf", &CM_IMUDriftRates.m21);
+			}
+			else if (!_strnicmp(line, "CMADSRAY=", 9)) {
+				sscanf(line + 9, "%lf", &CM_IMUDriftRates.m22);
+			}
+			else if (!_strnicmp(line, "CMADSRAZ=", 9)) {
+				sscanf(line + 9, "%lf", &CM_IMUDriftRates.m23);
+			}
+			else if (!_strnicmp(line, "CMADIAX=", 8)) {
+				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m31);
+			}
+			else if (!_strnicmp(line, "CMADIAY=", 8)) {
+				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m32);
+			}
+			else if (!_strnicmp(line, "CMADIAZ=", 8)) {
+				sscanf(line + 8, "%lf", &CM_IMUDriftRates.m33);
+			}
+			else if (!_strnicmp(line, "CMPIPABIASX=", 12)) {
+				sscanf(line + 12, "%lf", &CM_PIPABias.x);
+			}
+			else if (!_strnicmp(line, "CMPIPABIASY=", 12)) {
+				sscanf(line + 12, "%lf", &CM_PIPABias.y);
+			}
+			else if (!_strnicmp(line, "CMPIPABIASZ=", 12)) {
+				sscanf(line + 12, "%lf", &CM_PIPABias.z);
+			}
+			else if (!_strnicmp(line, "CMPIPASCALEX=", 13)) {
+				sscanf(line + 13, "%lf", &CM_PIPAScale.x);
+			}
+			else if (!_strnicmp(line, "CMPIPASCALEY=", 13)) {
+				sscanf(line + 13, "%lf", &CM_PIPAScale.y);
+			}
+			else if (!_strnicmp(line, "CMPIPASCALEZ=", 13)) {
+				sscanf(line + 13, "%lf", &CM_PIPAScale.z);
+			}
+			else if (!_strnicmp(line, "LMNBDX=", 7)) {
+				sscanf(line + 7, "%lf", &LM_IMUDriftRates.m11);
+			}
+			else if (!_strnicmp(line, "LMNBDY=", 7)) {
+				sscanf(line + 7, "%lf", &LM_IMUDriftRates.m12);
+			}
+			else if (!_strnicmp(line, "LMNBDZ=", 7)) {
+				sscanf(line + 7, "%lf", &LM_IMUDriftRates.m13);
+			}
+			else if (!_strnicmp(line, "LMADSRAX=", 9)) {
+				sscanf(line + 9, "%lf", &LM_IMUDriftRates.m21);
+			}
+			else if (!_strnicmp(line, "LMADSRAY=", 9)) {
+				sscanf(line + 9, "%lf", &LM_IMUDriftRates.m22);
+			}
+			else if (!_strnicmp(line, "LMADSRAZ=", 9)) {
+				sscanf(line + 9, "%lf", &LM_IMUDriftRates.m23);
+			}
+			else if (!_strnicmp(line, "LMADIAX=", 8)) {
+				sscanf(line + 8, "%lf", &LM_IMUDriftRates.m31);
+			}
+			else if (!_strnicmp(line, "LMADIAY=", 8)) {
+				sscanf(line + 8, "%lf", &LM_IMUDriftRates.m32);
+			}
+			else if (!_strnicmp(line, "LMADIAZ=", 8)) {
+				sscanf(line + 8, "%lf", &LM_IMUDriftRates.m33);
+			}
+			else if (!_strnicmp(line, "LMPIPABIASX=", 12)) {
+				sscanf(line + 12, "%lf", &LM_PIPABias.x);
+			}
+			else if (!_strnicmp(line, "LMPIPABIASY=", 12)) {
+				sscanf(line + 12, "%lf", &LM_PIPABias.y);
+			}
+			else if (!_strnicmp(line, "LMPIPABIASZ=", 12)) {
+				sscanf(line + 12, "%lf", &LM_PIPABias.z);
+			}
+			else if (!_strnicmp(line, "LMPIPASCALEX=", 13)) {
+				sscanf(line + 13, "%lf", &LM_PIPAScale.x);
+			}
+			else if (!_strnicmp(line, "LMPIPASCALEY=", 13)) {
+				sscanf(line + 13, "%lf", &LM_PIPAScale.y);
+			}
+			else if (!_strnicmp(line, "LMPIPASCALEZ=", 13)) {
+				sscanf(line + 13, "%lf", &LM_PIPAScale.z);
+			}
+			else if (!_strnicmp(line, "GroundStation=", 14)) {
+				ReadGroundStationLine(line + 14);
+			}
+			else if (!_strnicmp(line, "GroundStationPosition=", 22)) {
+				ReadGroundStationPostionLine(line + 22);
+			}
+			else if (!_strnicmp(line, "GroundStationActive=", 20)) {
+				ReadGroundStationActiveLine(line + 20);
+			}
 		}
 		hFile.close();
 
 		return true;
+	}
+
+	MATRIX3 Mission::GetCM_IMU_Drift() const {
+		return CM_IMUDriftRates;
+	}
+
+	MATRIX3 Mission::GetLM_IMU_Drift() const {
+		return LM_IMUDriftRates;
+	}
+	
+	VECTOR3 Mission::GetCM_PIPA_Bias() const {
+		return CM_PIPABias;
+	}
+	
+	VECTOR3 Mission::GetLM_PIPA_Bias() const {
+		return LM_PIPABias;
+	}
+	
+	VECTOR3 Mission::GetCM_PIPA_Scale() const {
+		return CM_PIPAScale;
+	}
+	
+	VECTOR3 Mission::GetLM_PIPA_Scale() const {
+		return LM_PIPAScale;
+	}
+
+	const std::string& Mission::GetMissionName(void) const
+	{
+		return strFileName;
 	}
 
 	int Mission::GetSMJCVersion() const
@@ -423,11 +569,6 @@ namespace mission {
 		return bHasRateAidedOptics;
 	}
 
-	int Mission::GetLMCWEAVersion() const
-	{
-		return iLMCWEAVersion;
-	}
-
 	bool Mission::GetCrossPointerReversePolarity() const
 	{
 		return bCrossPointerReversePolarity;
@@ -443,9 +584,9 @@ namespace mission {
 		return dTEPHEM0;
 	}
 
-	int Mission::GetLMSystemsVersion() const
+	int Mission::GetLMNumber() const
 	{
-		return iLMSystemsVersion;
+		return iLMNumber;
 	}
 
 	void Mission::ReadCueCardLine(char *line, int vehicle)
@@ -519,7 +660,7 @@ namespace mission {
 		{
 			dTEPHEM0 = 40038.;
 		}
-		else if (strCMCVersion == "Comanche055")
+		else if (strCMCVersion == "Comanche055" || strCMCVersion == "Comanche067" || strCMCVersion == "Manche72R3")
 		{
 			dTEPHEM0 = 40403.;
 		}
@@ -561,5 +702,72 @@ namespace mission {
 	const std::string& Mission::GetLMPSuitName() const
 	{
 		return strLMPSuitName;
+	}
+
+	bool Mission::IsLMEventTimerReversingAtZero() const
+	{
+		return bLMEventTimerReverseAtZero;
+	}
+
+	std::vector<GroundStationData> Mission::GetGroundStationData() const
+	{
+		return AdditionalGroundStations;
+	}
+
+	std::vector<GroundStationPosition> Mission::GetGroundStationPosition() const
+	{
+		return GroundStationsPositions;
+	}
+
+	std::vector<GroundStationActive> Mission::GetGroundStationActive() const
+	{
+		return GroundStationsActive;
+	}
+
+	void Mission::ReadGroundStationLine(char *line)
+	{
+		GroundStationData temp;
+
+		int itemp[3];
+
+		if (sscanf(line, "%d %s %s %lf %lf %d %d %d %d %d %d %d %d %d %d %d %d",
+			&temp.Num, temp.Name, temp.Code, &temp.Position[0], &temp.Position[1], &itemp[0], &temp.TrackingCaps, &temp.USBCaps, &temp.SBandAntenna, &temp.TelemetryCaps,
+			&temp.CommCaps, &itemp[1], &itemp[2], &temp.DownTlmCaps, &temp.UpTlmCaps, &temp.StationType, &temp.StationPurpose) == 17)
+		{
+			temp.Active = (itemp[0] != 0);
+			temp.HasRadar = (itemp[1] != 0);
+			temp.HasAcqAid = (itemp[2] != 0);
+
+			AdditionalGroundStations.push_back(temp);
+		}
+	}
+
+	void Mission::ReadGroundStationPostionLine(char *line)
+	{
+		GroundStationPosition temp;
+
+		if (sscanf(line, "%d %lf %lf", &temp.Num, &temp.Position[0], &temp.Position[1]) == 3)
+		{
+			GroundStationsPositions.push_back(temp);
+		}
+	}
+
+	void Mission::ReadGroundStationActiveLine(char *line)
+	{
+		GroundStationActive temp;
+
+		int itemp;
+
+		if (sscanf(line, "%d %d", &temp.Num, &itemp) == 2)
+		{
+			temp.Active = (itemp != 0);
+
+			GroundStationsActive.push_back(temp);
+		}
+	}
+
+	bool Mission::DoApollo13Failures() const
+	{
+		return bApollo13Failures;
 	}
 }

@@ -478,7 +478,7 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 	// S-IC/S-II separation
 	//
 
-	if (!LaunchFail.SIIAutoSepFail && SICSIISepPyros.Blown() && stage == LAUNCH_STAGE_ONE)
+	if (!Failures.GetFailure(CSMFailures_SII_Auto_Sep_Fail) && SICSIISepPyros.Blown() && stage == LAUNCH_STAGE_ONE)
 	{
 		SeparateStage(LAUNCH_STAGE_TWO);
 		SetStage(LAUNCH_STAGE_TWO);
@@ -518,7 +518,7 @@ void SaturnV::Timestep(double simt, double simdt, double mjd)
 	// CSM/LV separation
 	//
 
-	if (CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
+	if (!Failures.GetFailure(CSMFailures_CSM_LV_Separation_Failure) && CSMLVPyros.Blown() && stage < CSM_LEM_STAGE) {
 		SeparateStage(CSM_LEM_STAGE);
 		SetStage(CSM_LEM_STAGE);
 	}
@@ -1024,27 +1024,30 @@ void SaturnV::LoadSII(FILEHANDLE scn)
 	sii->LoadState(scn);
 }
 
-void SaturnV::SetEngineFailure(int failstage, int faileng, double failtime, bool fail)
+void SaturnV::SetFailure(int failuretype, bool condition)
 {
-	if (failstage == 1)
+	switch (failuretype)
 	{
-		sic->SetEngineFailureParameters(faileng, failtime, fail);
-	}
-	else if (failstage == 2)
-	{
-		sii->SetEngineFailureParameters(faileng, failtime, fail);
-	}
-}
-
-void SaturnV::GetEngineFailure(int failstage, int faileng, bool &fail, double &failtime)
-{
-	if (failstage == 1 && sic)
-	{
-		sic->GetEngineFailureParameters(faileng, fail, failtime);
-	}
-	else if (failstage == 2 && sii)
-	{
-		sii->GetEngineFailureParameters(faileng, fail, failtime);
+	case CSMFailures_SI_Engine_1_Failure:
+	case CSMFailures_SI_Engine_2_Failure:
+	case CSMFailures_SI_Engine_3_Failure:
+	case CSMFailures_SI_Engine_4_Failure:
+	case CSMFailures_SI_Engine_5_Failure:
+		if (sic) sic->SetEngineFailed(failuretype - CSMFailures_SI_Engine_1_Failure);
+		break;
+	case CSMFailures_SII_Engine_1_Failure:
+	case CSMFailures_SII_Engine_2_Failure:
+	case CSMFailures_SII_Engine_3_Failure:
+	case CSMFailures_SII_Engine_4_Failure:
+	case CSMFailures_SII_Engine_5_Failure:
+		if (sii) sii->SetEngineFailed(failuretype - CSMFailures_SII_Engine_1_Failure);
+		break;
+	case CSMFailures_SIVB_Engine_Failure:
+		if (sivb) sivb->SetEngineFailed();
+		break;
+	case CSMFailures_SIVB_O2_H2_Burner_Failure:
+		if (sivb) sivb->SetO2H2BurnerFailed(condition);
+		break;
 	}
 }
 

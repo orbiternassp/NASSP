@@ -1277,17 +1277,34 @@ void h_MixingPipe::Save(FILEHANDLE scn) {
 }
 
 
-h_crew::h_crew(char *i_name, int nr, h_Tank *i_src) {
+h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Pipe *i_pipe) {
 	
 	strcpy(name, i_name);
 	max_stage = 99;
 	number = nr;
 	SRC = i_src;
+	drinkpipe = i_pipe;
 }
 
 void h_crew::refresh(double dt) {
 
-	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)	
+	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)
+
+	if (drinkpipe && !(drinkpipe->in->pz)) {
+
+		if (number != 0)
+		{
+			drinkpipe->in->Open();
+			drinkpipe->flowMax = (0.0346494 * number); //grams of H2O consumed (6.6 lb/day or .275 lb/hr (18.8997 g/Man Hour))
+		}
+
+		else
+		{
+			drinkpipe->in->Close();
+			drinkpipe->flowMax = 0.0;
+		}
+	}
+
 	if (SRC) {
 		double srcTemp = SRC->GetTemp();
 		therm_obj *t = SRC->GetThermalInterface();
@@ -1304,7 +1321,7 @@ void h_crew::refresh(double dt) {
 		SRC->space.composition[SUBSTANCE_CO2].SetTemp(srcTemp);
 
 		double sweatRate = srcTemp < 310.2 ? 0.0685522320142486 + 1.99493308786737E-63 * exp(srcTemp * 0.4654878554362358) : 1.0;
-		double h2o = 1.1 * sweatRate * number * dt;  // grams of H2O water vapor (need a source for this)
+		double h2o = 1.1 * sweatRate * number * dt;  //grams of H2O water vapor (lung loss should be 2.64 lb/day and sweat should be 1.32 lb/day per crew)
 		SRC->space.composition[SUBSTANCE_H2O].mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].vapor_mass += h2o;	
 		SRC->space.composition[SUBSTANCE_H2O].SetTemp(srcTemp);
@@ -1410,7 +1427,8 @@ void h_WaterSeparator::refresh(double dt) {
 		h_volume fanned = in->GetFlow(dt * delta_p, flowMax * dt);
 		flow = fanned.GetMass() / dt;
 
-		rpmcmd = flow * 4235.29;  //Gives max flow through water separator = 3600rpm
+		// At 5.7 g/s flow, RPM should be approximately 2050 per Hamilton Standard LM ECS subsystem book
+		rpmcmd = flow * 1062.18; // This value gives approsximately 2050 RPM at 1.93 g/s flow which is what our current simulation tops off at.
 
 		if (flow != 0) {
 			h2oremovalratio = (RPM / rpmcmd);
@@ -1442,7 +1460,7 @@ void h_WaterSeparator::refresh(double dt) {
 				fanned.composition[SUBSTANCE_H2O].Q = fanned.composition[SUBSTANCE_H2O].Q*factor;
 
 				//if (!strcmp(name, "WATERSEP1"))
-				//	sprintf(oapiDebugString(), "Rate %f Removed %f Remaining %f", h2oremovalratio, removedmass / dt, fanned.composition[SUBSTANCE_H2O].mass / dt);
+					//sprintf(oapiDebugString(), "RPM %f Rate %f Removed %f Remaining %f", RPM, h2oremovalratio, removedmass / dt, fanned.composition[SUBSTANCE_H2O].mass / dt);
 			}
 		}
 
@@ -1458,11 +1476,11 @@ void h_WaterSeparator::refresh(double dt) {
 	drpmcmd = rpmcmd - RPM;
 	if (drpmcmd >= 0.0)
 	{
-		delay = 7.0;	// Gives delay for WS spool up RPM/sec, approximately 2 minutes
+		delay = 7.0;	// Gives delay for WS spool up RPM/sec, approximately 2 minutes to clear sep light
 	}
 	else
 	{
-		delay = 30.0;	// Gives delay for WS spin down RPM/sec, approximately 1 minute
+		delay = 21.0;	// Gives delay for WS spin down RPM/sec, approximately 1 minute to light sep light
 	}
 	if (abs(drpmcmd) > delay*dt)
 	{
@@ -1569,7 +1587,7 @@ h_ExteriorVentPipe::h_ExteriorVentPipe(char* i_name, h_Valve* i_IN, h_Valve* i_O
 {
 	v = NULL;
 	Num_Vents = 0;
-};
+}
 
 h_ExteriorVentPipe::~h_ExteriorVentPipe()
 {

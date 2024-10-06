@@ -2633,16 +2633,16 @@ void LM_SBAND::Timestep(double simt){
 	}
 
 	// Receiver AGC Voltage
-	if (lem->SBandPASelSwitch.IsUp()) {
-		if (ant && pa_mode_1 > 2) {
+	if (lem->SBandXCvrSelSwitch.IsUp()) {
+		if (ant && tc_mode_1 > 2) {
 			rcvr_agc_voltage = ant->GetSignalStrength();
 		}
 		else {
 			rcvr_agc_voltage = 0.0;
 		}
 	}
-	else if (lem->SBandPASelSwitch.IsDown()){
-		if (ant && pa_mode_2 > 2) {
+	else if (lem->SBandXCvrSelSwitch.IsDown()) {
+		if (ant && tc_mode_2 > 2) {
 			rcvr_agc_voltage = ant->GetSignalStrength();
 		}
 		else {
@@ -2656,14 +2656,14 @@ void LM_SBAND::Timestep(double simt){
 }
 
 void LM_SBAND::LoadState(char *line) {
-	sscanf(line + 12, "%i %i %lf %lf", &pa_mode_1, &pa_mode_2, &pa_timer_1, &pa_timer_2);
+	sscanf(line + 12, "%i %i %lf %lf %i %i %lf %lf", &pa_mode_1, &pa_mode_2, &pa_timer_1, &pa_timer_2, &tc_mode_1, &tc_mode_2, &tc_timer_1, &tc_timer_2);
 }
 
 
 void LM_SBAND::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%i %i %lf %lf", pa_mode_1, pa_mode_2, pa_timer_1, pa_timer_2);
+	sprintf(buffer, "%i %i %lf %lf %i %i %lf %lf", pa_mode_1, pa_mode_2, pa_timer_1, pa_timer_2, tc_mode_1, tc_mode_2, tc_timer_1, tc_timer_2);
 
 	oapiWriteScenario_string(scn, "UNIFIEDSBAND", buffer);
 }
@@ -2770,8 +2770,8 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	//Slew Mode
 	if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_DOWN)
 	{
-		PitchSlew = (lem->Panel12AntPitchKnob.GetState()*15.0 - 75.0)*RAD;
-		YawSlew = (lem->Panel12AntYawKnob.GetState()*15.0 - 90.0)*RAD;
+		PitchSlew = (lem->Panel12AntPitchKnob.GetValue()*15.0 - 75.0)*RAD;
+		YawSlew = (lem->Panel12AntYawKnob.GetValue()*15.0 - 90.0)*RAD;
 	}
 	//Auto Tracking
 	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)

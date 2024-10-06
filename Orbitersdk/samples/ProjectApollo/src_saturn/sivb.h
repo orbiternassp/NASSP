@@ -88,6 +88,7 @@ struct SIVBSettings
 
 	bool PanelsHinged;				///< Are SLA panels hinged?
 	double PanelProcess;			///< SLA Panels opening progress
+	bool UseWideSLA;				///< Use wide ELS-type SLA panels
 	bool SaturnVStage;				///< Saturn V stage or Saturn 1b stage?
 	bool LowRes;					///< Low-res meshes?
 	bool IUSCContPermanentEnabled;
@@ -103,6 +104,7 @@ struct SIVBSettings
 	double LMDescentEmptyMassKg;	///< Empty mass of descent stage of LEM.
 	double LMAscentEmptyMassKg;		///< Empty mass of ascent stage of LEM.
 	char PayloadName[64];			///< Payload Name
+	char customPayloadClass[256];	///< Class of custom vessel in SLA for Payload Type 9
 	char CSMName[64];
 	bool Crewed;
 
@@ -412,6 +414,7 @@ protected:
 	bool PanelsHinged;				///< SLA panels are hinged.
 	bool PanelsOpened;				///< SLA Panels are open.
 	bool SaturnVStage;				///< Stage from Saturn V.
+	bool UseWideSLA;				///< Use wide ELS-type SLA panels
 	bool LowRes;					///< Using low-res meshes.
 	bool IUSCContPermanentEnabled;
 	bool PayloadCreated;
@@ -446,6 +449,8 @@ protected:
 	int AEAPadValueCount;
 
 	char PayloadName[64];			///< Name of payload, if appropriate.
+
+	char customPayloadClass[256];	///< Class of vessel in the SLA for Payload Type 9.
 
 	bool Payloaddatatransfer;		///< Have we transferred data to the payload?
 
@@ -498,9 +503,10 @@ protected:
 	double panelProcPlusX;
 	int panelTimestepCount;
 	int panelMesh1SaturnV, panelMesh2SaturnV, panelMesh3SaturnV, panelMesh4SaturnV;
+	int panelMesh1SaturnVWide, panelMesh2SaturnVWide, panelMesh3SaturnVWide, panelMesh4SaturnVWide;
 	int panelMesh1SaturnVLow, panelMesh2SaturnVLow, panelMesh3SaturnVLow, panelMesh4SaturnVLow;
 	int panelMesh1Saturn1b, panelMesh2Saturn1b, panelMesh3Saturn1b, panelMesh4Saturn1b;
-	int meshSivbSaturnV, meshSivbSaturnVLow, meshSivbSaturn1b, meshSivbSaturn1bLow, meshSivbSaturn1bcross;
+	int meshSivbSaturnV, meshSivbSaturnVLow, meshSivbSaturnVWide, meshSivbSaturn1b, meshSivbSaturn1bLow, meshSivbSaturn1bcross;
 	int meshASTP_A, meshASTP_B, meshCOASTarget_A, meshCOASTarget_B, meshCOASTarget_C;
 	int meshApollo8LTA, meshLTA_2r;
 

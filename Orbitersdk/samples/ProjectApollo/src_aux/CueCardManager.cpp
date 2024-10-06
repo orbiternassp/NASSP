@@ -58,6 +58,15 @@ void CueCardManager::ResetMeshIndizes()
 	}
 }
 
+void CueCardManager::GetMeshIndexList(std::vector<UINT> &vec)
+{
+	vec.clear();
+	for (unsigned i = 0; i < CueCardLocations.size(); i++)
+	{
+		CueCardLocations[i].GetMeshIndexList(vec);
+	}
+}
+
 VECTOR3 CueCardManager::GetVCOffset()
 {
 	VECTOR3 ofs;

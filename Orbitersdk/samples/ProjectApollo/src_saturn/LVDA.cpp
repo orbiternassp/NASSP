@@ -347,6 +347,14 @@ bool LVDA::TLITargetingUpdate(double T_RP, double C_3, double Inclination, doubl
 	return false;
 }
 
+bool LVDA::GeneralizedManeuver(double T, double X, double Y, double Z, int type)
+{
+	if (iu->GetLVDC())
+		return iu->GetLVDC()->GeneralizedManeuver(T, X, Y, Z, type);
+
+	return false;
+}
+
 void LVDA::PrepareToLaunch()
 {
 	if (iu->GetLVDC()) iu->GetLVDC()->PrepareToLaunch();

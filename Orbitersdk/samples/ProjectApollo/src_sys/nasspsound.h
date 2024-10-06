@@ -79,5 +79,6 @@
 #define HATCHOPEN_SOUND				"hatch_open.wav"
 #define HATCHCLOSE_SOUND			"hatch_close.wav"
 #define LM_MASTERALARM_SOUND	    "alarm_lm.wav"
+#define MAIN_ENGINES_SOUND		    "Main Engines.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"

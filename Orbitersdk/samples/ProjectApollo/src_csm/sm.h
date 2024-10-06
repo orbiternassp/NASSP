@@ -157,6 +157,11 @@ public:
 	void clbkDockEvent(int dock, OBJHANDLE connected);
 
 	///
+	/// \brief For initializing sound.
+	///
+	void clbkPostCreation();
+
+	///
 	/// Pass settings from the main DLL to the jettisoned SM. This call must be virtual 
 	/// so it can be called from other DLLs without building in the SM code.
 	/// \brief Setup jettisoned SM.

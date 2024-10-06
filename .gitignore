@@ -111,5 +111,35 @@ XRSound/
 
 # Ignore EMS scroll
 /*.bmp
+/.cmake/api/v1
+/cmake
+/CMakeFiles
+/OVP
+/Src
+/Tests
+/_deps
+/VSInheritEnvironments.txt
+/SketchpadOutput2.png
+/SketchpadOutput.png
+/Orbiter_ng.pdb
+/Orbiter_ng.ilk
+/OrbiterCPackOptions.cmake
+/Orbiter.pdb
+/Orbiter.ilk
+/LuaInterpreter.pdb
+/LuaInterpreter.ilk
+/LuaInline.pdb
+/LuaInline.ilk
+/Lua.Interpreter.pdb
+/Lua.Interpreter.ilk
+/irrKlang.dll
+/CTestTestfile.cmake
+/CPackSourceConfig.cmake
+/CPackConfig.cmake
+/cmake_install.cmake
+/CMakeCache.txt
+/build.ninja
+/.ninja_log
+/.ninja_deps
 # Ignore Matlab log analyzers
 /*.m

@@ -98,7 +98,7 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 		INFO[5] = INFO_HAS[5]; INFO[7] = INFO_HAS[7]; INFO[8] = INFO_HAS[8];
 	}
 
-	pRTCC->PZGPMELM.code = "GPM";
+	pRTCC->PZGPMELM.code = "GP";
 	pRTCC->PZGPMELM.SV_before.R = R_B;
 	pRTCC->PZGPMELM.SV_before.V = V_B;
 	pRTCC->PZGPMELM.SV_before.GMT = sv_b_apo.TS;
@@ -717,6 +717,9 @@ void RTCCGeneralPurposeManeuverProcessor::FlightControllerInput()
 void RTCCGeneralPurposeManeuverProcessor::HeightManeuver(bool circ)
 {
 	double DH, dv_h, V_a2, x_a, E_a, V_a, r_b_dot, V_H_a, r_D;
+	int IMAX;
+
+	IMAX = 10;
 
 	if (circ)
 	{
@@ -775,17 +778,37 @@ void RTCCGeneralPurposeManeuverProcessor::HeightManeuver(bool circ)
 		{
 			DH = r_D - sv_temp.R;
 		}
-		if (abs(DH) < eps1 || I > 5)
+		if (abs(DH) < eps1 || I > IMAX)
 		{
 			break;
 		}
 		dv_h = mu * DH / (4.0*pow(sv_a.coe_osc.a, 2)*V_a);
+		//Limit change in DV. Is equation above even correct?
+		if (abs(dv_h) > 1000.0)
+		{
+			if (dv_h > 0.0)
+			{
+				dv_h = 1000.0;
+			}
+			else
+			{
+				dv_h = -1000.0;
+			}
+		}
+
 		V_H_a = V_H_a + dv_h;
 		V_a2 = V_H_a * V_H_a + r_b_dot * r_b_dot;
 		V_a = sqrt(V_a2);
 		sv_a.coe_osc.a = mu * sv_b.R / (2.0*mu - sv_b.R*V_a2);
 		x_a = sv_a.R*sv_a.R*V_H_a*V_H_a;
 		sv_a.coe_osc.e = sqrt(1.0 - x_a / mu / sv_a.coe_osc.a);
+		//Orbit too eccentric
+		if (sv_a.coe_osc.e >= 1.0)
+		{
+			ErrorIndicator = 9;
+			return;
+		}
+
 		E_a = pRTCC->GLQATN(sv_b.R*r_b_dot*sqrt(sv_a.coe_osc.a), sqrt(mu)*(sv_a.coe_osc.a - sv_b.R));
 		sv_a.coe_osc.l = E_a - sv_a.coe_osc.e*sin(E_a);
 		sv_a.f = pRTCC->GLQATN(sv_b.R*r_b_dot*sqrt(x_a), x_a - mu * sv_b.R);
@@ -798,7 +821,7 @@ void RTCCGeneralPurposeManeuverProcessor::HeightManeuver(bool circ)
 		{
 			sv_a.coe_osc.g += PI2;
 		}
-	} while (I < 5);
+	} while (I < IMAX);
 }
 
 int RTCCGeneralPurposeManeuverProcessor::OptimumApsidesChange()

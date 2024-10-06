@@ -136,12 +136,13 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP7ManPADOpt opt;
 		EphemerisData sv_A;
+		PLAWDTOutput WeightsTable;
 		double GET_TIG;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
 		sv_A = StateVectorCalcEphem(calcParams.src);
-		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
+		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		GET_TIG = OrbMech::HHMMSSToSS(3, 20, 0);
 
@@ -153,9 +154,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		opt.navcheckGET = 0;
 		opt.sv0 = sv_A;
-		opt.CSMMass = PZMPTCSM.TotalInitMass;
+		opt.WeightsTable = WeightsTable;
 
-		AP7ManeuverPAD(&opt, *form);
+		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "PHASING BURN");
 		sprintf(form->remarks, "heads down, retrograde, -X thrusters");
 	}
@@ -191,6 +192,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double get_guess, lng_des, gmt_guess, gmt_min, gmt_max;
 		AP7ManPADOpt opt;
 		EphemerisData sv, sv_upl;
+		PLAWDTOutput WeightsTable;
 		EMSMISSInputTable intab;
 		EphemerisDataTable2 tab; 
 		char buffer1[1000];
@@ -199,7 +201,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//Get state vector and mass
 		sv = StateVectorCalcEphem(calcParams.src);
-		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
+		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		if (fcn == 2)
 		{
@@ -225,6 +227,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		intab.EphemerisRightLimitGMT = gmt_max;
 		intab.ManCutoffIndicator = false;
 		intab.VehicleCode = RTCC_MPT_CSM;
+		intab.WeightsTable = &WeightsTable;
+		intab.useInputWeights = true;
 
 		EMSMISS(&intab);
 		tab.Header.TUP = 1;
@@ -256,7 +260,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		RZJCTTC.R31_GLevel = 0.2;
 		RZJCTTC.R31_FinalBankAngle = 55.0*RAD;
 
-		RMSDBMP(sv, PZMPTCSM.TotalInitMass);
+		RMSDBMP(sv, WeightsTable.ConfigWeight);
 
 		//Save data
 		TimeofIgnition = RZRFDP.data[2].GETI;
@@ -281,9 +285,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.UllageDT = 15.0;
 		opt.UllageThrusterOpt = true;
 		opt.sv0 = sv;
-		opt.CSMMass = PZMPTCSM.TotalInitMass;
+		opt.WeightsTable = WeightsTable;
 
-		AP7ManeuverPAD(&opt, *form);
+		AP7ManeuverPAD(opt, *form);
 
 		if (fcn == 2)
 		{
@@ -459,9 +463,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.UllageDT = 15.0;
 			opt.UllageThrusterOpt = true;
 			opt.sv0 = sv_A;
-			opt.CSMMass = PZMPTCSM.TotalInitMass;
+			opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
-			AP7ManeuverPAD(&opt, *form);
+			AP7ManeuverPAD(opt, *form);
 			sprintf(form->purpose, "PHASING BURN");
 
 			if (opt.enginetype == RTCC_ENGINETYPE_CSMRCSPLUS4)
@@ -568,7 +572,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.UllageDT = 15.0;
 		opt.UllageThrusterOpt = true;
 		opt.sv0 = sv_A;
-		opt.CSMMass = PZMPTCSM.TotalInitMass;
+		opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		if (preliminary)
 		{
@@ -588,7 +592,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(form->remarks, "posigrade, heads up");
 		}
 
-		AP7ManeuverPAD(&opt, *form);
+		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "NCC1");
 
 		AGCStateVectorUpdate(buffer1, 1, 1, sv_A);
@@ -609,13 +613,14 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		TwoImpulseResuls res;
 		AP7ManPADOpt opt;
 		EphemerisData sv_A, sv_P;
+		PLAWDTOutput WeightsTable;
 		double GET_TIG_imp, P30TIG;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
 		sv_A = StateVectorCalcEphem(calcParams.src);
 		sv_P = StateVectorCalcEphem(calcParams.tgt);
-		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
+		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		GET_TIG_imp = OrbMech::HHMMSSToSS(27, 30, 0);
 
@@ -645,10 +650,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			char buffer1[1000];
 			VECTOR3 dV_LVLH;
 			int enginetype;
-			enginetype = SPSRCSDecision(SystemParameters.MCTST1 / PZMPTCSM.TotalInitMass, res.dV);
+			enginetype = SPSRCSDecision(SystemParameters.MCTST1 / WeightsTable.ConfigWeight, res.dV);
 
 			in.CONFIG = 1; //CSM
-			in.CSMWeight = med_m50.CSMWT;
+			in.CSMWeight = WeightsTable.CSMWeight;
 			in.sv_before = res.sv_tig;
 			in.V_aft = res.sv_tig.V + res.dV;
 			in.DETU = 15.0; //Ullage
@@ -658,7 +663,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			in.LMWeight = 0.0;
 			in.Thruster = enginetype;
 			in.VC = RTCC_MANVEHICLE_CSM;
-			in.VehicleArea = PZMPTCSM.ConfigurationArea;
+			in.VehicleArea = WeightsTable.ConfigArea;
 
 			double GMT_TIG;
 			PoweredFlightProcessor(in, GMT_TIG, dV_LVLH);
@@ -674,9 +679,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.UllageDT = 15.0;
 			opt.UllageThrusterOpt = true;
 			opt.sv0 = sv_A;
-			opt.CSMMass = PZMPTCSM.TotalInitMass;
+			opt.WeightsTable = WeightsTable;
 
-			AP7ManeuverPAD(&opt, *form);
+			AP7ManeuverPAD(opt, *form);
 			sprintf(form->purpose, "NCC2");
 
 			CMCExternalDeltaVUpdate(buffer1, P30TIG, dV_LVLH);
@@ -699,13 +704,14 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double P30TIG;
 		VECTOR3 dV_LVLH;
 		SV sv_A, sv_P;
+		PLAWDTOutput WeightsTable;
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
 
 		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
 		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
-		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
+		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -728,7 +734,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		in.LMWeight = 0.0;
 		in.Thruster = RTCC_ENGINETYPE_CSMSPS;
 		in.VC = RTCC_MANVEHICLE_CSM;
-		in.VehicleArea = PZMPTCSM.ConfigurationArea;
+		in.VehicleArea = WeightsTable.ConfigArea;
 		in.HeadsUpIndicator = false;
 
 		double GMT_TIG;
@@ -745,9 +751,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.UllageDT = 15.0;
 		opt.UllageThrusterOpt = true;
 		opt.sv0 = ConvertSVtoEphemData(sv_A);
-		opt.CSMMass = PZMPTCSM.TotalInitMass;
+		opt.WeightsTable = WeightsTable;
 
-		AP7ManeuverPAD(&opt, *form);
+		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "NSR");
 		sprintf(form->remarks, "heads down, retrograde");
 
@@ -802,9 +808,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7MNV * form = (AP7MNV *)pad;
 
 		EphemerisData sv;
+		PLAWDTOutput WeightsTable;
 
 		sv = StateVectorCalcEphem(calcParams.src);
-		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
+		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		opt.dV_LVLH = _V(2.0*0.3048, 0.0, 0.0);
 		opt.enginetype = RTCC_ENGINETYPE_CSMRCSMINUS4;
@@ -814,9 +821,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sxtstardtime = 0;
 		opt.TIG = OrbMech::HHMMSSToSS(30.0, 20.0, 0.0);
 		opt.sv0 = sv;
-		opt.CSMMass = PZMPTCSM.TotalInitMass;
+		opt.WeightsTable = WeightsTable;
 
-		AP7ManeuverPAD(&opt, *form);
+		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "SEPARATION");
 		sprintf(form->remarks, "posigrade, heads down, -X Thrusters");
 	}
@@ -923,6 +930,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double P30TIG, TIG_imp, LOA, GET_TH;
 		MATRIX3 REFSMMAT;
 		EphemerisData sv, sv1;
+		PLAWDTOutput WeightsTable;
 		AEGBlock aeg;
 		AEGDataBlock sv_A;
 		int KAOP, KE;
@@ -931,7 +939,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buffer2[1000];
 
 		sv = StateVectorCalcEphem(calcParams.src);
-		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
+		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		//Threshold time
 		GET_TH = OrbMech::HHMMSSToSS(75, 18, 0);
@@ -940,7 +948,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv1 = coast(sv, GMTfromGET(GET_TH) - sv.GMT, RTCC_MPT_CSM);
 
 		//Convert to AEG and initialize
-		aeg = SVToAEG(sv1, PZMPTCSM.ConfigurationArea, PZMPTCSM.TotalInitMass, PZMPTCSM.KFactor);
+		aeg = SVToAEG(sv1, WeightsTable.ConfigArea, WeightsTable.ConfigWeight, PZMPTCSM.KFactor);
 		PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
 
 		//Calculate required apsidal shift
@@ -993,7 +1001,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PZGPMELM.V_after += tmul(OrbMech::LVLH_Matrix(PZGPMELM.SV_before.R, PZGPMELM.SV_before.V), _V(-0.8, 200.0, 0.0)*0.3048);
 
 		in.CONFIG = 1; //CSM
-		in.CSMWeight = PZMPTCSM.TotalInitMass;
+		in.CSMWeight = WeightsTable.CSMWeight;
 		in.sv_before = PZGPMELM.SV_before;
 		in.V_aft = PZGPMELM.V_after;
 		in.DETU = 15.0; //Ullage
@@ -1003,7 +1011,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		in.LMWeight = 0.0;
 		in.Thruster = RTCC_ENGINETYPE_CSMSPS;
 		in.VC = RTCC_MANVEHICLE_CSM;
-		in.VehicleArea = PZMPTCSM.ConfigurationArea;
+		in.VehicleArea = WeightsTable.ConfigArea;
 		in.HeadsUpIndicator = true;
 
 		double GMT_TIG;
@@ -1025,9 +1033,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.TIG = P30TIG;
 		manopt.sxtstardtime = -20.0*60.0;
 		manopt.sv0 = sv;
-		manopt.CSMMass = PZMPTCSM.TotalInitMass;
+		manopt.WeightsTable = WeightsTable;
 
-		AP7ManeuverPAD(&manopt, *form);
+		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "SPS-3");
 
 		AGCStateVectorUpdate(buffer1, 1, 1, sv);
@@ -1141,13 +1149,16 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		VECTOR3 dV_LVLH;
 		MATRIX3 REFSMMAT;
 		SV sv;
+		PLAWDTOutput WeightsTable;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		F = SystemParameters.MCTST1;
 		t_burn = 0.5;
-		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
-		dv = F / PZMPTCSM.CommonBlock.CSMMass * t_burn + SystemParameters.MCTCT1 / PZMPTCSM.CommonBlock.CSMMass * 20.0;
+
+		WeightsTable = GetWeightsTable(calcParams.src, true, false);
+
+		dv = F / WeightsTable.ConfigWeight * t_burn + SystemParameters.MCTCT1 / WeightsTable.ConfigWeight * 20.0;
 
 		sv = StateVectorCalc(calcParams.src);
 
@@ -1188,9 +1199,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.UllageThrusterOpt = false;
 		opt.UllageDT = 20.0;
 		opt.sv0 = ConvertSVtoEphemData(sv);
-		opt.CSMMass = PZMPTCSM.TotalInitMass;
+		opt.WeightsTable = WeightsTable;
 
-		AP7ManeuverPAD(&opt, *form);
+		AP7ManeuverPAD(opt, *form);
 		if (fcn == 23)
 		{
 			sprintf(form->purpose, "SPS-4");
@@ -1220,11 +1231,11 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 60: //Rev 136 Landmark Tracking Update
 	{
 		LMARKTRKPADOpt opt;
-		SV sv0;
+		EphemerisData sv0;
 
 		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
 
-		sv0 = StateVectorCalc(calcParams.src);
+		sv0 = StateVectorCalcEphem(calcParams.src);
 
 		opt.sv0 = sv0;
 
@@ -1349,7 +1360,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.entries = 4;
 		}
 
-		LandmarkTrackingPAD(&opt, *form);
+		LandmarkTrackingPAD(opt, *form);
 	}
 	break;
 	case 24: //MISSION C BLOCK DATA 14
@@ -1436,11 +1447,12 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double P30TIG, TIG_imp;
 		MATRIX3 REFSMMAT;
 		EphemerisData sv;
+		PLAWDTOutput WeightsTable;
 		char buffer1[1000];
 		char buffer2[1000];
 
 		sv = StateVectorCalcEphem(calcParams.src);
-		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
+		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		orbopt.H_A = 240.0*1852.0;
 		orbopt.H_P = 90.0*1852.0;
@@ -1454,7 +1466,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
 
 		in.CONFIG = 1; //CSM
-		in.CSMWeight = PZMPTCSM.TotalInitMass;
+		in.CSMWeight = WeightsTable.ConfigWeight;
 		in.sv_before = PZGPMELM.SV_before;
 		in.V_aft = PZGPMELM.V_after;
 		in.DETU = 20.0; //Ullage
@@ -1464,7 +1476,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		in.LMWeight = 0.0;
 		in.Thruster = RTCC_ENGINETYPE_CSMSPS;
 		in.VC = RTCC_MANVEHICLE_CSM;
-		in.VehicleArea = PZMPTCSM.ConfigurationArea;
+		in.VehicleArea = WeightsTable.ConfigArea;
 		in.HeadsUpIndicator = true;
 
 		double GMT_TIG;
@@ -1488,9 +1500,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.UllageThrusterOpt = false;
 		manopt.UllageDT = 20.0;
 		manopt.sv0 = sv;
-		manopt.CSMMass = PZMPTCSM.TotalInitMass;
+		manopt.WeightsTable = WeightsTable;
 
-		AP7ManeuverPAD(&manopt, *form);
+		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "SPS-5");
 
 		form->Vc += 100.0;
@@ -1675,6 +1687,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double P30TIG, TIG_imp;
 		MATRIX3 REFSMMAT;
 		EphemerisData sv, sv0, sv1;
+		PLAWDTOutput WeightsTable;
 		char buffer1[1000];
 		char buffer2[1000];
 		AEGBlock aeg;
@@ -1683,7 +1696,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		int KAOP, KE;
 
 		sv = StateVectorCalcEphem(calcParams.src);
-		PZMPTCSM.TotalInitMass = PZMPTCSM.CommonBlock.CSMMass = calcParams.src->GetMass();
+		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		sv0 = sv;
 		orbopt.dLOA = 0.0;
@@ -1697,7 +1710,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			//Take state vector to estimated time of rev 164 crossing
 			sv1 = coast(sv0, GMTfromGET(260.0*3600.0) - sv0.GMT, RTCC_MPT_CSM);
 			//Convert to AEG and initialize
-			aeg = SVToAEG(sv1, PZMPTCSM.ConfigurationArea, PZMPTCSM.TotalInitMass, PZMPTCSM.KFactor);
+			aeg = SVToAEG(sv1, WeightsTable.ConfigArea, WeightsTable.ConfigWeight, PZMPTCSM.KFactor);
 			PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
 			KAOP = -1; //Perigee only
 			KE = 0; //ECI
@@ -1712,7 +1725,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		in.CONFIG = 1; //CSM
-		in.CSMWeight = PZMPTCSM.TotalInitMass;
+		in.CSMWeight = WeightsTable.ConfigWeight;
 		in.sv_before = PZGPMELM.SV_before;
 		in.V_aft = PZGPMELM.V_after;
 		in.DETU = 15.0; //Ullage
@@ -1722,7 +1735,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		in.LMWeight = 0.0;
 		in.Thruster = RTCC_ENGINETYPE_CSMSPS;
 		in.VC = RTCC_MANVEHICLE_CSM;
-		in.VehicleArea = PZMPTCSM.ConfigurationArea;
+		in.VehicleArea = WeightsTable.ConfigArea;
 		in.HeadsUpIndicator = true;
 
 		double GMT_TIG;
@@ -1752,9 +1765,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.UllageThrusterOpt = true;
 		manopt.UllageDT = 15.0;
 		manopt.sv0 = sv;
-		manopt.CSMMass = PZMPTCSM.TotalInitMass;
+		manopt.WeightsTable = WeightsTable;
 
-		AP7ManeuverPAD(&manopt, *form);
+		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "SPS-7");
 
 		AGCStateVectorUpdate(buffer1, 1, 1, sv);

@@ -29,6 +29,11 @@
 class MCC;
 class RTCC;
 
+namespace mission
+{
+	class Mission;
+};
+
 class MCCVessel : public VESSEL4 {
 public:
 	MCCVessel(OBJHANDLE hVessel, int flightmodel);
@@ -52,9 +57,15 @@ protected:
 	void LoadVC();
 	void RedrawPanel_MFDButton(SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int xdist);
 
+	void LoadMissionFile();
+	void SetConfiguration();
+
 	char CSMName[64];
 	char LEMName[64];
 	char LVName[64];
+	std::string strMission;
+
+	mission::Mission* pMission;
 };
 
 extern void LoadMeshes();

@@ -41,8 +41,11 @@
 // Switch states. Only use positive numbers.
 //
 
-#define TOGGLESWITCH_DOWN		0			///< Toggle switch is up.
-#define TOGGLESWITCH_UP			1			///< Toggle switch is down.
+#define TOGGLESWITCH_DOWN		0			///< Toggle switch is down.
+#define TOGGLESWITCH_UP			1			///< Toggle switch is up.
+
+#define PUSHBUTTON_UNPUSHED		0			///< Push button is un-pushed (off).
+#define PUSHBUTTON_PUSHED		1			///< Push button is pushed (on).
 
 #define THREEPOSSWITCH_DOWN		0			///< Three-position switch is down.
 #define THREEPOSSWITCH_CENTER	1			///< Three-position switch is centered.
@@ -1159,6 +1162,112 @@ protected:
 	Sound guardClick;
 };
 
+//Any switch that does not have a discrete position
+class ContinuousSwitch : public PanelSwitchItem
+{
+public:
+	ContinuousSwitch();
+	virtual ~ContinuousSwitch();
+
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, double defaultVal, double minVal, double maxVal);
+	virtual void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
+
+	void DefineVCAnimations(UINT vc_idx);
+	void DefineMeshGroup(UINT _grpIndex);
+
+	void DrawFlash(SURFHANDLE drawSurface);
+
+	void DrawSwitchVC(int id, int event, SURFHANDLE drawSurface);
+
+	virtual void SaveState(FILEHANDLE scn);
+	virtual void LoadState(char *line);
+
+	//Checklist MFD
+	virtual void SetState(int value);
+	virtual int GetState();
+
+	//Returns displayed value (not animation state)
+	double GetValue();
+	//Returns animation state (0-1), could be overloaded to provide output voltage
+	virtual double GetOutput();
+
+	void SetRotationRange(double _range);
+	void SetWraparound(bool _Wraparound);
+protected:
+	void SetValue(double newAngle);
+	double DisplayToAngle(double value) const;
+	double AngletoDisplay(double angle) const;
+	bool SwitchTo(double newPosition);
+
+	void LoadSound(char *soundname);
+
+	//Common variables
+	double state;			//Equivalent to animation range, 0-1
+	double minValue;		//Value on the panel equivalent to animation state 0.0
+	double maxValue;		//Value on the panel equivalent to animation state 1.0
+	double slope;			//Slope of function converting displayed state to angle
+	bool Wraparound;		//Switch can wrap around limits of animation state, rotation range should be set to 360 degres for that
+	double RotationRange;	//Range of rotation in radians
+
+	//2D
+	int	x;
+	int y;
+	int width;
+	int height;
+	int maxState; //Number of discrete states in the bitmap
+	SURFHANDLE switchSurface;
+	SURFHANDLE switchBorder;
+
+	//VC
+	UINT grpIndex;
+	MGROUP_ROTATE* pswitchrot;
+	UINT anim_switch;
+
+	VESSEL *OurVessel;
+	SwitchRow *switchRow;
+	Sound sclick;
+};
+
+class ContinuousThumbwheelSwitch : public ContinuousSwitch
+{
+public:
+	ContinuousThumbwheelSwitch();
+	virtual ~ContinuousThumbwheelSwitch();
+
+	virtual void Register(PanelSwitchScenarioHandler &scnh, char *n, double defaultValue, double minValue, double maxValue, double clickIncr, bool horizontal = false);
+	virtual void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
+
+	void SetState(int value);
+	int GetState();
+
+	void DrawSwitch(SURFHANDLE drawSurface);
+	virtual bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
+protected:
+	bool isHorizontal;
+	double clickIncrement; //Increment of a mouse click of the displayed state. Left click is 5x this value.
+};
+
+class ContinuousRotationalSwitch : public ContinuousSwitch
+{
+public:
+	ContinuousRotationalSwitch();
+	virtual ~ContinuousRotationalSwitch();
+
+	virtual void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row);
+
+	void SetOffset(double Offset);
+
+	virtual void DrawSwitch(SURFHANDLE drawSurface);
+	virtual bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
+protected:
+	void ChangeSwitchState(double px);
+
+	double rotOffset; //For converting to 2D panel bitmap
+	double lastX;
+	bool mouseDown;
+};
 
 typedef struct {
 	double angle;
@@ -1256,22 +1365,11 @@ protected:
 	e_object *sources[16];
 };
 
-class OrdealRotationalSwitch : public RotationalSwitch {
+class OrdealRotationalSwitch : public ContinuousRotationalSwitch {
 
 public:
-	OrdealRotationalSwitch() { value = 100; lastX = 0; mouseDown = false; };
+	OrdealRotationalSwitch() { maxState = 12; };
 	virtual void DrawSwitch(SURFHANDLE drawSurface);
-	virtual void DrawSwitchVC(int id, int event, SURFHANDLE drawSurface);
-	virtual bool CheckMouseClick(int event, int mx, int my);
-	virtual bool CheckMouseClickVC(int event, VECTOR3 &p);
-	virtual void SaveState(FILEHANDLE scn);
-	virtual void LoadState(char *line);
-	int GetValue() { return value; }
-
-protected:
-	int value;
-	int lastX;
-	bool mouseDown;
 };
 
 class IndicatorSwitch: public PanelSwitchItem {
@@ -1425,27 +1523,6 @@ protected:
 	double RotationRange;
 };
 
-class ContinuousThumbwheelSwitch : public ThumbwheelSwitch {
-public:
-	ContinuousThumbwheelSwitch();
-	void Register(PanelSwitchScenarioHandler &scnh, char *n, int defaultState, int maximumState, bool horizontal, int multPos);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool CheckMouseClickVC(int event, VECTOR3 &p);
-	void DrawSwitchVC(int id, int event, SURFHANDLE drawSurface);
-	bool SwitchTo(int newPosition);
-	void LoadState(char *line);
-	void SetState(int value);
-	int GetPosition();
-protected:
-	int StateToPosition(int st);
-	int PositionToState(int pos);
-
-	int multiplicator;
-	int numPositions;
-	int position;
-};
-
-
 class HandcontrollerSwitch: public PanelSwitchItem {
 
 public:
@@ -1534,6 +1611,7 @@ protected:
 	friend class CircuitBrakerSwitch;
 	friend class HandcontrollerSwitch;
 	friend class MeterSwitch;
+	friend class ContinuousSwitch;
 };
 
 class PanelSwitchListener {
@@ -1605,6 +1683,7 @@ protected:
 	friend class CircuitBrakerSwitch;
 	friend class HandcontrollerSwitch;
 	friend class MeterSwitch;
+	friend class ContinuousSwitch;
 };
 
 

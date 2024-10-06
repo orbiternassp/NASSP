@@ -60,15 +60,19 @@ if (query_object)
 BuildError(1);
 return NULL;
 }
+
 void H_system::Create_h_crew(char *line)
 {
 char name[100];
 int nmb;
 char source[100];
+char drink[100];
 h_Tank *SRC;
-sscanf(line+6,"%s %i %s",name,&nmb,source);
+h_Pipe *drinkpipe;
+sscanf(line+6,"%s %i %s %s",name,&nmb,source,drink);
 SRC=(h_Tank*)GetPointerByString(source);
-AddSystem(new h_crew(name,nmb,SRC));
+drinkpipe=(h_Pipe*)GetPointerByString(drink);
+AddSystem(new h_crew(name,nmb,SRC,drinkpipe));
 }
 
 void H_system::Create_h_Radiator(char *line) {
@@ -630,6 +634,8 @@ void H_system::Build() {
 
 void* H_system::GetPointerByString(char* query)
 {
+	if (Compare(query, "NOTHING"))
+		return NULL; //intentionally returns NULL for a "dummy" or "placeholder" system
 	if (Compare(query, "HYDRAULIC")) query = query + 10;
 	if (Compare(query, "ELECTRIC"))
 		return P_electric->GetPointerByString(query + 9);
@@ -724,6 +730,8 @@ void* h_Tank::GetComponent(char *component_name) {
 		 return &(space.composition[0].vapor_mass);
 	if (!strnicmp (component_name, "H2O_MASS", 8))
 		 return &(space.composition[2].mass);
+	if (!strnicmp(component_name, "H2O_VAPORMASS", 13))
+		return &(space.composition[2].vapor_mass);
 
 	BuildError(2);
 	return NULL;

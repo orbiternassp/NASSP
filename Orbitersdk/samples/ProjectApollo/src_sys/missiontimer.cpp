@@ -61,7 +61,7 @@ MissionTimer::~MissionTimer()
 	// Nothing for now.
 }
 
-void MissionTimer::Init(e_object *a, e_object *b, RotationalSwitch *dimmer, e_object *c, ToggleSwitch *override)
+void MissionTimer::Init(e_object *a, e_object *b, ContinuousRotationalSwitch *dimmer, e_object *c, ToggleSwitch *override)
 {
 	DCPower.WireToBuses(a, b);
 	WireTo(c);
@@ -152,6 +152,12 @@ void MissionTimer::UpdateSeconds(int n)
 	}
 }
 
+void MissionTimer::CountingThroughZero(double &t)
+{
+	//Mission timers can't count down, so we should never even get here
+	t = 0.0;
+}
+
 bool MissionTimer::IsPowered()
 {
 	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE)
@@ -168,7 +174,7 @@ bool MissionTimer::IsDisplayPowered()
 	{
 		//Do nothing
 	}
-	else if (DimmerRotationalSwitch->GetState() == 0)
+	else if (DimmerRotationalSwitch->GetOutput() < 0.00001)
 	{
 		return false;
 	}
@@ -259,11 +265,7 @@ double MissionTimer::GetTime()
 void MissionTimer::SetTime(double t)
 {
 	if (t < 0.0) {
-		hours = 0;
-		minutes = 0;
-		seconds = 0;
-		extra = 0.0;
-		return;
+		CountingThroughZero(t);
 	}
 
 	int secs = (int) floor(t);
@@ -400,9 +402,7 @@ void MissionTimer::LoadState(FILEHANDLE scn, char *end_str)
 
 LEMEventTimer::LEMEventTimer(PanelSDK &p) : EventTimer(p)
 {
-	//
-	// Nothing for now
-	//
+	ReverseDirection = false;
 }
 
 LEMEventTimer::~LEMEventTimer()
@@ -445,6 +445,22 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits, int TexMul)
 	Curdigit = seconds;
 	Curdigit2 = seconds/10;
 	oapiBlt(surf, digits, 62*TexMul, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
+}
+
+void LEMEventTimer::CountingThroughZero(double &t)
+{
+	if (ReverseDirection)
+	{
+		//t will be slightly below zero, inverse the sign to countinue counting up
+		t = -t;
+		//Change direction
+		CountUp = TIMER_COUNT_UP;
+	}
+	else
+	{
+		//Normal event timer behavior
+		EventTimer::CountingThroughZero(t);
+	}
 }
 
 EventTimer::EventTimer(PanelSDK &p) : MissionTimer(p)
@@ -511,4 +527,10 @@ void EventTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, int TexMul)
 	Curdigit = seconds;
 	Curdigit2 = seconds / 10;
 	oapiBlt(surf, digits, 0, 58*TexMul, 19*TexMul * (Curdigit - (Curdigit2 * 10)), 0, 18*TexMul, 13*TexMul);
+}
+
+void EventTimer::CountingThroughZero(double &t)
+{
+	//Only event timers can count down, add 1 hour to make it count through zero
+	t += 3600.0;
 }

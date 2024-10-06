@@ -95,9 +95,12 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,83,207,10
     CONTROL         "Enable automatic checklist execution",IDC_CHECK_VAGCCHECKLISTAUTOENABLED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,70,149,10
-    GROUPBOX        "Other",IDC_STATIC,7,105,219,32
+    GROUPBOX        "Other",IDC_STATIC,7,105,219,83
     CONTROL         "Enable VC flight instruments in debug string (e.g. during PDI)",IDC_CHECK_VCINFOENABLED,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,14,119,206,10
+    LTEXT           "Level of VC vibrations:",IDC_STATIC,18,138,72,8
+    LTEXT           "%",IDC_STATIC,125,138,8,8
+    EDITTEXT        IDC_EDIT1,95,136,24,14,ES_AUTOHSCROLL
 END
 
 

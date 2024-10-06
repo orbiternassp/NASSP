@@ -24,6 +24,34 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "AnalyticEphemerisGenerator.h"
 #include "rtcc.h"
 
+AEGDataBlock::AEGDataBlock()
+{
+	InputOutputInd = 11;
+	ENTRY = 0;
+	TIMA = 0;
+	HarmonicsInd = 1;
+	ICSUBD = 0.0;
+	VehArea = 0.0;
+	Item7 = 0.0;
+	Item8 = 0.0;
+	Item9 = 0.0;
+	Item10 = 0.0;
+
+	for (int i = 0; i < 6; i++)
+	{
+		coe_osc.data[i] = coe_mean.data[i] = 0.0;
+	}
+
+	TS = 0.0;
+	l_dot = 0.0;
+	g_dot = 0.0;
+	h_dot = 0.0;
+	TE = 0.0;
+	f = 0.0;
+	U = 0.0;
+	R = 0.0;
+}
+
 PMMAEG::PMMAEG()
 {
 
@@ -309,7 +337,7 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 
 	header.ErrorInd = 0;
 
-	if (in.coe_osc.a<0.27*OrbMech::R_Earth || in.coe_osc.a > 5.0*OrbMech::R_Earth)
+	if (in.coe_osc.a < 0.2*OrbMech::R_Earth || in.coe_osc.a > 5.0*OrbMech::R_Earth)
 	{
 		goto NewPMMLAEG_V846;
 	}

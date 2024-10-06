@@ -209,9 +209,9 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		manopt.UllageDT = 20.0;
 		manopt.UllageThrusterOpt = false;
 		manopt.sv0 = opt.sv_CSM;
-		manopt.CSMMass = calcParams.src->GetMass();
+		manopt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
-		AP7ManeuverPAD(&manopt, *form);
+		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "NC1");
 
 		if (preliminary == false)
@@ -276,9 +276,10 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		manopt.UllageDT = 20.0;
 		manopt.UllageThrusterOpt = false;
 		manopt.sv0 = opt.sv_CSM;
-		manopt.CSMMass = CSMMass;
+		manopt.WeightsTable.CC[RTCC_CONFIG_C] = true;
+		manopt.WeightsTable.ConfigWeight = manopt.WeightsTable.CSMWeight = CSMMass;
 
-		AP7ManeuverPAD(&manopt, *form);
+		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "NC2");
 	}
 	break;
@@ -335,9 +336,10 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		manopt.UllageDT = 20.0;
 		manopt.UllageThrusterOpt = false;
 		manopt.sv0 = opt.sv_A;
-		manopt.CSMMass = CSMMass;
+		manopt.WeightsTable.CC[RTCC_CONFIG_C] = true;
+		manopt.WeightsTable.ConfigWeight = manopt.WeightsTable.CSMWeight = CSMMass;
 
-		AP7ManeuverPAD(&manopt, *form);
+		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "NCC");
 	}
 	break;
@@ -358,9 +360,10 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		manopt.UllageDT = 20.0;
 		manopt.UllageThrusterOpt = false;
 		manopt.sv0 = ConvertSVtoEphemData(calcParams.SVSTORE1);
-		manopt.CSMMass = calcParams.SVSTORE1.mass;
+		manopt.WeightsTable.CC[RTCC_CONFIG_C] = true;
+		manopt.WeightsTable.ConfigWeight = manopt.WeightsTable.CSMWeight = calcParams.SVSTORE1.mass;
 
-		AP7ManeuverPAD(&manopt, *form);
+		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "NSR");
 	}
 	break;
@@ -372,13 +375,11 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		AP7ManPADOpt manopt;
 		TwoImpulseOpt opt;
 		TwoImpulseResuls res;
-		double CSMMass;
 
 		opt.mode = 5;
 		opt.T1 = -1.0;
 		opt.T2 = -1.0;
 		opt.sv_A = StateVectorCalcEphem(calcParams.src);
-		CSMMass = calcParams.src->GetMass();
 		opt.sv_P = StateVectorCalcEphem(calcParams.tgt);
 		opt.DH = opt.PhaseAngle = 0.0;
 		opt.Elev = 27.0*RAD;
@@ -398,9 +399,9 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		manopt.UllageDT = 15.0;
 		manopt.UllageThrusterOpt = true;
 		manopt.sv0 = opt.sv_A;
-		manopt.CSMMass = CSMMass;
+		manopt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
-		AP7ManeuverPAD(&manopt, *form);
+		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "TPI");
 	}
 	break;

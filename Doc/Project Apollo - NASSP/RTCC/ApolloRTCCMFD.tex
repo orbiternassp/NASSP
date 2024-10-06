@@ -263,12 +263,56 @@ The output from the GPM Processor is a display containing such maneuver informat
 \textbf{CLC:} Calculate the maneuver.\\
 \textbf{MPT:} Create finite maneuver from impulsive burn.\\
 \textbf{BCK:} Go back to the main menu.\\
-
-\subsection{TLI Planning}
-
-To be determined.\\
 \newpage
+\subsection{TLI Planning}
+\subsubsection{Introduction}
+On a typical lunar mission all the targeting needed for TLI has been loaded into the Saturn computer (LVDC) before launch. For a dispersed Earth orbit or an alternative mission the RTCC has the capability to target a new TLI or an alternative second S-IVB burn. The options available in the TLI processor are
 
+\begin{enumerate}
+	\item S-IVB hypersurface solution. Evaluates the preloaded targeting in the LVDC
+	\item Integrated free-return trajectory to the nominal lunar flyby conditions
+	\item Specified total Delta V
+	\item Specified apogee altitude
+	\item Integrated non-free return trajectory to the nominal nodal position at the Moon
+\end{enumerate}
+
+\subsubsection{Inputs}
+\textbf{IU:} Select the vessel that is used for the uplink of the updated TLI targeting. In non-MPT mode also used as the vessel from which the state vector and weights are taken for the TLI processor calculation.\\
+\textbf{MPT:} Select CSM or LM mission plan table (MPT mode only).\\
+\textbf{VEC:} Select the state vector used in the calculation. Normally the anchor vector of the CSM or LM ephemeris is used, but any vector in the useable vector table can be specified (MPT mode only).\\
+\textbf{Opp:} Select the TLI opportunity. For option 1 this is the input to choose when the TLI is done and for all options this changes certain parameters associated with one of the opportunities in the LVDC, mostly the time of S-IVB mixture ratio shift from ignition.\\
+\textbf{Mode:} Choose the TLI processor calculation mode, see list above.\\
+\textbf{TIG:} Time of ignition. Not used for option 1. Used as a very rough initial guess in option 2 and 5, that only has to be accurate to a full orbit. In options 3 and 4 this is the exact time of ignition used.\\
+\textbf{DV:} Delta V of the maneuver (option 3 only).\\
+\textbf{APO:} Apogee altitude to be achieved by the maneuver (option 4 only).\\
+\textbf{Window:} Pacific or Atlantic TLI window, for the lunar mission options (2 and 5) this is used to generate the initial guess.\\
+\textbf{SFP:} For the lunar mission options (2 and 5) the target parameters are taken from the Skeleton Flight Plan table, which has two sets of data. See the Midcourse Correction Processor for more details about the SFP.\\
+
+\textbf{CLC:} Calculate solution.\\
+\textbf{MPT:} Transfer maneuver to MPT.\\
+\textbf{UPL:} Uplink solution to IU.\\
+\newpage
+\subsubsection{Display}
+
+\begin{figure}[hp]
+	\centering
+		\includegraphics{./ApolloRTCCMFDFiles/TLIProcessorDisplayExample.png}
+	\caption{TLI Planning Display}
+	\label{fig:TLIProcessorDisplayExample}
+\end{figure}
+
+\textbf{Display Parameters}\\
+
+\textbf{GET RP:} Ground Elapsed Time of Restart Preparations (TB6)\\
+\textbf{GET TIG:} Ground Elapsed Time of main engine ignition\\
+\textbf{INCL:} Inclination at cutoff\\
+\textbf{DESC:} Longitude of the descending node at cutoff\\
+\textbf{ECC:} Eccentricity at cutoff\\
+\textbf{C3:} Orbital energy at cutoff\\
+\textbf{ALPHA:} Angle from perigee of cutoff ellipse to descending node of cutoff ellipse\\
+\textbf{TA:} True anomaly at cutoff\\
+\textbf{BT:} Burn time of maneuver\\
+\newpage
 \subsection{Midcourse Correction Processor}
 
 \subsubsection{Introduction}
@@ -458,6 +502,255 @@ This display is based on the actual display used by the flight controllers for A
 \textbf{HPC:} Height of perilune on the first lunar orbit.\\
 \textbf{THETA:} Angle between the desired lunar orbit plane and the actual achieved plane.\\
 \textbf{FND/E:} True anomaly at LOI on the first ellipse (post LOI).\\
+\newpage
+\subsection{Lunar Descent Planning Processor}
+The LDPP computes maneuver sequences to be executed by the CSM and the LM to yield a set of desired orbital conditions at the point of LM descent ignition or a desired CSM orbital plane at the time of LM liftoff. There are seven modes of operations from which to choose. Each of these modes may contain more than one sequence. Each sequence may or maybe not have more than one maneuver. The following table presents a list of maneuver sequences in each mode:\\
+
+\begin{center}
+\begin{tabular}{|l|l|l|l|l|l|l|}
+\hline
+Mode&Maneuver&\multicolumn{5}{|l|}{Sequence}\\
+\hline
+&&1&2&3&4&5\\
+\hline
+1&1&PC&PCC&ASP&PCCH&PCCT\\
+&2&DOI&DOI&CIA&DOI&DOI\\
+&3&--&--&DOI&--&--\\
+\hline
+2&1&ASH&CIR&--&--&--\\
+&2&DOI&DOI&--&--&--\\
+\hline
+3&1&ASH&--&--&--&--\\
+&2&CIA&--&--&--&--\\
+&3&DOI&--&--&--&--\\
+\hline
+4&1&DOI&--&--&--&--\\
+\hline
+5&1&PC&HO1&HO1&--&--\\
+&2&HO1&PC&HO2&--&--\\
+&3&HO1&HO2&PC&--&--\\
+&4&DOI&DOI&DOI&--&--\\
+\hline
+6&\multicolumn{4}{|l|}{Go to powered descent}&--&--\\
+\hline
+7&1&PPC&&&--&--\\
+\hline
+\end{tabular}
+\end{center}
+
+Abbreviations:\\
+
+\begin{center}
+\begin{tabular}{l l}
+ASP&Apside shift, altitude adjustment, and plane change maneuver\\
+ASH&Apside shift and altitude adjustment maneuver\\
+CIA&Circularization at an apsis maneuver\\
+CIR&Circularization maneuver\\
+DOI&Descent orbit injection maneuver\\
+HO1&First maneuver in a double Hohmann sequence\\
+HOI2&Second maneuver in a double Hohmann sequence\\
+PC&Plane-change maneuver\\
+PCC&Plane change and circularization maneuver\\
+PCCH&Plane change and circularization maneuver at a desired height\\
+PCCT&Plane change and circularization maneuver at a desired time\\
+PPC&Prelaunch plane-change maneuver\\
+\end{tabular}
+\end{center}
+\newpage
+Detailed description of each mode:\\
+\begin{center}
+\begin{tabular}{l l l m{7.3cm}}
+Maneuver&Maneuver&Maneuver&\\
+Mode No.&Sequence No.&Display Code& Definition\\
+\hline
+1&1&PC&Compute plane-change maneuver only\\
+\hline
+1&2&PCC&Compute plane-change and circularization maneuver\\
+\hline
+1&3&ASP-CIA&Compute plane-change maneuver combined with first maneuver of a CSM two maneuver sequence to circularize the CSM orbit at an input altitude\\
+\hline
+1&4&PCCH&Compute plane-change and circularization maneuver at a specific altitude\\
+\hline
+1&5&PPCT&Compute plane-change and circularization maneuver at an input time\\
+\hline
+2&2&ASH&Compute CSM maneuver to establish an apsis and an input altitude at the DOI maneuver point\\
+\hline
+2&3&CIR&Compute CSM maneuver to circularize orbit at an input altitude\\
+\hline
+3&1&ASHT-CIA&Compute CSM two-maneuver sequence with the first maneuver performed at an input time and the second maneuver performed at an input altitude to circularize the orbit\\
+\hline
+3&3&ASHA-CIA&Compute CSM two-maneuver sequence with the first maneuver performed at an apsis and the second maneuver performed at an input altitude to circularize the orbit\\
+\hline
+\end{tabular}
+\end{center}
+\newpage
+\begin{center}
+\begin{tabular}{l l l m{7.3cm}}
+Maneuver&Maneuver&Maneuver&\\
+Mode No.&Sequence No.&Display Code& Definition\\
+\hline
+4&1&DOI&Computes the DOI maneuver only\\
+\hline
+4&2&DOI&Computes the DOI maneuver only and includes a plane change\\
+\hline
+4&3&DOI&Computes the DOI maneuver with a higher fidelity numerical integration processor, for a more precise perilune altitude and placement. Useful for CSM DOIs that take place many hours before PDI.\\
+\hline
+4&4&DOI&Same as sequence 3, but with an included plane change.\\
+\hline
+5&1&PC, HO1, HO2&Compute CSM three-maneuver sequence so that the first maneuver is a plane change and the following pair is a double Hohmann to a circular orbit at an input altitude\\
+\hline
+5&2&HO1, PC, HO2&Compute CSM three-maneuver sequence so that the first maneuver initiates a double Hohmann, the second is a plane-change, and the third completes  the double Hohmann to a circular orbit at an input altitude\\
+\hline
+5&3&HO2, HO2, PC&Compute CSM three-maneuver sequence so that the first two maneuvers constitute a double Hohmann to a circular orbit at an input altitude and the third is a plane change\\
+\hline
+6&1&PDI&Powered descent only\\
+\hline
+7&1&PPC&Prelaunch plane change\\
+\hline
+\end{tabular}
+\end{center}
+\newpage
+\subsubsection{Initialization Parameters}
+\begin{center}
+\begin{tabular}{ | m{1cm} | m{4cm} | m{8.5cm} |}
+\hline
+Button&Parameter&Description\\
+\hline
+AZI&Approach azimuth&For the calculation modes that involve a plane change maneuver, the approach azimuth to the landing site can be specified. If this is not required then the parameter can be set to 0, which will result in the optimum (smallest) plane change burn to be calculated\\
+\hline
+HDP&Altitude of point of descent ignition&Usually the DOI maneuver will set up PDI to occur at this specific altitude\\
+\hline
+PDS&Powered-descent simulation flag&Set to perform a a detailed simulation of powered descent (not implemented yet)\\
+\hline
+PDI&Powered-descent time&If the powered descent is to be simulated, this option either lets you choose the time of PDI or let it be internally calculated. For this the time should be set to zero\\
+\hline
+N&Dwell orbits&Number dwell orbits desired between DOI and powered-descent ignition\\
+\hline
+DFT&Descent flight time&Time from PDI to touchdown\\
+\hline
+DFA&Descent flight arc&Travel angle from PDI to touchdown. Usual values are 15 to 16 degrees\\
+\hline
+LSO&Landing site offset&Usually this will be set to the same value as DFA. This will cause PDI to occur at perilune. If PDI is desired to occur at a different point in the orbit, like on Apollo 17, then this value can control where the perilune will be located relative to the landing site. A value of -10 degrees will have the perilunar location 10 degrees after landing site passage\\
+\hline
+\end{tabular}
+\end{center}
+\newpage
+\subsubsection{Computation Parameters}
+
+\begin{center}
+\begin{tabular}{ | m{1cm} | m{4cm} | m{8.5cm} |}
+\hline
+VEH&Vehicle&Select if CSM or LM are performing the maneuver sequence\\
+\hline
+VTI&Vector time&With MPT enable, this time is the vector time from the ephemeris. Otherwise it seconds as a vehicle selection button\\
+MOD&Mode&Select the calculation mode (1-7)\\
+\hline
+SEQ&Sequence&Select the specific maneuver sequence\\
+\hline
+HEI&Height&Altitude wanted at apsis. Typically the altitude at which DOI is desired to occur, but depending on the mode can also be the circularization maneuver altitude\\
+\hline
+TH1&Threshold time 1&Threshold time for the first maneuver of a sequence\\
+\hline
+TH2&Threshold time 2&Threshold time for the second maneuver of a sequence\\
+\hline
+TH3&Threshold time 3&Threshold time for the third maneuver of a sequence\\
+\hline
+TH4&Threshold time 4&Threshold time for the fourth maneuver of a sequence. DOI maneuvers will always use this time as the threshold for the maneuver. For a prelaunch plane-change maneuver this time is used as a threshold for overflying the landing site\\
+\hline
+\end{tabular}
+\end{center}
+
+\newpage
+\subsubsection{Display}
+\paragraph{Buttons:}\mbox{} \\
+
+\textbf{CLC:} Calculate the display\\
+\textbf{TLA:} Store the time of landing (GETTD) for RTCC wide use\\
+\textbf{MPT:} Convert to finite burn or transfer to MPT\\
+
+\begin{center}
+\begin{tabular}{ | m{2cm} | m{9cm} | m{1.5cm} |}
+\hline
+Parameter&Description&Unit\\
+\hline
+LM WT&LM weight&lbs\\
+\hline
+GMTV&GMT of state vector used in the calculation&\\
+\hline
+GETV&GET of state vector used in the calculation&\\
+\hline
+MODE&Calculation mode of the calculation&\\
+\hline
+LAT LLS&Latitude of the landing site&degrees\\
+\hline
+LONG LLS&Longitude of the landing site&degrees\\
+\hline
+MVR&Maneuver code&\\
+\hline
+GETTH&Threshold time for the maneuver&\\
+\hline
+GETIG&Time of ignition for the maneuver. Special case for the PPC mode: Second time is the landing site crossing&\\
+\hline
+LIG&Longitude of ignition&degrees\\
+\hline
+DV&Total Delta V of the maneuver&ft/s\\
+\hline
+HAC&Height of apolune after the maneuver&NM\\
+\hline
+HPC&Height of perilune after the maneuver&NM\\
+\hline
+DVX&Delta V x-component of the maneuver in LVLH coordinates&ft/s\\
+\hline
+DVY&Delta V y-component of the maneuver in LVLH coordinates&ft/s\\
+\hline
+DVZ&Delta V z-component of the maneuver in LVLH coordinates&ft/s\\
+\hline
+GETIG&Time of ignition of powered descent&\\
+\hline
+GETTD&Touchdown time&\\
+\hline
+MODE&Descent azimuth mode&\\
+\hline
+DESC AZ&Approach azimuth to the landing site, if input&degrees\\
+\hline
+SN.LK.A&Sun look angle at the time of landing&degrees\\
+\hline
+\end{tabular}
+\end{center}
+\newpage
+\textbf{Error codes:}\\
+
+\begin{center}
+\begin{tabular}{ | l | m{12cm} |}
+\hline
+Bit&Description\\
+\hline
+1&Unrecoverable AEG error. Processing halted.\\
+\hline
+2&Error in backing through maneuver(s) in PCPLCH. Processing halted.\\
+\hline
+3&Error in trying to obtain LM weight from PLAWDT (or LM weight is zero). Processing continued.\\
+\hline
+4&Failed to converge in ASH maneuver. Processing continued.\\
+\hline
+5&Failed to converge on closest approach in PCPLCH. Processing continued.\\
+\hline
+6&Failed to converge on landing site. Processing continued.\\
+\hline
+7&Failed to converge in DOI maneuver. Processing continued.\\
+\hline
+8&Failed to converge on a height maneuver in PCSAC. Processing continued.\\
+\hline
+9&Failed to converge on a common node. Processing continued.\\
+\hline
+10&Delta V for plane change maneuver less than 1 ft/s. No maneuver computed, processing continued.\\
+\hline
+11&Error from PMMAPD. Processing halted.\\
+\hline
+12&Failed to converge on time of landing site longitude crossing PCTLLC - Processing continued.\\
+\hline
+\end{tabular}
+\end{center}
 \newpage
 \subsection{Lunar Launch Window Processor}
 \subsubsection{Introduction}
@@ -710,8 +1003,8 @@ The two nominally used modes are lunar search for TEI and the fuel critical, uns
 \textbf{TYP:} Cycle between the three AST types.\\
 \textbf{SIT:} Choose the landing site or type of abort.\\
 \textbf{VTI:} Choose the vector time for the abort (MPT mode only)\\
-\textbf{TIM:} Choose the time of abort, or initial guess in the case of lunar search.\\
-\textbf{TDV:} Choose the maximum DV for a time critical abort.\\
+\textbf{TIM:} Choose the time of abort, or minimum abort time in the case of lunar search.\\
+\textbf{TDV:} Choose the maximum DV for a time critical abort or the maximum abort time for the lunar search option.\\
 \textbf{TZ:} Choose the estimated landing time for PTP and ATP aborts.\\
 \textbf{AST:} Go to the AST display page.\\
 \textbf{ENT:} Choose the entry profile.\\
@@ -771,7 +1064,15 @@ for a vector fetch, a time of abort, and maneuver targets. This type of manual e
 \paragraph{Inputs}\mbox{} \\
 \textbf{COL:} Solution will be shown in either primary or manual column.\\
 \textbf{AST:} Choose AST code for the calculation.\\
-\textbf{REF:} Choose REFSMMAT type for the calculation.\\
+\textbf{REF:} Choose REFSMMAT type for the calculation. This can be any REFSMMAT currently stored in the RTCC or any of the following additional types that are calculated with the RTED solution:
+\begin{itemize}
+	\item ROP: Attitude is 0, 0, 0 in burn attitude with heads up. This is identical to the preferred REFSMMAT in the AGC.
+	\item ROY: Attitude is 180, 180, 0 in burn attitude with heads up. This is the Earth orbit retrofire REFSMMAT.
+	\item ROZ: Attitude is 0, 180, 0 in burn attitude with heads up.
+	\item TEI: Attitude is 180, 0, 0 in burn attitude with heads down. This is the TEI REFSMMAT used on Apollo 12 and later.
+  \item DEI: Attitude is 0, 180, 0 at reentry in an LVLH orientation with heat shield forward, inplane, lift up, heads down. This is the standard lunar entry REFSMMAT.
+	\item REI: Attitude is 0, 0, 0 at reentry in an LVLH orientation with heat shield forward, inplane, lift up, heads down.
+\end{itemize}
 \textbf{MAN:} Choose maneuver code for the calculation. The code consists of four letters. The first letter is the spacecraft performing the maneuver, C for CSM and L for LM. The second letter is the thruster used for the maneuver. S for SPS, D for DPS or R for RCS. The third letter is the spacecraft configuration. D for docked, A for ascent stage docked and U for undocked. The last letter is always X for External DV guidance.\\
 \textbf{ULL:} Choose the ullage thrusters and duration for the burn. The ullage thruster options are 2 or 4. If the burn is an RCS burn then the options are +2, +4, -2 or -4 and these will be the thrusters used for the maneuver.\\
 \textbf{TRM:} Choose the trim angle option (calculated or system parameter)\\
@@ -1029,9 +1330,23 @@ Option 4 will accept a state vector and IMU gimbal angles and compute the pitch 
 
 Option 5 computes the IMU gimbal angles required to place the spacecraft in a passive thermal control (PTC) attitude, with the +X-axis oriented 90 degrees with respect to the Sun and to the Earth for omnidirectional communication.\\
 
-Option 6 computes the attitude required to orientate the CSM to the forward or aft horizons, either in heads up or down.\
+Option 6 computes the attitude required to orientate the CSM to the forward or aft horizons, either in heads up or down.\\
 
-Options 7-9 will be implemented in the future.\\
+Option 7 (Optics Support Table) will primarily be used to verify the CMC and LGC stable member alignment made by using the onboard optical sighting equipment. This option is divided into 5 modes which are as follows:\\
+
+Mode 1 computes the yaw angle required to place the LM z-axis in the local vertical plane and a pitch angle which will place the horizon on the landing point designator LPD). The necessary inputs are REFSMMAT, gimbal angles, and time.\\
+
+Mode 2 uses an input REFSMMAT, spacecraft attitude, and time interval to compute AOS, LOS, and optics angles for 10 stars.\\
+
+Mode 3 computes a REFSMMAT by specifying star IDs, optics angles, and spacecraft attitude. The capability exists to input two sets of gimbal angles with the above input data and compute the REFSMMAT.\\
+
+Mode 4 uses an input REFSMMAT and spacecraft attitude for both vehicles to compute the second vehicle REFSMMAT. If both REFSMMATs are input, the second vehicle attitude will be computed.\\
+
+Mode 5 computes the CSM gimbal angles required to point the AOT at the desired target. The inputs are REFSMMAT, docking angle, one star ID, and optics angles.\\
+
+Mode 6 computes the attitude for the preferred REFSMMAT. Given a current and a desired REFSMMAT, it computes the gimbal angles for the current REFSMMAT, which define 0, 0, 0 gimbal angles for the preferred REFSMMAT and outputs a set of gimbal angles and FDAI angles which used in conjuction with the current REFSMMAT defines the spacecraft attitude necessary to switch to the preferred REFSMMAT and read 0, 0, 0 gimbal angles.\\
+
+Options 8 and 9 will be implemented in the future.\\
 \newpage
 \subsection{VECPOINT}
 
@@ -1537,6 +1852,65 @@ The procedure to calculate a nominal deorbit maneuver is very similar to the one
 \end{tabbing}
 \newpage
 
+\textbf{MED Code}: P13\\
+\textbf{Purpose}: Enter vector in spherical coordinates\\
+\textbf{Example}: \texttt{P13,CSM,5521.0,0.0,269.0,0.7,23.4,60.0,102:40:00,L,MCT;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &Vehicle&Velocity&Flight Path Angle&Azimuth&Geocentric Latitude&Longitude\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FLP&FLP&FLP&FLP&FLP\\
+ \hline
+ \textbf{Input Units} &EBCDIC&ft./sec.&degrees&degrees&degrees&degrees\\
+ \hline
+ \textbf{Checking Option}&Note 1&$\geq$0&-90.$\leq$A$\leq$90&0.$\leq$A$\leq$360&-90.$\leq$A$\leq$90&-180.$\leq$A$\leq$180\\
+ \hline
+ \textbf{Missing Item Option}&Error&&&&&\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}: \= (1) Vehicle must be in vehicle name table (CSM, LEM)\\
+\end{tabbing}
+\newpage
+
+\textbf{MED Code}: P13\\
+\textbf{Purpose}: Enter vector in spherical coordinates\\
+\textbf{Example}: \texttt{P13,CSM,5521.0,0.0,269.0,0.7,23.4,60.0,102:40:00,L,MCT;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{7} & \textbf{8} & \textbf{9} & \textbf{10} &&\\ 
+ \hline
+ \textbf{Item Name} &Height&Time&Live/Static Ephem. Ind.&Coordinate System Ind.&&\\
+ \hline
+ \textbf{Input Format} &FLP&H:M:S.TH&EBCDIC&EBCDIC&&\\
+ \hline
+ \textbf{Input Units} &NM&hours&EBCDIC&EBCDIC&&\\
+ \hline
+ \textbf{Checking Option}&H$\geq$0&T$\geq$0&Exact Note 2&Exact Note 3&&\\
+ \hline
+ \textbf{Missing Item Option}&&&Insert L&Insert ECT&&\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}: \= (2) \= Possible inputs:\\
+\> \>-L - Live ephem. (default)\\
+\> \>-B = put in GZLTRA and STATIC ephem.\\
+\> \>-S = STATIC ephem.\\
+\> \>-G = Put in GZLTRA only.\\
+\> (3) Coord. System Ind. = ECT, MCT\\
+\end{tabbing}
+\newpage
+
 \textbf{MED Code}: P15\\
 \textbf{Purpose}: Update GMTZS for specified vehicle\\
 \textbf{Example}: \texttt{P15,AGC,13:32:00;}
@@ -1671,7 +2045,7 @@ The procedure to calculate a nominal deorbit maneuver is very similar to the one
 
 \begin{tabbing}
 \textbf{Notes}: \= (1) \= Vehicle must be in MHGVNM.\\
-\> (2) Date is checked by internal caldenar on final logic. Then reference day is calculated (Jan 1 =\\
+\> (2) Date is checked by internal calendar on final logic. Then reference day is calculated (Jan 1 =\\
 \> \> day 0) along with days in month, etc. These values are stored in GZGENCSN.\\
 \> (3) On entry, link to EMLAMPNP to rotate P and N matrices and sun/moon tables.\\
 \> (4) If in Nophase, items 1-5 required, 6 may be input (zero inserted if missing). If in \\
@@ -2181,7 +2555,38 @@ LN & Geographic longitude of the earth return ascending node & deg & (3)\\
 \subsection{CSM Optics Support Table (MSK 0229)}
 
 TBD
+\newpage
+\subsection{Ascent Rendezvous Monitor (MSK 0232)}
 
+The Ascent Rendezvous Monitor (ARM) display calculates a tweak burn to be performed shortly after insertion from lunar ascent to correct the trajectory and get back to the nominal coelliptic rendezvous profile. It also shows additional parameters for contingencies, like the time of ignition and Delta V of an apolune kick burn, to correct an unsafe orbit.
+\subsubsection{Inputs}
+See input page in the MFD.
+\subsubsection{Display}
+The display automatically updates every two seconds after it has been enabled with the ENA button. This can be done before lunar liftoff, although no reasonable calculations can be done until shortly before insertion. Before that error messages will be displayed.\\
+
+According to the mission rules the tweak burn is required if its DV exceeds 30 ft/s. For this recommended action is display which either says GO or NO GO. The apolune kick calculation is done if the current perilune is lower than the minumum safe altitude from the input page.\\
+
+List of error codes:
+\begin{enumerate}
+	\item Failure in conic state vector extrapolation routine
+	\item CDH indicator must be an odd number
+	\item Too many iterations
+\end{enumerate}
+\newpage
+\subsection{Short Ascent Rendezvous Monitor (MSK 0233)}
+
+The Short Ascent Rendezvous Monitor (Short ARM) display is, like MSK 232, computing a tweak burn to be performed shortly after lunar ascent, but it is used for the direct/short rendezvous profile employed on Apollo 14 and later. On these missions the ARM display is used to calculate a bailout burn to get back to a coelliptic profile.
+\subsubsection{Inputs}
+See input page in the MFD.
+\subsubsection{Display}
+The display automatically updates every two seconds after it has been enabled with the ENA button. This can be done before lunar liftoff, although no reasonable calculations can be done until shortly before insertion. Before that a numeric error code will be displayed.\\
+
+According to the mission rules the tweak burn should not be performed if the DV exceeds 60 feet per second or if the perilune altitude after the burn would be below 5 nautical miles. The recommendation message on the display shows either BAIL or TWEAK for this. No specific recommendation is given if the tweak burn Delta V is so small that it should not even be performed.\\
+
+List of error codes:
+\begin{enumerate}
+	\item Failure in Two-Impulse processor
+\end{enumerate}
 \newpage
 \subsection{LM Optics Support Table (MSK 0239)}
 
@@ -2278,7 +2683,7 @@ MAT GET&An associated GET of any matrix display, such as time computed, time mad
 \end{figure}
 \end{landscape}
 \newpage
-\subsection{Vector Comparison Display (MSK 1591)}
+\subsection{Vector Comparison Display (MSK 1590)}
 
 \subsubsection{Function}
 

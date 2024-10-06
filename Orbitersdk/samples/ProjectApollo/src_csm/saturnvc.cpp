@@ -32,6 +32,14 @@
 #include "resource.h"
 
 #include "nasspdefs.h"
+#include "nassputils.h"
+
+#ifdef _OPENORBITER
+#include <gcCoreAPI.h>
+#else
+#include <gcConst.h>
+#endif
+
 #include "nasspsound.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -42,6 +50,10 @@
 #include "tracer.h"
 #include "papi.h"
 #include "CM_VC_Resource.h"
+#include "CM-VC-SeatsFolded_Resource.h"
+#include "CM-VC-SeatsUnfolded_Resource.h"
+#include "EmissionListCMVC.h"
+
 
 // ==============================================================
 // VC Constants
@@ -618,8 +630,8 @@ void Saturn::InitVC()
 	// Register active areas for repainting here
 	//
 		
-	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, 3);
-	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, 4);
+	SURFHANDLE MainPanelTex1 = oapiGetTextureHandle(hCMVC, VC_TEX_CMVCTex1_dds);
+	SURFHANDLE MainPanelTex2 = oapiGetTextureHandle(hCMVC, VC_TEX_CMVCTex2_dds);
 
 	// Panel 1
 
@@ -677,6 +689,23 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS2, _R(906*TexMul, 1081*TexMul, 1008*TexMul, 1201*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_EVENT_TIMER306, _R(220*TexMul, 149*TexMul, 238*TexMul, 220*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_MISSION_CLOCK306, _R(337*TexMul, 129*TexMul, 360*TexMul, 272*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+
+	// Integral Lights Panel 8
+	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_NUMERICS_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
+	// Integral Lights Panel 5
+	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P5, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P5, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
+	// Integral Lights LEB
+	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P100, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P100, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	oapiVCRegisterArea(AID_VC_NUMERICS_LIGHT_P100, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
+	// Cue Cards Lighting
+	oapiVCRegisterArea(AID_VC_CUE_CARDS_LIGHTING, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	// Initialize surfaces
 
@@ -761,11 +790,15 @@ bool Saturn::clbkLoadVC (int id)
 		id = viewpos;
 	}
 
+	InVC = true;
+	InPanel = false;
+
 	//Reset Clip Radius settings
 	SetClipRadius(0.0);
 
-	//if ((viewpos >= SATVIEW_ENG1) && (viewpos <= SATVIEW_ENG6))
-	//	return true;
+	// Init the 2D panel switches to fix XRSound not giving us switch clicks if we load directly into the VC.
+	// Calling InitPanel(SATPANEL_MAIN) also works, since that function calls SetSwitches() as well.
+	SetSwitches(SATPANEL_MAIN);	// Use main panel as a placeholder, it doesn't actually matter
 
 	//Reset VC free camera to default
 	vcFreeCamx = 0;
@@ -779,8 +812,7 @@ bool Saturn::clbkLoadVC (int id)
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 		SetCameraMovement(_V(0.0, -0.3, 0.0), 0, 0, _V(-0.3, -0.3, 0.1), 90 * RAD, 0, _V(0.25, -0.19, 0.15), 0, 0);
 		oapiVCSetNeighbours(-1, SATVIEW_CENTERSEAT, SATVIEW_LEFTDOCK, SATVIEW_LEBLEFT);
-		InVC = true;
-		InPanel = false;
+
 		SetView(true);
 		SetCOASMesh();
 
@@ -793,8 +825,7 @@ bool Saturn::clbkLoadVC (int id)
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 		SetCameraMovement(_V(-0.0, -0.15, 0.0), 0, 0, _V(-0.3, 0.0, 0.0), 0, 0, _V(0.3, 0.0, 0.0), 0, 0);
 		oapiVCSetNeighbours(SATVIEW_LEFTSEAT, SATVIEW_RIGHTSEAT, SATVIEW_UPPER_CENTER, SATVIEW_LOWER_CENTER);
-		InVC = true;
-		InPanel = false;
+
 		SetView(true);
 
 		RegisterActiveAreas();
@@ -806,8 +837,7 @@ bool Saturn::clbkLoadVC (int id)
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 		SetCameraMovement(_V(-0.0, -0.3, 0.0), 0, 0, _V(-0.3, 0.0, 0.0), 0, 0, _V(0.3, -0.3, 0.1), -90 * RAD, 0);
 		oapiVCSetNeighbours(SATVIEW_CENTERSEAT, -1, SATVIEW_RIGHTDOCK, SATVIEW_LEBRIGHT);
-		InVC = true;
-		InPanel = false;
+
 		SetView(true);
 
 		RegisterActiveAreas();
@@ -819,8 +849,7 @@ bool Saturn::clbkLoadVC (int id)
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
 		oapiVCSetNeighbours(SATVIEW_LEBLEFT, SATVIEW_LEBRIGHT, SATVIEW_TUNNEL, -1);
 		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
-		InVC = true;
-		InPanel = false;
+
 		SetView(true);
 
 		PanelId = SATPANEL_TELESCOPE;
@@ -833,8 +862,7 @@ bool Saturn::clbkLoadVC (int id)
 		viewpos = SATVIEW_LEFTDOCK;
 		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
 		oapiVCSetNeighbours(-1, SATVIEW_RIGHTDOCK, -1, SATVIEW_LEFTSEAT);
-		InVC = true;
-		InPanel = false;
+
 		SetView(true);
 		SetCOASMesh();
 
@@ -846,8 +874,7 @@ bool Saturn::clbkLoadVC (int id)
 		viewpos = SATVIEW_RIGHTDOCK;
 		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
 		oapiVCSetNeighbours(SATVIEW_LEFTDOCK, -1, -1, SATVIEW_RIGHTSEAT);
-		InVC = true;
-		InPanel = false;
+
 		SetView(true);
 
 		RegisterActiveAreas();
@@ -858,8 +885,7 @@ bool Saturn::clbkLoadVC (int id)
 		viewpos = SATVIEW_LEBLEFT;
 		SetCameraMovement(_V(0.0, 1.4, -0.2), -20 * RAD, 0, _V(-0.1, 0.7, -0.3), -20 * RAD, 0, _V(-0.1, 0.55, 0.2), 0, 20 * RAD);
 		oapiVCSetNeighbours(-1, SATVIEW_GNPANEL, SATVIEW_LEFTSEAT, -1);
-		InVC = true;
-		InPanel = false;
+
 		SetView(true);
 
 		RegisterActiveAreas();
@@ -870,8 +896,7 @@ bool Saturn::clbkLoadVC (int id)
 		viewpos = SATVIEW_LEBRIGHT;
 		SetCameraMovement(_V(0.0, 0.4, 0.1), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, -0.15, -0.35), 0, 0);
 		oapiVCSetNeighbours(SATVIEW_GNPANEL, -1, SATVIEW_RIGHTSEAT, -1);
-		InVC = true;
-		InPanel = false;
+
 		SetView(true);
 
 		RegisterActiveAreas();
@@ -882,8 +907,7 @@ bool Saturn::clbkLoadVC (int id)
 		viewpos = SATVIEW_UPPER_CENTER;
 		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.2, -0.03, -0.1), 0, 20 * RAD, _V(-0.2, -0.03, -0.1), 0, 20 * RAD);
 		oapiVCSetNeighbours(-1, -1, -1, SATVIEW_CENTERSEAT);
-		InVC = true;
-		InPanel = false;
+
 		SetView(true);
 
 		RegisterActiveAreas();
@@ -894,8 +918,7 @@ bool Saturn::clbkLoadVC (int id)
 		viewpos = SATVIEW_LOWER_CENTER;
 		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
 		oapiVCSetNeighbours(-1, -1, SATVIEW_CENTERSEAT, SATVIEW_TUNNEL);
-		InVC = true;
-		InPanel = false;
+
 		SetView(true);
 
 		RegisterActiveAreas();
@@ -906,8 +929,7 @@ bool Saturn::clbkLoadVC (int id)
 		viewpos = SATVIEW_TUNNEL;
 		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(-0.2, -0.1, 0.0), 90 * RAD, 0, _V(0.0, 0.0, 0.0), 0, 0);
 		oapiVCSetNeighbours(-1, -1, SATVIEW_LOWER_CENTER, SATVIEW_GNPANEL);
-		InVC = true;
-		InPanel = false;
+
 		SetView(true);
 
 		RegisterActiveAreas();
@@ -917,6 +939,22 @@ bool Saturn::clbkLoadVC (int id)
 	default:
 		return false;
 	}
+}
+
+void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
+	this->vis = vis;
+	if (vcidx != -1) {
+        vcmesh = GetDevMesh(vis, vcidx);
+//		seatsunfoldedmesh = GetDevMesh(vis, seatsunfoldedidx);
+//		seatsfoldedmesh = GetDevMesh(vis, seatsfoldedidx);
+	}
+}
+
+void Saturn::clbkVisualDestroyed(VISHANDLE vis, int refcount) {
+	if (this->vis == vis) this->vis = NULL;
+    vcmesh = NULL;
+//	seatsunfoldedmesh = NULL;
+//	seatsfoldedmesh = NULL;
 }
 
 void Saturn::RegisterActiveAreas() {
@@ -1139,12 +1177,18 @@ void Saturn::RegisterActiveAreas() {
 			oapiVCSetAreaClickmode_Quadrilateral(AID_VC_SWITCH_P2_01 + i, P2_TOGGLE_POS[i] + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + P1_3_CLICK + ofs, P2_TOGGLE_POS[i] + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + P1_3_CLICK + ofs, P2_TOGGLE_POS[i] + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + P1_3_CLICK + ofs, P2_TOGGLE_POS[i] + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + P1_3_CLICK + ofs);
 		}
 
-		for (i = 0; i < P2_ROTCOUNT; i++)
+		for (i = 0; i < 2; i++)
 		{
 			oapiVCRegisterArea(AID_VC_ROT_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 			oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P2_01 + i, P2_ROT_POS[i] + ofs, ROT);
 		}
 
+		for (i = 2; i < 4; i++)
+		{
+			oapiVCRegisterArea(AID_VC_ROT_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP);
+			oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ROT_P2_01 + i, P2_ROT_POS[i] + UL * ROT + P1_3_CLICK + ofs, P2_ROT_POS[i] + UR * ROT + P1_3_CLICK + ofs, P2_ROT_POS[i] + DL * ROT + P1_3_CLICK + ofs, P2_ROT_POS[i] + DR * ROT + P1_3_CLICK + ofs);
+		}
+		
 		for (i = 0; i < P2_PUSHBCOUNT; i++)
 		{
 			oapiVCRegisterArea(AID_VC_PUSHB_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
@@ -1223,8 +1267,8 @@ void Saturn::RegisterActiveAreas() {
 
 	for (i = 0; i < P5_ROTCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_VC_ROT_P5_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P5_01 + i, P5_ROT_POS[i] + ofs, ROT);
+		oapiVCRegisterArea(AID_VC_ROT_P5_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ROT_P5_01 + i, P5_ROT_POS[i] + UL * ROT + P8_CLICK + ofs, P5_ROT_POS[i] + UR * ROT + P8_CLICK + ofs, P5_ROT_POS[i] + DL * ROT + P8_CLICK + ofs, P5_ROT_POS[i] + DR * ROT + P8_CLICK + ofs);
 	}
 
 	for (i = 0; i < P5_CBCOUNT; i++)
@@ -1292,8 +1336,9 @@ void Saturn::RegisterActiveAreas() {
 
 	for (i = 0; i < P8_ROTCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_VC_ROT_P8_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P8_01 + i, P8_ROT_POS[i] + ofs, ROT);
+		oapiVCRegisterArea(AID_VC_ROT_P8_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ROT_P8_01 + i, P8_ROT_POS[i] + UL * ROT + P8_CLICK + ofs, P8_ROT_POS[i] + UR * ROT + P8_CLICK + ofs, P8_ROT_POS[i] + DL * ROT + P8_CLICK + ofs, P8_ROT_POS[i] + DR * ROT + P8_CLICK + ofs);
+
 	}
 
 	// Panel 9
@@ -1398,8 +1443,8 @@ void Saturn::RegisterActiveAreas() {
 
 	for (i = 0; i < P100_ROTCOUNT; i++)
 	{
-		oapiVCRegisterArea(AID_VC_ROT_P100_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_P100_01 + i, P100_ROT_POS[i] + ofs, ROT);
+		oapiVCRegisterArea(AID_VC_ROT_P100_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ROT_P100_01 + i, P100_ROT_POS[i] + UL * ROT + LEBFLOOR_CLICK + ofs, P100_ROT_POS[i] + UR * ROT + LEBFLOOR_CLICK + ofs, P100_ROT_POS[i] + DL * ROT + LEBFLOOR_CLICK + ofs, P100_ROT_POS[i] + DR * ROT + LEBFLOOR_CLICK + ofs);
 	}
 
 	// Panel 101
@@ -1685,6 +1730,125 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//case areaidentifier
 	//	Redraw Panel stuff
 	//	return true if dynamic texture modified, false if not
+	
+#ifdef _OPENORBITER
+	case AID_VC_SWITCH_P13_04: // CMVC Ordeal Lighting Switch
+        SetCMVCIntegralLight(vcidx, IntegralLights_CMVC_Ordeal, MatProp::Emission, ordeal.LightingPower(), NUM_ELEMENTS(IntegralLights_CMVC_Ordeal));
+		ORDEALLightingSwitch.DrawSwitchVC(id, event, surf);
+		return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P8:
+        SetCMVCIntegralLight(vcidx, IntegralLights_P8, MatProp::Emission, IntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntegralLights_P8));
+        SetCMVCIntegralLight(vcidx, IntergralLights_P8_NTex, MatProp::Light,IntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntergralLights_P8_NTex));
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P8:
+        SetCMVCIntegralLight(vcidx, FloodLights_P8, MatProp::Light,FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(FloodLights_P8));
+		SetCMVCIntegralLight(seatsunfoldedidx, CMVCSeatsUnFolded, MatProp::Light, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(CMVCSeatsUnFolded));
+		SetCMVCIntegralLight(seatsfoldedidx, CMVCSeatsFolded, MatProp::Light, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(CMVCSeatsFolded));
+		SetCMVCIntegralLight(coascdridx, CMVC_COAS_CDR, MatProp::Light, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(CMVC_COAS_CDR));
+
+        return true;
+
+	case AID_VC_NUMERICS_LIGHT_P8:
+//        SetCMVCIntegralLight(vcidx,NumericLights_P8, MatProp::Light, NumericRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(NumericLights_P8));
+        SetCMVCIntegralLight(vcidx, NumericLights_P8_NTex, MatProp::Light, NumericRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(NumericLights_P8_NTex));
+        return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P5:
+        SetCMVCIntegralLight(vcidx, IntegralLights_P5, MatProp::Emission, RightIntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntegralLights_P5));
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P5:
+//		SetCMVCIntegralLight(vcidx, FloodLights_P5, MatProp::Light,RightFloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(FloodLights_P5));
+        return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P100:
+        SetCMVCIntegralLight(vcidx, IntegralLights_P100, MatProp::Emission, Panel100IntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntegralLights_P100));
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P100:
+//		SetCMVCIntegralLight(vcidx, FloodLights_P100, MatProp::Light, Panel100FloodRotarySwitch.GetValue*0.01, NUM_ELEMENTS(FloodLights_P100));
+        return true;
+
+	case AID_VC_NUMERICS_LIGHT_P100:
+		SetCMVCIntegralLight(vcidx, NumericLights_P100, MatProp::Light, Panel100NumericRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(NumericLights_P100));
+		return true;
+	case AID_VC_CUE_CARDS_LIGHTING:
+	{
+		//Get list of mesh indices
+		std::vector<UINT> indices;
+		CueCards.GetMeshIndexList(indices);
+		//Assume cue cards only have material 0
+		DWORD ccmat[1] = { 0 };
+
+		for (unsigned i = 0; i < indices.size(); i++)
+		{
+			SetCMVCIntegralLight(indices[i], ccmat, MatProp::Light, FloodRotarySwitch.GetValue()*0.1, 1);
+		}
+
+		return true;
+	}
+#else
+	case AID_VC_SWITCH_P13_04: // CMVC Ordeal Lighting Switch
+        SetCMVCIntegralLight(vcidx, IntegralLights_CMVC_Ordeal, MESHM_EMISSION2, ordeal.LightingPower(), NUM_ELEMENTS(IntegralLights_CMVC_Ordeal));
+		ORDEALLightingSwitch.DrawSwitchVC(id, event, surf);
+		return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P8:
+        SetCMVCIntegralLight(vcidx, IntegralLights_P8, MESHM_EMISSION2, IntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntegralLights_P8));
+		SetCMVCIntegralLight(vcidx, IntergralLights_P8_NTex, MESHM_EMISSION,IntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntergralLights_P8_NTex));
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P8:
+		SetCMVCIntegralLight(vcidx, FloodLights_P8, MESHM_EMISSION, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(FloodLights_P8));
+		SetCMVCIntegralLight(seatsunfoldedidx, CMVCSeatsUnFolded, MESHM_EMISSION, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(CMVCSeatsUnFolded));
+		SetCMVCIntegralLight(seatsfoldedidx, CMVCSeatsFolded, MESHM_EMISSION, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(CMVCSeatsFolded));
+		SetCMVCIntegralLight(coascdridx, CMVC_COAS_CDR, MESHM_EMISSION, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(CMVC_COAS_CDR));
+        return true;
+
+	case AID_VC_NUMERICS_LIGHT_P8:
+//        SetCMVCIntegralLight(vcidx,NumericLights_P8, MESHM_EMISSION,NumericRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(NumericLights_P8));
+		SetCMVCIntegralLight(vcidx, NumericLights_P8_NTex, MESHM_EMISSION, NumericRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(NumericLights_P8_NTex));
+        return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P5:
+        SetCMVCIntegralLight(vcidx, IntegralLights_P5, MESHM_EMISSION2, RightIntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntegralLights_P5));
+        return true;
+
+	case AID_VC_FLOOD_LIGHT_P5:
+//		SetCMVCIntegralLight(vcidx, FloodLights_P5, MESHM_EMISSION, RightFloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(FloodLights_P5));
+		return true;
+
+	case AID_VC_INTEGRAL_LIGHT_P100:
+		SetCMVCIntegralLight(vcidx, IntegralLights_P100, MESHM_EMISSION2, Panel100IntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntegralLights_P100));
+		return true;
+
+	case AID_VC_FLOOD_LIGHT_P100:
+//		SetCMVCIntegralLight(vcidx, FloodLights_P100, MESHM_EMISSION, Panel100FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(FloodLights_P100));
+        return true;
+
+	case AID_VC_NUMERICS_LIGHT_P100:
+		SetCMVCIntegralLight(vcidx, NumericLights_P100, MESHM_EMISSION, Panel100NumericRotarySwitch.GetValue() / 10.0, NUM_ELEMENTS(NumericLights_P100));
+		return true;
+
+
+	case AID_VC_CUE_CARDS_LIGHTING:
+	{
+		//Get list of mesh indices
+		std::vector<UINT> indices;
+		CueCards.GetMeshIndexList(indices);
+		//Assume cue cards only have material 0
+		DWORD ccmat[1] = { 0 };
+
+		for (unsigned i = 0; i < indices.size(); i++)
+		{
+			SetCMVCIntegralLight(indices[i], ccmat, MESHM_EMISSION, FloodRotarySwitch.GetValue()*0.1, 1);
+		}
+
+		return true;
+	}
+#endif
 
 	case AID_VC_FDAI_LEFT:
 	{
@@ -1753,68 +1917,68 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	{
 		if (SI_EngineNum > 5)
 		{
-			RenderS1bEngineLight(ENGIND[0], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 42, TexMul);
-			RenderS1bEngineLight(ENGIND[1], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 98, TexMul);
-			RenderS1bEngineLight(ENGIND[2], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 8, 98, TexMul);
-			RenderS1bEngineLight(ENGIND[3], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 7, 43, TexMul);
-			RenderS1bEngineLight(ENGIND[4], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 41, TexMul);
-			RenderS1bEngineLight(ENGIND[5], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 51, 69, TexMul);
-			RenderS1bEngineLight(ENGIND[6], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 36, 98, TexMul);
-			RenderS1bEngineLight(ENGIND[7], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 22, 69, TexMul);
+			RenderS1bEngineLight(ENGIND[0], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 54, TexMul);
+			RenderS1bEngineLight(ENGIND[1], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 64, 111, TexMul);
+			RenderS1bEngineLight(ENGIND[2], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 4, 111, TexMul);
+			RenderS1bEngineLight(ENGIND[3], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 4, 54, TexMul);
+			RenderS1bEngineLight(ENGIND[4], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 34, 54, TexMul);
+			RenderS1bEngineLight(ENGIND[5], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 50, 84, TexMul);
+			RenderS1bEngineLight(ENGIND[6], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 34, 111, TexMul);
+			RenderS1bEngineLight(ENGIND[7], surf, srf[SRF_VC_LVENGLIGHTS_S1B], 19, 84, TexMul);
 		}
 		else
 		{
 			if (ENGIND[0])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 44*TexMul, 55*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 53*TexMul, 47*TexMul, 53*TexMul, 47*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 44*TexMul, 157*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 53*TexMul, 47*TexMul, 155*TexMul, 47*TexMul, 27*TexMul, 27*TexMul);
 			}
 
 			if (ENGIND[1])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 98*TexMul, 55*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 53*TexMul, 103*TexMul, 53*TexMul, 103*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 55*TexMul, 98*TexMul, 157*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 53*TexMul, 103*TexMul, 155*TexMul, 103*TexMul, 27*TexMul, 27*TexMul);
 			}
 			if (ENGIND[2])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 98*TexMul, 20*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 22*TexMul, 103*TexMul, 22*TexMul, 103*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 98*TexMul, 122*TexMul, 98*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 22*TexMul, 103*TexMul, 124*TexMul, 103*TexMul, 27*TexMul, 27*TexMul);
 			}
 			if (ENGIND[3])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 44*TexMul, 20*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 22*TexMul, 47*TexMul, 22*TexMul, 47*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 20*TexMul, 44*TexMul, 122*TexMul, 44*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 22*TexMul, 47*TexMul, 124*TexMul, 47*TexMul, 27*TexMul, 27*TexMul);
 			}
 			if (ENGIND[4])
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 71*TexMul, 37*TexMul, 71*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 75*TexMul, 37*TexMul, 75*TexMul, 27*TexMul, 27*TexMul);
 			}
 			else
 			{
-				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 71*TexMul, 140*TexMul, 71*TexMul, 27*TexMul, 27*TexMul);
+				oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 75*TexMul, 139*TexMul, 75*TexMul, 27*TexMul, 27*TexMul);
 			}
 		}
 	}
 
 	if (LVRateLight)
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 4*TexMul, 6*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 5*TexMul, 6*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 	}
 	else
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 4*TexMul, 108*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 6*TexMul, 5*TexMul, 108*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 	}
 
 	//
@@ -1825,21 +1989,21 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	{
 		if (SIISepState)
 		{
-			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 4*TexMul, 37*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 5*TexMul, 37*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 		}
 		else
 		{
-			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 4*TexMul, 139*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+			oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 37*TexMul, 5*TexMul, 139*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 		}
 	}
 
 	if (LVGuidLight)
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 69*TexMul, 4*TexMul, 69*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 68*TexMul, 5*TexMul, 68*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 	}
 	else
 	{
-		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 69*TexMul, 4*TexMul, 171*TexMul, 4*TexMul, 27*TexMul, 27*TexMul);
+		oapiBlt(surf, srf[SRF_VC_LVENGLIGHTS], 68*TexMul, 5*TexMul, 170*TexMul, 5*TexMul, 27*TexMul, 27*TexMul);
 	}
 	return true;
 
@@ -2073,113 +2237,11 @@ void Saturn::SetView(double offset, bool update_direction)
 		ofs_vc.z = ofs_vc.z - 0.15;
 	}
 
-	//
-	// Engineering cameras
-	//
-	if (viewpos >= SATVIEW_ENG1)
-	{
-		VECTOR3 e1 = _V(0, 0, 0), e2 = _V(0, 0, 0), e3 = _V(0, 0, 0), e4 = _V(0, 0, 0), e5 = _V(0, 0, 0), e6 = _V(0, 0, 0);	
-		VECTOR3 v1 = _V(0, 0, 0), v2 = _V(0, 0, 0), v3 = _V(0, 0, 0), v4 = _V(0, 0, 0), v5 = _V(0, 0, 0), v6 = _V(0, 0, 0);
-		VECTOR3 cd;
-
-		//
-		// We really need different cameras for Saturn V and 1b.
-		//
-
-		switch (stage) {
-		case PRELAUNCH_STAGE:
-			e3 = _V(0.0, 7.5, -10.0+STG0O);
-			v3 = _V(0.0, -0.1, -1.0);
-			e4 = _V(7.5, 0.0, -10.0+STG0O);
-			v4 = _V(-0.1, 0.0, -1.0);
-			e5 = _V(0.0, -7.5, -10.0+STG0O);
-			v5 = _V(0.0, 0.1, -1.0);
-			e6 = _V(-7.5, 0.0, -10.0+STG0O);
-			v6 = _V(0.1, 0.0, -1.0);
-			break;
-
-		case LAUNCH_STAGE_ONE:
-			e1 = _V(4.0, 0.0, -39.0+STG0O);
-			v1 = _V(-0.15, 0, 1.0);
-			e2 = _V(3.5, 0.0, -31.0+STG0O);
-			v2 = _V(-0.15, 0, -1.0);
-			e3 = _V(0.0, 7.5, -10.0+STG0O);
-			v3 = _V(0.0, -0.1, -1.0);
-			e4 = _V(7.5, 0.0, -10.0+STG0O);
-			v4 = _V(-0.1, 0.0, -1.0);
-			e5 = _V(0.0, -7.5, -10.0+STG0O);
-			v5 = _V(0.0, 0.1, -1.0);
-			e6 = _V(-7.5, 0.0, -10.0+STG0O);
-			v6 = _V(0.1, 0.0, -1.0);
-			break;
-
-		case LAUNCH_STAGE_TWO:
-		case LAUNCH_STAGE_TWO_ISTG_JET:
-			e2 = _V(3.5, 0.0, -31.0-STG1O);
-			v2 = _V(-0.15, 0, -1.0);
-			e3 = _V(0.0, 7.5, -10.0-STG1O);
-			v3 = _V(0.0, -0.1, -1.0);
-			e4 = _V(7.5, 0.0, -10.0-STG1O);
-			v4 = _V(-0.1, 0.0, -1.0);
-			e5 = _V(0.0, -7.5, -10.0-STG1O);
-			v5 = _V(0.0, 0.1, -1.0);
-			e6 = _V(-7.5, 0.0, -10.0-STG1O);
-			v6 = _V(0.1, 0.0, -1.0);
-			break;
-
-		//
-		// Switch back to commander view if we're past the point where we can
-		// display anything useful.
-		//
-
-		case LAUNCH_STAGE_SIVB:
-			viewpos = SATVIEW_LEFTSEAT;
-			SetView(offset, true);
-			return;
-		}
-
-		switch (viewpos) {
-		case SATVIEW_ENG1:
-			v = e1;
-			cd = v1;
-			break;
-
-		case SATVIEW_ENG2:
-			v = e2;
-			cd = v2;
-			break;
-
-		case SATVIEW_ENG3:
-			v = e3;
-			cd = v3;
-			break;
-
-		case SATVIEW_ENG4:
-			v = e4;
-			cd = v4;
-			break;
-
-		case SATVIEW_ENG5:
-			v = e5;
-			cd = v5;
-			break;
-
-		case SATVIEW_ENG6:
-			v = e6;
-			cd = v6;
-			break;
-		}
-
-		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
-		SetCameraDefaultDirection(cd);
-		oapiCameraSetCockpitDir(0,0);
-	}
-
 	// 
 	// 2D panel 
 	// Direction/rotation range is in clbkLoadPanel
 	//
-	else if (InPanel) {
+	if (InPanel) {
 		if (PanelId == SATPANEL_LEFT_RNDZ_WINDOW) {
 			v = _V(-0.605, 1.045, offset - 3.0); // Adjusted to line up with docking target
 
@@ -2313,9 +2375,9 @@ void Saturn::SetView(double offset, bool update_direction)
 			oapiCameraSetCockpitDir(0,0);
 		}
 
-		v.x += ViewOffsetx;
-		v.y += ViewOffsety;
-		v.z += ViewOffsetz;
+		v.x += ViewOffsetx * VibrationVisualizationMultiplier;
+		v.y += ViewOffsety * VibrationVisualizationMultiplier;
+		v.z += ViewOffsetz * VibrationVisualizationMultiplier;
 	}
 
 	SetCameraOffset(v - _V(currentCoG.x, currentCoG.y, 0.0)); //We already use the mesh offset in the z-axis
@@ -2624,14 +2686,12 @@ void Saturn::DefineVCAnimations()
 
 	MainPanelVC.AddSwitch(&SPSGimbalPitchThumbwheel, AID_VC_TW_P1_01);
 	SPSGimbalPitchThumbwheel.SetReference(P1_TW_POS[0], _V(1, 0, 0));
-	SPSGimbalPitchThumbwheel.SetRotationRange(RAD * 293);
 	SPSGimbalPitchThumbwheel.DefineMeshGroup(VC_GRP_TW_P1_01);
 	SPSGimbalPitchThumbwheel.SetInitialAnimState(0.5);
 
 	const VECTOR3	TW_SPSYAW_AXIS = { -0.00, sin(P1_3_TILT + (90.0 * RAD)), -cos(P1_3_TILT + (90.0 * RAD)) };
 	MainPanelVC.AddSwitch(&SPSGimbalYawThumbwheel, AID_VC_TW_P1_02);
 	SPSGimbalYawThumbwheel.SetReference(P1_TW_POS[1], TW_SPSYAW_AXIS);
-	SPSGimbalYawThumbwheel.SetRotationRange(RAD * 293);
 	SPSGimbalYawThumbwheel.DefineMeshGroup(VC_GRP_TW_P1_02);
 	SPSGimbalYawThumbwheel.SetInitialAnimState(0.5);
 
@@ -3103,9 +3163,9 @@ void Saturn::DefineVCAnimations()
 	DskySwitchClear.SetDirection(P1_3_PB_VECT);
 	DskySwitchClear.DefineMeshGroup(VC_GRP_PB_P2_15);
 
-	MainPanelVC.AddSwitch(&DskySwitchProg, AID_VC_PUSHB_P2_16);
-	DskySwitchProg.SetDirection(P1_3_PB_VECT);
-	DskySwitchProg.DefineMeshGroup(VC_GRP_PB_P2_16);
+	MainPanelVC.AddSwitch(&DskySwitchProceed, AID_VC_PUSHB_P2_16);
+	DskySwitchProceed.SetDirection(P1_3_PB_VECT);
+	DskySwitchProceed.DefineMeshGroup(VC_GRP_PB_P2_16);
 
 	MainPanelVC.AddSwitch(&DskySwitchKeyRel, AID_VC_PUSHB_P2_17);
 	DskySwitchKeyRel.SetDirection(P1_3_PB_VECT);
@@ -3135,10 +3195,12 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&HighGainAntennaPitchPositionSwitch, AID_VC_ROT_P2_03);
 	HighGainAntennaPitchPositionSwitch.SetReference(P2_ROT_POS[2], P1_3_ROT_AXIS);
 	HighGainAntennaPitchPositionSwitch.DefineMeshGroup(VC_GRP_Rot_P2_03);
+	HighGainAntennaPitchPositionSwitch.SetInitialAnimState(0.0);
 
 	MainPanelVC.AddSwitch(&HighGainAntennaYawPositionSwitch, AID_VC_ROT_P2_04);
 	HighGainAntennaYawPositionSwitch.SetReference(P2_ROT_POS[3], P1_3_ROT_AXIS);
 	HighGainAntennaYawPositionSwitch.DefineMeshGroup(VC_GRP_Rot_P2_04);
+	HighGainAntennaYawPositionSwitch.SetInitialAnimState(0.0);
 
 	NEEDLE_POS = { -0.187906, 0.721, 0.455917 };
 
@@ -3849,10 +3911,12 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&RightIntegralRotarySwitch, AID_VC_ROT_P5_01);
 	RightIntegralRotarySwitch.SetReference(P5_ROT_POS[0], P5_ROT_AXIS);
 	RightIntegralRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P5_01);
+	RightIntegralRotarySwitch.SetInitialAnimState(0.5);
 
 	MainPanelVC.AddSwitch(&RightFloodRotarySwitch, AID_VC_ROT_P5_02);
 	RightFloodRotarySwitch.SetReference(P5_ROT_POS[1], P5_ROT_AXIS);
 	RightFloodRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P5_02);
+	RightFloodRotarySwitch.SetInitialAnimState(0.5);
 
 	const VECTOR3 cb_p5_vector = { 0.846089265473375 * 0.003, 0.002307516178545 * 0.003, 0.533036237248285 * 0.003 };
 
@@ -4092,14 +4156,17 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&NumericRotarySwitch, AID_VC_ROT_P8_01);
 	NumericRotarySwitch.SetReference(P8_ROT_POS[0], P8_ROT_AXIS);
 	NumericRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P8_01);
+	NumericRotarySwitch.SetInitialAnimState(0.5);
 
 	MainPanelVC.AddSwitch(&FloodRotarySwitch, AID_VC_ROT_P8_02);
 	FloodRotarySwitch.SetReference(P8_ROT_POS[1], P8_ROT_AXIS);
 	FloodRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P8_02);
+	FloodRotarySwitch.SetInitialAnimState(0.5);
 
 	MainPanelVC.AddSwitch(&IntegralRotarySwitch, AID_VC_ROT_P8_03);
 	IntegralRotarySwitch.SetReference(P8_ROT_POS[2], P8_ROT_AXIS);
 	IntegralRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P8_03);
+	IntegralRotarySwitch.SetInitialAnimState(0.5);
 
 	const VECTOR3 cb_p8_vector = { -0.844819075554255 * 0.003, 0.0, 0.535052081184303 * 0.003 };
 
@@ -4290,6 +4357,7 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&ORDEALAltSetRotary, AID_VC_ORDEAL_ROT);
 	ORDEALAltSetRotary.SetReference(ORDEAL_RotLocation, P13_ROT_AXIS);
 	ORDEALAltSetRotary.DefineMeshGroup(VC_GRP_ORDEAL_Rot);
+	ORDEALAltSetRotary.SetInitialAnimState(133.0 / 285.0); //133° from 10 NM to 150 NM, 285° total range
 
 	// Panel 15
 
@@ -4361,14 +4429,17 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&Panel100NumericRotarySwitch, AID_VC_ROT_P100_01);
 	Panel100NumericRotarySwitch.SetReference(P100_ROT_POS[0], P100_ROT_AXIS);
 	Panel100NumericRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P100_01);
+	Panel100NumericRotarySwitch.SetInitialAnimState(0.5);
 
 	MainPanelVC.AddSwitch(&Panel100FloodRotarySwitch, AID_VC_ROT_P100_02);
 	Panel100FloodRotarySwitch.SetReference(P100_ROT_POS[1], P100_ROT_AXIS);
 	Panel100FloodRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P100_02);
+	Panel100FloodRotarySwitch.SetInitialAnimState(0.5);
 
 	MainPanelVC.AddSwitch(&Panel100IntegralRotarySwitch, AID_VC_ROT_P100_03);
 	Panel100IntegralRotarySwitch.SetReference(P100_ROT_POS[2], P100_ROT_AXIS);
 	Panel100IntegralRotarySwitch.DefineMeshGroup(VC_GRP_Rot_P100_03);
+	Panel100IntegralRotarySwitch.SetInitialAnimState(0.5);
 
 	// Panel 101
 
@@ -4497,9 +4568,9 @@ void Saturn::DefineVCAnimations()
 	Dsky2SwitchClear.SetDirection(pb_P122_vector);
 	Dsky2SwitchClear.DefineMeshGroup(VC_GRP_PB_P122_15);
 
-	MainPanelVC.AddSwitch(&Dsky2SwitchProg, AID_VC_PUSHB_P122_16);
-	Dsky2SwitchProg.SetDirection(pb_P122_vector);
-	Dsky2SwitchProg.DefineMeshGroup(VC_GRP_PB_P122_16);
+	MainPanelVC.AddSwitch(&Dsky2SwitchProceed, AID_VC_PUSHB_P122_16);
+	Dsky2SwitchProceed.SetDirection(pb_P122_vector);
+	Dsky2SwitchProceed.DefineMeshGroup(VC_GRP_PB_P122_16);
 
 	MainPanelVC.AddSwitch(&Dsky2SwitchKeyRel, AID_VC_PUSHB_P122_17);
 	Dsky2SwitchKeyRel.SetDirection(pb_P122_vector);
@@ -4920,3 +4991,34 @@ void Saturn::InitFDAI(UINT mesh)
 	AddAnimationComponent(anim_fdaiYrate_R, 0.0f, 1.0f, &mgt_yawrate_R);
 }
 
+#ifdef _OPENORBITER
+void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt)
+#else
+void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt)
+#endif
+
+{
+	if (vis == NULL || meshidx == -1) return;
+	DEVMESHHANDLE hMesh = GetDevMesh(vis, meshidx);
+
+    if (!hMesh)
+        return;
+
+	for (int i = 0; i < cnt; i++)
+	{
+		gcCore *pCore = gcGetCoreInterface();
+		if (pCore) {
+			FVECTOR4 value;
+			value.r = (float)state;
+			value.g = (float)state;
+			value.b = (float)state;
+			value.a = 1.0;
+#ifdef _OPENORBITER
+			pCore->SetMeshMaterial(hMesh, matList[i], EmissionMode, &value);
+#else
+			pCore->MeshMaterial(hMesh, matList[i], EmissionMode, &value, true);
+#endif
+		}
+	}
+    //sprintf(oapiDebugString(), "%d %lf", m, state);
+}

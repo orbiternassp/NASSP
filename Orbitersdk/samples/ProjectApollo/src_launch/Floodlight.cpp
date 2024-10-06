@@ -76,8 +76,6 @@ Floodlight::Floodlight(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	exhaustsEnabled = false;
 	currentExhaust = 0;
 	configMode = 0;
-
-	soundlib.InitSoundLib(hObj, SOUND_DIRECTORY);
 }
 
 Floodlight::~Floodlight() {
@@ -103,6 +101,7 @@ void Floodlight::clbkSetClassCaps(FILEHANDLE cfg) {
 }
 
 void Floodlight::clbkPostCreation() {
+	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 }
 
 void Floodlight::clbkPreStep(double simt, double simdt, double mjd) {
@@ -156,12 +155,6 @@ void Floodlight::clbkPostStep (double simt, double simdt, double mjd) {
 }
 
 void Floodlight::DoFirstTimestep() {
-
-	soundlib.SoundOptionOnOff(PLAYCOUNTDOWNWHENTAKEOFF, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINAIRCONDITIONING, FALSE);
-	soundlib.SoundOptionOnOff(PLAYCABINRANDOMAMBIANCE, FALSE);
-	soundlib.SoundOptionOnOff(PLAYRADARBIP, FALSE);
-	soundlib.SoundOptionOnOff(DISPLAYTIMER, FALSE);
 
 	firstTimestepDone = true;
 }

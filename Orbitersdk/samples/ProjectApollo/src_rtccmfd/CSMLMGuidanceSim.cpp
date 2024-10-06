@@ -561,6 +561,7 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	DV_ul = 0.0;
 	X_B = Y_B = Z_B = _V(0, 0, 0);
 	Kg = 0;
+	VGN = _V(0, 0, 0);
 
 	//This only for Earth
 	if (TArr.sv0.RBI == BODY_EARTH)
