@@ -1053,6 +1053,12 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
 					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSECHILLER:PUMP") = SP_PUMP_OFF;
 
+					// Close Service Module GSE Cryogenic Valves
+					O2Tanks[0]->IN_valve.Close();
+					O2Tanks[1]->IN_valve.Close();
+					H2Tanks[0]->IN_valve.Close();
+					H2Tanks[1]->IN_valve.Close();
+
 					// Next state
 					systemsState = SATSYSTEMS_READYTOLAUNCH;
 					lastSystemsMissionTime = MissionTime; 
@@ -1140,6 +1146,22 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //------------------------------------------------------------------------------------
 // Various debug prints
 //------------------------------------------------------------------------------------
+
+	//GSE Cryo Debug Lines
+	/*
+	double *GSEO2CryoPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:GSECRYOO2DEWAR:PRESS");
+	double *GSEO2CryoTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:GSECRYOO2DEWAR:TEMP");
+	double *O2Tank1Temp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK1:TEMP");
+	double *O2Tank2Temp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:O2TANK2:TEMP");
+
+	double *GSEH2CryoPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:GSECRYOH2DEWAR:PRESS");
+	double *GSEH2CryoTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:GSECRYOH2DEWAR:TEMP");
+	double *H2Tank1Temp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1:TEMP");
+	double *H2Tank2Temp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2:TEMP");
+
+	//sprintf(oapiDebugString(), "GSEPress: %.3f GSETemp: %.3f O2T1Temp: %.3f O2T2Temp: %.3f", *GSEO2CryoPress *PSI, KelvinToFahrenheit(*GSEO2CryoTemp), KelvinToFahrenheit(*O2Tank1Temp), KelvinToFahrenheit(*O2Tank2Temp));
+	//sprintf(oapiDebugString(), "GSEPress: %.3f GSETemp: %.3f H2T1Temp: %.3f H2T2Temp: %.3f", *GSEH2CryoPress *PSI, KelvinToFahrenheit(*GSEH2CryoTemp), KelvinToFahrenheit(*H2Tank1Temp), KelvinToFahrenheit(*H2Tank2Temp));
+	*/
 
 //	FC Nitrogen system.
 	//h_Tank* pHeader = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL1HEADERTANK");
@@ -2660,14 +2682,12 @@ void Saturn::CabinFansSystemTimestep()
 
 		PrimCabinHeatExchanger->SetPumpAuto();
 		SecCabinHeatExchanger->SetPumpAuto();
-		CabinHeater->SetPumpAuto(); 
 
 		CabinFanSound();
 	} 
 	else {
 		PrimCabinHeatExchanger->SetPumpOff();
 		SecCabinHeatExchanger->SetPumpOff();
-		CabinHeater->SetPumpOff(); 
 
 		StopCabinFanSound();
 	}
