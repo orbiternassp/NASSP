@@ -1998,6 +1998,7 @@ PCM::PCM()
 	frame_addr = 0;
 	frame_count = 0;
 	m_socket = INVALID_SOCKET;
+	pMCC = nullptr;
 }
 
 PCM::~PCM()
@@ -2062,6 +2063,16 @@ void PCM::Init(Saturn *vessel){
 
 	conn_state = 1; // INITIALIZED, LISTENING
 	uplink_state = 0; rx_offset = 0;
+
+	for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+	{
+		OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+		VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+		if (utils::IsVessel(pVessel, utils::MCC))
+		{
+			pMCC = ((MCCVessel*)pVessel)->mcc;
+		}
+	}
 }
 
 void PCM::SystemTimestep(double simdt) {	
@@ -2123,11 +2134,12 @@ void PCM::TimeStep(double simt){
 		return;
 	}
 	*/
+	
 
 	// Generate PCM datastream
 	if(LowBitrateLogic()){
 		tx_size = (int)((simt - last_update) / 0.005);
-		// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
+		//sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
 		if(tx_size > 0){
 			last_update = simt;
 			if(tx_size < 1024){
@@ -2143,7 +2155,7 @@ void PCM::TimeStep(double simt){
 	}
 	else{
 		tx_size = (int)((simt - last_update) / 0.00015625);
-		// sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
+		//sprintf(oapiDebugString(),"Need to send %d bytes",tx_size);
 		if(tx_size > 0){
 			last_update = simt;
 			if(tx_size < 1024){
@@ -2151,7 +2163,7 @@ void PCM::TimeStep(double simt){
 				while(tx_offset < tx_size){
 					generate_stream_hbr();
 					tx_offset++;
-				}			
+				}
 				perform_io(simt);
 			}
 		}
@@ -4932,6 +4944,24 @@ void PCM::generate_stream_hbr(){
 }
 
 void PCM::perform_io(double simt){
+	
+	//very slow, done for testing only
+	if (!pMCC) {
+		for (unsigned int i = 0; i < oapiGetVesselCount(); i++)
+		{
+			OBJHANDLE hVessel = oapiGetVesselByIndex(i);
+			VESSEL* pVessel = oapiGetVesselInterface(hVessel);
+			if (utils::IsVessel(pVessel, utils::MCC))
+			{
+				pMCC = ((MCCVessel*)pVessel)->mcc;
+			}
+		}
+	}
+	else {
+		int sent = pMCC->TelemetryDownlink(1, tx_data, tx_size);
+	}
+
+
 	// Do TCP IO	
 	switch(conn_state){
 		case 0: // UNINITIALIZED

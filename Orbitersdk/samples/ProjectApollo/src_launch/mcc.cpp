@@ -148,6 +148,13 @@ MCC::MCC(RTCC *rtc)
 
 	// Ground Systems Init
 	Init();
+
+	CSMTelemetryProcessor = new PCMTelemetryProcessor(&CSM_TelemetryBuffer, &CSM_OutputBuffer, &CSM_BufferLock);
+}
+
+MCC::~MCC()
+{
+	delete this->CSMTelemetryProcessor;
 }
 
 void MCC::Init(){
@@ -599,6 +606,10 @@ void MCC::Init(){
 	// Uplink items
 	uplink_size = 0;
 	logfileinit = false;
+
+	CSM_TelemetryBuffer = { 0 };
+	LEM_TelemetryBuffer = { 0 };
+	//IU_TelemetryBuffer = { 0 };
 }
 
 void MCC::setState(int newState){
@@ -617,6 +628,10 @@ void MCC::setSubState(int newState){
 
 void MCC::TimeStep(double simdt){
 	int x=0,y=0,z=0;				// Scratch
+
+	CSM_BufferLock.lock();
+	sprintf(oapiDebugString(), "%d %d %d %d %d %d %d %d %d %d", CSM_OutputBuffer[1], CSM_OutputBuffer[2], CSM_OutputBuffer[3], CSM_OutputBuffer[4], CSM_OutputBuffer[5], CSM_OutputBuffer[6], CSM_OutputBuffer[7], CSM_OutputBuffer[8], CSM_OutputBuffer[9], CSM_OutputBuffer[10]);
+	CSM_BufferLock.unlock();
 
 	/* AOS DETERMINATION */
 	LastAOSUpdate += simdt;
@@ -647,7 +662,7 @@ void MCC::TimeStep(double simdt){
 
 	//debugging
 	//sprintf(oapiDebugString(), "%d %d", TransmittingGroundStation[TrackingSlot::SlotCM], TransmittingGroundStation[TrackingSlot::SlotLM]);
-
+	
 	// MISSION STATE EVALUATOR
 	if(MT_Enabled == true){
 		// Make sure ground tracking is also on

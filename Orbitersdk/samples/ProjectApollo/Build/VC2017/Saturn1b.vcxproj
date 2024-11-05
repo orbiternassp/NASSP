@@ -162,6 +162,7 @@
     <ClCompile Include="..\..\src_csm\rhc.cpp" />
     <ClCompile Include="..\..\src_csm\sce.cpp" />
     <ClCompile Include="..\..\src_csm\smjc.cpp" />
+    <ClCompile Include="..\..\src_launch\TelemetryDownlink.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\OrbMech.cpp" />
     <ClCompile Include="..\..\src_saturn\canard.cpp" />
     <ClCompile Include="..\..\src_saturn\dcs.cpp" />

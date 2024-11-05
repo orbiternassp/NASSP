@@ -27,7 +27,10 @@
 #include "MCCPADForms.h"
 #include <fstream>
 #include <atomic>
+#include <vector>
+#include <deque>
 #include "thread.h"
+#include "RemoteSiteProcessor.h"
 
 // Save file strings
 #define MCC_START_STRING	"MCC_BEGIN"
@@ -241,6 +244,7 @@ class RTCC;
 class MCC {
 public:
 	MCC(RTCC *rtc);											// Cons
+	~MCC();
 
 	char CSMName[64];
 	char LEMName[64];
@@ -265,6 +269,7 @@ public:
 	void pushLGCUplinkString(const char *str);              // Send sequence to LM
 	int LM_uplink(const unsigned char *data, int len);		// Uplink string to LM
 	int LM_uplink_buffer();									// Send uplink buffer to LM
+	int TelemetryDownlink(int type, const unsigned char *telemetryWords, int messageLength);
 	void setState(int newState);							// Set mission state
 	void setSubState(int newState);							// Set mission substate
 	void drawPad(bool writetofile = true);					// Draw PAD display
@@ -326,6 +331,25 @@ public:
 	bool   CM_DeepSpace;                                    // CM Deep Space Mode flag (Not in Earth's SOI)
 	bool   GT_Enabled;										// Ground tracking enable/disable
 	bool   MT_Enabled;										// Mission status tracking enable/disable
+
+	//TELEMETRY PROCESSING
+private:
+	std::deque<uint8_t> CSM_TelemetryBuffer;		//Type 1
+	std::deque<uint8_t> LEM_TelemetryBuffer;		//Type 2
+	//std::vector<uint16_t> IU_TelemetryBuffer;		//Type 3
+
+	std::vector<uint8_t> CSM_OutputBuffer;			//Type 1
+	std::vector<uint8_t> LEM_OutputBuffer;			//Type 2
+	//std::vector<uint16_t> IU_OutputyBuffer;		//Type 3
+
+	std::mutex CSM_BufferLock;
+	std::mutex LEM_BufferLock;
+	//std::mutex IU_BufferLock;
+
+	PCMTelemetryProcessor* CSMTelemetryProcessor;
+	PCMTelemetryProcessor* LEMTelemetryProcessor;
+	//PCMTelemetryProcessor<uint16_t>* LEMTelemetryProcessor;
+public:
 
 	// MISSION STATE
 	int MissionType;										// Mission Type
