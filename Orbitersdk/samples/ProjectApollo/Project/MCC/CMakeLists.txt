@@ -12,6 +12,7 @@ set(INCLUDE_DIRS
     ${ORBITERSDK_DIR}/include
 )
 set(SOURCES
+    ${NASSP_SOURCE_ROOT}/src_aux/Mission.cpp
     ${NASSP_SOURCE_ROOT}/src_launch/mcc.cpp
     ${NASSP_SOURCE_ROOT}/src_launch/mccvc.cpp
     ${NASSP_SOURCE_ROOT}/src_launch/mccvessel.cpp
