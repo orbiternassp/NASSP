@@ -590,6 +590,16 @@ void LEM::Init()
 	vcFreeCamSpeed = 0.2;
 	vcFreeCamMaxOffset = 0.5;
 
+	// Flashlight
+	flashlight = 0;
+	flashlightColor = { 1,1,1,0 };
+	flashlightColor2 = { 0,0,0,0 };
+	flashlightPos = { 0,0,0 };
+	vesselPosGlobal = { 0,0,0 };
+	flashlightDirGlobal = { 0,0,1 };
+	flashlightDirLocal = { 0,0,1 };
+	flashlightOn = 0;
+
 	DPSPropellant.SetVessel(this);
 	APSPropellant.SetVessel(this);
 	RCSA.SetVessel(this);
@@ -1132,6 +1142,10 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	}
 
+	if ((down) && (key == OAPI_KEY_F)) {
+		ToggleFlashlight();
+	}
+
 	if (KEYMOD_SHIFT(keystate) || KEYMOD_CONTROL(keystate) || !down) {
 		return 0; 
 	}
@@ -1337,6 +1351,11 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 
 	if (oapiGetFocusObject() == GetHandle()) {
 		dsky.SendNetworkPacketDSKY();
+	}
+
+	if ((oapiGetFocusObject() == GetHandle()) && (oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
+		//We have focus on this vessel, and are in the VC
+		MoveFlashlight();
 	}
 }
 

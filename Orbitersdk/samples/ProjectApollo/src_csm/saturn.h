@@ -1285,6 +1285,21 @@ public:
 
 	void ClearMeshes();
 
+	//
+	// Flashlight for VC
+	//
+	void MoveFlashlight();
+	void SetFlashlightOn(bool state);
+	void ToggleFlashlight();
+	SpotLight* flashlight;
+	COLOUR4 flashlightColor;
+	COLOUR4 flashlightColor2;
+	VECTOR3 flashlightPos;
+	VECTOR3 vesselPosGlobal;
+	VECTOR3 flashlightDirGlobal;
+	VECTOR3 flashlightDirLocal;
+	bool flashlightOn;
+
 protected:
 
 	///

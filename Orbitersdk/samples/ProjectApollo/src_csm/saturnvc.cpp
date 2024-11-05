@@ -805,6 +805,12 @@ bool Saturn::clbkLoadVC (int id)
 	vcFreeCamy = 0;
 	vcFreeCamz = 0;
 
+	//Flashlight
+	DelLightEmitter(flashlight);
+	flashlight = (::SpotLight*)AddSpotLight(flashlightPos, flashlightDirLocal, 3, 0, 0, 3, 0, RAD * 45, flashlightColor, flashlightColor, flashlightColor2);
+	flashlight->SetVisibility(LightEmitter::VIS_COCKPIT);
+	flashlight->Activate(flashlightOn);
+
 	switch (id) {
 
 	case SATVIEW_LEFTSEAT:
@@ -5021,4 +5027,32 @@ void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode
 		}
 	}
     //sprintf(oapiDebugString(), "%d %lf", m, state);
+}
+
+void Saturn::MoveFlashlight()
+{
+	if (flashlightOn) { //Only move the light emmitter if the flashlight is on
+		//Huge thanks the Jordan64 for helping get the direction stuff working! :)
+		GetCameraOffset(flashlightPos);
+		oapiCameraGlobalDir(&flashlightDirGlobal);
+		GetGlobalPos(vesselPosGlobal);
+		Global2Local(vesselPosGlobal + flashlightDirGlobal, flashlightDirLocal);
+		normalise(flashlightDirLocal);
+
+		flashlight->SetPosition(flashlightPos);
+		flashlight->SetDirection(flashlightDirLocal);
+	}
+}
+
+void Saturn::SetFlashlightOn(bool state)
+{
+	flashlight->Activate(state);
+	flashlightOn = state;
+}
+
+void Saturn::ToggleFlashlight()
+{
+	if ((oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
+		SetFlashlightOn(!flashlightOn);
+	}
 }

@@ -2,7 +2,7 @@
 
 BEGIN_HEADER
 InitialState on
-ColourIdx 4
+ColourIdx 1
 ShapeIdx 1
 Size 0.5
 END_HEADER
@@ -12,31 +12,36 @@ BEGIN_DATA
 +30.2456 +0.5856    : "Boot Hill"
 +29.5956 +0.0469    : "Duke Island"
 +40.0065 +1.2255    : "Mount Marilyn"        ; Secchi Theta
--31.45 -16.45           	: "The Helmet"
+-31.45 -16.45       : "The Helmet"
 +29.2203 +0.9671    : "Wash Basin"           ; Maskelyne W
 +27.2714 +1.4581    : "Diamondback Rille"
 +28.0769 +0.0503    : "Sidewinder Rille"
--162.700 -5.250        : CP1 504 (Apollo 8)
-+155.100 -10.200     : CP2 526 (Apollo 8)
-+95.9 -9.1              	: CP3 334 (Apollo 8)
-+35.025 +02.675      : LDMK B1 (Apollo 8)
+-162.700 -5.250        : CP-1 504 (Apollo 8)
++155.100 -10.200     : CP-2 526 (Apollo 8)
++95.9 -9.1              	: CP-3 334 (Apollo 8)
++35.025 +02.675      : LDMK B-1 (Apollo 8)
 +23.678 +01.266      : LDMK 130 (Apollo 10 &11)
 +170.146 +0.875      : CP-1 (Apollo 10)
 +127.400 +1.600      : CP-2 (Apollo 10)
-+86.88 +1.6 	: LDMK F-1 (Apollo 8 & 10)
++86.88 +1.6			: LDMK F-1 (Apollo 8 & 10)
 +35.036 +2.522        : LDMK B-1 (Apollo 10)
 -1.428 +0.283           : LDMK 150 (Apollo 10)
 +57.702 +0.866        : LDMK 420 (Apollo 10)   ; Taruntius P
 +45.482 -0.050         : LDMK 423 (Apollo 10)   ; Secchi K
 +47.936 -0.950         : LDMK 422 (Apollo 10)   ; Messier B
 +49.898 +0.350        : LDMK 421 (Apollo 10)   ; Taruntius H
-+65.500 +2.000	: A1 (Pseudo Ldg Site) (Apollo 11)
++34.025278 +2.631667	: LLS 1 (Apollo 10)
++23.6475 +0.732222		: LLS 2 (Apollo 10)
+-1.345 +0.374167		: LLS 3 (Apollo 10)
+-36.698056 -3.642778	: LLS 4 (Apollo 10)
+-41.938889 +1.771944	: LLS 5 (Apollo 10)
++65.500 +2.000	: A-1 (Pseudo Ldg Site) (Apollo 11)
 +28.726 +1.885	: IP (130) (Apollo 11)
 +24.889 +0.505	: LDMK 123 (Apollo 11)
 +23.744 +1.285	: LDMK 129 (Apollo 11)
 +23.515 +0.787	: LDMK 133 (Apollo 11)
--15.250 -1.517	: LDMK H1 (Apollo 12)
--23.39194 -2.9822 	: LDMK Site 7 (Apollo12)
+-15.250 -1.517	: LDMK H-1 (Apollo 12)
+-23.39194 -2.9822 	: LDMK Site 7 (Apollo 12)
 -23.024 -2.957	: LDMK 190 (Apollo 12)
 -23.202 -3.437	: LDMK 191 (Apollo 12)
 -23.229 -3.437	: LDMK 193 (Apollo 12)
@@ -46,11 +51,11 @@ BEGIN_DATA
 +15.517 -8.858	: Descartes (Apollo 12)
 -17.550 -3.617	: Fra Mauro (Apollo 12)
 -31.150 0.150	: Lansberg A (Apollo 12)
-+112.000 -5.667	: CP 1 (Apollo 12)
-+56.183 -10.250	: CP 2 (Apollo 12)
-+15.550 -8.883	: DE 1 (Apollo 12)
-+15.067 -9.333	: DE 2 (Apollo 12)
-+14.983 -8.767	: DE 3 (Apollo 12)
--17.3305 -3.228	: FM 1 (Apollo 12)
--16.908 -4.117	: FM 2 (Apollo 12)
--17.517 -4.567	: FM 3 (Apollo 12)
++112.000 -5.667	: CP-1 (Apollo 12)
++56.183 -10.250	: CP-2 (Apollo 12)
++15.550 -8.883	: DE-1 (Apollo 12)
++15.067 -9.333	: DE-2 (Apollo 12)
++14.983 -8.767	: DE-3 (Apollo 12)
+-17.3305 -3.228	: FM-1 (Apollo 12)
+-16.908 -4.117	: FM-2 (Apollo 12)
+-17.517 -4.567	: FM-3 (Apollo 12)

@@ -1,0 +1,34 @@
+; Apollo 10 navigation landmarks, nicks and unofficial names.
+
+BEGIN_HEADER
+InitialState off
+ColourIdx 1
+ShapeIdx 1
+Size 0.5
+END_HEADER
+
+BEGIN_DATA
+
++30.2456 +0.5856    : "Boot Hill"
++29.5956 +0.0469    : "Duke Island"
++40.0065 +1.2255    : "Mount Marilyn"        ; Secchi Theta
+-31.45 -16.45       : "The Helmet"
++29.2203 +0.9671    : "Wash Basin"           ; Maskelyne W
++27.2714 +1.4581    : "Diamondback Rille"
++28.0769 +0.0503    : "Sidewinder Rille"
+
++23.678 +01.266      : LDMK 130
++170.146 +0.875      : CP-1
++127.400 +1.600      : CP-2
++86.88 +1.6			 : LDMK F-1
++35.036 +2.522       : LDMK B-1
+-1.428 +0.283        : LDMK 150
++57.702 +0.866       : LDMK 420    ; Taruntius P
++45.482 -0.050       : LDMK 423    ; Secchi K
++47.936 -0.950       : LDMK 422    ; Messier B
++49.898 +0.350       : LDMK 421    ; Taruntius H
++34.025278 +2.631667	: LLS 1 
++23.6475 +0.732222		: LLS 2 
+-1.345 +0.374167		: LLS 3 
+-36.698056 -3.642778	: LLS 4 
+-41.938889 +1.771944	: LLS 5 

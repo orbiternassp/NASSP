@@ -1,0 +1,38 @@
+; Apollo 12 navigation landmarks, nicks and unofficial names.
+
+BEGIN_HEADER
+InitialState off
+ColourIdx 1
+ShapeIdx 1
+Size 0.5
+END_HEADER
+
+BEGIN_DATA
+
++30.2456 +0.5856    : "Boot Hill"
++29.5956 +0.0469    : "Duke Island"
++40.0065 +1.2255    : "Mount Marilyn"        ; Secchi Theta
+-31.45 -16.45       : "The Helmet"
++29.2203 +0.9671    : "Wash Basin"           ; Maskelyne W
++27.2714 +1.4581    : "Diamondback Rille"
++28.0769 +0.0503    : "Sidewinder Rille"
+
+-15.250 -1.517		: LDMK H-1
+-23.39194 -2.9822 	: LDMK Site 7
+-23.024 -2.957		: LDMK 190
+-23.202 -3.437		: LDMK 191
+-23.229 -3.437		: LDMK 193
+-23.573 -3.009		: LDMK 194
+-24.008 -3.377		: LDMK 195
+-8.667 -4.783		: Lalande
++15.517 -8.858		: Descartes
+-17.550 -3.617		: Fra Mauro
+-31.150 0.150		: Lansberg A
++112.000 -5.667		: CP-1
++56.183 -10.250		: CP-2
++15.550 -8.883		: DE-1
++15.067 -9.333		: DE-2
++14.983 -8.767		: DE-3
+-17.3305 -3.228		: FM-1
+-16.908 -4.117		: FM-2
+-17.517 -4.567		: FM-3
