@@ -3735,6 +3735,8 @@ protected:
 	// GSE
 	Pump* GSEGlycolPump;
 	h_Radiator* GSERadiator;
+	h_Tank* GSEO2Dewar;
+	h_Tank *GSEH2Dewar;
 
 	// EPS
 	CryoPressureSwitch H2CryoPressureSwitch;
