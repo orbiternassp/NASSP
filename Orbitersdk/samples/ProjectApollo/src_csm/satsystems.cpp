@@ -344,6 +344,8 @@ void Saturn::SystemsInit() {
 
 	GSEGlycolPump = (Pump*)Panelsdk.GetPointerByString("ELECTRIC:GSEGLYCOLPUMP");
 	GSERadiator = (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:GSERADIATOR");
+	GSEO2Dewar = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:GSECRYOO2DEWAR");
+	GSEH2Dewar = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:GSECRYOH2DEWAR");
 
 	//
 	// ECS devices
@@ -1052,6 +1054,10 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:SECGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
 					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSECHILLER:PUMP") = SP_PUMP_OFF;
+
+					//Close GSE dewars
+					GSEO2Dewar->OUT_valve.Close();
+					GSEH2Dewar->OUT_valve.Close();
 
 					// Close Service Module GSE Cryogenic Valves
 					O2Tanks[0]->IN_valve.Close();
