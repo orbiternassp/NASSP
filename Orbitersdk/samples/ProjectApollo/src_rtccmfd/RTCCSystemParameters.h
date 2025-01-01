@@ -247,12 +247,12 @@ struct RTCCSystemParameters
 		MDCMAT[5] = -5.1257e-7; MDCMAT[6] = 7.739e-8; MDCMAT[7] =  5.7700e-8; MDCMAT[8] = -3.4567e-9;
 		MDSMAT[0] = -4.1312e-9; MDSMAT[1] = -8.9613e-7; MDSMAT[2] = 2.6809e-7; MDSMAT[3] = -2.15567e-8; MDSMAT[4] = 1.9885e-7;
 		MDSMAT[5] = -4.4095e-7; MDSMAT[6] = 1.497e-7; MDSMAT[7] = -1.2389e-8; MDSMAT[8] = 6.4464e-9;
-		MGTESE = 0; //4 to use the full tesseral data. Use 0 in Orbiter Beta and earlier, 4 in Open Orbiter
+		MGTESE = 4; //4 to use the full tesseral data. Use 0 in Orbiter Beta and earlier, 4 in Open Orbiter
 
 		//Moon
 		MMCMAT[0] = 0.0; MMCMAT[1] = 0.20715e-4; MMCMAT[2] = 0.34e-4; MMCMAT[3] = 0.0; MMCMAT[4] = 0.02583e-4; MMCMAT[5] = 0.0; MMCMAT[6] = 0.0; MMCMAT[7] = 0.0; MMCMAT[8] = 0.0;
 		MMSMAT[0] = 0.0; MMSMAT[1] = 0.0; MMSMAT[2] = 0.0; MMSMAT[3] = 0.0; MMSMAT[4] = 0.0; MMSMAT[5] = 0.0; MMSMAT[6] = 0.0; MMSMAT[7] = 0.0; MMSMAT[8] = 0.0;
-		MMTESE = 0; //3 with L1 model. Use 0 in Orbiter Beta and earlier, 3 in Open Orbiter
+		MMTESE = 3; //3 with L1 model. Use 0 in Orbiter Beta and earlier, 3 in Open Orbiter
 
 		//Time from launch to EOI, seconds
 		MDLIEV[0] = 0.76673814e3;
