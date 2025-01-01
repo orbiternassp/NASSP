@@ -132,7 +132,7 @@ void EnckeFreeFlightIntegrator::Propagate(EMMENIInputTable &in)
 	}
 	else if (ISTOPS == 4 || ISTOPS == 6 || ISTOPS == 7 || ISTOPS == 8)
 	{
-		//0.0001° tolerance
+		//0.0001ï¿½ tolerance
 		DEV = 0.0001*RAD;
 	}
 	else
