@@ -3,7 +3,7 @@ The Saturn V makes its second flight to test itself and carry an unmanned CSM/LM
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System ProjectApollo/Sol
+  System ProjectApollo/Sol_VirtualAGC
   Date MJD 39950.5000115741
 END_ENVIRONMENT
 

@@ -6,7 +6,7 @@ After the burn, use Prog 59 in the AGC to vent remaining propellant from the SIV
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System ProjectApollo/Sol
+  System ProjectApollo/Sol_VirtualAGC
   Date MJD 40995.6700611447
 END_ENVIRONMENT
 

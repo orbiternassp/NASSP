@@ -3,7 +3,7 @@ AAP - Mission 1a. CDR:Donald R. Garrett, CMP:Joel M. Rosenweig, LMP:Neil B. Ande
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System ProjectApollo/Sol
+  System ProjectApollo/Sol_VirtualAGC
   Date MJD 40312.5838078704
 END_ENVIRONMENT
 
