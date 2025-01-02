@@ -3,7 +3,7 @@ Moonlab. Mission to set up a Lunar Orbiting Spacestation. First flight objective
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System ProjectApollo/Sol
+  System ProjectApollo/Sol_VirtualAGC
   Date MJD 40483.40103032411
 END_ENVIRONMENT
 

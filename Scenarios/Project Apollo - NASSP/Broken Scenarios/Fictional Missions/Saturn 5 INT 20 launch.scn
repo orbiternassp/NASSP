@@ -3,7 +3,7 @@ Fly the planned Saturn 5 - INT 20 derivative to orbit. Be prepared for random fa
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System ProjectApollo/Sol
+  System ProjectApollo/Sol_VirtualAGC
   Date MJD 40418.52222222
 END_ENVIRONMENT
 

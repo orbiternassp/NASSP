@@ -3,7 +3,7 @@ Test of early Skylab plans using a Saturn 1b to launch a 'wet workshop' and crew
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System ProjectApollo/Sol
+  System ProjectApollo/Sol_VirtualAGC
   Date MJD 40995.52222222
 END_ENVIRONMENT
 
