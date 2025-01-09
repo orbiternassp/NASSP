@@ -310,7 +310,6 @@ protected:
 	e_object *TrackCB;
 	ThreePosSwitch *TrackSwitch;
 	h_HeatLoad *TLEHeat;
-	h_HeatLoad *SecTLEHeat;
 
 };
 

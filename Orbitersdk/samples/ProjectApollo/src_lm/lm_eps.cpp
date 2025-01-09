@@ -1260,7 +1260,7 @@ void LEM_LCA::UpdateFlow(double dt)
 		PowerDrawPerSource = power_load;
 	}
 
-	//sprintf(oapiDebugString(), "%f %f", power_load, AC_power_load);
+	//sprintf(oapiDebugString(), "%f %f %f", power_load, AC_power_load, LCAHeat);
 
 	if (CDR_Volts > 0) {
 		CDRAnnunDockCompCB->DrawPower(PowerDrawPerSource);
@@ -1282,7 +1282,7 @@ void LEM_LCA::UpdateFlow(double dt)
 
 void LEM_LCA::SystemTimestep(double simdt)
 {
-	//LCA Heating to be added
+	LCAHeat->GenerateHeat(power_load + AC_power_load); //AC power load not indicating here, also needsa connection for dock lights
 }
 
 double LEM_LCA::GetCompDockVoltage()
