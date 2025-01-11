@@ -656,7 +656,7 @@ void LEM_CWEA::SystemTimestep(double simdt) {
 		CWEAHeat->GenerateHeat(11.48);
 	}
 	if (IsLTGPowered())
-		lem->lca.DrawDCPower(GetDimmableLoad() + GetNonDimmableLoad());
+		lem->lca.DrawDCPower(GetDimmableLoad()*lem->lca.GetAnnunDimPct() + GetNonDimmableLoad());
 	if (MasterAlarm == true)
 		ma_pwr->DrawPower(7.2);
 
@@ -1057,19 +1057,19 @@ double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the CW power light 
 double LEM_CWEA::GetDimmableLoad()
 {
 	if (lem->LampToneTestRotary == 0 || lem->LampToneTestRotary == 1 || lem->LampToneTestRotary == 6 || lem->LampToneTestRotary == 7) {
-		return (GetNumberLightsOn() * 1.18) * lem->lca.GetAnnunDimPct();	//Approx 1.18W per bulb, scaled with LCA dimming
+		return (GetNumberLightsOn() * 1.18);	//Approx 1.18W per bulb
 	}
 	else if (lem->LampToneTestRotary == 2) {
-		return ((GetCWBank2Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18) * lem->lca.GetAnnunDimPct();
+		return ((GetCWBank2Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18);
 	}
 	else if (lem->LampToneTestRotary == 3) {
-		return ((GetCWBank1Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18) * lem->lca.GetAnnunDimPct();
+		return ((GetCWBank1Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18);
 	}
 	else if (lem->LampToneTestRotary == 4) {
-		return ((GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank4Lights()) * 1.18) * lem->lca.GetAnnunDimPct();
+		return ((GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank4Lights()) * 1.18);
 	}
 	else if (lem->LampToneTestRotary == 5) {
-		return ((GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank3Lights()) * 1.18) * lem->lca.GetAnnunDimPct();
+		return ((GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank3Lights()) * 1.18);
 	}
 	else
 		return 0.0;

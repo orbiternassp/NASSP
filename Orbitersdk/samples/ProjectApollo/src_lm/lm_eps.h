@@ -339,24 +339,34 @@ public:
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	void DrawDCPower(double watts);
-	void DrawACPower(double watts);
+	void DrawIntegralACPower(double watts);
+	void DrawNumericsACPower(double watts);
 
 	double GetCompDockVoltage();
 	double GetAnnunVoltage();
-	double GetAnnunDimPct();
-	double GetNumericVoltage();
 	double GetIntegralVoltage();
+	double GetNumericVoltage();
+
+	double GetAnnunDimPct();
+	double GetIntegralDimPct();
+	double GetNumericsDimPct();
 protected:
+	void UpdateAnnunVoltage();
+	void UpdateIntegralVoltage();
+	void UpdateNumericsVoltage();
+
 	bool HasDCPower;
-	double DCOutputVoltage;
+	double DCAnnunVoltage;
+	double ACNumericsVoltage;
+	double ACIntegralVoltage;
 
 	LEM *lem;
 	e_object *CDRAnnunDockCompCB;
 	e_object *LMPAnnunDockCompCB;
 	h_HeatLoad *LCAHeat;
 
-	double AC_power_load;
-
+	double Integral_AC_power_load;
+	double Numerics_AC_power_load;
 };
 
 class LEM_UtilLights

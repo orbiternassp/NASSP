@@ -1208,7 +1208,11 @@ LEM_LCA::LEM_LCA()
 	LMPAnnunDockCompCB = NULL;
 	HasDCPower = false;
 	LCAHeat = 0;
-	AC_power_load = 0;
+	Integral_AC_power_load = 0;
+	Numerics_AC_power_load = 0;
+	ACNumericsVoltage = 0.0;
+	ACIntegralVoltage = 0.0;
+	DCAnnunVoltage = 0.0;
 }
 
 void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, h_HeatLoad *lca_h)
@@ -1224,9 +1228,14 @@ void LEM_LCA::DrawDCPower(double watts)
 	power_load += watts;
 };
 
-void LEM_LCA::DrawACPower(double watts)
+void LEM_LCA::DrawIntegralACPower(double watts)
 {
-	AC_power_load += watts;
+	Integral_AC_power_load += watts;
+};
+
+void LEM_LCA::DrawNumericsACPower(double watts)
+{
+	Numerics_AC_power_load += watts;
 };
 
 void LEM_LCA::UpdateFlow(double dt)
@@ -1235,6 +1244,11 @@ void LEM_LCA::UpdateFlow(double dt)
 	double PowerDrawPerSource;
 	double CDR_Volts = 0;
 	double LMP_Volts = 0;
+
+	//Update voltages
+	UpdateAnnunVoltage();
+	UpdateIntegralVoltage();
+	UpdateNumericsVoltage();
 
 	HasDCPower = false;
 
@@ -1260,31 +1274,92 @@ void LEM_LCA::UpdateFlow(double dt)
 		PowerDrawPerSource = power_load;
 	}
 
-	LCAHeat->GenerateHeat(power_load + AC_power_load);
-	
-	//sprintf(oapiDebugString(), "%f %f %f", power_load, AC_power_load, LCAHeat);
-
 	if (CDR_Volts > 0) {
 		CDRAnnunDockCompCB->DrawPower(PowerDrawPerSource);
 	}
 	if (LMP_Volts > 0) {
 		LMPAnnunDockCompCB->DrawPower(PowerDrawPerSource);
 	}
+	if (csrc == 0) power_load = 0.0; //No power, no heat later
 
-	power_load = 0.0;
+	//Integral
+	if (lem->INTGL_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		lem->INTGL_LTG_AC_CB.DrawPower(Integral_AC_power_load);
+	}
+	else Integral_AC_power_load = 0.0; //No power, no heat later
 
+	//Numerics
 	if (lem->NUM_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
 	{
-		lem->NUM_LTG_AC_CB.DrawPower(AC_power_load);
+		lem->NUM_LTG_AC_CB.DrawPower(Numerics_AC_power_load);
 	}
+	else Numerics_AC_power_load = 0.0; //No power, no heat later
 
-	AC_power_load = 0.0;
+	//Heat
+	LCAHeat->GenerateHeat(power_load + Integral_AC_power_load + Numerics_AC_power_load);
+
+	power_load = Integral_AC_power_load = Numerics_AC_power_load = 0.0;
 }
 
 
 void LEM_LCA::SystemTimestep(double simdt)
 {
 
+}
+
+void LEM_LCA::UpdateAnnunVoltage()
+{
+	if (HasDCPower)
+	{
+		if (lem->LtgORideAnunSwitch.IsUp())
+		{
+			DCAnnunVoltage = 5.0;
+		}
+		else
+		{
+			//2-5V
+			DCAnnunVoltage = (3.0 / 8.0*lem->LtgAnunNumKnob.GetValue() + 2.0);
+		}
+	}
+
+	DCAnnunVoltage = 0.0;
+}
+
+void LEM_LCA::UpdateIntegralVoltage()
+{
+	if (lem->INTGL_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		if (lem->LtgORideIntegralSwitch.IsUp())
+		{
+			ACIntegralVoltage = 75.0;
+		}
+		else
+		{
+			//15-75V
+			ACIntegralVoltage = (60.0 / 8.0*lem->LtgIntegralKnob.GetValue() + 15.0);
+		}
+	}
+
+	ACIntegralVoltage = 0.0;
+}
+
+void LEM_LCA::UpdateNumericsVoltage()
+{
+	if (lem->NUM_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		if (lem->LtgORideNumSwitch.IsUp())
+		{
+			ACNumericsVoltage = 115.0;
+		}
+		else
+		{
+			//20-110V
+			ACNumericsVoltage = (90.0 / 8.0*lem->LtgAnunNumKnob.GetValue() + 20.0);
+		}
+	}
+
+	ACNumericsVoltage = 0.0;
 }
 
 double LEM_LCA::GetCompDockVoltage()
@@ -1299,65 +1374,35 @@ double LEM_LCA::GetCompDockVoltage()
 
 double LEM_LCA::GetAnnunVoltage()
 {
-	if (HasDCPower)
-	{
-		if (lem->LtgORideAnunSwitch.IsUp())
-		{
-			return 5.0;
-		}
-		else
-		{
-			//2-5V
-			return (3.0 / 8.0*lem->LtgAnunNumKnob.GetValue() + 2.0);
-		}
-	}
-
-	return 0.0;
-}
-
-double LEM_LCA::GetAnnunDimPct()
-{
-	if (GetAnnunVoltage() > 2.0)
-	{
-		return GetAnnunVoltage() / 5.0;
-	}
-	return 0.0;
+	return DCAnnunVoltage;
 }
 
 double LEM_LCA::GetNumericVoltage()
 {
-	if (lem->NUM_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
-	{
-		if (lem->LtgORideNumSwitch.IsUp())
-		{
-			return 115.0;
-		}
-		else
-		{
-			//20-110V
-			return (90.0 / 8.0*lem->LtgAnunNumKnob.GetValue() + 20.0);
-		}
-	}
-
-	return 0.0;
+	return ACNumericsVoltage;
 }
 
 double LEM_LCA::GetIntegralVoltage()
 {
-	if (lem->INTGL_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
-	{
-		if (lem->LtgORideIntegralSwitch.IsUp())
-		{
-			return 75.0;
-		}
-		else
-		{
-			//15-75V
-			return (60.0 / 8.0*lem->LtgIntegralKnob.GetValue() + 15.0);
-		}
-	}
+	return ACIntegralVoltage;
+}
 
-	return 0.0;
+double LEM_LCA::GetNumericsDimPct()
+{
+	if (ACNumericsVoltage < 20.0) return 0.0;
+	return min(1.0, ACNumericsVoltage / 110.0);
+}
+
+double LEM_LCA::GetIntegralDimPct()
+{
+	if (ACIntegralVoltage < 15.0) return 0.0;
+	return min(1.0, ACIntegralVoltage / 75.0);
+}
+
+double LEM_LCA::GetAnnunDimPct()
+{
+	if (DCAnnunVoltage < 2.0) return 0.0;
+	return min(1.0, DCAnnunVoltage / 5.0);
 }
 
 void LEM_LCA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
