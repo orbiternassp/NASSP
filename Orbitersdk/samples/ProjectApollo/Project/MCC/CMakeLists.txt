@@ -16,6 +16,7 @@ set(SOURCES
     ${NASSP_SOURCE_ROOT}/src_launch/mcc.cpp
     ${NASSP_SOURCE_ROOT}/src_launch/mccvc.cpp
     ${NASSP_SOURCE_ROOT}/src_launch/mccvessel.cpp
+    ${NASSP_SOURCE_ROOT}/src_launch/MCC_Calculations.cpp
     ${NASSP_SOURCE_ROOT}/src_launch/MCC_Mission_B.cpp
     ${NASSP_SOURCE_ROOT}/src_launch/MCC_Mission_C.cpp
     ${NASSP_SOURCE_ROOT}/src_launch/MCC_Mission_C_PRIME.cpp
