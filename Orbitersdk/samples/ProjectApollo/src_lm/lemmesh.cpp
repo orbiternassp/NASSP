@@ -48,6 +48,7 @@
 
 MESHHANDLE hLMDescent;
 MESHHANDLE hLMDescentNoLeg;
+MESHHANDLE hLMDescentJ;
 MESHHANDLE hLMAscent;
 MESHHANDLE hLMVC;
 MESHHANDLE hLMWindowShades;
@@ -175,6 +176,7 @@ void LEM::SetLmVesselDockStage()
 	// Configure meshes if needed
 	if (!pMission->LMHasLegs()) InsertMesh(hLMDescentNoLeg, dscidx, &mesh_dsc);
 	SetLMMeshVis();
+	if (pMission->IsJMission()) InsertMesh(hLMDescentJ, dscidx, &mesh_dsc);
 	if (pMission->GetCrossPointerShades()) ShowXPointerShades();
 
 	if (!ph_Dsc)
@@ -867,6 +869,7 @@ void LEMLoadMeshes()
 {
 	hLMDescent = oapiLoadMeshGlobal ("ProjectApollo/LM_DescentStage");
 	hLMDescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoLeg");
+	hLMDescentJ = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStage-J");
 	hLMAscent = oapiLoadMeshGlobal ("ProjectApollo/LM_AscentStage");
 	hLMVC = oapiLoadMeshGlobal("ProjectApollo/LM_VC");
 	hLMWindowShades = oapiLoadMeshGlobal("ProjectApollo/LM_Window_Shades");

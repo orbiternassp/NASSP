@@ -2138,6 +2138,7 @@ protected:
 
 extern MESHHANDLE hLMDescent;
 extern MESHHANDLE hLMDescentNoLeg;
+extern MESHHANDLE hLMDescentJ;
 extern MESHHANDLE hLMAscent;
 extern MESHHANDLE hLMVC;
 
