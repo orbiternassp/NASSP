@@ -2330,7 +2330,8 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 	ecs.crewNumber = CrewInCabin->number + CDRSuited->number + LMPSuited->number;
 	ecs.crewStatus = CrewStatus.GetStatus();;
 
-
+	ecs.cdrName = pMission->GetCDRName();
+	ecs.lmpName = pMission->GetLMPName();
 }
 
 void LEM::SetCrewNumber(int number)
