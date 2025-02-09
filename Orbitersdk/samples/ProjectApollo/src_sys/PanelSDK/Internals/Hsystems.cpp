@@ -394,7 +394,7 @@ double h_substance::GET_BULK_MOD(const int SUBSTANCE_TYPE, const double temperat
 	double bulkmod = 0;
 	switch (SUBSTANCE_TYPE) {
 	case SUBSTANCE_O2:
-		lookup_index = (int)(temperature);
+		lookup_index = static_cast<int>(temperature);
 		if (lookup_index >= 0 && lookup_index < 998)
 		{ 
 			//implimented as a simple liner interpolation
@@ -817,11 +817,11 @@ void h_Tank::refresh(double dt) {
 			fprintf(PanelsdkLogFile, "\t%i Q %f\n", i, space.composition[i].Q);
 	}*/
 
-	if (!strcmp(name, "O2TANK1"))
-	{
-		//sprintf(oapiDebugString(), "%lf", this->space.composition->GET_BULK_MOD(SUBSTANCE_O2, this->space.Press, this->space.Temp));
-		sprintf(oapiDebugString(), "%d %lf %le %lf Vapor Mass: %lf",(int)(this->space.composition->Temp), (this->space.composition->Temp), (this->space.Press), this->space.composition->GET_BULK_MOD(SUBSTANCE_O2, this->space.composition->Temp, this->space.Press), this->space.composition[0].vapor_mass);
-	}
+	//if (!strcmp(name, "O2TANK1"))
+	//{
+	//	//sprintf(oapiDebugString(), "%lf", this->space.composition->GET_BULK_MOD(SUBSTANCE_O2, this->space.Press, this->space.Temp));
+	//	sprintf(oapiDebugString(), "%d %lf %le %lf Vapor Mass: %lf",(int)(this->space.composition->Temp), (this->space.composition->Temp), (this->space.Press), this->space.composition->GET_BULK_MOD(SUBSTANCE_O2, this->space.composition->Temp, this->space.Press), this->space.composition[0].vapor_mass);
+	//}
 
 	space.ThermalComps(dt);
 	Temp = space.Temp;
