@@ -247,6 +247,7 @@ void SIVB::InitS4b()
 	PanelsHinged = false;
 	PanelsOpened = false;
 	UseWideSLA = false;
+	SLAHasBeacons = false;
 	LowRes = false;
 	IUSCContPermanentEnabled = true;
 	PayloadCreated = false;
@@ -458,6 +459,7 @@ void SIVB::SetS4b()
     ClearExhaustRefs();
     ClearAttExhaustRefs();
 	HideAllMeshes();
+	CreateStrobes();
 
 	double TCPS4B = -11;
 
@@ -627,6 +629,7 @@ void SIVB::SetS4b()
 	SetEmptyMass(mass);
 	SetAnimation(panelAnim, panelProc);
 	SetAnimation(panelAnimPlusX, panelProcPlusX);
+	MoveStrobes();
 
 	AddRCS_S4B();
 
@@ -648,6 +651,10 @@ void SIVB::SetS4b()
 	{
 		sivbsys->SetVehicleNumber(VehicleNo);
 		sivbsys->CreateParticleEffects(1400.0*0.0254); //CG location
+	}
+
+	if (PanelsHinged && SLAHasBeacons) {
+		ActivateStrobes();
 	}
 }
 
@@ -700,6 +707,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 					panelProcPlusX = min(RotationLimit, panelProcPlusX + simdt / 40.0);
 					SetAnimation(panelAnimPlusX, panelProcPlusX);
 				}
+				MoveStrobes();
 			}
 			else if (!PanelsOpened) {
 				if (panelProc < RotationLimit) {
@@ -946,6 +954,7 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 
 	oapiWriteScenario_int (scn, "S4PL", PayloadType);
 	oapiWriteScenario_int (scn, "WIDESLA", UseWideSLA);
+	oapiWriteScenario_int (scn, "SLABEACONS", SLAHasBeacons);
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
 	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
 	oapiWriteScenario_float (scn, "EMASS", EmptyMass);
@@ -1248,6 +1257,12 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			int i;
 			sscanf(line + 7, "%d", &i);
 			UseWideSLA = (i != 0);
+		}
+		else if (!strnicmp(line, "SLABEACONS", 10))
+		{
+			int i;
+			sscanf(line + 10, "%d", &i);
+			SLAHasBeacons = (i != 0);
 		}
 		else if (!strnicmp (line, "MAINSTATE", 9))
 		{
@@ -1669,6 +1684,7 @@ void SIVB::SetState(SIVBSettings &state)
 		SaturnVStage = state.SaturnVStage;
 		PanelsHinged = state.PanelsHinged;
 		UseWideSLA = state.UseWideSLA;
+		SLAHasBeacons = state.SLAHasBeacons;
 		VehicleNo = state.VehicleNo;
 		LowRes = state.LowRes;
 		IUSCContPermanentEnabled = state.IUSCContPermanentEnabled;
@@ -1694,6 +1710,7 @@ void SIVB::SetState(SIVBSettings &state)
 		{
 			panelProc = panelProcPlusX = state.PanelProcess;
 			SetAnimation(panelAnim, panelProc);
+			MoveStrobes();
 		}
 
 		if (SaturnVStage)
@@ -1978,6 +1995,66 @@ void SIVB::SeparateCSM()
 double SIVB::GetPayloadMass()
 {
 	return PayloadMass;
+}
+
+void SIVB::CreateStrobes()
+{
+	static VECTOR3 beaconCol = _V(1, 1, 1);
+	trackLightPos[0] = _V(2.25, 0, 14.25);
+	trackLightPos[1] = _V(0, 2.25, 14.25);
+	trackLightPos[2] = _V(0, -2.25, 14.25);
+	trackLightPos[3] = _V(-2.25, 0, 14.25);
+	for (int i = 0; i < 4; i++) {
+		trackLight[i].shape = BEACONSHAPE_STAR;
+		trackLight[i].pos = trackLightPos + i;
+		trackLight[i].col = &beaconCol;
+		trackLight[i].size = 0.25;
+		trackLight[i].falloff = 0.25;
+		trackLight[i].period = 1;
+		trackLight[i].duration = 0.1;
+		trackLight[i].tofs = 0;
+		trackLight[i].active = false;
+		AddBeacon(&trackLight[i]);
+	}
+}
+
+void SIVB::ActivateStrobes()
+{
+	for (int i = 0; i < 4; i++) {
+		trackLight[i].active = true;
+	}
+}
+
+void SIVB::MoveStrobes()
+{
+	double vOfs = 5.1;
+	double sOfs = -0.6;
+	VECTOR3 pos[4] = { //Beacon position relative to SLA panel hinge
+		_V(sOfs, 0, vOfs),
+		_V(0, sOfs, vOfs),
+		_V(0, -sOfs, vOfs),
+		_V(-sOfs, 0, vOfs)
+	};
+	VECTOR3 hinge[4] = { //SLA panel hinge position in vessel coordinates
+		_V(2.82, 0, 9.35),
+		_V(0, 2.82, 9.35),
+		_V(0, -2.82, 9.35),
+		_V(-2.82, 0, 9.35)
+	};
+	double theta = panelProc * PI;
+	double thetaPlusX = panelProcPlusX * PI;
+
+	trackLightPos[0].x = ((pos[0].x * cos(-thetaPlusX)) - (pos[0].z * sin(-thetaPlusX))) + hinge[0].x;
+	trackLightPos[0].z = ((pos[0].x * sin(-thetaPlusX)) + (pos[0].z * cos(-thetaPlusX))) + hinge[0].z;
+
+	trackLightPos[1].y = ((pos[1].y * cos(-theta)) - (pos[1].z * sin(-theta))) + hinge[1].y;
+	trackLightPos[1].z = ((pos[1].y * sin(-theta)) + (pos[1].z * cos(-theta))) + hinge[1].z;
+
+	trackLightPos[2].y = ((pos[2].y * cos(theta)) - (pos[2].z * sin(theta))) + hinge[2].y;
+	trackLightPos[2].z = ((pos[2].y * sin(theta)) + (pos[2].z * cos(theta))) + hinge[2].z;
+
+	trackLightPos[3].x = ((pos[3].x * cos(theta)) - (pos[3].z * sin(theta))) + hinge[3].x;
+	trackLightPos[3].z = ((pos[3].x * sin(theta)) + (pos[3].z * cos(theta))) + hinge[3].z;
 }
 
 void SIVB::SISwitchSelector(int channel)

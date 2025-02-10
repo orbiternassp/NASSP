@@ -1173,6 +1173,7 @@ void Saturn::CreateSIVBStage(char *config, VESSELSTATUS &vs1, bool SaturnVStage)
 	S4Config.PanelsHinged = !SLAWillSeparate;
 	S4Config.SLARotationLimit = (double) SLARotationLimit;
 	S4Config.UseWideSLA = UseWideSLA;
+	S4Config.SLAHasBeacons = SLAHasBeacons;
 	S4Config.PanelProcess = 0.0;
 
 	GetPayloadName(S4Config.PayloadName);

@@ -89,6 +89,7 @@ struct SIVBSettings
 	bool PanelsHinged;				///< Are SLA panels hinged?
 	double PanelProcess;			///< SLA Panels opening progress
 	bool UseWideSLA;				///< Use wide ELS-type SLA panels
+	bool SLAHasBeacons;				///< SLA has flashing beacons as on Apollo 7
 	bool SaturnVStage;				///< Saturn V stage or Saturn 1b stage?
 	bool LowRes;					///< Low-res meshes?
 	bool IUSCContPermanentEnabled;
@@ -344,6 +345,13 @@ public:
 	void SeparateCSM();
 	bool IsLowerStageDocked();
 
+	///
+	/// \brief Turn on strobe lights.
+	///
+	void CreateStrobes();
+	void ActivateStrobes();
+	void MoveStrobes();
+
 	SIVBToSIConnector *GetSIVBSIConnector() { return &sivbSIConnector; }
 
 protected:
@@ -415,6 +423,7 @@ protected:
 	bool PanelsOpened;				///< SLA Panels are open.
 	bool SaturnVStage;				///< Stage from Saturn V.
 	bool UseWideSLA;				///< Use wide ELS-type SLA panels
+	bool SLAHasBeacons;				///< SLA has flashing beacons as on Apollo 7
 	bool LowRes;					///< Using low-res meshes.
 	bool IUSCContPermanentEnabled;
 	bool PayloadCreated;
@@ -515,6 +524,9 @@ protected:
 	Pyro CSMLVSeparationInitiator;
 	Pyro LMSLASeparationInitiators;
 	Pyro SLAPanelDeployInitiator;
+
+	BEACONLIGHTSPEC trackLight[4];
+	VECTOR3 trackLightPos[4];
 };
 
 ///

@@ -719,6 +719,8 @@ void Saturn::initSaturn()
 
 	UseWideSLA = false;
 
+	SLAHasBeacons = false;
+
 	hStage1Mesh = 0;
 	hStage2Mesh = 0;
 	hStage3Mesh = 0;
@@ -1784,6 +1786,7 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 		oapiWriteScenario_int (scn, "S4PL", SIVBPayload);
 	}
 	oapiWriteScenario_int(scn, "WIDESLA", UseWideSLA);
+	oapiWriteScenario_int(scn, "SLABEACONS", SLAHasBeacons);
 	oapiWriteScenario_float(scn, "CUSTOMPAYLOADMASS", customPayloadMass);
 	if (customPayloadClass[0])
 		oapiWriteScenario_string(scn, "CUSTOMPAYLOADCLASS", customPayloadClass);
@@ -2388,6 +2391,11 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 		int i;
 		sscanf(line + 7, "%d", &i);
 		UseWideSLA = (i != 0);
+	}
+	else if (!strnicmp(line, "SLABEACONS", 10)) {
+		int i;
+		sscanf(line + 10, "%d", &i);
+		SLAHasBeacons = (i != 0);
 	}
 	else if (!strnicmp(line, "CUSTOMPAYLOADMASS", 17)) {
 		sscanf(line + 17, "%f", &ftcp);

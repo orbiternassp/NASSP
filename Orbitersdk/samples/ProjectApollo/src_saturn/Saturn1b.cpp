@@ -163,6 +163,8 @@ void Saturn1b::initSaturn1b()
 
 	UseWideSLA = false;
 
+	SLAHasBeacons = false;
+
 	// Moved to instantiation time
 	// lvdc.init(this);
 }

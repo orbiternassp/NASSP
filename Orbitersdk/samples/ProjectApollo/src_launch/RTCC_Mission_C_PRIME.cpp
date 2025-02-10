@@ -193,7 +193,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.type = 1;
 		entopt.vessel = calcParams.src;
 		entopt.RV_MCC = sv2;
-		entopt.r_rbias = PZREAP.RRBIAS;
 		entopt.dv_max = 7000.0*0.3048;
 
 		EntryTargeting(&entopt, &res); //Target Load for uplink
@@ -337,7 +336,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.TIGguess = TLIplus;
 		entopt.type = 1;
 		entopt.vessel = calcParams.src;
-		entopt.r_rbias = PZREAP.RRBIAS;
 		entopt.dv_max = 7000.0*0.3048;
 
 		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target Load for uplink
@@ -1344,7 +1342,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
-		entopt.r_rbias = PZREAP.RRBIAS;
 		entopt.type = 3;
 
 		//Calculate corridor control burn

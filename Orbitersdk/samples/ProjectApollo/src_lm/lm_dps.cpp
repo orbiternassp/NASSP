@@ -323,7 +323,7 @@ double DPSPropellantSource::GetOxidPercent()
 
 double DPSPropellantSource::GetAmbientHeliumPressPSI()
 {
-	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+	if (our_vessel->stage < 2 && our_vessel->INST_SIG_SENSOR_CB.IsPowered())
 		return ambientHeliumPressurePSI;
 
 	return 0.0;
@@ -331,7 +331,7 @@ double DPSPropellantSource::GetAmbientHeliumPressPSI()
 
 double DPSPropellantSource::GetSupercriticalHeliumPressPSI()
 {
-	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+	if (our_vessel->stage < 2 && our_vessel->INST_SIG_SENSOR_CB.IsPowered())
 		return supercriticalHeliumPressurePSI;
 
 	return 0.0;
@@ -339,7 +339,7 @@ double DPSPropellantSource::GetSupercriticalHeliumPressPSI()
 
 double DPSPropellantSource::GetHeliumRegulatorManifoldPressurePSI()
 {
-	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+	if (our_vessel->stage < 2 && our_vessel->INST_SIG_SENSOR_CB.IsPowered())
 		return heliumRegulatorManifoldPressurePSI;
 
 	return 0.0;
@@ -347,7 +347,7 @@ double DPSPropellantSource::GetHeliumRegulatorManifoldPressurePSI()
 
 double DPSPropellantSource::GetFuelTankUllagePressurePSI()
 {
-	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+	if (our_vessel->stage < 2 && our_vessel->INST_SIG_SENSOR_CB.IsPowered())
 		return FuelTankUllagePressurePSI;
 
 	return 0.0;
@@ -355,7 +355,7 @@ double DPSPropellantSource::GetFuelTankUllagePressurePSI()
 
 double DPSPropellantSource::GetOxidizerTankUllagePressurePSI()
 {
-	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+	if (our_vessel->stage < 2 && our_vessel->INST_SIG_SENSOR_CB.IsPowered())
 		return OxidTankUllagePressurePSI;
 
 	return 0.0;
@@ -363,7 +363,7 @@ double DPSPropellantSource::GetOxidizerTankUllagePressurePSI()
 
 double DPSPropellantSource::GetFuelEngineInletPressurePSI()
 {
-	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+	if (our_vessel->stage < 2 && our_vessel->INST_SIG_SENSOR_CB.IsPowered())
 		return FuelEngineInletPressurePSI;
 
 	return 0.0;
@@ -371,7 +371,7 @@ double DPSPropellantSource::GetFuelEngineInletPressurePSI()
 
 double DPSPropellantSource::GetOxidizerEngineInletPressurePSI()
 {
-	if (our_vessel->INST_SIG_SENSOR_CB.IsPowered())
+	if (our_vessel->stage < 2 && our_vessel->INST_SIG_SENSOR_CB.IsPowered())
 		return OxidEngineInletPressurePSI;
 
 	return 0.0;
@@ -379,6 +379,7 @@ double DPSPropellantSource::GetOxidizerEngineInletPressurePSI()
 
 bool DPSPropellantSource::IsGaugingPowered() {
 
+	if (our_vessel->stage > 1) return false;
 	if (GaugingPower->Voltage() < SP_MIN_DCVOLTAGE) return false;
 
 	if (our_vessel->QTYMonSwitch.IsDown()) return false;
@@ -388,22 +389,34 @@ bool DPSPropellantSource::IsGaugingPowered() {
 
 double DPSPropellantSource::GetOxidizerTank1BulkTempF()
 {
-	return 70.0;
+	if (lem->stage < 2)
+		return 20.0; //TBD: This is equal to 0V measured in the SCEA, there has to be a better system
+
+	return 70.0; //TBD: Simulate temperature
 }
 
 double DPSPropellantSource::GetOxidizerTank2BulkTempF()
 {
-	return 70.0;
+	if (lem->stage < 2)
+		return 20.0; //TBD: This is equal to 0V measured in the SCEA, there has to be a better system
+
+	return 70.0; //TBD: Simulate temperature
 }
 
 double DPSPropellantSource::GetFuelTank1BulkTempF()
 {
-	return 70.0;
+	if (lem->stage < 2)
+		return 20.0; //TBD: This is equal to 0V measured in the SCEA, there has to be a better system
+
+	return 70.0; //TBD: Simulate temperature
 }
 
 double DPSPropellantSource::GetFuelTank2BulkTempF()
 {
-	return 70.0;
+	if (lem->stage < 2)
+		return 20.0; //TBD: This is equal to 0V measured in the SCEA, there has to be a better system
+
+	return 70.0; //TBD: Simulate temperature
 }
 
 bool DPSPropellantSource::PropellantLevelLow()
@@ -699,7 +712,7 @@ void LEM_DPS::SystemTimestep(double simdt) {
 
 double LEM_DPS::GetPitchGimbalPosition()
 {
-	if (lem->DECA_GMBL_AC_CB.IsPowered() && lem->deca.GetK25())
+	if (lem->stage < 2 && lem->DECA_GMBL_AC_CB.IsPowered() && lem->deca.GetK25())
 		return pitchGimbalActuator.GetPosition();
 
 	return 0.0;
@@ -707,7 +720,7 @@ double LEM_DPS::GetPitchGimbalPosition()
 
 double LEM_DPS::GetRollGimbalPosition()
 {
-	if (lem->DECA_GMBL_AC_CB.IsPowered() && lem->deca.GetK25())
+	if (lem->stage < 2 && lem->DECA_GMBL_AC_CB.IsPowered() && lem->deca.GetK25())
 		return rollGimbalActuator.GetPosition();
 
 	return 0.0;

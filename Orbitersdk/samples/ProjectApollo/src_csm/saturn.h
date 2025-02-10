@@ -1405,6 +1405,12 @@ protected:
 	///
 	bool UseWideSLA;
 
+	///
+	/// True if SLA has flashing beacons as on Apollo 7.
+	/// \brief SLA has beacons.
+	///
+	bool SLAHasBeacons;
+
 	bool SIMBayPanelJett;
 
 	bool DeleteLaunchSite;

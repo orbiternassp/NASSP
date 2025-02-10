@@ -320,7 +320,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		TLIBase = calcParams.TLI;
 		TIG = TLIBase + 90.0*60.0;
 		entopt.ATPLine = 2; //AOL
-		entopt.r_rbias = PZREAP.RRBIAS;
 
 		sv1.mass = PZMPTCSM.mantable[1].CommonBlock.CSMMass;
 		sv1.gravref = hEarth;
@@ -391,7 +390,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.type = 1;
 		entopt.vessel = calcParams.src;
-		entopt.r_rbias = PZREAP.RRBIAS;
 
 		entopt.TIGguess = form->GETI[0] = OrbMech::HHMMSSToSS(8, 0, 0);
 		entopt.t_Z = OrbMech::HHMMSSToSS(25.0, 43.0, 0.0);
@@ -466,7 +464,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.type = 1;
 		entopt.vessel = calcParams.src;
-		entopt.r_rbias = PZREAP.RRBIAS;
 
 		if (fcn == 16)
 		{
@@ -1169,7 +1166,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		AP11ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "LOI-2");
-		sprintf(form->remarks, "Two-jet ullage for 19 seconds");
+		sprintf(form->remarks, "Ullage: 2 jet, 19 seconds");
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -1329,11 +1326,13 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->DEDA226 = (int)(res.DEDA226 / 0.3048 / 100.0);
 		form->DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
 
-		/* Pad-load:
+		/*
+		Pad-load:
 		form->DEDA224 = 60326;
 		form->DEDA225 = 58158;
 		form->DEDA226 = 70312;
-		form->DEDA227 = -50181;*/
+		form->DEDA227 = -50181;
+		*/
 
 		emem[0] = 16;
 		emem[1] = 2550;
@@ -1635,7 +1634,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->GET05G = GETfromGMT(entout.t_05g);
 		form->type = 2;
 
-		sprintf(form->remarks, "Four-jet ullage for 11 seconds");
+		sprintf(form->remarks, "Ullage: 4 jet, 11 seconds");
 
 		if (fcn == 40 || fcn == 43)
 		{
@@ -2760,14 +2759,14 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		if (fcn == 94)
 		{
 			sprintf(form->purpose, "PLANE CHANGE 1");
-			sprintf(form->remarks, "Ullage: 2 jets, 15 seconds");
+			sprintf(form->remarks, "Ullage: 2 jet, 15 seconds");
 			sprintf(updesc, "CSM state vector, target load, PC REFSMMAT");
 			AGCStateVectorUpdate(buffer1, sv, true);
 		}
 		else
 		{
 			sprintf(form->purpose, "PLANE CHANGE 2");
-			sprintf(form->remarks, "Ullage: 4 jets, 11 seconds");
+			sprintf(form->remarks, "Ullage: 4 jet, 11 seconds");
 			sprintf(updesc, "CSM state vector and V66, target load, PC REFSMMAT");
 			AGCStateVectorUpdate(buffer1, sv, true, true);
 		}
@@ -3384,7 +3383,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		entopt.RV_MCC = sv;
 		entopt.TIGguess = MCCtime;
 		entopt.vessel = calcParams.src;
-		entopt.r_rbias = PZREAP.RRBIAS;
 
 		if (calcParams.src->DockingStatus(0) == 1)
 		{

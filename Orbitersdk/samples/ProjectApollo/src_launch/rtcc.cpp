@@ -2815,7 +2815,7 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 	{
 		return;
 	}
-	entry->READ(opt->r_rbias, opt->dv_max, 2, 37500.0*0.3048);
+	entry->READ(PZREAP.RRBIAS, opt->dv_max, 2, 37500.0*0.3048);
 	entry->ATP(LINE);
 	while (!stop)
 	{
