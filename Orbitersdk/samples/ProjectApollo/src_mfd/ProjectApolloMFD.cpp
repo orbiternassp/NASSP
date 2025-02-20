@@ -654,7 +654,6 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 	hLogo = oapiCreateSurface(hBmpLogo);
 	screen = 0;
 	debug_frozen = false;
-	char buffer[8];
 
 	//We need to find out what type of vessel it is, so we check for the class name.
 	//Saturns have different functions than Crawlers.  But we have methods for both.
@@ -664,11 +663,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 		g_Data.progVessel = saturn;
 		g_Data.vessel = our_vessel = vessel;
 		Supported = true;
-		oapiGetObjectName(saturn->GetGravityRef(), buffer, 8);
-		if (strcmp(buffer, "Earth") == 0 || strcmp(buffer, "Moon") == 0)
-			g_Data.planet = saturn->GetGravityRef();
-		else
-			g_Data.planet = oapiGetGbodyByName("Earth");
+		g_Data.planet = AGCGravityRef(saturn);
 
 		if (utils::IsVessel(vessel, utils::SaturnIB))
 		{
@@ -681,18 +676,14 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 	}
 	else if (utils::IsVessel(vessel, utils::Crawler))  {
 			crawler = (Crawler *)vessel;
-			g_Data.planet = crawler->GetGravityRef();
+			g_Data.planet = AGCGravityRef(crawler);
 	}
 	else if (utils::IsVessel(vessel, utils::LEM)) {
 			lem = (LEM *)vessel;
 			g_Data.vessel = our_vessel = vessel;
 			g_Data.gorpVessel = lem;
 			Supported = true;
-			oapiGetObjectName(lem->GetGravityRef(), buffer, 8);
-			if(strcmp(buffer,"Earth") == 0 || strcmp(buffer,"Moon") == 0 )
-				g_Data.planet = lem->GetGravityRef();
-			else
-				g_Data.planet = oapiGetGbodyByName("Earth");
+			g_Data.planet = AGCGravityRef(lem);
 	}
 	else if (utils::IsVessel(vessel, utils::SIVB)) {
 		sivb = (SIVB*)vessel;
@@ -843,35 +834,42 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 
 		OBJHANDLE planet;
 		ELEMENTS elem;
-		char planetName[255];
-		VECTOR3 vel, hvel;
-		double vvel = 0, apDist, peDist, lat, lon, radius, alt;
+		MATRIX3 Rot;
+		VECTOR3 pos, vel;
+		double vvel, apDist, peDist, lat, lon, radius, alt, R_E;
 
-		planet = our_vessel->GetGravityRef();
+		//We have to do a lot of math ourselves here because Orbiter gives parameters relative to the closest body, not relative to an input body
+		planet = AGCGravityRef(our_vessel);
+		our_vessel->GetRelativePos(planet, pos);
 		our_vessel->GetRelativeVel(planet, vel);
-		if (our_vessel->GetAirspeedVector(FRAME_HORIZON, hvel)) {
-			vvel = hvel.y * 3.2808399;
-		}
-		our_vessel->GetApDist(apDist);
-		our_vessel->GetPeDist(peDist);
-		our_vessel->GetEquPos(lon, lat, radius);
-		our_vessel->GetElements(planet, elem, 0, 0, FRAME_EQU);
-		alt = our_vessel->GetAltitude();
+		vvel = dotp(vel, unit(pos));
+		oapiGetRotationMatrix(planet, &Rot);
+		pos = tmul(Rot, pos);
+		radius = length(pos);
+		lon = atan2(pos.z, pos.x);
+		lat = asin(pos.y / radius);
 
-		oapiGetObjectName(planet, planetName, 16);
-		if (strcmp(planetName, "Earth") == 0) {
-			apDist -= 6.373338e6;
-			peDist -= 6.373338e6;
+		our_vessel->GetElements(planet, elem, 0, 0, FRAME_EQU);
+		apDist = (1.0 + elem.e)*elem.a;
+		peDist = (1.0 - elem.e)*elem.a;
+
+		if (planet == oapiGetGbodyByName("Earth"))
+		{
+			R_E = 6.373338e6;
 		}
-		else {
-			apDist -= 1.73809e6;
-			peDist -= 1.73809e6;
+		else
+		{
+			R_E = 1.73809e6; //TBD: Get landing site radius from RTCC?
 		}
+		//Convert radii to altitudes
+		apDist -= R_E;
+		peDist -= R_E;
+		alt = radius - R_E;
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		sprintf(buffer, "%.0lf ft/s", length(vel) * 3.2808399);
 		skp->Text((int)(width * 0.9), (int)(height * 0.4), buffer, strlen(buffer));
-		sprintf(buffer, "%.0lf ft/s", vvel);
+		sprintf(buffer, "%.0lf ft/s", vvel * 3.2808399);
 		skp->Text((int)(width * 0.9), (int)(height * 0.45), buffer, strlen(buffer));
 		sprintf(buffer, "%.1lf nm  ", alt * 0.000539957);
 		skp->Text((int)(width * 0.9), (int)(height * 0.5), buffer, strlen(buffer));
@@ -891,6 +889,13 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			skp->Text(width / 2, (int)(height * 0.9), "*** KILL ROTATION ACTIVE ***", 28);
 		}
+
+		char buffer2[100];
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->SetTextColor(RGB(128, 128, 128));
+		oapiGetObjectName(planet, buffer2, 100);
+		sprintf(buffer, "Reference: %s", buffer2);
+		skp->Text((int)(width * 0.05), (int)(height * 0.95), buffer, strlen(buffer));
 	}
 
 	// Draw ECS
@@ -2486,6 +2491,21 @@ void ProjectApolloMFD::menuCycleFailuresSubpage()
 			FailureSubpage = 0;
 		}
 	}
+}
+
+OBJHANDLE ProjectApolloMFD::AGCGravityRef(VESSEL *vessel) const
+{
+	//Returns either the object handle to Earth or Moon, depending on the current sphere of influence as defined by the AGC constant for the lunar SOI radius
+	OBJHANDLE gravref;
+	VECTOR3 rsph;
+
+	gravref = oapiGetGbodyByName("Moon");
+	vessel->GetRelativePos(gravref, rsph);
+	if (length(rsph) > 64373760.0)
+	{
+		gravref = oapiGetGbodyByName("Earth");
+	}
+	return gravref;
 }
 
 void ProjectApolloMFD::StoreStatus (void) const
