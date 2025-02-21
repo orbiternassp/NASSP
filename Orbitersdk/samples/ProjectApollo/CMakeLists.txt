@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 
 # Set the project name
-project(NASSP VERSION 8.0.3)
+project(NASSP VERSION 9.0)
 
 # Set C++ compiler variables
 set(CMAKE_CXX_STANDARD 17)
