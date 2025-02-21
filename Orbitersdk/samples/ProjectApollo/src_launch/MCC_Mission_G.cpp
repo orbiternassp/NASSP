@@ -372,7 +372,7 @@ void MCC::MissionSequence_G()
 		UpdateMacro(UTP_PADONLY, PT_AP11ENT, mcc_calcs.GETEval(rtcc->calcParams.EI - 6.0*3600.0), 116, MST_G_TRANSEARTH_8);
 		break;
 	case MST_G_TRANSEARTH_8: //MCC-7 decision update to MCC-7 update
-		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(rtcc->calcParams.EI - 4.0*3600.0 - 35.0*60.0), 113, MST_G_TRANSEARTH_9);
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(rtcc->calcParams.EI - 4.0*3600.0 - 30.0*60.0), 113, MST_G_TRANSEARTH_9);
 		break;
 	case MST_G_TRANSEARTH_9: //MCC-7 update to Entry PAD update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 3.0*60.0, 114, MST_G_TRANSEARTH_10);
