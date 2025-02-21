@@ -1,0 +1,48 @@
+# This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
+# See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
+name: CMake on a single platform
+
+on:
+  push:
+    branches: [ "CMake" ]
+
+env:
+  GH_TOKEN: ${{github.token}}
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: RelWithDebInfo
+  BUILD_NAME: NASSP-V9.0-Beta-Orbiter2024-x64-${{github.run_number}}
+
+jobs:
+  build:
+    
+    # The CMake configure and build commands are platform agnostic and should work equally well on Windows or Mac.
+    # You can convert this to a matrix build if you need cross-platform coverage.
+    # See: https://docs.github.com/en/free-pro-team@latest/actions/learn-github-actions/managing-complex-workflows#using-a-build-matrix
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Download Orbiter 2024 x64
+      run: Invoke-WebRequest -Uri https://github.com/orbitersim/orbiter/releases/download/2024/Orbiter-x64.zip -OutFile ${{github.workspace}}/Orbiter2024-x64.zip
+    
+    - name: Extract Orbiter
+      run: Expand-Archive -Force ${{github.workspace}}/Orbiter2024-x64.zip ${{github.workspace}}/Orbiter2024
+
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: cmake -DORBITER_INSTALL_DIR:STRING="${{github.workspace}}/Orbiter2024" -DFINAL_INSTALL_DIR:STRING="${{github.workspace}}/install" -B ${{github.workspace}}/build -G "Visual Studio 17 2022" -A x64 ${{github.workspace}}/Orbitersdk/samples/ProjectApollo/
+
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} -j 4
+      
+    - name: Install
+      run: cmake --install ${{github.workspace}}/build
+
+    - name: Zip output directory
+      run: Compress-Archive -Path ${{github.workspace}}/install/* -DestinationPath ${{github.workspace}}/${{env.BUILD_NAME}}.zip -Force
+      
+    - name: Create GitHub release and tag
+      run: gh release create ${{env.BUILD_NAME}} ${{github.workspace}}/${{env.BUILD_NAME}}.zip --target CMake
