@@ -69,6 +69,11 @@ endif()
 # such as MFDs, which need to go in "Modules/Plugins" or PanelSDK,
 # which can stay in the default directory since it's statically linked.
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${FINAL_INSTALL_DIR}/Modules/ProjectApollo)
+# Workaround for buildbot appending build config name to output path.
+# If we start building with another config besides "RelWithDebInfo", this needs
+# to be changed in this file and any projects which output to a different directory,
+# such as MFDs or ProjectApolloConfigurator.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELWITHDEBINFO ${FINAL_INSTALL_DIR}/Modules/ProjectApollo)
 
 # Sub-projects are what actually build all our vessels, MFDs, etc.
 add_subdirectory(Project/PanelSDK)
