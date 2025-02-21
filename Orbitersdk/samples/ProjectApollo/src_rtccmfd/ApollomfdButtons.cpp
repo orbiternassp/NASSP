@@ -4118,16 +4118,16 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu121[] =
 	{
-		{ "Liftoff time option", 0, 'O' },
-		{ "Input liftoff time", 0, 'L' },
-		{ "Radius of insertion", 0, 'R' },
-		{ "Velocity of insertion", 0, 'V' },
-		{ "Gamma of insertion", 0, 'G' },
-		{ "Expected phase angle", 0, 'Q' },
+		{ "Set item", 0, 'P' },
+		{ "Next item", 0, 'Q' },
+		{ "Previous item", 0, 'V' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 
-		{ "Set Target", 0, 'T' },
-		{ "Diff nod regr flag", 0, 'N' },
-		{ "Input diff nod regr", 0, 'M' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
@@ -4135,16 +4135,16 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu121, sizeof(mnu121) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("LOT", OAPI_KEY_O, &ApolloRTCCMFD::menuLWPLiftoffTimeOption);
-	RegisterFunction("TLO", OAPI_KEY_L, &ApolloRTCCMFD::menuLWPLiftoffTime);
-	RegisterFunction("RINS", OAPI_KEY_R, &ApolloRTCCMFD::menuLWP_RINS);
-	RegisterFunction("VINS", OAPI_KEY_V, &ApolloRTCCMFD::menuLWP_VINS);
-	RegisterFunction("GINS", OAPI_KEY_G, &ApolloRTCCMFD::menuLWP_GAMINS);
-	RegisterFunction("PHA", OAPI_KEY_Q, &ApolloRTCCMFD::menuLWP_PhaseFlags);
+	RegisterFunction("SET", OAPI_KEY_O, &ApolloRTCCMFD::menuSetLWPInput);
+	RegisterFunction("<<", OAPI_KEY_Q, &ApolloRTCCMFD::menuCycleMarkerDown);
+	RegisterFunction(">>", OAPI_KEY_V, &ApolloRTCCMFD::menuCycleMarkerUp);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 
-	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_TargetVessel);
-	RegisterFunction("NOF", OAPI_KEY_N, &ApolloRTCCMFD::menuLWPCycleDELNOF);
-	RegisterFunction("DNO", OAPI_KEY_M, &ApolloRTCCMFD::menuLWP_DELNO);
+	RegisterFunction("PAG", OAPI_KEY_P, &ApolloRTCCMFD::menuCycleLWPSubscreen);
+	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_M, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("DIS", OAPI_KEY_C, &ApolloRTCCMFD::menuSetLWPDisplayPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetUtilityMenu);
