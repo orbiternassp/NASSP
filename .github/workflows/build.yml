@@ -10,7 +10,7 @@ env:
   GH_TOKEN: ${{github.token}}
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
   BUILD_TYPE: RelWithDebInfo
-  BUILD_NAME: NASSP-V9.0-Beta-Orbiter2024-x64-${{github.run_number}}
+  BUILD_NAME: NASSP-V9.0-Orbiter2024-${{github.run_number}}
 
 jobs:
   build:
@@ -50,7 +50,7 @@ jobs:
       run: cmake --install ${{github.workspace}}/build
 
     - name: Zip output directory
-      run: Compress-Archive -Path ${{github.workspace}}/install/* -DestinationPath ${{github.workspace}}/${{env.BUILD_NAME}}.zip -Force
+      run: Compress-Archive -Path ${{github.workspace}}/install/* -DestinationPath ${{github.workspace}}/${{env.BUILD_NAME}}-x64.zip -Force
       
     - name: Create GitHub release and tag
-      run: gh release create ${{env.BUILD_NAME}} ${{github.workspace}}/${{env.BUILD_NAME}}.zip --target CMake
+      run: gh release create ${{env.BUILD_NAME}} ${{github.workspace}}/${{env.BUILD_NAME}}-x64.zip --target CMake
