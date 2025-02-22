@@ -19,7 +19,7 @@ or accessible simulation there are plenty of better options,
 both for Orbiter and for other platforms.
 
 Orbiter is a Windows program, so this is a Windows-based project. You 
-will need Microsoft Visual Studio 2017 (or newer) to build the project. 
+will need Microsoft Visual Studio 2019/2022 (or newer) to build the project. 
 Until someone ports Orbiter to other platforms (or produces an 
 Orbiter-compatible simulator of sufficient capability) there's not much
 that can be done about this. Orbiter and NASSP might run under WINE,
