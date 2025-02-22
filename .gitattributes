@@ -9,4 +9,4 @@
 # Let's try this for scenario files too
 *.scn	eol=crlf
 # Do not propagate build script into branches unless requested
-appveyor.yml merge=ours
+.github/workflows/build.yml merge=ours
