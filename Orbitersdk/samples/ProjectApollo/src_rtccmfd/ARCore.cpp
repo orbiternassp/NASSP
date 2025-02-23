@@ -804,7 +804,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 		DeltaClockTime[i] = 0.0;
 		DesiredRTCCLiftoffTime[i] = 0.0;
 	}
-	iuUplinkResult = DONE;
+	iuUplinkResult = 0;
 
 	LUNTAR_lat = 0.0;
 	LUNTAR_lng = 0.0;
@@ -4202,7 +4202,7 @@ int ARCore::subThread()
 	break;
 	case 28: //SLV Navigation Update Uplink
 	{
-		iuUplinkResult = DONE;
+		iuUplinkResult = 0;
 
 		if (GC->rtcc->CZNAVSLV.NUPTIM == 0.0)
 		{
@@ -5453,11 +5453,18 @@ int ARCore::subThread()
 	break;
 	case 55: //SLV Target Update Uplink
 	{
-		iuUplinkResult = DONE;
+		iuUplinkResult = 0;
 
 		if (GC->rtcc->PZSLVTAR.VIGM == 0.0)
 		{
 			iuUplinkResult = 4;
+			Result = DONE;
+			break;
+		}
+
+		if (iuvessel == NULL)
+		{
+			iuUplinkResult = 2;
 			Result = DONE;
 			break;
 		}
@@ -5557,7 +5564,7 @@ int ARCore::subThread()
 	break;
 	case 57: //Saturn V TLI Targeting Update
 	{
-		iuUplinkResult = DONE;
+		iuUplinkResult = 0;
 
 		if (GC->rtcc->PZTTLIPL.DataIndicator == 0)
 		{
