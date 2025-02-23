@@ -22,6 +22,20 @@
 
   **************************************************************************/
 
+#pragma include_alias( <fstream.h>, <fstream> )
+#include "Orbitersdk.h"
+
+#include "nasspdefs.h"
+#include "nasspsound.h"
+
+#include "soundlib.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include "connector.h"
+
+
 //
 // Data structure passed from main vessel to S1c to configure stage.
 //
@@ -100,7 +114,7 @@ enum S1cState
 /// \brief S1c stage simulation.
 /// \ingroup SepStages
 ///
-class S1C : public VESSEL2 {
+class S1C : public ProjectApolloConnectorVessel {
 
 public:
 	///

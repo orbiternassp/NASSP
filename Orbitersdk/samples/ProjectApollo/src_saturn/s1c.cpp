@@ -23,21 +23,10 @@
   **************************************************************************/
 
 // To force Orbitersdk.h to use <fstream> in any compiler version
-#pragma include_alias( <fstream.h>, <fstream> )
-#include "Orbitersdk.h"
 
-#include "nasspdefs.h"
-#include "nasspsound.h"
-
-#include "soundlib.h"
 #include "s1c.h"
 
-#include <stdio.h>
-#include <string.h>
-
-
-S1C::S1C (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
-
+S1C::S1C (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel)
 {
 	InitS1c();
 }
@@ -192,9 +181,8 @@ void S1C::clbkPostCreation()
 }
 
 void S1C::clbkSaveState (FILEHANDLE scn)
-
 {
-	VESSEL2::clbkSaveState (scn);
+	VESSEL4::clbkSaveState (scn);
 
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
 	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
@@ -223,7 +211,6 @@ typedef union
 } MainState;
 
 int S1C::GetMainState()
-
 {
 	MainState state;
 
@@ -237,7 +224,6 @@ int S1C::GetMainState()
 }
 
 void S1C::AddEngines()
-
 {
 	int i;
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust2");
@@ -431,8 +417,38 @@ void S1C::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 void S1C::clbkSetClassCaps (FILEHANDLE cfg)
 
 {
-	VESSEL2::clbkSetClassCaps (cfg);
+	VESSEL4::clbkSetClassCaps (cfg);
 	SetS1c();
+
+	double td_mass = 450000.0;
+	double td_width = 10.0;
+	double td_tdph = -20.955 - 3.0;
+	double td_height = 40.0;
+
+	static DWORD ntdp = 4;
+	static TOUCHDOWNVTX td[4];
+	double stiffness = (-1) * (td_mass * 9.80655) / (3 * -0.05);
+	double damping = 0.9 * (2 * sqrt(td_mass * stiffness));
+	for (int i = 0; i < 4; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = -cos(30 * RAD) * td_width;
+	td[0].pos.y = -sin(30 * RAD) * td_width;
+	td[0].pos.z = td_tdph;
+	td[1].pos.x = 0;
+	td[1].pos.y = 1 * td_width;
+	td[1].pos.z = td_tdph;
+	td[2].pos.x = cos(30 * RAD) * td_width;
+	td[2].pos.y = -sin(30 * RAD) * td_width;
+	td[2].pos.z = td_tdph;
+	td[3].pos.x = 0;
+	td[3].pos.y = 0;
+	td[3].pos.z = td_tdph + td_height;
+
+	SetTouchdownPoints(td, ntdp);
 }
 
 void S1C::LoadMeshes(bool lowres)
@@ -514,7 +530,6 @@ void S1C::SetState(S1CSettings &state)
 }
 
 void S1C::ShowS1c()
-
 {
 	SetEmptyMass(EmptyMass);
 
