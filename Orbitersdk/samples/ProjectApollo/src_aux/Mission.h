@@ -146,6 +146,10 @@ namespace mission
 		int GetLMNumber() const;
 		//Get cue cards
 		bool GetCSMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
+		//true = use default CSM cue cards
+		virtual bool CSMUseDefaultCueCards() const;
+		//true = use default LM cue cards
+		virtual bool LMUseDefaultCueCards() const;
 		//Name of CDR
 		virtual const std::string& GetCDRName() const;
 		//Name of CMP
@@ -172,6 +176,7 @@ namespace mission
 		bool GetCueCards(const std::vector<CueCardConfig> &cue, unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
 
 		void AddCueCard(int vehicle, unsigned location, std::string meshname, VECTOR3 ofs);
+		void ClearCueCards(int vehicle);
 
 		void AddCSMCueCard(unsigned location, std::string meshname, VECTOR3 ofs = _V(0, 0, 0));
 		void AddLMCueCard(unsigned location, std::string meshname, VECTOR3 ofs = _V(0, 0, 0));
@@ -218,6 +223,8 @@ namespace mission
 		bool bHasRateAidedOptics;
 		bool bCrossPointerReversePolarity;
 		bool bCrossPointerShades;
+		bool bCSMUseDefaultCueCards;
+		bool bLMUseDefaultCueCards;
 		std::vector<CueCardConfig> CSMCueCards;
 		std::vector<CueCardConfig> LMCueCards;
 		double dTEPHEM0;
