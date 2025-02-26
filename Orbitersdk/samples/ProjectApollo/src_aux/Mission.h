@@ -146,10 +146,6 @@ namespace mission
 		int GetLMNumber() const;
 		//Get cue cards
 		bool GetCSMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
-		//true = use default CSM cue cards
-		virtual bool CSMUseDefaultCueCards() const;
-		//true = use default LM cue cards
-		virtual bool LMUseDefaultCueCards() const;
 		//Name of CDR
 		virtual const std::string& GetCDRName() const;
 		//Name of CMP

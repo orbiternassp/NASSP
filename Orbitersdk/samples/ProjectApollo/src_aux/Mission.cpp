@@ -334,12 +334,12 @@ namespace mission {
 			else if(!_strnicmp(line, "CSMDefaultCueCards=", 19)) {
 				strncpy(buffer, line + 19, 255);
 				bCSMUseDefaultCueCards = !_strnicmp(buffer, "TRUE", 4);
-				if (!CSMUseDefaultCueCards()) ClearCueCards(0);
+				if (!bCSMUseDefaultCueCards) ClearCueCards(0);
 			}
 			else if (!_strnicmp(line, "LMDefaultCueCards=", 18)) {
 				strncpy(buffer, line + 18, 255);
 				bLMUseDefaultCueCards = !_strnicmp(buffer, "TRUE", 4);
-				if (!LMUseDefaultCueCards()) ClearCueCards(1);
+				if (!bLMUseDefaultCueCards) ClearCueCards(1);
 				}
 			else if (!_strnicmp(line, "CSMCueCard=", 11)) {
 				ReadCueCardLine(line + 11, 0);
@@ -674,16 +674,6 @@ namespace mission {
 	void Mission::AddLMCueCard(unsigned location, std::string meshname, VECTOR3 ofs)
 	{
 		AddCueCard(1, location, meshname, ofs);
-	}
-
-	bool Mission::CSMUseDefaultCueCards() const
-	{
-		return bCSMUseDefaultCueCards;
-	}
-
-	bool Mission::LMUseDefaultCueCards() const
-	{
-		return bLMUseDefaultCueCards;
 	}
 
 	void Mission::ClearCueCards(int vehicle)
