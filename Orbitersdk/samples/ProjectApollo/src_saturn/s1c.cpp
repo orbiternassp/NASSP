@@ -50,8 +50,8 @@ void S1C::InitS1c()
 	thg_retro = 0;
 	thg_main = 0;
 
-	EmptyMass = 50000.0;
-	MainFuel = 5000.0;
+	EmptyMass = 137000.0;
+	MainFuel = 2077000.0;
 	EngineNum = 5;
 
 	RetrosFired = false;
@@ -420,9 +420,9 @@ void S1C::clbkSetClassCaps (FILEHANDLE cfg)
 	VESSEL4::clbkSetClassCaps (cfg);
 	SetS1c();
 
-	double td_mass = 450000.0;
+	double td_mass = 2214000.0;
 	double td_width = 10.0;
-	double td_tdph = -20.955 - 3.0;
+	double td_tdph = -49.0;
 	double td_height = 40.0;
 
 	static DWORD ntdp = 4;
