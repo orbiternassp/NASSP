@@ -932,7 +932,7 @@ void SIVB::clbkPreStep(double simt, double simdt, double mjd)
 
 	sivbsys->Timestep(simdt);
 	iu->Timestep(simt, simdt, mjd);
-	Panelsdk.Timestep(MissionTime);
+	Panelsdk.Timestep(simt);
 }
 
 void SIVB::clbkPostStep(double simt, double simdt, double mjd)
@@ -1764,6 +1764,24 @@ void SIVB::SetState(SIVBSettings &state)
 int SIVB::GetVehicleNo()
 {
 	return VehicleNo;
+}
+
+double SIVB::GetMissionTime()
+{
+	return MissionTime;
+}
+
+void SIVB::UpdateLaunchTime(double dt)
+{
+	//Don't allow earlier launch
+	if (dt < 0.0)
+		return;
+	//Don't allow during terminal countdown
+	if (MissionTime >= -186.0)
+		return;
+
+	//Update time
+	MissionTime -= dt;
 }
 
 void SIVB::SetSIVBThrusterDir(double yaw, double pitch)

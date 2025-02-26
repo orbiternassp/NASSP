@@ -35,11 +35,12 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("DBG", OAPI_KEY_D, &ProjectApolloMFD::menuSetDebugPage);
 
 
-	static const MFDBUTTONMENU mnuGNC[4] = {
+	static const MFDBUTTONMENU mnuGNC[5] = {
 		{ "Back", 0, 'B' },
 		{ "Kill rotation", 0, 'K' },
 		{ "Save EMS scroll", 0, 'E' },
-		{ "Virtual AGC core dump", 0, 'D' }
+		{ "Virtual AGC core dump", 0, 'D' },
+		{ "Change Saturn launch time", 0, 'T' }
 	};
 
 	page.GNC = RegisterPage(mnuGNC, sizeof(mnuGNC) / sizeof(MFDBUTTONMENU));
@@ -48,6 +49,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("KILR", OAPI_KEY_K, &ProjectApolloMFD::menuKillRot);
 	RegisterFunction("EMS", OAPI_KEY_E, &ProjectApolloMFD::menuSaveEMSScroll);
 	RegisterFunction("DMP", OAPI_KEY_D, &ProjectApolloMFD::menuVAGCCoreDump);
+	RegisterFunction("TLO", OAPI_KEY_D, &ProjectApolloMFD::menuChangeLaunchTime);
 
 
 	static const MFDBUTTONMENU mnuECS[8] = {

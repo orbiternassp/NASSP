@@ -276,6 +276,8 @@ public:
 	virtual void SetState(SIVBSettings &state);
 
 	int GetVehicleNo();
+	virtual double GetMissionTime();
+	virtual void UpdateLaunchTime(double dt);
 
 	bool GetSIVBThrustOK();
 

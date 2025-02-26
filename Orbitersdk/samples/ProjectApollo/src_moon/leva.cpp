@@ -77,9 +77,10 @@ static MESHHANDLE hCDRLRV;
 static MESHHANDLE hLMPLRV;
 static MESHHANDLE hLRV;
 static MESHHANDLE hLRVConsole;
-
-
-
+static MESHHANDLE hTv;
+static MESHHANDLE hEasepSWC;
+static MESHHANDLE hEasepPSEP;
+static MESHHANDLE hEasepLR3;
 
 
 LEVA::LEVA(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
@@ -118,6 +119,12 @@ void LEVA::init()
 
 	GoFlag = false;		 
 	FlagPlanted = false;
+
+	GoEquip = false;
+	TvPlanted = false;
+	EasepSwcPlanted = false;
+	EasepPsepPlanted = false;
+	EasepLr3Planted = false;
 
 	FirstTimestep = true;
 	SLEVAPlayed = false;
@@ -171,12 +178,20 @@ void LEVA::SetAstroStage ()
 
 void LEVA::clbkPostCreation()
 {
-	if (oapiGetVesselByName("Flag") == NULL) {
-		FlagPlanted = false;
-	}
-	else {
-		FlagPlanted = true;
-	}
+	if (oapiGetVesselByName("TV") == NULL) { TvPlanted = false; }
+	else { TvPlanted = true; }
+
+	if (oapiGetVesselByName("Flag") == NULL) { FlagPlanted = false; }
+	else { FlagPlanted = true; }
+
+	if (oapiGetVesselByName("SWC") == NULL) { EasepSwcPlanted = false; }
+	else { EasepSwcPlanted = true; }
+
+	if (oapiGetVesselByName("PSEP") == NULL) { EasepPsepPlanted = false; }
+	else { EasepPsepPlanted = true; }
+
+	if (oapiGetVesselByName("LR3") == NULL) { EasepLr3Planted = false; }
+	else { EasepLr3Planted = true; }
 }
 
 void LEVA::ToggleLRV()
@@ -619,6 +634,12 @@ int LEVA::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 		return 1;
 	}
 
+	if (key == OAPI_KEY_K && down == true) {
+		if (Astro)
+			GoEquip = true;
+		return 1;
+	}
+
 	if (key == OAPI_KEY_B && down == true) {
 		OBJHANDLE lrvHandle = GetLRVHandle();
 		if (lrvHandle == NULL) {}
@@ -688,6 +709,45 @@ void LEVA::SetFlag()
 
 	FlagSound.play();
 	FlagSound.done();
+}
+
+void LEVA::SetEquip()
+{
+	double distance = 1.1;
+
+	VESSELSTATUS vs1;
+	GetStatus(vs1);
+	OBJHANDLE hbody = GetGravityRef();
+	double radius = oapiGetSize(hbody);
+	vs1.vdata[0].x += distance * sin(vs1.vdata[0].z) / radius;
+	vs1.vdata[0].y += distance * cos(vs1.vdata[0].z) / radius;
+
+	if (isCDR) {
+		if (ApolloNo <= 14) {
+			if (TvPlanted == false) {
+				oapiCreateVessel("TV", "ProjectApollo/EasepTV", vs1);
+				TvPlanted = true;
+			}
+		}
+	}
+	else {
+		if (ApolloNo == 11) {
+			if (EasepSwcPlanted == false) {
+				oapiCreateVessel("SWC", "ProjectApollo/EasepSwc", vs1);
+				EasepSwcPlanted = true;
+			}
+			else if (EasepPsepPlanted == false) {
+				oapiCreateVessel("PSEP", "ProjectApollo/EasepPsep", vs1);
+				EasepPsepPlanted = true;
+			}
+			else if (EasepLr3Planted == false) {
+				oapiCreateVessel("LR3", "ProjectApollo/EasepLr3", vs1);
+				EasepLr3Planted = true;
+			}
+		}
+	}
+
+	GoEquip = false;
 }
 
 void LEVA::SetMissionPath()
@@ -831,6 +891,10 @@ void LEVA::clbkPreStep (double SimT, double SimDT, double mjd)
 		SetFlag();
 	}
 
+	if (GoEquip) {
+		SetEquip();
+	}
+
 	// touchdown point test
 	// sprintf(oapiDebugString(), "touchdownPointHeight %f", touchdownPointHeight);
 }
@@ -942,6 +1006,10 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 		hLMPLRV = oapiLoadMeshGlobal("ProjectApollo/LRV_Astro_LMP");
 		hLRV = oapiLoadMeshGlobal ("ProjectApollo/LRV");
 		hLRVConsole = oapiLoadMeshGlobal ("ProjectApollo/LRV_console");
+		hTv = oapiLoadMeshGlobal("ProjectApollo/EASEP_TV");
+		hEasepSWC = oapiLoadMeshGlobal("ProjectApollo/EASEP_SWC");
+		hEasepPSEP = oapiLoadMeshGlobal("ProjectApollo/EASEP_PSEP");
+		hEasepLR3 = oapiLoadMeshGlobal("ProjectApollo/EASEP_LR3");
 	}
 
 	return new LEVA (hvessel, flightmodel);

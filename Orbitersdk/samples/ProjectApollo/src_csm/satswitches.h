@@ -84,14 +84,13 @@ public:
 	void Init(int i, SURFHANDLE surf, SwitchRow &row, Saturn *s, ToggleSwitch *o2PressIndSwitch);
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	virtual void OnPostStep(double SimT, double DeltaT, double MJD);
 
 protected:
 	int Index;
 	SURFHANDLE NeedleSurface;
 	Saturn *Sat;
-	ToggleSwitch *O2PressIndSwitch;	
-
-	void DoDrawSwitch(SURFHANDLE surf, SURFHANDLE needle, double value, int xOffset, int xNeedle);
+	ToggleSwitch *O2PressIndSwitch;
 };
 
 class SaturnCryoQuantityMeter : public CurvedMeter {
@@ -258,6 +257,7 @@ class SaturnPartPressCO2Meter : public SaturnCabinMeter {
 public:
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+	virtual void OnPostStep(double SimT, double DeltaT, double MJD);
 };
 
 class SaturnRoundMeter : public RoundMeter {

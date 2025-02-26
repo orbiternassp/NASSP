@@ -4191,7 +4191,7 @@ public:
 		double RTEUADVMax;
 		double RTEPTPMissDistance;
 		double RTEInclination;
-		int EntryProfile;
+		int EntryProfile;  //0 = guided reentry to the shallow target line, 1 = manual reentry to the shallow target line, 2 = manual reentry to the steep target line
 		int RTETradeoffRemotePage;
 		int RTESiteNum;
 		bool RTEIsPTPSite;

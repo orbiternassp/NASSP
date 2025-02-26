@@ -427,6 +427,15 @@ const VECTOR3 UtilityLights_LMPLocation = { 0.1030, 1.0318, 0.8908 };
 const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
 const VECTOR3 AOT_ShaftSelectorLocation = { 0.0640, 0.8800, 1.4792 };
 
+// Flood lights
+const VECTOR3 floodLightPos_Right = { 0.238, 0.89, 1.2 };
+const COLOUR4 floodLightColor_Right = { 1,1,1,0 };
+const COLOUR4 floodLightColor2_Right = { 0,0,0,0 };
+
+const VECTOR3 floodLightPos_Left = { -0.238, 0.89, 1.2 };
+const COLOUR4 floodLightColor_Left = { 1,1,1,0 };
+const COLOUR4 floodLightColor2_Left = { 0,0,0,0 };
+
 // Subtracted from total material count to find L01 location.
 
 void LEM::JostleViewpoint(double amount)
@@ -731,6 +740,20 @@ bool LEM::clbkLoadVC (int id)
 	flashlight->SetVisibility(LightEmitter::VIS_COCKPIT);
 	flashlight->Activate(flashlightOn);
 
+	//FloodLight Right Pilot
+	DelLightEmitter(floodLight_Right);
+	floodLight_Right = (::PointLight*)AddPointLight(floodLightPos_Right, 3, 0, 0, 3, floodLightColor_Right, floodLightColor_Right, floodLightColor2_Right);
+	floodLight_Right->SetVisibility(LightEmitter::VIS_COCKPIT);
+	floodLight_Right->Activate(true);
+	floodLight_Right->SetIntensity(1);
+
+	//FloodLight Left Commander
+	DelLightEmitter(floodLight_Left);
+	floodLight_Left = (::PointLight*)AddPointLight(floodLightPos_Left, 3, 0, 0, 3, floodLightColor_Left, floodLightColor_Left, floodLightColor2_Left);
+	floodLight_Left->SetVisibility(LightEmitter::VIS_COCKPIT);
+	floodLight_Left->Activate(true);
+	floodLight_Left->SetIntensity(1);
+
 	switch (id) {
 	case LMVIEW_CDR:
 		viewpos = LMVIEW_CDR;
@@ -1004,22 +1027,21 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_EVA_Ant_Handle, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);		// Area ...
 	oapiVCSetAreaClickmode_Spherical(AID_VC_EVA_Ant_Handle, EVAAntHandleLoc + ofs, 0.05);	// Area Mode of the Click point
 
-	oapiVCRegisterArea(AID_LMVC_INTEGRAL_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_LMVC_FLOOD_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_LMVC_NUMERICS_LIGHT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	// LMVC Lighting
+	oapiVCRegisterArea(AID_LMVC_LIGHTING,  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238*TexMul, 27*TexMul, 559*TexMul, 153*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(60*TexMul, 259*TexMul, 202*TexMul, 281*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_EVENT_TIMER, _R(276*TexMul, 259*TexMul, 357*TexMul, 281*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(54*TexMul, 259*TexMul, 224*TexMul, 284*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_EVENT_TIMER, _R(273*TexMul, 259*TexMul, 368*TexMul, 284*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_RANGE_TAPE, _R(431*TexMul, 633*TexMul, 475*TexMul, 796*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_RATE_TAPE, _R(482*TexMul, 633*TexMul, 517*TexMul, 796*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_LEM_MA_LEFT, _R(30*TexMul, 593*TexMul, 77*TexMul, 636*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_LEM_MA_LEFT, _V(-0.415919, 0.599307, 1.70252) + ofs, 0.008);
 	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_LEFT, _R(341*TexMul, 891*TexMul, 377*TexMul, 1098*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_MPS_REG_CONTROLS_RIGHT, _R(415*TexMul, 891*TexMul, 451*TexMul, 1098*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MPS_OXID_QUANTITY_INDICATOR, _R(445*TexMul, 218*TexMul, 484*TexMul, 239*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MPS_FUEL_QUANTITY_INDICATOR, _R(445*TexMul, 270*TexMul, 484*TexMul, 292*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MPS_HELIUM_PRESS_INDICATOR, _R(577*TexMul, 259*TexMul, 658*TexMul, 281*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MPS_OXID_QUANTITY_INDICATOR, _R(447*TexMul, 218*TexMul, 490*TexMul, 243*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MPS_FUEL_QUANTITY_INDICATOR, _R(447*TexMul, 270*TexMul, 490*TexMul, 294*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MPS_HELIUM_PRESS_INDICATOR, _R(568*TexMul, 259*TexMul, 668*TexMul, 284*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	
 	oapiVCRegisterArea(AID_VC_XPOINTERCDR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 	oapiVCRegisterArea(AID_VC_FDAI_LEFT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -1152,8 +1174,8 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_STOP_BUTTON_LMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_STOP_BUTTON_LMP, _V(0.421597, 0.077646, 1.50924) + ofs, 0.01);
 
-	oapiVCRegisterArea(AID_VC_LM_DEDA_DISP, _R(1803*TexMul, 98*TexMul, 1937*TexMul, 120*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_LM_DEDA_ADR, _R(1827*TexMul, 53*TexMul, 1885*TexMul, 75*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LM_DEDA_DISP, _R(1802*TexMul, 97*TexMul, 1945*TexMul, 122*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_LM_DEDA_ADR, _R(1824*TexMul, 52*TexMul, 1895*TexMul, 78*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_LM_DEDA_LIGHTS, _R(1740*TexMul, 96*TexMul, 1787*TexMul, 122*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
 	// Panel 8
@@ -1586,43 +1608,79 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 {
 	switch (id) {
 
-#ifdef _OPENORBITER
-	case AID_LMVC_INTEGRAL_LIGHT:
-        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC, MatProp::Emission, lca.GetIntegralVoltage() / 100.0, NUM_ELEMENTS(IntegralLights_LMVC));
-//		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MatProp::Light, lca.GetIntegralVoltage() / 100.0, NUM_ELEMENTS(IntegralLights_LMVC_NoTex)));
-		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MatProp::Light, ( (lca.GetIntegralVoltage() / 100.0) + (FloodLights.GetCDRRotaryVoltage() / 28.0) )/2.0, NUM_ELEMENTS(IntegralLights_LMVC_NoTex));
-//		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MatProp::Emission, lca.GetIntegralVoltage() / 100.0, NUM_ELEMENTS(IntegralLights_LMVC_NoTex));
-        return true;
+	case AID_LMVC_LIGHTING:
+ 	{
+		std::vector<DWORD> DSKY_CW_Lights;
 
-	case AID_LMVC_FLOOD_LIGHT:
-        SetLMVCIntegralLight(vcidx, FloodLights_LMVC, MatProp::Light, FloodLights.GetCDRRotaryVoltage() / 28.0, NUM_ELEMENTS(FloodLights_LMVC));
-        SetLMVCIntegralLight(xpointershadesidx, FloodLights_XPointer_Shades, MatProp::Light, FloodLights.GetCDRRotaryVoltage() / 28.0, NUM_ELEMENTS(FloodLights_XPointer_Shades));
-        return true;
+		// Get the Caution& Warning Light Status
+		for (int i = 0; i < 5;  i++) {
+			for (int j = 0; j < 8; j++) {
+				if (CWEA.GetCWLightStatus(i, j)==1 && CWEA.IsCWPWRLTGPowered() == true && CWEA.IsLTGPowered() == true) { DSKY_CW_Lights.push_back(LMVC_CW_Lights[i][j]); }
+			}
+		}
+		if (dsky.GetStatusPower() == true && dsky.GetSegmentPower() == true)
+		{
+			if (dsky.UplinkLit())     { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_UPLINK_ACTY); }
+			if (dsky.NoAttLit())      { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_NO_ATT); }
+			if (dsky.StbyLit())       { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_STBY); }
+			if (dsky.KbRelLit())      { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_KEY_REL); }
+			if (dsky.OprErrLit())     { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_OPR_ERR); }
+			if (dsky.TempLit())       { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_TEMP); }
+			if (dsky.GimbalLockLit()) { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_GIMBAL_LOCK); }
+			if (dsky.ProgLit())       { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_PROG); }
+			if (dsky.RestartLit())    { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_RESTART); }
+			if (dsky.TrackerLit())    { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_TRACKER); }
+		}
 
-	case AID_LMVC_NUMERICS_LIGHT:
-		SetLMVCIntegralLight(vcidx, NumericLights_LMVC, MatProp::Light, ( (lca.GetNumericVoltage() / 115.0) + (FloodLights.GetCDRRotaryVoltage() / 28.0) )/2, NUM_ELEMENTS(NumericLights_LMVC));
-		return true;
+//		sprintf(oapiDebugString(), "Integral Voltage = %lf", lca.GetNumericVoltage());
 
-#else
-	case AID_LMVC_INTEGRAL_LIGHT:
-        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC, MESHM_EMISSION2, lca.GetIntegralVoltage() / 75.0, NUM_ELEMENTS(IntegralLights_LMVC));
-		SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MESHM_EMISSION, lca.GetIntegralVoltage() / 75.0, NUM_ELEMENTS(IntegralLights_LMVC_NoTex));
-        SetLMVCIntegralLight(vcidx, IntegralLights_LMVC_NoTex, MESHM_EMISSION2, lca.GetIntegralVoltage() / 75.0, NUM_ELEMENTS(IntegralLights_LMVC_NoTex));
-		return true;
-
-	case AID_LMVC_FLOOD_LIGHT:
-        SetLMVCIntegralLight(vcidx, FloodLights_LMVC, MESHM_EMISSION, FloodLights.GetCDRRotaryVoltage() / 28.0, NUM_ELEMENTS(FloodLights_LMVC));
-        SetLMVCIntegralLight(xpointershadesidx, FloodLights_XPointer_Shades, MESHM_EMISSION, FloodLights.GetCDRRotaryVoltage() / 28.0, NUM_ELEMENTS(FloodLights_XPointer_Shades));
-        return true;
-
-	case AID_LMVC_NUMERICS_LIGHT:
-		SetLMVCIntegralLight(vcidx, NumericLights_LMVC, MESHM_EMISSION, ( (lca.GetNumericVoltage() / 115.0) + (FloodLights.GetCDRRotaryVoltage() / 28.0) )/2, NUM_ELEMENTS(NumericLights_LMVC));
-
-//		sprintf(oapiDebugString(), "Numerics Voltage = %lf", lca.GetNumericVoltage());
+		double floodRotaryValue = 0.0; // FloodLights.GetCDRRotaryVoltage() / 28.0;
 		
-        return true;
+		/// Hardcode Materials with no Texture
+		SetVCLighting(vcidx,   VC_MAT_FDAI_errorneedle, MAT_LIGHT, floodRotaryValue, 1);
 
-#endif
+		// MAT_LIGHT changes the Brightness of the Material
+		// MAT_EMISSION changes the Brightness of the Material controlled by its _emis Texture
+		SetVCLighting(vcidx, FloodLights_LMVC,    MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(FloodLights_LMVC));
+		floodLight_Left->SetIntensity(FloodLights.GetCDRRotaryVoltage() / 28.0);
+		floodLight_Right->SetIntensity(FloodLights.GetLMPRotaryVoltage() / 28.0);
+		SetVCLighting(vcidx, IntegralLights_LMVC, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
+		SetVCLighting(vcidx, IntegralLights_LMVC_NoTex, MAT_LIGHT, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
+		SetVCLighting(vcidx, NumericLights_LMVC,  MAT_LIGHT, (lca.GetNumericVoltage() / 115.0) + floodRotaryValue, NUM_ELEMENTS(NumericLights_LMVC));
+
+		if (CWEA.GetMasterAlarm()) {
+			SetVCLighting(vcidx, MasterAlarm_NoTex,  MAT_LIGHT, 1, NUM_ELEMENTS(MasterAlarm_NoTex));
+		}
+
+		if (DSKY_CW_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_CW_Lights[0],  MAT_LIGHT, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, DSKY_CW_Lights.size());
+
+		//External Meshes ***If Second parameter is 0 then the mesh contains only one Material***
+		SetVCLighting(xpointershadesidx, 0, MAT_LIGHT, floodRotaryValue, 1); //FloodLights_XPointer_Shades
+		SetVCLighting(windowshadesidx,   0, MAT_LIGHT, floodRotaryValue, 1); //FloodLights_WindowShades
+
+		if (deda.OprErrLit()) {
+			SetVCLighting(vcidx, VC_MAT_DEDA_Light,  MAT_LIGHT, 1, 1);
+		}
+
+        //Tapemeter Lights
+        if (AltRngMonSwitch.GetState() == TOGGLESWITCH_DOWN) {
+            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, (lca.GetNumericVoltage() / 115.0), 1);
+            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, 0.25, 1);
+        }
+        else {
+            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, (lca.GetNumericVoltage() / 115.0), 1);
+            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, 0.25, 1);
+        }
+
+        if (TempPressMonRotary.GetState() == 0) {
+            SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, (lca.GetNumericVoltage() / 115.0), 1);
+        }
+        else {
+            SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, 0.25, 1);
+        }
+
+		return true;
+	}
 
 	case AID_VC_LM_CWS_LEFT:
 		CWEA.RedrawLeft(surf, srf[SFR_VC_CW_LIGHTS], TexMul);
@@ -3371,20 +3429,30 @@ void LEM::SetCompLight(int m, bool state) {
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
 
-	if (state == true)
-	{   // ON
-		mat->emissive.r = 1;
-		mat->emissive.g = 0.878f;
-		mat->emissive.b = 0.506f;
-		mat->emissive.a = 1;
-	}
-	else
-	{   // OFF
-		mat->emissive.r = 0.125f;
-		mat->emissive.g = 0.11f;
-		mat->emissive.b = 0.064f;
-		mat->emissive.a = 1;
-	}
+    if (state == true)
+    {   // ON
+		mat->diffuse.r = 0.937f * float((lca.GetAnnunVoltage() / 5.0));
+		mat->diffuse.g = 0.486f * float((lca.GetAnnunVoltage() / 5.0));
+		mat->diffuse.b = 0.055f * float((lca.GetAnnunVoltage() / 5.0));
+		mat->diffuse.a = 1.0f;
+
+		mat->emissive.r = 0.937f * float((lca.GetAnnunVoltage() / 5.0));
+		mat->emissive.g = 0.486f * float((lca.GetAnnunVoltage() / 5.0));
+		mat->emissive.b = 0.055f * float((lca.GetAnnunVoltage() / 5.0));
+		mat->emissive.a = 1.0f;
+    }
+    else
+    {   // OFF
+		mat->diffuse.r = 0.184f;
+		mat->diffuse.g = 0.157f;
+		mat->diffuse.b = 0.141f;
+		mat->diffuse.a = 1.0f;
+
+        mat->emissive.r = 0.0f;
+        mat->emissive.g = 0.0f;
+        mat->emissive.b = 0.0f;
+        mat->emissive.a = 1.0f;
+    }
 
 	oapiSetMaterial(vcmesh, m, mat);
 }
@@ -3448,6 +3516,11 @@ void LEM::SetStageSeqRelayLight(int m, bool state) {
 
 	if (state == true)
 	{   // ON
+		mat->diffuse.r = 1;
+		mat->diffuse.g = 1;
+		mat->diffuse.b = 1;
+		mat->diffuse.a = 1;
+
 		mat->emissive.r = 1;
 		mat->emissive.g = 1;
 		mat->emissive.b = 1;
@@ -3455,19 +3528,24 @@ void LEM::SetStageSeqRelayLight(int m, bool state) {
 	}
 	else
 	{   // OFF
-		mat->emissive.r = 0.125f;
-		mat->emissive.g = 0.125f;
-		mat->emissive.b = 0.125f;
-		mat->emissive.a = 1;
+		mat->diffuse.r = 0.184f;
+		mat->diffuse.g = 0.157f;
+		mat->diffuse.b = 0.141f;
+		mat->diffuse.a = 1.0f;
+
+        mat->emissive.r = 0.0f;
+        mat->emissive.g = 0.0f;
+        mat->emissive.b = 0.0f;
+        mat->emissive.a = 1.0f;
 	}
 
 	oapiSetMaterial(vcmesh, m, mat);
 }
 
 #ifdef _OPENORBITER
-void LEM::SetLMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt)
+void LEM::SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt)
 #else
-void LEM::SetLMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt)
+void LEM::SetVCLighting(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt)
 #endif
 
 {
@@ -3479,6 +3557,8 @@ void LEM::SetLMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, d
 
 	for (int i = 0; i < cnt; i++)
 	{
+		if (matList[i] == VC_MAT_NONE) continue;
+
 		gcCore *pCore = gcGetCoreInterface();
 		if (pCore) {
 			FVECTOR4 value;
@@ -3493,13 +3573,43 @@ void LEM::SetLMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, d
 #endif
 		}
 	}
-    //sprintf(oapiDebugString(), "%d %lf", m, state);
+}
+
+#ifdef _OPENORBITER
+void LEM::SetVCLighting(UINT meshidx, int material, MatProp EmissionMode, double state, int cnt)
+#else
+void LEM::SetVCLighting(UINT meshidx, int material, int EmissionMode, double state, int cnt)
+#endif
+
+{
+	if (vis == NULL || meshidx == -1) return;
+	DEVMESHHANDLE hMesh = GetDevMesh(vis, meshidx);
+
+    if (!hMesh)
+        return;
+
+	gcCore *pCore = gcGetCoreInterface();
+	if (pCore) {
+		FVECTOR4 value;
+		value.r = (float)state;
+		value.g = (float)state;
+		value.b = (float)state;
+		value.a = 1.0;
+#ifdef _OPENORBITER
+		pCore->SetMeshMaterial(hMesh, material, EmissionMode, &value);
+#else
+		pCore->MeshMaterial(hMesh, material, EmissionMode, &value, true);
+#endif
+		}
 }
 
 void LEM::MoveFlashlight()
 {
 	if (flashlightOn) { //Only move the light emmitter if the flashlight is on
 		//Huge thanks the Jordan64 for helping get the direction stuff working! :)
+
+		VECTOR3 flashlightDirGlobal, vesselPosGlobal;
+
 		GetCameraOffset(flashlightPos);
 		oapiCameraGlobalDir(&flashlightDirGlobal);
 		GetGlobalPos(vesselPosGlobal);
@@ -3522,4 +3632,19 @@ void LEM::ToggleFlashlight()
 	if ((oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
 		SetFlashlightOn(!flashlightOn);
 	}
+}
+
+void LEM::UpdateFloodLights()
+{
+	VECTOR3 camPos;
+	VECTOR3 ofs;
+	GetCameraOffset(camPos);
+	GetMeshOffset(vcidx, ofs); // First get or VC Offset
+
+	// Debug string for finding Camera and VC mesh Position
+//	sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ", camPos.x, camPos.y, camPos.z, ofs.x, ofs.y, ofs.z );
+
+	// Set the Floodlights 
+	floodLight_Left->SetPosition(ofs + floodLightPos_Left);
+	floodLight_Right->SetPosition(ofs + floodLightPos_Right);
 }

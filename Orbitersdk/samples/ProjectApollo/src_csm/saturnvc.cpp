@@ -54,7 +54,6 @@
 #include "CM-VC-SeatsUnfolded_Resource.h"
 #include "EmissionListCMVC.h"
 
-
 // ==============================================================
 // VC Constants
 // ==============================================================
@@ -544,6 +543,19 @@ const VECTOR3 Switch_P163Location = { -0.9108, -0.6972, -0.4823 };
 // PLVC switch
 const VECTOR3 Switch_PLVCLocation = { -1.0979, 1.0467, -0.4147 };
 
+// Flood lights
+const VECTOR3 floodLightPos_P5 = { 0.3, 0.85, -0.1 };
+const COLOUR4 floodLightColor_P5 = { 1,1,1,0 };
+const COLOUR4 floodLightColor2_P5 = { 0,0,0,0 };
+
+const VECTOR3 floodLightPos_P8 = { -0.3, 0.85, -0.1 };
+const COLOUR4 floodLightColor_P8 = { 1,1,1,0 };
+const COLOUR4 floodLightColor2_P8 = { 0,0,0,0 };
+
+const VECTOR3 floodLightPos_P100 = { 0.0, 0.0, 0.3 };
+const COLOUR4 floodLightColor_P100 = { 1,1,1,0 };
+const COLOUR4 floodLightColor2_P100 = { 0,0,0,0 };
+
 extern GDIParams g_Param;
 
 void Saturn::InitVC()
@@ -642,7 +654,8 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_SPS_LIGHT, _R(1840*TexMul, 1142*TexMul, 1881*TexMul, 1158*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_PT05G_LIGHT, _R(1774*TexMul, 1142*TexMul, 1815*TexMul, 1158*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_EMSDVDISPLAY, _R(1768*TexMul, 1204*TexMul, 1925*TexMul, 1225*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_EMS_RSI_BKGRND, _R(1627*TexMul, 1149*TexMul, 1715*TexMul, 1236*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+//	oapiVCRegisterArea(AID_VC_EMS_RSI_BKGRND, _R(1627*TexMul, 1149*TexMul, 1715*TexMul, 1236*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+	oapiVCRegisterArea(AID_VC_EMS_RSI_BKGRND, _R(1655*TexMul, 1154*TexMul, 1685*TexMul, 1229*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_SEQUENCERSWITCHES, _R(1847*TexMul, 1606*TexMul, 1886*TexMul, 1644*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 	oapiVCRegisterArea(AID_VC_ASCPDISPLAYROLL, _R(1224*TexMul, 1830*TexMul, 1254*TexMul, 1842*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
@@ -654,7 +667,7 @@ void Saturn::InitVC()
 	// Panel 2
 	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY, _R(254*TexMul, 1235*TexMul, 359*TexMul, 1411*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS, _R(110*TexMul, 1240*TexMul, 212*TexMul, 1360*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(849*TexMul, 949*TexMul, 992*TexMul, 972*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(838*TexMul, 948*TexMul, 1015*TexMul, 974*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_CWS_LIGHTS_LEFT, _R(555*TexMul, 743*TexMul, 767*TexMul, 1851*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_CWS_LIGHTS_RIGHT, _R(810*TexMul, 743*TexMul, 1023*TexMul, 851*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
@@ -688,21 +701,10 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_DSKY_DISPLAY2, _R(1050*TexMul, 1076*TexMul, 1155*TexMul, 1252*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_DSKY_LIGHTS2, _R(906*TexMul, 1081*TexMul, 1008*TexMul, 1201*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_EVENT_TIMER306, _R(220*TexMul, 149*TexMul, 238*TexMul, 220*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
-	oapiVCRegisterArea(AID_VC_MISSION_CLOCK306, _R(337*TexMul, 129*TexMul, 360*TexMul, 272*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
+	oapiVCRegisterArea(AID_VC_MISSION_CLOCK306, _R(337*TexMul, 120*TexMul, 360*TexMul, 300*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 
-	// Integral Lights Panel 8
-	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_VC_NUMERICS_LIGHT_P8, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-
-	// Integral Lights Panel 5
-	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P5, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P5, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-
-	// Integral Lights LEB
-	oapiVCRegisterArea(AID_VC_INTEGRAL_LIGHT_P100, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_VC_FLOOD_LIGHT_P100, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
-	oapiVCRegisterArea(AID_VC_NUMERICS_LIGHT_P100, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+	// CMVC Lighting
+	oapiVCRegisterArea(AID_CMVC_LIGHTING, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
 	// Cue Cards Lighting
 	oapiVCRegisterArea(AID_VC_CUE_CARDS_LIGHTING, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -811,6 +813,28 @@ bool Saturn::clbkLoadVC (int id)
 	flashlight->SetVisibility(LightEmitter::VIS_COCKPIT);
 	flashlight->Activate(flashlightOn);
 
+	//FloodLight Panel 5
+	DelLightEmitter(floodLight_P5);
+	floodLight_P5 = (::PointLight*)AddPointLight(floodLightPos_P5, 3, 0, 0, 3, floodLightColor_P5, floodLightColor_P5, floodLightColor2_P5);
+	floodLight_P5->SetVisibility(LightEmitter::VIS_COCKPIT);
+	floodLight_P5->Activate(true);
+	floodLight_P5->SetIntensity(1);
+
+	//FloodLight Panel 8
+	DelLightEmitter(floodLight_P8);
+	floodLight_P8 = (::PointLight*)AddPointLight(floodLightPos_P8, 3, 0, 0, 3, floodLightColor_P8, floodLightColor_P8, floodLightColor2_P8);
+	floodLight_P8->SetVisibility(LightEmitter::VIS_COCKPIT);
+	floodLight_P8->Activate(true);
+	floodLight_P8->SetIntensity(1);
+
+	//FloodLight Panel 100(LEB)
+	DelLightEmitter(floodLight_P100);
+	floodLight_P100 = (::PointLight*)AddPointLight(floodLightPos_P100, 3, 0, 0, 3, floodLightColor_P100, floodLightColor_P100, floodLightColor2_P100);
+	floodLight_P100->SetVisibility(LightEmitter::VIS_COCKPIT);
+	floodLight_P100->Activate(true);
+	floodLight_P100->SetIntensity(1);
+
+
 	switch (id) {
 
 	case SATVIEW_LEFTSEAT:
@@ -830,7 +854,7 @@ bool Saturn::clbkLoadVC (int id)
 		viewpos = SATVIEW_CENTERSEAT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 		SetCameraMovement(_V(-0.0, -0.15, 0.0), 0, 0, _V(-0.3, 0.0, 0.0), 0, 0, _V(0.3, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(SATVIEW_LEFTSEAT, SATVIEW_RIGHTSEAT, SATVIEW_UPPER_CENTER, SATVIEW_LOWER_CENTER);
+		oapiVCSetNeighbours(SATVIEW_LEFTSEAT, SATVIEW_RIGHTSEAT, SATVIEW_SIDEHATCH, SATVIEW_LOWER_CENTER);
 
 		SetView(true);
 
@@ -867,7 +891,19 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_LEFTDOCK:
 		viewpos = SATVIEW_LEFTDOCK;
 		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(-1, SATVIEW_RIGHTDOCK, -1, SATVIEW_LEFTSEAT);
+		oapiVCSetNeighbours(-1, SATVIEW_SIDEHATCH, -1, SATVIEW_LEFTSEAT);
+
+		SetView(true);
+		SetCOASMesh();
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case SATVIEW_SIDEHATCH:
+		viewpos = SATVIEW_SIDEHATCH;
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(SATVIEW_LEFTDOCK, SATVIEW_RIGHTDOCK, SATVIEW_UPPER_CENTER, SATVIEW_CENTERSEAT);
 
 		SetView(true);
 		SetCOASMesh();
@@ -879,7 +915,7 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_RIGHTDOCK:
 		viewpos = SATVIEW_RIGHTDOCK;
 		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(SATVIEW_LEFTDOCK, -1, -1, SATVIEW_RIGHTSEAT);
+		oapiVCSetNeighbours(SATVIEW_SIDEHATCH, -1, -1, SATVIEW_RIGHTSEAT);
 
 		SetView(true);
 
@@ -912,7 +948,7 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_UPPER_CENTER:
 		viewpos = SATVIEW_UPPER_CENTER;
 		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.2, -0.03, -0.1), 0, 20 * RAD, _V(-0.2, -0.03, -0.1), 0, 20 * RAD);
-		oapiVCSetNeighbours(-1, -1, -1, SATVIEW_CENTERSEAT);
+		oapiVCSetNeighbours(-1, -1, -1, SATVIEW_SIDEHATCH);
 
 		SetView(true);
 
@@ -1078,6 +1114,56 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCRegisterArea(AID_VC_COAS, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_COAS, COASLocation + ofs, 0.05);
 
+	// DSKY_Glareshade
+	const VECTOR3 DSKY_GlareshadeLocation = { -0.293864, 0.616971, 0.33086 };
+	oapiVCRegisterArea(AID_VC_DSKY_Glareshade, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_DSKY_Glareshade, DSKY_GlareshadeLocation + ofs, 0.05);
+
+	// EMSDV_Glareshade
+	const VECTOR3 EMSDV_GlareshadeLocation = { -0.586873, 0.705286, 0.348643 };
+	oapiVCRegisterArea(AID_VC_EMSDV_Glareshade, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_EMSDV_Glareshade, EMSDV_GlareshadeLocation + ofs, 0.05);
+
+	// MissionTimer_Glareshade
+	const VECTOR3 MissionTimer_GlareshadeLocation = { 0.075027, 0.824892, 0.397274 };
+	oapiVCRegisterArea(AID_VC_MissionTimer_Glareshade, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_MissionTimer_Glareshade, MissionTimer_GlareshadeLocation + ofs, 0.05);
+
+	// Sextant_Eyepiece
+	const VECTOR3 Sextant_EyepieceLocation = { -0.140321, -0.591028, 0.268827 };
+	oapiVCRegisterArea(AID_VC_Sextant_Eyepiece, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Sextant_Eyepiece, Sextant_EyepieceLocation + ofs, 0.05);
+
+	// Telescope_Eyepiece
+	const VECTOR3 Telescope_EyepieceLocation = { 0.087357, -0.595404, 0.257364 };
+	oapiVCRegisterArea(AID_VC_Telescope_Eyepiece, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Telescope_Eyepiece, Telescope_EyepieceLocation + ofs, 0.05);
+
+	// AccelerometerCover
+	const VECTOR3 AccelerometerCoverLocation = { -0.80165, 0.631025, 0.34615 };
+	oapiVCRegisterArea(AID_VC_AccelerometerCover, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_AccelerometerCover, AccelerometerCoverLocation + ofs, 0.024);
+
+	// Altimeter Cover
+	const VECTOR3 AltimeterLocation = { -0.524273, 0.916269 , 0.425239 };
+	oapiVCRegisterArea(AID_VC_Altimeter_Cover, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Altimeter_Cover, AltimeterLocation + ofs, 0.035);
+
+	// Ordeal Visibility
+	const VECTOR3 OrdealLocation = { -0.965283, 1.01771, -0.143067 };
+	oapiVCRegisterArea(AID_VC_Ordeal_Stowed, PANEL_REDRAW_NEVER, PANEL_MOUSE_RBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Ordeal_Stowed, OrdealLocation + ofs, 0.10);
+
+	// Panel382Cover
+	const VECTOR3 Panel382CoverLocation = { -1.0863, 0.1907, -0.66875 };
+	oapiVCRegisterArea(AID_VC_Panel382_Cover, PANEL_REDRAW_NEVER, PANEL_MOUSE_RBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Panel382_Cover, Panel382CoverLocation + ofs, 0.05);
+	
+	// Waste Disposal
+	const VECTOR3 WasteKnobLocation = { 1.0773, -0.255847, -0.165491 };
+	oapiVCRegisterArea(AID_VC_Waste_Disposal, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Waste_Disposal, WasteKnobLocation + ofs, 0.05);
+
 	// THC Handle
 	oapiVCRegisterArea(AID_VC_THC_HANDLE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_THC_HANDLE, THChandleLocation + ofs, ROT);
@@ -1194,7 +1280,7 @@ void Saturn::RegisterActiveAreas() {
 			oapiVCRegisterArea(AID_VC_ROT_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP);
 			oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ROT_P2_01 + i, P2_ROT_POS[i] + UL * ROT + P1_3_CLICK + ofs, P2_ROT_POS[i] + UR * ROT + P1_3_CLICK + ofs, P2_ROT_POS[i] + DL * ROT + P1_3_CLICK + ofs, P2_ROT_POS[i] + DR * ROT + P1_3_CLICK + ofs);
 		}
-		
+
 		for (i = 0; i < P2_PUSHBCOUNT; i++)
 		{
 			oapiVCRegisterArea(AID_VC_PUSHB_P2_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
@@ -1691,6 +1777,100 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		ForwardHatch.Toggle();
 		return true;
 
+	case AID_VC_Panel382_Cover:
+		if (panel382CoverState.Closed()) {
+			panel382CoverState.action = AnimState::OPENING;
+			Panel382Cover.SetState(1);
+			//Sat->panel382Enabled = 1;
+		}
+		else {
+			panel382CoverState.action = AnimState::CLOSING;
+			Panel382Cover.SetState(0);
+			//Sat->panel382Enabled = 0;
+		}
+		return true;
+
+	case AID_VC_Altimeter_Cover:
+		if (altimeterCoverState.Closed()) {
+			altimeterCoverState.action = AnimState::OPENING;
+		}
+		else {
+			altimeterCoverState.action = AnimState::CLOSING;
+		}
+		return true;
+
+	case AID_VC_DSKY_Glareshade:
+		if (DSKY_GlareshadeState.Closed()) {
+			DSKY_GlareshadeState.action = AnimState::OPENING;
+		}
+		else {
+			DSKY_GlareshadeState.action = AnimState::CLOSING;
+		}
+		return true;
+
+	case AID_VC_EMSDV_Glareshade:
+		if (EMSDV_GlareshadeState.Closed()) {
+			EMSDV_GlareshadeState.action = AnimState::OPENING;
+		}
+		else {
+			EMSDV_GlareshadeState.action = AnimState::CLOSING;
+		}
+		return true;
+
+	case AID_VC_AccelerometerCover:
+		if (AccelerometerCoverState.Closed()) {
+			AccelerometerCoverState.action = AnimState::OPENING;
+		}
+		else {
+			AccelerometerCoverState.action = AnimState::CLOSING;
+		}
+		return true;
+
+	case AID_VC_Sextant_Eyepiece:
+		if (Sextant_EyepieceState.Closed()) {
+			Sextant_EyepieceState.action = AnimState::OPENING;
+		}
+		else {
+			Sextant_EyepieceState.action = AnimState::CLOSING;
+		}
+		return true;
+
+	case AID_VC_Telescope_Eyepiece:
+		if (Telescope_EyepieceState.Closed()) {
+			Telescope_EyepieceState.action = AnimState::OPENING;
+		}
+		else {
+			Telescope_EyepieceState.action = AnimState::CLOSING;
+		}
+		return true;
+
+	case AID_VC_MissionTimer_Glareshade:
+		if (MissionTimer_GlareshadeState.Closed()) {
+			MissionTimer_GlareshadeState.action = AnimState::OPENING;
+		}
+		else {
+			MissionTimer_GlareshadeState.action = AnimState::CLOSING;
+		}
+		return true;
+
+	case AID_VC_Waste_Disposal:
+		if (wasteDisposalState.Closed()) {
+			wasteDisposalState.action = AnimState::OPENING;
+		}
+		else {
+			wasteDisposalState.action = AnimState::CLOSING;
+		}
+		return true;
+
+	case AID_VC_Ordeal_Stowed:
+		if (ordealState.Closed()) {
+			ordealState.action = AnimState::OPENING;
+		}
+		else {
+			ordealState.action = AnimState::CLOSING;
+		}
+		return true;
+
 	case AID_VC_COAS:
 		if (coasEnabled) {
 			coasEnabled = false;
@@ -1736,52 +1916,254 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//case areaidentifier
 	//	Redraw Panel stuff
 	//	return true if dynamic texture modified, false if not
-	
-#ifdef _OPENORBITER
-	case AID_VC_SWITCH_P13_04: // CMVC Ordeal Lighting Switch
-        SetCMVCIntegralLight(vcidx, IntegralLights_CMVC_Ordeal, MatProp::Emission, ordeal.LightingPower(), NUM_ELEMENTS(IntegralLights_CMVC_Ordeal));
-		ORDEALLightingSwitch.DrawSwitchVC(id, event, surf);
+
+	case AID_CMVC_LIGHTING:
+	{
+		/////////////////////
+		// Dimmable lights //
+		/////////////////////
+
+		// First Darken All Lights
+		double floodRotaryValue = 0.0; //FloodRotarySwitch.GetOutput();
+
+/// Hardcode Materials with no Texture
+		SetVCLighting(vcidx,   VC_MAT_FDAI_errorneedle, MAT_LIGHT, floodRotaryValue, 1);
+		SetVCLighting(vcidx,   VC_MAT_FDAI_Cue, MAT_LIGHT, floodRotaryValue, 1);
+
+		// Flood Lights Panel 8
+		SetVCLighting(vcidx, FloodLights_P8, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(FloodLights_P8));
+		floodLight_P8->SetIntensity(FloodRotarySwitch.GetOutput()*1.5);
+
+		// CMVC Ordeal Lighting Switch
+		SetVCLighting(vcidx, IntegralLights_CMVC_Ordeal, MAT_EMISSION, ordeal.LightingPower(), NUM_ELEMENTS(IntegralLights_CMVC_Ordeal));
+		// ORDEALLightingSwitch.DrawSwitchVC(id, event, surf); // ***Check this line  by JK***
+
+		// Integral Lights Panel 8
+		SetVCLighting(vcidx, IntegralLights_P8, MAT_EMISSION, IntegralRotarySwitch.GetOutput(), NUM_ELEMENTS(IntegralLights_P8));
+		SetVCLighting(vcidx, IntergralLights_P8_NTex, MAT_LIGHT, IntegralRotarySwitch.GetOutput() + floodRotaryValue, NUM_ELEMENTS(IntergralLights_P8_NTex));
+
+		// External meshes
+		SetVCLighting(seatsunfoldedidx, CMVCSeatsUnFolded, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(CMVCSeatsUnFolded));
+		SetVCLighting(seatsfoldedidx, CMVCSeatsFolded, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(CMVCSeatsFolded));
+		SetVCLighting(coascdridx, CMVC_COAS_CDR, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(CMVC_COAS_CDR));
+
+		// Numerics Lights Panel 8
+//      SetVCLighting(vcidx,NumericLights_P8, MAT_LIGHT,NumericRotarySwitch.GetOutput(), NUM_ELEMENTS(NumericLights_P8));
+		SetVCLighting(vcidx, NumericLights_P8_NTex, MAT_LIGHT, NumericRotarySwitch.GetOutput() + floodRotaryValue, NUM_ELEMENTS(NumericLights_P8_NTex));
+
+		// Integral Lights Panel 5
+		SetVCLighting(vcidx, IntegralLights_P5, MAT_EMISSION, RightIntegralRotarySwitch.GetOutput(), NUM_ELEMENTS(IntegralLights_P5));
+
+		// Flood Lights Panel 5 *** NOT FUNCTIONALY YET ***
+//		SetVCLighting(vcidx, FloodLights_P5, MAT_LIGHT, RightFloodRotarySwitch.GetOutput(), NUM_ELEMENTS(FloodLights_P5));
+		floodLight_P5->SetIntensity(RightFloodRotarySwitch.GetOutput()*1.5);
+
+		// Integral Lights Panel 100
+		SetVCLighting(vcidx, IntegralLights_P100, MAT_EMISSION, Panel100IntegralRotarySwitch.GetOutput(), NUM_ELEMENTS(IntegralLights_P100));
+		SetVCLighting(vcidx, IntegralLights_P100_NoTex, MAT_LIGHT, Panel100IntegralRotarySwitch.GetOutput(), NUM_ELEMENTS(IntegralLights_P100_NoTex));
+
+
+		//// Flood Lights Panel 100 *** NOT FUNCTIONALY YET ***
+//		SetVCLighting(vcidx, FloodLights_P100, MAT_LIGHT, Panel100FloodRotarySwitch.GetOutput(), NUM_ELEMENTS(FloodLights_P100));
+		floodLight_P100->SetIntensity(Panel100FloodRotarySwitch.GetOutput()*1.5);
+
+		// Numerics Lights Panel 100
+		SetVCLighting(vcidx, NumericLights_P100, MAT_LIGHT, Panel100NumericRotarySwitch.GetOutput() + floodRotaryValue, NUM_ELEMENTS(NumericLights_P100));
+
+		// DSKY and Caution & Warning Lights
+		std::vector<DWORD> DSKY_Lights;
+		std::vector<DWORD> DSKY_LEB_Lights;
+		std::vector<DWORD> CW_Lights;
+
+		bool LightStates[CWS_LIGHTS_PER_PANEL * 2];
+
+		// Clear Lightstate list...
+		for (int i = 0; i < CWS_LIGHTS_PER_PANEL * 2; i++) {
+			LightStates[i] = false;
+		}
+		// ... and Read them
+		cws.GetCWLightStates(LightStates);
+
+		if (NumericRotarySwitch.GetOutput()) {
+			if (dsky.UplinkLit())		{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_UPLINK_ACTY); }
+			if (dsky.NoAttLit())		{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_NO_ATT); }
+			if (dsky.StbyLit())			{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_STBY); }
+			if (dsky.KbRelLit())		{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_KEY_REL); }
+			if (dsky.OprErrLit())		{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_OPR_ERR); }
+			if (dsky.TempLit())			{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_TEMP); }
+			if (dsky.GimbalLockLit())	{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_GIMBAL_LOCK); }
+			if (dsky.ProgLit())			{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_PROG); }
+			if (dsky.RestartLit())		{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_RESTART); }
+			if (dsky.TrackerLit())		{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_TRACKER); }
+		}
+
+		if (Panel100NumericRotarySwitch.GetOutput()) {
+			if (dsky.UplinkLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_UPLINK_ACTY); }
+			if (dsky.NoAttLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_NO_ATT); }
+			if (dsky.StbyLit())			{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_STBY); }
+			if (dsky.KbRelLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_KEY_REL); }
+			if (dsky.OprErrLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_OPR_ERR); }
+			if (dsky.TempLit())			{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_TEMP); }
+			if (dsky.GimbalLockLit())	{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_GIMBAL_LOCK); }
+			if (dsky.ProgLit())			{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_PROG); }
+			if (dsky.RestartLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_RESTART); }
+			if (dsky.TrackerLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_TRACKER); }
+		}
+
+		for (int i = 0; i < CWS_LIGHTS_PER_PANEL; i++)
+		{
+			if ((LightStates[i]  && cws.GetMode() != CWS_MODE_ACK) || cws.GetCWLightTest() == CWS_TEST_LIGHTS_LEFT)
+			{
+				if (cws.GetSource() != CWS_SOURCE_CM) {
+					CW_Lights.push_back(IntegralLights_CW_Lights[i]);
+				}
+				else
+				{
+					CW_Lights.push_back(IntegralLights_CW_Lights_CM[i]);
+				}
+			}
+		 }
+
+		for (int i = 0; i < CWS_LIGHTS_PER_PANEL; i++)
+		{
+			if ((LightStates[i+30]  && cws.GetMode() != CWS_MODE_ACK) || cws.GetCWLightTest() == CWS_TEST_LIGHTS_RIGHT)
+			{
+				if (cws.GetSource() != CWS_SOURCE_CM) {
+					CW_Lights.push_back(IntegralLights_CW_Lights[i + 30]);
+				}
+				else
+				{
+					CW_Lights.push_back(IntegralLights_CW_Lights_CM[i+30]);
+				}
+			}
+		 }
+
+		if (CW_Lights.size() > 0) SetVCLighting(vcidx, &CW_Lights[0], MAT_LIGHT, 1, CW_Lights.size()); 	//Caution & Warning Lights
+		if (DSKY_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_Lights[0], MAT_LIGHT, NumericRotarySwitch.GetOutput() + floodRotaryValue, DSKY_Lights.size());
+		if (DSKY_LEB_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_LEB_Lights[0], MAT_LIGHT, Panel100NumericRotarySwitch.GetOutput() + floodRotaryValue, DSKY_LEB_Lights.size());
+
+/*
+		// LEB Conditional Lamps
+		if (Panel100NumericRotarySwitch.GetOutput()) {
+			if (cws.IsPowered() && cws.GetGNLampState() != 0) {
+				if (cws.GetGNLampState() == 2 || cws.GetGNPGNSAlarm()) {
+					SetVCLighting(vcidx, VC_MAT_LEB_ConditionLamp_PGNS, MAT_LIGHT, Panel100NumericRotarySwitch.GetOutput() + floodRotaryValue, 1);
+				}
+
+				if (cws.GetGNLampState() == 2 || LightStates[CSM_CWS_CMC_LIGHT + 30 - CWS_LIGHTS_PER_PANEL]) {
+					SetVCLighting(vcidx, VC_MAT_LEB_ConditionLamp_CMC, MAT_LIGHT, Panel100NumericRotarySwitch.GetOutput() + floodRotaryValue, 1);
+				}
+
+				if (cws.GetGNLampState() == 2 || LightStates[CSM_CWS_ISS_LIGHT + 30 - CWS_LIGHTS_PER_PANEL]) {
+					SetVCLighting(vcidx, VC_MAT_LEB_ConditionLamp_ISS, MAT_LIGHT, Panel100NumericRotarySwitch.GetOutput() + floodRotaryValue, 1);
+				}
+			}
+		}
+*/
+		// LEB Conditional Lamps
+		if (cws.IsPowered() && cws.GetGNLampState() != 0) {
+			if (cws.GetGNLampState() == 2 || cws.GetGNPGNSAlarm()) {
+				SetVCLighting(vcidx, VC_MAT_LEB_ConditionLamp_PGNS, MAT_LIGHT, 1.0, 1);
+			}
+
+			if (cws.GetGNLampState() == 2 || LightStates[CSM_CWS_CMC_LIGHT + 30 - CWS_LIGHTS_PER_PANEL]) {
+				SetVCLighting(vcidx, VC_MAT_LEB_ConditionLamp_CMC, MAT_LIGHT, 1.0, 1);
+			}
+
+			if (cws.GetGNLampState() == 2 || LightStates[CSM_CWS_ISS_LIGHT + 30 - CWS_LIGHTS_PER_PANEL]) {
+				SetVCLighting(vcidx, VC_MAT_LEB_ConditionLamp_ISS, MAT_LIGHT, 1.0, 1);
+			}
+		}
+
+		/////////////////////
+		// Full Lit Lights //
+		/////////////////////
+
+		if (AbortLightLogic()) {
+			SetVCLighting(vcidx, FullLitAbort, MAT_LIGHT, 1.0, 1);
+		}
+
+		if (secs.LiftoffLightPower()) {
+			if (!secs.NoAutoAbortLightPower()){
+				SetVCLighting(vcidx, VC_MAT_CMVC_LIFT_OFF_NO_ABORT, MAT_LIGHT, 1.0, 1);
+			}
+		}
+
+		if ((cws.GetMasterAlarm() || cws.GetCWLightTest() == CWS_TEST_LIGHTS_LEFT) && cws.GetMode() != CWS_MODE_BOOST) {
+			SetVCLighting(vcidx, VC_MAT_MASTERALARM_PANEL1, MAT_LIGHT, 1.0, 1);
+		}
+		
+		if (cws.GetMasterAlarm() || cws.GetCWLightTest() == CWS_TEST_LIGHTS_RIGHT) {
+			SetVCLighting(vcidx, VC_MAT_MASTERALARM_PANEL2, MAT_LIGHT, 1.0, 1);
+		}
+
+		if (cws.GetMasterAlarm()) {
+			SetVCLighting(vcidx, VC_MAT_MasterAlarm_LEB, MAT_LIGHT, 1.0, 1);
+		}
+
+		if (SI_EngineNum > 5){
+			if (ENGIND[0]) SetVCLighting(vcidx, LVEngine_8_1, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_8_1));
+			if (ENGIND[1]) SetVCLighting(vcidx, LVEngine_8_2, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_8_2));
+			if (ENGIND[2]) SetVCLighting(vcidx, LVEngine_8_3, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_8_3));
+			if (ENGIND[3]) SetVCLighting(vcidx, LVEngine_8_4, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_8_4));
+			if (ENGIND[4]) SetVCLighting(vcidx, LVEngine_8_5, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_8_5));
+			if (ENGIND[5]) SetVCLighting(vcidx, LVEngine_8_6, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_8_6));
+			if (ENGIND[6]) SetVCLighting(vcidx, LVEngine_8_7, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_8_7));
+			if (ENGIND[7]) SetVCLighting(vcidx, LVEngine_8_8, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_8_8));
+		}
+		else
+		{
+			if (ENGIND[0]) SetVCLighting(vcidx, LVEngine_5_1, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_5_1));
+			if (ENGIND[1]) SetVCLighting(vcidx, LVEngine_5_2, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_5_2));
+			if (ENGIND[2]) SetVCLighting(vcidx, LVEngine_5_3, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_5_3));
+			if (ENGIND[3]) SetVCLighting(vcidx, LVEngine_5_4, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_5_4));
+			if (ENGIND[4]) SetVCLighting(vcidx, LVEngine_5_5, MAT_LIGHT, 1.0, NUM_ELEMENTS(LVEngine_5_5));
+		}
+
+		if (LVRateLight) {
+			SetVCLighting(vcidx, VC_MAT_LV_ENG_LV_RATE, MAT_LIGHT, 1.0, 1);
+		}
+
+		if (LVGuidLight) {
+			SetVCLighting(vcidx, VC_MAT_LV_ENG_LV_GUID, MAT_LIGHT, 1.0, 1);
+		}
+
+		if (SaturnType == SAT_SATURNV) {
+			if (SIISepState) {
+				SetVCLighting(vcidx, VC_MAT_LV_ENG_SII_SEP, MAT_LIGHT, 1.0, 1);
+			}
+		}
+
+		switch (ems.LiftVectLight()) {
+		case 1:
+			SetVCLighting(vcidx, LiftVectorIndUp, MAT_LIGHT, 1.0, 1);
+			break;
+		case -1:
+			SetVCLighting(vcidx, LiftVectorIndDown, MAT_LIGHT, 1.0, 1);
+			break;
+		case 0:
+//			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 82*TexMul, 10*TexMul, 30*TexMul, 11*TexMul);
+//			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 63*TexMul, 82*TexMul, 10*TexMul, 30*TexMul, 11*TexMul);
+//			SetVCLighting(vcidx, LiftVectorIndUp, MAT_LIGHT, 1.0, 1);
+//			SetVCLighting(vcidx, LiftVectorIndDown, MAT_LIGHT, 1.0, 1);
+			break;
+		}
+
+		if (ems.SPSThrustLight()) {
+			SetVCLighting(vcidx, EMSSPSThrustLight, MAT_LIGHT, 1.0, 1);
+		}
+
+		if (ems.pt05GLight()) {
+			SetVCLighting(vcidx, EMSPoint05GLight, MAT_LIGHT, 1.0, 1);
+		}
+
 		return true;
+	}
 
-	case AID_VC_INTEGRAL_LIGHT_P8:
-        SetCMVCIntegralLight(vcidx, IntegralLights_P8, MatProp::Emission, IntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntegralLights_P8));
-        SetCMVCIntegralLight(vcidx, IntergralLights_P8_NTex, MatProp::Light,IntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntergralLights_P8_NTex));
-        return true;
-
-	case AID_VC_FLOOD_LIGHT_P8:
-        SetCMVCIntegralLight(vcidx, FloodLights_P8, MatProp::Light,FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(FloodLights_P8));
-		SetCMVCIntegralLight(seatsunfoldedidx, CMVCSeatsUnFolded, MatProp::Light, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(CMVCSeatsUnFolded));
-		SetCMVCIntegralLight(seatsfoldedidx, CMVCSeatsFolded, MatProp::Light, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(CMVCSeatsFolded));
-		SetCMVCIntegralLight(coascdridx, CMVC_COAS_CDR, MatProp::Light, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(CMVC_COAS_CDR));
-
-        return true;
-
-	case AID_VC_NUMERICS_LIGHT_P8:
-//        SetCMVCIntegralLight(vcidx,NumericLights_P8, MatProp::Light, NumericRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(NumericLights_P8));
-        SetCMVCIntegralLight(vcidx, NumericLights_P8_NTex, MatProp::Light, NumericRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(NumericLights_P8_NTex));
-        return true;
-
-	case AID_VC_INTEGRAL_LIGHT_P5:
-        SetCMVCIntegralLight(vcidx, IntegralLights_P5, MatProp::Emission, RightIntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntegralLights_P5));
-        return true;
-
-	case AID_VC_FLOOD_LIGHT_P5:
-//		SetCMVCIntegralLight(vcidx, FloodLights_P5, MatProp::Light,RightFloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(FloodLights_P5));
-        return true;
-
-	case AID_VC_INTEGRAL_LIGHT_P100:
-        SetCMVCIntegralLight(vcidx, IntegralLights_P100, MatProp::Emission, Panel100IntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntegralLights_P100));
-        return true;
-
-	case AID_VC_FLOOD_LIGHT_P100:
-//		SetCMVCIntegralLight(vcidx, FloodLights_P100, MatProp::Light, Panel100FloodRotarySwitch.GetValue*0.01, NUM_ELEMENTS(FloodLights_P100));
-        return true;
-
-	case AID_VC_NUMERICS_LIGHT_P100:
-		SetCMVCIntegralLight(vcidx, NumericLights_P100, MatProp::Light, Panel100NumericRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(NumericLights_P100));
-		return true;
 	case AID_VC_CUE_CARDS_LIGHTING:
 	{
+		double floodRotaryValue = 0.0; //FloodRotarySwitch.GetOutput();
+
 		//Get list of mesh indices
 		std::vector<UINT> indices;
 		CueCards.GetMeshIndexList(indices);
@@ -1790,71 +2172,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		for (unsigned i = 0; i < indices.size(); i++)
 		{
-			SetCMVCIntegralLight(indices[i], ccmat, MatProp::Light, FloodRotarySwitch.GetValue()*0.1, 1);
+			SetVCLighting(indices[i], ccmat, MAT_LIGHT, floodRotaryValue, 1);
 		}
 
 		return true;
 	}
-#else
-	case AID_VC_SWITCH_P13_04: // CMVC Ordeal Lighting Switch
-        SetCMVCIntegralLight(vcidx, IntegralLights_CMVC_Ordeal, MESHM_EMISSION2, ordeal.LightingPower(), NUM_ELEMENTS(IntegralLights_CMVC_Ordeal));
-		ORDEALLightingSwitch.DrawSwitchVC(id, event, surf);
-		return true;
-
-	case AID_VC_INTEGRAL_LIGHT_P8:
-        SetCMVCIntegralLight(vcidx, IntegralLights_P8, MESHM_EMISSION2, IntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntegralLights_P8));
-		SetCMVCIntegralLight(vcidx, IntergralLights_P8_NTex, MESHM_EMISSION,IntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntergralLights_P8_NTex));
-        return true;
-
-	case AID_VC_FLOOD_LIGHT_P8:
-		SetCMVCIntegralLight(vcidx, FloodLights_P8, MESHM_EMISSION, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(FloodLights_P8));
-		SetCMVCIntegralLight(seatsunfoldedidx, CMVCSeatsUnFolded, MESHM_EMISSION, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(CMVCSeatsUnFolded));
-		SetCMVCIntegralLight(seatsfoldedidx, CMVCSeatsFolded, MESHM_EMISSION, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(CMVCSeatsFolded));
-		SetCMVCIntegralLight(coascdridx, CMVC_COAS_CDR, MESHM_EMISSION, FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(CMVC_COAS_CDR));
-        return true;
-
-	case AID_VC_NUMERICS_LIGHT_P8:
-//        SetCMVCIntegralLight(vcidx,NumericLights_P8, MESHM_EMISSION,NumericRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(NumericLights_P8));
-		SetCMVCIntegralLight(vcidx, NumericLights_P8_NTex, MESHM_EMISSION, NumericRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(NumericLights_P8_NTex));
-        return true;
-
-	case AID_VC_INTEGRAL_LIGHT_P5:
-        SetCMVCIntegralLight(vcidx, IntegralLights_P5, MESHM_EMISSION2, RightIntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntegralLights_P5));
-        return true;
-
-	case AID_VC_FLOOD_LIGHT_P5:
-//		SetCMVCIntegralLight(vcidx, FloodLights_P5, MESHM_EMISSION, RightFloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(FloodLights_P5));
-		return true;
-
-	case AID_VC_INTEGRAL_LIGHT_P100:
-		SetCMVCIntegralLight(vcidx, IntegralLights_P100, MESHM_EMISSION2, Panel100IntegralRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(IntegralLights_P100));
-		return true;
-
-	case AID_VC_FLOOD_LIGHT_P100:
-//		SetCMVCIntegralLight(vcidx, FloodLights_P100, MESHM_EMISSION, Panel100FloodRotarySwitch.GetValue()*0.1, NUM_ELEMENTS(FloodLights_P100));
-        return true;
-
-	case AID_VC_NUMERICS_LIGHT_P100:
-		SetCMVCIntegralLight(vcidx, NumericLights_P100, MESHM_EMISSION, Panel100NumericRotarySwitch.GetValue() / 10.0, NUM_ELEMENTS(NumericLights_P100));
-		return true;
-
-
-	case AID_VC_CUE_CARDS_LIGHTING:
-	{
-		//Get list of mesh indices
-		std::vector<UINT> indices;
-		CueCards.GetMeshIndexList(indices);
-		//Assume cue cards only have material 0
-		DWORD ccmat[1] = { 0 };
-
-		for (unsigned i = 0; i < indices.size(); i++)
-		{
-			SetCMVCIntegralLight(indices[i], ccmat, MESHM_EMISSION, FloodRotarySwitch.GetValue()*0.1, 1);
-		}
-
-		return true;
-	}
-#endif
 
 	case AID_VC_FDAI_LEFT:
 	{
@@ -2063,7 +2385,6 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-
 	case AID_VC_EMSDVDISPLAY:
 		EMSDvDisplay.DoDrawSwitchVC(surf, EMSDvDisplay.QueryValue(), srf[SRF_VC_DIGITALDISP]);
 		return true;
@@ -2089,14 +2410,18 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	{
 		switch (ems.LiftVectLight()) {
 		case 1:
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 33*TexMul, 8*TexMul, 82*TexMul, 6*TexMul, 20*TexMul, 6*TexMul);
+//			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 33*TexMul, 8*TexMul, 82*TexMul, 6*TexMul, 20*TexMul, 6*TexMul);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 82*TexMul, 21*TexMul, 30*TexMul, 11*TexMul);
 			break;
 		case -1:
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32*TexMul, 69*TexMul, 82*TexMul, 22*TexMul, 22*TexMul, 10*TexMul);
+//			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32*TexMul, 69*TexMul, 82*TexMul, 22*TexMul, 22*TexMul, 10*TexMul);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 63*TexMul, 82*TexMul, 21*TexMul, 30*TexMul, 11*TexMul);
 			break;
 		case 0:
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 33*TexMul, 8*TexMul, 82*TexMul, 0, 20*TexMul, 6*TexMul);
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32*TexMul, 69*TexMul, 82*TexMul, 12*TexMul, 22*TexMul, 10*TexMul);
+//			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 33*TexMul, 8*TexMul, 82*TexMul, 0, 20*TexMul, 6*TexMul);
+//			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32*TexMul, 69*TexMul, 82*TexMul, 12*TexMul, 22*TexMul, 10*TexMul);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 82*TexMul, 10*TexMul, 30*TexMul, 11*TexMul);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 63*TexMul, 82*TexMul, 10*TexMul, 30*TexMul, 11*TexMul);
 			break;
 		}
 	}
@@ -2310,7 +2635,14 @@ void Saturn::SetView(double offset, bool update_direction)
 				//v.y += vcFreeCamy;
 				//v.z += vcFreeCamz;
 				break;
-			
+
+			case SATVIEW_SIDEHATCH:
+				v = _V(0.0, 1, 0.2 + ofs_vc.z);
+				//v.x += vcFreeCamx;
+				//v.y += vcFreeCamy;
+				//v.z += vcFreeCamz;
+				break;
+
 			case SATVIEW_RIGHTDOCK:
 				v = _V(0.6, 1.05, 0.1 + ofs_vc.z);
 				//v.x += vcFreeCamx;
@@ -2373,6 +2705,8 @@ void Saturn::SetView(double offset, bool update_direction)
 				SetCameraDefaultDirection(_V(0.0, 1.0, 0.0), 180 * RAD);
 			} else if (viewpos == SATVIEW_UPPER_CENTER) {
 				SetCameraDefaultDirection(_V(0.0, 0.0, -1.0));
+			} else if (viewpos == SATVIEW_SIDEHATCH) {
+				SetCameraDefaultDirection(_V(0.0, 0.85, 0.0));
 			} else if (viewpos == SATVIEW_LEFTSEAT || viewpos == SATVIEW_CENTERSEAT || viewpos == SATVIEW_RIGHTSEAT) {
 				SetCameraDefaultDirection(_V(0.00, -sin(P1_3_TILT), cos(P1_3_TILT)));
 			} else {
@@ -2429,12 +2763,349 @@ void Saturn::InitVCAnimations() {
 	anim_fdaiRrate_L = anim_fdaiRrate_R = -1;
 	anim_fdaiPrate_L = anim_fdaiPrate_R = -1;
 	anim_fdaiYrate_L = anim_fdaiYrate_R = -1;
+	wasteDisposalAnim = -1;
+	panel382CoverAnim = -1;
+	altimeterCoverAnim = -1;
+	ordealAnim = -1;
+	DSKY_GlareshadeAnim = -1;
+	EMSDV_GlareshadeAnim = -1;
+	AccelerometerCoverAnim = -1;
+	MissionTimer_GlareshadeAnim = -1;
+	Sextant_EyepieceAnim = -1;
+	Telescope_EyepieceAnim = -1;
 }
 
 void Saturn::DefineVCAnimations()
 
 {
 	MainPanelVC.ClearSwitches();
+
+	/// BEGINN PATH ANIMATION by JORDAN 
+
+	// PUTING THIS CODE AN THE END OF THE DefineVCAnimations SOLVES SOME SWITCHES FLOATING AROUND
+
+	// ***ATTENTION*** ANIMATION BUG IF I PUT THE CODE FOR PANEL382COVER BEFORE WASTEDISPOSAL
+	// ***SEAMS TO WORK AFTER COMBINING THE ANIMATION OF THE WASTE DISPOSAL
+
+	// Panel382Cover
+	static UINT Panel382Cover[1] = { VC_GRP_Panel382_Cover };
+	static MGROUP_ROTATE panel382CoverMesh(0, Panel382Cover, 1, _V(-1.0863, 0.2566, -0.66875), _V(0, 0, 1), (float)(120.0 * RAD));
+	panel382CoverAnim = CreateAnimation(0.0);
+	AddAnimationComponent(panel382CoverAnim, 0, 1, &panel382CoverMesh);
+
+	// Waste Disposal
+	// Define animation for the Rotation Knob
+	static UINT wasteDisposal[1] = { VC_GRP_WasteDisposalDoor };
+	static MGROUP_ROTATE wasteDisposalKnob(0, wasteDisposal, 1, _V(1.0773, -0.255847, -0.165491), _V(-1, 0, 0), (float)(-60.0 * RAD));
+
+	// Define animation for both the knob and the frame
+	static UINT wasteDisposalAll[2] = { VC_GRP_WasteDisposalDoor, VC_GRP_WasteDisposalFrame };
+	static MGROUP_ROTATE wasteDisposalKnobAll(0, wasteDisposalAll, 2, _V(1.07709, -0.257737, -0.098881), _V(0, -1, 0), (float)(-120.0 * RAD));
+
+	wasteDisposalAnim = CreateAnimation(0.0);
+	AddAnimationComponent(wasteDisposalAnim, 0, 0.5, &wasteDisposalKnob);
+	AddAnimationComponent(wasteDisposalAnim, 0.5, 1, &wasteDisposalKnobAll);
+
+	// Altimeter Cover
+	static UINT altimeterCover[1] = { VC_GRP_Altimeter_Cover };
+
+	static MGROUP_ROTATE    altimeterCoverMesh1(0, altimeterCover, 1, _V(-0.524273, 0.914852, 0.429616), _V(-1, 0, 0), (float)(-60.0 * RAD));
+	static MGROUP_TRANSLATE altimeterCoverMesh2(0, altimeterCover, 1, _V(0,  0.011831, -0.035858));
+	static MGROUP_TRANSLATE altimeterCoverMesh3(0, altimeterCover, 1, _V(0, -0.050791, -0.091839));
+	static MGROUP_TRANSLATE altimeterCoverMesh4(0, altimeterCover, 1, _V(0, -0.634309, -0.156401));
+	static MGROUP_TRANSLATE altimeterCoverMesh5(0, altimeterCover, 1, _V(0, -0.061196,  0.047939));
+	static MGROUP_TRANSLATE altimeterCoverMesh6(0, altimeterCover, 1, _V(0,  0.000000,  0.097930));
+
+	altimeterCoverAnim = CreateAnimation(0.0);
+	AddAnimationComponent(altimeterCoverAnim, 0.2, 0.4, &altimeterCoverMesh1); // Rotation
+	AddAnimationComponent(altimeterCoverAnim, 0.0, 0.2, &altimeterCoverMesh2); // Translation
+	AddAnimationComponent(altimeterCoverAnim, 0.2, 0.3, &altimeterCoverMesh3); // Translation
+	AddAnimationComponent(altimeterCoverAnim, 0.3, 0.8, &altimeterCoverMesh4); // Translation
+	AddAnimationComponent(altimeterCoverAnim, 0.8, 0.8, &altimeterCoverMesh5); // Translation
+	AddAnimationComponent(altimeterCoverAnim, 0.8, 1.0, &altimeterCoverMesh6); // Translation
+
+	// DSKY_Glareshade
+	static UINT DSKY_Glareshade[1] = { VC_GRP_DSKY_Glareshade };
+
+	static MGROUP_ROTATE    DSKY_GlareshadeMesh01(0, DSKY_Glareshade, 1, _V( -0.293864,   0.616971,   0.330860), _V(0, -1, 0), (float)(90.0 * RAD));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T01(0, DSKY_Glareshade, 1, _V(  0.000330,   0.014509,  -0.041281));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T02(0, DSKY_Glareshade, 1, _V( -0.004290,   0.002325,  -0.033830));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T03(0, DSKY_Glareshade, 1, _V( -0.007876,  -0.008183,  -0.024899));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T04(0, DSKY_Glareshade, 1, _V( -0.011969,  -0.019472,  -0.016817));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T05(0, DSKY_Glareshade, 1, _V( -0.014668,  -0.027352,  -0.010170));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T06(0, DSKY_Glareshade, 1, _V( -0.027500,  -0.052383,  -0.015800));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T07(0, DSKY_Glareshade, 1, _V( -0.027513,  -0.051734,  -0.017806));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T08(0, DSKY_Glareshade, 1, _V( -0.027528,  -0.051931,  -0.017194));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T09(0, DSKY_Glareshade, 1, _V( -0.027421,  -0.051921,  -0.017394));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T10(0, DSKY_Glareshade, 1, _V( -0.029745,  -0.050789,  -0.016962));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T11(0, DSKY_Glareshade, 1, _V( -0.034046,  -0.048344,  -0.016135));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T12(0, DSKY_Glareshade, 1, _V( -0.038257,  -0.045484,  -0.015195));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T13(0, DSKY_Glareshade, 1, _V( -0.041665,  -0.042739,  -0.014281));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T14(0, DSKY_Glareshade, 1, _V( -0.044595,  -0.040038,  -0.013374));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T15(0, DSKY_Glareshade, 1, _V( -0.047353,  -0.037124,  -0.012396));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T16(0, DSKY_Glareshade, 1, _V( -0.049981,  -0.033934,  -0.011329));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T17(0, DSKY_Glareshade, 1, _V( -0.052318,  -0.030635,  -0.010227));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T18(0, DSKY_Glareshade, 1, _V( -0.054435,  -0.027281,  -0.009106));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T19(0, DSKY_Glareshade, 1, _V( -0.056679,  -0.022721,  -0.007582));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T20(0, DSKY_Glareshade, 1, _V( -0.058945,  -0.016944,  -0.005650));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T21(0, DSKY_Glareshade, 1, _V( -0.060428,  -0.011837,  -0.003943));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T22(0, DSKY_Glareshade, 1, _V( -0.061265,  -0.005602,  -0.001858));
+	static MGROUP_TRANSLATE DSKY_GlareshadeMesh_T23(0, DSKY_Glareshade, 1, _V( -0.133887,   0.000231,   0.000106));
+
+	DSKY_GlareshadeAnim = CreateAnimation(0.0);
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.20, 0.40, &DSKY_GlareshadeMesh01); // Rotation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.00,  0.04, &DSKY_GlareshadeMesh_T01); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.04,  0.09, &DSKY_GlareshadeMesh_T02); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.09,  0.13, &DSKY_GlareshadeMesh_T03); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.13,  0.17, &DSKY_GlareshadeMesh_T04); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.17,  0.22, &DSKY_GlareshadeMesh_T05); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.22,  0.26, &DSKY_GlareshadeMesh_T06); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.26,  0.30, &DSKY_GlareshadeMesh_T07); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.30,  0.35, &DSKY_GlareshadeMesh_T08); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.35,  0.39, &DSKY_GlareshadeMesh_T09); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.39,  0.43, &DSKY_GlareshadeMesh_T10); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.43,  0.48, &DSKY_GlareshadeMesh_T11); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.48,  0.52, &DSKY_GlareshadeMesh_T12); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.52,  0.57, &DSKY_GlareshadeMesh_T13); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.57,  0.61, &DSKY_GlareshadeMesh_T14); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.61,  0.65, &DSKY_GlareshadeMesh_T15); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.65,  0.70, &DSKY_GlareshadeMesh_T16); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.70,  0.74, &DSKY_GlareshadeMesh_T17); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.74,  0.78, &DSKY_GlareshadeMesh_T18); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.78,  0.83, &DSKY_GlareshadeMesh_T19); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.83,  0.87, &DSKY_GlareshadeMesh_T20); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.87,  0.91, &DSKY_GlareshadeMesh_T21); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.91,  0.96, &DSKY_GlareshadeMesh_T22); // Translation
+	AddAnimationComponent(DSKY_GlareshadeAnim, 0.96,  1.00, &DSKY_GlareshadeMesh_T23); // Translation
+
+	// EMSDV_Glareshade
+	static UINT EMSDV_Glareshade[1] = { VC_GRP_EMSDeltaV_Glareshield };
+
+	static MGROUP_ROTATE    EMSDV_GlareshadeMesh_R01(0, EMSDV_Glareshade, 1, _V( -0.586873, 0.705286, 0.348643), _V(0, -1, 0), (float)(90.0 * RAD));
+	static MGROUP_TRANSLATE EMSDV_GlareshadeMesh_T01(0, EMSDV_Glareshade, 1, _V(  0.000008,   0.015473,  -0.046336));
+	static MGROUP_TRANSLATE EMSDV_GlareshadeMesh_T02(0, EMSDV_Glareshade, 1, _V(  0.000017,  -0.145613,  -0.048622));
+	static MGROUP_TRANSLATE EMSDV_GlareshadeMesh_T03(0, EMSDV_Glareshade, 1, _V(  0.003522,  -0.143836,  -0.048027));
+	static MGROUP_TRANSLATE EMSDV_GlareshadeMesh_T04(0, EMSDV_Glareshade, 1, _V( -0.004380,  -0.143812,  -0.048020));
+	static MGROUP_TRANSLATE EMSDV_GlareshadeMesh_T05(0, EMSDV_Glareshade, 1, _V( -0.028856,  -0.141099,  -0.047119));
+	static MGROUP_TRANSLATE EMSDV_GlareshadeMesh_T06(0, EMSDV_Glareshade, 1, _V( -0.063993,  -0.130533,  -0.043596));
+	static MGROUP_TRANSLATE EMSDV_GlareshadeMesh_T07(0, EMSDV_Glareshade, 1, _V( -0.101536,  -0.106309,  -0.035514));
+	static MGROUP_TRANSLATE EMSDV_GlareshadeMesh_T08(0, EMSDV_Glareshade, 1, _V( -0.133735,  -0.068902,  -0.023028));
+	static MGROUP_TRANSLATE EMSDV_GlareshadeMesh_T09(0, EMSDV_Glareshade, 1, _V( -0.148529,  -0.026269,  -0.008795));
+	static MGROUP_TRANSLATE EMSDV_GlareshadeMesh_T10(0, EMSDV_Glareshade, 1, _V( -0.152157,   0.006253,   0.002064));
+
+	EMSDV_GlareshadeAnim = CreateAnimation(0.0);
+
+	AddAnimationComponent(EMSDV_GlareshadeAnim, 0.20,  0.40, &EMSDV_GlareshadeMesh_R01); // Rotation
+	AddAnimationComponent(EMSDV_GlareshadeAnim, 0.00,  0.10, &EMSDV_GlareshadeMesh_T01); // Translation
+	AddAnimationComponent(EMSDV_GlareshadeAnim, 0.10,  0.20, &EMSDV_GlareshadeMesh_T02); // Translation
+	AddAnimationComponent(EMSDV_GlareshadeAnim, 0.20,  0.30, &EMSDV_GlareshadeMesh_T03); // Translation
+	AddAnimationComponent(EMSDV_GlareshadeAnim, 0.30,  0.40, &EMSDV_GlareshadeMesh_T04); // Translation
+	AddAnimationComponent(EMSDV_GlareshadeAnim, 0.40,  0.50, &EMSDV_GlareshadeMesh_T05); // Translation
+	AddAnimationComponent(EMSDV_GlareshadeAnim, 0.50,  0.60, &EMSDV_GlareshadeMesh_T06); // Translation
+	AddAnimationComponent(EMSDV_GlareshadeAnim, 0.60,  0.70, &EMSDV_GlareshadeMesh_T07); // Translation
+	AddAnimationComponent(EMSDV_GlareshadeAnim, 0.70,  0.80, &EMSDV_GlareshadeMesh_T08); // Translation
+	AddAnimationComponent(EMSDV_GlareshadeAnim, 0.80,  0.90, &EMSDV_GlareshadeMesh_T09); // Translation
+	AddAnimationComponent(EMSDV_GlareshadeAnim, 0.90,  1.00, &EMSDV_GlareshadeMesh_T10); // Translation
+
+	// AccelerometerCover
+	static UINT AccelerometerCover[1] = { VC_GRP_Accelerometer_Cover };
+
+	static MGROUP_ROTATE    AccelerometerCoverMesh_R01(0, AccelerometerCover, 1, _V(  -0.80165,   0.631025,   0.34615), _V(-1, 0, 0), (float)(-90.0 * RAD));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T01(0, AccelerometerCover, 1, _V(  0.000154,  -0.011916,  -0.022708));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T02(0, AccelerometerCover, 1, _V(  0.000005,  -0.033782,  -0.018787));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T03(0, AccelerometerCover, 1, _V(  0.000005,  -0.033781,  -0.018787));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T04(0, AccelerometerCover, 1, _V(  0.000005,  -0.033782,  -0.018787));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T05(0, AccelerometerCover, 1, _V(  0.000004,  -0.033781,  -0.018787));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T06(0, AccelerometerCover, 1, _V(  0.000005,  -0.033782,  -0.018787));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T07(0, AccelerometerCover, 1, _V(  0.000005,  -0.033781,  -0.018787));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T08(0, AccelerometerCover, 1, _V(  0.000005,  -0.033782,  -0.018787));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T09(0, AccelerometerCover, 1, _V(  0.000005,  -0.033781,  -0.018787));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T10(0, AccelerometerCover, 1, _V(  0.000005,  -0.033782,  -0.018787));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T11(0, AccelerometerCover, 1, _V(  0.000001,  -0.040238,   0.000550));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T12(0, AccelerometerCover, 1, _V(  0.000002,  -0.027152,   0.013261));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T13(0, AccelerometerCover, 1, _V( -0.000003,  -0.017736,   0.052845));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T14(0, AccelerometerCover, 1, _V( -0.000003,  -0.017736,   0.052845));
+	static MGROUP_TRANSLATE AccelerometerCoverMesh_T15(0, AccelerometerCover, 1, _V( -0.000004,  -0.017737,   0.052845));
+
+	AccelerometerCoverAnim = CreateAnimation(0.0);
+
+	AddAnimationComponent(AccelerometerCoverAnim, 0.2,    0.4, &AccelerometerCoverMesh_R01); // Rotation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.00,  0.07, &AccelerometerCoverMesh_T01); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.07,  0.13, &AccelerometerCoverMesh_T02); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.13,  0.20, &AccelerometerCoverMesh_T03); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.20,  0.27, &AccelerometerCoverMesh_T04); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.27,  0.33, &AccelerometerCoverMesh_T05); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.33,  0.40, &AccelerometerCoverMesh_T06); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.40,  0.47, &AccelerometerCoverMesh_T07); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.47,  0.53, &AccelerometerCoverMesh_T08); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.53,  0.60, &AccelerometerCoverMesh_T09); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.60,  0.67, &AccelerometerCoverMesh_T10); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.67,  0.73, &AccelerometerCoverMesh_T11); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.73,  0.80, &AccelerometerCoverMesh_T12); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.80,  0.87, &AccelerometerCoverMesh_T13); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.87,  0.93, &AccelerometerCoverMesh_T14); // Translation
+	AddAnimationComponent(AccelerometerCoverAnim, 0.93,  1.00, &AccelerometerCoverMesh_T15); // Translation
+
+	// MissionTimer_Glareshade
+	static UINT MissionTimer_Glareshade[1] = { VC_GRP_MissionTimer_Glareshade };
+
+	static MGROUP_ROTATE    MissionTimer_GlareshadeMesh_R01(0, MissionTimer_Glareshade, 1, _V( 0.075027, 0.824892, 0.397274 ), _V(0, -1, 0), (float)(90.0 * RAD));
+	static MGROUP_TRANSLATE MissionTimer_GlareshadeMesh_T01(0, MissionTimer_Glareshade, 1, _V( -0.005346,   0.021032,  -0.069290));
+	static MGROUP_TRANSLATE MissionTimer_GlareshadeMesh_T02(0, MissionTimer_Glareshade, 1, _V( -0.083607,  -0.204529,  -0.090774));
+	static MGROUP_TRANSLATE MissionTimer_GlareshadeMesh_T03(0, MissionTimer_Glareshade, 1, _V( -0.127086,  -0.194370,  -0.052375));
+	static MGROUP_TRANSLATE MissionTimer_GlareshadeMesh_T04(0, MissionTimer_Glareshade, 1, _V( -0.160604,  -0.172746,  -0.037124));
+	static MGROUP_TRANSLATE MissionTimer_GlareshadeMesh_T05(0, MissionTimer_Glareshade, 1, _V( -0.196848,  -0.131835,  -0.026713));
+	static MGROUP_TRANSLATE MissionTimer_GlareshadeMesh_T06(0, MissionTimer_Glareshade, 1, _V( -0.222829,  -0.082468,  -0.020999));
+	static MGROUP_TRANSLATE MissionTimer_GlareshadeMesh_T07(0, MissionTimer_Glareshade, 1, _V( -0.233449,  -0.043617,  -0.022120));
+	static MGROUP_TRANSLATE MissionTimer_GlareshadeMesh_T08(0, MissionTimer_Glareshade, 1, _V( -0.235964,  -0.022583,  -0.026681));
+	static MGROUP_TRANSLATE MissionTimer_GlareshadeMesh_T09(0, MissionTimer_Glareshade, 1, _V( -0.237175,  -0.001963,  -0.025312));
+
+	MissionTimer_GlareshadeAnim = CreateAnimation(0.0);
+
+	AddAnimationComponent(MissionTimer_GlareshadeAnim, 0.20,  0.40, &MissionTimer_GlareshadeMesh_R01); // Rotation
+	AddAnimationComponent(MissionTimer_GlareshadeAnim, 0.00,  0.11, &MissionTimer_GlareshadeMesh_T01); // Translation
+	AddAnimationComponent(MissionTimer_GlareshadeAnim, 0.11,  0.22, &MissionTimer_GlareshadeMesh_T02); // Translation
+	AddAnimationComponent(MissionTimer_GlareshadeAnim, 0.22,  0.33, &MissionTimer_GlareshadeMesh_T03); // Translation
+	AddAnimationComponent(MissionTimer_GlareshadeAnim, 0.33,  0.44, &MissionTimer_GlareshadeMesh_T04); // Translation
+	AddAnimationComponent(MissionTimer_GlareshadeAnim, 0.44,  0.56, &MissionTimer_GlareshadeMesh_T05); // Translation
+	AddAnimationComponent(MissionTimer_GlareshadeAnim, 0.56,  0.67, &MissionTimer_GlareshadeMesh_T06); // Translation
+	AddAnimationComponent(MissionTimer_GlareshadeAnim, 0.67,  0.78, &MissionTimer_GlareshadeMesh_T07); // Translation
+	AddAnimationComponent(MissionTimer_GlareshadeAnim, 0.78,  0.89, &MissionTimer_GlareshadeMesh_T08); // Translation
+	AddAnimationComponent(MissionTimer_GlareshadeAnim, 0.89,  1.00, &MissionTimer_GlareshadeMesh_T09); // Translation
+
+	// Sextant_Eyepiece
+	static UINT Sextant_Eyepiece[1] = { VC_GRP_Group_10_02_Sextant_Eyepiece };
+
+	static MGROUP_ROTATE    Sextant_EyepieceMesh_R01(0, Sextant_Eyepiece, 1, _V( -0.140321,  -0.591028,   0.268827), _V(-0.000241, 0.933295, -0.35911), (float)(-45.0 * RAD));
+	static MGROUP_ROTATE    Sextant_EyepieceMesh_R02(0, Sextant_Eyepiece, 1, _V( -0.140321,  -0.591028,   0.268827), _V(-0.000241, 0.933295, -0.35911), (float)(45.0 * RAD));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T05(0, Sextant_Eyepiece, 1, _V( -0.000000,   0.033431,  -0.000000));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T06(0, Sextant_Eyepiece, 1, _V( -0.000000,   0.033431,  -0.000000));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T07(0, Sextant_Eyepiece, 1, _V( -0.000000,   0.035943,   0.014889));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T08(0, Sextant_Eyepiece, 1, _V( -0.000000,   0.014888,   0.035942));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T09(0, Sextant_Eyepiece, 1, _V( -0.000000,  -0.000000,   0.045752));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T10(0, Sextant_Eyepiece, 1, _V( -0.000000,  -0.000000,   0.045751));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T11(0, Sextant_Eyepiece, 1, _V( -0.000000,  -0.000000,   0.045751));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T12(0, Sextant_Eyepiece, 1, _V( -0.000000,  -0.000000,   0.045751));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T13(0, Sextant_Eyepiece, 1, _V( -0.000000,  -0.014888,   0.035943));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T14(0, Sextant_Eyepiece, 1, _V( -0.000000,  -0.035943,   0.014888));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T15(0, Sextant_Eyepiece, 1, _V( -0.000000,  -0.056562,  -0.000000));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T16(0, Sextant_Eyepiece, 1, _V( -0.000000,  -0.056562,  -0.000000));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T17(0, Sextant_Eyepiece, 1, _V( -0.000000,  -0.056562,  -0.000000));
+	static MGROUP_TRANSLATE Sextant_EyepieceMesh_T18(0, Sextant_Eyepiece, 1, _V( -0.000000,  -0.056562,  -0.000000));
+
+	Sextant_EyepieceAnim = CreateAnimation(0.0);
+
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.0,   0.15, &Sextant_EyepieceMesh_R01); // Rotation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.5,   0.65, &Sextant_EyepieceMesh_R02); // Rotation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.22,  0.28, &Sextant_EyepieceMesh_T05); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.28,  0.33, &Sextant_EyepieceMesh_T06); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.33,  0.39, &Sextant_EyepieceMesh_T07); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.39,  0.44, &Sextant_EyepieceMesh_T08); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.44,  0.50, &Sextant_EyepieceMesh_T09); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.50,  0.56, &Sextant_EyepieceMesh_T10); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.56,  0.61, &Sextant_EyepieceMesh_T11); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.61,  0.67, &Sextant_EyepieceMesh_T12); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.67,  0.72, &Sextant_EyepieceMesh_T13); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.72,  0.78, &Sextant_EyepieceMesh_T14); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.78,  0.83, &Sextant_EyepieceMesh_T15); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.83,  0.89, &Sextant_EyepieceMesh_T16); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.89,  0.94, &Sextant_EyepieceMesh_T17); // Translation
+	AddAnimationComponent(Sextant_EyepieceAnim, 0.94,  1.00, &Sextant_EyepieceMesh_T18); // Translation
+
+	// Telescope_Eyepiece
+	static UINT Telescope_Eyepiece[1] = { VC_GRP_Group_10_02_Optics_Teleskop };
+
+	static MGROUP_ROTATE    Telescope_EyepieceMesh_R01(0, Telescope_Eyepiece, 1, _V( 0.087357,  -0.595404,  0.257364 ),  _V(-0.000241, 0.933295, -0.35911), (float)(45.0 * RAD));
+	static MGROUP_ROTATE    Telescope_EyepieceMesh_R02(0, Telescope_Eyepiece, 1, _V( 0.087357,  -0.595404,  0.257364 ),  _V(-0.000241, 0.933295, -0.35911), (float)(-45.0 * RAD));
+
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T05(0, Telescope_Eyepiece, 1, _V( -0.000000,   0.033431,  -0.000000));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T06(0, Telescope_Eyepiece, 1, _V( -0.000000,   0.033431,  -0.000000));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T07(0, Telescope_Eyepiece, 1, _V( -0.000000,   0.035943,   0.014889));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T08(0, Telescope_Eyepiece, 1, _V( -0.000000,   0.014888,   0.035942));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T09(0, Telescope_Eyepiece, 1, _V( -0.000000,  -0.000000,   0.045752));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T10(0, Telescope_Eyepiece, 1, _V( -0.000000,  -0.000000,   0.045751));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T11(0, Telescope_Eyepiece, 1, _V( -0.000000,  -0.000000,   0.045751));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T12(0, Telescope_Eyepiece, 1, _V( -0.000000,  -0.000000,   0.045751));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T13(0, Telescope_Eyepiece, 1, _V( -0.000000,  -0.014888,   0.035943));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T14(0, Telescope_Eyepiece, 1, _V( -0.000000,  -0.035943,   0.014888));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T15(0, Telescope_Eyepiece, 1, _V( -0.000000,  -0.056562,  -0.000000));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T16(0, Telescope_Eyepiece, 1, _V( -0.000000,  -0.056562,  -0.000000));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T17(0, Telescope_Eyepiece, 1, _V( -0.000000,  -0.056562,  -0.000000));
+	static MGROUP_TRANSLATE Telescope_EyepieceMesh_T18(0, Telescope_Eyepiece, 1, _V( -0.000000,  -0.056562,  -0.000000));
+
+	Telescope_EyepieceAnim = CreateAnimation(0.0);
+
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.0,   0.15, &Telescope_EyepieceMesh_R01); // Rotation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.5,   0.65, &Telescope_EyepieceMesh_R02); // Rotation
+
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.22,  0.28, &Telescope_EyepieceMesh_T05); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.28,  0.33, &Telescope_EyepieceMesh_T06); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.33,  0.39, &Telescope_EyepieceMesh_T07); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.39,  0.44, &Telescope_EyepieceMesh_T08); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.44,  0.50, &Telescope_EyepieceMesh_T09); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.50,  0.56, &Telescope_EyepieceMesh_T10); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.56,  0.61, &Telescope_EyepieceMesh_T11); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.61,  0.67, &Telescope_EyepieceMesh_T12); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.67,  0.72, &Telescope_EyepieceMesh_T13); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.72,  0.78, &Telescope_EyepieceMesh_T14); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.78,  0.83, &Telescope_EyepieceMesh_T15); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.83,  0.89, &Telescope_EyepieceMesh_T16); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.89,  0.94, &Telescope_EyepieceMesh_T17); // Translation
+	AddAnimationComponent(Telescope_EyepieceAnim, 0.94,  1.00, &Telescope_EyepieceMesh_T18); // Translation
+
+
+	// Ordeal Animation
+	static UINT ordealMeshGrp[12] = { 
+		VC_GRP_Screws_Panel13,
+		VC_GRP_Group_78_OrdealLighting,
+		VC_GRP_Group_78,
+		VC_GRP_ORDEAL_Rot,
+		VC_GRP_SwitchGuard_P13,
+		VC_GRP_SwitchHolder_P13,
+		VC_GRP_Sw_P13_01,
+		VC_GRP_Sw_P13_02,
+		VC_GRP_Sw_P13_03,
+		VC_GRP_Sw_P13_04,
+		VC_GRP_Sw_P13_05,
+		VC_GRP_Sw_P13_06
+};
+
+	static MGROUP_ROTATE ordealMeshGrp01(0, ordealMeshGrp, 12, _V( -0.931150,  0.988850, -0.002250), _V(0.387345, -0.375881,  0.84183), (float)(45.0 * RAD));
+	static MGROUP_ROTATE ordealMeshGrp02(0, ordealMeshGrp, 12, _V( -0.931150,  0.988850, -0.002250), _V(0.746545,  0.663823, -0.04483), (float)(-25.0 * RAD));
+
+	static MGROUP_TRANSLATE ordealMeshGrp03(0, ordealMeshGrp, 12, _V( 0.048105, 0.046687,-0.002054));
+	static MGROUP_TRANSLATE ordealMeshGrp04(0, ordealMeshGrp, 12, _V( 0.045540,-0.070472,-0.002001));
+	static MGROUP_TRANSLATE ordealMeshGrp05(0, ordealMeshGrp, 12, _V(-0.093769,-0.111988, 0.011892));
+	static MGROUP_TRANSLATE ordealMeshGrp06(0, ordealMeshGrp, 12, _V(-0.057720,-0.104968, 0.016579));
+	static MGROUP_TRANSLATE ordealMeshGrp07(0, ordealMeshGrp, 12, _V(-0.045257,-0.111645, 0.015972));
+	static MGROUP_TRANSLATE ordealMeshGrp08(0, ordealMeshGrp, 12, _V(-0.031742,-0.116623, 0.012001));
+	static MGROUP_TRANSLATE ordealMeshGrp09(0, ordealMeshGrp, 12, _V(-0.009214,-0.120099, 0.007878));
+	static MGROUP_TRANSLATE ordealMeshGrp10(0, ordealMeshGrp, 12, _V( 0.002824,-0.119671, 0.006403));
+	static MGROUP_TRANSLATE ordealMeshGrp11(0, ordealMeshGrp, 12, _V( 0.018193,-0.117666, 0.007002));
+	static MGROUP_TRANSLATE ordealMeshGrp12(0, ordealMeshGrp, 12, _V( 0.015888,-0.117059, 0.005107));
+	static MGROUP_TRANSLATE ordealMeshGrp13(0, ordealMeshGrp, 12, _V( 0.016092,-0.117294, 0.000250));
+	static MGROUP_TRANSLATE ordealMeshGrp14(0, ordealMeshGrp, 12, _V(-0.031066,-0.109332, 0.006414));
+	static MGROUP_TRANSLATE ordealMeshGrp15(0, ordealMeshGrp, 12, _V(-0.108063,-0.024326, 0.003564));
+
+	ordealAnim = CreateAnimation(0.0);
+	AddAnimationComponent(ordealAnim, 0.08, 0.23, &ordealMeshGrp01); // Rotation
+	AddAnimationComponent(ordealAnim, 0.08, 0.31, &ordealMeshGrp02); // Rotation
+
+	AddAnimationComponent(ordealAnim, 0.00, 0.08, &ordealMeshGrp03); // Translation
+	AddAnimationComponent(ordealAnim, 0.08, 0.15, &ordealMeshGrp04); // Translation
+	AddAnimationComponent(ordealAnim, 0.15, 0.23, &ordealMeshGrp05); // Translation
+	AddAnimationComponent(ordealAnim, 0.23, 0.31, &ordealMeshGrp06); // Translation
+	AddAnimationComponent(ordealAnim, 0.31, 0.38, &ordealMeshGrp07); // Translation
+	AddAnimationComponent(ordealAnim, 0.38, 0.46, &ordealMeshGrp08); // Translation
+	AddAnimationComponent(ordealAnim, 0.46, 0.54, &ordealMeshGrp09); // Translation
+	AddAnimationComponent(ordealAnim, 0.54, 0.62, &ordealMeshGrp10); // Translation
+	AddAnimationComponent(ordealAnim, 0.62, 0.69, &ordealMeshGrp11); // Translation
+	AddAnimationComponent(ordealAnim, 0.69, 0.77, &ordealMeshGrp12); // Translation
+	AddAnimationComponent(ordealAnim, 0.77, 0.85, &ordealMeshGrp13); // Translation
+	AddAnimationComponent(ordealAnim, 0.85, 0.92, &ordealMeshGrp14); // Translation
+	AddAnimationComponent(ordealAnim, 0.92, 1.00, &ordealMeshGrp15); // Translation
+
+	/// END TEST by JORDAN
 
 	// Panel 1
 
@@ -3212,91 +3883,91 @@ void Saturn::DefineVCAnimations()
 
 	MainPanelVC.AddSwitch(&RCSTempMeter);
 	RCSTempMeter.SetReference(NEEDLE_POS);
-	RCSTempMeter.SetRotationRange(RAD * 38.6);
+	RCSTempMeter.SetRotationRange(RAD * 38.67);
 	RCSTempMeter.DefineMeshGroup(VC_GRP_Needle_P2_01);
 
 	MainPanelVC.AddSwitch(&RCSHeliumPressMeter);
 	RCSHeliumPressMeter.SetReference(NEEDLE_POS);
-	RCSHeliumPressMeter.SetRotationRange(RAD * 38.4);
+	RCSHeliumPressMeter.SetRotationRange(RAD * 38.67);
 	RCSHeliumPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_02);
 
 	MainPanelVC.AddSwitch(&RCSFuelPressMeter);
 	RCSFuelPressMeter.SetReference(NEEDLE_POS);
-	RCSFuelPressMeter.SetRotationRange(RAD * 39.5);
+	RCSFuelPressMeter.SetRotationRange(RAD * 38.67);
 	RCSFuelPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_03);
 
 	MainPanelVC.AddSwitch(&RCSQuantityMeter);
 	RCSQuantityMeter.SetReference(NEEDLE_POS);
-	RCSQuantityMeter.SetRotationRange(RAD * 39.5);
+	RCSQuantityMeter.SetRotationRange(RAD * 38.67);
 	RCSQuantityMeter.DefineMeshGroup(VC_GRP_Needle_P2_04);
 
 	NEEDLE_POS = { 0.33136, 0.761097, 0.468935 };
 
 	MainPanelVC.AddSwitch(&H2Pressure1Meter);
 	H2Pressure1Meter.SetReference(NEEDLE_POS);
-	H2Pressure1Meter.SetRotationRange(RAD * 39.5);
+	H2Pressure1Meter.SetRotationRange(RAD * 38.67);
 	H2Pressure1Meter.DefineMeshGroup(VC_GRP_Needle_P2_05);
 
 	MainPanelVC.AddSwitch(&H2Pressure2Meter);
 	H2Pressure2Meter.SetReference(NEEDLE_POS);
-	H2Pressure2Meter.SetRotationRange(RAD * 39.5);
+	H2Pressure2Meter.SetRotationRange(RAD * 38.67);
 	H2Pressure2Meter.DefineMeshGroup(VC_GRP_Needle_P2_06);
 
 	MainPanelVC.AddSwitch(&O2Pressure1Meter);
 	O2Pressure1Meter.SetReference(NEEDLE_POS);
-	O2Pressure1Meter.SetRotationRange(RAD * 40.3);
+	O2Pressure1Meter.SetRotationRange(RAD * 38.67);
 	O2Pressure1Meter.DefineMeshGroup(VC_GRP_Needle_P2_07);
 
 	MainPanelVC.AddSwitch(&O2Pressure2Meter);
 	O2Pressure2Meter.SetReference(NEEDLE_POS);
-	O2Pressure2Meter.SetRotationRange(RAD * 40.3);
+	O2Pressure2Meter.SetRotationRange(RAD * 38.67);
 	O2Pressure2Meter.DefineMeshGroup(VC_GRP_Needle_P2_08);
 
 	MainPanelVC.AddSwitch(&H2Quantity1Meter);
 	H2Quantity1Meter.SetReference(NEEDLE_POS);
-	H2Quantity1Meter.SetRotationRange(RAD * 40.3);
+	H2Quantity1Meter.SetRotationRange(RAD * 38.67);
 	H2Quantity1Meter.DefineMeshGroup(VC_GRP_Needle_P2_09);
 
 	MainPanelVC.AddSwitch(&H2Quantity2Meter);
 	H2Quantity2Meter.SetReference(NEEDLE_POS);
-	H2Quantity2Meter.SetRotationRange(RAD * 40.3);
+	H2Quantity2Meter.SetRotationRange(RAD * 38.67);
 	H2Quantity2Meter.DefineMeshGroup(VC_GRP_Needle_P2_10);
 
 	MainPanelVC.AddSwitch(&O2Quantity1Meter);
 	O2Quantity1Meter.SetReference(NEEDLE_POS);
-	O2Quantity1Meter.SetRotationRange(RAD * 40.3);
+	O2Quantity1Meter.SetRotationRange(RAD * 38.67);
 	O2Quantity1Meter.DefineMeshGroup(VC_GRP_Needle_P2_11);
 
 	MainPanelVC.AddSwitch(&O2Quantity2Meter);
 	O2Quantity2Meter.SetReference(NEEDLE_POS);
-	O2Quantity2Meter.SetRotationRange(RAD * 40.3);
+	O2Quantity2Meter.SetRotationRange(RAD * 38.67);
 	O2Quantity2Meter.DefineMeshGroup(VC_GRP_Needle_P2_12);
 
 	NEEDLE_POS = { 0.347613, 0.603087, 0.415891 };
 
 	MainPanelVC.AddSwitch(&SuitTempMeter);
 	SuitTempMeter.SetReference(NEEDLE_POS);
-	SuitTempMeter.SetRotationRange(RAD * 40.2);
+	SuitTempMeter.SetRotationRange(RAD * 38.67);
 	SuitTempMeter.DefineMeshGroup(VC_GRP_Needle_P2_13);
 
 	MainPanelVC.AddSwitch(&CabinTempMeter);
 	CabinTempMeter.SetReference(NEEDLE_POS);
-	CabinTempMeter.SetRotationRange(RAD * 40.2);
+	CabinTempMeter.SetRotationRange(RAD * 38.67);
 	CabinTempMeter.DefineMeshGroup(VC_GRP_Needle_P2_14);
 
 	MainPanelVC.AddSwitch(&SuitPressMeter);
 	SuitPressMeter.SetReference(NEEDLE_POS);
-	SuitPressMeter.SetRotationRange(RAD * 37.5);
+	SuitPressMeter.SetRotationRange(RAD * 38.67);
 	SuitPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_15);
 
 	MainPanelVC.AddSwitch(&CabinPressMeter);
 	CabinPressMeter.SetReference(NEEDLE_POS);
-	CabinPressMeter.SetRotationRange(RAD * 37.5);
+	CabinPressMeter.SetRotationRange(RAD * 38.67);
 	CabinPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_16);
 
 	MainPanelVC.AddSwitch(&PartPressCO2Meter);
 	PartPressCO2Meter.SetReference(NEEDLE_POS);
-	PartPressCO2Meter.SetRotationRange(RAD * 38.7);
+	PartPressCO2Meter.SetRotationRange(RAD * 38.67);
 	PartPressCO2Meter.DefineMeshGroup(VC_GRP_Needle_P2_17);
 
 	NEEDLE_POS = { -0.2005, 0.9289, 0.4364 };
@@ -3401,7 +4072,7 @@ void Saturn::DefineVCAnimations()
 
 	MainPanelVC.AddSwitch(&HighGainAntennaYawMeter);
 	HighGainAntennaYawMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	HighGainAntennaYawMeter.SetRotationRange(RAD * 255);
+	HighGainAntennaYawMeter.SetRotationRange(RAD * 235);
 	HighGainAntennaYawMeter.DefineMeshGroup(VC_GRP_Needle_P2_32);
 
 	MainPanelVC.AddSwitch(&CabinTempAutoControlSwitch, AID_VC_TW_P2_01);
@@ -3717,42 +4388,42 @@ void Saturn::DefineVCAnimations()
 
 	MainPanelVC.AddSwitch(&SPSTempMeter);
 	SPSTempMeter.SetReference(NEEDLE_POS);
-	SPSTempMeter.SetRotationRange(RAD * 39.5);
+	SPSTempMeter.SetRotationRange(RAD * 38.67);
 	SPSTempMeter.DefineMeshGroup(VC_GRP_Needle_P3_01);
 
 	MainPanelVC.AddSwitch(&SPSHeliumNitrogenPressMeter);
 	SPSHeliumNitrogenPressMeter.SetReference(NEEDLE_POS);
-	SPSHeliumNitrogenPressMeter.SetRotationRange(RAD * 39.5);
+	SPSHeliumNitrogenPressMeter.SetRotationRange(RAD * 38.67);
 	SPSHeliumNitrogenPressMeter.DefineMeshGroup(VC_GRP_Needle_P3_02);
 
 	MainPanelVC.AddSwitch(&SPSFuelPressMeter);
 	SPSFuelPressMeter.SetReference(NEEDLE_POS);
-	SPSFuelPressMeter.SetRotationRange(RAD * 39.5);
+	SPSFuelPressMeter.SetRotationRange(RAD * 38.67);
 	SPSFuelPressMeter.DefineMeshGroup(VC_GRP_Needle_P3_03);
 
 	MainPanelVC.AddSwitch(&SPSOxidPressMeter);
 	SPSOxidPressMeter.SetReference(NEEDLE_POS);
-	SPSOxidPressMeter.SetRotationRange(RAD * 39.5);
+	SPSOxidPressMeter.SetRotationRange(RAD * 38.67);
 	SPSOxidPressMeter.DefineMeshGroup(VC_GRP_Needle_P3_04);
 
 	MainPanelVC.AddSwitch(&FuelCellH2FlowMeter);
 	FuelCellH2FlowMeter.SetReference(NEEDLE_POS);
-	FuelCellH2FlowMeter.SetRotationRange(RAD * 40.3);
+	FuelCellH2FlowMeter.SetRotationRange(RAD * 38.67);
 	FuelCellH2FlowMeter.DefineMeshGroup(VC_GRP_Needle_P3_05);
 
 	MainPanelVC.AddSwitch(&FuelCellO2FlowMeter);
 	FuelCellO2FlowMeter.SetReference(NEEDLE_POS);
-	FuelCellO2FlowMeter.SetRotationRange(RAD * 40.3);
+	FuelCellO2FlowMeter.SetRotationRange(RAD * 38.67);
 	FuelCellO2FlowMeter.DefineMeshGroup(VC_GRP_Needle_P3_06);
 
 	MainPanelVC.AddSwitch(&FuelCellTempMeter);
 	FuelCellTempMeter.SetReference(NEEDLE_POS);
-	FuelCellTempMeter.SetRotationRange(RAD * 40.7);
+	FuelCellTempMeter.SetRotationRange(RAD * 38.67);
 	FuelCellTempMeter.DefineMeshGroup(VC_GRP_Needle_P3_07);
 
 	MainPanelVC.AddSwitch(&FuelCellCondenserTempMeter);
 	FuelCellCondenserTempMeter.SetReference(NEEDLE_POS);
-	FuelCellCondenserTempMeter.SetRotationRange(RAD * 40.7);
+	FuelCellCondenserTempMeter.SetRotationRange(RAD * 38.67);
 	FuelCellCondenserTempMeter.DefineMeshGroup(VC_GRP_Needle_P3_08);
 
 	NEEDLE_POS = { 0.8420, 0.6010, 0.3265 };
@@ -4998,9 +5669,9 @@ void Saturn::InitFDAI(UINT mesh)
 }
 
 #ifdef _OPENORBITER
-void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt)
+void Saturn::SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt)
 #else
-void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt)
+void Saturn::SetVCLighting(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt)
 #endif
 
 {
@@ -5012,6 +5683,8 @@ void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode
 
 	for (int i = 0; i < cnt; i++)
 	{
+		if (matList[i] == VC_MAT_NONE) continue;
+
 		gcCore *pCore = gcGetCoreInterface();
 		if (pCore) {
 			FVECTOR4 value;
@@ -5026,13 +5699,59 @@ void Saturn::SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode
 #endif
 		}
 	}
-    //sprintf(oapiDebugString(), "%d %lf", m, state);
+}
+
+#ifdef _OPENORBITER
+void Saturn::SetVCLighting(UINT meshidx, int material, MatProp EmissionMode, double state, int cnt)
+#else
+void Saturn::SetVCLighting(UINT meshidx, int material, int EmissionMode, double state, int cnt)
+#endif
+
+{
+	if (vis == NULL || meshidx == -1) return;
+	DEVMESHHANDLE hMesh = GetDevMesh(vis, meshidx);
+
+    if (!hMesh)
+        return;
+
+	gcCore *pCore = gcGetCoreInterface();
+	if (pCore) {
+		FVECTOR4 value;
+		value.r = (float)state;
+		value.g = (float)state;
+		value.b = (float)state;
+		value.a = 1.0;
+#ifdef _OPENORBITER
+		pCore->SetMeshMaterial(hMesh, material, EmissionMode, &value);
+#else
+		pCore->MeshMaterial(hMesh, material, EmissionMode, &value, true);
+#endif
+	}
+}
+
+void Saturn::UpdateFloodLights()
+{
+	VECTOR3 camPos;
+	VECTOR3 ofs;
+	GetCameraOffset(camPos);
+	GetMeshOffset(vcidx, ofs); // First get or VC Offset
+
+	// Debug string for finding Camera and VC mesh Position
+	//sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ", camPos.x, camPos.y, camPos.z, ofs.x, ofs.y, ofs.z );
+
+	// Set the Floodlights 
+	floodLight_P5->SetPosition(ofs + floodLightPos_P5);
+	floodLight_P8->SetPosition(ofs + floodLightPos_P8);
+	floodLight_P100->SetPosition(ofs + floodLightPos_P100);
 }
 
 void Saturn::MoveFlashlight()
 {
 	if (flashlightOn) { //Only move the light emmitter if the flashlight is on
 		//Huge thanks the Jordan64 for helping get the direction stuff working! :)
+
+		VECTOR3 flashlightDirGlobal, vesselPosGlobal;
+
 		GetCameraOffset(flashlightPos);
 		oapiCameraGlobalDir(&flashlightDirGlobal);
 		GetGlobalPos(vesselPosGlobal);

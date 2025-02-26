@@ -682,10 +682,15 @@ public:
 	COLOUR4 flashlightColor;
 	COLOUR4 flashlightColor2;
 	VECTOR3 flashlightPos;
-	VECTOR3 vesselPosGlobal;
-	VECTOR3 flashlightDirGlobal;
 	VECTOR3 flashlightDirLocal;
 	bool flashlightOn;
+
+	// Floodlight LM Pilot
+	void UpdateFloodLights();
+	PointLight* floodLight_Left;
+
+	// Floodlight LM Commander
+	PointLight* floodLight_Right;
 
 protected:
 
@@ -739,9 +744,11 @@ protected:
 	void SetStageSeqRelayLight(int m, bool state);
 
 #ifdef _OPENORBITER
-	void SetLMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
+	void SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
+	void SetVCLighting(UINT meshidx, int material, MatProp EmissionMode, double state, int cnt);
 #else
-	void SetLMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
+	void SetVCLighting(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
+	void SetVCLighting(UINT meshidx, int material, int EmissionMode, double state, int cnt);
 #endif
 
 	void InitFDAI(UINT mesh);

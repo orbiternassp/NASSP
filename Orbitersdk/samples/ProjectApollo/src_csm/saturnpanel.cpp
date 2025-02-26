@@ -523,6 +523,8 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH30],						g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THREEPOSSWITCH30LEFT],					g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_DSKYDISP],								g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_DIGITAL2],								g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_DIGITAL90],							g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_FDAI],									g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_FDAIROLL],								g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_SWITCHUPSMALL],						g_Param.col[4]);
@@ -1266,7 +1268,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_CSM_PANEL_306,						_R(1093, 1410, 1123, 1720), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CSM_PANEL_306_MISSIONTIMERSWITCH,	_R(1211, 1619, 1240, 1650), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN|PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_EVENT_TIMER306,						_R(1185, 1431, 1203, 1502), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
-		oapiRegisterPanelArea (AID_MISSION_CLOCK306,					_R(1302, 1411, 1325, 1554), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_MISSION_CLOCK306,					_R(1302, 1401, 1325, 1571), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,			  PANEL_MAP_BACKGROUND);
 
 
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
@@ -1595,7 +1597,7 @@ void Saturn::AddLeftMiddleMainPanelAreas(int offset) {
 
 void Saturn::AddRightMiddleMainPanelAreas(int offset) {
 
-	oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1834 + offset,  303, 1977 + offset,  326), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
+	oapiRegisterPanelArea (AID_MISSION_CLOCK,								_R(1821 + offset,  302, 1996 + offset,  326), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CYROTANKSWITCHES,        					_R(1902 + offset,  451, 2492 + offset,  537), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_CYROTANKINDICATORS,        					_R(2173 + offset,  295, 2495 + offset,  439), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
 	oapiRegisterPanelArea (AID_SUITCOMPRDELTAPMETER,       					_R(2069 + offset,  726, 2115 + offset,  770), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,				PANEL_MAP_BACKGROUND);
@@ -2805,8 +2807,8 @@ void Saturn::SetSwitches(int panel) {
 	HGAGroup2CB.Init			(171, 157, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &TelcomGroup2Switch, 2.0);
 	SBandFMXMTRFLTBusCB.Init	(171,  85, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
 	SBandFMXMTRGroup1CB.Init	(171,  15, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &TelcomGroup1Switch, 2.0);
-	CentralTimingEquipMNACB.Init(264, 400, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
-	CentralTimingEquipMNBCB.Init(264, 357, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow);
+	CentralTimingEquipMNACB.Init(264, 400, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, MainBusA);
+	CentralTimingEquipMNBCB.Init(264, 357, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, MainBusB);
 	RNDZXPNDRFLTBusCB.Init		(264, 314, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 10.0);
 	SIGCondrFLTBusCB.Init		(264, 271, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
 	SBandPWRAmpl1FLTBusCB.Init	(264, 228, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel225CircuitBreakersRow, &FlightBus, 5.0);
@@ -5578,36 +5580,36 @@ void Saturn::InitSwitches() {
 	DirectUllageButton.Register(PSH, "DirectUllageButton", false);
 	ThrustOnButton.Register(PSH, "ThrustOnButton", false);
 
-	H2Pressure1Meter.Register(PSH, "H2Pressure1Meter", 0, 400, 10);
-	H2Pressure2Meter.Register(PSH, "H2Pressure2Meter", 0, 400, 10);
-	O2Pressure1Meter.Register(PSH, "O2Pressure1Meter", 0, 1000, 10); //Scaled for consistent display in 2D and VC
-	O2Pressure2Meter.Register(PSH, "O2Pressure2Meter", 0, 1000, 10);
-	H2Quantity1Meter.Register(PSH, "H2Quantity1Meter", 0, 5.0, 10);
-	H2Quantity2Meter.Register(PSH, "H2Quantity2Meter", 0, 5.0, 10);
-	O2Quantity1Meter.Register(PSH, "O2Quantity1Meter", 0, 5.0, 10);
-	O2Quantity2Meter.Register(PSH, "O2Quantity2Meter", 0, 5.0, 10);
+	H2Pressure1Meter.Register(PSH, "H2Pressure1Meter", 0, 350, 10);
+	H2Pressure2Meter.Register(PSH, "H2Pressure2Meter", 0, 350, 10);
+	O2Pressure1Meter.Register(PSH, "O2Pressure1Meter", 0.0, 5.0, 10);  //Scaled meter 0-5V
+	O2Pressure2Meter.Register(PSH, "O2Pressure2Meter", 0.0, 5.0, 10);  //Scaled meter 0-5V
+	H2Quantity1Meter.Register(PSH, "H2Quantity1Meter", 0.0, 5.0, 10);  //Scaled meter 0-5V
+	H2Quantity2Meter.Register(PSH, "H2Quantity2Meter", 0.0, 5.0, 10);  //Scaled meter 0-5V
+	O2Quantity1Meter.Register(PSH, "O2Quantity1Meter", 0.0, 5.0, 10);  //Scaled meter 0-5V
+	O2Quantity2Meter.Register(PSH, "O2Quantity2Meter", 0.0, 5.0, 10);  //Scaled meter 0-5V
 
 	CSMACVoltMeter.Register(PSH, "ACVoltMeter", 89, 131, 3);
 	CSMDCVoltMeter.Register(PSH, "DCVoltMeter", 19, 46, 3);
 	SystemTestVoltMeter.Register(PSH, "SystemTestMeter", 0.0, 5.0, 3);
 	DCAmpMeter.Register(PSH, "DCAmpMeter", 0, 100, 3);
 
-	FuelCellH2FlowMeter.Register(PSH, "FuelCellH2FlowMeter", 0, 0.2, 2);
-	FuelCellO2FlowMeter.Register(PSH, "FuelCellO2FlowMeter", 0, 1.6, 2);
-	FuelCellTempMeter.Register(PSH, "FuelCellTempMeter", 0, 5, 2);
-	FuelCellCondenserTempMeter.Register(PSH, "FuelCellCondenserTempMeter", 150, 250, 2);
+	FuelCellH2FlowMeter.Register(PSH, "FuelCellH2FlowMeter", 0.0, 5.0, 2); //Scaled meter 0-5V
+	FuelCellO2FlowMeter.Register(PSH, "FuelCellO2FlowMeter", 0.0, 5.0, 2); //Scaled meter 0-5V
+	FuelCellTempMeter.Register(PSH, "FuelCellTempMeter", 0.0, 5.0, 2); //Scaled meter 0-5V
+	FuelCellCondenserTempMeter.Register(PSH, "FuelCellCondenserTempMeter", 0.0, 5.0, 2); //Scaled meter 0-5V
 
 	SuitTempMeter.Register(PSH, "SuitTempMeter", 20, 95, 2);
-	CabinTempMeter.Register(PSH, "CabinTempMeter", 40, 120, 2);
-	SuitPressMeter.Register(PSH, "SuitPressMeter", 0, 16, 2);
-	CabinPressMeter.Register(PSH, "CabinPressMeter", 0, 16, 2);
+	CabinTempMeter.Register(PSH, "CabinTempMeter", 40, 125, 2);
+	SuitPressMeter.Register(PSH, "SuitPressMeter", 0, 17, 2);
+	CabinPressMeter.Register(PSH, "CabinPressMeter", 0, 17, 2);
 	PartPressCO2Meter.Register(PSH, "PartPressCO2Meter", 0, 30, 2);
 
-	SuitComprDeltaPMeter.Register(PSH, "SuitComprDeltaPMeter", -0.1, 1.1, 5);
-	LeftO2FlowMeter.Register(PSH, "LeftO2FlowMeter", 0.1, 1.1, 5);
+	SuitComprDeltaPMeter.Register(PSH, "SuitComprDeltaPMeter", 0.0, 1.0, 5);
+	LeftO2FlowMeter.Register(PSH, "LeftO2FlowMeter", 0.2, 1.0, 5);
 
 	SuitCabinDeltaPMeter.Register(PSH, "SuitCabinDeltaPMeter", -6, 6, 5);
-	RightO2FlowMeter.Register(PSH, "RightO2FlowMeter", 0.1, 1.1, 5);
+	RightO2FlowMeter.Register(PSH, "RightO2FlowMeter", 0.2, 1.0, 5);
 
 	EcsRadTempInletMeter.Register(PSH, "EcsRadTempInletMeter", 50, 130, 5);
 	EcsRadTempPrimOutletMeter.Register(PSH, "EcsRadTempPrimOutletMeter", -60, 110, 5, 50);

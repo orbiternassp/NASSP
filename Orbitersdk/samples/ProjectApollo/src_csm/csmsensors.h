@@ -119,3 +119,17 @@ public:
 protected:
 	h_Pipe *pipe;
 };
+
+class FCH2FlowTransducer : public CSMPipeFlowTransducer
+{
+public:
+	FCH2FlowTransducer(char *i_name, double minIn, double maxIn);
+	double Voltage();
+};
+
+class FCO2FlowTransducer : public CSMPipeFlowTransducer
+{
+public:
+	FCO2FlowTransducer(char *i_name, double minIn, double maxIn);
+	double Voltage();
+};

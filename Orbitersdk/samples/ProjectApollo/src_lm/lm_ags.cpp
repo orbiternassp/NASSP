@@ -1205,8 +1205,8 @@ int LEM_DEDA::ThreeDigitDisplaySegmentsLit(char *Str)
 void LEM_DEDA::RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, int TexMul)
 
 {
-	const int DigitWidth = 19*TexMul;
-	const int DigitHeight = 21*TexMul;
+	const int DigitWidth = 21*TexMul;
+	const int DigitHeight = 23*TexMul;
 	int Curdigit;
 
 	if (Str[0] >= '0' && Str[0] <= '9') {
@@ -1216,12 +1216,12 @@ void LEM_DEDA::RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int d
 
 	if (Str[1] >= '0' && Str[1] <= '9') {
 		Curdigit = Str[1] - '0';
-		oapiBlt(surf, digits, dstx + 20*TexMul, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+		oapiBlt(surf, digits, dstx + DigitWidth, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 
 	if (Str[2] >= '0' && Str[2] <= '9') {
 		Curdigit = Str[2] - '0';
-		oapiBlt(surf, digits, dstx + 39*TexMul, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+		oapiBlt(surf, digits, dstx + (DigitWidth * 2), dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 	}
 }
 
@@ -1247,25 +1247,22 @@ int LEM_DEDA::SixDigitDisplaySegmentsLit(char *Str)
 void LEM_DEDA::RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, int TexMul)
 
 {
-	const int DigitWidth = 19*TexMul;
-	const int DigitHeight = 21*TexMul;
+	const int DigitWidth = 21*TexMul;
+	const int DigitHeight = 23*TexMul;
 	int	Curdigit;
 	int i;
 
 	if (Str[0] == '-') {
-		oapiBlt(surf, digits, dstx + 4*TexMul, dsty, 10 * DigitWidth, 0, DigitWidth, DigitHeight);
+		oapiBlt(surf, digits, dstx, dsty, 11 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 	else if (Str[0] == '+') {
-		oapiBlt(surf, digits, dstx + 4*TexMul, dsty, 11 * DigitWidth, 0, DigitWidth, DigitHeight);
+		oapiBlt(surf, digits, dstx, dsty, 10 * DigitWidth, 0, DigitWidth, DigitHeight);
 	}
 
 	for (i = 1; i < 6; i++) {
 		if (Str[i] >= '0' && Str[i] <= '9') {
 			Curdigit = Str[i] - '0';
-			oapiBlt(surf, digits, dstx + ((DigitWidth + 1) * i) + 4, dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
-		}
-		else {
-//			oapiBlt(surf, digits, dstx + (10*i), dsty, 440, 6, 10, 15);
+			oapiBlt(surf, digits, dstx + ((DigitWidth + 1) * i), dsty, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 		}
 	}
 }

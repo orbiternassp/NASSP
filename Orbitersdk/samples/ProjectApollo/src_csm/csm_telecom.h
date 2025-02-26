@@ -25,6 +25,7 @@
 
 #include "RF_calc.h"
 #include "paCBGmessageID.h"
+#include "timingequipment.h"
 
 /* PCM DOWN-TELEMETRY
 
@@ -706,3 +707,14 @@ protected:
 //{
 //
 //};
+
+class CTE : public TimingEquipment {
+public:
+	void Init(CircuitBrakerSwitch* mna, CircuitBrakerSwitch* mnb);
+	bool IsPowered();
+	virtual bool TimingSignal();
+
+protected:
+	CircuitBrakerSwitch* cte_mna;
+	CircuitBrakerSwitch* cte_mnb;
+};

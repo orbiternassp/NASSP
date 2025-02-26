@@ -756,4 +756,9 @@ private:
 
 	//Maximum number of iterations for MCDRIV
 	const int k_max = 50;
+	//Hardcoded tolerance because they are used in comparing doubles
+	const double CLL_LOOSE_TOLERANCE = 0.05;
+	const double CLL_TIGHT_TOLERANCE = 0.005;
+	//This is used in checks if a solution has been found
+	const double INVALID_VALUE = 1e10;
 };

@@ -110,10 +110,10 @@ double SaturnH2PressureMeter::QueryValue()
 
 void SaturnH2PressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	if (Index == 1) 
-		oapiBlt(drawSurface, NeedleSurface,  0, (130 - (int)(v / 400.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+	if (Index == 1)
+		oapiBlt(drawSurface, NeedleSurface, 0, (129 - (int)(v * 0.2942857146)), 0, 0, 10, 10, SURF_PREDEF_CK);
 	else
-		oapiBlt(drawSurface, NeedleSurface, 53, (130 - (int)(v / 400.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(drawSurface, NeedleSurface, 53, (129 - (int)(v * 0.2942857146)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
 
 
@@ -126,60 +126,64 @@ void SaturnO2PressureMeter::Init(int i, SURFHANDLE surf, SwitchRow &row, Saturn 
 	O2PressIndSwitch = o2PressIndSwitch;
 }
 
-double SaturnO2PressureMeter::QueryValue()
+double SaturnO2PressureMeter::QueryValue() //Returns meter proportional voltage from transducer voltage to scale display
 {
-	//Scale voltage (0-5V) to 0 to 1000 range on display
-	//TBD: Display goes from 100 to 1050, but should actually start at 50
-	double val;
+	double XducerV;
+	double MeterV;
 	if (Index == 1)
 		if (O2PressIndSwitch->IsUp())
-			val = Sat->O2Tank1PressSensor.Voltage();
+			XducerV = Sat->O2Tank1PressSensor.Voltage();
 		else
-			val = Sat->O2SurgeTankPressSensor.Voltage();
+			XducerV = Sat->O2SurgeTankPressSensor.Voltage();
 	else
-		val = Sat->O2Tank2PressSensor.Voltage();
+		XducerV = Sat->O2Tank2PressSensor.Voltage();
 
-	if (val < 0.25) //100 PSI
+	if (XducerV <= 0.0) //50 PSI
 	{
-		return 0.0;
+		MeterV = 0.0;
 	}
-	else if (val < 2.25) //100-500 psi
+	else if (XducerV <= 3.25) //50-700 psi
 	{
-		return (val - 0.25)*122.64; //245.28 at 500 psi
+		MeterV = 0.615384620189831*XducerV + 0.000000000759321;
 	}
-	else if (val < 3.75) //500-800 psi
+	else if (XducerV <= 3.75) //700-800 psi
 	{
-		return (val - 0.8055)*169.81; //500 at 800 psi
+		MeterV = 0.9999999676*XducerV - 1.2499998785;
 	}
-	else if (val < 4.25) //800-900 psi
+	else if (XducerV <= 4.00) //800-850 psi
 	{
-		return (val - 2.3553)*358.5; //679.25 at 900 psi
+		MeterV = 1.2581856262*XducerV - 2.2181960983;
 	}
-	else if (val < 4.5) //900-950 psi
+	else if (XducerV <= 4.5) //850-950 psi
 	{
-		return (val - 3.39284)*792.44; //877.36 at 950 psi
+		MeterV = -53.0805807926226*pow(XducerV, 4) + 895.008103586675*pow(XducerV, 3) - 5653.6724668028*pow(XducerV, 2) + 15860.671689824*XducerV - 16673.0026906803;
 	}
-	else if (val < 5.0) //950-1050 psi
+	else if (XducerV <= 5.0) //950-1050 psi
 	{
-		return (val - 2.1038)*345.28; //1000 at 1050 psi
+		MeterV = 1.1795223365*XducerV - 0.8976116825;
 	}
 	else
 	{
-		return 1000.0;
+		MeterV = 5.0;
 	}
+
+	return MeterV;
 }
 
 void SaturnO2PressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	if (Index == 1) 
-		DoDrawSwitch(drawSurface, NeedleSurface, v, 86, 0);
+	if (Index == 1)
+		oapiBlt(drawSurface, NeedleSurface, 86, (129 - (int)(v * 20.6)), 0, 0, 10, 10, SURF_PREDEF_CK);
 	else
-		DoDrawSwitch(drawSurface, NeedleSurface, v, 139, 10);
+		oapiBlt(drawSurface, NeedleSurface, 139, (129 - (int)(v * 20.6)), 10, 0, 10, 10, SURF_PREDEF_CK);
+
+	//sprintf(oapiDebugString(), "v %lf QV %lf XV %lf", v, QueryValue(), Sat->O2Tank1PressSensor.Voltage());
 }
 
-void SaturnO2PressureMeter::DoDrawSwitch(SURFHANDLE surf, SURFHANDLE needle, double value, int xOffset, int xNeedle)
+void SaturnO2PressureMeter::OnPostStep(double SimT, double DeltaT, double MJD)
 {
-	oapiBlt(surf, needle, xOffset, 130 - (int)(value*0.106), xNeedle, 0, 10, 10, SURF_PREDEF_CK);
+	double v = GetDisplayValue();
+	OurVessel->SetAnimation(anim_switch, (v * 0.2)); //Scales VC meter 0-1
 }
 
 
@@ -196,10 +200,11 @@ double SaturnCryoQuantityMeter::QueryValue()
 {
 	if (!strcmp("H2", Substance)) {
 		if (Index == 1)
-			return Sat->H2Tank1QuantitySensor.Voltage();
+			return Sat->H2Tank1QuantitySensor.Voltage(); //Uses direct voltage instead of a value
 		else
 			return Sat->H2Tank2QuantitySensor.Voltage();
-	} else {
+	}
+	else {
 		if (Index == 1)
 			return Sat->O2Tank1QuantitySensor.Voltage();
 		else
@@ -210,19 +215,20 @@ double SaturnCryoQuantityMeter::QueryValue()
 void SaturnCryoQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	if (!strcmp("H2", Substance)) {
-		if (Index == 1) 
-			oapiBlt(drawSurface, NeedleSurface,  172, (130 - (int)(v * 20.8)), 0, 0, 10, 10, SURF_PREDEF_CK);
+		if (Index == 1)
+			oapiBlt(drawSurface, NeedleSurface, 172, (129 - (int)(v * 20.6)), 0, 0, 10, 10, SURF_PREDEF_CK);
 		else
-			oapiBlt(drawSurface, NeedleSurface,  225, (130 - (int)(v * 20.8)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	} else {
-		if (Index == 1) 
-			oapiBlt(drawSurface, NeedleSurface,  258, (130 - (int)(v * 20.8)), 0, 0, 10, 10, SURF_PREDEF_CK);
+			oapiBlt(drawSurface, NeedleSurface, 225, (129 - (int)(v * 20.6)), 10, 0, 10, 10, SURF_PREDEF_CK);
+	}
+	else {
+		if (Index == 1)
+			oapiBlt(drawSurface, NeedleSurface, 258, (129 - (int)(v * 20.6)), 0, 0, 10, 10, SURF_PREDEF_CK);
 		else {
 			//
 			// Apollo 13 O2 tank 2 quantity display failed offscale high around 46:45.
 			//
 
-			#define O2FAILURETIME	(46.0 * 3600.0 + 45.0 * 60.0)
+#define O2FAILURETIME	(46.0 * 3600.0 + 45.0 * 60.0)
 
 			if (Sat->GetMission()->DoApollo13Failures()) {
 				if (Sat->GetMissionTime() >= (O2FAILURETIME + 5.0)) {
@@ -232,7 +238,7 @@ void SaturnCryoQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 					v += (1.05 - value) * ((Sat->GetMissionTime() - O2FAILURETIME) / 5.0);
 				}
 			}
-			oapiBlt(drawSurface, NeedleSurface,  311, (130 - (int)(v * 20.8)), 10, 0, 10, 10, SURF_PREDEF_CK);
+			oapiBlt(drawSurface, NeedleSurface, 311, (129 - (int)(v * 20.6)), 10, 0, 10, 10, SURF_PREDEF_CK);
 		}
 	}
 }
@@ -431,98 +437,156 @@ void SaturnFuelCellMeter::Init(SURFHANDLE surf, SwitchRow &row, Saturn *s, Rotat
 }
 
 
-double SaturnFuelCellH2FlowMeter::QueryValue()
+double SaturnFuelCellH2FlowMeter::QueryValue() //returns scaled voltage for meter
 {
-	//please redo this with FuelCellIndicatorsSwitch chosing which FlowSensor powers the gauge or something less horrible than my if structure
-	double value = 0.0;
+	double XducerV;
+	double MeterV;
 	int state = FuelCellIndicatorsSwitch->GetState();
+
 	if (state == 0) {
-		value = Sat->FCH2FlowSensor1.Voltage();
+		XducerV = Sat->FCH2FlowSensor1.Voltage();
 	}
 	else if (state == 1) {
-		value = Sat->FCH2FlowSensor2.Voltage();
+		XducerV = Sat->FCH2FlowSensor2.Voltage();
 	}
 	else {
-		value = Sat->FCH2FlowSensor3.Voltage();
+		XducerV = Sat->FCH2FlowSensor3.Voltage();
 	}
 
-	return value*0.04;
+	if (XducerV <= 0.0) // 0.0 lb/hr
+	{
+		MeterV = 0.0;
+	}
+
+	else if (XducerV <= 1.051) // 0.040 lb/hr
+	{
+		MeterV = -0.030499699482334*pow(XducerV, 4) + 0.452704244711636*pow(XducerV, 3) - 0.411609259201163*pow(XducerV, 2) + 0.480197442231626*XducerV - 0.000000111566335;
+	}
+
+	else if (XducerV <= 3.810) // 0.150 lb/hr
+	{
+		MeterV = 0.000013343349451*pow(XducerV, 4) + 0.000281791115131*pow(XducerV, 3) + 0.013711415422193*pow(XducerV, 2) + 1.21186864722573*XducerV - 0.840419756553562;
+	}
+
+	else if (XducerV <= 5.0)
+	{
+		MeterV = -0.350205797083618*pow(XducerV, 4) + 6.29887068994609*pow(XducerV, 3) - 42.7703507882545*pow(XducerV, 2) + 130.747806191626*XducerV - 147.960473303941;
+	}
+
+	else
+	{
+		MeterV = 5.0;
+	}
+
+	return MeterV;
 }
 
 void SaturnFuelCellH2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	if (v < 0.05)
-		oapiBlt(drawSurface, NeedleSurface, 0, (111 - (int)(v / 0.05 * 21.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-	else if (v < 0.15)
-		oapiBlt(drawSurface, NeedleSurface, 0, (90 - (int)((v - 0.05) / 0.1 * 65.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
-	else
-		oapiBlt(drawSurface, NeedleSurface, 0, (25 - (int)((v - 0.15) / 0.05 * 21.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface, 0, (109 - (int)(v * 20.6)), 0, 0, 10, 10, SURF_PREDEF_CK);
+
+	//sprintf(oapiDebugString(), "flow %lf xducerv %lf v %lf QV %lf", Sat->FCH2FlowSensor1.GetValue(), Sat->FCH2FlowSensor1.Voltage(), v, QueryValue());
 }
 
 
-double SaturnFuelCellO2FlowMeter::QueryValue()
+double SaturnFuelCellO2FlowMeter::QueryValue() //returns scaled voltage for meter
 {
-	//please redo this with FuelCellIndicatorsSwitch chosing which FlowSensor powers the gauge or something less horrible than my if structure
-	double value = 0.0;
+	double XducerV;
+	double MeterV;
 	int state = FuelCellIndicatorsSwitch->GetState();
+
 	if (state == 0) {
-		value = Sat->FCO2FlowSensor1.Voltage();
+		XducerV = Sat->FCO2FlowSensor1.Voltage();
 	}
 	else if (state == 1) {
-		value = Sat->FCO2FlowSensor2.Voltage();
+		XducerV = Sat->FCO2FlowSensor2.Voltage();
 	}
 	else {
-		value = Sat->FCO2FlowSensor3.Voltage();
+		XducerV = Sat->FCO2FlowSensor3.Voltage();
 	}
 
-	return value/3.125;
+	if (XducerV <= 0.0) // 0.0 lb/hr
+	{
+		MeterV = 0.0;
+	}
+
+	else if (XducerV <= 1.020) // 0.3 lb/hr
+	{
+		MeterV = 0.014098120198469*pow(XducerV, 4) + 0.223221958673093*pow(XducerV, 3) - 0.045838072030173*pow(XducerV, 2) + 0.291344081544595*XducerV - 0.000000000013565;
+	}
+
+	else if (XducerV <= 3.852) // 1.2 lb/hr
+	{
+		MeterV = 0.000064440349774*pow(XducerV, 4) + 0.000520370915327*pow(XducerV, 3) + 0.020695228302543*pow(XducerV, 2) + 1.14397528372564*XducerV - 0.739232564556853;
+	}
+
+	else if (XducerV <= 5.0) // 1.6 lb/hr
+	{
+		MeterV = 0.030566201268812*pow(XducerV, 4) - 0.156004160047441*pow(XducerV, 3) - 2.02427636007929*pow(XducerV, 2) + 17.3575089533921*XducerV - 30.783991552232;
+	}
+
+	else
+	{
+		MeterV = 5.0;
+	}
+
+	return MeterV;
 }
 
 void SaturnFuelCellO2FlowMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	if (v < 0.4)
-		oapiBlt(drawSurface, NeedleSurface, 53, (111 - (int)(v / 0.4 * 21.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else if (v < 1.2)
-		oapiBlt(drawSurface, NeedleSurface, 53, (90 - (int)((v - 0.4) / 0.8 * 65.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else
-		oapiBlt(drawSurface, NeedleSurface, 53, (25 - (int)((v - 1.2) / 0.4 * 21.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface, 53, (109 - (int)(v * 20.6)), 10, 0, 10, 10, SURF_PREDEF_CK);
+
+	//sprintf(oapiDebugString(), "flow %lf xducerv %lf v %lf QV %lf", Sat->FCO2FlowSensor1.GetValue(), Sat->FCO2FlowSensor1.Voltage(), v, QueryValue());
 }
 
 
-double SaturnFuelCellTempMeter::QueryValue()
+double SaturnFuelCellTempMeter::QueryValue() //returns scaled voltage for meter
 {
-	double inputFromSCE = (Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 6)); // 0-5V range
-	double gaugeOutput = 0.0;
+	double SCEVolts = Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 6);
+	double MeterV;
 
-	if (inputFromSCE < 3.404) {
-		gaugeOutput = inputFromSCE * 0.779;
+	if (SCEVolts < 3.670)
+	{
+		MeterV = 0.719117056156418*SCEVolts + 0.014535504998879;
 	}
-	else if (inputFromSCE < 4.468) {
-		gaugeOutput = (inputFromSCE-3.404) * 1.733 + 2.653;
-	}
-	else {
-		gaugeOutput = (inputFromSCE-4.468) * 0.945 + 4.497;
-	}
+	else
+		MeterV = -1.245728362366210*pow(SCEVolts, 4) + 21.555110610090500*pow(SCEVolts, 3) - 139.540785275859000*pow(SCEVolts, 2) + 402.127332241837000*SCEVolts - 432.923106966540000;
 
-	
-	//sprintf(oapiDebugString(), "%lf %lf", inputFromSCE, gaugeOutput);
-	return gaugeOutput;
+	return MeterV;
 }
 
 void SaturnFuelCellTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	oapiBlt(drawSurface, NeedleSurface, 86, 112 - (int)(v * 21.6), 0, 0, 10, 10, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface, 86, 109 - (int)(v * 20.6), 0, 0, 10, 10, SURF_PREDEF_CK);
+
+	//sprintf(oapiDebugString(), "v %lf QV %lf", v, QueryValue());
 }
 
 
-double SaturnFuelCellCondenserTempMeter::QueryValue()
+double SaturnFuelCellCondenserTempMeter::QueryValue() //returns scaled voltage for meter
 {
-	return (Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 3)*21.0 + 145.0);
+	double SCEVolts = Sat->GetSCE()->GetVoltage(2, FuelCellIndicatorsSwitch->GetState() + 3);
+	double MeterV = 0.000941918166177*pow(SCEVolts, 5) - 0.009069653653491*pow(SCEVolts, 4) + 0.040305650554429*pow(SCEVolts, 3) - 0.088756050044652*pow(SCEVolts, 2) + 1.030785609061760*SCEVolts - 0.251417380779603;
+
+	if (MeterV < 0.0)
+	{
+		return 0.0;
+	}
+	else if (MeterV > 5.0)
+	{
+		return 5.0;
+	}
+	else
+
+		return MeterV;
 }
 
 void SaturnFuelCellCondenserTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	oapiBlt(drawSurface, NeedleSurface, 139, (109 - (int)((v - 150.0) / 100.0 * 103.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface, 139, 109 - (int)(20.6 * v), 10, 0, 10, 10, SURF_PREDEF_CK);
+
+	//sprintf(oapiDebugString(), "v %lf QV %lf pixel %lf", v, QueryValue(), (v*20.6));
 }
 
 
@@ -541,7 +605,7 @@ double SaturnSuitTempMeter::QueryValue()
 
 void SaturnSuitTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	oapiBlt(drawSurface, NeedleSurface,  1, (110 - (int)((v - 20.0) / 75.0 * 104.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface, 1, (109 - (int)((v * 1.3733333340) - 27.4666666660)), 0, 0, 10, 10, SURF_PREDEF_CK);
 }
 
 
@@ -552,7 +616,7 @@ double SaturnCabinTempMeter::QueryValue()
 
 void SaturnCabinTempMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	oapiBlt(drawSurface, NeedleSurface,  53, (110 - (int)((v - 40.0) / 80.0 * 104.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface, 53, (109 - (int)((v * 1.2117647056) - 48.4705882359)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
 
 
@@ -563,21 +627,21 @@ double SaturnSuitPressMeter::QueryValue()
 
 void SaturnSuitPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	if (v < 6.0)
-		oapiBlt(drawSurface, NeedleSurface,  101, (108 - (int)(v / 6.0 * 55.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+	if (v <= 6.0)
+		oapiBlt(drawSurface, NeedleSurface, 101, (109 - (int)(v * 8.5833333333)), 0, 0, 10, 10, SURF_PREDEF_CK); //scaling done in meter for now, should be done by sensor itself?
 	else
-		oapiBlt(drawSurface, NeedleSurface,  101, (53 - (int)((v - 6.0) / 10.0 * 45.0)), 0, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(drawSurface, NeedleSurface, 101, (109 - (int)((v * 4.6818181818) + 23.4090909091)), 0, 0, 10, 10, SURF_PREDEF_CK);
 }
 
 void SaturnSuitPressMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = GetDisplayValue();
 
-	if (v < 6.0) {
-		OurVessel->SetAnimation(anim_switch, v / 11.0);
+	if (v <= 6.0) {
+		OurVessel->SetAnimation(anim_switch, (v * 0.0833333333));
 	}
 	else {
-		OurVessel->SetAnimation(anim_switch, (v / 22.0) + (3.0 / 11.0));
+		OurVessel->SetAnimation(anim_switch, (v * 0.0454545455) + 0.2272727273);
 	}
 }
 
@@ -588,39 +652,38 @@ double SaturnCabinPressMeter::QueryValue()
 
 void SaturnCabinPressMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	if (v < 6.0)
-		oapiBlt(drawSurface, NeedleSurface,  153, (108 - (int)(v / 6.0 * 55.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+	if (v <= 6.0)
+		oapiBlt(drawSurface, NeedleSurface, 153, (109 - (int)(v * 8.5833333333)), 10, 0, 10, 10, SURF_PREDEF_CK); //scaling done in meter for now, should be done by sensor itself?
 	else
-		oapiBlt(drawSurface, NeedleSurface,  153, (53 - (int)((v - 6.0) / 10.0 * 45.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+		oapiBlt(drawSurface, NeedleSurface, 153, (109 - (int)((v * 4.6818181818) + 23.4090909091)), 10, 0, 10, 10, SURF_PREDEF_CK);
 }
 
 void SaturnCabinPressMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 	double v = GetDisplayValue();
 
-	if (v < 6.0) {
-		OurVessel->SetAnimation(anim_switch, v / 11.0);
+	if (v <= 6.0) {
+		OurVessel->SetAnimation(anim_switch, (v * 0.0833333333));
 	}
 	else {
-		OurVessel->SetAnimation(anim_switch, (v / 22.0) + (3.0 / 11.0));
+		OurVessel->SetAnimation(anim_switch, (v * 0.0454545455) + 0.2272727273);
 	}
 }
 
 double SaturnPartPressCO2Meter::QueryValue()
 {
-	return pow(Sat->CO2PartPressSensor.Voltage(), 2)*30.0 / 25.0;
+	return pow(Sat->CO2PartPressSensor.Voltage(), 1.9808911771) * 1.2374787219; //Returns value from voltage, reversing the voltage equation in the sensor
 }
 
 void SaturnPartPressCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	if (v < 10.0)
-		oapiBlt(drawSurface, NeedleSurface, 215, (109 - (int)(v / 10.0 * 55.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else if (v < 15.0)
-		oapiBlt(drawSurface, NeedleSurface, 215, (54 - (int)((v - 10.0) / 5.0 * 19.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else if (v < 20.0)
-		oapiBlt(drawSurface, NeedleSurface, 215, (35 - (int)((v - 15.0) / 5.0 * 15.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
-	else
-		oapiBlt(drawSurface, NeedleSurface, 215, (20 - (int)((v - 20.0) / 10.0 * 14.0)), 10, 0, 10, 10, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface, 215, (109 - (int)(pow(v, 0.5048232894) * 18.4991602291)), 10, 0, 10, 10, SURF_PREDEF_CK); //Scales CO2 meter 0-30
+}
+
+void SaturnPartPressCO2Meter::OnPostStep(double SimT, double DeltaT, double MJD)
+{
+	double v = GetDisplayValue();
+	OurVessel->SetAnimation(anim_switch, (pow(v, 0.5048232894) * 0.1796034974)); //Scales VC meter 0-1
 }
 
 void SaturnRoundMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s)
@@ -1769,6 +1832,7 @@ void SaturnEMSDvDisplay::Init(SURFHANDLE digits, SwitchRow &row, Saturn *s)
 	MeterSwitch::Init(row);
 	Digits = digits;
 	Sat = s;
+	minMaxTime = 0;	// Don't animate/interpolate between reported values
 }
 
 void SaturnEMSDvDisplay::DoDrawSwitch(double v, SURFHANDLE drawSurface)

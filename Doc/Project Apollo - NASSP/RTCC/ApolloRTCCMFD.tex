@@ -1153,10 +1153,10 @@ for a vector fetch, a time of abort, and maneuver targets. This type of manual e
 \newpage
 \subsection{Skylab Launch Window Processor}
 
-The launch window processor (LWP) can be used to calculate the optimal liftoff time and launch targeting parameters for Saturn IB missions to a rendezvous target in orbit, such as Skylab and ASTP. At present there is no capability to stop and re-start the countdown for Saturn launches, so only at the predetermined time in a launch scenario can the launch be done. The liftoff time options other than input time should therefore not used for now.\\
-
+The launch window processor (LWP) can be used to calculate the optimal liftoff time and launch targeting parameters for Saturn IB missions to a rendezvous target in orbit, such as Skylab and ASTP. In the input descriptions below GMTLO* refers to the lift-off time that is required to achieve zero phase angle to the target at insertion.
 \subsubsection{Inputs}
 
+\textbf{TGT:} Select target vehicle in orbit for rendezvous.\\
 \textbf{LOT:} Liftoff time option. The options are: 
 
 \begin{itemize}
@@ -1168,15 +1168,35 @@ The launch window processor (LWP) can be used to calculate the optimal liftoff t
 \item{"In-plane with nodal regression", iterate on lift-off on inplane launch time based on target orbit phase angle (final GMTLO = TYAW + TRANS).}
 \end{itemize}
 
-\textbf{TLO:} Input liftoff time.\\
+\textbf{CKFACT:} Chaser vehicle K-factor (drag multiplier). Not used yet.\\
+\textbf{CAREA:} Chaser vehicle reference area. Not used yet.\\
+\textbf{CWHT:} Chaser vehicle weight at insertion. Not used yet.\\
+\textbf{NS:} Compute a launch using the northerly or southerly launch opportunity.\\
+\textbf{DAY:} Day on which launch times are computed, relative to base date.\\
+\textbf{PFT:} Powered flight time.\\
+\textbf{PFA:} Powered flight arc.\\
+\textbf{YSMAX:} Yaw steering limit.\\
+\textbf{DTOPT:} Delta time to be subtracted from analytical inplane launch time to obtain empirical inplane launch time.\\
+\textbf{DTGRR:} Delta time from lift-off, which defines the time of guidance reference release.\\
 \textbf{RINS:} Radius of insertion in meters.\\
 \textbf{VINS:} Velocity of insertion in meters per second.\\
-\textbf{GINS:} Flight-path angle of insertion in degrees.\\
-\textbf{PHA:} Expected phase angle at insertion. The default option is 90-270$^{\circ}$, which should work for most of the 0-360$^{\circ}$ range. Near 360$^{\circ}$ some difficulty to converge could arise, so if a calculation fails then switching this option to 270-540$^{\circ}$ can help. Other than that there should be no need to change the default value.\\
-
-\textbf{TGT:} Select target vehicle in orbit for rendezvous.\\
-\textbf{NOF:} Flag for option to compute differential nodal regression from insertion to rendezvous.\\
-\textbf{DNO:} Angle that is added to the target descending node to account for differential nodal regression.\\
+\textbf{GAMINS:} Flight-path angle of insertion in degrees.\\
+\textbf{GMTLOR:} Threshold or actual lift-off time for LOT options that require an input time.\\
+\textbf{OFFSET:} Phase angle desired at insertion.\\
+\textbf{BIAS:} Bias that is added to GMTLO* to produce lift-off time.\\
+\textbf{TRANS:} Delta time added to inplane time to obtain lift-off time.\\
+\textbf{INSCO:} Insertion cutoff conditions options:
+\begin{itemize}
+\item{"Input VINS, GAMINS, RINS", use the input parameters for insertion.}
+\item{"Input GAMINS, RINS and height difference", calculate the insertion velocity to achieve the height difference DHW to the target at apogee after insertion.}
+\item{"Input GAMINS, RINS, altitude at angle from insertion", calculate the insertion velocity to achieve the altitude DHW at the angle DU after insertion.}
+\end{itemize}
+\textbf{DHW:} Desired height difference between chaser and target, or altitude of chaser at input angle from insertion.\\
+\textbf{DU:} Angle from insertion to obtain a given altitude or delta altitude.\\
+\textbf{ANOM:} Nominal semimajor axis at insertion, used for an initial guess of the insertion velocity in the INSCO options that calculate it.\\
+\textbf{DELNOF:} Flag for option to compute differential nodal regression from insertion to rendezvous.\\
+\textbf{DELNO:} Angle that is added to the target descending node to account for differential nodal regression.\\
+\textbf{PHASE:} Expected phase angle at insertion. The default option is 90-270$^{\circ}$, which should work for most of the 0-360$^{\circ}$ range. Near 360$^{\circ}$ some difficulty to converge could arise, so if a calculation fails then switching this option to 270-540$^{\circ}$ can help. Other than that there should be no need to change the default value.\\
 \textbf{DIS:} Go to launch targeting display.\\ 
 \textbf{BCK:} Go back to utilities page.\\
 

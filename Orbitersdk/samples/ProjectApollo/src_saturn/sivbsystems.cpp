@@ -1550,14 +1550,21 @@ void SIVBSystems::SetAPSAttitudeEngine(int n, bool on)
 {
 	if (apsThrusters[0])
 	{
+		double Level;
+
 		if (on)
 		{
-			vessel->SetThrusterLevel(apsThrusters[n], 1.0);
+			Level = vessel->GetThrusterLevel(apsThrusters[n]);
+
+			//On the first timestep when an APS thruster is fired, cause a minimum impulse firing (7.5 lbf-sec impulse with 150 lbf thrust equals 50 milliseconds)
+			Level += 0.05 / oapiGetSimStep();
+			Level = min(1.0, Level);
 		}
 		else
 		{
-			vessel->SetThrusterLevel(apsThrusters[n], 0.0);
+			Level = 0.0;
 		}
+		vessel->SetThrusterLevel(apsThrusters[n], Level);
 	}
 }
 

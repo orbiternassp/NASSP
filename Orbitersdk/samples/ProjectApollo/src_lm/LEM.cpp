@@ -596,10 +596,14 @@ void LEM::Init()
 	flashlightColor = { 1,1,1,0 };
 	flashlightColor2 = { 0,0,0,0 };
 	flashlightPos = { 0,0,0 };
-	vesselPosGlobal = { 0,0,0 };
-	flashlightDirGlobal = { 0,0,1 };
 	flashlightDirLocal = { 0,0,1 };
 	flashlightOn = 0;
+
+	//
+	// FloodLights
+	//
+	floodLight_Right = 0;
+	floodLight_Left = 0;
 
 	DPSPropellant.SetVessel(this);
 	APSPropellant.SetVessel(this);
@@ -1417,6 +1421,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	if ((oapiGetFocusObject() == GetHandle()) && (oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
 		//We have focus on this vessel, and are in the VC
 		MoveFlashlight();
+		UpdateFloodLights();
 	}
 }
 

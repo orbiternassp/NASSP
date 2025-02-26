@@ -5695,3 +5695,19 @@ void RNDZXPDRSystem::SaveState(FILEHANDLE scn)
 
 	oapiWriteScenario_string(scn, "RNDZXPDRSystem", buffer);
 }
+
+void CTE::Init(CircuitBrakerSwitch* mna, CircuitBrakerSwitch* mnb)
+{
+	cte_mna = mna;
+	cte_mnb = mnb;
+}
+
+bool CTE::IsPowered()
+{
+	return cte_mna->Voltage() > SP_MIN_DCVOLTAGE || cte_mnb->Voltage() > SP_MIN_DCVOLTAGE;
+}
+
+bool CTE::TimingSignal()
+{
+	return IsPowered();
+}
