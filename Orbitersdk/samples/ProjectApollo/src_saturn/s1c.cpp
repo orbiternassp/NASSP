@@ -44,11 +44,11 @@ void S1C::InitS1c()
 
 	State = SIC_STATE_HIDDEN;
 
-	ph_retro = 0;
-	ph_main = 0;
+	ph_retro = nullptr;
+	ph_main = nullptr;
 
-	thg_retro = 0;
-	thg_main = 0;
+	thg_retro = nullptr;
+	thg_main = nullptr;
 
 	EmptyMass = 137000.0;
 	MainFuel = 2077000.0;
@@ -69,13 +69,13 @@ void S1C::InitS1c()
 
 	CurrentThrust = 0.0;
 
-	hsat5stg1 = 0;
-	hsat5stg1low = 0;
+	hsat5stg1 = nullptr;
+	hsat5stg1low = nullptr;
 
 	for (i = 0; i < 4; i++)
-		th_retro[i] = 0;
+		th_retro[i] = nullptr;
 
-	th_main[0] = 0;
+	th_main[0] = nullptr;
 }
 
 void S1C::SetS1c()
