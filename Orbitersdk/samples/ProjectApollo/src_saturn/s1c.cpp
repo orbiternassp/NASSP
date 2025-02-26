@@ -53,6 +53,7 @@ void S1C::InitS1c()
 	EmptyMass = 137000.0;
 	MainFuel = 2077000.0;
 	EngineNum = 5;
+	RetroNum = 4;
 
 	RetrosFired = false;
 	LowRes = false;
