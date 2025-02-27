@@ -1716,7 +1716,7 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_14, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_14, _V(0.2, 0.437, 0.268) + ofs, _V(0.280, 0.437, 0.268) + ofs, _V(0.2, 0.365, 0.243) + ofs, _V(0.280, 0.365, 0.243) + ofs);
 
-	// Covering floodlight
+	// Front of floodlight
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_15, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_15, _V(0.270, 0.995, -0.331) + ofs, _V(0.350, 0.995, -0.331) + ofs, _V(0.270, 0.863, -0.26) + ofs, _V(0.350, 0.863, -0.26) + ofs);
 
@@ -1728,7 +1728,6 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_17, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_17, _V(0.95, 0.953, 0.08) + ofs, _V(1.02, 0.885, 0.06) + ofs, _V(1.12, 0.964, -0.144) + ofs, _V(1.026, 1.06, -0.117) + ofs);
 }
-
 
 // --------------------------------------------------------------
 // Respond to virtual cockpit mouse event
