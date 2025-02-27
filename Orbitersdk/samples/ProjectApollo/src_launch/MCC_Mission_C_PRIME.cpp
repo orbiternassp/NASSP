@@ -43,10 +43,10 @@ void MCC::MissionSequence_C_Prime()
 		UpdateMacro(UTP_NONE, PT_NONE, true, 2, MST_CP_EPO2);
 		break;
 	case MST_CP_EPO2: //TLI+90 Maneuver PAD to TLI+5h Maneuver PAD
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0*60.0, 3, MST_CP_EPO3);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 3.0*60.0, 3, MST_CP_EPO3);
 		break;
 	case MST_CP_EPO3: //TLI+5h P37 PAD to TLI PAD
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 5.0*60.0, 4, MST_CP_EPO4);
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, SubStateTime > 3.0*60.0, 4, MST_CP_EPO4);
 		break;
 	case MST_CP_EPO4: //TLI PAD to TLI Evaluation
 		UpdateMacro(UTP_PADONLY, PT_TLIPAD, mcc_calcs.GETEval(rtcc->calcParams.TLI + 18.0), 5, MST_CP_TRANSLUNAR1);
