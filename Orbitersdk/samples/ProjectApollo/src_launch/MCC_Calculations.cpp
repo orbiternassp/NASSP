@@ -255,7 +255,7 @@ void MCC_Calculations::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV
 {
 	//Plan: Phasing (fixed TIG), Insertion, CSI 50 minutes after Insertion, CDH, TPI at orbital midnight (Apollo 10)
 
-	LambertMan lamopt, lamopt2;
+	TwoImpulseOpt lamopt, lamopt2;
 	TwoImpulseResuls lamres;
 	double GETbase, t_sv0, t_Phasing, t_Insertion, dt, t_CSI, ddt, T_P, dv_CSI, t_CDH, dt_TPI, t_TPI_apo;
 	VECTOR3 dV_Phasing, dV_Insertion, R_P_CDH1, V_P_CDH1;
@@ -273,15 +273,15 @@ void MCC_Calculations::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV
 
 	sv_P0 = pRTCC->StateVectorCalc(target);
 
-	lamopt.mode = 0;
-	lamopt.N = 0;
-	lamopt.Offset = _V(-270.0*1852.0, 0.0, 60.0*1852.0 - 60000.0*0.3048);
-	lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;
-	lamopt.T1 = t_Phasing;
-	lamopt.sv_P = sv_P0;
+	lamopt.mode = 5; //External request
+	lamopt.DH = 60.0*1852.0 - 60000.0*0.3048; //Aiming for 60000 ft altitude
+	lamopt.PhaseAngle = 15.509*RAD; //270 NM behind CSM
+	lamopt.T1 = pRTCC->GMTfromGET(t_Phasing);
+	lamopt.sv_P = pRTCC->ConvertSVtoEphemData(sv_P0);
 
 	lamopt2 = lamopt;
-	lamopt2.Offset = _V(-147.0*1852.0, 0.0, 14.7*1852.0);
+	lamopt2.DH = 14.7*1852.0; //14.7 NM
+	lamopt2.PhaseAngle = 8.4436*RAD; //147 NM behind
 
 	t_sv0 = OrbMech::GETfromMJD(sv_A0.MJD, GETbase);
 	sv_Phasing = pRTCC->coast(sv_A0, t_Phasing - t_sv0);
@@ -292,10 +292,10 @@ void MCC_Calculations::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV
 		//Phasing Targeting
 		t_Insertion = t_Phasing + dt;
 
-		lamopt.T2 = t_Insertion;
-		lamopt.sv_A = sv_Phasing;
+		lamopt.T2 = pRTCC->GMTfromGET(t_Insertion);
+		lamopt.sv_A = pRTCC->ConvertSVtoEphemData(sv_Phasing);
 
-		pRTCC->LambertTargeting(&lamopt, lamres);
+		pRTCC->PMSTICN(lamopt, lamres);
 		dV_Phasing = lamres.dV;
 
 		sv_Phasing_apo = sv_Phasing;
@@ -304,11 +304,11 @@ void MCC_Calculations::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV
 		//Insertion Targeting
 		t_CSI = t_Insertion + dt2;
 
-		lamopt2.T1 = t_Insertion;
-		lamopt2.T2 = t_CSI;
-		lamopt2.sv_A = sv_Phasing_apo;
+		lamopt2.T1 = pRTCC->GMTfromGET(t_Insertion);
+		lamopt2.T2 = pRTCC->GMTfromGET(t_CSI);
+		lamopt2.sv_A = pRTCC->ConvertSVtoEphemData(sv_Phasing_apo);
 
-		pRTCC->LambertTargeting(&lamopt2, lamres);
+		pRTCC->PMSTICN(lamopt2, lamres);
 		dV_Insertion = lamres.dV;
 
 		sv_Insertion = pRTCC->coast(sv_Phasing_apo, t_Insertion - t_Phasing);
@@ -390,8 +390,8 @@ void MCC_Calculations::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV
 		sprintf(Buffer, "TIG %s DV %.1lf %.1lf %.1lf", Buffer2, DV_LVLH.x, DV_LVLH.y, DV_LVLH.z);
 		oapiWriteLog(Buffer);
 		OrbMech::periapo(sv_after.R, sv_after.V, OrbMech::mu_Moon, r_apo, r_peri);
-		h_apo = r_apo - BZLAND.rad[0];
-		h_peri = r_peri - BZLAND.rad[0];
+		h_apo = r_apo - pRTCC->BZLAND.rad[0];
+		h_peri = r_peri - pRTCC->BZLAND.rad[0];
 		sprintf(Buffer, "HA %.2lf HP %.2lf", h_apo / 1852.0, h_peri / 1852.0);
 		oapiWriteLog(Buffer);
 	}
