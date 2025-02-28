@@ -1090,6 +1090,7 @@ void SaturnDCVoltMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Satur
 
 double SaturnDCVoltMeter::QueryValue()
 {
+	//Fuel Cells Return Zero
 	if (DCIndicatorSwitch->GetState() <= 2)
 	{
 		return 0.0;
