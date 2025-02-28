@@ -231,6 +231,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_uplink);
 
 			sprintf(form->purpose, "TLI+90");
+			sprintf(form->remarks, "No ullage, high speed procedure not required");
+
 			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 			if (upString != NULL) {
 				// give to mcc
@@ -241,6 +243,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		else
 		{
 			sprintf(form->purpose, "TLI+4");
+			sprintf(form->remarks, "No ullage, high speed procedure not required");
 
 			//Save parameters for further use
 			SplashLatitude = res.latitude;
@@ -275,6 +278,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		//Set anchor vector time to 0, so that no trajectory updates are done anymore
 		EZANCHR1.AnchorVectors[9].Vector.GMT = 0.0;
+
+		sprintf(form->remarks, "TLI 10-minute abort pitch, 199°");
 	}
 	break;
 	case 6: //TLI Evaluation
