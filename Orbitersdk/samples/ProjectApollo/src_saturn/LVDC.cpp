@@ -6662,7 +6662,8 @@ void LVDCSV::TimeBaseChangeRoutine()
 void LVDCSV::InterruptProcessing()
 {
 	//Timer 1 always counts down wrapping around through 0 and generates an interrupt when it hits 0.
-	Timer1Counter = (Timer1Counter - 1) & 403;
+	Timer1Counter--;
+	if (Timer1Counter < 0) Timer1Counter = 403;
 	if (Timer1Counter == 0)
 	{
 		Timer1Overflow = true;
@@ -6784,6 +6785,8 @@ void LVDCSV::Timer1Interrupt(bool timer1schedule)
 {
 	if (timer1schedule == false)
 	{
+		//fprintf(lvlog, "T1 Interrupt at GRR+%lf for function %d\r\n", TMM, GST1M);
+
 		DFIL3 = true;
 		switch (GST1M)
 		{
@@ -6831,6 +6834,11 @@ void LVDCSV::Timer1Interrupt(bool timer1schedule)
 		}
 	}
 
+	if (Timer1Counter < 1)
+	{
+		Timer1Counter = 1;
+	}
+
 	//fprintf(lvlog, "T1 Interrupt. Counter %d\r\n", Timer1Counter);
 }
 
@@ -6838,7 +6846,7 @@ void LVDCSV::Timer2Interrupt(bool timer2schedule)
 {
 	if (timer2schedule == false)
 	{
-		//fprintf(lvlog, "T2 Interrupt at GRR+%lf\r\n", TMM);
+		//fprintf(lvlog, "T2 Interrupt at GRR+%lf for function %d\r\n", TMM, DGST2);
 		//Lock T2 Interrupt
 		DVIH[INT11_Timer2Interrupt] = true;
 		//Set T2 interrupt in progress indicator
@@ -7842,12 +7850,17 @@ void LVDCSV::IterativeGuidanceMode()
 				T_GO = T_3;
 				DT_N = 0.7; //HSL takes about 0.7 seconds to run
 				//fprintf(lvlog, "HSL = true, GATE5 = true, T_GO = %f\r\n", T_GO);
-				//Set up engine pump purge control valve enable on sequence on first S-IVB burn
 				if (BOOST)
 				{
+					//Set up engine pump purge control valve enable on sequence on first S-IVB burn
 					DVASW = DVASW | MSKSSSPEC;
-					SwitchSelectorProcessor(0);
 				}
+				else
+				{
+					//Set up S-IVB cutoff sequence on second S-IVB burn
+					DVASW = DVASW | MSKSSS4C0;
+				}
+				SwitchSelectorProcessor(0);
 			}
 			if (BOOST == true) {
 				//fprintf(lvlog, "BOOST-TO-ORBIT ACTIVE\r\n");
@@ -9053,25 +9066,25 @@ void LVDCSV::MinorLoop(int entry)
 
 void LVDCSV::CutoffLogic()
 {
-	if (ModeCode25[MC25_FirstSIVBCutoffCommand] == false && HSL == true && S4B_IGN == true)
+	if (HSL)
 	{
-		//Accounts for an average half minor loop delay
-		if (T_CO - TMM <= 0.02)
+		if ((S4B_IGN && ModeCode25[MC25_FirstSIVBCutoffCommand] == false) || (S4B_REIGN && ModeCode26[MC26_SecondSIVBCutoffCommand] == false))
 		{
-			SwitchSelectorProcessor(8);
-			fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
-			ModeCode25[MC25_FirstSIVBCutoffCommand] = true;
-		}
-	}
-	if (ModeCode26[MC26_SecondSIVBCutoffCommand] == false && HSL == true && S4B_REIGN == true)
-	{
-		//Accounts for an average half minor loop delay and also a 20ms delay in issuing the cutoff command
-		if (T_CO - TMM <= 0.04)
-		{
-			DVASW = DVASW | MSKSSS4C1;
-			SwitchSelectorProcessor(0);
-			fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
-			ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
+			//Accounts for an average half minor loop delay
+			if (T_CO - TMM <= 0.02)
+			{
+				SwitchSelectorProcessor(8);
+				fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
+
+				if (S4B_IGN)
+				{
+					ModeCode25[MC25_FirstSIVBCutoffCommand] = true;
+				}
+				else
+				{
+					ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
+				}
+			}
 		}
 	}
 }
