@@ -4072,9 +4072,9 @@ public:
 		double GETTH_CSM = 0.0;
 		double GETTH_LM = 0.0;
 		std::string MAN_VEH;
-		std::string GETFRZ;
-		std::string GMTFRZ;
-		std::string GETVAR;
+		char GETFRZ = ' ';
+		char GMTFRZ = ' ';
+		char GETVAR = ' ';
 		std::string OPTION;
 		double WT = 0.0;
 		double PHASE = 0.0;

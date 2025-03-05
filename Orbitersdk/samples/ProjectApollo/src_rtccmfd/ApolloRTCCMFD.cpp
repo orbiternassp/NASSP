@@ -52,14 +52,19 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	}
 	GC = g_SC;                                  // Make the ApolloRTCCMFD instance Global Core point to the static core. 
 
-	//font = oapiCreateFont(w / 20, true, "Arial", FONT_NORMAL, 0);
-	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0);
-	font2 = oapiCreateFont(w * 2 / 51, true, "Courier", FONT_NORMAL, 0);
+	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0); //TBD: This does not actually give Courier
+	font2 = oapiCreateFont(w * 2 / 51, true, "Courier", FONT_NORMAL, 0); //TBD: This does not actually give Courier
+
 	font2vert = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 900);
 	fonttest = oapiCreateFont(w / 32, false, "Courier New", FONT_NORMAL, 0);
 	font3 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
 	font4 = oapiCreateFont(w / 31, true, "Courier", FONT_NORMAL, 0);
 	font5 = oapiCreateFont(w / 32, false, "Fixed", FONT_NORMAL, 0);
+
+	int hh = h;
+	font_mocr1 = oapiCreateFont(-(hh / 36), false, "Fixed");
+	font_mocr2 = oapiCreateFont(-(hh / 25), false, "Fixed");
+	font_mocr3 = oapiCreateFont(-(hh / 25), false, "Fixed");
 
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	pen2 = oapiCreatePen(1, 1, 0x00FFFFFF);
@@ -88,6 +93,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	IsCSM = true;
 	EnableCalculation = false;
 	ErrorMessage = false;
+	CW = CH = x = y = dy = 0;
 
 	LoadState();
 }
@@ -103,6 +109,9 @@ ApolloRTCCMFD::~ApolloRTCCMFD ()
 	oapiReleaseFont(font3);
 	oapiReleaseFont(font4);
 	oapiReleaseFont(font5);
+	oapiReleaseFont(font_mocr1);
+	oapiReleaseFont(font_mocr2);
+	oapiReleaseFont(font_mocr3);
 	oapiReleasePen(pen);
 	oapiReleasePen(pen2);
 
@@ -9631,7 +9640,7 @@ void ApolloRTCCMFD::GMPManeuverPointName(char *buffer, int point)
 		sprintf(buffer, "Apoapsis");
 		break;
 	case 1:
-		sprintf(buffer, "Equatorial crossing");
+		sprintf(buffer, "Equat. crossing");
 		break;
 	case 2:
 		sprintf(buffer, "Perigee");

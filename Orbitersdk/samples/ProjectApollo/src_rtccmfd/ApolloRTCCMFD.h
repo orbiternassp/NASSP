@@ -880,8 +880,14 @@ protected:
 	oapi::Font *font3;
 	oapi::Font *font4;
 	oapi::Font *font5;
+	oapi::Font *font_mocr1; //Used for displays with 28 x 56 dynamic characters
+	oapi::Font *font_mocr2; //Used for displays with 21 x 42 dynamic characters
+	oapi::Font *font_mocr3; //Guaranteed to give 25 lines
 	oapi::Pen *pen;
 	oapi::Pen *pen2;
+	int CW; //Character width
+	int CH; //Character height
+	int x, y, dy; //Display spacing helper variables
 	Saturn *saturn;
 	LEM *lem;
 	int screen;
@@ -924,6 +930,7 @@ private:
 	void PrintIUVessel(char *Buffer);
 	void PrintTargetVessel(char *Buffer);
 	void PrintUllage(char *Buffer, int Thruster, bool Use4Jets, double Duration);
+	void GetCharSize(oapi::Sketchpad*skp, int &CW, int &CH);
 };
 
 #endif // !__ApolloRTCCMFD_H

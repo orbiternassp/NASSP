@@ -34862,17 +34862,17 @@ void RTCC::PMDTIMP()
 
 	if (PZTIPREG.IVFLAG == 2)
 	{
-		TwoImpMultDispBuffer.GETFRZ = "2";
-		TwoImpMultDispBuffer.GMTFRZ = "2";
-		TwoImpMultDispBuffer.GETVAR = "1";
+		TwoImpMultDispBuffer.GETFRZ = '2';
+		TwoImpMultDispBuffer.GMTFRZ = '2';
+		TwoImpMultDispBuffer.GETVAR = '1';
 		TwoImpMultDispBuffer.GET1 = GETfromGMT(PZTIPREG.data[0].Time2);
 		TwoImpMultDispBuffer.GMT1 = PZTIPREG.data[0].Time2;
 	}
 	else
 	{
-		TwoImpMultDispBuffer.GETFRZ = "1";
-		TwoImpMultDispBuffer.GMTFRZ = "1";
-		TwoImpMultDispBuffer.GETVAR = "2";
+		TwoImpMultDispBuffer.GETFRZ = '1';
+		TwoImpMultDispBuffer.GMTFRZ = '1';
+		TwoImpMultDispBuffer.GETVAR = '2';
 		TwoImpMultDispBuffer.GET1 = GETfromGMT(PZTIPREG.data[0].Time1);
 		TwoImpMultDispBuffer.GMT1 = PZTIPREG.data[0].Time1;
 	}
