@@ -1042,7 +1042,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "LOI-1");
-		sprintf(form->remarks, "LM weight is %.0f", form->LMWeight);
+		sprintf(form->remarks, "LM weight is %.0f. N42 in P30 is HA %.1lf, HP %.1lf", form->LMWeight, form->HA_P30, form->HP_P30);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
