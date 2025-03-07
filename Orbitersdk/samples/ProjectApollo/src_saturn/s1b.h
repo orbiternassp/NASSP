@@ -97,29 +97,6 @@ enum S1bState
 	S1B_STATE_WAITING					///< S1b is idle after motor burnout.
 };
 
-class S1B;
-
-class SIBConnector : public Connector
-{
-public:
-	SIBConnector();
-	~SIBConnector();
-
-	void SetSIB(S1B *sat) { OurVessel = sat; };
-
-protected:
-	S1B *OurVessel;
-};
-
-class SIBtoSIVBConnector : public SIBConnector
-{
-public:
-	SIBtoSIVBConnector();
-	~SIBtoSIVBConnector();
-
-	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
-};
-
 ///
 /// This code simulates the seperated S1b stage. Basically it simulates thrust decay if there is any fuel 
 /// left, fires any retro rockets to push it away from the Saturn and then sits around waiting to be deleted.
@@ -182,12 +159,6 @@ public:
 
 	virtual SIBSystems* GetSIB() { return &sibsys; }
 
-	void SetH1ThrusterDir(int n, double beta_y, double beta_p);
-	void SwitchSelector(int channel);
-	bool GetLowLevelSensorsDry();
-	bool GetSIPropellantDepletionEngineCutoff();
-	void GetSIThrustOK(bool *ok);
-
 protected:
 
 	void AddEngines();
@@ -226,6 +197,4 @@ protected:
 	SIBSystems sibsys;
 	Pyro SIB_SIVB_Sep;
 	Sound LaunchS, SShutS;
-
-	SIBtoSIVBConnector sibSIVBConnector;
 };
