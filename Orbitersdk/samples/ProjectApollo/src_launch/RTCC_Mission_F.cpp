@@ -1140,7 +1140,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11ManeuverPAD(opt, *form);
 
 		sprintf(form->purpose, manname);
-		sprintf(form->remarks, "TUllage: 2 jet, 14 seconds");
+		sprintf(form->remarks, "Ullage: 2 jet, 14 seconds");
 		form->lat = res.latitude*DEG;
 		form->lng = res.longitude*DEG;
 		form->RTGO = res.RTGO;
