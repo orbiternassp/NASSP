@@ -988,7 +988,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "LOI-2");
-		sprintf(form->remarks, "Two-jet ullage for 17 seconds");
+		sprintf(form->remarks, "Ullage: 2 jet, 17 seconds");
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -1140,7 +1140,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11ManeuverPAD(opt, *form);
 
 		sprintf(form->purpose, manname);
-		sprintf(form->remarks, "Two-jet ullage for 14 seconds");
+		sprintf(form->remarks, "TUllage: 2 jet, 14 seconds");
 		form->lat = res.latitude*DEG;
 		form->lng = res.longitude*DEG;
 		form->RTGO = res.RTGO;
@@ -1902,7 +1902,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP11ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "Backup Insertion");
-		sprintf(form->remarks, "Four-jet ullage for 10 seconds");
+		sprintf(form->remarks, "Ullage: 4 jet, 10 seconds");
 
 		sv_Ins = ExecuteManeuver(sv_CSM, P30TIG, dV_LVLH, 0.0, RTCC_ENGINETYPE_CSMSPS);
 
@@ -2238,7 +2238,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			AP11ManeuverPAD(opt, *form);
 			sprintf(form->purpose, manname);
-			if (opt.enginetype == RTCC_ENGINETYPE_CSMSPS) sprintf(form->remarks, "Two-jet ullage for 14 seconds");
+			if (opt.enginetype == RTCC_ENGINETYPE_CSMSPS) sprintf(form->remarks, "Ullage: 2 jet, 14 seconds");
 			form->lat = res.latitude*DEG;
 			form->lng = res.longitude*DEG;
 			form->RTGO = res.RTGO;

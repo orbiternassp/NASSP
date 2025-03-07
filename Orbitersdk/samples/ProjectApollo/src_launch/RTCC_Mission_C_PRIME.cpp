@@ -311,6 +311,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			TLIplus = calcParams.TLI + 11.0*3600.0;
 			sprintf(manname, "TLI+11");
+			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd, Assumes no MCC-1");
 			entopt.t_Z = OrbMech::HHMMSSToSS(50.0, 4.0, 0.0);
 		}
 		else if (fcn == 11)
