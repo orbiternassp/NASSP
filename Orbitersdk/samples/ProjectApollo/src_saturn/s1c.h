@@ -34,6 +34,9 @@
 #include <string.h>
 
 #include "connector.h"
+#include "s1csystems.h"
+#include "PanelSDK/PanelSDK.h"
+#include "pyro.h"
 
 
 //
@@ -105,6 +108,29 @@ enum S1cState
 	SIC_STATE_HIDDEN = -1,				///< S1c is waiting for setup call.
 	S1C_STATE_SHUTTING_DOWN,			///< S1c is firing motors to jettison.
 	S1C_STATE_WAITING					///< S1c is idle after motor burnout.
+};
+
+class S1C;
+
+class SICConnector : public Connector
+{
+public:
+	SICConnector();
+	~SICConnector();
+
+	void SetSIC(S1C* sat) { OurVessel = sat; };
+
+protected:
+	S1C* OurVessel;
+};
+
+class SICtoSIIConnector : public SICConnector
+{
+public:
+	SICtoSIIConnector();
+	~SICtoSIIConnector();
+
+	bool ReceiveMessage(Connector* from, ConnectorMessage& m);
 };
 
 ///
@@ -216,4 +242,16 @@ protected:
 	THRUSTER_HANDLE th_retro[4], th_main[5];
 	THGROUP_HANDLE thg_retro, thg_main;
 	PROPELLANT_HANDLE ph_retro, ph_main;
+	DOCKHANDLE hDockSII;                         // docking connector to S-II
+
+	//Move us into the SICSystems class eventually
+	PanelSDK Panelsdk;
+	SICSystems* sicSystems;
+	Pyro* SICSIISepPyros;
+	SICtoSIIConnector sibSIVBConnector;
+	//***********************\\\
+
+	Sound LaunchS, SShutS;
+
+	
 };

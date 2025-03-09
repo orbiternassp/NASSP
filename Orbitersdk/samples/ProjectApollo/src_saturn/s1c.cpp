@@ -38,7 +38,6 @@ S1C::~S1C()
 }
 
 void S1C::InitS1c()
-
 {
 	int i;
 
@@ -111,7 +110,6 @@ void S1C::SetS1c()
 }
 
 void S1C::clbkPreStep(double simt, double simdt, double mjd)
-
 {	
 	if (State == SIC_STATE_HIDDEN)
 	{
@@ -323,7 +321,6 @@ void S1C::AddEngines()
 }
 
 void S1C::SetMainState(int s)
-
 {
 	MainState state;
 
@@ -336,7 +333,6 @@ void S1C::SetMainState(int s)
 }
 
 void S1C::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
-
 {
 	char *line;
 	float flt;
@@ -421,6 +417,7 @@ void S1C::clbkSetClassCaps (FILEHANDLE cfg)
 	VESSEL4::clbkSetClassCaps (cfg);
 	SetS1c();
 
+	//This could be a function
 	double td_mass = 2214000.0;
 	double td_width = 10.0;
 	double td_tdph = -49.0;
@@ -450,6 +447,10 @@ void S1C::clbkSetClassCaps (FILEHANDLE cfg)
 	td[3].pos.z = td_tdph + td_height;
 
 	SetTouchdownPoints(td, ntdp);
+	//****
+
+	SICSIISepPyros = new Pyro("SICSIISepPyros", Panelsdk);
+	sicSystems = new SICSystems(this, th_main, ph_main, Pyro(*SICSIISepPyros), LaunchS, SShutS, CurrentThrust);
 }
 
 void S1C::LoadMeshes(bool lowres)
