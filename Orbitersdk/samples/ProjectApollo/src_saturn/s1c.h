@@ -210,6 +210,7 @@ protected:
 	void InitS1c();
 	void AddEngines();
 	void ShowS1c();
+	void SetupTouchdownPoints();
 
 	int GetMainState();
 	void SetMainState(int s);
