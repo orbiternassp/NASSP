@@ -1700,6 +1700,33 @@ void Saturn::RegisterActiveAreas() {
 	// Antenna locations
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_11, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_11, _V(0.344100, 0.560850, 0.304682) + ofs, _V(0.364100, 0.560850, 0.304682) + ofs, _V(0.344100, 0.541883, 0.298337) + ofs, _V(0.364100, 0.541883, 0.298337) + ofs);
+	
+	
+	// ASTP Exclusive
+
+	// Above G-Meter
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_12, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_12, _V(-0.7514, 0.773366, 0.384634) + ofs, _V(-0.733932, 0.773366, 0.384634) + ofs, _V(-0.7514, 0.756452, 0.376589) + ofs, _V(-0.733932, 0.756452, 0.376589) + ofs);
+
+	// Above RCS selector
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_13, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_13, _V(0, 0.8, 0.39) + ofs, _V(0.06, 0.8, 0.39) + ofs, _V(0, 0.77, 0.384) + ofs, _V(0.06, 0.77, 0.384) + ofs);
+
+	// Covering HGA Controls
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_14, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_14, _V(0.2, 0.437, 0.268) + ofs, _V(0.280, 0.437, 0.268) + ofs, _V(0.2, 0.365, 0.243) + ofs, _V(0.280, 0.365, 0.243) + ofs);
+
+	// Front of floodlight
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_15, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_15, _V(0.270, 0.995, -0.331) + ofs, _V(0.350, 0.995, -0.331) + ofs, _V(0.270, 0.863, -0.26) + ofs, _V(0.350, 0.863, -0.26) + ofs);
+
+	// Next to panel 229
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_16, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_16, _V(1.076, 0.125, -0.04) + ofs, _V(1.075, 0.020, -0.04) + ofs, _V(1.075, 0.02, -0.23) + ofs, _V(1.076, 0.09, -0.23) + ofs);
+
+	// Above window 5
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_17, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_17, _V(0.95, 0.953, 0.08) + ofs, _V(1.02, 0.885, 0.06) + ofs, _V(1.12, 0.964, -0.144) + ofs, _V(1.026, 1.06, -0.117) + ofs);
 }
 
 // --------------------------------------------------------------
@@ -1895,6 +1922,12 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 	case AID_VC_CUE_CARD_LOCATION_9:
 	case AID_VC_CUE_CARD_LOCATION_10:
 	case AID_VC_CUE_CARD_LOCATION_11:
+	case AID_VC_CUE_CARD_LOCATION_12:
+	case AID_VC_CUE_CARD_LOCATION_13:
+	case AID_VC_CUE_CARD_LOCATION_14:
+	case AID_VC_CUE_CARD_LOCATION_15:
+	case AID_VC_CUE_CARD_LOCATION_16:
+	case AID_VC_CUE_CARD_LOCATION_17:
 		CueCards.CycleCueCard(id - AID_VC_CUE_CARD_LOCATION_1);
 		return true;
 	}
@@ -2410,18 +2443,14 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	{
 		switch (ems.LiftVectLight()) {
 		case 1:
-//			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 33*TexMul, 8*TexMul, 82*TexMul, 6*TexMul, 20*TexMul, 6*TexMul);
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 82*TexMul, 21*TexMul, 30*TexMul, 11*TexMul);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 112*TexMul, 21*TexMul, 30*TexMul, 11*TexMul);			// Top Light Lit
 			break;
 		case -1:
-//			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32*TexMul, 69*TexMul, 82*TexMul, 22*TexMul, 22*TexMul, 10*TexMul);
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 63*TexMul, 82*TexMul, 21*TexMul, 30*TexMul, 11*TexMul);
+			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 63*TexMul, 82*TexMul, 21*TexMul, 30*TexMul, 11*TexMul);	// Bottom Light Lit
 			break;
 		case 0:
-//			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 33*TexMul, 8*TexMul, 82*TexMul, 0, 20*TexMul, 6*TexMul);
-//			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 32*TexMul, 69*TexMul, 82*TexMul, 12*TexMul, 22*TexMul, 10*TexMul);
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 82*TexMul, 10*TexMul, 30*TexMul, 11*TexMul);
-			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 63*TexMul, 82*TexMul, 10*TexMul, 30*TexMul, 11*TexMul);
+//			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 0, 112*TexMul , 10*TexMul, 30*TexMul, 11*TexMul);			// Top Light Unlit
+//			oapiBlt(surf, srf[SRF_VC_EMS_LIGHTS], 0, 63*TexMul, 82*TexMul, 10*TexMul, 30*TexMul, 11*TexMul);	// Bottom Light Unlit
 			break;
 		}
 	}

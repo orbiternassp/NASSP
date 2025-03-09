@@ -3729,6 +3729,9 @@ RTCC_PMSTICN_9_2:
 	{
 		//Pass solution back
 		res.sv_tig = sv_A1;
+		res.sv_tig_apo = sv_A1_apo;
+		res.sv_tig2 = sv_A2;
+		res.sv_tig2_apo = sv_A2_apo;
 		res.dV = sv_A1_apo.V - sv_A1.V;
 		res.dV2 = sv_A2_apo.V - sv_A2.V;
 		res.dV_LVLH = mul(OrbMech::LVLH_Matrix(sv_A1.R, sv_A1.V), res.dV);
@@ -3951,229 +3954,6 @@ RTCC_PMSTICN_24_2:
 	EMSNAP(0, display);
 RTCC_PMSTICN_24_3:
 	return;
-}
-
-void RTCC::LambertTargeting(LambertMan *lambert, TwoImpulseResuls &res)
-{
-	SV sv_A1, sv_A1_apo, sv_A2, sv_P1, sv_P2;
-	double GETbase, dt1, dt1_apo, dt2, mu, T1, T2;
-	int N;
-	OBJHANDLE gravref;
-	int body;
-	bool prograde;
-
-	GETbase = CalcGETBase();
-	gravref = lambert->sv_A.gravref;
-	N = lambert->N;
-
-	if (gravref == oapiGetObjectByName("Earth"))	//Hardcoded: Always prograde for Earth, always retrograde for Moon
-	{
-		prograde = true;
-		mu = OrbMech::mu_Earth;
-		body = BODY_EARTH;
-	}
-	else
-	{
-		prograde = false;
-		mu = OrbMech::mu_Moon;
-		body = BODY_MOON;
-	}
-
-	if (lambert->mode == 2)
-	{
-		if (lambert->T1 >= 0)
-		{
-			T1 = lambert->T1;
-		}
-		else
-		{
-			T1 = TPISearch(lambert->sv_A, lambert->sv_P, lambert->ElevationAngle);
-		}
-	}
-	else
-	{
-		T1 = lambert->T1;
-	}
-
-	dt1 = T1 - (lambert->sv_A.MJD - GETbase) * 24.0 * 60.0 * 60.0;
-	dt1_apo = T1 - (lambert->sv_P.MJD - GETbase) * 24.0 * 60.0 * 60.0;
-
-	if (lambert->Perturbation == 1)
-	{
-		sv_A1 = coast(lambert->sv_A, dt1);
-		sv_P1 = coast(lambert->sv_P, dt1_apo);
-	}
-	else
-	{
-		OrbMech::rv_from_r0v0(lambert->sv_A.R, lambert->sv_A.V, dt1, sv_A1.R, sv_A1.V, mu);
-		OrbMech::rv_from_r0v0(lambert->sv_P.R, lambert->sv_P.V, dt1_apo, sv_P1.R, sv_P1.V, mu);
-	}
-
-	if (lambert->mode == 2)
-	{
-		if (lambert->T2 >= 0)
-		{
-			T2 = lambert->T2;
-		}
-		else
-		{
-			double dt;
-
-			OrbMech::time_theta(sv_P1.R, sv_P1.V, lambert->TravelAngle, mu, dt);
-			T2 = T1 + dt;
-		}
-	}
-	else
-	{
-		T2 = lambert->T2;
-	}
-
-	dt2 = T2 - T1;
-
-	if (lambert->Perturbation == 1)
-	{
-		sv_P2 = coast(lambert->sv_P, dt1_apo + dt2);
-	}
-	else
-	{
-		OrbMech::rv_from_r0v0(lambert->sv_P.R, lambert->sv_P.V, dt1_apo + dt2, sv_P2.R, sv_P2.V, mu);
-	}
-
-	MATRIX3 Q_Xx;
-	VECTOR3 RP2off, VP2off, VA1_apo;
-
-	if (lambert->mode == 0)
-	{
-		double angle;
-		angle = lambert->Offset.x / length(sv_P2.R);
-
-		OrbMech::rv_from_r0v0_ta(sv_P2.R, sv_P2.V, angle, RP2off, VP2off, mu);
-
-		VECTOR3 i, j, k;
-		MATRIX3 Q_Xx2;
-
-		k = -unit(RP2off);
-		j = unit(crossp(VP2off, RP2off));
-		i = crossp(j, k);
-		Q_Xx2 = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
-
-		RP2off = RP2off + tmul(Q_Xx2, _V(0.0, lambert->Offset.y, lambert->Offset.z));
-	}
-	else
-	{
-		if (lambert->PhaseAngle != 0 || lambert->DH != 0)
-		{
-			CELEMENTS elem_T, elem_CE;
-			double f_T, f_CE;
-			elem_T = OrbMech::GIMIKC(sv_P2.R, sv_P2.V, mu);
-			f_T = OrbMech::MeanToTrueAnomaly(elem_T.l, elem_T.e);
-			elem_CE.a = elem_T.a - lambert->DH;
-			elem_CE.e = elem_T.e*elem_T.a / elem_CE.a;
-			f_CE = f_T - lambert->PhaseAngle;
-			elem_CE.l = OrbMech::TrueToMeanAnomaly(f_CE, elem_CE.e);
-			elem_CE.i = elem_T.i;
-			elem_CE.g = elem_T.g;
-			elem_CE.h = elem_T.h;
-			OrbMech::GIMKIC(elem_CE, mu, RP2off, VP2off);
-		}
-		else
-		{
-			RP2off = sv_P2.R;
-			VP2off = sv_P2.V;
-		}
-	}
-
-	if (lambert->Perturbation == RTCC_LAMBERT_PERTURBED)
-	{
-		VA1_apo = OrbMech::Vinti(SystemParameters.AGCEpoch, sv_A1.R, sv_A1.V, RP2off, sv_A1.MJD, dt2, N, prograde, body, body, body, _V(0.0, 0.0, 0.0), 100.0*0.3048); //Vinti Targeting: For non-spherical gravity
-	
-		sv_A1_apo = sv_A1;
-		sv_A1_apo.V = VA1_apo;
-		sv_A2 = coast(sv_A1_apo, dt2);
-	}
-	else
-	{
-		if (lambert->axis == RTCC_LAMBERT_MULTIAXIS)
-		{
-			VA1_apo = OrbMech::elegant_lambert(sv_A1.R, sv_A1.V, RP2off, dt2, N, prograde, mu);	//Lambert Targeting
-		}
-		else
-		{
-			OrbMech::xaxislambert(sv_A1.R, sv_A1.V, RP2off, dt2, N, prograde, mu, VA1_apo, lambert->Offset.z);	//Lambert Targeting
-		}
-
-		sv_A1_apo = sv_A1;
-		sv_A1_apo.V = VA1_apo;
-		sv_A2 = sv_A1_apo;
-		OrbMech::rv_from_r0v0(sv_A1_apo.R, sv_A1_apo.V, dt2, sv_A2.R, sv_A2.V, mu);
-	}
-
-	Q_Xx = OrbMech::LVLH_Matrix(sv_A1.R, sv_A1.V);
-	res.dV = VA1_apo - sv_A1.V;
-	res.dV2 = sv_P2.V - sv_A2.V;
-	res.dV_LVLH = mul(Q_Xx, res.dV);
-	res.T1 = T1;
-	res.T2 = T2;
-
-	if (lambert->axis == RTCC_LAMBERT_XAXIS)
-	{
-		res.dV_LVLH.y = 0.0;
-	}
-
-	if (lambert->mode == 1)
-	{
-		SV sv_A2_apo;
-		VECTOR3 u, R_A2, V_A2, R_PC, V_PC, DV;
-		double dt_TPI;
-
-		sv_A2_apo = sv_A2;
-
-		u = unit(crossp(sv_P2.R, sv_P2.V));
-
-		R_A2 = unit(sv_A2.R - u * dotp(sv_A2.R, u))*length(sv_A2.R);
-		V_A2 = unit(sv_A2.V - u * dotp(sv_A2.V, u))*length(sv_A2.V);
-
-		OrbMech::RADUP(sv_P2.R, sv_P2.V, R_A2, mu, R_PC, V_PC);
-		DV = OrbMech::CoellipticDV(R_A2, R_PC, V_PC, mu) - V_A2;
-		sv_A2_apo.V += DV;
-
-		dt_TPI = OrbMech::findelev(SystemParameters.AGCEpoch, sv_A2_apo.R, sv_A2_apo.V, sv_P2.R, sv_P2.V, sv_P2.MJD, lambert->ElevationAngle, gravref);
-		res.t_TPI = OrbMech::GETfromMJD(sv_P2.MJD, GETbase) + dt_TPI;
-	}
-
-	if (lambert->storesolns == false) return;
-
-	PZMYSAVE.SV_before[0] = ConvertSVtoEphemData(sv_A1);
-	PZMYSAVE.V_after[0] = sv_A1_apo.V;
-	PZMYSAVE.plan[0] = lambert->ChaserVehicle;
-	if (lambert->mode == 0)
-	{
-		PZMYSAVE.code[0] = "L1";
-	}
-	else if (lambert->mode == 1)
-	{
-		PZMYSAVE.code[0] = "CC";
-	}
-	else
-	{
-		PZMYSAVE.code[0] = "TI";
-	}
-
-	PZMYSAVE.SV_before[1] = ConvertSVtoEphemData(sv_A2);
-	PZMYSAVE.V_after[1] = VP2off;
-	PZMYSAVE.plan[1] = lambert->ChaserVehicle;
-	if (lambert->mode == 0)
-	{
-		PZMYSAVE.code[1] = "L2";
-	}
-	else if (lambert->mode == 1)
-	{
-		PZMYSAVE.code[1] = "SR";
-	}
-	else
-	{
-		PZMYSAVE.code[1] = "TF";
-	}
 }
 
 void RTCC::LMThrottleProgram(double F, double v_e, double mass, double dV_LVLH, double &F_average, double &ManPADBurnTime, double &bt_var, int &step)
@@ -4546,11 +4326,16 @@ void RTCC::AP11ManeuverPAD(const AP11ManPADOpt &opt, AP11MNV &pad)
 		R_E = BZLAND.rad[0];
 	}
 
+	//Actual HA/HP
 	OrbMech::periapo(aux.R_BO, aux.V_BO, mu, apo, peri);
 	ManPADApo = apo - R_E;
 	ManPADPeri = peri - R_E;
 	pad.HA = min(9999.9, ManPADApo / 1852.0);
 	pad.HP = ManPADPeri / 1852.0;
+	//P30 predicted HA/HP
+	OrbMech::periapo(aux.R_BI, aux.V_BI + tmul(OrbMech::LVLH_Matrix(aux.R_BI, aux.V_BI), opt.dV_LVLH), mu, apo, peri);
+	pad.HA_P30 = min(9999.9, (apo - R_E) / 1852.0);
+	pad.HP_P30 = (peri - R_E) / 1852.0;
 
 	//Attitude
 	VECTOR3 X_P, Y_P, Z_P;
@@ -5926,17 +5711,6 @@ double RTCC::FindDH(SV sv_A, SV sv_P, double TIGguess, double DH)
 
 	CDHtime_cor = dt2 + (SVMJD - GETbase) * 24 * 60 * 60;		//the new, calculated CDH time
 	return CDHtime_cor;
-}
-
-double RTCC::TPISearch(SV sv_A, SV sv_P, double elev)
-{
-	SV sv_P1;
-	double dt;
-
-	sv_P1 = coast(sv_P, (sv_A.MJD - sv_P.MJD)*24.0*3600.0);
-	dt = OrbMech::findelev(SystemParameters.AGCEpoch, sv_A.R, sv_A.V, sv_P1.R, sv_P1.V, sv_A.MJD, elev, sv_A.gravref);
-
-	return OrbMech::GETfromMJD(sv_A.MJD + dt / 24.0 / 3600.0, CalcGETBase());
 }
 
 int RTCC::LunarDescentPlanningProcessor(EphemerisData sv, double W_LM)
@@ -11657,20 +11431,17 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 			res.sv_T[2] = coast(res.sv_T[1], t_TPI - OrbMech::GETfromMJD(res.sv_T[1].MJD, GETbase));
 
 			//Call two-impulse processor
-			LambertMan lam;
+			TwoImpulseOpt lam;
 			TwoImpulseResuls lamres;
 
-			lam.mode = 2;
-			lam.T1 = t_TPI;
-			lam.T2 = -1;
-			lam.N = 0;
-			lam.axis = RTCC_LAMBERT_MULTIAXIS;
-			lam.Perturbation = RTCC_LAMBERT_PERTURBED;
-			lam.sv_A = res.sv_C[2];
-			lam.sv_P = res.sv_T[2];
-			lam.TravelAngle = opt.WT;
+			lam.mode = 5; //External request
+			lam.T1 = GMTfromGET(t_TPI);
+			lam.T2 = -1; //Find based on WT
+			lam.sv_A = ConvertSVtoEphemData(res.sv_C[2]);
+			lam.sv_P = ConvertSVtoEphemData(res.sv_T[2]);
+			lam.WT = opt.WT;
 
-			LambertTargeting(&lam, lamres);
+			PMSTICN(lam, lamres);
 
 			//Save post TPI state vector
 			res.sv_C_apo[2] = res.sv_C[2];

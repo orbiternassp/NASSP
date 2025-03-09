@@ -1714,7 +1714,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 73: //PHASING MANEUVER
 	{
 		AP11LMManPADOpt opt;
-		LambertMan lamopt;
+		TwoImpulseOpt lamopt;
 		TwoImpulseResuls res;
 		EphemerisData sv_CSM, sv_LM, sv_DOI;
 		SV sv_DOI2;
@@ -1744,18 +1744,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 		sv_DOI2 = ConvertEphemDatatoSV(sv_DOI, WeightsTable_LM2.ConfigWeight);
 
-		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
-		lamopt.mode = 0;
-		lamopt.N = 0;
-		lamopt.Offset = _V(-270.0*1852.0, 0.0, 60.0*1852.0 - 60000.0*0.3048);
-		lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;
-		lamopt.sv_A = sv_DOI2;
-		lamopt.sv_P = ConvertEphemDatatoSV(sv_CSM, WeightsTable_CSM.ConfigWeight);
-		lamopt.T1 = calcParams.Phasing;
-		lamopt.T2 = calcParams.Insertion;
+		lamopt.mode = 5; //External request
+		lamopt.sv_A = ConvertSVtoEphemData(sv_DOI2);
+		lamopt.sv_P = sv_CSM;
+		lamopt.T1 = GMTfromGET(calcParams.Phasing);
+		lamopt.T2 = GMTfromGET(calcParams.Insertion);
+		lamopt.DH = 60.0*1852.0 - 60000.0*0.3048; //Aiming for 60000 ft altitude
+		lamopt.PhaseAngle = 15.509*RAD; //270 NM behind CSM
 
-		LambertTargeting(&lamopt, res);
-		PoweredFlightProcessor(sv_DOI2, lamopt.T1, RTCC_ENGINETYPE_LMDPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
+		PMSTICN(lamopt, res);
+		PoweredFlightProcessor(sv_DOI2, GETfromGMT(lamopt.T1), RTCC_ENGINETYPE_LMDPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 
 		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
@@ -1868,7 +1866,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 76: //CSM BACKUP INSERTION UPDATE
 	{
 		AP11ManPADOpt opt;
-		LambertMan lamopt;
+		TwoImpulseOpt lamopt;
 		TwoImpulseResuls res;
 		SV sv_CSM, sv_LM, sv_Ins;
 		VECTOR3 dV_LVLH;
@@ -1879,18 +1877,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_CSM = StateVectorCalc(calcParams.src);
 		sv_LM = StateVectorCalc(calcParams.tgt);
 
-		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
-		lamopt.mode = 0;
-		lamopt.N = 0;
-		lamopt.Offset = -_V(-110.0*1852.0, 0.0, 14.7*1852.0);
-		lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;
-		lamopt.sv_A = sv_CSM;
-		lamopt.sv_P = sv_LM;
-		lamopt.T1 = calcParams.Insertion + 3.0*60.0;
-		lamopt.T2 = calcParams.CSI;
+		lamopt.mode = 5; //External request
+		lamopt.sv_A = ConvertSVtoEphemData(sv_CSM);
+		lamopt.sv_P = ConvertSVtoEphemData(sv_LM);
+		lamopt.T1 = GMTfromGET(calcParams.Insertion + 3.0*60.0);
+		lamopt.T2 = GMTfromGET(calcParams.CSI);
+		lamopt.DH = -14.7*1852.0; //14.7 NM
+		lamopt.PhaseAngle = -6.3184*RAD; //110 NM ahead
 
-		LambertTargeting(&lamopt, res);
-		PoweredFlightProcessor(sv_CSM, lamopt.T1, RTCC_ENGINETYPE_CSMSPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
+		PMSTICN(lamopt, res);
+		PoweredFlightProcessor(sv_CSM, GETfromGMT(lamopt.T1), RTCC_ENGINETYPE_CSMSPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 
 		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
@@ -1943,7 +1939,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 78: //LM INSERTION UPDATE
 	{
 		AP11LMManPADOpt opt;
-		LambertMan lamopt;
+		TwoImpulseOpt lamopt;
 		TwoImpulseResuls res;
 		SV sv_CSM, sv_LM;
 		VECTOR3 dV_LVLH;
@@ -1958,18 +1954,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LEM *lem = (LEM *)calcParams.tgt;
 		sv_LM.mass = lem->GetAscentStageMass();
 
-		lamopt.axis = RTCC_LAMBERT_MULTIAXIS;
-		lamopt.mode = 0;
-		lamopt.N = 0;
-		lamopt.Offset = _V(-147.0*1852.0, 0.0, 14.7*1852.0);
-		lamopt.Perturbation = RTCC_LAMBERT_PERTURBED;
-		lamopt.sv_A = sv_LM;
-		lamopt.sv_P = sv_CSM;
-		lamopt.T1 = calcParams.Insertion;
-		lamopt.T2 = calcParams.CSI;
+		lamopt.mode = 5; //External request
+		lamopt.sv_A = ConvertSVtoEphemData(sv_LM);
+		lamopt.sv_P = ConvertSVtoEphemData(sv_CSM);
+		lamopt.T1 = GMTfromGET(calcParams.Insertion);
+		lamopt.T2 = GMTfromGET(calcParams.CSI);
+		lamopt.DH = 14.7*1852.0; //14.7 NM
+		lamopt.PhaseAngle = 8.4436*RAD; //147 NM behind
 
-		LambertTargeting(&lamopt, res);
-		PoweredFlightProcessor(sv_LM, lamopt.T1, RTCC_ENGINETYPE_LMAPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
+		PMSTICN(lamopt, res);
+		PoweredFlightProcessor(sv_LM, GETfromGMT(lamopt.T1), RTCC_ENGINETYPE_LMAPS, 0.0, res.dV, false, P30TIG, dV_LVLH);
 
 		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;

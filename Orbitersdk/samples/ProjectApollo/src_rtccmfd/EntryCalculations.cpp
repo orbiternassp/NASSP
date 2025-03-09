@@ -614,6 +614,17 @@ namespace EntryCalculations
 
 	int MINMIZ(VECTOR3 &X, VECTOR3 &Y, VECTOR3 &Z, bool opt, VECTOR3 CUR, double TOL, double &XMIN, double &YMIN)
 	{
+		//Given three values of X and Y, this routine predicts the X, Y coordinates which minimize Y. This is done by assuming that the first derivative of Y = f(X) = is linear.
+		//INPUTS:
+		//X: Table of values for the active independent variable
+		//Y: Table of values for the dependent variable
+		//Z: Table of values for the passive independent variable
+		//opt: 0 = Place CUR in the X, Y, Z tables, then predict the minimum using the updated tables. 1 = Predict minimum using the input X, Y, Z tables
+		//TOL: A step size in X to be used if no local minimum in Y is indicated within the range of X
+		//OUTPUTS:
+		//XMIN: Predicted value of X which will minimize Y
+		//YMIN: Predicted value of the minimum Y
+		//ISUB (return value): 0 = a local minimum has been detected, !=0 = no local minimum was found so the step size TOL will be used
 		int ISUB = 0;
 
 		if (opt == false)
@@ -6496,7 +6507,7 @@ bool RTEMoon::MASTER(const RTEMoonInputsArray &opt)
 		if (ISOL == false)
 		{
 			//Set DV to large value
-			dv = 1e10;
+			dv = INVALID_VALUE;
 		}
 		//If it is a discrete case, then the calculation is done
 		if (LETSGO == 1) break;
@@ -6589,7 +6600,7 @@ void RTEMoon::MCSS()
 	PNT = 0;
 	REP = 0;
 	eps_SS = 0.002;
-	t_t = pow(10, 10);
+	t_t = INVALID_VALUE;
 	Dmu_z = pow(10, 9);
 	k_xx = 0;
 	FRZ = 0;
@@ -6702,16 +6713,26 @@ bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv
 {
 	VECTOR3 IRTAB, DVTAB, ZTAB, Vig_apo;
 	double theta_long, theta_lat, dlng, dt, i_r_apo, TOL, i_rmin, DV_min, delta_S, i_rc, h_p, r_p, D1, D2, DVSS, i_rs, INS, u_r;
-	double t_z1, t_z_apo, indvar, eps, GMT_L, h_mins;
-	int ISUB, KOUNT, ICNT, jj, ICONVG, ii, ITCNT, LOPCNT, REP;
-	bool NIR, IOPT, NIRS, KIP, KFLG, q_d;
+	double t_z1, t_z_apo, eps, GMT_L, h_mins;
+	int KOUNT, ICNT, jj, ICONVG, ii, ITCNT, LOPCNT;
+	bool NIRS, KFLG, q_d;
+	//0 = no MCDRIV solution has been found, >0 = a solution has been found in MCDRIV
+	int REP;
+	//0 = a local minimum has been detected, !=0 = no local minimum was found so the step size TOL will be used (MINMIZ)
+	int ISUB;
+	//false = Reentry velocity is the independent variable, true = landing time is the independent variable
+	bool KIP;
+	//false = Update MINMIZ table and then predict minimum, true = only predict minimum in MINMIZ
+	bool IOPT;
+	//false = input i_r is greater than the declination of the pseudostate, true = input i_r is less than the declination of the pseudostate
+	bool NIR;
 
 	q_m = false;
 	h_mins = h_min;
-	DV_min = pow(10, 10);
+	DV_min = INVALID_VALUE;
 	ZTAB = _V(0, 0, 0);
 	KFLG = false;
-	solution.dv = pow(10, 10);
+	solution.dv = INVALID_VALUE;
 	t_z_apo = 0.0;
 
 	if (CIRCUM == 0)
@@ -6728,29 +6749,22 @@ bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv
 	KIP = 0;
 	u_r = u_rmax;
 	INTER = 1.0;
-	i_r = 0.5235988;
-	eps = 0.05;
+	i_r = 0.5235988; //30 degrees, guaranteed to give a solution no matter the lunar declination
+	eps = CLL_LOOSE_TOLERANCE;
 	KOUNT = 0;
 	ITCNT = 0;
 
+	//Was a desired return inclination input?
 	if (i_rk != 0)
 	{
+		//Yes
 		i_r = abs(i_rk);
 		i_rmax = i_r;
-		eps = 0.005;
+		eps = CLL_TIGHT_TOLERANCE; //The first while loop is already used to converge completely on the landing site
 		INTER = -i_rk / i_r;
 	}
 
-	//Minimum return time without further constraints
-	if (KIP)
-	{
-		indvar = t_z_apo;
-	}
-	else
-	{
-		indvar = u_r;
-	}
-	REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, q_m, i_r, INTER, KIP, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d);
+	REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, u_r, q_m, i_r, INTER, KIP, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d);
 	h_p = r_p - R_M;
 	EntryCalculations::LNDING(R_EI, V_EI, t_z, alpha_SID0, LD, ICRNGG, r_rbias, theta_long, theta_lat, GMT_L);
 
@@ -6761,6 +6775,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv
 	//This loop roughly converges on the desired landing site
 	do
 	{
+		//Get required longitude at the current impact latitude
 		EntryCalculations::TBLOOK(LINE, theta_lat, EntryLng);
 		dlng = theta_long - EntryLng;
 		if (ITCNT > 0 && abs(dlng) < eps)
@@ -6792,15 +6807,7 @@ bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv
 		LOPCNT = 0;
 		KIP = 1;
 
-		if (KIP)
-		{
-			indvar = t_z_apo;
-		}
-		else
-		{
-			indvar = u_r;
-		}
-		REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, q_m, i_r, INTER, KIP, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d);
+		REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, t_z_apo, q_m, i_r, INTER, KIP, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d);
 		dv = length(Vig_apo - sv0.V);
 		EntryCalculations::LNDING(R_EI, V_EI, t_z, alpha_SID0, LD, ICRNGG, r_rbias, theta_long, theta_lat, GMT_L);
 		LOPCNT = 0;
@@ -6809,14 +6816,14 @@ bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv
 	i_rmin = 10.0;
 
 	//This checks if the inclination was specified
-	if (eps != 0.05)
+	if (eps != CLL_LOOSE_TOLERANCE)
 	{
 		goto RTEMoon_CLL_17_B;
 	}
 
-	TOL = 0.01745;
+	TOL = 0.01745; //1 degree
 	ISUB = 0;
-	DVSS = pow(10, 10);
+	DVSS = INVALID_VALUE;
 	jj = 0;
 	INTER = -1.0;
 	i_r = i_rmax;
@@ -6827,42 +6834,58 @@ bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv
 	//Main iteration loop for the DV optimization
 	while (KOUNT <= 10)
 	{
+		//Converge precisely on the landing site longitude, this is different than the actual RTE which optimizes DV with a fixed time of landing and converges on the longitude afterwards
 		ii = 0;
 		do
 		{
 			REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, t_z_apo, q_m, i_r, INTER, true, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, i_r_apo, r_p, q_d);
+			//Error?
+			if (REP == 0) break;
+			//Simulate landing
 			EntryCalculations::LNDING(R_EI, V_EI, t_z, alpha_SID0, LD, ICRNGG, r_rbias, theta_long, theta_lat, GMT_L);
+			//Get required longitude at the current impact latitude
 			EntryCalculations::TBLOOK(LINE, theta_lat, EntryLng);
-
+			//Calculate longitude error
 			dlng = theta_long - EntryLng;
 			if (abs(dlng) > PI)
 			{
 				dlng = dlng - OrbMech::sign(dlng)*PI2;
 			}
-
+			//Calculate correction in landing time
 			dt = dlng / w_E;
 			t_z_apo += dt;
 			ii++;
-		} while (abs(dt) > 1.0);
-
-		h_p = r_p - R_M;
-		dv = length(Vig_apo - sv0.V);
-		if (q_d && h_p < h_min)
+		} while (abs(dt) > 1.0 && ii < 10);
+		//Error?
+		if (REP == 0)
 		{
-			dv = pow(10, 10);
+			dv = INVALID_VALUE;
 		}
-
-		if (NIR && IOPT)
+		else
 		{
-			delta_S = i_r_apo;
-		}
-
-		if (dv <= DVSS)
-		{
-			DVSS = dv;
-			i_rs = i_r_apo;
-			INS = INTER;
-			NIRS = NIR;
+			//Calculate pericynthion height
+			h_p = r_p - R_M;
+			//Calculate maneuver DV
+			dv = length(Vig_apo - sv0.V);
+			//Pericynthion passage and minimum height violated?
+			if (q_d && h_p < h_min)
+			{
+				dv = INVALID_VALUE;
+			}
+			//Save minimum possible inclination (should come from the second pass through MCDRIV with i_r=0 set below)
+			if (NIR && IOPT)
+			{
+				delta_S = i_r_apo;
+			}
+			//New solution is optimum?
+			if (dv <= DVSS)
+			{
+				//Store optimum solution
+				DVSS = dv;
+				i_rs = i_r_apo;
+				INS = INTER;
+				NIRS = NIR;
+			}
 		}
 
 		if (IOPT)
@@ -6895,50 +6918,47 @@ bool RTEMoon::CLL(double &i_r, double &INTER, bool &q_m, double &t_z, double &dv
 		}
 		if (jj < 3) continue;
 
-		if (i_rk == 0)
+		if (abs(dv - DV_min) <= 0.1772) //0.0001 er/hr
 		{
-			if (abs(dv - DV_min) <= 0.1772) //0.0001 er/hr
-			{
-				ICONVG++;
-				if (ICONVG != 1)
-				{
-					break;
-				}
-			}
-			if ((KOUNT >= 10 || abs(i_rmin) < 0.25*RAD) || (ISUB != 0 && (dv - DVTAB.data[ISUB - 1]) >= 0.0))
+			ICONVG++;
+			if (ICONVG != 1)
 			{
 				break;
 			}
-
-			ISUB = EntryCalculations::MINMIZ(IRTAB, DVTAB, ZTAB, IOPT, _V(i_rc, dv, 0.0), TOL, i_rmin, DV_min);
-			IOPT = false;
-			KOUNT++;
-			D1 = 5.0*IRTAB.y - 4.0*IRTAB.x;
-			D2 = 5.0*IRTAB.y - 4.0*IRTAB.z;
-
-			if (ISUB == 0)
-			{
-				if ((IRTAB.x <= i_rmin) && (i_rmin <= IRTAB.y) && (DVTAB.z > pow(10, 8)))
-				{
-					i_rmin = (IRTAB.y + IRTAB.z) / 2.0;
-				}
-				else if ((IRTAB.y <= i_rmin) && (i_rmin <= IRTAB.z) && (DVTAB.x > pow(10, 8)))
-				{
-					i_rmin = (IRTAB.x + IRTAB.y) / 2.0;
-				}
-				else if (D1 < IRTAB.z)
-				{
-					i_rmin = (IRTAB.y + IRTAB.z) / 2.0;
-				}
-				else if (D2 >= IRTAB.x)
-				{
-					i_rmin = (IRTAB.x + IRTAB.y) / 2.0;
-				}
-			}
-
-			INTER = i_rmin / abs(i_rmin);
-			i_r = abs(i_rmin + INTER * delta_S);
 		}
+		if ((KOUNT >= 10 || abs(i_rmin) < 0.25*RAD) || (ISUB != 0 && (dv - DVTAB.data[ISUB - 1]) >= 0.0))
+		{
+			break;
+		}
+
+		ISUB = EntryCalculations::MINMIZ(IRTAB, DVTAB, ZTAB, IOPT, _V(i_rc, dv, 0.0), TOL, i_rmin, DV_min);
+		IOPT = false;
+		KOUNT++;
+		D1 = 5.0*IRTAB.y - 4.0*IRTAB.x;
+		D2 = 5.0*IRTAB.y - 4.0*IRTAB.z;
+
+		if (ISUB == 0)
+		{
+			if ((IRTAB.x <= i_rmin) && (i_rmin <= IRTAB.y) && (DVTAB.z > 1e8))
+			{
+				i_rmin = (IRTAB.y + IRTAB.z) / 2.0;
+			}
+			else if ((IRTAB.y <= i_rmin) && (i_rmin <= IRTAB.z) && (DVTAB.x > 1e8))
+			{
+				i_rmin = (IRTAB.x + IRTAB.y) / 2.0;
+			}
+			else if (D1 < IRTAB.z)
+			{
+				i_rmin = (IRTAB.y + IRTAB.z) / 2.0;
+			}
+			else if (D2 >= IRTAB.x)
+			{
+				i_rmin = (IRTAB.x + IRTAB.y) / 2.0;
+			}
+		}
+
+		INTER = i_rmin / abs(i_rmin);
+		i_r = abs(i_rmin + INTER * delta_S);
 	}
 
 	//Restore best solution
@@ -6980,7 +7000,7 @@ bool RTEMoon::MCUA(double &i_r, double &INTER, bool &q_m, double &t_z, double &d
 
 	zc = 0.0;
 
-	solution.dv = pow(10, 10);
+	solution.dv = INVALID_VALUE;
 	i_rmax_apo = i_rmax;
 	t_zmin_apo = t_zmin;
 	eps_dv = 0.1772; //0.0001 er/hr
@@ -6998,8 +7018,8 @@ RTEMoon_MCUA_1_A:
 	di_r = 0.0;
 	u_r = u_rmax;
 	eps_ir = 0.01;
-	DV_est1 = DV_est2 = pow(10, 10);
-	SDV = SSDV = pow(10, 10);
+	DV_est1 = DV_est2 = INVALID_VALUE;
+	SDV = SSDV = INVALID_VALUE;
 	KIP = false;
 	LOCATE = 5;
 	IRSCAN = 0;
@@ -7029,7 +7049,7 @@ RTEMoon_MCUA_1_A:
 			REP = MCDRIV(sv0.R, sv0.V, sv0.GMT, indvar, q_m, i_r, INTER, KIP, t_zmin, Vig_apo, R_EI, V_EI, t_z, NIR, Xi_r, r_p, q_d);
 			if (REP == 0)
 			{
-				dv = pow(10, 10);
+				dv = INVALID_VALUE;
 			}
 			else
 			{
@@ -7063,8 +7083,8 @@ RTEMoon_MCUA_1_A:
 				i_r = i_rmin;
 				LOOP = 0;
 				LOOPTZ = 0;
-				SDV = pow(10, 10);
-				SSDV = pow(10, 10);
+				SDV = INVALID_VALUE;
+				SSDV = INVALID_VALUE;
 				KIP = true;
 				Di_r = (i_rmax - i_rmin) / 2.0;
 				Dt_z = (t_zmax - t_zmin) / 2.0;
@@ -7140,7 +7160,7 @@ RTEMoon_MCUA_1_A:
 			IOPT1 = 1;
 			if (LOOPTZ != 3)
 			{
-				SDV = pow(10, 10);
+				SDV = INVALID_VALUE;
 				continue;
 			}
 		}
@@ -7157,7 +7177,7 @@ RTEMoon_MCUA_1_A:
 			i_r = SSi_r;
 			t_z_apo = SSt_z;
 			LOOP = 0;
-			DVSSS = pow(10, 10);
+			DVSSS = INVALID_VALUE;
 			LOOPTZ = 0;
 			break;
 		}
@@ -7202,7 +7222,7 @@ RTEMoon_MCUA_1_A:
 		}
 
 		i_r = i_rmin;
-		SDV = pow(10, 10);
+		SDV = INVALID_VALUE;
 		LOOP = 0;
 		Di_r = (i_rmax - i_rmin) / 2.0;
 		if (LOCATE == 3)
@@ -7376,6 +7396,7 @@ int RTEMoon::MCDRIV(VECTOR3 Y_0, VECTOR3 V_0, double t_0, double var, bool q_m, 
 
 	tol = 63.78165;
 	q_a = false;
+	dy_x_apo = 0.0;
 
 	if (KIP)
 	{
@@ -7586,8 +7607,8 @@ void RTEMoon::SEARCH(RTEMoonSEARCHArray &arr, double dv)
 	{
 		for (int i = 0; i < 7; i++)
 		{
-			arr.TEST[i] = 1e10;
-			arr.STAVEX[i].GMT = 1e10;
+			arr.TEST[i] = INVALID_VALUE;
+			arr.STAVEX[i].GMT = INVALID_VALUE;
 		}
 		arr.K = 1;
 		arr.IOUT = false;

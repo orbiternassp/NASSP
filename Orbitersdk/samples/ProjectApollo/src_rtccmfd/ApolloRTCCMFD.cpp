@@ -917,6 +917,9 @@ void ApolloRTCCMFD::menuSetDAPPADPage()
 
 void ApolloRTCCMFD::menuSetSaturnIBLVDCPage()
 {
+	subscreen = 0;
+	marker = 0;
+	markermax = 18;
 	SelectPage(121);
 }
 
@@ -1637,80 +1640,164 @@ void ApolloRTCCMFD::menuAGOPSaveREFSMMAT()
 	GC->rtcc->EMGSTSTM(GC->AGOP_REFSMMAT_Vehicle, GC->AGOP_REFSMMAT, RTCC_REFSMMAT_TYPE_OST, GC->rtcc->RTCCPresentTimeGMT());
 }
 
-void ApolloRTCCMFD::menuLWPLiftoffTimeOption()
+void ApolloRTCCMFD::menuSetLWPInput()
 {
-	if (GC->rtcc->PZSLVCON.LOT < 6)
+	if (subscreen == 0)
 	{
-		GC->rtcc->PZSLVCON.LOT++;
+		switch (marker)
+		{
+		case 0:
+			set_TargetVessel();
+			break;
+		case 1:
+			if (GC->rtcc->PZSLVCON.LOT < 6)
+			{
+				GC->rtcc->PZSLVCON.LOT++;
+			}
+			else
+			{
+				GC->rtcc->PZSLVCON.LOT = 1;
+			}
+			break;
+		case 2:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.CKFACT, "Chaser vehicle K-Factor:");
+			break;
+		case 3:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.CAREA, "Chaser vehicle reference area:", pow(0.3048, 2));
+			break;
+		case 4:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.CWHT, "Chaser vehicle weight at insertion:", LBS2KG);
+			break;
+		case 5:
+			GC->rtcc->PZSLVCON.NS = 1 - GC->rtcc->PZSLVCON.NS;
+			break;
+		case 6:
+			GenericIntInput(&GC->rtcc->PZSLVCON.DAY, "Day on which launch window times are computed, relative to base date:");
+			break;
+		case 7:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.PFT, "Powered flight time:");
+			break;
+		case 8:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.PFA, "Powered flight arc:", RAD);
+			break;
+		case 9:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.YSMAX, "Yaw steering limit:", RAD);
+			break;
+		case 10:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.DTOPT, "Delta time to be subtracted from analyticial inplane launch time to obtain empirical inplane launch time:");
+			break;
+		case 11:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.DTGRR, "DT from lift-off which defines the time of guidance reference release:");
+			break;
+		case 12:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.RINS, "Radius of insertion:", 1.0);
+			break;
+		case 13:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.VINS, "Velocity of insertion:", 1.0);
+			break;
+		case 14:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.GAMINS, "Flight-path angle of insertion:", RAD);
+			break;
+		case 15:
+			GenericGETInput(&GC->rtcc->PZSLVCON.GMTLOR, "Enter desired GMT of liftoff (Format: HH:MM:SS)");
+			break;
+		case 16:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.OFFSET, "Phase angle desired at insertion:", RAD);
+			break;
+		case 17:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.BIAS, "Bias that is added to GMTLO* (zero phase angle) to produce lift-off time:");
+			break;
+		case 18:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.TRANS, "Delta time added to inplane time to obtain lift-off time:");
+			break;
+		}
 	}
 	else
 	{
-		GC->rtcc->PZSLVCON.LOT = 1;
+		switch (marker)
+		{
+		case 0:
+			if (GC->rtcc->PZSLVCON.INSCO < 3)
+			{
+				GC->rtcc->PZSLVCON.INSCO++;
+			}
+			else
+			{
+				GC->rtcc->PZSLVCON.INSCO = 1;
+			}
+			break;
+		case 1:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.DHW, "Desired height difference between chaser and target, or altitude of chaser, at input angle from insertion:", 1852.0);
+			break;
+		case 2:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.DU, "Angle from insertion to obtain a given altitude, or delta altitude:", RAD);
+			break;
+		case 3:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.ANOM, "Nominal semimajor axis at insertion:", 1852.0);
+			break;
+		case 4:
+			GC->rtcc->PZSLVCON.DELNOF = !GC->rtcc->PZSLVCON.DELNOF;
+			break;
+		case 5:
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.DELNO, "Differential nodal regression in degrees:", RAD);
+			break;
+		case 6:
+			if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 0)
+			{
+				GC->rtcc->PZSLVCON.NEGTIV = 0;
+				GC->rtcc->PZSLVCON.WRAP = 0;
+			}
+			else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 0)
+			{
+				GC->rtcc->PZSLVCON.NEGTIV = 2;
+				GC->rtcc->PZSLVCON.WRAP = 1;
+			}
+			else if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 1)
+			{
+				GC->rtcc->PZSLVCON.NEGTIV = 0;
+				GC->rtcc->PZSLVCON.WRAP = 1;
+			}
+			else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 1)
+			{
+				GC->rtcc->PZSLVCON.NEGTIV = 2;
+				GC->rtcc->PZSLVCON.WRAP = 2;
+			}
+			else
+			{
+				GC->rtcc->PZSLVCON.NEGTIV = 2;
+				GC->rtcc->PZSLVCON.WRAP = 0;
+			}
+			break;
+		}
 	}
 }
 
-void ApolloRTCCMFD::menuLWPLiftoffTime()
+void ApolloRTCCMFD::menuCycleLWPSubscreen()
 {
-	GenericGETInput(&GC->rtcc->PZSLVCON.GMTLOR, "Enter desired GMT of liftoff (Format: HH:MM:SS)");
+	if (subscreen < 1)
+	{
+		subscreen++;
+	}
+	else
+	{
+		subscreen = 0;
+	}
+	marker = 0;
+
+	switch (subscreen)
+	{
+	case 0:
+		markermax = 18;
+		break;
+	case 1:
+		markermax = 6;
+		break;
+	}
 }
 
 void ApolloRTCCMFD::LUNTAR_TIGInput()
 {
 	GenericGETInput(&G->LUNTAR_TIG, "Enter GET (Format: HH:MM:SS). Enter zero for trajectory evaluation (no maneuver):");
-}
-
-void ApolloRTCCMFD::menuLWP_RINS()
-{
-	GenericDoubleInput(&GC->rtcc->PZSLVCON.RINS, "Radius of insertion in meters:", 1.0);
-}
-
-void ApolloRTCCMFD::menuLWP_VINS()
-{
-	GenericDoubleInput(&GC->rtcc->PZSLVCON.VINS, "Velocity of insertion in m/s:", 1.0);
-}
-
-void ApolloRTCCMFD::menuLWP_GAMINS()
-{
-	GenericDoubleInput(&GC->rtcc->PZSLVCON.GAMINS, "Flight-path angle of insertion in degrees:", RAD);
-}
-
-void ApolloRTCCMFD::menuLWPCycleDELNOF()
-{
-	GC->rtcc->PZSLVCON.DELNOF = !GC->rtcc->PZSLVCON.DELNOF;
-}
-
-void ApolloRTCCMFD::menuLWP_DELNO()
-{
-	GenericDoubleInput(&GC->rtcc->PZSLVCON.DELNO, "Differential nodal regression in degrees:", RAD);
-}
-
-void ApolloRTCCMFD::menuLWP_PhaseFlags()
-{
-	if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 0)
-	{
-		GC->rtcc->PZSLVCON.NEGTIV = 0;
-		GC->rtcc->PZSLVCON.WRAP = 0;
-	}
-	else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 0)
-	{
-		GC->rtcc->PZSLVCON.NEGTIV = 2;
-		GC->rtcc->PZSLVCON.WRAP = 1;
-	}
-	else if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 1)
-	{
-		GC->rtcc->PZSLVCON.NEGTIV = 0;
-		GC->rtcc->PZSLVCON.WRAP = 1;
-	}
-	else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 1)
-	{
-		GC->rtcc->PZSLVCON.NEGTIV = 2;
-		GC->rtcc->PZSLVCON.WRAP = 2;
-	}
-	else
-	{
-		GC->rtcc->PZSLVCON.NEGTIV = 2;
-		GC->rtcc->PZSLVCON.WRAP = 0;
-	}
 }
 
 void ApolloRTCCMFD::LUNTAR_BTInput()
@@ -5830,16 +5917,8 @@ void ApolloRTCCMFD::menuLMLSUpload()
 
 void ApolloRTCCMFD::menuREFSMMATUplinkCalc()
 {
-	if (GC->MissionPlanningActive)
-	{
-		bool REFSMMATUplinkCalcMPTInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Format: C12,VEH. COMPUTER,REFSMMAT,ADDRESS; VEH. COMPUTER = CMC, LGC. REFSMMAT = CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD. ADDRESS = 1 for actual, 2 for desired REFSMMAT", REFSMMATUplinkCalcMPTInput, 0, 20, (void*)this);
-	}
-	else
-	{
-		bool REFSMMATUplinkCalcInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Format: 1 for actual REFSMMAT, 2 for desired REFSMMAT", REFSMMATUplinkCalcInput, 0, 20, (void*)this);
-	}
+	bool REFSMMATUplinkCalcInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Format: REFSMMAT ADDRESS. REFSMMAT = CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD. ADDRESS = 1 for actual, 2 for desired REFSMMAT", REFSMMATUplinkCalcInput, "CUR 2", 20, (void*)this);
 }
 
 bool REFSMMATUplinkCalcInput(void *id, char *str, void *data)
@@ -5849,8 +5928,9 @@ bool REFSMMATUplinkCalcInput(void *id, char *str, void *data)
 
 bool ApolloRTCCMFD::REFSMMATUplinkCalc(char *str)
 {
+	char Buff1[4];
 	int type;
-	if (sscanf(str, "%d", &type) == 1)
+	if (sscanf_s(str, "%s %d", Buff1, 4, &type) == 2)
 	{
 		if (type >= 1 && type <= 2)
 		{
@@ -5864,18 +5944,12 @@ bool ApolloRTCCMFD::REFSMMATUplinkCalc(char *str)
 			{
 				sprintf_s(veh, "LGC");
 			}
-			sprintf_s(str2, 32, "C12,%s,CUR,%d;", veh, type);
+			sprintf_s(str2, 32, "C12,%s,%s,%d;", veh, Buff1, type);
 			GeneralMEDRequest(str2);
 			return true;
 		}
 	}
 	return false;
-}
-
-bool REFSMMATUplinkCalcMPTInput(void *id, char *str, void *data)
-{
-	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
-	return true;
 }
 
 void ApolloRTCCMFD::menuCycleTwoImpulseOption()

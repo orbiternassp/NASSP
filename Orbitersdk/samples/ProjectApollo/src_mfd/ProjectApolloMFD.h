@@ -114,6 +114,8 @@ public:
 	void menuClearAllFailures();
 	void menuAEAACommands();
 
+	OBJHANDLE AGCGravityRef(VESSEL *vessel) const;
+
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);
 	void StoreStatus (void) const;

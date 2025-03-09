@@ -99,7 +99,9 @@ void Skylab::clbkSetClassCaps(FILEHANDLE cfg)
 
 	SetSize(15);
 	//Mass
-	double mass = 88474; //https://ntrs.nasa.gov/api/citations/19730025115/downloads/19730025115.pdf#page=189
+	//https://ntrs.nasa.gov/api/citations/19730025115/downloads/19730025115.pdf#page=189
+	//Weight at S-II separation (195052 lbm) minus payload shroud (25640 lbm) and minus TACS propellant (1426 lbm)
+	double mass = 76197;
 	SetEmptyMass(mass);
 	//Principal Moment of Inertia
 	//https://ntrs.nasa.gov/api/citations/19770014164/downloads/19770014164.pdf

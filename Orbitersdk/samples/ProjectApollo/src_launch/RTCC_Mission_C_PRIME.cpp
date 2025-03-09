@@ -401,7 +401,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "MCC3");
 			REFSMMAT = EZJGMTX1.data[0].REFSMMAT;
 			PZMCCPLN.SFPBlockNum = 2;
-			dv_thres = 1.0*0.3048; //Source: Apollo Mission Techniques for Apollo 8
+			//Mission Techniques had 1 ft/s, but on the actual missions MCC-3 was an undesirable course correction point.
+			//The 5 ft/s threshold still ensures that MCC-4 won't be more than 10 ft/s, which would necessitate a MCC at the earliest possible time, according to the techniques.
+			dv_thres = 5.0*0.3048;
 		}
 		else
 		{

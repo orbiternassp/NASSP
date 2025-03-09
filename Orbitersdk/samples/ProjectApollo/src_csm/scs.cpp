@@ -4932,7 +4932,6 @@ void EMS::TimeStep(double simdt) {
 			// dV/Range display
 			if (xacc > 0 || status == EMS_STATUS_DV) {
 				dVRangeCounter -= dV;
-				dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
 			}				
 			//sprintf(oapiDebugString(), "xacc %.10f", xacc);
 			break;
@@ -5103,6 +5102,8 @@ void EMS::TimeStep(double simdt) {
 			dVRangeCounter = sat->vhfranging.GetRange();
 			break;
 	}
+
+	dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
 
 	// If powered, drive Glevel
 	if (status == EMS_STATUS_ENTRY || 

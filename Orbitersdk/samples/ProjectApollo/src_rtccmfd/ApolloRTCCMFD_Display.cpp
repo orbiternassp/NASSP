@@ -10020,101 +10020,203 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	else if (screen == 121)
 	{
-		skp->Text(1 * W / 8, 2 * H / 28, "LAUNCH WINDOW PROCESSOR INPUTS", 30);
+		skp->Text(1 * W / 8, 1 * H / 28, "LAUNCH WINDOW PROCESSOR INPUTS", 30);
 
-		switch (GC->rtcc->PZSLVCON.LOT)
-		{
-		case 1:
-			sprintf(Buffer, "Input time");
-			break;
-		case 2:
-			sprintf(Buffer, "Phase angle offset");
-			break;
-		case 3:
-			sprintf(Buffer, "Biased phase zero (GMTLOR)");
-			break;
-		case 4:
-			sprintf(Buffer, "Biased phase zero (TPLANE)");
-			break;
-		case 5:
-			sprintf(Buffer, "In-plane");
-			break;
-		case 6:
-			sprintf(Buffer, "In-plane with nodal regression");
-			break;
-		default:
-			sprintf(Buffer, "");
-			break;
-		}
-		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
+		skp->SetFont(font2);
 
-		if (GC->rtcc->PZSLVCON.LOT == 1)
-		{
-			GET_Display2(Buffer, GC->rtcc->PZSLVCON.GMTLOR);
-			skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
-		}
+		sprintf(Buffer, "%d/2", subscreen + 1);
+		skp->Text(15 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
 
-		sprintf(Buffer, "%+.2lf", GC->rtcc->PZSLVCON.RINS);
-		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(1 * W / 22, (marker + 3) * H / 22, "*", 1);
 
-		sprintf(Buffer, "%+.2lf", GC->rtcc->PZSLVCON.VINS);
-		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+		if (subscreen == 0)
+		{
+			skp->Text(2 * W / 22, 3 * H / 22, "TGT:", 4);
+			skp->Text(2 * W / 22, 4 * H / 22, "LOT:", 4);
+			skp->Text(2 * W / 22, 5 * H / 22, "CKFACT:", 7);
+			skp->Text(2 * W / 22, 6 * H / 22, "CAREA:", 6);
+			skp->Text(2 * W / 22, 7 * H / 22, "CWHT:", 5);
+			skp->Text(2 * W / 22, 8 * H / 22, "NS:", 3);
+			skp->Text(2 * W / 22, 9 * H / 22, "DAY:", 4);
+			skp->Text(2 * W / 22, 10 * H / 22, "PFT:", 4);
+			skp->Text(2 * W / 22, 11 * H / 22, "PFA:", 4);
+			skp->Text(2 * W / 22, 12 * H / 22, "YSMAX:", 6);
+			skp->Text(2 * W / 22, 13 * H / 22, "DTOPT:", 6);
+			skp->Text(2 * W / 22, 14 * H / 22, "DTGRR:", 6);
+			skp->Text(2 * W / 22, 15 * H / 22, "RINS:", 4);
+			skp->Text(2 * W / 22, 16 * H / 22, "VINS:", 4);
+			skp->Text(2 * W / 22, 17 * H / 22, "GAMINS:", 7);
+			skp->Text(2 * W / 22, 18 * H / 22, "GMTLOR:", 7);
+			skp->Text(2 * W / 22, 19 * H / 22, "OFFSET:", 7);
+			skp->Text(2 * W / 22, 20 * H / 22, "BIAS:", 5);
+			skp->Text(2 * W / 22, 21 * H / 22, "TRANS:", 6);
 
-		sprintf(Buffer, "%+.3lf°", GC->rtcc->PZSLVCON.GAMINS*DEG);
-		skp->Text(1 * W / 16, 10 * H / 14, Buffer, strlen(Buffer));
+			if (G->Rendezvous_Target != NULL)
+			{
+				sprintf(Buffer, "%s", G->Rendezvous_Target->GetName());
+			}
+			else
+			{
+				sprintf(Buffer, "No Target!");
+			}
+			skp->Text(6 * W / 22, 3 * H / 22, Buffer, strlen(Buffer));
 
-		if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 0)
-		{
-			sprintf(Buffer, "-90 to 90°");
-		}
-		else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 0)
-		{
-			sprintf(Buffer, "90 to 270°");
-		}
-		else if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 1)
-		{
-			sprintf(Buffer, "270 to 450°");
-		}
-		else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 1)
-		{
-			sprintf(Buffer, "450 to 630°");
-		}
-		else if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 2)
-		{
-			sprintf(Buffer, "630 to 720°");
+			switch (GC->rtcc->PZSLVCON.LOT)
+			{
+			case 1:
+				sprintf(Buffer, "Lift-off on input time");
+				break;
+			case 2:
+				sprintf(Buffer, "Lift-off with phase angle at insertion (OFFSET)");
+				break;
+			case 3:
+				sprintf(Buffer, "Biased phase zero (GMTLOR)");
+				break;
+			case 4:
+				sprintf(Buffer, "Biased phase zero (TPLANE)");
+				break;
+			case 5:
+				sprintf(Buffer, "In-plane");
+				break;
+			case 6:
+				sprintf(Buffer, "In-plane with nodal regression");
+				break;
+			default:
+				sprintf(Buffer, "");
+				break;
+			}
+			skp->Text(6 * W / 22, 4 * H / 22, Buffer, strlen(Buffer));
+
+			sprintf(Buffer, "%.2lf", GC->rtcc->PZSLVCON.CKFACT);
+			skp->Text(6 * W / 22, 5 * H / 22, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.1lf sq ft", GC->rtcc->PZSLVCON.CAREA / pow(0.3048, 2));
+			skp->Text(6 * W / 22, 6 * H / 22, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.1lf lbs", GC->rtcc->PZSLVCON.CWHT / LBS2KG);
+			skp->Text(6 * W / 22, 7 * H / 22, Buffer, strlen(Buffer));
+			if (GC->rtcc->PZSLVCON.NS == 0)
+			{
+				skp->Text(6 * W / 22, 8 * H / 22, "Northerly", 9);
+			}
+			else
+			{
+				skp->Text(6 * W / 22, 8 * H / 22, "Southerly", 9);
+			}
+			sprintf(Buffer, "%d", GC->rtcc->PZSLVCON.DAY);
+			skp->Text(6 * W / 22, 9 * H / 22, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.1lf sec", GC->rtcc->PZSLVCON.PFT);
+			skp->Text(6 * W / 22, 10 * H / 22, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.3lf deg", GC->rtcc->PZSLVCON.PFA*DEG);
+			skp->Text(6 * W / 22, 11 * H / 22, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.1lf deg", GC->rtcc->PZSLVCON.YSMAX*DEG);
+			skp->Text(6 * W / 22, 12 * H / 22, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.1lf sec", GC->rtcc->PZSLVCON.DTOPT);
+			skp->Text(6 * W / 22, 13 * H / 22, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.1lf sec", GC->rtcc->PZSLVCON.DTGRR);
+			skp->Text(6 * W / 22, 14 * H / 22, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.2lf m", GC->rtcc->PZSLVCON.RINS);
+			skp->Text(6 * W / 22, 15 * H / 22, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.2lf m/s", GC->rtcc->PZSLVCON.VINS);
+			skp->Text(6 * W / 22, 16 * H / 22, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%+.3lf deg", GC->rtcc->PZSLVCON.GAMINS*DEG);
+			skp->Text(6 * W / 22, 17 * H / 22, Buffer, strlen(Buffer));
+
+			if (GC->rtcc->PZSLVCON.LOT <= 3)
+			{
+				GET_Display2(Buffer, GC->rtcc->PZSLVCON.GMTLOR);
+				skp->Text(6 * W / 22, 18 * H / 22, Buffer, strlen(Buffer));
+			}
+			if (GC->rtcc->PZSLVCON.LOT == 2)
+			{
+				sprintf(Buffer, "%+.3lf deg", GC->rtcc->PZSLVCON.OFFSET*DEG);
+				skp->Text(6 * W / 22, 19 * H / 22, Buffer, strlen(Buffer));
+			}
+			if (GC->rtcc->PZSLVCON.LOT == 3 || GC->rtcc->PZSLVCON.LOT == 4)
+			{
+				sprintf(Buffer, "%+.1lf sec", GC->rtcc->PZSLVCON.BIAS);
+				skp->Text(6 * W / 22, 20 * H / 22, Buffer, strlen(Buffer));
+			}
+			if (GC->rtcc->PZSLVCON.LOT == 5 || GC->rtcc->PZSLVCON.LOT == 6)
+			{
+				sprintf(Buffer, "%+.1lf sec", GC->rtcc->PZSLVCON.TRANS);
+				skp->Text(6 * W / 22, 21 * H / 22, Buffer, strlen(Buffer));
+			}
 		}
 		else
 		{
-			sprintf(Buffer, "Invalid phase flags!");
-		}
-		skp->Text(1 * W / 16, 12 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(2 * W / 22, 3 * H / 22, "INSCO:", 6);
+			skp->Text(2 * W / 22, 4 * H / 22, "DHW:", 4);
+			skp->Text(2 * W / 22, 5 * H / 22, "DU:", 3);
+			skp->Text(2 * W / 22, 6 * H / 22, "ANOM:", 5);
+			skp->Text(2 * W / 22, 7 * H / 22, "DELNOF:", 7);
+			skp->Text(2 * W / 22, 8 * H / 22, "DELNO:", 6);
+			skp->Text(2 * W / 22, 9 * H / 22, "PHASE:", 6);
 
-		PrintTargetVessel(Buffer);
-		skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+			if (GC->rtcc->PZSLVCON.INSCO == 1)
+			{
+				strcpy(Buffer, "Input VINS, GAMINS, RINS");
+			}
+			else if (GC->rtcc->PZSLVCON.INSCO == 2)
+			{
+				strcpy(Buffer, "Input GAMINS, RINS and height difference");
+			}
+			else
+			{
+				strcpy(Buffer, "Input GAMINS, RINS, altitude at angle from insertion");
+			}
+			skp->Text(6 * W / 22, 3 * H / 22, Buffer, strlen(Buffer));
 
-		if (GC->rtcc->PZSLVCON.DELNOF)
-		{
-			sprintf(Buffer, "Compute DELNO");
-			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
-		}
-		else
-		{
-			sprintf(Buffer, "Input DELNO");
-			skp->Text(10 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
+			if (GC->rtcc->PZSLVCON.INSCO != 1)
+			{
+				sprintf(Buffer, "%+.1lf NM", GC->rtcc->PZSLVCON.DHW / 1852.0);
+				skp->Text(6 * W / 22, 4 * H / 22, Buffer, strlen(Buffer));
 
-			sprintf(Buffer, "%+.3lf°", GC->rtcc->PZSLVCON.DELNO*DEG);
-			skp->Text(10 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
+				sprintf(Buffer, "%+.1lf deg", GC->rtcc->PZSLVCON.DU * DEG);
+				skp->Text(6 * W / 22, 5 * H / 22, Buffer, strlen(Buffer));
+
+				sprintf(Buffer, "%+.1lf NM", GC->rtcc->PZSLVCON.ANOM / 1852.0);
+				skp->Text(6 * W / 22, 6 * H / 22, Buffer, strlen(Buffer));
+			}
+
+			if (GC->rtcc->PZSLVCON.DELNOF)
+			{
+				strcpy(Buffer, "Compute DELNO");
+				skp->Text(6 * W / 22, 7 * H / 22, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				strcpy(Buffer, "Input DELNO");
+				skp->Text(6 * W / 22, 7 * H / 22, Buffer, strlen(Buffer));
+
+				sprintf(Buffer, "%+.3lf deg", GC->rtcc->PZSLVCON.DELNO*DEG);
+				skp->Text(6 * W / 22, 8 * H / 22, Buffer, strlen(Buffer));
+			}
+
+			if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 0)
+			{
+				strcpy(Buffer, "-90 to 90 deg");
+			}
+			else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 0)
+			{
+				strcpy(Buffer, "90 to 270 deg");
+			}
+			else if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 1)
+			{
+				strcpy(Buffer, "270 to 450 deg");
+			}
+			else if (GC->rtcc->PZSLVCON.NEGTIV == 0 && GC->rtcc->PZSLVCON.WRAP == 1)
+			{
+				strcpy(Buffer, "450 to 630 deg");
+			}
+			else if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 2)
+			{
+				strcpy(Buffer, "630 to 720 deg");
+			}
+			else
+			{
+				strcpy(Buffer, "Invalid phase flags!");
+			}
+			skp->Text(6 * W / 22, 9 * H / 22, Buffer, strlen(Buffer));
 		}
-		
-		if (GC->rtcc->PZSLVCON.NS == 0)
-		{
-			sprintf(Buffer, "North");
-		}
-		else
-		{
-			sprintf(Buffer, "South");
-		}
-		skp->Text(10 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
 	}
 	else if (screen == 122)
 	{
