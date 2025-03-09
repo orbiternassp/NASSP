@@ -159,11 +159,14 @@
     </ClCompile>
     <ClCompile Include="..\..\src_saturn\s1csystems.cpp" />
     <ClCompile Include="..\..\src_sys\connector.cpp" />
+    <ClCompile Include="..\..\src_sys\soundlib.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_saturn\s1c.h" />
     <ClInclude Include="..\..\src_saturn\s1csystems.h" />
     <ClInclude Include="..\..\src_sys\connector.h" />
+    <ClInclude Include="..\..\src_sys\pyro.h" />
+    <ClInclude Include="..\..\src_sys\soundlib.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
