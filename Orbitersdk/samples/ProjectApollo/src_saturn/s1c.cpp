@@ -577,3 +577,24 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 	if (vessel) 
 		delete (S1C *)vessel;
 }
+
+SICConnector::SICConnector()
+{
+}
+
+SICConnector::~SICConnector()
+{
+}
+
+SICtoSIIConnector::SICtoSIIConnector()
+{
+}
+
+SICtoSIIConnector::~SICtoSIIConnector()
+{
+}
+
+bool SICtoSIIConnector::ReceiveMessage(Connector* from, ConnectorMessage& m)
+{
+	return false;
+}
