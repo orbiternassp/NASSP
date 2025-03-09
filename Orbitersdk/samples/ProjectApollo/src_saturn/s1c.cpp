@@ -32,9 +32,9 @@ S1C::S1C (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmode
 }
 
 S1C::~S1C()
-
 {
-	// Nothing for now.
+	delete(SICSIISepPyros);
+	delete(sicSystems);
 }
 
 void S1C::InitS1c()
@@ -76,6 +76,7 @@ void S1C::InitS1c()
 		th_retro[i] = nullptr;
 
 	th_main[0] = nullptr;
+	hDockSII = nullptr;
 }
 
 void S1C::SetS1c()
@@ -412,12 +413,12 @@ void S1C::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 }
 
 void S1C::clbkSetClassCaps (FILEHANDLE cfg)
-
 {
 	VESSEL4::clbkSetClassCaps (cfg);
 	SetS1c();
 
 	SetupTouchdownPoints();
+	hDockSII = CreateDock(_V(0.0, 0.0, 20.169), _V(0, 0, 1), _V(0, 1, 0));
 
 	SICSIISepPyros = new Pyro("SICSIISepPyros", Panelsdk);
 	sicSystems = new SICSystems(this, th_main, ph_main, Pyro(*SICSIISepPyros), LaunchS, SShutS, CurrentThrust);
