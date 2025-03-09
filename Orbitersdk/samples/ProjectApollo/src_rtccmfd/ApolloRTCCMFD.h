@@ -880,9 +880,14 @@ protected:
 	oapi::Font *font3;
 	oapi::Font *font4;
 	oapi::Font *font5;
-	oapi::Font *font_mocr1; //Used for displays with 28 x 56 dynamic characters
-	oapi::Font *font_mocr2; //Used for displays with 21 x 42 dynamic characters
-	oapi::Font *font_mocr3; //Guaranteed to give 25 lines
+
+	oapi::Font *font_mocr1; //Used for displays with 42 x 84 dynamic characters
+	oapi::Font *font_mocr2; //Used for displays with 32 x 64 dynamic characters
+	oapi::Font *font_mocr3; //Used for displays with 28 x 56 dynamic characters
+	oapi::Font *font_mocr4; //Used for displays with 21 x 42 dynamic characters
+	oapi::Font *font_mocr5; //Used for displays with 17 x 34 dynamic characters
+
+	oapi::Font *font_menu; //Guaranteed to give 25 lines
 	oapi::Pen *pen;
 	oapi::Pen *pen2;
 	int CW; //Character width

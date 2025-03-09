@@ -62,9 +62,13 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	font5 = oapiCreateFont(w / 32, false, "Fixed", FONT_NORMAL, 0);
 
 	int hh = h;
-	font_mocr1 = oapiCreateFont(-(hh / 36), false, "Fixed");
-	font_mocr2 = oapiCreateFont(-(hh / 25), false, "Fixed");
-	font_mocr3 = oapiCreateFont(-(hh / 25), false, "Fixed");
+	font_mocr1 = oapiCreateFont(-(hh / 55), false, "*Lucida Console"); // should be 42
+	font_mocr2 = oapiCreateFont(-(hh / 41), false, "*Lucida Console"); // should be 32
+	font_mocr3 = oapiCreateFont(-(hh / 36), false, "*Lucida Console"); // should be 28
+	font_mocr4 = oapiCreateFont(-(hh / 27), false, "*Lucida Console"); // should be 21
+	font_mocr5 = oapiCreateFont(-(hh / 21), false, "*Lucida Console"); // should be 17
+
+	font_menu = oapiCreateFont(-(hh / 25), false, "*Lucida Console");
 
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	pen2 = oapiCreatePen(1, 1, 0x00FFFFFF);
@@ -112,6 +116,9 @@ ApolloRTCCMFD::~ApolloRTCCMFD ()
 	oapiReleaseFont(font_mocr1);
 	oapiReleaseFont(font_mocr2);
 	oapiReleaseFont(font_mocr3);
+	oapiReleaseFont(font_mocr4);
+	oapiReleaseFont(font_mocr5);
+	oapiReleaseFont(font_menu);
 	oapiReleasePen(pen);
 	oapiReleasePen(pen2);
 

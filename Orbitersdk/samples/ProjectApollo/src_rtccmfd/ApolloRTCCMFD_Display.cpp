@@ -15,7 +15,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 	skp->SetTextColor(GetDefaultColour(2)); //White
 	//Temporary code until all displays have been updated
-	if (screen < 10) skp->SetFont(GetDefaultFont(0));  //Courier
+	if (screen < 10) skp->SetFont(font_menu);  //Lucida Console
 	else skp->SetFont(font); //Old default
 	GetCharSize(skp, CW, CH);
 
@@ -137,7 +137,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		skp->Text(CW, 12 * H / 14, Buffer, strlen(Buffer));
 
-		x = CW * 21;
+		x = CW * 23;
 		y = CH * 17;
 		dy = CH;
 		skp->Text(x, y, "DEL H", 5); y += dy;
@@ -166,17 +166,15 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		break;
 	case 2:
-		skp->SetFont(font_mocr1);
+		skp->SetFont(font_mocr3);
 		GetCharSize(skp, CW, CH);
-		sprintf(oapiDebugString(), "W %d H %d CW %d CH %d cw %d ch %d ratio %d", W, H, CW, CH, cw, ch, H / CH);
-
-		skp->SetTextAlign(oapi::Sketchpad::CENTER);
-		skp->Text(W / 2, 0, "TWO IMPULSE MULTIPLE SOLUTION", 29);
-		sprintf_s(Buffer, GC->rtcc->TwoImpMultDispBuffer.ErrorMessage.c_str());
-		skp->Text(W / 2, CH * 26, Buffer, strlen(Buffer));
 
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-		skp->Text(CW * 53, 0, "0063", 4);
+		skp->Text(CW * 14, 0, "TWO IMPULSE MULTIPLE SOLUTION", 29);
+		sprintf_s(Buffer, GC->rtcc->TwoImpMultDispBuffer.ErrorMessage.c_str());
+		skp->Text(CW * 14, CH * 26, Buffer, strlen(Buffer));
+
+		skp->Text(CW * 52, 0, "0063", 4);
 		skp->Text(CW, CH * 4, "LM STA ID", 9);
 		skp->Text(CW, CH * 5, "LM GETTHS", 9);
 		skp->Text(CW * 3, CH * 6, "MAN VEH", 7);
@@ -187,28 +185,28 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf_s(Buffer, "GMT%c", GC->rtcc->TwoImpMultDispBuffer.GMTFRZ);
 		skp->Text(CW, CH * 9, Buffer, strlen(Buffer));
 
-		skp->Text(CW * 36, CH * 4, "CSM STA ID", 10);
-		skp->Text(CW * 36, CH * 5, "CSM GETTHS", 10);
-		skp->Text(CW * 36, CH * 6, "PHASE", 10);
-		skp->Text(CW * 36, CH * 7, "DEL H", 5);
-		skp->Text(CW * 36, CH * 8, "OPTION", 6);
+		skp->Text(CW * 35, CH * 4, "CSM STA ID", 10);
+		skp->Text(CW * 35, CH * 5, "CSM GETTHS", 10);
+		skp->Text(CW * 35, CH * 6, "PHASE", 10);
+		skp->Text(CW * 35, CH * 7, "DEL H", 5);
+		skp->Text(CW * 35, CH * 8, "OPTION", 6);
 
 		skp->Text(CW * 1, CH * 11, "DEL V1   YAW  PITCH", 19);
 		sprintf_s(Buffer, "GET%c", GC->rtcc->TwoImpMultDispBuffer.GETVAR);
-		skp->Text(CW * 24, CH * 11, Buffer, strlen(Buffer));
-		skp->Text(CW * 32, CH * 11, "DEL V2", 6);
+		skp->Text(CW * 23, CH * 11, Buffer, strlen(Buffer));
+		skp->Text(CW * 31, CH * 11, "DEL V2", 6);
 		if (GC->rtcc->TwoImpMultDispBuffer.showTPI)
 		{
-			skp->Text(CW * 44, CH * 11, "TTPI", 4);
+			skp->Text(CW * 42, CH * 11, "TTPI", 4);
 		}
 		else
 		{
-			skp->Text(CW * 41, CH * 11, "YAW", 3);
-			skp->Text(CW * 46, CH * 11, "PITCH", 5);
+			skp->Text(CW * 40, CH * 11, "YAW", 3);
+			skp->Text(CW * 45, CH * 11, "PITCH", 5);
 		}
 
-		skp->Text(CW * 53, CH * 11, "L", 1);
-		skp->Text(CW * 56, CH * 11, "C", 1);
+		skp->Text(CW * 51, CH * 11, "L", 1);
+		skp->Text(CW * 55, CH * 11, "C", 1);
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		sprintf_s(Buffer, GC->rtcc->TwoImpMultDispBuffer.MAN_VEH.c_str());
@@ -221,11 +219,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(CW * 22, CH * 9, Buffer, strlen(Buffer));
 
 		sprintf(Buffer, "%.4lf", GC->rtcc->TwoImpMultDispBuffer.PHASE);
-		skp->Text(CW * 57, CH * 6, Buffer, strlen(Buffer));
+		skp->Text(CW * 56, CH * 6, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.2lf", GC->rtcc->TwoImpMultDispBuffer.DH);
-		skp->Text(CW * 57, CH * 7, Buffer, strlen(Buffer));
+		skp->Text(CW * 56, CH * 7, Buffer, strlen(Buffer));
 		sprintf_s(Buffer, GC->rtcc->TwoImpMultDispBuffer.OPTION.c_str());
-		skp->Text(CW * 57, CH * 8, Buffer, strlen(Buffer));
+		skp->Text(CW * 56, CH * 8, Buffer, strlen(Buffer));
 
 		for (int i = 0; i < GC->rtcc->TwoImpMultDispBuffer.Solutions; i++)
 		{
@@ -238,24 +236,24 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			GET_Display(Buffer, GC->rtcc->TwoImpMultDispBuffer.data[i].Time2, false);
 			skp->Text(CW * 30, CH * (12 + i), Buffer, strlen(Buffer));
 			sprintf(Buffer, "%.1lf", GC->rtcc->TwoImpMultDispBuffer.data[i].DELV2);
-			skp->Text(CW * 38, CH * (12 + i), Buffer, strlen(Buffer));
+			skp->Text(CW * 37, CH * (12 + i), Buffer, strlen(Buffer));
 			if (GC->rtcc->TwoImpMultDispBuffer.showTPI)
 			{
 				GET_Display(Buffer, GC->rtcc->TwoImpMultDispBuffer.data[i].T_TPI, false);
-				skp->Text(CW * 50, CH * (12 + i), Buffer, strlen(Buffer));
+				skp->Text(CW * 49, CH * (12 + i), Buffer, strlen(Buffer));
 			}
 			else
 			{
 				sprintf(Buffer, "%.1lf", GC->rtcc->TwoImpMultDispBuffer.data[i].YAW2);
-				skp->Text(CW * 45, CH * (12 + i), Buffer, strlen(Buffer));
+				skp->Text(CW * 44, CH * (12 + i), Buffer, strlen(Buffer));
 				sprintf(Buffer, "%.1lf", GC->rtcc->TwoImpMultDispBuffer.data[i].PITCH2);
-				skp->Text(CW * 51, CH * (12 + i), Buffer, strlen(Buffer));
+				skp->Text(CW * 50, CH * (12 + i), Buffer, strlen(Buffer));
 			}
 
 			sprintf(Buffer, "%c", GC->rtcc->TwoImpMultDispBuffer.data[i].L);
-			skp->Text(CW * 54, CH * (12 + i), Buffer, strlen(Buffer));
+			skp->Text(CW * 52, CH * (12 + i), Buffer, strlen(Buffer));
 			sprintf(Buffer, "%d", GC->rtcc->TwoImpMultDispBuffer.data[i].C);
-			skp->Text(CW * 57, CH * (12 + i), Buffer, strlen(Buffer));
+			skp->Text(CW * 56, CH * (12 + i), Buffer, strlen(Buffer));
 		}
 		break;
 	case 3:
@@ -715,7 +713,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(CW, 4 * H / 14, "PTC", 3);
 
 			skp->Text(CW, 6 * H / 14, "Average TEI:", 12);
-			sprintf(Buffer, "MJD %.5lf", GC->REFSMMAT_PTC_MJD);
+			sprintf(Buffer, "MJD %.4lf", GC->REFSMMAT_PTC_MJD);
 			skp->Text(CW, 7 * H / 14, Buffer, strlen(Buffer));
 		}
 		else if (G->REFSMMATopt == 7)
@@ -896,9 +894,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(W - CW, 8 * H / 14, "Update Liftoff Time", 19);
 		break;
 	case 9:
-		skp->SetFont(font_mocr3);
-		GetCharSize(skp, CW, CH);
-		sprintf(oapiDebugString(), "W %d H %d CW %d CH %d cw %d ch %d ratio %d", W, H, CW, CH, cw, ch, H / CH);
+		//skp->SetFont(font6);
+		//GetCharSize(skp, CW, CH);
 		if (G->manpadopt == 0 || G->manpadopt == 1)
 		{
 			int hh, mm;
@@ -989,8 +986,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				}
 				else
 				{
-					skp->Text(CW * 17, CH * 3, "N/A      PTRIM", 14);
-					skp->Text(CW * 17, CH * 4, "N/A      YTRIM", 14);
+					skp->Text(CW * 17, CH * 3, "N/A     PTRIM", 13);
+					skp->Text(CW * 17, CH * 4, "N/A     YTRIM", 13);
 				}
 
 				OrbMech::SStoHHMMSS(GC->manpad.GETI, hh, mm, secs, 0.01);
@@ -4020,7 +4017,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			GET_Display_HHMM(Buffer, GC->rtcc->MPTDISPLAY.man[i].DT);
 			skp->Text(19 * W / 64, (i * 2 + 17) * H / 56, Buffer, strlen(Buffer));
 		}
-
 	}
 	else if (screen == 45)
 	{
