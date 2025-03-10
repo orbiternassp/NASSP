@@ -20,9 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_saturn\S1C_S2_IntStage.h" />
+    <ClInclude Include="..\..\src_sys\connector.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_saturn\S1C_S2_IntStage.cpp" />
+    <ClCompile Include="..\..\src_sys\connector.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -114,15 +116,18 @@
       <SDLCheck>
       </SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;SAT1CSAT2INTERSTAGE_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
+      <ConformanceMode>false</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>../../src_aux;../../src_sys;../../src_mfd;../../src_lm;../../src_moon;../../src_csm;../../src_launch;../../src_landing;../../src_saturn;../../../../include;../../../../XRSound;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpp14</LanguageStandard>
       <PrecompiledHeaderOutputFile>.\Release\Sat1C_Sat2Interstage/Sat1C_Sat2Interstage.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\Release\Sat1C_Sat2Interstage/</AssemblerListingLocation>
+      <ObjectFileName>.\Release\Sat1C_Sat2Interstage/</ObjectFileName>
+      <ProgramDataBaseFileName>.\Release\Sat1C_Sat2Interstage/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -130,8 +135,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <OutputFile>../../../../../Modules/ProjectApollo/Saturn5.dll</OutputFile>
+      <OutputFile>../../../../../Modules/ProjectApollo/Sat1C_Sat2Interstage.dll</OutputFile>
       <AdditionalLibraryDirectories>.\Release\PanelSDK;../../../../lib;../../../../XRSound;../../../../lib/Lua;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>../../src_aux/dsound.lib;winmm.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;lua5.1.lib;opengl32.lib;glu32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;XRSound.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">

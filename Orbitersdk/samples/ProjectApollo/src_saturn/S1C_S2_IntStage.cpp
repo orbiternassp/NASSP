@@ -25,8 +25,48 @@
 
 #include "S1C_S2_IntStage.h"
 
+#define ORBITER_MODULE
+
 S1C_S2_Interstage::S1C_S2_Interstage(OBJHANDLE hObj, int fmodel): ProjectApolloConnectorVessel(hObj, fmodel)
 {
 	SIIDock = nullptr;
 	SICDock = nullptr;
+}
+
+S1C_S2_Interstage::~S1C_S2_Interstage() {
+
+}
+
+void S1C_S2_Interstage::clbkSetClassCaps(FILEHANDLE cfg)
+{
+}
+
+void S1C_S2_Interstage::clbkPostCreation()
+{
+}
+
+void S1C_S2_Interstage::clbkPreStep(double simt, double simdt, double mjd)
+{
+}
+
+void S1C_S2_Interstage::clbkSaveState(FILEHANDLE scn)
+{
+}
+
+void S1C_S2_Interstage::clbkLoadStateEx(FILEHANDLE scn, void* vstatus)
+{
+}
+
+void S1C_S2_Interstage::clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos)
+{
+}
+
+DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel)
+{
+	return new S1C_S2_Interstage(hvessel, flightmodel);
+}
+
+DLLCLBK void ovcExit(VESSEL* vessel)
+{
+	delete (S1C_S2_Interstage*)vessel;
 }

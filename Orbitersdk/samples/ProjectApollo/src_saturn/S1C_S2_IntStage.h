@@ -29,7 +29,6 @@
 
 #include "Orbitersdk.h"
 #include "PanelSDK/PanelSDK.h"
-#include "soundlib.h"
 #include "nasspdefs.h"
 #include "connector.h" //replace with interstage connector header.
 
@@ -38,19 +37,17 @@ class S1C_S2_Interstage : public ProjectApolloConnectorVessel {
 public:
 	S1C_S2_Interstage(OBJHANDLE hObj, int fmodel);
 	virtual ~S1C_S2_Interstage();
-	void InitS1C_S2_Interstage();
-	void clbkPostCreation();
 	void clbkSetClassCaps(FILEHANDLE cfg);
+	void clbkPostCreation();
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkSaveState(FILEHANDLE scn);
 	void clbkLoadStateEx(FILEHANDLE scn, void* vstatus);
-	int clbkConsumeBufferedKey(DWORD key, bool down, char* kstate);
-	void clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel);
 	void clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos);
 
 protected:
 	DOCKHANDLE SIIDock, SICDock;
-
+	PROPELLANT_HANDLE ULLAGE_PROP[8];
+	THRUSTER_HANDLE ULLAGE_MOTORS[8];
 };
 
 #endif
