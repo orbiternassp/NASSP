@@ -29,8 +29,9 @@
 
 S1C_S2_Interstage::S1C_S2_Interstage(OBJHANDLE hObj, int fmodel): ProjectApolloConnectorVessel(hObj, fmodel)
 {
-	SIIDock = nullptr;
-	SICDock = nullptr;
+	hSIIDock = nullptr;
+	hSICDock = nullptr;
+	Sat1C_Sat2InterstageMesh = nullptr;
 }
 
 S1C_S2_Interstage::~S1C_S2_Interstage() {
@@ -39,10 +40,27 @@ S1C_S2_Interstage::~S1C_S2_Interstage() {
 
 void S1C_S2_Interstage::clbkSetClassCaps(FILEHANDLE cfg)
 {
+	VESSEL4::clbkSetClassCaps(cfg);
+	ClearMeshes();
+	ClearThrusterDefinitions();
+	ClearExhaustRefs();
+	ClearAttExhaustRefs();
+
+	Sat1C_Sat2InterstageMesh = oapiLoadMeshGlobal("ProjectApollo/sat5intstg");
+	//Sat1C_Sat2InterstageMesh = oapiLoadMeshGlobal("ProjectApollo/sat5intstg4");
+	//Sat1C_Sat2InterstageMesh = oapiLoadMeshGlobal("ProjectApollo/sat5intstg8");
+
+	VECTOR3 mesh_dir = _V(0, 0, 0);
+	unsigned int meshidx = AddMesh(Sat1C_Sat2InterstageMesh, &mesh_dir);
+	SetMeshVisibilityMode(meshidx, MESHVIS_ALWAYS);
+
+	hSIIDock = CreateDock(_V(0.0, 0.0, 2.1675), _V(0, 0, 1), _V(0, 1, 0));
+	hSICDock = CreateDock(_V(0.0, 0.0, -3.3807), _V(0, 0, -1), _V(0, 1, 0));
 }
 
 void S1C_S2_Interstage::clbkPostCreation()
 {
+	
 }
 
 void S1C_S2_Interstage::clbkPreStep(double simt, double simdt, double mjd)

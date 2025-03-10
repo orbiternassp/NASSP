@@ -45,9 +45,10 @@ public:
 	void clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos);
 
 protected:
-	DOCKHANDLE SIIDock, SICDock;
+	DOCKHANDLE hSIIDock, hSICDock;
 	PROPELLANT_HANDLE ULLAGE_PROP[8];
 	THRUSTER_HANDLE ULLAGE_MOTORS[8];
+	MESHHANDLE Sat1C_Sat2InterstageMesh;
 };
 
 #endif
