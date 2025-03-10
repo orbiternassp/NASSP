@@ -40,14 +40,10 @@ S1C_S2_Interstage::~S1C_S2_Interstage() {
 
 void S1C_S2_Interstage::clbkSetClassCaps(FILEHANDLE cfg)
 {
-	VESSEL4::clbkSetClassCaps(cfg);
-	ClearMeshes();
-	ClearThrusterDefinitions();
-	ClearExhaustRefs();
-	ClearAttExhaustRefs();
-
-	Sat1C_Sat2InterstageMesh = oapiLoadMeshGlobal("ProjectApollo/sat5intstg");
-	//Sat1C_Sat2InterstageMesh = oapiLoadMeshGlobal("ProjectApollo/sat5intstg4");
+	SetEmptyMass(1000.0);
+	SetSize(10.0);
+	//Sat1C_Sat2InterstageMesh = oapiLoadMeshGlobal("ProjectApollo/sat5intstg");
+	Sat1C_Sat2InterstageMesh = oapiLoadMeshGlobal("ProjectApollo/sat5intstg4");
 	//Sat1C_Sat2InterstageMesh = oapiLoadMeshGlobal("ProjectApollo/sat5intstg8");
 
 	VECTOR3 mesh_dir = _V(0, 0, 0);
@@ -69,15 +65,16 @@ void S1C_S2_Interstage::clbkPreStep(double simt, double simdt, double mjd)
 
 void S1C_S2_Interstage::clbkSaveState(FILEHANDLE scn)
 {
+	VESSEL4::clbkSaveState(scn);
 }
 
-void S1C_S2_Interstage::clbkLoadStateEx(FILEHANDLE scn, void* vstatus)
-{
-}
-
-void S1C_S2_Interstage::clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos)
-{
-}
+//void S1C_S2_Interstage::clbkLoadStateEx(FILEHANDLE scn, void* vstatus)
+//{
+//}
+//
+//void S1C_S2_Interstage::clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos)
+//{
+//}
 
 DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel)
 {

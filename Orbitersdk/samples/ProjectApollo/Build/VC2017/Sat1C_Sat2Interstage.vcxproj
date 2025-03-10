@@ -83,9 +83,9 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <TargetName>Sat1C_Sat2Interstage</TargetName>
+    <TargetName>S1C_S2_Interstage</TargetName>
     <OutDir>../../../../../Modules/ProjectApollo/</OutDir>
-    <IntDir>.\Release\Sat1C_Sat2Interstage\</IntDir>
+    <IntDir>.\Release\S1C_S2_Interstage\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -124,10 +124,10 @@
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <LanguageStandard>stdcpp14</LanguageStandard>
-      <PrecompiledHeaderOutputFile>.\Release\Sat1C_Sat2Interstage/Sat1C_Sat2Interstage.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>.\Release\Sat1C_Sat2Interstage/</AssemblerListingLocation>
-      <ObjectFileName>.\Release\Sat1C_Sat2Interstage/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Release\Sat1C_Sat2Interstage/</ProgramDataBaseFileName>
+      <PrecompiledHeaderOutputFile>.\Release\Sat1C_Sat2Interstage/S1C_S2_Interstage.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>.\Release\S1C_S2_Interstage/</AssemblerListingLocation>
+      <ObjectFileName>.\Release\S1C_S2_Interstage/</ObjectFileName>
+      <ProgramDataBaseFileName>.\Release\S1C_S2_Interstage/</ProgramDataBaseFileName>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -135,7 +135,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
-      <OutputFile>../../../../../Modules/ProjectApollo/Sat1C_Sat2Interstage.dll</OutputFile>
+      <OutputFile>../../../../../Modules/ProjectApollo/S1C_S2_Interstage.dll</OutputFile>
       <AdditionalLibraryDirectories>.\Release\PanelSDK;../../../../lib;../../../../XRSound;../../../../lib/Lua;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>../../src_aux/dsound.lib;winmm.lib;PanelSDK.lib;orbiter.lib;orbitersdk.lib;lua5.1.lib;opengl32.lib;glu32.lib;../../src_aux/dinput8.lib;../../src_aux/dxguid.lib;WS2_32.lib;User32.lib;Gdi32.lib;XRSound.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>

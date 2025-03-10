@@ -41,8 +41,8 @@ public:
 	void clbkPostCreation();
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkSaveState(FILEHANDLE scn);
-	void clbkLoadStateEx(FILEHANDLE scn, void* vstatus);
-	void clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos);
+	//void clbkLoadStateEx(FILEHANDLE scn, void* vstatus);
+	//void clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos);
 
 protected:
 	DOCKHANDLE hSIIDock, hSICDock;
