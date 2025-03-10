@@ -888,6 +888,8 @@ protected:
 	oapi::Font *font_mocr5; //Used for displays with 17 x 34 dynamic characters
 
 	oapi::Font *font_menu; //Guaranteed to give 25 lines
+	oapi::Font *font_menu2; //Guaranteed to give 32 lines
+
 	oapi::Pen *pen;
 	oapi::Pen *pen2;
 	int CW; //Character width

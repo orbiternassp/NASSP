@@ -69,6 +69,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	font_mocr5 = oapiCreateFont(-(hh / 21), false, "*Lucida Console"); // should be 17
 
 	font_menu = oapiCreateFont(-(hh / 25), false, "*Lucida Console");
+	font_menu2 = oapiCreateFont(-(hh / 32), false, "*Lucida Console");
 
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	pen2 = oapiCreatePen(1, 1, 0x00FFFFFF);
@@ -119,6 +120,7 @@ ApolloRTCCMFD::~ApolloRTCCMFD ()
 	oapiReleaseFont(font_mocr4);
 	oapiReleaseFont(font_mocr5);
 	oapiReleaseFont(font_menu);
+	oapiReleaseFont(font_menu2);
 	oapiReleasePen(pen);
 	oapiReleasePen(pen2);
 

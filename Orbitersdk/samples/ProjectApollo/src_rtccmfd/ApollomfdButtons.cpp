@@ -386,10 +386,11 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 
 		{ "Select CSM or LM", 0, 'E' },
-		{ "Calc Map Update", 0, 'C' },
 		{ "Earth or Moon", 0, 'V' },
+		{ "Calc Map Update", 0, 'C' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
@@ -405,8 +406,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("SEL", OAPI_KEY_E, &ApolloRTCCMFD::set_Vessel);
-	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuCalcMapUpdate);
 	RegisterFunction("MOD", OAPI_KEY_V, &ApolloRTCCMFD::menuSwitchMapUpdate);
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuCalcMapUpdate);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetPADMenu);
