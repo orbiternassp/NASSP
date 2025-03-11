@@ -326,6 +326,17 @@ void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, std::string message, int x, int y
 	skp->Text(x * W / xmax, y * H / ymax, message.c_str(), message.size());
 }
 
+void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, std::string message)
+{
+	skp->Text(CW * x, CH * y, message.c_str(), message.size());
+}
+
+void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, double val, char *format)
+{
+	sprintf(Buffer, format, val);
+	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+}
+
 void ApolloRTCCMFD::menuEntryUpdateUpload()
 {
 	G->EntryUpdateUplink();
