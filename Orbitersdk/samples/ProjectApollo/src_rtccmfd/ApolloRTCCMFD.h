@@ -83,7 +83,8 @@ public:
 	void Text(oapi::Sketchpad *skp, std::string message, int x, int y, int xmax = 1024, int ymax = 1024);
 	//Functions using CW and CH
 	void Text(oapi::Sketchpad *skp, int x, int y, std::string message);
-	void Text(oapi::Sketchpad *skp, int x, int y, double val, char *format);
+	void Text(oapi::Sketchpad *skp, int x, int y, char *format, double val);
+	void Text(oapi::Sketchpad *skp, int x, int y, char *format, int val);
 
 	void SelectPage(int page);
 

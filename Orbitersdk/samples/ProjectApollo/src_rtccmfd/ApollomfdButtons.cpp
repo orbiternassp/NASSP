@@ -824,12 +824,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu24[] =
 	{
+		{ "", 0, ' ' },
 		{ "Enter file name", 0, 'F' },
 		{ "Enter load number", 0, 'L' },
 		{ "Initialize", 0, 'I' },
 		{ "Edit octal", 0, 'G' },
 		{ "Delete line", 0, 'D' },
-		{ "", 0, ' ' },
 
 		{ "Load EMP", 0, 'O' },
 		{ "", 0, ' ' },
@@ -841,12 +841,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu24, sizeof(mnu24) / sizeof(MFDBUTTONMENU));
 
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("FIL", OAPI_KEY_F, &ApolloRTCCMFD::menuSetEMPFileName);
 	RegisterFunction("NUM", OAPI_KEY_L, &ApolloRTCCMFD::menuSetEMPUplinkNumber);
 	RegisterFunction("INI", OAPI_KEY_I, &ApolloRTCCMFD::menuInitializeEMP);
 	RegisterFunction("EDI", OAPI_KEY_E, &ApolloRTCCMFD::menuEditEMPOctal);
 	RegisterFunction("DEL", OAPI_KEY_D, &ApolloRTCCMFD::menuDeleteEMPLine);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("LOA", OAPI_KEY_O, &ApolloRTCCMFD::menuLoadEMP);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
