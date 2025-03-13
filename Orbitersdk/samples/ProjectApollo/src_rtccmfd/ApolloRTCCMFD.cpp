@@ -61,12 +61,29 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	font4 = oapiCreateFont(w / 31, true, "Courier", FONT_NORMAL, 0);
 	font5 = oapiCreateFont(w / 32, false, "Fixed", FONT_NORMAL, 0);
 
+	//Detect widescreen
+	double aspectratio = ((double)w) / ((double)h);
+	bool widescreen = aspectratio > 1.25;
 	int hh = h;
-	font_mocr1 = oapiCreateFont(-(hh / 55), false, "*Lucida Console"); // should be 42
-	font_mocr2 = oapiCreateFont(-(hh / 41), false, "*Lucida Console"); // should be 32
-	font_mocr3 = oapiCreateFont(-(hh / 36), false, "*Lucida Console"); // should be 28
-	font_mocr4 = oapiCreateFont(-(hh / 27), false, "*Lucida Console"); // should be 21
-	font_mocr5 = oapiCreateFont(-(hh / 21), false, "*Lucida Console"); // should be 17
+
+	if (widescreen)
+	{
+		//Use correct font size
+		font_mocr1 = oapiCreateFont(-(hh / 42), false, "*Lucida Console");
+		font_mocr2 = oapiCreateFont(-(hh / 32), false, "*Lucida Console");
+		font_mocr3 = oapiCreateFont(-(hh / 28), false, "*Lucida Console");
+		font_mocr4 = oapiCreateFont(-(hh / 21), false, "*Lucida Console");
+		font_mocr5 = oapiCreateFont(-(hh / 17), false, "*Lucida Console");
+	}
+	else
+	{
+		//Use smaller font size for 1:1 MFDs
+		font_mocr1 = oapiCreateFont(-(hh / 55), false, "*Lucida Console");
+		font_mocr2 = oapiCreateFont(-(hh / 41), false, "*Lucida Console");
+		font_mocr3 = oapiCreateFont(-(hh / 36), false, "*Lucida Console");
+		font_mocr4 = oapiCreateFont(-(hh / 27), false, "*Lucida Console");
+		font_mocr5 = oapiCreateFont(-(hh / 21), false, "*Lucida Console");
+	}
 
 	font_menu = oapiCreateFont(-(hh / 25), false, "*Lucida Console");
 	font_menu2 = oapiCreateFont(-(hh / 32), false, "*Lucida Console");
@@ -343,6 +360,12 @@ void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, char *format, int v
 	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
 }
 
+void ApolloRTCCMFD::Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	GET_Display(Buffer, val, false);
+	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+}
+
 void ApolloRTCCMFD::menuEntryUpdateUpload()
 {
 	G->EntryUpdateUplink();
@@ -554,7 +577,7 @@ void ApolloRTCCMFD::FormatLatitude(char * Buff, double lat)
 	}
 }
 
-void ApolloRTCCMFD::FormatLongitude(char * Buff, double lng)
+void ApolloRTCCMFD::FormatLongitude(char * Buff, double lng, int precision)
 {
 	while (lng >= 180.0)
 	{
@@ -577,11 +600,11 @@ void ApolloRTCCMFD::FormatLongitude(char * Buff, double lng)
 
 	if (lng >= 0)
 	{
-		sprintf_s(Buff, 64, "%03.0lf:%02.0lfE", iPart, fPart*60.0);
+		sprintf_s(Buff, 64, "%03.0lf:%0*.0lfE", iPart, precision, fPart*60.0);
 	}
 	else
 	{
-		sprintf_s(Buff, 64, "%03.0lf:%02.0lfW", iPart, fPart*60.0);
+		sprintf_s(Buff, 64, "%03.0lf:%0*.0lfW", iPart, precision, fPart*60.0);
 	}
 }
 
@@ -631,35 +654,35 @@ void ApolloRTCCMFD::ThrusterName(char *Buff, int n)
 	}
 	else if (n == RTCC_ENGINETYPE_CSMRCSPLUS2)
 	{
-		sprintf(Buff, "SM RCS 2+X");
+		sprintf(Buff, "CSM RCS +X (2)");
 	}
 	else if (n == RTCC_ENGINETYPE_LMRCSPLUS2)
 	{
-		sprintf(Buff, "LM RCS 2+X");
+		sprintf(Buff, "LM RCS +X (2)");
 	}
 	else if (n == RTCC_ENGINETYPE_CSMRCSPLUS4)
 	{
-		sprintf(Buff, "SM RCS 4+X");
+		sprintf(Buff, "CSM RCS +X (4)");
 	}
 	else if (n == RTCC_ENGINETYPE_LMRCSPLUS4)
 	{
-		sprintf(Buff, "LM RCS 4+X");
+		sprintf(Buff, "LM RCS +X (4)");
 	}
 	else if (n == RTCC_ENGINETYPE_CSMRCSMINUS2)
 	{
-		sprintf(Buff, "SM RCS 2-X");
+		sprintf(Buff, "CSM RCS -X (2)");
 	}
 	else if (n == RTCC_ENGINETYPE_LMRCSMINUS2)
 	{
-		sprintf(Buff, "LM RCS 2-X");
+		sprintf(Buff, "LM RCS -X (2)");
 	}
 	else if (n == RTCC_ENGINETYPE_CSMRCSMINUS4)
 	{
-		sprintf(Buff, "SM RCS 4-X");
+		sprintf(Buff, "CSM RCS -X (4)");
 	}
 	else if (n == RTCC_ENGINETYPE_LMRCSMINUS4)
 	{
-		sprintf(Buff, "LM RCS 4-X");
+		sprintf(Buff, "LM RCS -X (4)");
 	}
 	else if (n == RTCC_ENGINETYPE_LOX_DUMP)
 	{

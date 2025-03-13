@@ -371,7 +371,7 @@ FIDOOrbitDigitals::FIDOOrbitDigitals()
 	PA = 0.0;
 	PP = 0.0;
 	PPP = 0.0;
-	sprintf(REF, "");
+	sprintf(REF1, "");
 	REV = 0;
 	REVL = 0;
 	REVR = 0;
@@ -380,7 +380,8 @@ FIDOOrbitDigitals::FIDOOrbitDigitals()
 	TO = 0.0;
 	V = 0.0;
 	sprintf(VEHID, "");
-	sprintf(REFR, "");
+	sprintf(REF2, "");
+	sprintf(REF3, "");
 	GETBV = 0.0;
 	HAR = 0.0;
 	PAR = 0.0;
@@ -390,6 +391,8 @@ FIDOOrbitDigitals::FIDOOrbitDigitals()
 	PPR = 0.0;
 	LPR = 0.0;
 	GETPR = 0.0;
+	PET = 0.0;
+	GETR = 0.0;
 	Error = 0;
 }
 
@@ -14692,6 +14695,7 @@ void RTCC::EMSTIME(int L, int ID)
 
 		tab->RevNum = CapeCrossingRev(L, sv_true.GMT);
 		tab->TUP = out.TUP;
+		tab->NV = out.ORER + 1;
 	}
 }
 
@@ -14780,14 +14784,16 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 	{
 		tab->REV = tcontab->RevNum;
 		tab->GET = GETfromGMT(tcontab->sv_present.GMT);
+		tab->GETR = SystemParameters.MCGREF*3600.0;
+		tab->PET = tab->GET - tab->GETR;
 		tab->TO = tcontab->T0;
 		if (tcontab->sv_present.RBI == BODY_EARTH)
 		{
-			sprintf_s(tab->REF, "EARTH");
+			sprintf_s(tab->REF1, "ECT");
 		}
 		else
 		{
-			sprintf_s(tab->REF, "LUNAR");
+			sprintf_s(tab->REF1, "MCT");
 		}
 
 		if (mpt->LastExecutedManeuver == 0)
@@ -14860,6 +14866,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 
 	if (queid == 1 || queid == 2)
 	{
+		tab->NV1 = tcontab->NV;
 		tab->LPP = tcontab->lng*DEG;
 		tab->PPP = tcontab->lat*DEG;
 		tab->GETCC = GETfromGMT(CapeCrossingGMT(L, tcontab->RevNum + 1));
@@ -14870,6 +14877,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		tab->A = tcontab->a / 1852.0;
 		tab->E = tcontab->e;
 		tab->I = tcontab->i*DEG;
+		tab->K = mpt->KFactor;
 
 		if (queid == 2 || (CurGET > tab->GETA))
 		{
@@ -14994,11 +15002,11 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 
 		if (sv_pred.RBI == BODY_EARTH)
 		{
-			sprintf_s(tab->REFR, "EARTH");
+			sprintf_s(tab->REF2, "ECT");
 		}
 		else
 		{
-			sprintf_s(tab->REFR, "LUNAR");
+			sprintf_s(tab->REF2, "MCT");
 		}
 
 		tab->REVR = CapeCrossingRev(L, sv_pred.GMT);
@@ -15070,10 +15078,12 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		if (DetermineSVBody(EPHEM.table.front()) == BODY_EARTH)
 		{
 			out = 1;
+			sprintf_s(tab->REF3, "ECT");
 		}
 		else
 		{
 			out = 3;
+			sprintf_s(tab->REF3, "MCT");
 		}
 
 		ELVCNV(EPHEM.table, 0, out, tab2.table);
@@ -15109,10 +15119,12 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		if (DetermineSVBody(outtab.SV) == BODY_EARTH)
 		{
 			out = 1;
+			sprintf_s(tab->REF3, "ECT");
 		}
 		else
 		{
 			out = 3;
+			sprintf_s(tab->REF3, "MCT");
 		}
 		EphemerisData2 sv_true;
 		ELVCNV(outtab.SV, 0, out, sv_true);
@@ -15120,6 +15132,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		OrbMech::latlong_from_r(sv_true.R, lat, lng);
 		tab->GETL = param;
 		tab->L = lng * DEG;
+		tab->REVL = CapeCrossingRev(L, gmt);
 	}
 }
 

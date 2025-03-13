@@ -944,12 +944,12 @@ struct DockAlignOpt	//Docking Alignment Processor
 struct FIDOOrbitDigitals
 {
 	FIDOOrbitDigitals();
-	double GET;		//Ground elapsed time associated with present position data
-	char VEHID[64];	//Vehicle name
-	int REV;		//Current revolution number associated with subject vehicle and central body
-	char REF[64];	//Reference planet
-	char STAID[16]; //Last vector used for updating the ephemeris
-	double GMTID;	//GMT of the state vector
+	double GET;		// Ground elapsed time associated with present position data
+	char VEHID[4];	// Vehicle name
+	int REV;		// Current revolution number associated with subject vehicle and central body
+	char REF1[4];	// Central body for present position data
+	char STAID[8];	// Last vector used for updating the ephemeris
+	double GMTID;	// GMT of the state vector
 	double GETID;	//GET of the state vector
 	int NV1;		//Number of vectors used for interpolation for present position values
 	double H;		//Current height
@@ -973,12 +973,13 @@ struct FIDOOrbitDigitals
 	double LNPP;	//Longitude of ascending node (Earth-fixed or moon-fixed)
 	double GETL;	//Time spacecraft will pass over L
 	int REVL;		//Revolution associated with GETL
+	char REF3[4];	// Central body of L
 	double L;		//The longitude associated with GETL
 	double TO;		//Orbital period
 	double K;		//K-Factor
 	double ORBWT;	//Total current weight
 	int REVR;		//Revolution of requested apogee/perigee
-	char REFR[64];	//Reference planet of requested vector
+	char REF2[4];	// Central body for predicted apogee/perigee data
 	double GETBV;	//Time tag of vector from which apogee/perigee values were computed
 	int NV2;		//Number of vectors used in interpolating for base vector for predicted apogee/perigee data
 	double HAR;		//Height of next apogee at GETA, as requested
@@ -989,6 +990,8 @@ struct FIDOOrbitDigitals
 	double PPR;		//Latitude of next apogee at GETP, as requested
 	double LPR;		//Longitude of next apogee at GETP, as requested
 	double GETPR;	//Time of arrival at next apogee, as requested
+	double PET;		// Phase elapsed time
+	double GETR;	// Event reference time
 	int Error;
 };
 

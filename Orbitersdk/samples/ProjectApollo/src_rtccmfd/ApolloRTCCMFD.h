@@ -85,6 +85,7 @@ public:
 	void Text(oapi::Sketchpad *skp, int x, int y, std::string message);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, double val);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, int val);
+	void Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
 
 	void SelectPage(int page);
 
@@ -165,7 +166,7 @@ public:
 	void GET_Display_HHMM(char *Buff, double time);
 	void AGC_Display(char * Buff, double time);
 	void FormatLatitude(char * Buff, double lat);
-	void FormatLongitude(char * Buff, double lng);
+	void FormatLongitude(char * Buff, double lng, int precision = 2);
 	void FormatIMUAngle0(char *Buff, double ang); //0 digits
 	void FormatIMUAngle1(char *Buff, double ang); //0 digits
 	void FormatIMUAngle2(char *Buff, double ang); //0 digits
