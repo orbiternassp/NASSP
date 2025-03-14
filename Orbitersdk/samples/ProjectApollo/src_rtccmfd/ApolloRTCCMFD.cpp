@@ -115,7 +115,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	IsCSM = true;
 	EnableCalculation = false;
 	ErrorMessage = false;
-	CW = CH = x = y = dy = 0;
+	CW = CH = x = y = dx = dy = 0;
 
 	LoadState();
 }
@@ -362,7 +362,25 @@ void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, char *format, int v
 
 void ApolloRTCCMFD::Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val)
 {
+	GET_Display4(Buffer, val);
+	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+}
+
+void ApolloRTCCMFD::Text_GET_HHHMMSS(oapi::Sketchpad *skp, int x, int y, double val)
+{
 	GET_Display(Buffer, val, false);
+	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+}
+
+void ApolloRTCCMFD::Text_GET_HHHMMSSC(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	GET_Display3(Buffer, val);
+	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+}
+
+void ApolloRTCCMFD::Text_GET_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	GET_Display2(Buffer, val);
 	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
 }
 
@@ -7999,10 +8017,12 @@ void ApolloRTCCMFD::menuSpaceDigitalsInit()
 		if (GC->rtcc->EZETVMED.SpaceDigVehID == RTCC_MPT_CSM)
 		{
 			GC->rtcc->EZETVMED.SpaceDigVehID = RTCC_MPT_LM;
+			sprintf(GC->rtcc->EZSPACE.VEHID, "LEM");
 		}
 		else
 		{
 			GC->rtcc->EZETVMED.SpaceDigVehID = RTCC_MPT_CSM;
+			sprintf(GC->rtcc->EZSPACE.VEHID, "CSM");
 		}
 	}
 }
@@ -9527,108 +9547,47 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 {
 	switch (num)
 	{
-	case 1:
-		menuSetMCCDisplaysPage();
+	case 1: menuSetMCCDisplaysPage(); break;
+	case 40: menuSetFIDOLaunchAnalogNo1Page(); break;
+	case 41: menuSetFIDOLaunchAnalogNo2Page(); break;
+	case 43: //FDO LAUNCH DIG NO 1
 		break;
-	case 40:
-		menuSetFIDOLaunchAnalogNo1Page();
-		break;
-	case 41:
-		menuSetFIDOLaunchAnalogNo2Page();
-		break;
-	case 43:
-		//FDO LAUNCH DIG NO 1
-		break;
-	case 45:
-		menuSetFIDOOrbitDigitalsLMPage();
-		break;
-	case 46:
-		menuSetFIDOOrbitDigitalsCSMPage();
-		break;
-	case 47:
-		menuSetMPTPage();
-		break;
-	case 48:
-		menuSetOrbAdjPage();
-		break;
-	case 54:
-		menuSetDetailedManeuverTableNo1Page();
-		break;
-	case 55:
-		menuSetPredSiteAcquisitionCSM1Page();
-		break;
-	case 56:
-		menuSetPredSiteAcquisitionLM1Page();
-		break;
-	case 58:
-		menuSetRendezvousEvaluationDisplayPage();
-		break;
-	case 60:
-		menuSetRelativeMotionDigitalsPage();
-		break;
-	case 66:
-		menuSetRendezvousPlanningDisplayPage();
-		break;
-	case 69:
-		menuSetDetailedManeuverTableNo2Page();
-		break;
-	case 79:
-		menuMidcourseTradeoffPage();
-		break;
-	case 82:
-		menuSetSpaceDigitalsPage();
-		break;
-	case 86:
-		menuSetDescPlanCalcPage();
-		break;
-	case 87:
-		menuSetPredSiteAcquisitionCSM2Page();
-		break;
-	case 88:
-		menuSetPredSiteAcquisitionLM2Page();
-		break;
-	case 229:
-		menuSetGuidanceOpticsSupportTablePage();
-		break;
-	case 232:
-		SetMEDInputPage("K19");
-		break;
-	case 233:
-		SetMEDInputPage("K39");
-		break;
-	case 239:
-		menuSetLMOpticsSupportTablePage();
-		break;
-	case 1501:
-		menuSetMoonriseMoonsetTablePage();
-		break;
-	case 1502:
-		menuSetSunriseSunsetTablePage();
-		break;
-	case 1503:
-		menuSetNextStationContactsPage();
-		break;
-	case 1506:
-		menuSetExpSiteAcqPage();
-		break;
-	case 1508:
-		menuSetLandmarkAcquisitionDisplayPage();
-		break;
-	case 1590:
-		menuSetVectorCompareDisplay();
-		break;
-	case 1591:
-		menuVectorPanelSummaryPage();
-		break;
-	case 1597:
-		menuSetSkeletonFlightPlanPage();
-		break;
-	case 1619:
-		menuSetCheckoutMonitorPage();
-		break;
-	case 1629:
-		menuSetOnlineMonitorPage();
-		break;
+	case 45: menuSetFIDOOrbitDigitalsLMPage(); break;
+	case 46: menuSetFIDOOrbitDigitalsCSMPage(); break;
+	case 47: menuSetMPTPage(); break;
+	case 48: menuSetOrbAdjPage(); break;
+	case 50: menuSetPerigeeAdjustDisplayPage(); break;
+	case 54: menuSetDetailedManeuverTableNo1Page(); break;
+	case 55: menuSetPredSiteAcquisitionCSM1Page(); break;
+	case 56: menuSetPredSiteAcquisitionLM1Page(); break;
+	case 57: menuSetRendezvousPlanningDisplayPage(); break;
+	case 58: menuSetRendezvousEvaluationDisplayPage(); break;
+	case 60: menuSetRelativeMotionDigitalsPage(); break;
+	case 66: menuSetLLWPDisplayPage(); break;
+	case 69: menuSetDetailedManeuverTableNo2Page(); break;
+	case 78: menuSetLOIDisplayPage(); break;
+	case 79: menuMidcourseTradeoffPage(); break;
+	case 80: menuTLIPlanningPage(); break;
+	case 82: menuSetSpaceDigitalsPage(); break;
+	case 86: menuSetDescPlanCalcPage(); break;
+	case 87: menuSetPredSiteAcquisitionCSM2Page(); break;
+	case 88: menuSetPredSiteAcquisitionLM2Page(); break;
+	case 229: menuSetGuidanceOpticsSupportTablePage(); break;
+	case 232: SetMEDInputPage("K19"); break;
+	case 233: SetMEDInputPage("K39"); break;
+	case 239: menuSetLMOpticsSupportTablePage(); break;
+	case 363: menuSetRTEDigitalsPage(); break;
+	case 366: menuSetRTEConstraintsPage(); break;
+	case 1501: menuSetMoonriseMoonsetTablePage(); break;
+	case 1502: menuSetSunriseSunsetTablePage(); break;
+	case 1503: menuSetNextStationContactsPage(); break;
+	case 1506: menuSetExpSiteAcqPage(); break;
+	case 1508: menuSetLandmarkAcquisitionDisplayPage(); break;
+	case 1590: menuSetVectorCompareDisplay(); break;
+	case 1591: menuVectorPanelSummaryPage(); break;
+	case 1597: menuSetSkeletonFlightPlanPage(); break;
+	case 1619: menuSetCheckoutMonitorPage(); break;
+	case 1629: menuSetOnlineMonitorPage(); break;
 	}
 }
 

@@ -86,6 +86,9 @@ public:
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, double val);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, int val);
 	void Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHHMMSSC(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val);
 
 	void SelectPage(int page);
 
@@ -899,7 +902,7 @@ protected:
 	oapi::Pen *pen2;
 	int CW; //Character width
 	int CH; //Character height
-	int x, y, dy; //Display spacing helper variables
+	int x, y, dx, dy; //Display spacing helper variables
 	Saturn *saturn;
 	LEM *lem;
 	int screen;
