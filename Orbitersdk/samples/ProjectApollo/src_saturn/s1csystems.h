@@ -24,6 +24,44 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "connector.h"
+
+class SICSystems;
+
+class SICSystemsConnector : public Connector
+{
+public:
+	SICSystemsConnector();
+	virtual ~SICSystemsConnector();
+	void SetSICSystems(SICSystems *sic) { ourSIC = sic; };
+protected:
+	SICSystems *ourSIC;
+};
+
+//S-IC to S-II Connector
+class SICToSIIConnector : public SICSystemsConnector
+{
+public:
+	SICToSIIConnector();
+	virtual ~SICToSIIConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
+//S-IC to S-I Connector
+class SICToSIESEConnector : public SICSystemsConnector
+{
+public:
+	SICToSIESEConnector();
+	virtual ~SICToSIESEConnector();
+
+	//S-IC to S-I ESE
+	bool GetSICThrustOKSimulate(int eng, int n);
+
+	//S-I ESE to S-IC
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
 class F1Engine
 {
 public:
@@ -71,7 +109,6 @@ protected:
 	double yawPos;
 };
 
-class TSMUmbilical;
 class Pyro;
 class Sound;
 
@@ -103,17 +140,16 @@ public:
 	bool GetPropellantDepletionEngineCutoff();
 	bool GetInboardEngineOut();
 	bool GetOutboardEngineOut();
+	bool GetSICSIINotSeparated();
 
 	virtual bool GetEngineStop();
 
-	virtual void ConnectUmbilical(TSMUmbilical *umb);
-	virtual void DisconnectUmbilical();
-	bool IsUmbilicalConnected();
+	SICToSIIConnector * GetSICToSIIConnector() { return &sicSIIConnector; }
+	SICToSIESEConnector * GetSICToSIESEConnector() { return &sicSIESEConnector; }
 protected:
 
 	bool TripleVoting(bool vote1, bool vote2, bool vote3);
 	double GetSumThrust();
-	bool ESEGetSICThrustOKSimulate(int eng, int n);
 
 	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
@@ -141,5 +177,6 @@ protected:
 
 	bool ThrustOK[15];
 
-	TSMUmbilical *TSMUmb;
+	SICToSIIConnector sicSIIConnector;
+	SICToSIESEConnector sicSIESEConnector;
 };

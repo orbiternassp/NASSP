@@ -91,8 +91,8 @@ EDS::EDS(IU *iu)
 	ExcessiveRollRateIndication = false;
 	ExcessivePitchYawRateIndicationA = false;
 	ExcessivePitchYawRateIndicationB = false;
-	SIAllEnginesOKA = false;
-	SIAllEnginesOKB = false;
+	SINotAllEnginesOKA = false;
+	SINotAllEnginesOKB = false;
 	AutoAbort1AToSC = false;
 	AutoAbort1BToSC = false;
 	AutoAbort2AToSC = false;
@@ -111,7 +111,6 @@ EDS::EDS(IU *iu)
 
 	LVRateAutoSwitchOff = false;
 	TwoEngineOutAutoSwitchOff = false;
-	Stage = 0;
 	EDSBus1Powered = false;
 	EDSBus2Powered = false;
 	EDSBus3Powered = false;
@@ -128,43 +127,43 @@ void EDS::Timestep(double simdt)
 	else
 		IUEDSBusPowered = false;
 
-	if (iu->ESEGetCommandVehicleLiftoffIndicationInhibit())
+	if (iu->GetIUToIUESECommandConnector()->GetCommandVehicleLiftoffIndicationInhibit())
 		LiftoffRelay = true;
 	else
 		LiftoffRelay = false;
 
-	if (iu->ESEPadAbortRequest())
+	if (iu->GetIUToIUESECommandConnector()->PadAbortRequest())
 		PadAbortRequest = true;
 	else
 		PadAbortRequest = false;
 
-	if (iu->ESEGetEngineThrustIndicationEnableInhibitA())
+	if (iu->GetIUToIUESECommandConnector()->GetEngineThrustIndicationEnableInhibitA())
 		GSEEngineThrustIndicationEnableA = true;
 	else
 		GSEEngineThrustIndicationEnableA = false;
 
-	if (iu->ESEGetEngineThrustIndicationEnableInhibitB())
+	if (iu->GetIUToIUESECommandConnector()->GetEngineThrustIndicationEnableInhibitB())
 		GSEEngineThrustIndicationEnableB = true;
 	else
 		GSEEngineThrustIndicationEnableB = false;
 
-	if (iu->ESEEDSLiftoffInhibitA())
+	if (iu->GetIUToIUESECommandConnector()->EDSLiftoffInhibitA())
 		EDSLiftoffInhibitA = true;
 	else
 		EDSLiftoffInhibitA = false;
 
-	if (iu->ESEEDSLiftoffInhibitB())
+	if (iu->GetIUToIUESECommandConnector()->EDSLiftoffInhibitB())
 		EDSLiftoffInhibitB = true;
 	else
 		EDSLiftoffInhibitB = false;
 
 	//S-IVB Thrust Monitor
-	if (IUEDSBusPowered && SIVBEngineOutIndicationA && iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
+	if (IUEDSBusPowered && SIVBEngineOutIndicationA && iu->GetSIVBCommandConnector()->GetSIVBThrustOK() == false)
 		SIVBEngineThrustMonitorA = true;
 	else
 		SIVBEngineThrustMonitorA = false;
 
-	if (IUEDSBusPowered && SIVBEngineOutIndicationB && iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
+	if (IUEDSBusPowered && SIVBEngineOutIndicationB && iu->GetSIVBCommandConnector()->GetSIVBThrustOK() == false)
 		SIVBEngineThrustMonitorB = true;
 	else
 		SIVBEngineThrustMonitorB = false;
@@ -172,7 +171,6 @@ void EDS::Timestep(double simdt)
 	//Input signals
 	LVRateAutoSwitchOff = iu->GetCommandConnector()->LVRateAutoSwitchState() == TOGGLESWITCH_DOWN;
 	TwoEngineOutAutoSwitchOff = iu->GetCommandConnector()->TwoEngineOutAutoSwitchState() == TOGGLESWITCH_DOWN;
-	Stage = iu->GetLVCommandConnector()->GetStage();
 	EDSBus1Powered = iu->GetCommandConnector()->IsEDSBusPowered(1);
 	EDSBus2Powered = iu->GetCommandConnector()->IsEDSBusPowered(2);
 	EDSBus3Powered = iu->GetCommandConnector()->IsEDSBusPowered(3);
@@ -182,50 +180,50 @@ void EDS::Timestep(double simdt)
 	//Auto Abort Relays
 	//Two-Engines Out
 	tempsignal1 = iu->GetControlDistributor()->GetTwoEnginesOutAutoAbortInhibit() || (IUEDSBusPowered && TwoEngineOutAutoSwitchOff);
-	if (iu->ESEGetTwoEngineOutAutoAbortInhibit(1) || tempsignal1)
+	if (iu->GetIUToIUESECommandConnector()->GetTwoEngineOutAutoAbortInhibit(1) || tempsignal1)
 		TwoEngineOutAutoAbortInhibitNo1 = true;
 	else
 		TwoEngineOutAutoAbortInhibitNo1 = false;
 
-	if (iu->ESEGetTwoEngineOutAutoAbortInhibit(2) || tempsignal1)
+	if (iu->GetIUToIUESECommandConnector()->GetTwoEngineOutAutoAbortInhibit(2) || tempsignal1)
 		TwoEngineOutAutoAbortInhibitNo2 = true;
 	else
 		TwoEngineOutAutoAbortInhibitNo2 = false;
 
-	if (iu->ESEGetTwoEngineOutAutoAbortInhibit(3) || tempsignal1)
+	if (iu->GetIUToIUESECommandConnector()->GetTwoEngineOutAutoAbortInhibit(3) || tempsignal1)
 		TwoEngineOutAutoAbortInhibitNo3 = true;
 	else
 		TwoEngineOutAutoAbortInhibitNo3 = false;
 
 	//Excessive Rate
 	tempsignal1 = iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitchOff);
-	if (iu->ESEGetExcessivePitchYawRateAutoAbortInhibit(1) || tempsignal1)
+	if (iu->GetIUToIUESECommandConnector()->GetExcessivePitchYawRateAutoAbortInhibit(1) || tempsignal1)
 		ExcessiveRateAutoAbortInhibitPY1 = true;
 	else
 		ExcessiveRateAutoAbortInhibitPY1 = false;
 
-	if (iu->ESEGetExcessivePitchYawRateAutoAbortInhibit(2) || tempsignal1)
+	if (iu->GetIUToIUESECommandConnector()->GetExcessivePitchYawRateAutoAbortInhibit(2) || tempsignal1)
 		ExcessiveRateAutoAbortInhibitPY2 = true;
 	else
 		ExcessiveRateAutoAbortInhibitPY2 = false;
 
-	if (iu->ESEGetExcessivePitchYawRateAutoAbortInhibit(3) || tempsignal1)
+	if (iu->GetIUToIUESECommandConnector()->GetExcessivePitchYawRateAutoAbortInhibit(3) || tempsignal1)
 		ExcessiveRateAutoAbortInhibitPY3 = true;
 	else
 		ExcessiveRateAutoAbortInhibitPY3 = false;
 
 	tempsignal1 = iu->GetControlDistributor()->GetExcessiveRatePYRAutoAbortInhibit() || iu->GetControlDistributor()->GetExcessiveRateRollAutoAbortInhibit() || (IUEDSBusPowered && LVRateAutoSwitchOff);
-	if (iu->ESEGetExcessiveRollRateAutoAbortInhibit(1) || tempsignal1)
+	if (iu->GetIUToIUESECommandConnector()->GetExcessiveRollRateAutoAbortInhibit(1) || tempsignal1)
 		ExcessiveRateAutoAbortInhibitR1 = true;
 	else
 		ExcessiveRateAutoAbortInhibitR1 = false;
 
-	if (iu->ESEGetExcessiveRollRateAutoAbortInhibit(2) || tempsignal1)
+	if (iu->GetIUToIUESECommandConnector()->GetExcessiveRollRateAutoAbortInhibit(2) || tempsignal1)
 		ExcessiveRateAutoAbortInhibitR2 = true;
 	else
 		ExcessiveRateAutoAbortInhibitR2 = false;
 
-	if (iu->ESEGetExcessiveRollRateAutoAbortInhibit(3) || tempsignal1)
+	if (iu->GetIUToIUESECommandConnector()->GetExcessiveRollRateAutoAbortInhibit(3) || tempsignal1)
 		ExcessiveRateAutoAbortInhibitR3 = true;
 	else
 		ExcessiveRateAutoAbortInhibitR3 = false;
@@ -237,17 +235,17 @@ void EDS::Timestep(double simdt)
 	}
 
 	//LV Engines EDS Cutoff Inhibit
-	if ((IUEDSBusPowered && !BECOA) || iu->ESEGetEDSLVCutoffSimulate(1))
+	if ((IUEDSBusPowered && !BECOA) || iu->GetIUToIUESECommandConnector()->GetEDSLVCutoffSimulate(1))
 		LVEnginesCutoffFromSC1 = true;
 	else
 		LVEnginesCutoffFromSC1 = false;
 
-	if ((IUEDSBusPowered && (!BECOA || !BECOB)) || iu->ESEGetEDSLVCutoffSimulate(2))
+	if ((IUEDSBusPowered && (!BECOA || !BECOB)) || iu->GetIUToIUESECommandConnector()->GetEDSLVCutoffSimulate(2))
 		LVEnginesCutoffFromSC2 = true;
 	else
 		LVEnginesCutoffFromSC2 = false;
 
-	if ((IUEDSBusPowered && !BECOB) || iu->ESEGetEDSLVCutoffSimulate(3))
+	if ((IUEDSBusPowered && !BECOB) || iu->GetIUToIUESECommandConnector()->GetEDSLVCutoffSimulate(3))
 		LVEnginesCutoffFromSC3 = true;
 	else
 		LVEnginesCutoffFromSC3 = false;
@@ -270,19 +268,19 @@ void EDS::Timestep(double simdt)
 
 	//Overrate Auto Abort
 	//Roll
-	if (iu->ESEGetGSEOverrateSimulate(3) || IUEDSBusPowered && iu->GetContSigProc()->GetRollNo3Overrate())
+	if (iu->GetIUToIUESECommandConnector()->GetGSEOverrateSimulate(3) || IUEDSBusPowered && iu->GetContSigProc()->GetRollNo3Overrate())
 		ExcessiveRollRateVotingA = true;
 	else
 		ExcessiveRollRateVotingA = false;
 
-	tempsignal1 = iu->ESEGetGSEOverrateSimulate(2) || IUEDSBusPowered && iu->GetContSigProc()->GetRollNo2Overrate();
+	tempsignal1 = iu->GetIUToIUESECommandConnector()->GetGSEOverrateSimulate(2) || IUEDSBusPowered && iu->GetContSigProc()->GetRollNo2Overrate();
 
 	if (tempsignal1)
 		ExcessiveRollRateVotingB = true;
 	else
 		ExcessiveRollRateVotingB = false;
 
-	tempsignal2 = iu->ESEGetGSEOverrateSimulate(1) || IUEDSBusPowered && iu->GetContSigProc()->GetRollNo1Overrate();
+	tempsignal2 = iu->GetIUToIUESECommandConnector()->GetGSEOverrateSimulate(1) || IUEDSBusPowered && iu->GetContSigProc()->GetRollNo1Overrate();
 
 	if ((tempsignal1 && ExcessiveRollRateVotingA) || (tempsignal2 && ExcessiveRollRateVotingB))
 		ExcessiveRollRateIndication = true;
@@ -290,19 +288,19 @@ void EDS::Timestep(double simdt)
 		ExcessiveRollRateIndication = false;
 
 	//Pitch
-	if (iu->ESEGetGSEOverrateSimulate(6) || IUEDSBusPowered && iu->GetContSigProc()->GetPitchNo3Overrate())
+	if (iu->GetIUToIUESECommandConnector()->GetGSEOverrateSimulate(6) || IUEDSBusPowered && iu->GetContSigProc()->GetPitchNo3Overrate())
 		ExcessivePitchRateVotingA = true;
 	else
 		ExcessivePitchRateVotingA = false;
 
-	tempsignal1 = iu->ESEGetGSEOverrateSimulate(5) || IUEDSBusPowered && iu->GetContSigProc()->GetPitchNo2Overrate();
+	tempsignal1 = iu->GetIUToIUESECommandConnector()->GetGSEOverrateSimulate(5) || IUEDSBusPowered && iu->GetContSigProc()->GetPitchNo2Overrate();
 
 	if (tempsignal1)
 		ExcessivePitchRateVotingB = true;
 	else
 		ExcessivePitchRateVotingB = false;
 
-	tempsignal2 = iu->ESEGetGSEOverrateSimulate(4) || IUEDSBusPowered && iu->GetContSigProc()->GetPitchNo1Overrate();
+	tempsignal2 = iu->GetIUToIUESECommandConnector()->GetGSEOverrateSimulate(4) || IUEDSBusPowered && iu->GetContSigProc()->GetPitchNo1Overrate();
 
 	if ((tempsignal1 && ExcessivePitchRateVotingA) || (tempsignal2 && ExcessivePitchRateVotingB))
 		ExcessivePitchYawRateIndicationA = true;
@@ -310,19 +308,19 @@ void EDS::Timestep(double simdt)
 		ExcessivePitchYawRateIndicationA = false;
 
 	//Yaw
-	if (iu->ESEGetGSEOverrateSimulate(9) || IUEDSBusPowered && iu->GetContSigProc()->GetYawNo3Overrate())
+	if (iu->GetIUToIUESECommandConnector()->GetGSEOverrateSimulate(9) || IUEDSBusPowered && iu->GetContSigProc()->GetYawNo3Overrate())
 		ExcessiveYawRateVotingA = true;
 	else
 		ExcessiveYawRateVotingA = false;
 
-	tempsignal1 = iu->ESEGetGSEOverrateSimulate(8) || IUEDSBusPowered && iu->GetContSigProc()->GetYawNo2Overrate();
+	tempsignal1 = iu->GetIUToIUESECommandConnector()->GetGSEOverrateSimulate(8) || IUEDSBusPowered && iu->GetContSigProc()->GetYawNo2Overrate();
 
 	if (tempsignal1)
 		ExcessiveYawRateVotingB = true;
 	else
 		ExcessiveYawRateVotingB = false;
 
-	tempsignal2 = iu->ESEGetGSEOverrateSimulate(7) || IUEDSBusPowered && iu->GetContSigProc()->GetYawNo1Overrate();
+	tempsignal2 = iu->GetIUToIUESECommandConnector()->GetGSEOverrateSimulate(7) || IUEDSBusPowered && iu->GetContSigProc()->GetYawNo1Overrate();
 
 	if ((tempsignal1 && ExcessiveYawRateVotingA) || (tempsignal2 && ExcessiveYawRateVotingB))
 		ExcessivePitchYawRateIndicationB = true;
@@ -395,7 +393,7 @@ void EDS::Timestep(double simdt)
 	}
 
 	//Guidance Reference Release
-	if (iu->ESEGetGuidanceReferenceRelease())
+	if (iu->GetIUToIUESECommandConnector()->GetGuidanceReferenceRelease())
 		iu->GetCommandConnector()->SetAGCInputChannelBit(030, GuidanceReferenceRelease, true);
 	else
 		iu->GetCommandConnector()->SetAGCInputChannelBit(030, GuidanceReferenceRelease, false);
@@ -409,32 +407,32 @@ void EDS::Timestep(double simdt)
 
 void EDS::AutoAbortCircuits()
 {
-	if (AutoAbortBus || iu->ESEGetEDSAutoAbortSimulate(1))
+	if (AutoAbortBus || iu->GetIUToIUESECommandConnector()->GetEDSAutoAbortSimulate(1))
 		AutoAbort1AToSC = true;
 	else
 		AutoAbort1AToSC = false;
 
-	if (AutoAbortBus || iu->ESEGetEDSAutoAbortSimulate(2))
+	if (AutoAbortBus || iu->GetIUToIUESECommandConnector()->GetEDSAutoAbortSimulate(2))
 		AutoAbort1BToSC = true;
 	else
 		AutoAbort1BToSC = false;
 
-	if (AutoAbortBus || iu->ESEGetEDSAutoAbortSimulate(3))
+	if (AutoAbortBus || iu->GetIUToIUESECommandConnector()->GetEDSAutoAbortSimulate(3))
 		AutoAbort2AToSC = true;
 	else
 		AutoAbort2AToSC = false;
 
-	if (AutoAbortBus || iu->ESEGetEDSAutoAbortSimulate(4))
+	if (AutoAbortBus || iu->GetIUToIUESECommandConnector()->GetEDSAutoAbortSimulate(4))
 		AutoAbort2BToSC = true;
 	else
 		AutoAbort2BToSC = false;
 
-	if (AutoAbortBus || iu->ESEGetEDSAutoAbortSimulate(5))
+	if (AutoAbortBus || iu->GetIUToIUESECommandConnector()->GetEDSAutoAbortSimulate(5))
 		AutoAbort3AToSC = true;
 	else
 		AutoAbort3AToSC = false;
 
-	if (AutoAbortBus || iu->ESEGetEDSAutoAbortSimulate(6))
+	if (AutoAbortBus || iu->GetIUToIUESECommandConnector()->GetEDSAutoAbortSimulate(6))
 		AutoAbort3BToSC = true;
 	else
 		AutoAbort3BToSC = false;
@@ -495,22 +493,22 @@ double EDS::GetLVTankPressure(int n)
 	//S-IVB LOX No. 1 Tank Pressure
 	if (n == 1)
 	{
-		return iu->GetLVCommandConnector()->GetSIVBLOXTankPressurePSI();
+		return iu->GetSIVBCommandConnector()->GetSIVBLOXTankPressurePSI();
 	}
 	//S-IVB LOX No. 2 Tank Pressure
 	else if (n == 2)
 	{
-		return iu->GetLVCommandConnector()->GetSIVBLOXTankPressurePSI();
+		return iu->GetSIVBCommandConnector()->GetSIVBLOXTankPressurePSI();
 	}
 	//S-IVB Fuel No. 1 Tank Pressure
 	else if (n == 3)
 	{
-		return iu->GetLVCommandConnector()->GetSIVBFuelTankPressurePSI();
+		return iu->GetSIVBCommandConnector()->GetSIVBFuelTankPressurePSI();
 	}
 	//S-IVB Fuel No. 2 Tank Pressure
 	else if (n == 4)
 	{
-		return iu->GetLVCommandConnector()->GetSIVBFuelTankPressurePSI();
+		return iu->GetSIVBCommandConnector()->GetSIVBFuelTankPressurePSI();
 	}
 
 	return 0.0;
@@ -523,7 +521,7 @@ bool EDS::GetSCControl()
 
 bool EDS::GetAllSIEnginesRunning()
 {
-	return (!SIAllEnginesOKA && !SIAllEnginesOKB);
+	return (!SINotAllEnginesOKA && !SINotAllEnginesOKB);
 }
 
 bool EDS::IsEDSUnsafeA()
@@ -534,6 +532,16 @@ bool EDS::IsEDSUnsafeA()
 bool EDS::IsEDSUnsafeB()
 {
 	return iu->GetCommandConnector()->IsEDSUnsafeB();
+}
+
+void EDS::GetAutoAbortToSC(bool *abort)
+{
+	abort[0] = AutoAbort1AToSC;
+	abort[1] = AutoAbort1BToSC;
+	abort[2] = AutoAbort2AToSC;
+	abort[3] = AutoAbort2BToSC;
+	abort[4] = AutoAbort3AToSC;
+	abort[5] = AutoAbort3BToSC;
 }
 
 void EDS::ResetBus1()
@@ -631,26 +639,23 @@ EDS1B::EDS1B(IU *iu) : EDS(iu)
 
 void EDS1B::Timestep(double simdt)
 {
-	if (iu->GetLVCommandConnector() == NULL) return;
-	if (iu->GetCommandConnector() == NULL) return;
-
 	EDS::Timestep(simdt);
 
-	SIAllEnginesOKA = false;
-	SIAllEnginesOKB = false;
+	SINotAllEnginesOKA = false;
+	SINotAllEnginesOKB = false;
 
 	//S-IB Thrust Monitor
-	if (IUEDSBusPowered && Stage <= LAUNCH_STAGE_ONE)
+	if (IUEDSBusPowered && iu->GetSIVBCommandConnector()->SIXSIVBNotSeparated())
 	{
-		iu->GetLVCommandConnector()->GetSIThrustOK(ThrustOKSignal, 24);
+		iu->GetSIVBCommandConnector()->GetSIThrustOK(ThrustOKSignal, 24);
 		for (int i = 0;i < 8;i++)
 		{
 			SIThrustNotOK[i] = TripleVoting(!ThrustOKSignal[3 * i], !ThrustOKSignal[3 * i + 1], !ThrustOKSignal[3 * i + 2]);
 
 			if (SIThrustNotOK[i])
 			{
-				SIAllEnginesOKA = true;
-				SIAllEnginesOKB = true;
+				SINotAllEnginesOKA = true;
+				SINotAllEnginesOKB = true;
 			}
 		}
 	}
@@ -665,33 +670,27 @@ void EDS1B::Timestep(double simdt)
 	//EDS Engine Cutoff
 	if (LVEnginesCutoffCommand1 || LVEnginesCutoffCommand3)
 	{
-		if (Stage == LAUNCH_STAGE_ONE)
+		if (!SIEDSCutoff)
 		{
-			if (!SIEDSCutoff)
-			{
-				SIEDSCutoff = true;
-				iu->GetLVCommandConnector()->SIEDSCutoff(true);
-			}
+			SIEDSCutoff = true;
+			iu->GetSIVBCommandConnector()->SIEDSCutoff(true);
 		}
-		else if (Stage == LAUNCH_STAGE_SIVB || Stage == STAGE_ORBIT_SIVB)
+		if (!SIVBEngineCutoffDisabled && !SIVBEDSCutoff)
 		{
-			if (!SIVBEngineCutoffDisabled && !SIVBEDSCutoff)
-			{
-				SIVBEDSCutoff = true;
-				iu->GetLVCommandConnector()->SIVBEDSCutoff(true);
-			}
+			SIVBEDSCutoff = true;
+			iu->GetSIVBCommandConnector()->SIVBEDSCutoff(true);
 		}
 	}
 	else
 	{
 		if (SIEDSCutoff == true)
 		{
-			iu->GetLVCommandConnector()->SIEDSCutoff(false);
+			iu->GetSIVBCommandConnector()->SIEDSCutoff(false);
 			SIEDSCutoff = false;
 		}
 		if (SIVBEDSCutoff == true)
 		{
-			iu->GetLVCommandConnector()->SIVBEDSCutoff(false);
+			iu->GetSIVBCommandConnector()->SIVBEDSCutoff(false);
 			SIVBEDSCutoff = false;
 		}
 	}
@@ -792,12 +791,12 @@ double EDSSV::GetLVTankPressure(int n)
 		if (SIISIVBNotSeparated)
 		{
 			//S-II LH2 Tank Ullage Pressure No. 1
-			return iu->GetLVCommandConnector()->GetSIIFuelTankPressurePSI();
+			return iu->GetSIVBCommandConnector()->GetSIIFuelTankPressurePSI();
 		}
 		else
 		{
 			//S-IVB LOX No. 1 Tank Pressure
-			return iu->GetLVCommandConnector()->GetSIVBLOXTankPressurePSI();
+			return iu->GetSIVBCommandConnector()->GetSIVBLOXTankPressurePSI();
 		}
 	}
 	else if (n == 2)
@@ -805,23 +804,23 @@ double EDSSV::GetLVTankPressure(int n)
 		if (SIISIVBNotSeparated)
 		{
 			//S-II LH2 Tank Ullage Pressure No. 2
-			return iu->GetLVCommandConnector()->GetSIIFuelTankPressurePSI();
+			return iu->GetSIVBCommandConnector()->GetSIIFuelTankPressurePSI();
 		}
 		else
 		{
 			//S-IVB LOX No. 2 Tank Pressure
-			return iu->GetLVCommandConnector()->GetSIVBLOXTankPressurePSI();
+			return iu->GetSIVBCommandConnector()->GetSIVBLOXTankPressurePSI();
 		}
 	}
 	//S-IVB Fuel No. 1 Tank Pressure
 	else if (n == 3)
 	{
-		return iu->GetLVCommandConnector()->GetSIVBFuelTankPressurePSI();
+		return iu->GetSIVBCommandConnector()->GetSIVBFuelTankPressurePSI();
 	}
 	//S-IVB Fuel No. 2 Tank Pressure
 	else if (n == 4)
 	{
-		return iu->GetLVCommandConnector()->GetSIVBFuelTankPressurePSI();
+		return iu->GetSIVBCommandConnector()->GetSIVBFuelTankPressurePSI();
 	}
 
 	return 0.0;
@@ -829,31 +828,28 @@ double EDSSV::GetLVTankPressure(int n)
 
 void EDSSV::Timestep(double simdt)
 {
-	if (iu->GetLVCommandConnector() == NULL) return;
-	if (iu->GetCommandConnector() == NULL) return;
-
 	EDS::Timestep(simdt);
 
-	if (Stage < LAUNCH_STAGE_SIVB)
+	if (iu->GetSIVBCommandConnector()->SIXSIVBNotSeparated())
 		SIISIVBNotSeparated = true;
 	else
 		SIISIVBNotSeparated = false;
 
-	SIAllEnginesOKA = false;
-	SIAllEnginesOKB = false;
+	SINotAllEnginesOKA = false;
+	SINotAllEnginesOKB = false;
 
 	//S-IC Thrust Monitor
-	if (IUEDSBusPowered && Stage <= LAUNCH_STAGE_ONE)
+	if (IUEDSBusPowered && iu->GetSIVBCommandConnector()->SICSIINotSeparated())
 	{
-		iu->GetLVCommandConnector()->GetSIThrustOK(ThrustOKSignal, 15);
+		iu->GetSIVBCommandConnector()->GetSIThrustOK(ThrustOKSignal, 15);
 		for (int i = 0;i < 5;i++)
 		{
 			SIThrustNotOK[i] = TripleVoting(!ThrustOKSignal[3 * i], !ThrustOKSignal[3 * i + 1], !ThrustOKSignal[3 * i + 2]);
 
 			if (SIThrustNotOK[i])
 			{
-				SIAllEnginesOKA = true;
-				SIAllEnginesOKB = true;
+				SINotAllEnginesOKA = true;
+				SINotAllEnginesOKB = true;
 			}
 		}
 	}
@@ -866,10 +862,10 @@ void EDSSV::Timestep(double simdt)
 	}
 
 	//S-II Thrust Monitor
-	if (IUEDSBusPowered && (Stage == LAUNCH_STAGE_TWO || Stage == LAUNCH_STAGE_TWO_ISTG_JET))
+	if (IUEDSBusPowered && (SIIEngineOutIndicationA || SIIEngineOutIndicationB) && iu->GetSIVBCommandConnector()->SIXSIVBNotSeparated())
 	{
-		iu->GetLVCommandConnector()->GetSIIThrustOK(ThrustOKSignal);
-		for (int i = 0;i < 5;i++)
+		iu->GetSIVBCommandConnector()->GetSIIThrustOK(ThrustOKSignal);
+		for (int i = 0; i < 5; i++)
 		{
 			SIIEngineThrustMonitorA[i] = SIIEngineOutIndicationA && !ThrustOKSignal[i];
 			SIIEngineThrustMonitorB[i] = SIIEngineOutIndicationB && !ThrustOKSignal[i];
@@ -877,7 +873,7 @@ void EDSSV::Timestep(double simdt)
 	}
 	else
 	{
-		for (int i = 0;i < 5;i++)
+		for (int i = 0; i < 5; i++)
 		{
 			SIIEngineThrustMonitorA[i] = false;
 			SIIEngineThrustMonitorB[i] = false;
@@ -887,46 +883,37 @@ void EDSSV::Timestep(double simdt)
 	//EDS Engine Cutoff
 	if (LVEnginesCutoffCommand1 || LVEnginesCutoffCommand3)
 	{
-		if (Stage == LAUNCH_STAGE_ONE)
+		if (!SIEDSCutoff)
 		{
-			if (!SIEDSCutoff)
-			{
-				SIEDSCutoff = true;
-				iu->GetLVCommandConnector()->SIEDSCutoff(true);
-			}
+			SIEDSCutoff = true;
+			iu->GetSIVBCommandConnector()->SIEDSCutoff(true);
 		}
-		else if (Stage == LAUNCH_STAGE_TWO || Stage == LAUNCH_STAGE_TWO_ISTG_JET)
+		if (!SIIEDSCutoff)
 		{
-			if (!SIIEDSCutoff)
-			{
-				SIIEDSCutoff = true;
-				iu->GetLVCommandConnector()->SIIEDSCutoff(true);
-			}
+			SIIEDSCutoff = true;
+			iu->GetSIVBCommandConnector()->SIIEDSCutoff(true);
 		}
-		else if (Stage == LAUNCH_STAGE_SIVB || Stage == STAGE_ORBIT_SIVB)
+		if (!SIVBEngineCutoffDisabled && !SIVBEDSCutoff)
 		{
-			if (!SIVBEngineCutoffDisabled && !SIVBEDSCutoff)
-			{
-				SIVBEDSCutoff = true;
-				iu->GetLVCommandConnector()->SIVBEDSCutoff(true);
-			}
+			SIVBEDSCutoff = true;
+			iu->GetSIVBCommandConnector()->SIVBEDSCutoff(true);
 		}
 	}
 	else
 	{
 		if (SIEDSCutoff == true)
 		{
-			iu->GetLVCommandConnector()->SIEDSCutoff(false);
+			iu->GetSIVBCommandConnector()->SIEDSCutoff(false);
 			SIEDSCutoff = false;
 		}
 		if (SIIEDSCutoff == true)
 		{
-			iu->GetLVCommandConnector()->SIIEDSCutoff(false);
+			iu->GetSIVBCommandConnector()->SIIEDSCutoff(false);
 			SIIEDSCutoff = false;
 		}
 		if (SIVBEDSCutoff == true)
 		{
-			iu->GetLVCommandConnector()->SIVBEDSCutoff(false);
+			iu->GetSIVBCommandConnector()->SIVBEDSCutoff(false);
 			SIVBEDSCutoff = false;
 		}
 	}
@@ -965,8 +952,8 @@ void EDSSV::Timestep(double simdt)
 	}
 
 	//Second Plane Separation Monitor
-	bool SIISecPlaneSepA = EDSBus1Powered && SIIEngineOutIndicationA && (SIVBRestartAlert || Stage < LAUNCH_STAGE_TWO_ISTG_JET);
-	bool SIISecPlaneSepB = EDSBus3Powered && SIIEngineOutIndicationB && (SIVBRestartAlert || Stage < LAUNCH_STAGE_TWO_ISTG_JET);
+	bool SIISecPlaneSepA = EDSBus1Powered && SIIEngineOutIndicationA && (SIVBRestartAlert || iu->GetSIVBCommandConnector()->SIIInterstageNotSeparated());
+	bool SIISecPlaneSepB = EDSBus3Powered && SIIEngineOutIndicationB && (SIVBRestartAlert || iu->GetSIVBCommandConnector()->SIIInterstageNotSeparated());
 
 	if (SIISecPlaneSepA || SIISecPlaneSepB)
 		iu->GetCommandConnector()->SetSIISep();
