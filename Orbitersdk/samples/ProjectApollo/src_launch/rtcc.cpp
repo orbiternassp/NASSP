@@ -14262,7 +14262,14 @@ void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
 		tab.RA = PI2 - tab.RA;
 	}
 	tab.sv_present = sv;
-	tab.T0 = OrbMech::period(sv.R, sv.V, mu);
+	if (tab.e < 1.0)
+	{
+		tab.T0 = OrbMech::period(sv.R, sv.V, mu);
+	}
+	else
+	{
+		tab.T0 = 0.0;
+	}
 	tab.TA = acos2(dotp(unit(E), unit(sv.R)));
 	if (dotp(sv.R, sv.V) < 0)
 	{
