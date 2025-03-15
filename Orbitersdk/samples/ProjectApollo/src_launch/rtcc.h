@@ -1899,8 +1899,6 @@ struct PredictedSiteAcquisitionTable
 	unsigned numcontacts[2];
 	//Station ID of anchor vector
 	std::string STAID;
-	//Vehicle (CSM or LEM)
-	std::string VEHICLE;
 	//Revolution number
 	int REV[2][21];
 	//Sites

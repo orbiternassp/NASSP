@@ -15,7 +15,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 	skp->SetTextColor(GetDefaultColour(2)); //White
 	//Temporary code until all displays have been updated
-	if (screen < 46) skp->SetFont(font_menu);  //Lucida Console
+	if (screen < 50) skp->SetFont(font_menu);  //Lucida Console
 	else skp->SetFont(font); //Old default
 	GetCharSize(skp, CW, CH);
 
@@ -3548,255 +3548,254 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 		}
 		break;
-	}
-
-	//Old
-	if (screen == 46 || screen == 72 || screen == 73 || screen == 74)
+	case 46:
+	case 72:
+	case 73:
+	case 74:
 	{
+		skp->SetPen(pen2);
+		skp->SetFont(font_mocr3);
+		GetCharSize(skp, CW, CH);
 		PredictedSiteAcquisitionTable *tab;
 
-		skp->SetTextAlign(oapi::Sketchpad::CENTER);
-
-		if (screen == 46)
+		y = 3;
+		skp->Line(0, CH * y, CW * 56, CH * y);
+		skp->Line((CW * 9) / 2, CH*y, (CW * 9) / 2, CH * 28);
+		skp->Line(CW * 10, CH*y, CW * 10, CH * 28);
+		skp->Line(CW * 21, CH*y, CW * 21, CH * 28);
+		skp->Line(CW * 32, CH*y, CW * 32, CH * 28);
+		skp->Line(CW * 38, CH*y, CW * 38, CH * 28);
+		skp->Line((CW * 93) / 2, CH*y, (CW * 93) / 2, CH * 28);
+		skp->Line(0, CH * 6, CW * 56, CH * 6);
+		Text(skp, 10, 0, "PREDICTED SITE ACQUISITION TABLE NO");
+		Text(skp, 5, 1, "PAGE");
+		Text(skp, 13, 1, "OF");
+		Text(skp, 19, 1, "VEHICLE");
+		Text(skp, 31, 1, "STA ID");
+		switch (screen)
 		{
-			skp->Text(4 * W / 8, 1 * H / 28, "PREDICTED SITE ACQUISITION TABLE NO 1", 37);
+		case 46:
+			Text(skp, 46, 0, "1");
+			Text(skp, 27, 1, "CSM");
+			Text(skp, 52, 0, "0055");
 			tab = &GC->rtcc->EZACQ1;
-		}
-		else if (screen == 72)
-		{
-			skp->Text(4 * W / 8, 1 * H / 28, "PREDICTED SITE ACQUISITION TABLE NO 1", 37);
+			break;
+		case 72:
+			Text(skp, 46, 0, "1");
+			Text(skp, 27, 1, "LEM");
+			Text(skp, 52, 0, "0056");
 			tab = &GC->rtcc->EZACQ3;
-		}
-		else if (screen == 73)
-		{
-			skp->Text(4 * W / 8, 1 * H / 28, "PREDICTED SITE ACQUISITION TABLE NO 2", 37);
+			break;
+		case 73:
+			Text(skp, 46, 0, "2");
+			Text(skp, 27, 1, "CSM");
+			Text(skp, 52, 0, "0087");
 			tab = &GC->rtcc->EZDPSAD1;
-		}
-		else
-		{
-			skp->Text(4 * W / 8, 1 * H / 28, "PREDICTED SITE ACQUISITION TABLE NO 2", 37);
+			break;
+		case 74:
+			Text(skp, 46, 0, "2");
+			Text(skp, 27, 1, "LEM");
+			Text(skp, 52, 0, "0088");
 			tab = &GC->rtcc->EZDPSAD3;
+			break;
 		}
-
-		skp->SetFont(font2);
-
-		skp->Text(22 * W / 32, 3 * H / 28, "STA ID", 6);
-		skp->Text(4 * W / 32, 11 * H / 56, "REV", 3);
-		skp->Text(10 * W / 32, 11 * H / 56, "STA", 3);
-		skp->Text(15 * W / 32, 5 * H / 28, "AOS", 3);
-		skp->Text(15 * W / 32, 6 * H / 28, "GET", 3);
-		skp->Text(21 * W / 32, 5 * H / 28, "LOS", 3);
-		skp->Text(21 * W / 32, 6 * H / 28, "GET", 3);
-		skp->Text(26 * W / 32, 5 * H / 28, "MAX ELEV", 8);
-		skp->Text(26 * W / 32, 6 * H / 28, "DEG", 3);
-
-		sprintf_s(Buffer, "PAGE %02d OF %02d", tab->curpage, tab->pages);
-		skp->Text(6 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
-		sprintf_s(Buffer, "VEHICLE %s", tab->VEHICLE.c_str());
-		skp->Text(14 * W / 32, 3 * H / 28, Buffer, strlen(Buffer));
-
-		for (unsigned i = 0;i < tab->numcontacts[tab->curpage - 1];i++)
+		Text(skp, 1, 4, "REV");
+		Text(skp, 6, 4, "STA");
+		skp->Text(CW * 11, (CH * 7) / 2, "GETHCA", 6);
+		skp->Text(CW * 11, (CH * 9) / 2, "HR:MN:SEC", 9);
+		skp->Text(CW * 22, (CH * 7) / 2, "GETHCD", 6);
+		skp->Text(CW * 22, (CH * 9) / 2, "HR:MN:SEC", 9);
+		skp->Text((CW * 65) / 2, CH * 4, "ELMAX", 5);
+		skp->SetFont(font_mocr2);
+		Text(skp, 38, 3, "R=RDR,T=TLM");
+		Text(skp, 38, 4, "V=VOICE");
+		Text(skp, 38, 5, "C=CMD");
+		skp->SetFont(font_mocr3);
+		Text(skp, 48, 4, "ACQLOS");
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+		Text(skp, 12, 1, "%d", tab->curpage);
+		Text(skp, 18, 1, "%d", tab->pages);
+		Text(skp, 45, 1, tab->STAID);
+		for (unsigned i = 0; i < tab->numcontacts[tab->curpage - 1]; i++)
 		{
-			sprintf_s(Buffer, "%03d", tab->REV[tab->curpage-1][i]);
-			skp->Text(4 * W / 32, (i + 7) * H / 28, Buffer, strlen(Buffer));
-
-			sprintf_s(Buffer, tab->STA[tab->curpage - 1][i].c_str());
-			skp->Text(10 * W / 32, (i + 7) * H / 28, Buffer, strlen(Buffer));
-
+			Text(skp, 4, 7 + i, "%d", tab->REV[tab->curpage - 1][i]);
+			Text(skp, 9, 7 + i, tab->STA[tab->curpage - 1][i]);
 			if (tab->BestAvailableAOS[tab->curpage - 1][i])
 			{
-				skp->Text(25 * W / 64, (i + 7) * H / 28, "*", 1);
+				Text(skp, 11, 7 + i, "*");
 			}
-
-			GET_Display(Buffer, tab->GETHCA[tab->curpage - 1][i], false);
-			skp->Text(15 * W / 32, (i + 7) * H / 28, Buffer, strlen(Buffer));
-
+			Text_GET_HHHMMSS(skp, 20, 7 + i, tab->GETHCA[tab->curpage - 1][i]);
 			if (tab->BestAvailableLOS[tab->curpage - 1][i])
 			{
-				skp->Text(37 * W / 64, (i + 7) * H / 28, "*", 1);
+				Text(skp, 22, 7 + i, "*");
 			}
-
-			GET_Display(Buffer, tab->GETHCD[tab->curpage - 1][i], false);
-			skp->Text(21 * W / 32, (i + 7) * H / 28, Buffer, strlen(Buffer));
-
+			Text_GET_HHHMMSS(skp, 31, 7 + i, tab->GETHCD[tab->curpage - 1][i]);
 			if (tab->BestAvailableEMAX[tab->curpage - 1][i])
 			{
-				skp->Text(24 * W / 32, (i + 7) * H / 28, "*", 1);
+				Text(skp, 33, 7 + i, "*");
 			}
-			sprintf_s(Buffer, "%04.1f", tab->ELMAX[tab->curpage - 1][i]);
-			skp->Text(26 * W / 32, (i + 7) * H / 28, Buffer, strlen(Buffer));
+			Text(skp, 37, 7 + i, "%.1lf", tab->ELMAX[tab->curpage - 1][i]);
 		}
 	}
-	else if (screen == 47)
-	{
-		skp->SetFont(font2);
-		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-
-		skp->Text(1 * W / 16, 4 * H / 28, "00: CMC CSM Navigation Update", 29);
-		skp->Text(1 * W / 16, 5 * H / 28, "06: CMC Landing Site Vector", 27);
-		skp->Text(1 * W / 16, 6 * H / 28, "07: CMC Time Increment", 22);
-		skp->Text(1 * W / 16, 7 * H / 28, "08: CMC Liftoff Time Update", 27);
-		skp->Text(1 * W / 16, 8 * H / 28, "09: CMC LM Navigation Update", 28);
-		skp->Text(1 * W / 16, 9 * H / 28, "10: CMC External DV", 19);
-		skp->Text(1 * W / 16, 10 * H / 28, "12: CMC REFSMMAT Update", 23);
-		skp->Text(1 * W / 16, 11 * H / 28, "13: CMC Retrofire External DV", 29);
-		skp->Text(1 * W / 16, 12 * H / 28, "14: CMC Entry Update", 20);
-		skp->Text(1 * W / 16, 13 * H / 28, "18: CMC Erasable Memory Update A", 32);
-		skp->Text(1 * W / 16, 14 * H / 28, "19: CMC Erasable Memory Update B", 32);
-
-		skp->Text(1 * W / 16, 16 * H / 28, "20: LGC LM Navigation Update", 28);
-		skp->Text(1 * W / 16, 17 * H / 28, "21: LGC CSM Navigation Update", 29);
-		skp->Text(1 * W / 16, 18 * H / 28, "22: LGC External DV", 19);
-		skp->Text(1 * W / 16, 19 * H / 28, "23: LGC REFSMMAT Update", 23);
-		skp->Text(1 * W / 16, 20 * H / 28, "24: LGC Time Increment", 22);
-		skp->Text(1 * W / 16, 21 * H / 28, "25: LGC Liftoff Time Update", 27);
-		skp->Text(1 * W / 16, 22 * H / 28, "26: LGC Landing Site Vector", 27);
-		skp->Text(1 * W / 16, 23 * H / 28, "28: LGC Descent Update", 22);
-		skp->Text(1 * W / 16, 24 * H / 28, "38: LGC Erasable Memory Update A", 32);
-		skp->Text(1 * W / 16, 25 * H / 28, "39: LGC Erasable Memory Update B", 32);
-
-		skp->Text(9 * W / 16, 4 * H / 28, "49: LVDC Navigation Update", 26);
-	}
-	else if (screen == 48)
-	{
+	break;
+	case 47:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
-
-		RTCC::NavUpdateMakeupBuffer * tab;
-		if (subscreen == 0)
-		{
-			skp->Text(4 * W / 8, 1 * H / 14, "CSM NAV UPDATE TO CMC (276)", 27);
-			tab = &GC->rtcc->CZNAVGEN.CMCCSMUpdate;
-		}
-		else if (subscreen == 1)
-		{
-			skp->Text(4 * W / 8, 1 * H / 14, "LM NAV UPDATE TO CMC (270)", 26);
-			tab = &GC->rtcc->CZNAVGEN.CMCLEMUpdate;
-		}
-		else if (subscreen == 2)
-		{
-			skp->Text(4 * W / 8, 1 * H / 14, "LGC CSM NAV UPDATE (278)", 24);
-			tab = &GC->rtcc->CZNAVGEN.LGCCSMUpdate;
-		}
-		else
-		{
-			skp->Text(4 * W / 8, 1 * H / 14, "LGC LM NAV UPDATE (279)", 23);
-			tab = &GC->rtcc->CZNAVGEN.LGCLEMUpdate;
-		}
-
+		skp->Text(W / 2, CH / 2, "Uplinks", 7);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-
-		skp->Text(1 * W / 8, 4 * H / 28, "GET", 3);
-		skp->Text(1 * W / 8, 5 * H / 28, "LOAD NO", 7);
-		skp->Text(1 * W / 8, 6 * H / 28, "REF", 3);
-
-		if (G->SVDesiredGET < 0)
+		skp->SetFont(font_menu2);
+		GetCharSize(skp, CW, CH);
+		y = 3;
+		skp->Text(CW, CH * y, "00: CMC CSM Nav Update", 29); y++;
+		skp->Text(CW, CH * y, "06: CMC Landing Site Vector", 27); y++;
+		skp->Text(CW, CH * y, "07: CMC Time Increment", 22); y++;
+		skp->Text(CW, CH * y, "08: CMC Liftoff Time Update", 27); y++;
+		skp->Text(CW, CH * y, "09: CMC LM Nav Update", 28); y++;
+		skp->Text(CW, CH * y, "10: CMC External DV", 19); y++;
+		skp->Text(CW, CH * y, "12: CMC REFSMMAT Update", 23); y++;
+		skp->Text(CW, CH * y, "13: CMC Retrofire External DV", 29); y++;
+		skp->Text(CW, CH * y, "14: CMC Entry Update", 20); y++;
+		skp->Text(CW, CH * y, "18: CMC Erasable Memory Update A", 32); y++;
+		skp->Text(CW, CH * y, "19: CMC Erasable Memory Update B", 32); y++; y++;
+		skp->Text(CW, CH * y, "20: LGC LM Nav Update", 28); y++;
+		skp->Text(CW, CH * y, "21: LGC CSM Nav Update", 29); y++;
+		skp->Text(CW, CH * y, "22: LGC External DV", 19); y++;
+		skp->Text(CW, CH * y, "23: LGC REFSMMAT Update", 23); y++;
+		skp->Text(CW, CH * y, "24: LGC Time Increment", 22); y++;
+		skp->Text(CW, CH * y, "25: LGC Liftoff Time Update", 27); y++;
+		skp->Text(CW, CH * y, "26: LGC Landing Site Vector", 27); y++;
+		skp->Text(CW, CH * y, "28: LGC Descent Update", 22); y++;
+		skp->Text(CW, CH * y, "38: LGC Erasable Memory Update A", 32); y++;
+		skp->Text(CW, CH * y, "39: LGC Erasable Memory Update B", 32);
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+		y = 3;
+		skp->Text(W - CW, CH * y, "49: LVDC Navigation Update", 26);
+		break;
+	case 48:
+	{
+		skp->SetPen(pen2);
+		skp->SetFont(font_mocr4);
+		GetCharSize(skp, CW, CH);
+		RTCC::NavUpdateMakeupBuffer * tab;
+		switch (subscreen)
 		{
-			sprintf(Buffer, "Present GET");
+		case 0:
+			Text(skp, 13, 0, "CMC CSM NAV UPDATE");
+			Text(skp, 38, 0, "0276");
+			tab = &GC->rtcc->CZNAVGEN.CMCCSMUpdate;
+			break;
+		case 1:
+			Text(skp, 13, 0, "CMC LM NAV UPDATE");
+			Text(skp, 38, 0, "0270");
+			tab = &GC->rtcc->CZNAVGEN.CMCLEMUpdate;
+			break;
+		case 2:
+			Text(skp, 13, 0, "LGC CSM NAV UPDATE");
+			Text(skp, 38, 0, "0278");
+			tab = &GC->rtcc->CZNAVGEN.CMCLEMUpdate;
+			break;
+		case 3:
+			Text(skp, 13, 0, "LGC LM NAV UPDATE");
+			Text(skp, 38, 0, "0279");
+			tab = &GC->rtcc->CZNAVGEN.CMCLEMUpdate;
+			break;
+		}
+		Text(skp, 1, 1, "LOAD NO");
+		Text(skp, 15, 1, "GETGEN");
+		Text(skp, 32, 1, "SITES");
+		Text(skp, 1, 2, "STA ID");
+		Text(skp, 16, 2, "REF");
+		Text(skp, 27, 2, "GETSV");
+		Text(skp, 3, 3, "OID");
+		Text(skp, 10, 3, "FCT");
+		Text(skp, 16, 3, "DSKY V71");
+		Text(skp, 30, 3, "VECTOR");
+		Text(skp, 9, 4, "INDEX");
+		Text(skp, 10, 5, "ADD");
+		Text(skp, 10, 6, "VID");
+		Text(skp, 11, 7, "X");
+		Text(skp, 11, 8, "X");
+		Text(skp, 11, 9, "Y");
+		Text(skp, 11, 10, "Y");
+		Text(skp, 11, 11, "Z");
+		Text(skp, 11, 12, "Z");
+		Text(skp, 11, 13, "XD");
+		Text(skp, 11, 14, "XD");
+		Text(skp, 11, 15, "YD");
+		Text(skp, 11, 16, "YD");
+		Text(skp, 11, 17, "ZD");
+		Text(skp, 11, 18, "ZD");
+		Text(skp, 11, 19, "T");
+		Text(skp, 11, 20, "T");
+		for (y = 4; y < 21; y++)
+		{
+			Text(skp, 4, y, "%02o", y - 3);
+		}
+		skp->Line(CW, CH * 3, CW * 42, CH * 3);
+		skp->Line(CW, CH * 4, CW * 42, CH * 4);
+		skp->Line((CW * 15) / 2, CH * 3, (CW * 15) / 2, CH * 21);
+		skp->Line((CW * 31) / 2, CH * 3, (CW * 31) / 2, CH * 21);
+		skp->Line((CW * 49) / 2, CH * 3, (CW * 49) / 2, CH * 21);
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+		Text(skp, 13, 1, "%04d", tab->SequenceNumber);
+		Text_GET_HHHMMSS(skp, 31, 1, tab->GETofGeneration);
+		if (GC->MissionPlanningActive)
+		{
+			Text(skp, 15, 2, tab->DCCode);
 		}
 		else
-		{
-			GET_Display2(Buffer, G->SVDesiredGET);
-		}
-		skp->Text(2 * W / 8, 4 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%04d", tab->SequenceNumber);
-		skp->Text(3 * W / 8, 5 * H / 28, Buffer, strlen(Buffer));
-		if (tab->sv.RBI == BODY_EARTH)
-		{
-			skp->Text(2 * W / 8, 6 * H / 28, "Earth", 5);
-		}
-		else if (tab->sv.RBI == BODY_MOON)
-		{
-			skp->Text(2 * W / 8, 6 * H / 28, "Moon", 4);
-		}
-
-		if (GC->MissionPlanningActive == false)
 		{
 			if (subscreen == 0 || subscreen == 2)
 			{
-				PrintCSMVessel(Buffer);
+				PrintCSMVessel(Buffer, false);
 			}
 			else
 			{
-				PrintLMVessel(Buffer);
+				PrintLMVessel(Buffer, false);
 			}
-			skp->Text(5 * W / 8, 2 * H / 14, Buffer, strlen(Buffer));
+			sprintf(Buffer2, "%.7s", Buffer);
+			Text(skp, 15, 2, Buffer2);
 		}
-
-		skp->Text(5 * W / 32, 9 * H / 28, "OID", 3);
-		skp->Text(10 * W / 32, 9 * H / 28, "FCT", 3);
-		skp->Text(15 * W / 32, 9 * H / 28, "DSKY V71", 8);
-		skp->Text(22 * W / 32, 9 * H / 28, "VECTOR", 6);
-
-		for (int i = 1;i <= 021;i++)
+		Text(skp, 25, 2, tab->sv.RBI == BODY_EARTH ? "EARTH" : "LUNAR");
+		if (G->SVDesiredGET < 0)
 		{
-			sprintf(Buffer, "%o", i);
-			skp->Text(5 * W / 32, (i + 9) * H / 28, Buffer, strlen(Buffer));
-		}
-
-		skp->Text(10 * W / 32, 10 * H / 28, "INDEX", 5);
-		skp->Text(10 * W / 32, 11 * H / 28, "ADD", 3);
-		skp->Text(10 * W / 32, 12 * H / 28, "VID", 3);
-		skp->Text(10 * W / 32, 13 * H / 28, "X", 1);
-		skp->Text(10 * W / 32, 14 * H / 28, "X", 1);
-		skp->Text(10 * W / 32, 15 * H / 28, "Y", 1);
-		skp->Text(10 * W / 32, 16 * H / 28, "Y", 1);
-		skp->Text(10 * W / 32, 17 * H / 28, "Z", 1);
-		skp->Text(10 * W / 32, 18 * H / 28, "Z", 1);
-		skp->Text(10 * W / 32, 19 * H / 28, "X-DOT", 5);
-		skp->Text(10 * W / 32, 20 * H / 28, "X-DOT", 5);
-		skp->Text(10 * W / 32, 21 * H / 28, "Y-DOT", 5);
-		skp->Text(10 * W / 32, 22 * H / 28, "Y-DOT", 5);
-		skp->Text(10 * W / 32, 23 * H / 28, "Z-DOT", 5);
-		skp->Text(10 * W / 32, 24 * H / 28, "Z-DOT", 5);
-		skp->Text(10 * W / 32, 25 * H / 28, "T", 1);
-		skp->Text(10 * W / 32, 26 * H / 28, "T", 1);
-
-		for (int i = 0;i < 021;i++)
-		{
-			sprintf(Buffer, "%05d", tab->Octals[i]);
-			skp->Text(15 * W / 32, (i + 10) * H / 28, Buffer, strlen(Buffer));
-		}
-
-		if (tab->sv.RBI == BODY_EARTH)
-		{
-			skp->Text(22 * W / 32, 11 * H / 28, "EARTH", 5);
+			sprintf(Buffer, "Present");
 		}
 		else
 		{
-			skp->Text(22 * W / 32, 11 * H / 28, "MOON", 4);
+			GET_Display(Buffer, G->SVDesiredGET, false);
 		}
-		sprintf(Buffer, "%.1f", tab->sv.R.x);
-		skp->Text(22 * W / 32, 13 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", tab->sv.R.y);
-		skp->Text(22 * W / 32, 15 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", tab->sv.R.z);
-		skp->Text(22 * W / 32, 17 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", tab->sv.V.x);
-		skp->Text(22 * W / 32, 19 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", tab->sv.V.y);
-		skp->Text(22 * W / 32, 21 * H / 28, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.1f", tab->sv.V.z);
-		skp->Text(22 * W / 32, 23 * H / 28, Buffer, strlen(Buffer));
-		GET_Display2(Buffer, tab->sv.GMT);
-		skp->Text(22 * W / 32, 25 * H / 28, Buffer, strlen(Buffer));
-	}
-	else if (screen == 49)
-	{
-		skp->Text(4 * W / 8, (int)(0.5 * H / 14), "Landing Site Update", 19);
+		skp->Text(CW * 42, CH * 2, Buffer, strlen(Buffer));
 
+		for (int i = 0; i < 021; i++)
+		{
+			Text(skp, 22, 4 + i, "%05d", tab->Octals[i]);
+		}
+		Text(skp, 40, 7, "%+.1f", tab->sv.R.x);
+		Text(skp, 40, 9, "%+.1f", tab->sv.R.y);
+		Text(skp, 40, 11, "%+.1f", tab->sv.R.z);
+		Text(skp, 39, 13, "%+.1f", tab->sv.V.x);
+		Text(skp, 39, 15, "%+.1f", tab->sv.V.y);
+		Text(skp, 39, 17, "%+.1f", tab->sv.V.z);
+		Text_GET_HHHMMSSCS(skp, 39, 19, tab->sv.GMT);
+	}
+	break;
+	case 49:
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(W / 2, CW / 2, "Landing Site Update", 19);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		PrintLMVessel(Buffer, false);
-		skp->Text(1 * W / 16, 2 * H / 14, Buffer, strlen(Buffer));
-
+		skp->Text(CW, 2 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
-		skp->Text(1 * W / 16, 4 * H / 14, Buffer, strlen(Buffer));
-
+		skp->Text(CW, 4 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
-		skp->Text(1 * W / 16, 6 * H / 14, Buffer, strlen(Buffer));
-
+		skp->Text(CW, 6 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
-		skp->Text(1 * W / 16, 8 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(CW, 8 * H / 14, Buffer, strlen(Buffer));
+		break;
 	}
-	else if (screen == 50 || screen == 98)
+
+	//Old
+	if (screen == 50 || screen == 98)
 	{
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 
