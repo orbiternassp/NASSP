@@ -882,8 +882,6 @@ protected:
 	oapi::Font *font5;
 	oapi::Pen *pen;
 	oapi::Pen *pen2;
-	Saturn *saturn;
-	LEM *lem;
 	int screen;
 	int subscreen;
 	int marker;

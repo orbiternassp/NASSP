@@ -6439,6 +6439,8 @@ void ApolloRTCCMFD::GetEntryTargetfromAGC()
 
 	if (utils::IsVessel(v, utils::Saturn) == false) return;
 
+	Saturn *saturn = (Saturn *)v;
+
 	unsigned short Entryoct[6];
 	Entryoct[2] = saturn->agc.vagc.Erasable[0][03400];
 	Entryoct[3] = saturn->agc.vagc.Erasable[0][03401];
