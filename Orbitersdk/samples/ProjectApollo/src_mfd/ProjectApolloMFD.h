@@ -31,6 +31,7 @@ class Saturn;
 class LEM;
 class Crawler;
 class MCC;
+class SIVB;
 
 ///
 /// \ingroup MFD
@@ -47,6 +48,7 @@ public:
 	void GetStateVector (void);
 	bool SetSource(char *rstr);
 	bool SetReferencePlanet(char *rstr);
+	bool SetLaunchTime(char *rstr);
 	bool SetCrewNumber (char *rstr);
 	bool SetPrimECSTestHeaterPower (char *rstr);
 	bool SetSecECSTestHeaterPower (char *rstr);
@@ -80,6 +82,7 @@ public:
 	void menuKillRot();
 	void menuSaveEMSScroll();
 	void menuVAGCCoreDump();
+	void menuChangeLaunchTime();
 	void menuSetCrewNumber();
 	void menuSetCDRInSuit();
 	void menuSetLMPInSuit();
@@ -111,6 +114,8 @@ public:
 	void menuClearAllFailures();
 	void menuAEAACommands();
 
+	OBJHANDLE AGCGravityRef(VESSEL *vessel) const;
+
 	void WriteStatus (FILEHANDLE scn) const;
 	void ReadStatus (FILEHANDLE scn);
 	void StoreStatus (void) const;
@@ -124,14 +129,17 @@ protected:
 	SURFHANDLE hLogo;
 	DWORD width;
 	DWORD height;
+	VESSEL *our_vessel;
 	//We can link to the Saturn OR the Crawler.  Only the Saturn has full funcionality.  The Crawler can ONLY read the mission time.
 	Saturn *saturn;
 	Crawler *crawler;
 	LEM *lem;
+	SIVB *sivb;
 	MCC *mcc;
 	int screen;
 	bool debug_frozen;
 	bool isSaturnV;
+	bool Supported; //Vessel is supported
 	unsigned FailureSubpage;
 
 	static struct ScreenData {

@@ -93,7 +93,10 @@ protected:
 	//Retrofire Convergence
 	void RMMDBN(int entry);
 	//Thrust Direction and Body Attitude Routine
-	void RMMATT(int entry, int opt, bool calcDesired, VECTOR3 Att, MATRIX3 REFSMMAT, int thruster, VECTOR3 R, VECTOR3 V, int TrimIndicator, double mass, VECTOR3 &U_T, VECTOR3 &OtherAtt);
+	void RMMATT_LVLH(VECTOR3 LVLH_Att, VECTOR3 R, VECTOR3 V, int thruster, int TrimIndicator, double mass, VECTOR3 &U_T, VECTOR3 &X_B, VECTOR3 &Y_B, VECTOR3 &Z_B) const;
+	VECTOR3 RMMATT_IMU(VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, MATRIX3 REFSMMAT) const;
+	VECTOR3 RMMATT_LVLH_Body(VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, VECTOR3 R, VECTOR3 V) const;
+	MATRIX3 RMMATT_REFSMMAT(VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, VECTOR3 R) const;
 	//Retrofire Output Control
 	void RMSTTF();
 	//Retrofire On-Line Printing
@@ -154,9 +157,6 @@ protected:
 	double TCMC;
 	//Burn attitude in LVLH coordinates (thrust direction, not body)
 	VECTOR3 LVLHAtt;
-	VECTOR3 BodyAtt;
-	VECTOR3 IMUAtt;
-	MATRIX3 DesREFSMMAT;
 	//Time to reverse bank angle
 	double t_RB;
 	//Partials status. 0 = not yet calculated, 1 = TTF varied, 2 = GMTRB varied
@@ -756,4 +756,9 @@ private:
 
 	//Maximum number of iterations for MCDRIV
 	const int k_max = 50;
+	//Hardcoded tolerance because they are used in comparing doubles
+	const double CLL_LOOSE_TOLERANCE = 0.05;
+	const double CLL_TIGHT_TOLERANCE = 0.005;
+	//This is used in checks if a solution has been found
+	const double INVALID_VALUE = 1e10;
 };

@@ -138,8 +138,7 @@ public:
 	void SkylabSaturnIBLaunchCalc();
 	void SkylabSaturnIBLaunchUplink();
 	void TransferTIToMPT();
-	void TransferSPQToMPT();
-	void TransferDKIToMPT();
+	void Transfer_SPQ_Or_DKI_To_MPT();
 	void TransferDescentPlanToMPT();
 	void TransferPoweredDescentToMPT();
 	void TransferPoweredAscentToMPT();

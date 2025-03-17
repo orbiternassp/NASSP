@@ -215,6 +215,20 @@ void CSMMalfunctionSimulation::ResetFailure(unsigned i)
 	case CSMFailures_SM_Jett2_Fail:
 		sat->CmSmSep2Switch.SetFailed(false);
 		break;
+	case CSMFailures_SI_Engine_1_Failure:
+	case CSMFailures_SI_Engine_2_Failure:
+	case CSMFailures_SI_Engine_3_Failure:
+	case CSMFailures_SI_Engine_4_Failure:
+	case CSMFailures_SI_Engine_5_Failure:
+	case CSMFailures_SI_Engine_6_Failure:
+	case CSMFailures_SI_Engine_7_Failure:
+	case CSMFailures_SI_Engine_8_Failure:
+	case CSMFailures_SII_Engine_1_Failure:
+	case CSMFailures_SII_Engine_2_Failure:
+	case CSMFailures_SII_Engine_3_Failure:
+	case CSMFailures_SII_Engine_4_Failure:
+	case CSMFailures_SII_Engine_5_Failure:
+	case CSMFailures_SIVB_Engine_Failure:
 	case CSMFailures_SIVB_O2_H2_Burner_Failure:
 		sat->SetFailure(i, false);
 		break;

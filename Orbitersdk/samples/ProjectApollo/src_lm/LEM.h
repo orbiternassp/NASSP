@@ -477,6 +477,7 @@ public:
 	void DrogueVis();
 	void HideProbes();
 	void HideDeflectors();
+	void HideCask();
 	void ShowXPointerShades();
 	void SetTrackLight();
 	void SetDockingLights();
@@ -544,6 +545,9 @@ public:
 	virtual void StartEVA();
 	void StartSeparationPyros();
 	void StopSeparationPyros();
+
+	void AnimEVAAntHandle();
+	void SetAnimations(double);
 
 	//
 	// VISHANDLE
@@ -621,6 +625,7 @@ public:
 	PROPELLANT_HANDLE ph_RCSA,ph_RCSB;   // RCS Fuel A and B, replaces ph_rcslm0
 	PROPELLANT_HANDLE ph_Dsc, ph_Asc; // handles for propellant resources
 	THRUSTER_HANDLE th_hover[1];               // handles for orbiter main engines
+	double aca_keyboard_deflection[6];		// Deflection values (0 to 1) for the six directions the ACA can move.
 	// There are 16 RCS. 4 clusters, 4 per cluster.
 	THRUSTER_HANDLE th_rcs[16];
 	THGROUP_HANDLE thg_hover;		          // handles for thruster groups
@@ -666,6 +671,24 @@ public:
 
 	// Variables for checklists
 	char Checklist_Variable[16][32];
+
+	// Flashlight for VC
+	void MoveFlashlight();
+	void SetFlashlightOn(bool state);
+	void ToggleFlashlight();
+	SpotLight* flashlight;
+	COLOUR4 flashlightColor;
+	COLOUR4 flashlightColor2;
+	VECTOR3 flashlightPos;
+	VECTOR3 flashlightDirLocal;
+	bool flashlightOn;
+
+	// Floodlight LM Pilot
+	void UpdateFloodLights();
+	PointLight* floodLight_Left;
+
+	// Floodlight LM Commander
+	PointLight* floodLight_Right;
 
 protected:
 
@@ -719,9 +742,11 @@ protected:
 	void SetStageSeqRelayLight(int m, bool state);
 
 #ifdef _OPENORBITER
-	void SetLMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
+	void SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
+	void SetVCLighting(UINT meshidx, int material, MatProp EmissionMode, double state, int cnt);
 #else
-	void SetLMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
+	void SetVCLighting(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
+	void SetVCLighting(UINT meshidx, int material, int EmissionMode, double state, int cnt);
 #endif
 
 	void InitFDAI(UINT mesh);
@@ -1546,6 +1571,12 @@ protected:
 
 	int LEMWindowShades;
 
+	/////////////////////
+    // LEM EVA Antenna //
+	/////////////////////
+ 
+	CircuitBrakerSwitch EvaAntennaHandle;
+
 	///////////////////////////
 	// ORDEAL Panel switches //
 	///////////////////////////
@@ -1681,6 +1712,7 @@ protected:
 
 	DEVMESHHANDLE probes;
 	DEVMESHHANDLE deflectors;
+	DEVMESHHANDLE cask;
 	DEVMESHHANDLE drogue;
 	DEVMESHHANDLE cdrmesh;
 	DEVMESHHANDLE lmpmesh;
@@ -1754,6 +1786,14 @@ protected:
 	double vcFreeCamz;
 	double vcFreeCamSpeed;
 	double vcFreeCamMaxOffset;
+
+	//
+	// EVA Antenna Handle
+	//
+
+	int EVAAntHandleStatus;
+	UINT EVAAntHandleAnim;
+	AnimState EVAAntHandleState;
 
 	//
 	// Failures.

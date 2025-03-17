@@ -583,6 +583,8 @@ struct RetrofireDisplayParametersTableData
 	double H_Sep;
 	double H_apo_sep, H_peri_sep;
 	double P_G_Sep, Y_G_Sep;
+	//External DV vector for sep/shaping
+	VECTOR3 VG_XDV_Sep;
 };
 
 struct RetrofireDisplayParametersTable

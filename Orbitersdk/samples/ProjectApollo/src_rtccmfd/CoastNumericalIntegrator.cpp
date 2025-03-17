@@ -494,11 +494,14 @@ void CoastIntegrator2::SetBodyParameters(int p)
 		rect2 = 0.75*OrbMech::power(2.0, 2.0)*100.0;
 		P = BODY_EARTH;
 		GMD = 4;
-		GMO = 0; //4 to use the full tesseral data
+		GMO = pRTCC->SystemParameters.MGTESE;
 		ZONAL[0] = 0.0; ZONAL[1] = OrbMech::J2_Earth; ZONAL[2] = OrbMech::J3_Earth; ZONAL[3] = OrbMech::J4_Earth;
-		//Use this when Orbiter simulates it
-		//C[0] = -1.1619e-9; C[1] =  1.5654e-6; C[2] = 2.1625e-6; C[3] =  3.18750e-7; C[4] = 9.7078e-8; C[5] = -5.1257e-7; C[6] = 7.739e-8; C[7] =  5.7700e-8; C[8] = -3.4567e-9;
-		//S[0] = -4.1312e-9; S[1] = -8.9613e-7; S[2] = 2.6809e-7; S[3] = -2.15567e-8; S[4] = 1.9885e-7; S[5] = -4.4095e-7; S[6] = 1.497e-7; S[7] = -1.2389e-8; S[8] =  6.4464e-9;
+
+		for (int i = 0; i < 9; i++)
+		{
+			C[i] = pRTCC->SystemParameters.MDCMAT[i];
+			S[i] = pRTCC->SystemParameters.MDSMAT[i];
+		}
 	}
 	else
 	{
@@ -510,10 +513,14 @@ void CoastIntegrator2::SetBodyParameters(int p)
 		rect2 = 0.75*OrbMech::power(2.0, -2.0)*100.0;
 		P = BODY_MOON;
 		GMD = 3;
-		GMO = 0; //3 with L1 model
+		GMO = pRTCC->SystemParameters.MMTESE;
 		ZONAL[0] = 0.0; ZONAL[1] = OrbMech::J2_Moon; ZONAL[2] = OrbMech::J3_Moon; ZONAL[3] = 0.0;
-		//L1 model, use this when Orbiter simulates it
-		//C[0] = 0.0; C[1] = 0.20715e-4; C[2] = 0.34e-4; C[4] = 0.02583e-4;
+
+		for (int i = 0; i < 9; i++)
+		{
+			C[i] = pRTCC->SystemParameters.MMCMAT[i];
+			S[i] = pRTCC->SystemParameters.MMSMAT[i];
+		}
 	}
 }
 

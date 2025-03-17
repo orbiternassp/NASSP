@@ -55,6 +55,7 @@ void J2Engine::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "EDSCUTOFF", EDSCutoff);
 	papiWriteScenario_bool(scn, "RSSCUTOFF", RSSCutoff);
 	papiWriteScenario_bool(scn, "ENGINERUNNING", EngineRunning);
+	if (EngineFailed) papiWriteScenario_bool(scn, "ENGINEFAILED", EngineFailed);
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
 	oapiWriteLine(scn, end_str);
 }
@@ -76,6 +77,7 @@ void J2Engine::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "EDSCUTOFF", EDSCutoff);
 		papiReadScenario_bool(line, "RSSCUTOFF", RSSCutoff);
 		papiReadScenario_bool(line, "ENGINERUNNING", EngineRunning);
+		papiReadScenario_bool(line, "ENGINEFAILED", EngineFailed);
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
 	}
 }
@@ -84,7 +86,7 @@ void J2Engine::Timestep(double simdt)
 {
 	if (th_j2 == NULL) return;
 
-	ThrustOK = vessel->GetThrusterLevel(th_j2) > 0.65 && !EngineFailed;
+	ThrustOK = vessel->GetThrusterLevel(th_j2) > 0.65;
 
 	if (!EngineRunning)
 	{
@@ -113,31 +115,30 @@ void J2Engine::Timestep(double simdt)
 		EngineStop = false;
 	}
 
-	if (EngineStop)
+	if (EngineStop || EngineFailed)
 	{
 		if (ThrustLevel > 0.0)
 		{
 			ThrustTimer += simdt;
 
 			// Cutoff transient thrust
-			if (ThrustTimer < 2.0) {
-				if (ThrustTimer < 0.25) {
-					// 95% of thrust dies in the first .25 second
-					ThrustLevel = 1.0 - (ThrustTimer*3.3048);
+			if (ThrustTimer < 0.25) {
+				// 95% of thrust dies in the first .25 second
+				ThrustLevel = 1.0 - (ThrustTimer*3.3048);
+				vessel->SetThrusterLevel(th_j2, ThrustLevel);
+			}
+			else {
+				if (ThrustTimer < 1.5) {
+					// The remainder dies over the next 1.25 second
+					ThrustLevel = 0.1738 - ((ThrustTimer - 0.25)*0.1390);
 					vessel->SetThrusterLevel(th_j2, ThrustLevel);
 				}
 				else {
-					if (ThrustTimer < 1.5) {
-						// The remainder dies over the next 1.25 second
-						ThrustLevel = 0.1738 - ((ThrustTimer - 0.25)*0.1390);
-						vessel->SetThrusterLevel(th_j2, ThrustLevel);
-					}
-					else {
-						// Engine is completely shut down at 1.5 second
-						ThrustLevel = 0.0;
-						vessel->SetThrusterLevel(th_j2, ThrustLevel);
-						EngineRunning = false;
-					}
+					// Engine is completely shut down at 1.5 second
+					ThrustLevel = 0.0;
+					vessel->SetThrusterLevel(th_j2, ThrustLevel);
+					EngineRunning = false;
+					ThrustTimer = 0.0;
 				}
 			}
 		}
@@ -146,23 +147,33 @@ void J2Engine::Timestep(double simdt)
 	{
 		ThrustTimer += simdt;
 
-		//First Burn
-		if (ThrustTimer >= 1.0 && ThrustTimer < 3.2) {
-			ThrustLevel = (ThrustTimer - 1.0)*0.45;
-			vessel->SetThrusterLevel(th_j2, ThrustLevel);
+		if (ThrustTimer < 1.0)
+		{
+			ThrustLevel = 0.0;
 		}
-		else if (ThrustTimer > 3.2 && ThrustLevel < 1.0)
+		else if (ThrustTimer < 3.2)
+		{
+			ThrustLevel = (ThrustTimer - 1.0)*0.45;
+		}
+		else
 		{
 			ThrustLevel = 1.0;
-			vessel->SetThrusterLevel(th_j2, ThrustLevel);
-
 			EngineRunning = true;
+			ThrustTimer = 0.0;
 		}
+		vessel->SetThrusterLevel(th_j2, ThrustLevel);
 	}
 	else if (ThrustTimer > 0.0)
 	{
 		ThrustTimer = 0.0;
 	}
+
+	/*
+	if (EngineFailed)
+	{
+		sprintf(oapiDebugString(), "EngineStart %d EngineStop %d EngineRunning %d ThrustTimer %lf ThrustLevel %lf", EngineStart, EngineStop, EngineRunning, ThrustTimer, ThrustLevel);
+	}
+	*/
 }
 
 void J2Engine::SetThrusterDir(double beta_y, double beta_p)

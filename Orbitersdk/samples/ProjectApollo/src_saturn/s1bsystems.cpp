@@ -739,11 +739,11 @@ double SIBSystems::GetSumThrust()
 	return thrust;
 }
 
-void SIBSystems::SetEngineFailed(int n)
+void SIBSystems::SetEngineFailed(int n, bool fail)
 {
 	if (n < 0 || n > 7) return;
 
-	h1engines[n]->SetFailed();
+	h1engines[n]->SetFailed(fail);
 }
 
 bool SIBSystems::GetEngineStop()

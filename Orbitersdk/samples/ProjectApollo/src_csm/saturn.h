@@ -92,7 +92,6 @@ namespace mission
 #define RCS_CM_RING_1		4
 #define RCS_CM_RING_2		5
 
-
 ///
 /// \brief Cabin atmosphere status.
 /// \ingroup InternalInterface
@@ -738,6 +737,24 @@ public:
 		MainState() { word = 0; };
 	};
 
+	union CrewEquipmentState {
+		struct {
+			unsigned wasteDisposalStatus : 1;
+			unsigned panel382CoverStatus : 1;
+			unsigned altimeterCoverStowed : 1;
+			unsigned ordealStowed : 1;
+			unsigned DSKY_GlareshadeStowed : 1;
+			unsigned EMSDV_GlareshadeStowed : 1;
+			unsigned AccelerometerCoverStowed : 1;
+			unsigned MissionTimer_GlareshadeStowed : 1;
+			unsigned Sextant_EyepieceStowed : 1;
+			unsigned Telescope_EyepieceStowed : 1;
+		};
+		unsigned long word;
+
+		CrewEquipmentState() { word = 0; };
+	};
+
 	//
 	// Now the actual code and data for the class.
 	//
@@ -810,11 +827,11 @@ public:
 
 	///
 	/// This function can be used during the countdown to update the MissionTime. Since we launch when
-	/// MissionTime reaches zero, setting MissionTime to (-t) tells the code when to launch.
+	/// MissionTime reaches zero, delay the MissionTime by dt tells the code when to launch.
 	/// \brief Update the launch time.
-	/// \param t Specifies the time in seconds to wait before launch.
+	/// \param t Specifies the time in seconds to delay the launch.
 	///
-	void UpdateLaunchTime(double t);	
+	virtual void UpdateLaunchTime(double dt);
 
 	///
 	/// Set up the default mesh for the virtual cockpit.
@@ -1284,6 +1301,29 @@ public:
 	mission::Mission *GetMission() { return pMission; }
 
 	void ClearMeshes();
+	void SetAnimations(double);
+	void DoMeshAnimation(AnimState &, UINT &, double, double);
+
+	//
+	// Flashlight for VC
+	//
+	void MoveFlashlight();
+	void SetFlashlightOn(bool state);
+	void ToggleFlashlight();
+	SpotLight* flashlight;
+	COLOUR4 flashlightColor;
+	COLOUR4 flashlightColor2;
+	VECTOR3 flashlightPos;
+	VECTOR3 flashlightDirLocal;
+	bool flashlightOn;
+
+	//
+	// FloodLight
+	//
+	void UpdateFloodLights();
+	PointLight* floodLight_P5;
+	PointLight* floodLight_P8;
+	PointLight* floodLight_P100;
 
 protected:
 
@@ -1390,6 +1430,12 @@ protected:
 	///
 	bool UseWideSLA;
 
+	///
+	/// True if SLA has flashing beacons as on Apollo 7.
+	/// \brief SLA has beacons.
+	///
+	bool SLAHasBeacons;
+
 	bool SIMBayPanelJett;
 
 	bool DeleteLaunchSite;
@@ -1406,9 +1452,21 @@ protected:
 	//
 
 	///
+	/// The current Simulated Time, which runs continuously throughout the mission.
+	/// If the mission elapsed time is not changed before launch, essentially a launch
+	/// delay, then SimulatedTime is identical to MissionTime. This time can be used for
+	/// subsystems that need a steadily updating time, which does not need to have a
+	/// specific time reference/start time.
+	/// \brief Simulated Time.
+	///
+	double SimulatedTime;
+
+	///
 	/// The current Mission Elapsed Time. This is the main variable used for timing
 	/// automated events during the mission, giving the time in seconds from launch
 	/// (negative for the pre-launch countdown).
+	/// It can be changed during pre-launch to enact a launch delay, but should not
+	/// be modified after launch.
 	/// \brief Mission Elapsed Time.
 	///
 	double MissionTime;
@@ -1552,6 +1610,48 @@ protected:
 	int hatchPanel600EnabledLeft;
 	int hatchPanel600EnabledRight;
 	int panel382Enabled;
+
+	/// VC animations
+
+	/// Waste Disposal
+	UINT wasteDisposalAnim;
+	AnimState wasteDisposalState;
+
+	/// Panel 382 Cover
+	UINT panel382CoverAnim;
+	AnimState panel382CoverState;
+
+	/// Altimeter Cover
+	UINT altimeterCoverAnim;
+	AnimState altimeterCoverState;
+
+	/// Ordeal
+	UINT ordealAnim;
+	AnimState ordealState;
+
+	/// DSKY_Glareshade
+	UINT DSKY_GlareshadeAnim;
+	AnimState DSKY_GlareshadeState;
+
+	/// EMSDV_Glareshade
+	UINT EMSDV_GlareshadeAnim;
+	AnimState EMSDV_GlareshadeState;
+
+	/// AccelerometerCover
+	UINT AccelerometerCoverAnim;
+	AnimState AccelerometerCoverState;
+
+	/// MissionTimer_Glareshade
+	UINT MissionTimer_GlareshadeAnim;
+	AnimState MissionTimer_GlareshadeState;
+
+	/// Sextant_Eyepiece
+	UINT Sextant_EyepieceAnim;
+	AnimState Sextant_EyepieceState;
+
+	/// Telescope_Eyepiece
+	UINT Telescope_EyepieceAnim;
+	AnimState Telescope_EyepieceState;
 
 	///
 	/// \brief Right-hand FDAI.
@@ -1955,7 +2055,7 @@ protected:
 	ACVoltMeter CSMACVoltMeter;
 
 	SwitchRow DCVoltMeterRow;
-	DCVoltMeter CSMDCVoltMeter;
+	SaturnDCVoltMeter CSMDCVoltMeter;
 
 	SwitchRow DCAmpMeterRow;
 	SaturnDCAmpMeter DCAmpMeter;
@@ -3528,6 +3628,7 @@ protected:
 	VHFRangingSystem vhfranging;
 	VHFAMTransceiver vhftransceiver;
 	RNDZXPDRSystem RRTsystem;
+	CTE cte;
 
 	//Instrumentation
 	SCE sce;
@@ -3594,12 +3695,12 @@ public:
 	CSMTankPressTransducer FCN2PressureSensor1;
 	CSMTankPressTransducer FCN2PressureSensor2;
 	CSMTankPressTransducer FCN2PressureSensor3;
-	CSMPipeFlowTransducer FCO2FlowSensor1;
-	CSMPipeFlowTransducer FCO2FlowSensor2;
-	CSMPipeFlowTransducer FCO2FlowSensor3;
-	CSMPipeFlowTransducer FCH2FlowSensor1;
-	CSMPipeFlowTransducer FCH2FlowSensor2;
-	CSMPipeFlowTransducer FCH2FlowSensor3;
+	FCO2FlowTransducer FCO2FlowSensor1;
+	FCO2FlowTransducer FCO2FlowSensor2;
+	FCO2FlowTransducer FCO2FlowSensor3;
+	FCH2FlowTransducer FCH2FlowSensor1;
+	FCH2FlowTransducer FCH2FlowSensor2;
+	FCH2FlowTransducer FCH2FlowSensor3;
 	TemperatureTransducer SPSFuelLineTempSensor;
 	TemperatureTransducer SPSOxidizerLineTempSensor;
 	TemperatureTransducer SPSFuelFeedTempSensor;
@@ -3608,6 +3709,8 @@ public:
 	CSMTankPressTransducer BatteryManifoldPressureSensor;
 	TemperatureTransducer WasteH2ODumpTempSensor;
 	TemperatureTransducer UrineDumpTempSensor;
+
+	TemperatureTransducer DockProbeTempSensor;
 
 protected:
 
@@ -3735,6 +3838,8 @@ protected:
 	// GSE
 	Pump* GSEGlycolPump;
 	h_Radiator* GSERadiator;
+	h_Tank *GSECryoO2Dewar;
+	h_Tank *GSECryoH2Dewar;
 
 	// EPS
 	CryoPressureSwitch H2CryoPressureSwitch;
@@ -3891,6 +3996,7 @@ protected:
     #define SATVIEW_TUNNEL          8
     #define SATVIEW_LOWER_CENTER    9
     #define SATVIEW_UPPER_CENTER    10
+	#define SATVIEW_SIDEHATCH       11
 
 	unsigned int	viewpos;
 
@@ -4139,9 +4245,11 @@ protected:
 	// Integral Lights
 	//
 #ifdef _OPENORBITER
-	void SetCMVCIntegralLight(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
+	void SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
+	void SetVCLighting(UINT meshidx, int material, MatProp EmissionMode, double state, int cnt);
 #else
-	void SetCMVCIntegralLight(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
+	void SetVCLighting(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
+	void SetVCLighting(UINT meshidx, int material, int EmissionMode, double state, int cnt);
 #endif
 
 	//
@@ -4165,6 +4273,8 @@ protected:
 	void SetAttachState(int s);
 	int GetSLAState();
 	void SetSLAState(int s);
+	int GetCrewEquipmentState();
+	void SetCrewEquipmentState(int s);
 
 	///
 	/// Get the Apollo 13 state flags as an int.
@@ -4356,6 +4466,7 @@ protected:
 	THRUSTER_HANDLE th_att_cm[12], th_att_cm_sys1[6], th_att_cm_sys2[6];    // CM RCS  
 	THRUSTER_HANDLE th_o2_vent;
 	bool th_att_cm_commanded[12];
+	double rhc_keyboard_deflection[6];	// Holds deflection values (0.0 to 1.0) for each Orbiter attitude direction
 
 	PSTREAM_HANDLE dyemarker;
 	PSTREAM_HANDLE wastewaterdump;

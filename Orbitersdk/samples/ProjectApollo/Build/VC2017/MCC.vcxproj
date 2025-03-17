@@ -152,6 +152,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src_aux\Mission.cpp" />
     <ClCompile Include="..\..\src_launch\mccvessel.cpp" />
+    <ClCompile Include="..\..\src_launch\MCC_Calculations.cpp" />
     <ClCompile Include="..\..\src_launch\MCC_Mission_B.cpp" />
     <ClCompile Include="..\..\src_launch\MCC_Mission_C.cpp" />
     <ClCompile Include="..\..\src_launch\MCC_Mission_C_PRIME.cpp" />
@@ -203,6 +204,7 @@
     <ClInclude Include="..\..\src_aux\Mission.h" />
     <ClInclude Include="..\..\src_aux\paCBGmessageID.h" />
     <ClInclude Include="..\..\src_launch\mccvessel.h" />
+    <ClInclude Include="..\..\src_launch\MCC_Calculations.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_B.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_C.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_C_PRIME.h" />

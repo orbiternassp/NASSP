@@ -210,7 +210,19 @@ On this page the time of ignition and time of the TPI maneuver are defined.
 \textbf{DH1:} The Delta Height at the NCC maneuver point. Only required for Skylab rendezvous profile. Usually 20 NM\\
 \textbf{DH2:} The Delta Height at the NSR maneuver point. A positive value indicates the chaser vehicle being below the target. Usually 10 to 20 NM.\\
 \textbf{E:} Elevation angle at TPI. Typical value is 26.6 DEG for a rendezvous from below. For rendezvous from above, for example if the CSM needs to rescue the LM in lunar orbit, the value 208.3 DEG is usually used.\\
+\textbf{WT:} Transfer angle from TPI to TPF, typically between 130 and 140 degrees.\\
+\textbf{MIN:} Minimum allowable periapsis altitude in the rendezvous plan.\\
 
+\paragraph{DKI Inputs}\mbox{} \\
+
+\textbf{NC1:} Choose the maneuver line number of the NC1 maneuver. Set to a negative value if no phasing maneuver is in the maneuver plan.\\
+\textbf{NH1:} Choose the maneuver line number of the NH maneuver. Set to a negative value if no height maneuver is in the maneuver plan.\\
+\textbf{NSR:} Choose the maneuver line number of the NSR maneuver. If the rendezvous profile is the Skylab profile then the NCC maneuver line number is selected here and NSR happens at a specific time after NCC.\\
+\textbf{MI:} The maneuver line number for the rendezvous point (TPF). This is an integer number and only has to be a rough estimate, typically this will be set so that rendezvous occurs one orbit after NSR.\\
+\textbf{IDM:} Number of additional rendezvous plans that are being generated. For this the NSR and subsequent maneuvers are set to occur one orbit later and the DKI calculation is run again for the updated plan.\\
+\textbf{MNH:} Location of the NH maneuver in the additional plans select with the IDM button. The NH maneuver either stays at its original maneuver line, as specified on this MFD page, or it is being moved one orbit for every additional plan, in effect keeping its place in the plan relative to NSR.\\
+\textbf{NPC:} Location of the plane change maneuver in the rendezvous plan. Not available yet.\\
+ 
 \paragraph{Example: Apollo 10 PDI Abort}\mbox{} \\
 
 A simple example for a DKI targeted maneuver is the Apollo 10 PDI Abort. Similar in concept to the PDI+12 maneuvers of the lunar landing missions, Apollo 10 would have done an abort maneuver at perilune after DOI to return to the CSM one orbit earlier than in the normal rendezvous plan. The sequence of maneuvers would be the abort initiation 0.5 revolutions after DOI, targeted as a phasing (NC1) maneuver. CSI or NH would follow another half revolution later, and again the CDH or NSR maneuver would be half an orbit after that. If we assign 1.0 as the maneuver line to the DOI maneuver then we would have NC1 = 1.5, NH = 2.0, NSR = 2.5, M = 3. The maneuver line definition is using the time option with the DOI TIG as input.
@@ -1141,10 +1153,10 @@ for a vector fetch, a time of abort, and maneuver targets. This type of manual e
 \newpage
 \subsection{Skylab Launch Window Processor}
 
-The launch window processor (LWP) can be used to calculate the optimal liftoff time and launch targeting parameters for Saturn IB missions to a rendezvous target in orbit, such as Skylab and ASTP. At present there is no capability to stop and re-start the countdown for Saturn launches, so only at the predetermined time in a launch scenario can the launch be done. The liftoff time options other than input time should therefore not used for now.\\
-
+The launch window processor (LWP) can be used to calculate the optimal liftoff time and launch targeting parameters for Saturn IB missions to a rendezvous target in orbit, such as Skylab and ASTP. In the input descriptions below GMTLO* refers to the lift-off time that is required to achieve zero phase angle to the target at insertion.
 \subsubsection{Inputs}
 
+\textbf{TGT:} Select target vehicle in orbit for rendezvous.\\
 \textbf{LOT:} Liftoff time option. The options are: 
 
 \begin{itemize}
@@ -1156,15 +1168,35 @@ The launch window processor (LWP) can be used to calculate the optimal liftoff t
 \item{"In-plane with nodal regression", iterate on lift-off on inplane launch time based on target orbit phase angle (final GMTLO = TYAW + TRANS).}
 \end{itemize}
 
-\textbf{TLO:} Input liftoff time.\\
+\textbf{CKFACT:} Chaser vehicle K-factor (drag multiplier). Not used yet.\\
+\textbf{CAREA:} Chaser vehicle reference area. Not used yet.\\
+\textbf{CWHT:} Chaser vehicle weight at insertion. Not used yet.\\
+\textbf{NS:} Compute a launch using the northerly or southerly launch opportunity.\\
+\textbf{DAY:} Day on which launch times are computed, relative to base date.\\
+\textbf{PFT:} Powered flight time.\\
+\textbf{PFA:} Powered flight arc.\\
+\textbf{YSMAX:} Yaw steering limit.\\
+\textbf{DTOPT:} Delta time to be subtracted from analytical inplane launch time to obtain empirical inplane launch time.\\
+\textbf{DTGRR:} Delta time from lift-off, which defines the time of guidance reference release.\\
 \textbf{RINS:} Radius of insertion in meters.\\
 \textbf{VINS:} Velocity of insertion in meters per second.\\
-\textbf{GINS:} Flight-path angle of insertion in degrees.\\
-\textbf{PHA:} Expected phase angle at insertion. The default option is 90-270$^{\circ}$, which should work for most of the 0-360$^{\circ}$ range. Near 360$^{\circ}$ some difficulty to converge could arise, so if a calculation fails then switching this option to 270-540$^{\circ}$ can help. Other than that there should be no need to change the default value.\\
-
-\textbf{TGT:} Select target vehicle in orbit for rendezvous.\\
-\textbf{NOF:} Flag for option to compute differential nodal regression from insertion to rendezvous.\\
-\textbf{DNO:} Angle that is added to the target descending node to account for differential nodal regression.\\
+\textbf{GAMINS:} Flight-path angle of insertion in degrees.\\
+\textbf{GMTLOR:} Threshold or actual lift-off time for LOT options that require an input time.\\
+\textbf{OFFSET:} Phase angle desired at insertion.\\
+\textbf{BIAS:} Bias that is added to GMTLO* to produce lift-off time.\\
+\textbf{TRANS:} Delta time added to inplane time to obtain lift-off time.\\
+\textbf{INSCO:} Insertion cutoff conditions options:
+\begin{itemize}
+\item{"Input VINS, GAMINS, RINS", use the input parameters for insertion.}
+\item{"Input GAMINS, RINS and height difference", calculate the insertion velocity to achieve the height difference DHW to the target at apogee after insertion.}
+\item{"Input GAMINS, RINS, altitude at angle from insertion", calculate the insertion velocity to achieve the altitude DHW at the angle DU after insertion.}
+\end{itemize}
+\textbf{DHW:} Desired height difference between chaser and target, or altitude of chaser at input angle from insertion.\\
+\textbf{DU:} Angle from insertion to obtain a given altitude or delta altitude.\\
+\textbf{ANOM:} Nominal semimajor axis at insertion, used for an initial guess of the insertion velocity in the INSCO options that calculate it.\\
+\textbf{DELNOF:} Flag for option to compute differential nodal regression from insertion to rendezvous.\\
+\textbf{DELNO:} Angle that is added to the target descending node to account for differential nodal regression.\\
+\textbf{PHASE:} Expected phase angle at insertion. The default option is 90-270$^{\circ}$, which should work for most of the 0-360$^{\circ}$ range. Near 360$^{\circ}$ some difficulty to converge could arise, so if a calculation fails then switching this option to 270-540$^{\circ}$ can help. Other than that there should be no need to change the default value.\\
 \textbf{DIS:} Go to launch targeting display.\\ 
 \textbf{BCK:} Go back to utilities page.\\
 
@@ -1533,7 +1565,42 @@ Now go to the Retrofire Maneuver page. The estimated TIG, latitude and longitude
 
 \subsection{Example 2: Apollo 9 nominal deorbit}
 
-The procedure to calculate a nominal deorbit maneuver is very similar to the one described in the previous example. Instead of the fixed Delta V of 325 ft/s the V, gamma target line is used. The calculation is of type 1 (no sep/shaping maneuver), so none of the inputs on the MFD page for the sep/shaping maneuver apply. The splashdown longitude is 59.9 deg west.
+The procedure to calculate a nominal deorbit maneuver is very similar to the one described in the previous example. Instead of the fixed Delta V of 325 ft/s the V, gamma target line is used. The calculation is of type 1 (no sep/shaping maneuver), so none of the inputs on the MFD page for the sep/shaping maneuver apply. The splashdown longitude is 59.9 deg west.\\
+
+\subsection{Example 3: Skylab deorbit}
+
+The Skylab missions performed the deorbit in two steps. First a SPS burn called the shaping maneuver, which lowers the perigee to 90 NM. Then, about two orbits later, the actual deorbit maneuver, again with the SPS, was done.\\
+
+The easiest method to target this maneuver sequence is, contrary to the naming, use of the separation burn logic, so that the two maneuvers are separated by a specific time difference. Here the common inputs for the shaping and deorbit maneuver:\\
+
+\textbf{Definition of Separation/Shaping Maneuver (R30)}\\
+\textbf{SHA}: No Shaping Maneuver\\
+\textbf{SEP}: 180 min (initial guess for two full orbits between the two maneuvers)\\
+\textbf{THR}: SPS\\
+\textbf{DV}: 250 ft/s (initial guess from Skylab orbital altitude)\\
+\textbf{DT}: 0.0 s\\
+\textbf{ATT}: 180.0 -15.0 180.0 (pitched down 15 degrees from local horizontal, heads down)\\
+\textbf{UDT}: 20.0\\
+\textbf{UTH}: 2 jet ullage\\
+\textbf{GBL}: Compute Gimbal Trims\\
+
+\textbf{Retrofire Constraints (R31)}\\
+\textbf{ENG}: SPS\\
+\textbf{MOD}: V, Gamma\\
+\textbf{VAL}: N/A\\
+\textbf{ATT}: LVLH\\
+\textbf{LVH}: 180.0 -15.0 180.0 (pitched down 15 degrees from local horizontal, heads down)\\
+\textbf{ULL}: 2 quads, 20 seconds\\
+\textbf{MAT}: DES (desired orientation, gives the IMU attitude 0, 180, 0 in burn attitude)\\
+\textbf{GIM}: Compute Gimbal Trims\\
+\textbf{K1}: 0.0 deg\\
+\textbf{GC}: 0.2 gs\\
+\textbf{K2}: 55.0 deg\\
+
+\textbf{Retrofire Planning (R32)}\\
+\textbf{TYP}: Type 2 (With Sep/Shaping)\\
+
+Select the target point like in example 1. Two input values have to be tweaked manually with trial and error to get a satisfying solution. First, the Delta V of the shaping maneuver is a manual input, so it has to be changed until the perigee altitude after the maneuver is 90 NM. This value, as well as the other burn parameters of the shaping burn, can be found on the Retrofire Separation (MSK 355) display. In a second step, to optimize the Delta V of the deorbit burn, the time difference from shaping to deorbit has to be adjusted. This is the SEP button on the "Definition of Separation/Shaping Maneuver" page. The deorbit burn should occur near apogee, so tweak this input value until a minimum Delta V of the deorbit burn is reached.\\
 
 \newpage
 %\renewcommand{\arraystretch}{2}
@@ -2882,8 +2949,19 @@ MHVLCG\_N&Number of entries in LM CG table&40&\\
 MHVACG&LM ascent stage CG table. Format: entry in table, weight, x, y and z coordinates. Example: 0 5000.0 260.9969 0.3187 5.0043&&-, lbs, in, in, in\\
 \hline
 MHVACG\_N&Number of entries in LM ascent stage CG table&14&\\
+\hline
 \end{tabular}
 
+\newpage
+\begin{tabular}{L{3cm} L{7cm} L{2.5cm} L{1.5cm}}
+\hline
+\textbf{Name} & \textbf{Description} & \textbf{Default Value} & \textbf{Unit}\\
+\hline
+MGTESE&Number of tesseral and sectorial coefficients in Earth potential&0 (use 4 in Open Orbiter)&\\
+\hline
+MMTESE&Number of tesseral and sectorial coefficients in Moon potential&0 (use 3 in Open Orbiter)&\\
+\hline
+\end{tabular}
 \newpage
 \subsection{Launch Day Init Parameters}
 

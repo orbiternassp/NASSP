@@ -1589,3 +1589,13 @@ void DSKY::SendNetworkPacketDSKY()
 		//strcpy(oapiDebugString(), message.c_str());
 	}
 }
+
+bool DSKY::GetStatusPower()
+{
+	return IsStatusPowered();
+}
+
+bool DSKY::GetSegmentPower()
+{	
+	return IsSegmentPowered();
+}

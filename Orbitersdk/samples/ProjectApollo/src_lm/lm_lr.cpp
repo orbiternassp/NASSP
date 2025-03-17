@@ -30,6 +30,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "papi.h"
 #include "LEM.h"
 #include "lm_lr.h"
+#include <LM_DescentStageResource.h>
 
 // Landing Radar
 LEM_LR::LEM_LR()
@@ -37,6 +38,7 @@ LEM_LR::LEM_LR()
 	lem = NULL;
 	lrheat = 0;
 	antennaAngle = 24; // Position 1
+
 }
 
 void LEM_LR::Init(LEM *s, e_object *dc_src, h_Radiator *ant, Boiler *anheat, h_HeatLoad *hl) {
@@ -60,6 +62,9 @@ void LEM_LR::Init(LEM *s, e_object *dc_src, h_Radiator *ant, Boiler *anheat, h_H
 	rate[0] = rate[1] = rate[2] = 0;
 	rangeGood = 0;
 	velocityGood = 0;
+	anim_LR = 0;
+	lr_proc = 0;
+	lr_proc_last = 0;
 }
 
 // Are we on?
@@ -137,7 +142,15 @@ double LEM_LR::GetVelTransmitterPower()
 }
 
 void LEM_LR::Timestep(double simdt) {
+	
 	if (lem == NULL) { return; }
+	//LR Mesh Animation
+	if (lem->stage < 2) {
+		lr_proc = abs(antennaAngle - 24) / 24;
+		if (lr_proc - lr_proc_last != 0.0) lem->SetAnimation(anim_LR, lr_proc);
+		lr_proc_last = lr_proc;
+		//sprintf(oapiDebugString(), "Angle: %.1f   Proc: %lf   Last: %lf", antennaAngle, lr_proc, lr_proc_last);
+	};
 	// char debugmsg[256];
 	ChannelValue val12;
 	ChannelValue val33;
@@ -387,6 +400,25 @@ void LEM_LR::SystemTimestep(double simdt)
 	{
 		lrheat->GenerateHeat(118);
 	}
+}
+
+void LEM_LR::DefineAnimations(UINT idx) {
+
+	//LR Mode Animation
+	ANIMATIONCOMPONENT_HANDLE LR_Rotate;
+	const VECTOR3 LM_LR_PIVOT = { -1.4501, -1.0404, -1.372 }; //Pivot Point
+	static UINT meshgroup_LR[3] = { DS_GRP_LRAntenna, DS_GRP_LRAntennaBlack, DS_GRP_LRAntennaMount };
+	static MGROUP_ROTATE LRAnt(idx, meshgroup_LR, 3, LM_LR_PIVOT, _V(-1, 0, 0), (float)(RAD * 24));
+	anim_LR = lem->CreateAnimation(0.0);
+	LR_Rotate = lem->AddAnimationComponent(anim_LR, 0, 1, &LRAnt);
+	lr_proc = abs(antennaAngle - 24) / 24;
+	lem->SetAnimation(anim_LR, lr_proc);
+
+}
+
+void LEM_LR::DeleteAnimations() {
+	if (anim_LR != -1) lem->DelAnimation(anim_LR);
+	anim_LR = -1;
 }
 
 void LEM_LR::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {

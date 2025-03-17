@@ -66,7 +66,7 @@ using namespace nassp;
 #define LOAD_STRING(KEY,VALUE,LEN) if(strnicmp(line,KEY,strlen(KEY))==0){ strncpy(VALUE, line + (strlen(KEY)+1), LEN); }
 
 // CONS
-MCC::MCC(RTCC *rtc)
+MCC::MCC(RTCC *rtc) : mcc_calcs(rtc)
 {	
 	// Reset data
 	CSMName[0] = 0;
@@ -3034,10 +3034,22 @@ void MCC::drawPad(bool writetofile){
 		sprintf(buffer, "MAP UPDATE REV %d\n", form->Rev);
 		OrbMech::SStoHHMMSS(form->LOSGET, hh, mm, ss);
 		sprintf(buffer, "%sLOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
-		if (form->type == 0)
+		if (form->type == 0 || form->type == 4 || form->type == 6)
 		{
 			OrbMech::SStoHHMMSS(form->PMGET, hh, mm, ss);
-			sprintf(buffer, "%sPM: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			if (form->type == 0)
+			{
+				sprintf(buffer, "%sPM: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			}
+			else if (form->type == 4)
+			{
+				sprintf(buffer, "%s180°: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			}
+			else
+			{
+				sprintf(buffer, "%s150°: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			}
+
 			OrbMech::SStoHHMMSS(form->AOSGET, hh, mm, ss);
 			sprintf(buffer, "%sAOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 		}
@@ -3078,13 +3090,6 @@ void MCC::drawPad(bool writetofile){
 			OrbMech::SStoHHMMSS(form->SSGET2, hh, mm, ss);
 			sprintf(buffer, "%sSS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 		}
-		else if (form->type == 4)
-		{
-			OrbMech::SStoHHMMSS(form->PMGET, hh, mm, ss);
-			sprintf(buffer, "%s180°: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
-			OrbMech::SStoHHMMSS(form->AOSGET, hh, mm, ss);
-			sprintf(buffer, "%sAOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
-		}
 		else if (form->type == 5)
 		{
 			OrbMech::SStoHHMMSS(form->PMGET, hh, mm, ss);
@@ -3093,6 +3098,13 @@ void MCC::drawPad(bool writetofile){
 			sprintf(buffer, "%sAOS WITH TEI: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 			OrbMech::SStoHHMMSS(form->AOSGET, hh, mm, ss);
 			sprintf(buffer, "%sAOS WITHOUT TEI: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+		}
+		else if (form->type == 7)
+		{
+			OrbMech::SStoHHMMSS(form->AOSGET2, hh, mm, ss);
+			sprintf(buffer, "%sAOS (W/TEI): %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			OrbMech::SStoHHMMSS(form->AOSGET, hh, mm, ss);
+			sprintf(buffer, "%sAOS (NO TEI): %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 		}
 
 		oapiAnnotationSetText(NHpad, buffer);
@@ -3170,7 +3182,7 @@ void MCC::drawPad(bool writetofile){
 
 		length += sprintf(buffer + length, "%+07.1f DVY LOCAL\n%+07.1f DVZ VERT\n", form->dV.y, form->dV.z);
 
-		if (MissionType != MTP_D)
+		if (!(MissionType == MTP_D || MissionType == MTP_F)) //Not Apollo 9 or 10
 		{
 			length += sprintf(buffer + length, "%+07.1f HA N42\n%+07.1f HP\n", form->HA, form->HP);
 		}
