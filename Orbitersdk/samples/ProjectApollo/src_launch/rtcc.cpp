@@ -21907,8 +21907,8 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 		//ECT: lambda is true geographic, lambda_D is true inertial
 		EZCHECKDIS.lambda -= sv_out.GMT*OrbMech::w_Earth;
 	}
-	OrbMech::normalizeAngle(EZCHECKDIS.lambda);
-	OrbMech::normalizeAngle(EZCHECKDIS.lambda_D);
+	OrbMech::normalizeAngle(EZCHECKDIS.lambda, false);
+	OrbMech::normalizeAngle(EZCHECKDIS.lambda_D, false);
 
 	EZCHECKDIS.phi_c *= DEG;
 	EZCHECKDIS.phi_D *= DEG;
@@ -21951,7 +21951,7 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 	EZCHECKDIS.ZSA = SystemParameters.MCGZSS * 3600.0;
 	EZCHECKDIS.R_Day[0] = GZGENCSN.DayofLiftoff;
 	EZCHECKDIS.R_Day[1] = GZGENCSN.MonthofLiftoff;
-	EZCHECKDIS.R_Day[2] = GZGENCSN.Year;
+	EZCHECKDIS.R_Day[2] = GZGENCSN.Year - (GZGENCSN.Year / 100) * 100;
 
 	if (veh == RTCC_MPT_LM)
 	{

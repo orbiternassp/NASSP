@@ -89,6 +89,9 @@ public:
 	void Text_GET_HHHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMMSSC(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
+	void Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
 
 	void SelectPage(int page);
 
@@ -883,7 +886,6 @@ public:
 protected:
 	oapi::Font *font;
 	oapi::Font *font2;
-	oapi::Font *font2vert;
 	oapi::Font *fonttest;
 	oapi::Font *font3;
 	oapi::Font *font4;
@@ -894,6 +896,7 @@ protected:
 	oapi::Font *font_mocr3; //Used for displays with 28 x 56 dynamic characters
 	oapi::Font *font_mocr4; //Used for displays with 21 x 42 dynamic characters
 	oapi::Font *font_mocr5; //Used for displays with 17 x 34 dynamic characters
+	oapi::Font *font_mocr3_vert;
 
 	oapi::Font *font_menu; //Guaranteed to give 25 lines
 	oapi::Font *font_menu2; //Guaranteed to give 32 lines

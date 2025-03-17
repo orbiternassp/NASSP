@@ -55,7 +55,6 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0); //TBD: This does not actually give Courier
 	font2 = oapiCreateFont(w * 2 / 51, true, "Courier", FONT_NORMAL, 0); //TBD: This does not actually give Courier
 
-	font2vert = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 900);
 	fonttest = oapiCreateFont(w / 32, false, "Courier New", FONT_NORMAL, 0);
 	font3 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
 	font4 = oapiCreateFont(w / 31, true, "Courier", FONT_NORMAL, 0);
@@ -72,6 +71,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 		font_mocr1 = oapiCreateFont(-(hh / 42), false, "*Lucida Console");
 		font_mocr2 = oapiCreateFont(-(hh / 32), false, "*Lucida Console");
 		font_mocr3 = oapiCreateFont(-(hh / 28), false, "*Lucida Console");
+		font_mocr3_vert = oapiCreateFont(-(hh / 28), false, "*Lucida Console", FONT_NORMAL, 900);
 		font_mocr4 = oapiCreateFont(-(hh / 21), false, "*Lucida Console");
 		font_mocr5 = oapiCreateFont(-(hh / 17), false, "*Lucida Console");
 	}
@@ -81,6 +81,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 		font_mocr1 = oapiCreateFont(-(hh / 55), false, "*Lucida Console");
 		font_mocr2 = oapiCreateFont(-(hh / 41), false, "*Lucida Console");
 		font_mocr3 = oapiCreateFont(-(hh / 36), false, "*Lucida Console");
+		font_mocr3_vert = oapiCreateFont(-(hh / 36), false, "*Lucida Console", FONT_NORMAL, 900);
 		font_mocr4 = oapiCreateFont(-(hh / 27), false, "*Lucida Console");
 		font_mocr5 = oapiCreateFont(-(hh / 21), false, "*Lucida Console");
 	}
@@ -126,7 +127,7 @@ ApolloRTCCMFD::~ApolloRTCCMFD ()
 	// Add MFD cleanup code here
 	oapiReleaseFont(font);
 	oapiReleaseFont(font2);
-	oapiReleaseFont(font2vert);
+	oapiReleaseFont(font_mocr3_vert);
 	oapiReleaseFont(fonttest);
 	oapiReleaseFont(font3);
 	oapiReleaseFont(font4);
@@ -381,6 +382,41 @@ void ApolloRTCCMFD::Text_GET_HHHMMSSC(oapi::Sketchpad *skp, int x, int y, double
 void ApolloRTCCMFD::Text_GET_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val)
 {
 	GET_Display2(Buffer, val);
+	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+}
+
+void ApolloRTCCMFD::Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	//val in degrees
+	FormatLatitude(Buffer, val);
+	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+}
+
+void ApolloRTCCMFD::Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals)
+{
+	//val in degrees
+	if (val >= 0.0)
+	{
+		sprintf(Buffer, "%.*lfN", decimals, abs(val));
+	}
+	else
+	{
+		sprintf(Buffer, "%.*lfS", decimals, abs(val));
+	}
+	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+}
+
+void ApolloRTCCMFD::Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals)
+{
+	//val in degrees
+	if (val >= 0.0)
+	{
+		sprintf(Buffer, "%.*lfE", decimals, abs(val));
+	}
+	else
+	{
+		sprintf(Buffer, "%.*lfW", decimals, abs(val));
+	}
 	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
 }
 
