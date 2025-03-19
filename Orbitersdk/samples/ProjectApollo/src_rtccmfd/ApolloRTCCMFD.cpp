@@ -344,6 +344,18 @@ void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, std::string message, int x, int y
 	skp->Text(x * W / xmax, y * H / ymax, message.c_str(), message.size());
 }
 
+void ApolloRTCCMFD::Text_Double(oapi::Sketchpad *skp, int x, int y, char *format, double val)
+{
+	sprintf(Buffer, format, val);
+	skp->Text(x, y, Buffer, strlen(Buffer));
+}
+
+void ApolloRTCCMFD::Text_Int(oapi::Sketchpad *skp, int x, int y, char *format, int val)
+{
+	sprintf(Buffer, format, val);
+	skp->Text(x, y, Buffer, strlen(Buffer));
+}
+
 void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, std::string message)
 {
 	skp->Text(CW * x, CH * y, message.c_str(), message.size());
@@ -358,6 +370,21 @@ void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, char *format, doubl
 void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, char *format, int val)
 {
 	sprintf(Buffer, format, val);
+	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+}
+
+void ApolloRTCCMFD::Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	int hh, mm;
+	double ss;
+	OrbMech::SStoHHMMSS(val, hh, mm, ss, 0.1);
+	sprintf_s(Buffer, "%d:%04.1f", mm, ss);
+	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+}
+
+void ApolloRTCCMFD::Text_GET_HHMM(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	GET_Display_HHMM(Buffer, val);
 	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
 }
 
@@ -389,6 +416,13 @@ void ApolloRTCCMFD::Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val
 {
 	//val in degrees
 	FormatLatitude(Buffer, val);
+	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+}
+
+void ApolloRTCCMFD::Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	//val in degrees
+	FormatLongitude(Buffer, val);
 	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
 }
 
@@ -6627,7 +6661,7 @@ void ApolloRTCCMFD::menuTLCCVectorTime()
 
 void ApolloRTCCMFD::menuCycleTLCCColumnNumber()
 {
-	if (GC->rtcc->PZMCCPLN.Column < 4)
+	if (GC->rtcc->PZMCCPLN.Column < 6)
 	{
 		GC->rtcc->PZMCCPLN.Column++;
 	}

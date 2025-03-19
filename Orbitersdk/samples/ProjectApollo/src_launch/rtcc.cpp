@@ -474,7 +474,7 @@ SpaceDigitals::SpaceDigitals()
 
 CheckoutMonitor::CheckoutMonitor()
 {
-	sprintf_s(VEH, "CSM");
+	sprintf_s(VEH, "");
 	GET = 0.0;
 	GMT = 0.0;
 	sprintf_s(VID, "");
@@ -506,7 +506,7 @@ CheckoutMonitor::CheckoutMonitor()
 	A = 0.0;
 	K_Fac = 0.0;
 	sprintf_s(CFG, "");
-	sprintf_s(RF, "ECI");
+	sprintf_s(RF, "");
 	WT = 0.0;
 	WC = 0.0;
 	WL = 0.0;
@@ -537,7 +537,7 @@ CheckoutMonitor::CheckoutMonitor()
 	EB2 = 0.0;
 	EE2 = 0.0;
 	U_T = _V(-2, 0, 0); //Indicator to blank display (value < -2)
-	sprintf_s(Option, "GMT");
+	sprintf_s(Option, "");
 
 	unit = 0;
 	TABlank = false;
@@ -556,6 +556,7 @@ DetailedManeuverTable::DetailedManeuverTable()
 	L_GMTV = 0.0;
 	L_GETV = 0.0;
 	sprintf_s(REF, "");
+	X_VEH = ' ';
 	sprintf_s(X_STA_ID, "");
 	X_GMTV = 0.0;
 	X_GETV = 0.0;
@@ -14403,7 +14404,7 @@ void RTCC::EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis,
 	else
 	{
 		EZRMDT.Mode = '2';
-		EZRMDT.PETorSH = "/SH";
+		EZRMDT.PETorSH = "/SH ";
 		EZRMDT.YDotorT = "/T";
 
 		MATRIX3 M_B;
@@ -20829,26 +20830,24 @@ void RTCC::EMDLANDM(int L, double gmt, double dt, int ref)
 	tab->err = 0;
 }
 
-void RTCC::ECMEXP(EphemerisData sv, StationData *stat, int statbody, double &range, double &alt)
+void RTCC::ECMEXP(EphemerisData2 sv, StationData *stat, int statbody, double &range, double &alt)
 {
-	EphemerisData sv_out;
+	//INPUTS:
+	//sv: state vector at maximum elevation, ECT or MCT coordinates
 	VECTOR3 Q, U_R;
-	int out;
 
-	U_R = EMXING_Station_ECT(sv.GMT, stat->R_E_sin_lat, stat->R_E_cos_lat, stat->lng);
 	if (statbody == BODY_EARTH)
 	{
-		out = 1;
+		U_R = EMXING_Station_ECT(sv.GMT, stat->R_E_sin_lat, stat->R_E_cos_lat, stat->lng);
 	}
 	else
 	{
-		out = 3;
+		U_R = OrbMech::r_from_latlong(stat->lat_geoc, stat->lng);
 	}
-	ELVCNV(sv, out, sv_out);
 	
-	Q = unit(crossp(sv_out.V, sv_out.R));
-	range = abs(stat->R_S * asin(dotp(U_R, Q)));
-	alt = length(sv_out.R) - stat->R_S;
+	Q = unit(crossp(sv.V, sv.R));
+	range = dotp(Q, U_R*stat->R_S);
+	alt = length(sv.R) - stat->R_S;
 }
 
 void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int body)
@@ -20970,7 +20969,7 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 			}
 
 			intab.GMT = res.Stations[i].GMTEMAX;
-			ELVCTR(intab, outtab);
+			ELVCTR(intab, outtab, ephem2, ephem.MANTIMES, &ephem.LUNRSTAY);
 
 			for (unsigned j = 0;j < contact.table.size();j++)
 			{
@@ -20980,7 +20979,8 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 					break;
 				}
 			}
-			ECMEXP(Eph2ToEph1(outtab.SV, BODY_EARTH), &tempstat, stat_body, range, alt);
+			//Get ground range and altitude
+			ECMEXP(outtab.SV, &tempstat, stat_body, range, alt);
 
 			tab->REV[tab->pages - 1][numcontacts] = CapeCrossingRev(veh, res.Stations[i].GMTAOS);
 			tab->STA[tab->pages - 1][numcontacts] = res.Stations[i].StationID;
@@ -23569,9 +23569,9 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	res.I = man->i_BO*DEG;
 	res.WP = man->g_BO*DEG;
 	res.HA = man->h_a / 1852.0;
-	if (res.HA > 99999.999)
+	if (res.HA > 999999.9)
 	{
-		res.HA = 99999.999;
+		res.HA = -1.0; //In display code this will show up as invalid
 	}
 	res.HP = man->h_p / 1852.0;
 	res.L_AN = man->lng_AN*DEG;
@@ -23636,6 +23636,7 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	}
 	else
 	{
+		res.X_VEH = ' ';
 		res.X_GMTV = 0.0;
 		sprintf(res.X_STA_ID, "");
 	}
@@ -23735,6 +23736,7 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 
 		if (man->TVC == 3)
 		{
+			//LM
 			double Y, P, R;
 			Y = asin(-cos(MG)*sin(OG));
 			if (abs(sin(Y)) != 1.0)
@@ -23751,7 +23753,8 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 		}
 		else
 		{
-			res.FDAIAtt = _V(OG, IG, MG);
+			//CSM
+			res.FDAIAtt = _V(0.0, 0.0, 0.0); //Set to zero for CSM as they would be the same as IMU
 		}
 
 		for (int i = 0;i < 3;i++)

@@ -81,15 +81,20 @@ public:
 	void RecallStatus(void);
 
 	void Text(oapi::Sketchpad *skp, std::string message, int x, int y, int xmax = 1024, int ymax = 1024);
+	void Text_Double(oapi::Sketchpad *skp, int x, int y, char *format, double val);
+	void Text_Int(oapi::Sketchpad *skp, int x, int y, char *format, int val);
 	//Functions using CW and CH
 	void Text(oapi::Sketchpad *skp, int x, int y, std::string message);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, double val);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, int val);
+	void Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHMM(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMMSSC(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
 	void Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
 

@@ -1175,6 +1175,7 @@ struct DetailedManeuverTable
 	double L_GMTV;
 	double L_GETV;
 	char REF[10];
+	char X_VEH; //Character for X_STA_ID
 	char X_STA_ID[10];
 	double X_GMTV;
 	double X_GETV;
@@ -2866,7 +2867,7 @@ public:
 	//Predicted Site Acquisition Display
 	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
 	//Ground Range and Altitude Subprogram
-	void ECMEXP(EphemerisData sv, StationData *stat, int statbody, double &range, double &alt);
+	void ECMEXP(EphemerisData2 sv, StationData *stat, int statbody, double &range, double &alt);
 	//Landmark Acquisition Display
 	void EMDLANDM(int L, double gmt, double dt, int ref);
 	//Ground Point Characteristics Block Routine
