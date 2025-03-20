@@ -119,7 +119,7 @@ void MCC::MissionSequence_C_Prime()
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 3.0*60.0, 41, MST_CP_TRANSLUNAR15);
 		break;
 	case MST_CP_TRANSLUNAR15: //Fast PC+2 to Prel. LOI-1
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.LOI - 2.5*3600.0), 42, MST_CP_TRANSLUNAR16);
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.LOI - 2.5*3600.0), 43, MST_CP_TRANSLUNAR16);
 		break;
 	case MST_CP_TRANSLUNAR16: //Prel. LOI-1 to Prel. TEI-1
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.LOI - 1.0*3600.0 - 50.0*60.0), 30, MST_CP_TRANSLUNAR17);

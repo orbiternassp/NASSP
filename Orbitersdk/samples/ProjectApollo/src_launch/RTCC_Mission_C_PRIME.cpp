@@ -752,6 +752,10 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 			sprintf(form->remarks, "Requires realignment to preferred REFSMMAT,  Raises perilune to %.0f NM", res.FlybyAlt / 1852.0);
 		}
+		else
+		{
+			sprintf(form->remarks, "Uses Launch REFSMMAT,  Raises perilune to %.0f NM", res.FlybyAlt / 1852.0);
+		}
 
 		sprintf(form->purpose, "Flyby");
 		form->lat = res.latitude*DEG;
@@ -765,6 +769,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		SplashLongitude = res.longitude;
 		calcParams.TEI = res.P30TIG;
 		calcParams.EI = res.GET400K;
+		calcParams.StoredREFSMMAT = opt.REFSMMAT;
 	}
 	break;
 	case 41:	// MISSION CP PC+2 MANEUVER
@@ -776,6 +781,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP11ManPADOpt opt;
 		SV sv;
 		char manname[32];
+		char prevrefs[100];
+		char alignment[100];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -789,26 +796,26 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			entopt.returnspeed = 1;
 			entopt.enginetype = RTCC_ENGINETYPE_CSMRCSPLUS4;
 			sprintf(manname, "PC+2");
-			sprintf(form->remarks, "4 Jet, Assumes MCC4, Uses LOI-2 REFSMNMAT");
+			sprintf(prevrefs, "LOI-2");
 		}
-		else if (fcn == 42)
+		else if (fcn == 42) //For Flyby PC+2 Fast Return
 		{
 			//IOL
 			entopt.entrylongmanual = false;
 			entopt.ATPLine = 3;
 			entopt.returnspeed = 2;
 			sprintf(manname, "PC+2 Fast Return");
-			sprintf(form->remarks, "No Ullage, Assumes Flyby, Uses same alignment as Flyby"); //For Flyby PC+2 Fast Return
+			sprintf(prevrefs, "Flyby");
 			PZREAP.VRMAX = 37500.0;
 		}
-		else
+		else //For MCC4 PC+2 Fast Return
 		{
 			//IOL
 			entopt.entrylongmanual = false;
 			entopt.ATPLine = 3;
 			entopt.returnspeed = 2;
 			sprintf(manname, "PC+2 Fast Return");
-			sprintf(form->remarks, "No Ullage, Assumes MCC4, Uses LOI-2 REFSMMAT"); //For MCC4 PC+2 Fast Return
+			sprintf(prevrefs, "LOI-2");
 			PZREAP.VRMAX = 37500.0;
 		}
 
@@ -832,14 +839,24 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		}
+
 		opt.HeadsUp = false;
-		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		if (fcn == 42)
+		{
+			opt.REFSMMAT = calcParams.StoredREFSMMAT;
+		}
+		else
+		{
+			opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		}
+
 		opt.RV_MCC = ConvertSVtoEphemData(sv);
 		opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		AP11ManeuverPAD(opt, *form);
 
-		if (!mcc->mcc_calcs.REFSMMATDecision(form->Att*RAD))
+		//if (!mcc->mcc_calcs.REFSMMATDecision(form->Att*RAD))
+		if (mcc->mcc_calcs.REFSMMATDecision(form->Att*RAD))
 		{
 			REFSMMATOpt refsopt;
 			MATRIX3 REFSMMAT;
@@ -848,6 +865,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			refsopt.REFSMMATTime = res.P30TIG;
 			refsopt.REFSMMATopt = 0;
 			refsopt.vessel = calcParams.src;
+			refsopt.useSV = true;
+			refsopt.RV_MCC = calcParams.SVSTORE1;
 
 			REFSMMAT = REFSMMATCalc(&refsopt);
 
@@ -855,14 +874,34 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			opt.REFSMMAT = REFSMMAT;
 			AP11ManeuverPAD(opt, *form);
 
-			sprintf(form->remarks, "Requires realignment to preferred REFSMMAT");
+			sprintf(alignment, "Requires realignment to preferred REFSMMAT");
 		}
+		else
+		{
+			sprintf(alignment, "Uses %s REFSMMAT", prevrefs);
+		}
+
 		sprintf(form->purpose, manname);
 		form->lat = res.latitude*DEG;
 		form->lng = res.longitude*DEG;
 		form->RTGO = res.RTGO;
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
+		if (fcn == 41)
+		{
+			//PC+2
+			sprintf(form->remarks, "4 Jet, Assumes MCC4, %s", alignment);
+		}
+		else if (fcn == 42)
+		{
+			//Flyby PC+2 Fast Return
+			sprintf(form->remarks, "No Ullage, Assumes Flyby, %s", alignment);
+		}
+		else
+		{
+			//MCC4 PC+2 Fast Return
+			sprintf(form->remarks, "No Ullage, Assumes MCC4, %s", alignment);
+		}
 
 		//Save parameters for further use
 		SplashLatitude = res.latitude;
