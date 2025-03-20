@@ -220,7 +220,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			double GMTSV;
 
 			GMTSV = PZMPTCSM.TimeToBeginManeuver[0] - 10.0*60.0; //10 minutes before TB6
-			
+
 			sv = StateVectorCalcEphem(calcParams.src);
 			sv_uplink = coast(sv, GMTSV - sv.GMT, RTCC_MPT_CSM); //Coast with venting and drag taken into account
 
@@ -318,18 +318,21 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			TLIplus = calcParams.TLI + 25.0*3600.0;
 			sprintf(manname, "TLI+25");
+			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd");
 			entopt.t_Z = OrbMech::HHMMSSToSS(74.0, 38.0, 0.0);
 		}
 		else if (fcn == 12)
 		{
 			TLIplus = calcParams.TLI + 35.0*3600.0;
 			sprintf(manname, "TLI+35");
+			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,821 for Mid-Pacific landing,  High-speed procedure not req'd");
 			entopt.t_Z = OrbMech::HHMMSSToSS(98.0, 12.0, 0.0);
 		}
 		else if (fcn == 13)
 		{
 			TLIplus = calcParams.TLI + 44.0*3600.0;
 			sprintf(manname, "TLI+44");
+			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 8,750 for Indian Ocean,  High-speed procedure (-MA) req'd");
 			entopt.t_Z = OrbMech::HHMMSSToSS(98.0, 12.0, 0.0);
 		}
 
@@ -523,6 +526,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			SV sv_node, sv_ig2, sv_cut2;
 			double P30TIG_LOI2;
 			char buffer2[1000];
+			char SV2[1000];
 
 			//Step 1: Calculate LOI-1 with MCC-4 burnout vector
 
@@ -585,18 +589,19 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			//Step 4: Store SV for use with PC+2
 			calcParams.SVSTORE1 = sv_cut1;
 
-			//CSM state vector with V66
-			AGCStateVectorUpdate(buffer1, sv, true, true);
+			//CSM & LM state vector
+			AGCStateVectorUpdate(buffer1, sv, false, false);
+			AGCStateVectorUpdate(SV2, sv, true, false);
 
 			if (scrubbed)
 			{
 				AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT);
 
-				sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+				sprintf(uplinkdata, "%s%s%s", buffer1, SV2, buffer2);
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM+LM state vectors, LOI-2 REFSMMAT");
+					sprintf(upDesc, "LM & CSM state vectors, LOI-2 REFSMMAT");
 				}
 			}
 			else
@@ -617,11 +622,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
 
-				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+				sprintf(uplinkdata, "%s%s%s%s", buffer1, SV2, buffer2, buffer3);
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM+LM state vectors, target load, LOI-2 REFSMMAT");
+					sprintf(upDesc, "LM & CSM state vectors, target load, LOI-2 REFSMMAT");
 				}
 			}
 		}
@@ -745,7 +750,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			opt.REFSMMAT = REFSMMAT;
 			AP11ManeuverPAD(opt, *form);
 
-			sprintf(form->remarks, "Requires realignment to preferred REFSMMAT");
+			sprintf(form->remarks, "Requires realignment to preferred REFSMMAT,  Raises perilune to %.0f NM", res.FlybyAlt / 1852.0);
 		}
 
 		sprintf(form->purpose, "Flyby");
@@ -763,7 +768,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	}
 	break;
 	case 41:	// MISSION CP PC+2 MANEUVER
-	case 42:	// MISSION CP FAST PC+2 MANEUVER
+	case 42:	// MISSION CP FAST PC+2 MANEUVER w/ Flyby
+	case 43:	// MISSION CP FAST PC+2 MANEUVER w/ MCC4
 	{
 		RTEMoonOpt entopt;
 		EntryResults res;
@@ -783,6 +789,17 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			entopt.returnspeed = 1;
 			entopt.enginetype = RTCC_ENGINETYPE_CSMRCSPLUS4;
 			sprintf(manname, "PC+2");
+			sprintf(form->remarks, "4 Jet, Assumes MCC4, Uses LOI-2 REFSMNMAT");
+		}
+		else if (fcn == 42)
+		{
+			//IOL
+			entopt.entrylongmanual = false;
+			entopt.ATPLine = 3;
+			entopt.returnspeed = 2;
+			sprintf(manname, "PC+2 Fast Return");
+			sprintf(form->remarks, "No Ullage, Assumes Flyby, Uses same alignment as Flyby"); //For Flyby PC+2 Fast Return
+			PZREAP.VRMAX = 37500.0;
 		}
 		else
 		{
@@ -790,7 +807,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			entopt.entrylongmanual = false;
 			entopt.ATPLine = 3;
 			entopt.returnspeed = 2;
-			sprintf(manname, "PC+2 fast return");
+			sprintf(manname, "PC+2 Fast Return");
+			sprintf(form->remarks, "No Ullage, Assumes MCC4, Uses LOI-2 REFSMMAT"); //For MCC4 PC+2 Fast Return
 			PZREAP.VRMAX = 37500.0;
 		}
 
@@ -879,7 +897,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "TEI-2");
 			entopt.t_zmin = 146.0*3600.0;
 			sv1 = coast(sv1, 2.5*3600.0);
-		}	
+		}
 
 		entopt.EntryLng = -165.0*RAD;
 		entopt.RV_MCC = sv1;
@@ -934,7 +952,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->Rev = 1;
 		form->LOSGET = upd_hyper.LOSGET;
 		form->PMGET = upd_hyper.PMGET;
-		form->AOSGET = upd_ellip.AOSGET;		
+		form->AOSGET = upd_ellip.AOSGET;
 		form->SSGET = upd_ellip.SSGET;
 		form->LOSGET2 = upd_ellip2.LOSGET;
 		form->SRGET = upd_ellip2.SRGET;
