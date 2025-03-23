@@ -648,20 +648,33 @@ struct LunarLiftoffTimeOpt
 
 struct LLTPOpt
 {
+	//CSM state vector
 	EphemerisData sv_CSM;
+	//Yaw steer limit
 	double Y_S;
+	//Desired radial velocity at insertion
 	double V_Z_NOM;
+	//Threshold time (GMT)
 	double T_TH;
+	//Landing site radius, latitude, longitude
 	double R_LS, lat_LS, lng_LS;
+	//Powered flight arc and time
 	double alpha_PF, dt_PF;
+	//DT from insertion to TPI
 	double dt_INS_TPI;
+	//Height of insertion
 	double h_INS;
+	//TPI height and phase offset
 	double DH_TPI, dTheta_TPI;
+	//Angle from TPI to TPF
 	double WT;
 };
 
 struct LunarLaunchTargetingTable
 {
+	std::string CSM_STA_ID;
+	double GETTH = 0.0;
+	double GETV = 0.0;
 	double GETLOR = 0.0;
 	double VH = 0.0;
 	double GET_TPI = 0.0, GET_TPF = 0.0;
@@ -2808,7 +2821,7 @@ public:
 	//CMC and LGC REFSMMAT Update Generator
 	void CMMRFMAT(int L, int id, int addr);
 	//SLV Navigation Update
-	void CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT);
+	void CMMSLVNAV(int L, VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT);
 	//CMC/LGC Landing Site Update Load Generator
 	void CMMCMCLS(int veh);
 	//LGC Descent Target Update Load Generator
@@ -3448,7 +3461,7 @@ public:
 
 	struct GuidanceOpticsSupportTable
 	{
-		std::string CODE = "ZZZZZZZZ";			//Identification of maneuver to be performed
+		std::string CODE = "ZZZZZZZ";			//Identification of maneuver to be performed
 		VECTOR3 Att_H = _V(0, 0, 0);			//Pitch, yaw and roll attitudes for the maneuver references to the IMU aligned to a local vertical orientation. Associated with DMT REFSMMAT.
 		double GETAC = 0.0;						//Ground elapsed time of alignment check
 		double IGA = 0.0;
@@ -3610,6 +3623,7 @@ public:
 	{
 		bool error = false;
 		int NumVec = 0;
+		double GMT = 0.0;
 		VectorCompareTableData data[4];
 	} BZCCANOE;
 
@@ -3619,8 +3633,8 @@ public:
 		bool showHA[4] = { false,false,false,false };
 		int NumVec = 0;
 		VectorCompareTableData data[4];
-		double PET = 0.0;
-		double GMTR = 0.0;
+		double GET = 0.0;
+		double GMT = 0.0;
 		std::string error = "TABLE NOT INITIALIZED";
 	} VectorCompareDisplayBuffer;
 
@@ -4516,6 +4530,7 @@ public:
 		double LM_GMTV = 0.0;
 		double LM_GETV = 0.0;
 		double DT_CSI = 0.0;
+		double LM_LIFETIME = 0.0;
 		double DV_MAX = 0.0;
 		double MINH = 0.0;
 		double WT = 0.0;
@@ -4814,6 +4829,9 @@ public:
 		VECTOR3 PosS = _V(0, 0, 0);
 		VECTOR3 DotS = _V(0, 0, 0);
 		double NUPTIM = 0.0;
+		int SequenceNumber = 0;
+		double GETLoadGeneration = 0.0;
+		std::string STAID;
 	} CZNAVSLV;
 
 	struct LandingSiteMakupBuffer

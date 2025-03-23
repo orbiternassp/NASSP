@@ -10116,7 +10116,9 @@ RTCC_PMMLLWP_22_19:
 	PZLRPT.LM_GMTV = 0.0;
 	PZLRPT.LM_GETV = 0.0;
 	PZLRPT.DT_CSI = dt_B;
+	PZLRPT.LM_LIFETIME = opt.t_max / 3600.0;
 	PZLRPT.DV_MAX = opt.DV_MAX[m] / 0.3048;
+	PZLRPT.MINH = opt.H_S / 1852.0;
 	PZLRPT.WT = opt.theta_F*DEG;
 	for (int i = 0;i < I_LOOP;i++)
 	{
@@ -13628,6 +13630,8 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargeting
 		T_TPI = T_TPI - S * DV_Z;
 	} while (i <= I_max);
 
+	res.GETV = GETfromGMT(opt.sv_CSM.GMT);
+	res.GETTH = GETfromGMT(opt.T_TH);
 	res.GETLOR = GETfromGMT(T_LO);
 	res.GET_TPI = GETfromGMT(T_TPI);
 	res.GET_TPF = lamres.T2;
@@ -34994,11 +34998,11 @@ void RTCC::PMDRET()
 		PZREDT.DV[i] = block->Display[i].dv / 0.3048;
 		if (block->Display[i].VEH == 1)
 		{
-			PZREDT.VEH[i] = "CSM";
+			PZREDT.VEH[i] = "C";
 		}
 		else
 		{
-			PZREDT.VEH[i] = "LEM";
+			PZREDT.VEH[i] = "L";
 		}
 		PZREDT.PURP[i] = block->Display[i].Man_ID;
 		PZREDT.CODE[i] = 0.0;
@@ -36419,6 +36423,7 @@ void RTCC::BMSVEC()
 		}
 	}
 
+	BZCCANOE.GMT = gmt;
 	BZCCANOE.NumVec = numvec;
 
 	if (med_s80.REF == BODY_EARTH)
@@ -36494,7 +36499,7 @@ void RTCC::BMSVEC()
 			V = unit(crossp(-U, W));
 		}
 
-		BZCCANOE.data[i].GMT = sv_final[i].GMT;
+		BZCCANOE.data[i].GMT = sv_comp[i].GMT;
 		OrbMech::periapo(sv_final[i].R, sv_final[i].V, mu, r_apo, r_peri);
 		coe = OrbMech::coe_from_sv(sv_final[i].R, sv_final[i].V, mu);
 		PICSSC(true, sv_final[i].R, sv_final[i].V, r, v, lat, lng, gamma, azi);
@@ -36547,9 +36552,9 @@ void RTCC::BMDVEC()
 		return;
 	}
 
-	VectorCompareDisplayBuffer.GMTR = GMTfromGET(SystemParameters.MCGREF);
-	VectorCompareDisplayBuffer.PET = BZCCANOE.data[0].GMT - VectorCompareDisplayBuffer.GMTR;
 	VectorCompareDisplayBuffer.NumVec = BZCCANOE.NumVec;
+	VectorCompareDisplayBuffer.GMT = BZCCANOE.GMT;
+	VectorCompareDisplayBuffer.GET = GETfromGMT(BZCCANOE.GMT);
 
 	for (int i = 0;i < BZCCANOE.NumVec;i++)
 	{
@@ -38473,11 +38478,34 @@ void RTCC::EMDGLMST()
 	}
 }
 
-void RTCC::CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT)
+void RTCC::CMMSLVNAV(int L, VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT)
 {
-	CZNAVSLV.PosS = mul(GZLTRA.IU1_REFSMMAT, R_ecl);
-	CZNAVSLV.DotS = mul(GZLTRA.IU1_REFSMMAT, V_ecl);
-	CZNAVSLV.NUPTIM = GMT - SystemParameters.MCGRIC * 3600.0;
+	MATRIX3 REFS;
+	double GRR;
+
+	if (CZNAVSLV.SequenceNumber == 0)
+	{
+		CZNAVSLV.SequenceNumber = 4900;
+	}
+	CZNAVSLV.SequenceNumber++;
+
+	if (L == RTCC_MPT_CSM)
+	{
+		REFS = GZLTRA.IU1_REFSMMAT;
+		GRR = SystemParameters.MCGRIC * 3600.0;
+		CZNAVSLV.STAID = PZMPTCSM.StationID;
+	}
+	else
+	{
+		REFS = GZLTRA.IU2_REFSMMAT;
+		GRR = SystemParameters.MCGRIL * 3600.0;
+		CZNAVSLV.STAID = PZMPTLEM.StationID;
+	}
+
+	CZNAVSLV.GETLoadGeneration = GETfromGMT(RTCCPresentTimeGMT());
+	CZNAVSLV.PosS = mul(REFS, R_ecl);
+	CZNAVSLV.DotS = mul(REFS, V_ecl);
+	CZNAVSLV.NUPTIM = GMT - GRR;
 }
 
 //CMC/LGC Landing Site Update Load Generator

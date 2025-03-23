@@ -87,6 +87,7 @@ public:
 	void Text(oapi::Sketchpad *skp, int x, int y, std::string message);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, double val);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, int val);
+	void Text_GET_MMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHMM(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
@@ -97,6 +98,7 @@ public:
 	void Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
 	void Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
+	void Text_Dot(oapi::Sketchpad *skp, int x, int y);
 
 	void SelectPage(int page);
 
@@ -168,7 +170,7 @@ public:
 	void menuGPMCycleVessel();
 	void SPQcalc();
 	void lambertcalc();
-	void Angle_Display(char *Buff, double angle, bool DispPlus = true);
+	void FormatDeclination(char *Buff, double angle);
 	void GET_Display(char * Buff, double time, bool DispGET = true);
 	void GMT_Display2(char * Buff, double time) const;
 	void GET_Display2(char * Buff, double time) const;
@@ -896,12 +898,17 @@ protected:
 	oapi::Font *font4;
 	oapi::Font *font5;
 
-	oapi::Font *font_mocr1; //Used for displays with 42 x 84 dynamic characters
-	oapi::Font *font_mocr2; //Used for displays with 32 x 64 dynamic characters
-	oapi::Font *font_mocr3; //Used for displays with 28 x 56 dynamic characters
-	oapi::Font *font_mocr4; //Used for displays with 21 x 42 dynamic characters
-	oapi::Font *font_mocr5; //Used for displays with 17 x 34 dynamic characters
+	oapi::Font *font_mocr1; //Used for displays with 42 x 84 static characters
+	oapi::Font *font_mocr2; //Used for displays with 32 x 64 static characters
+	oapi::Font *font_mocr3; //Used for displays with 28 x 56 static characters
+	oapi::Font *font_mocr4; //Used for displays with 21 x 42 static characters
+	oapi::Font *font_mocr5; //Used for displays with 17 x 34 static characters
 	oapi::Font *font_mocr3_vert;
+	oapi::Font *font_mocr1_dyn; //Used for displays with 42 x 84 dynamic characters
+	oapi::Font *font_mocr2_dyn; //Used for displays with 32 x 64 dynamic characters
+	oapi::Font *font_mocr3_dyn; //Used for displays with 28 x 56 dynamic characters
+	oapi::Font *font_mocr4_dyn; //Used for displays with 21 x 42 dynamic characters
+	oapi::Font *font_mocr5_dyn; //Used for displays with 17 x 34 dynamic characters
 
 	oapi::Font *font_menu; //Guaranteed to give 25 lines
 	oapi::Font *font_menu2; //Guaranteed to give 32 lines
@@ -955,6 +962,7 @@ private:
 	void PrintTargetVessel(char *Buffer);
 	void PrintUllage(char *Buffer, int Thruster, bool Use4Jets, double Duration);
 	void GetCharSize(oapi::Sketchpad*skp, int &CW, int &CH);
+	void SetMOCRFont(oapi::Sketchpad*skp, int size, bool dynamic);
 };
 
 #endif // !__ApolloRTCCMFD_H

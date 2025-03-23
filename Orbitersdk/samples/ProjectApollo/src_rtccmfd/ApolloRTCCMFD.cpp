@@ -65,29 +65,46 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	bool widescreen = aspectratio > 1.25;
 	int hh = h;
 
+	//Fonts
+	const char *menu_font = "*Lucida Console";
+	const char *mocr_stat_font = "*Lucida Console";
+	const char *mocr_dyn_font = "*Lucida Console"; //"*Cascadia Mono"; "*OG Courier Zero Dot" "*Cascadia Code"
+
 	if (widescreen)
 	{
 		//Use correct font size
-		font_mocr1 = oapiCreateFont(-(hh / 42), false, "*Lucida Console");
-		font_mocr2 = oapiCreateFont(-(hh / 32), false, "*Lucida Console");
-		font_mocr3 = oapiCreateFont(-(hh / 28), false, "*Lucida Console");
-		font_mocr3_vert = oapiCreateFont(-(hh / 28), false, "*Lucida Console", FONT_NORMAL, 900);
-		font_mocr4 = oapiCreateFont(-(hh / 21), false, "*Lucida Console");
-		font_mocr5 = oapiCreateFont(-(hh / 17), false, "*Lucida Console");
+		font_mocr1 = oapiCreateFont(-(hh / 42), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr2 = oapiCreateFont(-(hh / 32), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr3 = oapiCreateFont(-(hh / 28), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr3_vert = oapiCreateFont(-(hh / 28), false, mocr_stat_font, FONT_NORMAL, 900);
+		font_mocr4 = oapiCreateFont(-(hh / 21), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr5 = oapiCreateFont(-(hh / 17), false, mocr_stat_font, FONT_NORMAL, 0);
+
+		font_mocr1_dyn = oapiCreateFont(-(hh / 42), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr2_dyn = oapiCreateFont(-(hh / 32), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr3_dyn = oapiCreateFont(-(hh / 28), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr4_dyn = oapiCreateFont(-(hh / 21), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr5_dyn = oapiCreateFont(-(hh / 17), false, mocr_dyn_font, FONT_NORMAL, 0);
 	}
 	else
 	{
 		//Use smaller font size for 1:1 MFDs
-		font_mocr1 = oapiCreateFont(-(hh / 55), false, "*Lucida Console");
-		font_mocr2 = oapiCreateFont(-(hh / 41), false, "*Lucida Console");
-		font_mocr3 = oapiCreateFont(-(hh / 36), false, "*Lucida Console");
-		font_mocr3_vert = oapiCreateFont(-(hh / 36), false, "*Lucida Console", FONT_NORMAL, 900);
-		font_mocr4 = oapiCreateFont(-(hh / 27), false, "*Lucida Console");
-		font_mocr5 = oapiCreateFont(-(hh / 21), false, "*Lucida Console");
+		font_mocr1 = oapiCreateFont(-(hh / 55), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr2 = oapiCreateFont(-(hh / 41), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr3 = oapiCreateFont(-(hh / 36), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr3_vert = oapiCreateFont(-(hh / 36), false, mocr_stat_font, FONT_NORMAL, 900);
+		font_mocr4 = oapiCreateFont(-(hh / 27), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr5 = oapiCreateFont(-(hh / 21), false, mocr_stat_font, FONT_NORMAL, 0);
+
+		font_mocr1_dyn = oapiCreateFont(-(hh / 55), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr2_dyn = oapiCreateFont(-(hh / 41), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr3_dyn = oapiCreateFont(-(hh / 36), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr4_dyn = oapiCreateFont(-(hh / 27), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr5_dyn = oapiCreateFont(-(hh / 21), false, mocr_dyn_font, FONT_NORMAL, 0);
 	}
 
-	font_menu = oapiCreateFont(-(hh / 25), false, "*Lucida Console");
-	font_menu2 = oapiCreateFont(-(hh / 32), false, "*Lucida Console");
+	font_menu = oapiCreateFont(-(hh / 25), false, menu_font, FONT_NORMAL, 0);
+	font_menu2 = oapiCreateFont(-(hh / 32), false, menu_font, FONT_NORMAL, 0);
 
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	pen2 = oapiCreatePen(1, 1, 0x00FFFFFF);
@@ -139,6 +156,11 @@ ApolloRTCCMFD::~ApolloRTCCMFD ()
 	oapiReleaseFont(font_mocr5);
 	oapiReleaseFont(font_menu);
 	oapiReleaseFont(font_menu2);
+	oapiReleaseFont(font_mocr1_dyn);
+	oapiReleaseFont(font_mocr2_dyn);
+	oapiReleaseFont(font_mocr3_dyn);
+	oapiReleaseFont(font_mocr4_dyn);
+	oapiReleaseFont(font_mocr5_dyn);
 	oapiReleasePen(pen);
 	oapiReleasePen(pen2);
 
@@ -373,6 +395,15 @@ void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, char *format, int v
 	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
 }
 
+void ApolloRTCCMFD::Text_GET_MMSS(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	int hh, mm;
+	double ss;
+	OrbMech::SStoHHMMSS(val, hh, mm, ss);
+	sprintf_s(Buffer, "%d:%02.0f", mm, ss);
+	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+}
+
 void ApolloRTCCMFD::Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double val)
 {
 	int hh, mm;
@@ -454,6 +485,12 @@ void ApolloRTCCMFD::Text_Longitude(oapi::Sketchpad *skp, int x, int y, double va
 	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
 }
 
+void ApolloRTCCMFD::Text_Dot(oapi::Sketchpad *skp, int x, int y)
+{
+	//Writes a dot above the letter location indicated with x and y
+	skp->Text(CW * x, CH * (y * 4 - 3) / 4, ".", 1);
+}
+
 void ApolloRTCCMFD::menuEntryUpdateUpload()
 {
 	G->EntryUpdateUplink();
@@ -522,23 +559,17 @@ void ApolloRTCCMFD::menuTLANDUpload()
 	G->TLANDUplink();
 }
 
-void ApolloRTCCMFD::Angle_Display(char *Buff, double angle, bool DispPlus)
+void ApolloRTCCMFD::FormatDeclination(char *Buff, double angle)
 {
+	//Input in arc seconds
 	double angle2 = abs(round(angle));
 	if (angle >= 0)
 	{
-		if (DispPlus)
-		{
-			sprintf_s(Buff, 32, "+%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
-		}
-		else
-		{
-			sprintf_s(Buff, 32, "%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
-		}
+		sprintf_s(Buff, 32, "+%.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
 	}
 	else
 	{
-		sprintf_s(Buff, 32, "-%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
+		sprintf_s(Buff, 32, "-%.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
 	}
 }
 
@@ -8866,6 +8897,20 @@ bool VectorCompareTimeInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::set_VectorCompareTime(double time)
 {
 	GC->rtcc->med_s80.time = time;
+	if (GC->rtcc->med_s80.time > 0.0) //GMT
+	{
+		GC->rtcc->VectorCompareDisplayBuffer.GMT = GC->rtcc->med_s80.time;
+		GC->rtcc->VectorCompareDisplayBuffer.GET = GC->rtcc->GETfromGMT(GC->rtcc->med_s80.time);
+	}
+	else if (GC->rtcc->med_s80.time < 0.0) //GET
+	{
+		GC->rtcc->VectorCompareDisplayBuffer.GET = -GC->rtcc->med_s80.time;
+		GC->rtcc->VectorCompareDisplayBuffer.GMT = GC->rtcc->GMTfromGET(GC->rtcc->VectorCompareDisplayBuffer.GET);
+	}
+	else //Time from V1
+	{
+		GC->rtcc->VectorCompareDisplayBuffer.GET = GC->rtcc->VectorCompareDisplayBuffer.GMT = 0.0;
+	}
 }
 
 void ApolloRTCCMFD::menuGOSTDisplayREFSMMAT()
