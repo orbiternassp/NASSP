@@ -32,7 +32,6 @@ AR_GCore::AR_GCore(VESSEL* v)
 	MissionPlanningActive = false;
 	mptInitError = 0;
 
-	AGOP_Page = 1;
 	AGOP_Option = 1;
 	AGOP_Mode = 1;
 	AGOP_AdditionalOption = 0;

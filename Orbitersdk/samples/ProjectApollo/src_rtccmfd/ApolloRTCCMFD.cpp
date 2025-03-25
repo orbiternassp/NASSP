@@ -52,13 +52,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	}
 	GC = g_SC;                                  // Make the ApolloRTCCMFD instance Global Core point to the static core. 
 
-	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0); //TBD: This does not actually give Courier
-	font2 = oapiCreateFont(w * 2 / 51, true, "Courier", FONT_NORMAL, 0); //TBD: This does not actually give Courier
-
-	fonttest = oapiCreateFont(w / 32, false, "Courier New", FONT_NORMAL, 0);
-	font3 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
-	font4 = oapiCreateFont(w / 31, true, "Courier", FONT_NORMAL, 0);
-	font5 = oapiCreateFont(w / 32, false, "Fixed", FONT_NORMAL, 0);
+	font_mocr_plot = oapiCreateFont(w / 31, true, "Arial", FONT_NORMAL, 0);
 
 	//Detect widescreen
 	double aspectratio = ((double)w) / ((double)h);
@@ -105,6 +99,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 
 	font_menu = oapiCreateFont(-(hh / 25), false, menu_font, FONT_NORMAL, 0);
 	font_menu2 = oapiCreateFont(-(hh / 32), false, menu_font, FONT_NORMAL, 0);
+	font_menu3 = oapiCreateFont(-(hh / 28), false, menu_font, FONT_NORMAL, 0);
 
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	pen2 = oapiCreatePen(1, 1, 0x00FFFFFF);
@@ -142,20 +137,16 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 ApolloRTCCMFD::~ApolloRTCCMFD ()
 {
 	// Add MFD cleanup code here
-	oapiReleaseFont(font);
-	oapiReleaseFont(font2);
-	oapiReleaseFont(font_mocr3_vert);
-	oapiReleaseFont(fonttest);
-	oapiReleaseFont(font3);
-	oapiReleaseFont(font4);
-	oapiReleaseFont(font5);
+	oapiReleaseFont(font_mocr_plot);
 	oapiReleaseFont(font_mocr1);
 	oapiReleaseFont(font_mocr2);
 	oapiReleaseFont(font_mocr3);
+	oapiReleaseFont(font_mocr3_vert);
 	oapiReleaseFont(font_mocr4);
 	oapiReleaseFont(font_mocr5);
 	oapiReleaseFont(font_menu);
 	oapiReleaseFont(font_menu2);
+	oapiReleaseFont(font_menu3);
 	oapiReleaseFont(font_mocr1_dyn);
 	oapiReleaseFont(font_mocr2_dyn);
 	oapiReleaseFont(font_mocr3_dyn);
@@ -378,6 +369,11 @@ void ApolloRTCCMFD::Text_Int(oapi::Sketchpad *skp, int x, int y, char *format, i
 	skp->Text(x, y, Buffer, strlen(Buffer));
 }
 
+void ApolloRTCCMFD::Text_String(oapi::Sketchpad *skp, int x, int y, std::string message)
+{
+	skp->Text(x, y, message.c_str(), message.size());
+}
+
 void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, std::string message)
 {
 	skp->Text(CW * x, CH * y, message.c_str(), message.size());
@@ -386,13 +382,13 @@ void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, std::string message
 void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, char *format, double val)
 {
 	sprintf(Buffer, format, val);
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, char *format, int val)
 {
 	sprintf(Buffer, format, val);
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_GET_MMSS(oapi::Sketchpad *skp, int x, int y, double val)
@@ -401,7 +397,7 @@ void ApolloRTCCMFD::Text_GET_MMSS(oapi::Sketchpad *skp, int x, int y, double val
 	double ss;
 	OrbMech::SStoHHMMSS(val, hh, mm, ss);
 	sprintf_s(Buffer, "%d:%02.0f", mm, ss);
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double val)
@@ -410,51 +406,51 @@ void ApolloRTCCMFD::Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double va
 	double ss;
 	OrbMech::SStoHHMMSS(val, hh, mm, ss, 0.1);
 	sprintf_s(Buffer, "%d:%04.1f", mm, ss);
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_GET_HHMM(oapi::Sketchpad *skp, int x, int y, double val)
 {
 	GET_Display_HHMM(Buffer, val);
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val)
 {
 	GET_Display4(Buffer, val);
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_GET_HHHMMSS(oapi::Sketchpad *skp, int x, int y, double val)
 {
 	GET_Display(Buffer, val, false);
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_GET_HHHMMSSC(oapi::Sketchpad *skp, int x, int y, double val)
 {
 	GET_Display3(Buffer, val);
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_GET_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val)
 {
 	GET_Display2(Buffer, val);
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val)
 {
 	//val in degrees
 	FormatLatitude(Buffer, val);
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val)
 {
 	//val in degrees
 	FormatLongitude(Buffer, val);
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals)
@@ -468,7 +464,7 @@ void ApolloRTCCMFD::Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val
 	{
 		sprintf(Buffer, "%.*lfS", decimals, abs(val));
 	}
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals)
@@ -482,7 +478,7 @@ void ApolloRTCCMFD::Text_Longitude(oapi::Sketchpad *skp, int x, int y, double va
 	{
 		sprintf(Buffer, "%.*lfW", decimals, abs(val));
 	}
-	skp->Text(CW * x, CH * y, Buffer, strlen(Buffer));
+	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_Dot(oapi::Sketchpad *skp, int x, int y)
@@ -588,6 +584,12 @@ void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display
 	{
 		sprintf_s(Buff, 32, "%03d:%02d:%02.0f", hours, minutes, seconds);
 	}
+}
+
+void ApolloRTCCMFD::GET_Display(oapi::Sketchpad *skp, int x, int y, double time, bool DispGET)
+{
+	GET_Display(Buffer, time, DispGET);
+	skp->Text(x, y, Buffer, strlen(Buffer));
 }
 
 void ApolloRTCCMFD::GMT_Display2(char* Buff, double time) const
@@ -1500,6 +1502,7 @@ void ApolloRTCCMFD::menuSetAGOPPage()
 {
 	marker = 0;
 	markermax = 17;
+	subscreen = 1;
 	SelectPage(128);
 }
 
@@ -1566,13 +1569,13 @@ void ApolloRTCCMFD::menuPerigeeAdjustHeight()
 
 void ApolloRTCCMFD::menuCycleAGOPPage()
 {
-	if (GC->AGOP_Page == 1)
+	if (subscreen == 1)
 	{
-		GC->AGOP_Page = 2;
+		subscreen = 2;
 	}
 	else
 	{
-		GC->AGOP_Page = 1;
+		subscreen = 1;
 	}
 }
 
@@ -1804,7 +1807,7 @@ void ApolloRTCCMFD::menuSetAGOPInput()
 
 void ApolloRTCCMFD::menuAGOPCalc()
 {
-	GC->AGOP_Page = 2;
+	subscreen = 2;
 	G->startSubthread(51);
 }
 
@@ -10015,7 +10018,7 @@ void ApolloRTCCMFD::SetMEDInputPage(std::string med)
 
 	if (med == "K19")
 	{
-		AddMEDInputTitle(MEDInputData, "K19", "Initialization for Ascent Rendezvous Monitor");
+		AddMEDInputTitle(MEDInputData, "K19", "Initialization for Asc Rdz Monitor");
 
 		sprintf(Buff, "%.1lf", GC->rtcc->PZMARM.WT*DEG);
 		AddMEDInput(MEDInputData.table, "WT:", "Terminal phase travel angle (from TPI to TPF):", Buff, "degrees");
@@ -10079,7 +10082,7 @@ void ApolloRTCCMFD::SetMEDInputPage(std::string med)
 	}
 	else if (med == "M75")
 	{
-		AddMEDInputTitle(MEDInputData, "M75", "Transfer of TLI maneuver from study aid");
+		AddMEDInputTitle(MEDInputData, "M75", "Transfer of TLI mnvr from study aid");
 
 		AddMEDInput(MEDInputData.table, "VEH:", "Vehicle (CSM or LEM):", "CSM", "");
 		AddMEDInput(MEDInputData.table, "REP:", "Replace code (1-15 or 0 if no replacement):", "0", "");
@@ -10204,14 +10207,15 @@ void ApolloRTCCMFD::menuReturnToMEDInput()
 	}
 }
 
-void ApolloRTCCMFD::DFLBackgroundSlide(oapi::Sketchpad *skp, unsigned display)
+void ApolloRTCCMFD::DFLBackgroundSlide(oapi::Sketchpad *skp, unsigned display, int fontsize)
 {
-	skp->SetFont(font2);
-	GC->DFLBackgroundSlide(skp, W, H, display);
+	SetMOCRFont(skp, fontsize, false);
+	GetCharSize(skp, CW, CH);
+	GC->DFLBackgroundSlide(skp, CW, CH, display);
 }
 
-void ApolloRTCCMFD::DFLDynamicData(oapi::Sketchpad *skp, unsigned display)
+void ApolloRTCCMFD::DFLDynamicData(oapi::Sketchpad *skp, unsigned display, int fontsize)
 {
-	skp->SetFont(font2);
-	GC->rtcc->DynamicDisplayData.Print(skp, W, H, display);
+	SetMOCRFont(skp, fontsize, true);
+	GC->rtcc->DynamicDisplayData.Print(skp, CW, CH, display);
 }

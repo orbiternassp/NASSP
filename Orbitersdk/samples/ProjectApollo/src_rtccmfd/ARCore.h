@@ -67,7 +67,6 @@ public:
 	double LmkElevation;
 
 	//APOLLO GENERALIZED OPTICS PROGRAM
-	int AGOP_Page;
 	int AGOP_Option;
 	int AGOP_Mode;
 	int AGOP_AdditionalOption;

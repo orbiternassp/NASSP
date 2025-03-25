@@ -25,7 +25,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 namespace rtcc
 {
-	void RTCCDisplayPrint::Print(oapi::Sketchpad *skp, DWORD W, DWORD H, unsigned dispnum) const
+	void RTCCDisplayPrint::Print(oapi::Sketchpad *skp, DWORD CW, DWORD CH, unsigned dispnum) const
 	{
 		for (unsigned i = 0; i < displays.size(); i++)
 		{
@@ -43,7 +43,7 @@ namespace rtcc
 						skp->SetTextAlign(disp->Data[i].align);
 						halign = disp->Data[i].align;
 					}
-					skp->Text(disp->Data[i].x * W / 1024, (1024 - disp->Data[i].y)*H / 1024, disp->Data[i].Text.c_str(), disp->Data[i].Text.size());
+					skp->Text(disp->Data[i].x * CW, disp->Data[i].y*CH, disp->Data[i].Text.c_str(), disp->Data[i].Text.size());
 				}
 			}
 		}		
@@ -57,95 +57,71 @@ namespace rtcc
 
 		//Coelliptic ARM
 		temp.MSKNumber = 232;
-		AddTitle(temp, "Ascent Rendezvous Monitor");
-		AddMSK(temp, "0232");
+		AddText(temp, "Ascent Rendezvous Monitor", 8, 0);
+		AddText(temp, "0232", 38, 0);
 
-		AddText(temp, "WT", 64, 950);
-		AddText(temp, "E", 320, 950);
-		AddText(temp, "CSI", 512, 950);
-		AddText(temp, "CDH", 672, 950);
-		AddText(temp, "TPI", 64, 918);
-		AddText(temp, "MIN PL", 320, 918);
-		AddText(temp, "INS", 512, 918);
+		AddText(temp, "WT", 1, 2);
+		AddText(temp, "E", 14, 2);
+		AddText(temp, "CSI", 24, 2);
+		AddText(temp, "CDH", 35, 2);
+		AddText(temp, "TPI", 1, 3);
+		AddText(temp, "MIN PL", 16, 3);
+		AddText(temp, "INS", 29, 3);
 
-		AddText(temp, "SOURCE", 64, 854);
-		AddText(temp, "MSFN", 320, 854);
-		AddText(temp, "PGNS", 576, 854);
-		AddText(temp, "AGS", 832, 854);
+		AddText(temp, "SOURCE", 1, 5);
+		AddText(temp, "MSFN", 16, 5);
+		AddText(temp, "PGNS", 26, 5);
+		AddText(temp, "AGS", 36, 5);
 
-		AddText(temp, "RECOMMEND", 64, 790);
+		AddText(temp, "RECOMMEND", 1, 7);
 
-		AddText(temp, "GET TWEAK", 64, 726);
-		AddText(temp, "DVX TWEAK", 64, 694);
-		AddText(temp, "HP", 64, 662);
+		AddText(temp, "GET TWEAK", 1, 9);
+		AddText(temp, "DVX TWEAK", 1, 10);
+		AddText(temp, "HP", 1, 11);
 
-		AddText(temp, "GET CSI", 64, 598);
-		AddText(temp, "DV CSI", 64, 566);
-		AddText(temp, "GET CDH", 64, 534);
-		AddText(temp, "DV CDH", 64, 502);
+		AddText(temp, "GET CSI", 1, 13);
+		AddText(temp, "DV CSI", 1, 14);
+		AddText(temp, "GET CDH", 1, 15);
+		AddText(temp, "DV CDH", 1, 16);
 
-		AddText(temp, "GET KICK", 64, 438);
-		AddText(temp, "DVX KICK", 64, 406);
+		AddText(temp, "GET KICK", 1, 18);
+		AddText(temp, "DVX KICK", 1, 19);
 
 		displays.push_back(temp);
 
 		//Short ARM
 		temp.Data.clear();
 		temp.MSKNumber = 233;
-		AddTitle(temp, "Short Ascent Rendezvous Monitor");
-		AddMSK(temp, "0233");
+		AddText(temp, "Short Ascent Rendezvous Monitor", 4, 0);
+		AddText(temp, "0233", 38, 0);
 
-		AddText(temp, "WT", 64, 950);
-		AddText(temp, "DPH", 320, 950);
-		AddText(temp, "TPI", 64, 918);
-		AddText(temp, "INS", 320, 918);
-		AddText(temp, "REF", 640, 918);
+		AddText(temp, "WT", 1, 2);
+		AddText(temp, "DPH", 16, 2);
+		AddText(temp, "TPI", 1, 3);
+		AddText(temp, "INS", 16, 3);
+		AddText(temp, "REF", 32, 3);
 
-		AddText(temp, "SOURCE", 64, 854);
-		AddText(temp, "MSFN", 320, 854);
-		AddText(temp, "PGNS", 576, 854);
-		AddText(temp, "AGS", 832, 854);
+		AddText(temp, "SOURCE", 1, 5);
+		AddText(temp, "MSFN", 16, 5);
+		AddText(temp, "PGNS", 26, 5);
+		AddText(temp, "AGS", 36, 5);
 
-		AddText(temp, "RECOMMEND", 64, 790);
+		AddText(temp, "RECOMMEND", 1, 7);
 
-		AddText(temp, "GET TWEAK", 64, 726);
-		AddText(temp, "DVX", 64, 694);
-		AddText(temp, "DVY", 64, 662);
-		AddText(temp, "DVZ", 64, 630);
-		AddText(temp, "HP", 64, 598);
+		AddText(temp, "GET TWEAK", 1, 9);
+		AddText(temp, "DVX", 1, 10);
+		AddText(temp, "DVY", 1, 11);
+		AddText(temp, "DVZ", 1, 12);
+		AddText(temp, "HP", 1, 13);
 
-		AddText(temp, "R(M)", 64, 566);
-		AddText(temp, "P(I)", 64, 534);
-		AddText(temp, "Y(O)", 64, 502);
+		AddText(temp, "R(M)", 1, 14);
+		AddText(temp, "P(I)", 1, 15);
+		AddText(temp, "Y(O)", 1, 16);
 
-		AddText(temp, "GETTPI", 64, 438);
-		AddText(temp, "DV", 64, 406);
+		AddText(temp, "GETTPI", 1, 18);
+		AddText(temp, "DV", 1, 19);
 
 		displays.push_back(temp);
-	}
-
-	void RTCCBackgroundSlides::AddTitle(struct RTCCDisplay &disp, std::string title) const
-	{
-		DisplayFormatData temp;
-
-		temp.Text = title;
-		temp.x = 508;
-		temp.y = 1004;
-		temp.align = oapi::Sketchpad::TAlign_horizontal::CENTER;
-
-		disp.Data.push_back(temp);
-	}
-
-	void RTCCBackgroundSlides::AddMSK(struct RTCCDisplay &disp, std::string msk) const
-	{
-		DisplayFormatData temp;
-
-		temp.Text = msk;
-		temp.x = 940;
-		temp.y = 1004;
-		temp.align = oapi::Sketchpad::TAlign_horizontal::LEFT;
-
-		disp.Data.push_back(temp);
 	}
 
 	void RTCCBackgroundSlides::AddText(struct RTCCDisplay &disp, std::string Text, int x, int y, oapi::Sketchpad::TAlign_horizontal align) const
