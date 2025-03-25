@@ -533,11 +533,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			if (scrubbed)
 			{
 				sv_cut1 = sv;
-				DeltaV_LVLH = dV_LVLH;
+				DeltaV_LVLH = _V(0, 0, 0);
 			}
 			else
 			{
-				DeltaV_LVLH = _V(0, 0, 0);
+				DeltaV_LVLH = dV_LVLH;
 			}
 
 			PZLOIPLN.dh_bias = 0.0;
