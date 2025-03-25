@@ -8468,7 +8468,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, 17, 26, GC->rtcc->LOSTDisplayBuffer[78]); //MATRIX 2 Z/XE
 		Text(skp, 36, 26, GC->rtcc->LOSTDisplayBuffer[79]); //MATRIX 2 Z/YE
 		Text(skp, 54, 26, GC->rtcc->LOSTDisplayBuffer[80]); //MATRIX 2 Z/ZE
-		Text(skp, 40, 27, GC->rtcc->LOSTDisplayBuffer[81]); //ERROR
 		break;
 	case 127:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
