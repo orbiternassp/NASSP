@@ -4002,7 +4002,6 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 						addMessage(upMessage);
 					}
 					freePad();
-					scrubbed = false;
 					setSubState(2);
 				}
 				else
@@ -4053,7 +4052,6 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 						addMessage(upMessage);
 					}
 					freePad();
-					scrubbed = false;
 				}
 				else
 				{
@@ -4223,7 +4221,6 @@ void MCC::UpdateMacro(int type, int padtype, bool condition, int updatenumber, i
 						addMessage(upMessage);
 					}
 					freePad();
-					scrubbed = false;
 				}
 				else
 				{
