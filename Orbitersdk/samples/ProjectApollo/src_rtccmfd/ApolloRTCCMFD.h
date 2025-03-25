@@ -912,11 +912,10 @@ protected:
 
 	oapi::Pen *pen;
 	oapi::Pen *pen2;
+
 	int CW; //Character width
 	int CH; //Character height
 	int x, y, dx, dy; //Display spacing helper variables
-	Saturn *saturn;
-	LEM *lem;
 	int screen;
 	int subscreen;
 	int marker;

@@ -2307,7 +2307,7 @@ void Saturn::SetSwitches(int panel) {
 	CSMACVoltMeter.SetSurface(srf[SRF_ACVOLTS], 99, 98);
 
 	DCVoltMeterRow.Init(AID_DCVOLTS, MainPanel);
-	CSMDCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], DCVoltMeterRow, &DCIndicatorsRotary);
+	CSMDCVoltMeter.Init(g_Param.pen[4], g_Param.pen[4], DCVoltMeterRow, this, &DCIndicatorsRotary);
 	CSMDCVoltMeter.SetSurface(srf[SRF_DCVOLTS], 99, 98);
 
 	DCAmpMeterRow.Init(AID_DCAMPS, MainPanel);

@@ -1879,7 +1879,8 @@ void Saturn::SetRecovery()
 	SetCOASMesh();
 
 	if (Crewed) {
-		mesh_dir =_V(2.7,1.8,-1.5);
+		//old values 2.7,1.8,-1.5
+		mesh_dir =_V(0,0,-1.5);
 		meshidx = AddMesh (hCRB, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}

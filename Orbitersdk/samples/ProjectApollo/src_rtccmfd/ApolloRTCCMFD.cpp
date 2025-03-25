@@ -6097,16 +6097,8 @@ void ApolloRTCCMFD::menuLMLSUpload()
 
 void ApolloRTCCMFD::menuREFSMMATUplinkCalc()
 {
-	if (GC->MissionPlanningActive)
-	{
-		bool REFSMMATUplinkCalcMPTInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Format: C12,VEH. COMPUTER,REFSMMAT,ADDRESS; VEH. COMPUTER = CMC, LGC. REFSMMAT = CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD. ADDRESS = 1 for actual, 2 for desired REFSMMAT", REFSMMATUplinkCalcMPTInput, 0, 20, (void*)this);
-	}
-	else
-	{
-		bool REFSMMATUplinkCalcInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Format: 1 for actual REFSMMAT, 2 for desired REFSMMAT", REFSMMATUplinkCalcInput, 0, 20, (void*)this);
-	}
+	bool REFSMMATUplinkCalcInput(void *id, char *str, void *data);
+	oapiOpenInputBox("Format: REFSMMAT ADDRESS. REFSMMAT = CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD. ADDRESS = 1 for actual, 2 for desired REFSMMAT", REFSMMATUplinkCalcInput, "CUR 2", 20, (void*)this);
 }
 
 bool REFSMMATUplinkCalcInput(void *id, char *str, void *data)
@@ -6116,8 +6108,9 @@ bool REFSMMATUplinkCalcInput(void *id, char *str, void *data)
 
 bool ApolloRTCCMFD::REFSMMATUplinkCalc(char *str)
 {
+	char Buff1[4];
 	int type;
-	if (sscanf(str, "%d", &type) == 1)
+	if (sscanf_s(str, "%s %d", Buff1, 4, &type) == 2)
 	{
 		if (type >= 1 && type <= 2)
 		{
@@ -6131,18 +6124,12 @@ bool ApolloRTCCMFD::REFSMMATUplinkCalc(char *str)
 			{
 				sprintf_s(veh, "LGC");
 			}
-			sprintf_s(str2, 32, "C12,%s,CUR,%d;", veh, type);
+			sprintf_s(str2, 32, "C12,%s,%s,%d;", veh, Buff1, type);
 			GeneralMEDRequest(str2);
 			return true;
 		}
 	}
 	return false;
-}
-
-bool REFSMMATUplinkCalcMPTInput(void *id, char *str, void *data)
-{
-	((ApolloRTCCMFD*)data)->GeneralMEDRequest(str);
-	return true;
 }
 
 void ApolloRTCCMFD::menuCycleTwoImpulseOption()
@@ -6631,6 +6618,8 @@ void ApolloRTCCMFD::GetEntryTargetfromAGC()
 	if (v == NULL) return;
 
 	if (utils::IsVessel(v, utils::Saturn) == false) return;
+
+	Saturn *saturn = (Saturn *)v;
 
 	unsigned short Entryoct[6];
 	Entryoct[2] = saturn->agc.vagc.Erasable[0][03400];

@@ -4332,11 +4332,16 @@ void RTCC::AP11ManeuverPAD(const AP11ManPADOpt &opt, AP11MNV &pad)
 		R_E = BZLAND.rad[0];
 	}
 
+	//Actual HA/HP
 	OrbMech::periapo(aux.R_BO, aux.V_BO, mu, apo, peri);
 	ManPADApo = apo - R_E;
 	ManPADPeri = peri - R_E;
 	pad.HA = min(9999.9, ManPADApo / 1852.0);
 	pad.HP = ManPADPeri / 1852.0;
+	//P30 predicted HA/HP
+	OrbMech::periapo(aux.R_BI, aux.V_BI + tmul(OrbMech::LVLH_Matrix(aux.R_BI, aux.V_BI), opt.dV_LVLH), mu, apo, peri);
+	pad.HA_P30 = min(9999.9, (apo - R_E) / 1852.0);
+	pad.HP_P30 = (peri - R_E) / 1852.0;
 
 	//Attitude
 	VECTOR3 X_P, Y_P, Z_P;

@@ -263,6 +263,8 @@ struct AP11MNV {
 		LMWeight = 0.0;
 		dV = _V(0, 0, 0);
 		GETI = 0.0;
+		HA_P30 = 0.0;
+		HP_P30 = 0.0;
 		sprintf(remarks, "");
 	}
 
@@ -273,7 +275,7 @@ struct AP11MNV {
 	double GETI;		// TIG
 	VECTOR3 dV;			// P30 dV
 	VECTOR3 Att;		// Attitude at TIG
-	double HA, HP;		// Predicted apogee/perigee after maneuver
+	double HA, HP;		// Predicted apogee/perigee after maneuver. Equivalent to a V82 after the maneuver.
 	double Vt;			//Total dV
 	double burntime;	// Burn time
 	double Vc;			// EMS dV
@@ -291,7 +293,8 @@ struct AP11MNV {
 	char remarks[128];	// remarks
 	int type;           // 1 = Full PAD, 2 = Abbreviated PAD
 
-	double LMWeight;	// LM weight
+	double LMWeight;		// LM weight
+	double HA_P30, HP_P30;	// Predicted P30 apogee/perigee after maneuver. The HA/HP displayed by P30 before the maneuver.
 };
 
 // APOLLO 11 LM - MANEUVER
