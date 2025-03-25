@@ -533,13 +533,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			if (scrubbed)
 			{
 				sv_cut1 = sv;
-				//DeltaV_LVLH = _V(0,0,0);
 				DeltaV_LVLH = dV_LVLH;
 			}
 			else
 			{
-				//DeltaV_LVLH = dV_LVLH;
-				DeltaV_LVLH = _V(0,0,0);
+				DeltaV_LVLH = _V(0, 0, 0);
 			}
 
 			PZLOIPLN.dh_bias = 0.0;
@@ -627,7 +625,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
-				DeltaV_LVLH = dV_LVLH;
 
 				sprintf(uplinkdata, "%s%s%s%s", buffer1, SV2, buffer2, buffer3);
 				if (upString != NULL) {
