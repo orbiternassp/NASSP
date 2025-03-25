@@ -521,7 +521,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		//MCC-4
 		else
 		{
-
 			REFSMMATOpt refsopt;
 			SV sv_node, sv_ig2, sv_cut2;
 			double P30TIG_LOI2;
@@ -530,10 +529,17 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 			//Step 1: Calculate LOI-1 with MCC-4 burnout vector
 
-			//If maneuver scrubbed, use state vector without maneuver
+			//If maneuver scrubbed, use state vector without maneuver, store DV for PC+2 scrub check
 			if (scrubbed)
 			{
 				sv_cut1 = sv;
+				//DeltaV_LVLH = _V(0,0,0);
+				DeltaV_LVLH = dV_LVLH;
+			}
+			else
+			{
+				//DeltaV_LVLH = dV_LVLH;
+				DeltaV_LVLH = _V(0,0,0);
 			}
 
 			PZLOIPLN.dh_bias = 0.0;
@@ -621,6 +627,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 				CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 				AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
+				DeltaV_LVLH = dV_LVLH;
 
 				sprintf(uplinkdata, "%s%s%s%s", buffer1, SV2, buffer2, buffer3);
 				if (upString != NULL) {
@@ -783,10 +790,20 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		char manname[32];
 		char prevrefs[100];
 		char alignment[100];
+		char mcc4scrub[100];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
 		sv = StateVectorCalc(calcParams.src);
+
+		if (length(DeltaV_LVLH) != 0.0)
+		{
+			sprintf(mcc4scrub, " Assumes MCC4,");
+		}
+		else
+		{
+			sprintf(mcc4scrub, "");
+		}
 
 		if (fcn == 41)
 		{
@@ -855,8 +872,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		AP11ManeuverPAD(opt, *form);
 
-		//if (!mcc->mcc_calcs.REFSMMATDecision(form->Att*RAD))
-		if (mcc->mcc_calcs.REFSMMATDecision(form->Att*RAD))
+		if (!mcc->mcc_calcs.REFSMMATDecision(form->Att*RAD))
 		{
 			REFSMMATOpt refsopt;
 			MATRIX3 REFSMMAT;
@@ -874,11 +890,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			opt.REFSMMAT = REFSMMAT;
 			AP11ManeuverPAD(opt, *form);
 
-			sprintf(alignment, "Requires realignment to preferred REFSMMAT");
+			sprintf(alignment, " Requires realignment to preferred REFSMMAT");
 		}
 		else
 		{
-			sprintf(alignment, "Uses %s REFSMMAT", prevrefs);
+			sprintf(alignment, " Uses %s REFSMMAT", prevrefs);
 		}
 
 		sprintf(form->purpose, manname);
@@ -890,17 +906,17 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		if (fcn == 41)
 		{
 			//PC+2
-			sprintf(form->remarks, "4 Jet, Assumes MCC4, %s", alignment);
+			sprintf(form->remarks, "4 Jet,%s%s", mcc4scrub, alignment);
 		}
 		else if (fcn == 42)
 		{
 			//Flyby PC+2 Fast Return
-			sprintf(form->remarks, "No Ullage, Assumes Flyby, %s", alignment);
+			sprintf(form->remarks, "No Ullage, Assumes Flyby,%s", alignment);
 		}
 		else
 		{
 			//MCC4 PC+2 Fast Return
-			sprintf(form->remarks, "No Ullage, Assumes MCC4, %s", alignment);
+			sprintf(form->remarks, "No Ullage,%s%s", mcc4scrub, alignment);
 		}
 
 		//Save parameters for further use
