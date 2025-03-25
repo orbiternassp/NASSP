@@ -7716,6 +7716,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		GET_Display(skp, W - CW, 15 * H / 20, G->LUNTAR_Output.get_imp);
 		Text_Double(skp, W - CW, 16 * H / 20, "Lat: %.2lf°", G->LUNTAR_Output.lat_imp*DEG);
 		Text_Double(skp, W - CW, 17 * H / 20, "Lng: %.2lf°", G->LUNTAR_Output.lng_imp*DEG);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		if (G->LUNTAR_Output.err > 0)
 		{
 			if (G->LUNTAR_Output.err == 1)
@@ -8531,7 +8532,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(W - CW, 5 * H / 14, "IMU Angles:", 11);
 		sprintf(Buffer, "OGA: %+.2lf°", G->IMUParkingAngles.x * DEG);
 		skp->Text(W - CW, 6 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "IGA:   %+.2lf°", G->IMUParkingAngles.y * DEG);
+		sprintf(Buffer, "IGA: %+.2lf°", G->IMUParkingAngles.y * DEG);
 		skp->Text(W - CW, 7 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "MGA: %+.2lf°", G->IMUParkingAngles.z * DEG);
 		skp->Text(W - CW, 8 * H / 14, Buffer, strlen(Buffer));
