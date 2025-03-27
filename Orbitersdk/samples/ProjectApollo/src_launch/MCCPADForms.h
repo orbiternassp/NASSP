@@ -390,6 +390,8 @@ struct AP10MAPUPDATE
 	double AOSGET2; //Time of AOS for a second rev (type = 3) or taking LOI into account (type = 2) or TEI (type = 5)
 					//0 = Only LOS/AOS and PM, 1 = Display all parameters, 2 = LOS, AOS with and AOS without LOI, 3 = Like 1 but for two revs, 4 = Like 0 but shows 180° instead of PM,
 	int type;		//5 = like 2 but for TEI, 6 = like 0 but shows 150° instead of PM, 7 = LOS, AOS w/ TEI, AOS w/o TEI
+	char remarks[128];	// remarks
+	char RevText[10];	//Used for non integer rev number (ie Apollo 8)
 };
 
 // APOLLO 11 LANDMARK TRACKING PAD
@@ -397,13 +399,13 @@ struct AP10MAPUPDATE
 struct AP11LMARKTRKPAD
 {
 	int entries;
-	char LmkID[4][128];		// Landmark ID
-	double T1[4];			// T1 time (landmark over horizon)
-	double T2[4];			// T2 time (spacecraft at 35° elevation from landmark)
-	double CRDist[4];		// landmark distance to ground track
-	double Lat[4];			// landmark latitude
-	double Lng05[4];		// landmark longitude divided by 2
-	double Alt[4];			// landmark altitude
+	char LmkID[5][128];		// Landmark ID
+	double T1[5];			// T1 time (landmark over horizon)
+	double T2[5];			// T2 time (spacecraft at 35° elevation from landmark)
+	double CRDist[5];		// landmark distance to ground track
+	double Lat[5];			// landmark latitude
+	double Lng05[5];		// landmark longitude divided by 2
+	double Alt[5];			// landmark altitude
 };
 
 // APOLLO 10 DAP DATA PAD

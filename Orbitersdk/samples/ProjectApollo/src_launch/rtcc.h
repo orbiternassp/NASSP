@@ -711,10 +711,10 @@ struct LMARKTRKPADOpt
 {
 	EphemerisData sv0; //Input state vector
 	double Elevation = 35.0*RAD; //Elevation angle at acquisition
-	double LmkTime[4]; //initial guess for time over landmark (GET)
-	double lat[4];		//landmark latitude
-	double lng[4];		//landmark longitude
-	double alt[4] = { 0,0,0,0 };	//landmark altitude
+	double LmkTime[5]; //initial guess for time over landmark (GET)
+	double lat[5];		//landmark latitude
+	double lng[5];		//landmark longitude
+	double alt[5] = { 0,0,0,0,0 };	//landmark altitude
 	int entries;
 };
 

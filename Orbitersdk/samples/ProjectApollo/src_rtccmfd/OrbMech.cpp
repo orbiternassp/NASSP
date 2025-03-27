@@ -171,6 +171,20 @@ namespace OrbMech{
 		sprintf(buf, "%03d:%02d:%02.0lf", hours, minutes, seconds);
 	}
 
+	// Format time to XXH:MM:SS. (no leading zeros)
+	void format_time_XXHMMSS(char *buf, double time)
+	{
+		buf[0] = 0; // Clobber
+		if (time < 0) { return; } // don't do that
+
+		int hours, minutes;
+		double seconds;
+
+		SStoHHMMSS(time, hours, minutes, seconds);
+
+		sprintf(buf, "%d:%02d:%02.0lf", hours, minutes, seconds);
+	}
+
 	// Format precise time.
 	void format_time_prec(char *buf, double time)
 	{

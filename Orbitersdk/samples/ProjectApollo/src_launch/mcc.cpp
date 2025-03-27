@@ -1743,6 +1743,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			AP10MAPUPDATE * form = (AP10MAPUPDATE *)padForm;
 
 			SAVE_INT("MCC_AP10MAPUPDATE_REV", form->Rev);
+			SAVE_STRING("MCC_AP10MAPUPDATE_REVTEXT", form->RevText);
 			SAVE_INT("MCC_AP10MAPUPDATE_type", form->type);
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_AOSGET", form->AOSGET);
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_LOSGET", form->LOSGET);
@@ -1753,6 +1754,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_LOSGET2", form->LOSGET2);
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_PMGET2", form->PMGET2);
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_SSGET2", form->SSGET2);
+			SAVE_STRING("MCC_AP10MAPUPDATE_remarks", form->remarks);
 		}
 		else if (padNumber == 13)
 		{
@@ -2359,6 +2361,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			AP10MAPUPDATE * form = (AP10MAPUPDATE *)padForm;
 
 			papiReadScenario_int(line, "MCC_AP10MAPUPDATE_REV", form->Rev);
+			papiReadScenario_string(line, "MCC_AP10MAPUPDATE_REVTEXT", form->RevText);
 			papiReadScenario_int(line, "MCC_AP10MAPUPDATE_type", form->type);
 			papiReadScenario_double(line, "MCC_AP10MAPUPDATE_AOSGET", form->AOSGET);
 			papiReadScenario_double(line, "MCC_AP10MAPUPDATE_LOSGET", form->LOSGET);
@@ -2369,6 +2372,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			papiReadScenario_double(line, "MCC_AP10MAPUPDATE_LOSGET2", form->LOSGET2);
 			papiReadScenario_double(line, "MCC_AP10MAPUPDATE_PMGET2", form->PMGET2);
 			papiReadScenario_double(line, "MCC_AP10MAPUPDATE_SSGET2", form->SSGET2);
+			papiReadScenario_string(line, "MCC_AP10MAPUPDATE_remarks", form->remarks);
 		}
 		else if (padNumber == 13)
 		{
@@ -3032,6 +3036,7 @@ void MCC::drawPad(bool writetofile){
 		double ss;
 
 		sprintf(buffer, "MAP UPDATE REV %d\n", form->Rev);
+		sprintf(buffer, "MAP UPDATE REV %s\n", form->RevText);
 		OrbMech::SStoHHMMSS(form->LOSGET, hh, mm, ss);
 		sprintf(buffer, "%sLOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 		if (form->type == 0 || form->type == 4 || form->type == 6)
@@ -3052,6 +3057,7 @@ void MCC::drawPad(bool writetofile){
 
 			OrbMech::SStoHHMMSS(form->AOSGET, hh, mm, ss);
 			sprintf(buffer, "%sAOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			sprintf(buffer, "%sRemarks:\n%s", buffer, form->remarks);
 		}
 		else if (form->type == 1)
 		{
@@ -3063,6 +3069,7 @@ void MCC::drawPad(bool writetofile){
 			sprintf(buffer, "%sAOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 			OrbMech::SStoHHMMSS(form->SSGET, hh, mm, ss);
 			sprintf(buffer, "%sSS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			sprintf(buffer, "%sRemarks:\n%s", buffer, form->remarks);
 		}
 		else if (form->type == 2)
 		{
@@ -3070,6 +3077,7 @@ void MCC::drawPad(bool writetofile){
 			sprintf(buffer, "%sAOS WITH LOI1: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 			OrbMech::SStoHHMMSS(form->AOSGET, hh, mm, ss);
 			sprintf(buffer, "%sAOS W/O LOI1: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			sprintf(buffer, "%sRemarks:\n%s", buffer, form->remarks);
 		}
 		else if (form->type == 3)
 		{
@@ -3089,6 +3097,7 @@ void MCC::drawPad(bool writetofile){
 			sprintf(buffer, "%sAOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 			OrbMech::SStoHHMMSS(form->SSGET2, hh, mm, ss);
 			sprintf(buffer, "%sSS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			sprintf(buffer, "%sRemarks:\n%s", buffer, form->remarks);
 		}
 		else if (form->type == 5)
 		{
@@ -3098,6 +3107,7 @@ void MCC::drawPad(bool writetofile){
 			sprintf(buffer, "%sAOS WITH TEI: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 			OrbMech::SStoHHMMSS(form->AOSGET, hh, mm, ss);
 			sprintf(buffer, "%sAOS WITHOUT TEI: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			sprintf(buffer, "%sRemarks:\n%s", buffer, form->remarks);
 		}
 		else if (form->type == 7)
 		{
@@ -3105,6 +3115,7 @@ void MCC::drawPad(bool writetofile){
 			sprintf(buffer, "%sAOS (W/TEI): %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 			OrbMech::SStoHHMMSS(form->AOSGET, hh, mm, ss);
 			sprintf(buffer, "%sAOS (NO TEI): %d:%02d:%02.0f\n", buffer, hh, mm, ss);
+			sprintf(buffer, "%sRemarks:\n%s", buffer, form->remarks);
 		}
 
 		oapiAnnotationSetText(NHpad, buffer);
