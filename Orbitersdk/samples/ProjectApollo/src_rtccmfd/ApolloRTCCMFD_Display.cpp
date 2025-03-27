@@ -6149,7 +6149,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, 0, 2, "GET VECTOR");
 		Text(skp, 3, 4, "LAT LLS");
 		Text(skp, 3, 5, "LNG LLS");
-		Text(skp, 3, 5, "LNG LLS");
 		Text(skp, 5, 6, "R LLS");
 		Text(skp, 25, 4, "REVS1");
 		Text(skp, 25, 5, "REVS2");
