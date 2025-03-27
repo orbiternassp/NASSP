@@ -32,7 +32,6 @@ AR_GCore::AR_GCore(VESSEL* v)
 	MissionPlanningActive = false;
 	mptInitError = 0;
 
-	AGOP_Page = 1;
 	AGOP_Option = 1;
 	AGOP_Mode = 1;
 	AGOP_AdditionalOption = 0;
@@ -4195,7 +4194,7 @@ int ARCore::subThread()
 			sv2 = GC->rtcc->coast(sv, GC->rtcc->GMTfromGET(SVDesiredGET) - sv.GMT, RTCC_MPT_CSM);
 		}
 
-		GC->rtcc->CMMSLVNAV(sv2.R, sv2.V, sv2.GMT);
+		GC->rtcc->CMMSLVNAV(1, sv2.R, sv2.V, sv2.GMT);
 
 		Result = DONE;
 	}

@@ -52,14 +52,54 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	}
 	GC = g_SC;                                  // Make the ApolloRTCCMFD instance Global Core point to the static core. 
 
-	//font = oapiCreateFont(w / 20, true, "Arial", FONT_NORMAL, 0);
-	font = oapiCreateFont(w / 20, true, "Courier", FONT_NORMAL, 0);
-	font2 = oapiCreateFont(w * 2 / 51, true, "Courier", FONT_NORMAL, 0);
-	font2vert = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 900);
-	fonttest = oapiCreateFont(w / 32, false, "Courier New", FONT_NORMAL, 0);
-	font3 = oapiCreateFont(w / 24, true, "Courier", FONT_NORMAL, 0);
-	font4 = oapiCreateFont(w / 31, true, "Courier", FONT_NORMAL, 0);
-	font5 = oapiCreateFont(w / 32, false, "Fixed", FONT_NORMAL, 0);
+	font_mocr_plot = oapiCreateFont(w / 31, true, "Arial", FONT_NORMAL, 0);
+
+	//Detect widescreen
+	double aspectratio = ((double)w) / ((double)h);
+	bool widescreen = aspectratio > 1.25;
+	int hh = h;
+
+	//Fonts
+	const char *menu_font = "*Lucida Console";
+	const char *mocr_stat_font = "*Lucida Console";
+	const char *mocr_dyn_font = "*Lucida Console"; //"*Cascadia Mono"; "*OG Courier Zero Dot" "*Cascadia Code"
+
+	if (widescreen)
+	{
+		//Use correct font size
+		font_mocr1 = oapiCreateFont(-(hh / 42), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr2 = oapiCreateFont(-(hh / 32), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr3 = oapiCreateFont(-(hh / 28), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr3_vert = oapiCreateFont(-(hh / 28), false, mocr_stat_font, FONT_NORMAL, 900);
+		font_mocr4 = oapiCreateFont(-(hh / 21), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr5 = oapiCreateFont(-(hh / 17), false, mocr_stat_font, FONT_NORMAL, 0);
+
+		font_mocr1_dyn = oapiCreateFont(-(hh / 42), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr2_dyn = oapiCreateFont(-(hh / 32), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr3_dyn = oapiCreateFont(-(hh / 28), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr4_dyn = oapiCreateFont(-(hh / 21), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr5_dyn = oapiCreateFont(-(hh / 17), false, mocr_dyn_font, FONT_NORMAL, 0);
+	}
+	else
+	{
+		//Use smaller font size for 1:1 MFDs
+		font_mocr1 = oapiCreateFont(-(hh / 55), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr2 = oapiCreateFont(-(hh / 41), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr3 = oapiCreateFont(-(hh / 36), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr3_vert = oapiCreateFont(-(hh / 36), false, mocr_stat_font, FONT_NORMAL, 900);
+		font_mocr4 = oapiCreateFont(-(hh / 27), false, mocr_stat_font, FONT_NORMAL, 0);
+		font_mocr5 = oapiCreateFont(-(hh / 21), false, mocr_stat_font, FONT_NORMAL, 0);
+
+		font_mocr1_dyn = oapiCreateFont(-(hh / 55), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr2_dyn = oapiCreateFont(-(hh / 41), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr3_dyn = oapiCreateFont(-(hh / 36), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr4_dyn = oapiCreateFont(-(hh / 27), false, mocr_dyn_font, FONT_NORMAL, 0);
+		font_mocr5_dyn = oapiCreateFont(-(hh / 21), false, mocr_dyn_font, FONT_NORMAL, 0);
+	}
+
+	font_menu = oapiCreateFont(-(hh / 25), false, menu_font, FONT_NORMAL, 0);
+	font_menu2 = oapiCreateFont(-(hh / 32), false, menu_font, FONT_NORMAL, 0);
+	font_menu3 = oapiCreateFont(-(hh / 28), false, menu_font, FONT_NORMAL, 0);
 
 	pen = oapiCreatePen(1, 1, 0x00FFFF);
 	pen2 = oapiCreatePen(1, 1, 0x00FFFFFF);
@@ -88,6 +128,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	IsCSM = true;
 	EnableCalculation = false;
 	ErrorMessage = false;
+	CW = CH = x = y = dx = dy = 0;
 
 	LoadState();
 }
@@ -96,13 +137,21 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 ApolloRTCCMFD::~ApolloRTCCMFD ()
 {
 	// Add MFD cleanup code here
-	oapiReleaseFont(font);
-	oapiReleaseFont(font2);
-	oapiReleaseFont(font2vert);
-	oapiReleaseFont(fonttest);
-	oapiReleaseFont(font3);
-	oapiReleaseFont(font4);
-	oapiReleaseFont(font5);
+	oapiReleaseFont(font_mocr_plot);
+	oapiReleaseFont(font_mocr1);
+	oapiReleaseFont(font_mocr2);
+	oapiReleaseFont(font_mocr3);
+	oapiReleaseFont(font_mocr3_vert);
+	oapiReleaseFont(font_mocr4);
+	oapiReleaseFont(font_mocr5);
+	oapiReleaseFont(font_menu);
+	oapiReleaseFont(font_menu2);
+	oapiReleaseFont(font_menu3);
+	oapiReleaseFont(font_mocr1_dyn);
+	oapiReleaseFont(font_mocr2_dyn);
+	oapiReleaseFont(font_mocr3_dyn);
+	oapiReleaseFont(font_mocr4_dyn);
+	oapiReleaseFont(font_mocr5_dyn);
 	oapiReleasePen(pen);
 	oapiReleasePen(pen2);
 
@@ -308,6 +357,136 @@ void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, std::string message, int x, int y
 	skp->Text(x * W / xmax, y * H / ymax, message.c_str(), message.size());
 }
 
+void ApolloRTCCMFD::Text_Double(oapi::Sketchpad *skp, int x, int y, char *format, double val)
+{
+	sprintf(Buffer, format, val);
+	skp->Text(x, y, Buffer, strlen(Buffer));
+}
+
+void ApolloRTCCMFD::Text_Int(oapi::Sketchpad *skp, int x, int y, char *format, int val)
+{
+	sprintf(Buffer, format, val);
+	skp->Text(x, y, Buffer, strlen(Buffer));
+}
+
+void ApolloRTCCMFD::Text_String(oapi::Sketchpad *skp, int x, int y, std::string message)
+{
+	skp->Text(x, y, message.c_str(), message.size());
+}
+
+void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, std::string message)
+{
+	skp->Text(CW * x, CH * y, message.c_str(), message.size());
+}
+
+void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, char *format, double val)
+{
+	sprintf(Buffer, format, val);
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, char *format, int val)
+{
+	sprintf(Buffer, format, val);
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_GET_MMSS(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	int hh, mm;
+	double ss;
+	OrbMech::SStoHHMMSS(val, hh, mm, ss);
+	sprintf_s(Buffer, "%d:%02.0f", mm, ss);
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	int hh, mm;
+	double ss;
+	OrbMech::SStoHHMMSS(val, hh, mm, ss, 0.1);
+	sprintf_s(Buffer, "%d:%04.1f", mm, ss);
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_GET_HHMM(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	GET_Display_HHMM(Buffer, val);
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	GET_Display4(Buffer, val);
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_GET_HHHMMSS(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	GET_Display(Buffer, val, false);
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_GET_HHHMMSSC(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	GET_Display3(Buffer, val);
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_GET_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	GET_Display2(Buffer, val);
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	//val in degrees
+	FormatLatitude(Buffer, val);
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	//val in degrees
+	FormatLongitude(Buffer, val);
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals)
+{
+	//val in degrees
+	if (val >= 0.0)
+	{
+		sprintf(Buffer, "%.*lfN", decimals, abs(val));
+	}
+	else
+	{
+		sprintf(Buffer, "%.*lfS", decimals, abs(val));
+	}
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals)
+{
+	//val in degrees
+	if (val >= 0.0)
+	{
+		sprintf(Buffer, "%.*lfE", decimals, abs(val));
+	}
+	else
+	{
+		sprintf(Buffer, "%.*lfW", decimals, abs(val));
+	}
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_Dot(oapi::Sketchpad *skp, int x, int y)
+{
+	//Writes a dot above the letter location indicated with x and y
+	skp->Text(CW * x, CH * (y * 4 - 3) / 4, ".", 1);
+}
+
 void ApolloRTCCMFD::menuEntryUpdateUpload()
 {
 	G->EntryUpdateUplink();
@@ -376,23 +555,17 @@ void ApolloRTCCMFD::menuTLANDUpload()
 	G->TLANDUplink();
 }
 
-void ApolloRTCCMFD::Angle_Display(char *Buff, double angle, bool DispPlus)
+void ApolloRTCCMFD::FormatDeclination(char *Buff, double angle)
 {
+	//Input in arc seconds
 	double angle2 = abs(round(angle));
 	if (angle >= 0)
 	{
-		if (DispPlus)
-		{
-			sprintf_s(Buff, 32, "+%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
-		}
-		else
-		{
-			sprintf_s(Buff, 32, "%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
-		}
+		sprintf_s(Buff, 32, "+%.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
 	}
 	else
 	{
-		sprintf_s(Buff, 32, "-%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
+		sprintf_s(Buff, 32, "-%.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
 	}
 }
 
@@ -411,6 +584,12 @@ void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display
 	{
 		sprintf_s(Buff, 32, "%03d:%02d:%02.0f", hours, minutes, seconds);
 	}
+}
+
+void ApolloRTCCMFD::GET_Display(oapi::Sketchpad *skp, int x, int y, double time, bool DispGET)
+{
+	GET_Display(Buffer, time, DispGET);
+	skp->Text(x, y, Buffer, strlen(Buffer));
 }
 
 void ApolloRTCCMFD::GMT_Display2(char* Buff, double time) const
@@ -519,7 +698,7 @@ void ApolloRTCCMFD::FormatLatitude(char * Buff, double lat)
 	}
 }
 
-void ApolloRTCCMFD::FormatLongitude(char * Buff, double lng)
+void ApolloRTCCMFD::FormatLongitude(char * Buff, double lng, int precision)
 {
 	while (lng >= 180.0)
 	{
@@ -542,11 +721,11 @@ void ApolloRTCCMFD::FormatLongitude(char * Buff, double lng)
 
 	if (lng >= 0)
 	{
-		sprintf_s(Buff, 64, "%03.0lf:%02.0lfE", iPart, fPart*60.0);
+		sprintf_s(Buff, 64, "%03.0lf:%0*.0lfE", iPart, precision, fPart*60.0);
 	}
 	else
 	{
-		sprintf_s(Buff, 64, "%03.0lf:%02.0lfW", iPart, fPart*60.0);
+		sprintf_s(Buff, 64, "%03.0lf:%0*.0lfW", iPart, precision, fPart*60.0);
 	}
 }
 
@@ -596,35 +775,35 @@ void ApolloRTCCMFD::ThrusterName(char *Buff, int n)
 	}
 	else if (n == RTCC_ENGINETYPE_CSMRCSPLUS2)
 	{
-		sprintf(Buff, "SM RCS 2+X");
+		sprintf(Buff, "CSM RCS +X (2)");
 	}
 	else if (n == RTCC_ENGINETYPE_LMRCSPLUS2)
 	{
-		sprintf(Buff, "LM RCS 2+X");
+		sprintf(Buff, "LM RCS +X (2)");
 	}
 	else if (n == RTCC_ENGINETYPE_CSMRCSPLUS4)
 	{
-		sprintf(Buff, "SM RCS 4+X");
+		sprintf(Buff, "CSM RCS +X (4)");
 	}
 	else if (n == RTCC_ENGINETYPE_LMRCSPLUS4)
 	{
-		sprintf(Buff, "LM RCS 4+X");
+		sprintf(Buff, "LM RCS +X (4)");
 	}
 	else if (n == RTCC_ENGINETYPE_CSMRCSMINUS2)
 	{
-		sprintf(Buff, "SM RCS 2-X");
+		sprintf(Buff, "CSM RCS -X (2)");
 	}
 	else if (n == RTCC_ENGINETYPE_LMRCSMINUS2)
 	{
-		sprintf(Buff, "LM RCS 2-X");
+		sprintf(Buff, "LM RCS -X (2)");
 	}
 	else if (n == RTCC_ENGINETYPE_CSMRCSMINUS4)
 	{
-		sprintf(Buff, "SM RCS 4-X");
+		sprintf(Buff, "CSM RCS -X (4)");
 	}
 	else if (n == RTCC_ENGINETYPE_LMRCSMINUS4)
 	{
-		sprintf(Buff, "LM RCS 4-X");
+		sprintf(Buff, "LM RCS -X (4)");
 	}
 	else if (n == RTCC_ENGINETYPE_LOX_DUMP)
 	{
@@ -1323,6 +1502,7 @@ void ApolloRTCCMFD::menuSetAGOPPage()
 {
 	marker = 0;
 	markermax = 17;
+	subscreen = 1;
 	SelectPage(128);
 }
 
@@ -1389,13 +1569,13 @@ void ApolloRTCCMFD::menuPerigeeAdjustHeight()
 
 void ApolloRTCCMFD::menuCycleAGOPPage()
 {
-	if (GC->AGOP_Page == 1)
+	if (subscreen == 1)
 	{
-		GC->AGOP_Page = 2;
+		subscreen = 2;
 	}
 	else
 	{
-		GC->AGOP_Page = 1;
+		subscreen = 1;
 	}
 }
 
@@ -1627,7 +1807,7 @@ void ApolloRTCCMFD::menuSetAGOPInput()
 
 void ApolloRTCCMFD::menuAGOPCalc()
 {
-	GC->AGOP_Page = 2;
+	subscreen = 2;
 	G->startSubthread(51);
 }
 
@@ -6504,7 +6684,7 @@ void ApolloRTCCMFD::menuTLCCVectorTime()
 
 void ApolloRTCCMFD::menuCycleTLCCColumnNumber()
 {
-	if (GC->rtcc->PZMCCPLN.Column < 4)
+	if (GC->rtcc->PZMCCPLN.Column < 6)
 	{
 		GC->rtcc->PZMCCPLN.Column++;
 	}
@@ -7930,10 +8110,12 @@ void ApolloRTCCMFD::menuSpaceDigitalsInit()
 		if (GC->rtcc->EZETVMED.SpaceDigVehID == RTCC_MPT_CSM)
 		{
 			GC->rtcc->EZETVMED.SpaceDigVehID = RTCC_MPT_LM;
+			sprintf(GC->rtcc->EZSPACE.VEHID, "LEM");
 		}
 		else
 		{
 			GC->rtcc->EZETVMED.SpaceDigVehID = RTCC_MPT_CSM;
+			sprintf(GC->rtcc->EZSPACE.VEHID, "CSM");
 		}
 	}
 }
@@ -8707,6 +8889,20 @@ bool VectorCompareTimeInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::set_VectorCompareTime(double time)
 {
 	GC->rtcc->med_s80.time = time;
+	if (GC->rtcc->med_s80.time > 0.0) //GMT
+	{
+		GC->rtcc->VectorCompareDisplayBuffer.GMT = GC->rtcc->med_s80.time;
+		GC->rtcc->VectorCompareDisplayBuffer.GET = GC->rtcc->GETfromGMT(GC->rtcc->med_s80.time);
+	}
+	else if (GC->rtcc->med_s80.time < 0.0) //GET
+	{
+		GC->rtcc->VectorCompareDisplayBuffer.GET = -GC->rtcc->med_s80.time;
+		GC->rtcc->VectorCompareDisplayBuffer.GMT = GC->rtcc->GMTfromGET(GC->rtcc->VectorCompareDisplayBuffer.GET);
+	}
+	else //Time from V1
+	{
+		GC->rtcc->VectorCompareDisplayBuffer.GET = GC->rtcc->VectorCompareDisplayBuffer.GMT = 0.0;
+	}
 }
 
 void ApolloRTCCMFD::menuGOSTDisplayREFSMMAT()
@@ -9458,108 +9654,47 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 {
 	switch (num)
 	{
-	case 1:
-		menuSetMCCDisplaysPage();
+	case 1: menuSetMCCDisplaysPage(); break;
+	case 40: menuSetFIDOLaunchAnalogNo1Page(); break;
+	case 41: menuSetFIDOLaunchAnalogNo2Page(); break;
+	case 43: //FDO LAUNCH DIG NO 1
 		break;
-	case 40:
-		menuSetFIDOLaunchAnalogNo1Page();
-		break;
-	case 41:
-		menuSetFIDOLaunchAnalogNo2Page();
-		break;
-	case 43:
-		//FDO LAUNCH DIG NO 1
-		break;
-	case 45:
-		menuSetFIDOOrbitDigitalsLMPage();
-		break;
-	case 46:
-		menuSetFIDOOrbitDigitalsCSMPage();
-		break;
-	case 47:
-		menuSetMPTPage();
-		break;
-	case 48:
-		menuSetOrbAdjPage();
-		break;
-	case 54:
-		menuSetDetailedManeuverTableNo1Page();
-		break;
-	case 55:
-		menuSetPredSiteAcquisitionCSM1Page();
-		break;
-	case 56:
-		menuSetPredSiteAcquisitionLM1Page();
-		break;
-	case 58:
-		menuSetRendezvousEvaluationDisplayPage();
-		break;
-	case 60:
-		menuSetRelativeMotionDigitalsPage();
-		break;
-	case 66:
-		menuSetRendezvousPlanningDisplayPage();
-		break;
-	case 69:
-		menuSetDetailedManeuverTableNo2Page();
-		break;
-	case 79:
-		menuMidcourseTradeoffPage();
-		break;
-	case 82:
-		menuSetSpaceDigitalsPage();
-		break;
-	case 86:
-		menuSetDescPlanCalcPage();
-		break;
-	case 87:
-		menuSetPredSiteAcquisitionCSM2Page();
-		break;
-	case 88:
-		menuSetPredSiteAcquisitionLM2Page();
-		break;
-	case 229:
-		menuSetGuidanceOpticsSupportTablePage();
-		break;
-	case 232:
-		SetMEDInputPage("K19");
-		break;
-	case 233:
-		SetMEDInputPage("K39");
-		break;
-	case 239:
-		menuSetLMOpticsSupportTablePage();
-		break;
-	case 1501:
-		menuSetMoonriseMoonsetTablePage();
-		break;
-	case 1502:
-		menuSetSunriseSunsetTablePage();
-		break;
-	case 1503:
-		menuSetNextStationContactsPage();
-		break;
-	case 1506:
-		menuSetExpSiteAcqPage();
-		break;
-	case 1508:
-		menuSetLandmarkAcquisitionDisplayPage();
-		break;
-	case 1590:
-		menuSetVectorCompareDisplay();
-		break;
-	case 1591:
-		menuVectorPanelSummaryPage();
-		break;
-	case 1597:
-		menuSetSkeletonFlightPlanPage();
-		break;
-	case 1619:
-		menuSetCheckoutMonitorPage();
-		break;
-	case 1629:
-		menuSetOnlineMonitorPage();
-		break;
+	case 45: menuSetFIDOOrbitDigitalsLMPage(); break;
+	case 46: menuSetFIDOOrbitDigitalsCSMPage(); break;
+	case 47: menuSetMPTPage(); break;
+	case 48: menuSetOrbAdjPage(); break;
+	case 50: menuSetPerigeeAdjustDisplayPage(); break;
+	case 54: menuSetDetailedManeuverTableNo1Page(); break;
+	case 55: menuSetPredSiteAcquisitionCSM1Page(); break;
+	case 56: menuSetPredSiteAcquisitionLM1Page(); break;
+	case 57: menuSetRendezvousPlanningDisplayPage(); break;
+	case 58: menuSetRendezvousEvaluationDisplayPage(); break;
+	case 60: menuSetRelativeMotionDigitalsPage(); break;
+	case 66: menuSetLLWPDisplayPage(); break;
+	case 69: menuSetDetailedManeuverTableNo2Page(); break;
+	case 78: menuSetLOIDisplayPage(); break;
+	case 79: menuMidcourseTradeoffPage(); break;
+	case 80: menuTLIPlanningPage(); break;
+	case 82: menuSetSpaceDigitalsPage(); break;
+	case 86: menuSetDescPlanCalcPage(); break;
+	case 87: menuSetPredSiteAcquisitionCSM2Page(); break;
+	case 88: menuSetPredSiteAcquisitionLM2Page(); break;
+	case 229: menuSetGuidanceOpticsSupportTablePage(); break;
+	case 232: SetMEDInputPage("K19"); break;
+	case 233: SetMEDInputPage("K39"); break;
+	case 239: menuSetLMOpticsSupportTablePage(); break;
+	case 363: menuSetRTEDigitalsPage(); break;
+	case 366: menuSetRTEConstraintsPage(); break;
+	case 1501: menuSetMoonriseMoonsetTablePage(); break;
+	case 1502: menuSetSunriseSunsetTablePage(); break;
+	case 1503: menuSetNextStationContactsPage(); break;
+	case 1506: menuSetExpSiteAcqPage(); break;
+	case 1508: menuSetLandmarkAcquisitionDisplayPage(); break;
+	case 1590: menuSetVectorCompareDisplay(); break;
+	case 1591: menuVectorPanelSummaryPage(); break;
+	case 1597: menuSetSkeletonFlightPlanPage(); break;
+	case 1619: menuSetCheckoutMonitorPage(); break;
+	case 1629: menuSetOnlineMonitorPage(); break;
 	}
 }
 
@@ -9620,7 +9755,7 @@ void ApolloRTCCMFD::GMPManeuverPointName(char *buffer, int point)
 		sprintf(buffer, "Apoapsis");
 		break;
 	case 1:
-		sprintf(buffer, "Equatorial crossing");
+		sprintf(buffer, "Equat. crossing");
 		break;
 	case 2:
 		sprintf(buffer, "Perigee");
@@ -9872,7 +10007,7 @@ void ApolloRTCCMFD::SetMEDInputPage(std::string med)
 
 	if (med == "K19")
 	{
-		AddMEDInputTitle(MEDInputData, "K19", "Initialization for Ascent Rendezvous Monitor");
+		AddMEDInputTitle(MEDInputData, "K19", "Initialization for Asc Rdz Monitor");
 
 		sprintf(Buff, "%.1lf", GC->rtcc->PZMARM.WT*DEG);
 		AddMEDInput(MEDInputData.table, "WT:", "Terminal phase travel angle (from TPI to TPF):", Buff, "degrees");
@@ -9936,7 +10071,7 @@ void ApolloRTCCMFD::SetMEDInputPage(std::string med)
 	}
 	else if (med == "M75")
 	{
-		AddMEDInputTitle(MEDInputData, "M75", "Transfer of TLI maneuver from study aid");
+		AddMEDInputTitle(MEDInputData, "M75", "Transfer of TLI mnvr from study aid");
 
 		AddMEDInput(MEDInputData.table, "VEH:", "Vehicle (CSM or LEM):", "CSM", "");
 		AddMEDInput(MEDInputData.table, "REP:", "Replace code (1-15 or 0 if no replacement):", "0", "");
@@ -10061,14 +10196,15 @@ void ApolloRTCCMFD::menuReturnToMEDInput()
 	}
 }
 
-void ApolloRTCCMFD::DFLBackgroundSlide(oapi::Sketchpad *skp, unsigned display)
+void ApolloRTCCMFD::DFLBackgroundSlide(oapi::Sketchpad *skp, unsigned display, int fontsize)
 {
-	skp->SetFont(font2);
-	GC->DFLBackgroundSlide(skp, W, H, display);
+	SetMOCRFont(skp, fontsize, false);
+	GetCharSize(skp, CW, CH);
+	GC->DFLBackgroundSlide(skp, CW, CH, display);
 }
 
-void ApolloRTCCMFD::DFLDynamicData(oapi::Sketchpad *skp, unsigned display)
+void ApolloRTCCMFD::DFLDynamicData(oapi::Sketchpad *skp, unsigned display, int fontsize)
 {
-	skp->SetFont(font2);
-	GC->rtcc->DynamicDisplayData.Print(skp, W, H, display);
+	SetMOCRFont(skp, fontsize, true);
+	GC->rtcc->DynamicDisplayData.Print(skp, CW, CH, display);
 }

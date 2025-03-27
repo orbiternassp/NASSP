@@ -371,7 +371,7 @@ FIDOOrbitDigitals::FIDOOrbitDigitals()
 	PA = 0.0;
 	PP = 0.0;
 	PPP = 0.0;
-	sprintf(REF, "");
+	sprintf(REF1, "");
 	REV = 0;
 	REVL = 0;
 	REVR = 0;
@@ -380,7 +380,8 @@ FIDOOrbitDigitals::FIDOOrbitDigitals()
 	TO = 0.0;
 	V = 0.0;
 	sprintf(VEHID, "");
-	sprintf(REFR, "");
+	sprintf(REF2, "");
+	sprintf(REF3, "");
 	GETBV = 0.0;
 	HAR = 0.0;
 	PAR = 0.0;
@@ -390,6 +391,8 @@ FIDOOrbitDigitals::FIDOOrbitDigitals()
 	PPR = 0.0;
 	LPR = 0.0;
 	GETPR = 0.0;
+	PET = 0.0;
+	GETR = 0.0;
 	Error = 0;
 }
 
@@ -403,7 +406,7 @@ SpaceDigitals::SpaceDigitals()
 	GETAxis = 0.0;
 	GETR = 0.0;
 	GET = 0.0;
-	sprintf(REF, "");
+	sprintf(REF1, "");
 	V = 0.0;
 	PHI = 0.0;
 	H = 0.0;
@@ -413,8 +416,10 @@ SpaceDigitals::SpaceDigitals()
 	PSI = 0.0;
 	sprintf(VEHID, "");
 	GETVector1 = 0.0;
-	sprintf(REF1, "");
+	sprintf(REF2, "");
 	WT = 0.0;
+	AREA = 0.0;
+	K = 0.0;
 	GETA = 0.0;
 	HA = 0.0;
 	HP = 0.0;
@@ -469,7 +474,7 @@ SpaceDigitals::SpaceDigitals()
 
 CheckoutMonitor::CheckoutMonitor()
 {
-	sprintf_s(VEH, "CSM");
+	sprintf_s(VEH, "");
 	GET = 0.0;
 	GMT = 0.0;
 	sprintf_s(VID, "");
@@ -501,7 +506,7 @@ CheckoutMonitor::CheckoutMonitor()
 	A = 0.0;
 	K_Fac = 0.0;
 	sprintf_s(CFG, "");
-	sprintf_s(RF, "ECI");
+	sprintf_s(RF, "");
 	WT = 0.0;
 	WC = 0.0;
 	WL = 0.0;
@@ -532,7 +537,7 @@ CheckoutMonitor::CheckoutMonitor()
 	EB2 = 0.0;
 	EE2 = 0.0;
 	U_T = _V(-2, 0, 0); //Indicator to blank display (value < -2)
-	sprintf_s(Option, "GMT");
+	sprintf_s(Option, "");
 
 	unit = 0;
 	TABlank = false;
@@ -551,6 +556,7 @@ DetailedManeuverTable::DetailedManeuverTable()
 	L_GMTV = 0.0;
 	L_GETV = 0.0;
 	sprintf_s(REF, "");
+	X_VEH = ' ';
 	sprintf_s(X_STA_ID, "");
 	X_GMTV = 0.0;
 	X_GETV = 0.0;
@@ -10115,7 +10121,9 @@ RTCC_PMMLLWP_22_19:
 	PZLRPT.LM_GMTV = 0.0;
 	PZLRPT.LM_GETV = 0.0;
 	PZLRPT.DT_CSI = dt_B;
+	PZLRPT.LM_LIFETIME = opt.t_max / 3600.0;
 	PZLRPT.DV_MAX = opt.DV_MAX[m] / 0.3048;
+	PZLRPT.MINH = opt.H_S / 1852.0;
 	PZLRPT.WT = opt.theta_F*DEG;
 	for (int i = 0;i < I_LOOP;i++)
 	{
@@ -13627,6 +13635,8 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargeting
 		T_TPI = T_TPI - S * DV_Z;
 	} while (i <= I_max);
 
+	res.GETV = GETfromGMT(opt.sv_CSM.GMT);
+	res.GETTH = GETfromGMT(opt.T_TH);
 	res.GETLOR = GETfromGMT(T_LO);
 	res.GET_TPI = GETfromGMT(T_TPI);
 	res.GET_TPF = lamres.T2;
@@ -14403,7 +14413,7 @@ void RTCC::EMMRMD(int Veh1, int Veh2, double get, double dt, int refs, int axis,
 	else
 	{
 		EZRMDT.Mode = '2';
-		EZRMDT.PETorSH = "/SH";
+		EZRMDT.PETorSH = "/SH ";
 		EZRMDT.YDotorT = "/T";
 
 		MATRIX3 M_B;
@@ -14704,6 +14714,7 @@ void RTCC::EMSTIME(int L, int ID)
 
 		tab->RevNum = CapeCrossingRev(L, sv_true.GMT);
 		tab->TUP = out.TUP;
+		tab->NV = out.ORER + 1;
 	}
 }
 
@@ -14792,14 +14803,16 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 	{
 		tab->REV = tcontab->RevNum;
 		tab->GET = GETfromGMT(tcontab->sv_present.GMT);
+		tab->GETR = SystemParameters.MCGREF*3600.0;
+		tab->PET = tab->GET - tab->GETR;
 		tab->TO = tcontab->T0;
 		if (tcontab->sv_present.RBI == BODY_EARTH)
 		{
-			sprintf_s(tab->REF, "EARTH");
+			sprintf_s(tab->REF1, "ECT");
 		}
 		else
 		{
-			sprintf_s(tab->REF, "LUNAR");
+			sprintf_s(tab->REF1, "MCT");
 		}
 
 		if (mpt->LastExecutedManeuver == 0)
@@ -14872,6 +14885,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 
 	if (queid == 1 || queid == 2)
 	{
+		tab->NV1 = tcontab->NV;
 		tab->LPP = tcontab->lng*DEG;
 		tab->PPP = tcontab->lat*DEG;
 		tab->GETCC = GETfromGMT(CapeCrossingGMT(L, tcontab->RevNum + 1));
@@ -14882,6 +14896,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		tab->A = tcontab->a / 1852.0;
 		tab->E = tcontab->e;
 		tab->I = tcontab->i*DEG;
+		tab->K = mpt->KFactor;
 
 		if (queid == 2 || (CurGET > tab->GETA))
 		{
@@ -15006,11 +15021,11 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 
 		if (sv_pred.RBI == BODY_EARTH)
 		{
-			sprintf_s(tab->REFR, "EARTH");
+			sprintf_s(tab->REF2, "ECT");
 		}
 		else
 		{
-			sprintf_s(tab->REFR, "LUNAR");
+			sprintf_s(tab->REF2, "MCT");
 		}
 
 		tab->REVR = CapeCrossingRev(L, sv_pred.GMT);
@@ -15082,10 +15097,12 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		if (DetermineSVBody(EPHEM.table.front()) == BODY_EARTH)
 		{
 			out = 1;
+			sprintf_s(tab->REF3, "ECT");
 		}
 		else
 		{
 			out = 3;
+			sprintf_s(tab->REF3, "MCT");
 		}
 
 		ELVCNV(EPHEM.table, 0, out, tab2.table);
@@ -15121,10 +15138,12 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		if (DetermineSVBody(outtab.SV) == BODY_EARTH)
 		{
 			out = 1;
+			sprintf_s(tab->REF3, "ECT");
 		}
 		else
 		{
 			out = 3;
+			sprintf_s(tab->REF3, "MCT");
 		}
 		EphemerisData2 sv_true;
 		ELVCNV(outtab.SV, 0, out, sv_true);
@@ -15132,6 +15151,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		OrbMech::latlong_from_r(sv_true.R, lat, lng);
 		tab->GETL = param;
 		tab->L = lng * DEG;
+		tab->REVL = CapeCrossingRev(L, gmt);
 	}
 }
 
@@ -15156,11 +15176,11 @@ int RTCC::EMDSPACENoMPT(SV sv0, int queid, double gmt, double incl, double ascno
 
 	if (sv.RBI == BODY_EARTH)
 	{
-		sprintf(EZSPACE.REF, "EARTH");
+		sprintf(EZSPACE.REF1, "EARTH");
 	}
 	else
 	{
-		sprintf(EZSPACE.REF, "MOON");
+		sprintf(EZSPACE.REF1, "LUNAR");
 	}
 
 	TimeConstraintsTable newtab;
@@ -15200,12 +15220,12 @@ int RTCC::EMDSPACENoMPT(SV sv0, int queid, double gmt, double incl, double ascno
 		EZSPACE.GETVector1 = GETfromGMT(sv.GMT);
 		if (sv.RBI == BODY_EARTH)
 		{
-			sprintf(EZSPACE.REF1, "E");
+			sprintf(EZSPACE.REF2, "EARTH");
 			mu = OrbMech::mu_Earth;
 		}
 		else
 		{
-			sprintf(EZSPACE.REF1, "M");
+			sprintf(EZSPACE.REF2, "LUNAR");
 			mu = OrbMech::mu_Moon;
 		}
 
@@ -15571,11 +15591,11 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 		{
 			if (tctab->sv_present.RBI == BODY_EARTH)
 			{
-				sprintf(EZSPACE.REF, "EARTH");
+				sprintf(EZSPACE.REF1, "EARTH");
 			}
 			else
 			{
-				sprintf(EZSPACE.REF, "MOON");
+				sprintf(EZSPACE.REF1, "MOON");
 			}
 			EZSPACE.V = tctab->V / 0.3048;
 			EZSPACE.GAM = tctab->gamma*DEG;
@@ -15662,12 +15682,12 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			EZSPACE.GETVector1 = GETfromGMT(sv.GMT);
 			if (sv.RBI == BODY_EARTH)
 			{
-				sprintf(EZSPACE.REF1, "E");
+				sprintf(EZSPACE.REF2, "EARTH");
 				mu = OrbMech::mu_Earth;
 			}
 			else
 			{
-				sprintf(EZSPACE.REF1, "M");
+				sprintf(EZSPACE.REF2, "LUNAR");
 				mu = OrbMech::mu_Moon;
 			}
 			
@@ -15711,6 +15731,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			}
 			EZSPACE.E1 = newtab.e;
 			EZSPACE.I1 = newtab.i*DEG;
+			EZSPACE.TUN1 = ephtab->EPHEM.Header.TUP;
 
 			if (newtab.e < 0.85)
 			{
@@ -15803,6 +15824,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			EZSPACE.PCA = newtab.lat * DEG;
 			EZSPACE.LCA = newtab.lng * DEG;
 			EZSPACE.PSICA = newtab.azi*DEG;
+			EZSPACE.TUN2 = ephtab->EPHEM.Header.TUP;
 		}
 		//Column 3
 		else
@@ -15892,6 +15914,7 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 			EZSPACE.PSIVP = newtab.azi*DEG;
 			EZSPACE.IE = newtab.i*DEG;
 			EZSPACE.LN = newtab.RA*DEG;
+			EZSPACE.TUN3 = ephtab->EPHEM.Header.TUP;
 
 			//Have we passed EI?
 			if (length(emsin.sv_cutoff.R) > OrbMech::R_Earth + 400000.0*0.3048)
@@ -19771,7 +19794,7 @@ void RTCC::PMDPAD()
 			MSK0050Buffer[num].assign(Buffer);
 			num++;
 
-			sprintf(Buffer, "%.0lf", PZPADDIS.Man[i].DV / 0.3048);
+			sprintf(Buffer, "%.1lf", PZPADDIS.Man[i].DV / 0.3048);
 			MSK0050Buffer[num].assign(Buffer);
 			num++;
 
@@ -19783,11 +19806,11 @@ void RTCC::PMDPAD()
 			MSK0050Buffer[num].assign(Buffer);
 			num++;
 
-			sprintf(Buffer, "%.0lf", PZPADDIS.Man[i].H / 1852.0);
+			sprintf(Buffer, "%.1lf", PZPADDIS.Man[i].H / 1852.0);
 			MSK0050Buffer[num].assign(Buffer);
 			num++;
 
-			sprintf(Buffer, "%.0lf", PZPADDIS.Man[i].H_A / 1852.0);
+			sprintf(Buffer, "%.1lf", PZPADDIS.Man[i].H_A / 1852.0);
 			MSK0050Buffer[num].assign(Buffer);
 			num++;
 		}
@@ -20816,26 +20839,24 @@ void RTCC::EMDLANDM(int L, double gmt, double dt, int ref)
 	tab->err = 0;
 }
 
-void RTCC::ECMEXP(EphemerisData sv, StationData *stat, int statbody, double &range, double &alt)
+void RTCC::ECMEXP(EphemerisData2 sv, StationData *stat, int statbody, double &range, double &alt)
 {
-	EphemerisData sv_out;
+	//INPUTS:
+	//sv: state vector at maximum elevation, ECT or MCT coordinates
 	VECTOR3 Q, U_R;
-	int out;
 
-	U_R = EMXING_Station_ECT(sv.GMT, stat->R_E_sin_lat, stat->R_E_cos_lat, stat->lng);
 	if (statbody == BODY_EARTH)
 	{
-		out = 1;
+		U_R = EMXING_Station_ECT(sv.GMT, stat->R_E_sin_lat, stat->R_E_cos_lat, stat->lng);
 	}
 	else
 	{
-		out = 3;
+		U_R = OrbMech::r_from_latlong(stat->lat_geoc, stat->lng);
 	}
-	ELVCNV(sv, out, sv_out);
 	
-	Q = unit(crossp(sv_out.V, sv_out.R));
-	range = abs(stat->R_S * asin(dotp(U_R, Q)));
-	alt = length(sv_out.R) - stat->R_S;
+	Q = unit(crossp(sv.V, sv.R));
+	range = dotp(Q, U_R*stat->R_S);
+	alt = length(sv.R) - stat->R_S;
 }
 
 void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int body)
@@ -20957,7 +20978,7 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 			}
 
 			intab.GMT = res.Stations[i].GMTEMAX;
-			ELVCTR(intab, outtab);
+			ELVCTR(intab, outtab, ephem2, ephem.MANTIMES, &ephem.LUNRSTAY);
 
 			for (unsigned j = 0;j < contact.table.size();j++)
 			{
@@ -20967,7 +20988,8 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 					break;
 				}
 			}
-			ECMEXP(Eph2ToEph1(outtab.SV, BODY_EARTH), &tempstat, stat_body, range, alt);
+			//Get ground range and altitude
+			ECMEXP(outtab.SV, &tempstat, stat_body, range, alt);
 
 			tab->REV[tab->pages - 1][numcontacts] = CapeCrossingRev(veh, res.Stations[i].GMTAOS);
 			tab->STA[tab->pages - 1][numcontacts] = res.Stations[i].StationID;
@@ -20997,6 +21019,7 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 			tab->numcontacts[0] = 20;
 			tab->numcontacts[1] = numcontacts;
 		}
+		tab->STAID = veh == 1 ? PZMPTCSM.StationID : PZMPTLEM.StationID;
 	}
 	//Predicted site
 	else
@@ -21028,15 +21051,6 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 
 		PredictedSiteAcquisitionTable empty;
 		*tab = empty;
-
-		if (veh == 1)
-		{
-			tab->VEHICLE = "CSM";
-		}
-		else
-		{
-			tab->VEHICLE = "LEM";
-		}
 
 		int numcontacts = 0;
 		for (int i = 0;i < 42;i++)
@@ -21070,6 +21084,7 @@ void RTCC::EMDPESAD(int num, int veh, int ind, double vala, double valb, int bod
 			tab->numcontacts[0] = 21;
 			tab->numcontacts[1] = numcontacts;
 		}
+		tab->STAID = veh == 1 ? PZMPTCSM.StationID : PZMPTLEM.StationID;
 	}
 }
 
@@ -21901,8 +21916,8 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 		//ECT: lambda is true geographic, lambda_D is true inertial
 		EZCHECKDIS.lambda -= sv_out.GMT*OrbMech::w_Earth;
 	}
-	OrbMech::normalizeAngle(EZCHECKDIS.lambda);
-	OrbMech::normalizeAngle(EZCHECKDIS.lambda_D);
+	OrbMech::normalizeAngle(EZCHECKDIS.lambda, false);
+	OrbMech::normalizeAngle(EZCHECKDIS.lambda_D, false);
 
 	EZCHECKDIS.phi_c *= DEG;
 	EZCHECKDIS.phi_D *= DEG;
@@ -21945,7 +21960,7 @@ void RTCC::EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool
 	EZCHECKDIS.ZSA = SystemParameters.MCGZSS * 3600.0;
 	EZCHECKDIS.R_Day[0] = GZGENCSN.DayofLiftoff;
 	EZCHECKDIS.R_Day[1] = GZGENCSN.MonthofLiftoff;
-	EZCHECKDIS.R_Day[2] = GZGENCSN.Year;
+	EZCHECKDIS.R_Day[2] = GZGENCSN.Year - (GZGENCSN.Year / 100) * 100;
 
 	if (veh == RTCC_MPT_LM)
 	{
@@ -23563,9 +23578,9 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	res.I = man->i_BO*DEG;
 	res.WP = man->g_BO*DEG;
 	res.HA = man->h_a / 1852.0;
-	if (res.HA > 99999.999)
+	if (res.HA > 999999.9)
 	{
-		res.HA = 99999.999;
+		res.HA = -1.0; //In display code this will show up as invalid
 	}
 	res.HP = man->h_p / 1852.0;
 	res.L_AN = man->lng_AN*DEG;
@@ -23630,6 +23645,7 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	}
 	else
 	{
+		res.X_VEH = ' ';
 		res.X_GMTV = 0.0;
 		sprintf(res.X_STA_ID, "");
 	}
@@ -23729,6 +23745,7 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 
 		if (man->TVC == 3)
 		{
+			//LM
 			double Y, P, R;
 			Y = asin(-cos(MG)*sin(OG));
 			if (abs(sin(Y)) != 1.0)
@@ -23745,7 +23762,8 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 		}
 		else
 		{
-			res.FDAIAtt = _V(OG, IG, MG);
+			//CSM
+			res.FDAIAtt = _V(0.0, 0.0, 0.0); //Set to zero for CSM as they would be the same as IMU
 		}
 
 		for (int i = 0;i < 3;i++)
@@ -34874,17 +34892,17 @@ void RTCC::PMDTIMP()
 
 	if (PZTIPREG.IVFLAG == 2)
 	{
-		TwoImpMultDispBuffer.GETFRZ = "2";
-		TwoImpMultDispBuffer.GMTFRZ = "2";
-		TwoImpMultDispBuffer.GETVAR = "1";
+		TwoImpMultDispBuffer.GETFRZ = '2';
+		TwoImpMultDispBuffer.GMTFRZ = '2';
+		TwoImpMultDispBuffer.GETVAR = '1';
 		TwoImpMultDispBuffer.GET1 = GETfromGMT(PZTIPREG.data[0].Time2);
 		TwoImpMultDispBuffer.GMT1 = PZTIPREG.data[0].Time2;
 	}
 	else
 	{
-		TwoImpMultDispBuffer.GETFRZ = "1";
-		TwoImpMultDispBuffer.GMTFRZ = "1";
-		TwoImpMultDispBuffer.GETVAR = "2";
+		TwoImpMultDispBuffer.GETFRZ = '1';
+		TwoImpMultDispBuffer.GMTFRZ = '1';
+		TwoImpMultDispBuffer.GETVAR = '2';
 		TwoImpMultDispBuffer.GET1 = GETfromGMT(PZTIPREG.data[0].Time1);
 		TwoImpMultDispBuffer.GMT1 = PZTIPREG.data[0].Time1;
 	}
@@ -34985,11 +35003,11 @@ void RTCC::PMDRET()
 		PZREDT.DV[i] = block->Display[i].dv / 0.3048;
 		if (block->Display[i].VEH == 1)
 		{
-			PZREDT.VEH[i] = "CSM";
+			PZREDT.VEH[i] = "C";
 		}
 		else
 		{
-			PZREDT.VEH[i] = "LEM";
+			PZREDT.VEH[i] = "L";
 		}
 		PZREDT.PURP[i] = block->Display[i].Man_ID;
 		PZREDT.CODE[i] = 0.0;
@@ -36410,6 +36428,7 @@ void RTCC::BMSVEC()
 		}
 	}
 
+	BZCCANOE.GMT = gmt;
 	BZCCANOE.NumVec = numvec;
 
 	if (med_s80.REF == BODY_EARTH)
@@ -36485,7 +36504,7 @@ void RTCC::BMSVEC()
 			V = unit(crossp(-U, W));
 		}
 
-		BZCCANOE.data[i].GMT = sv_final[i].GMT;
+		BZCCANOE.data[i].GMT = sv_comp[i].GMT;
 		OrbMech::periapo(sv_final[i].R, sv_final[i].V, mu, r_apo, r_peri);
 		coe = OrbMech::coe_from_sv(sv_final[i].R, sv_final[i].V, mu);
 		PICSSC(true, sv_final[i].R, sv_final[i].V, r, v, lat, lng, gamma, azi);
@@ -36538,9 +36557,9 @@ void RTCC::BMDVEC()
 		return;
 	}
 
-	VectorCompareDisplayBuffer.GMTR = GMTfromGET(SystemParameters.MCGREF);
-	VectorCompareDisplayBuffer.PET = BZCCANOE.data[0].GMT - VectorCompareDisplayBuffer.GMTR;
 	VectorCompareDisplayBuffer.NumVec = BZCCANOE.NumVec;
+	VectorCompareDisplayBuffer.GMT = BZCCANOE.GMT;
+	VectorCompareDisplayBuffer.GET = GETfromGMT(BZCCANOE.GMT);
 
 	for (int i = 0;i < BZCCANOE.NumVec;i++)
 	{
@@ -38327,7 +38346,7 @@ void RTCC::EMDGLMST()
 
 		if (EZJGSTBL.COAS_star1 == 0 && EZJGSTBL.COAS_star2 == 0)
 		{
-			LOSTDisplayBuffer[33] = "NO STARS AVAILABLE";
+			LOSTDisplayBuffer[33] = "N/A";
 		}
 
 		if (EZJGSTBL.COAS_AXIS == 1)
@@ -38464,11 +38483,34 @@ void RTCC::EMDGLMST()
 	}
 }
 
-void RTCC::CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT)
+void RTCC::CMMSLVNAV(int L, VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT)
 {
-	CZNAVSLV.PosS = mul(GZLTRA.IU1_REFSMMAT, R_ecl);
-	CZNAVSLV.DotS = mul(GZLTRA.IU1_REFSMMAT, V_ecl);
-	CZNAVSLV.NUPTIM = GMT - SystemParameters.MCGRIC * 3600.0;
+	MATRIX3 REFS;
+	double GRR;
+
+	if (CZNAVSLV.SequenceNumber == 0)
+	{
+		CZNAVSLV.SequenceNumber = 4900;
+	}
+	CZNAVSLV.SequenceNumber++;
+
+	if (L == RTCC_MPT_CSM)
+	{
+		REFS = GZLTRA.IU1_REFSMMAT;
+		GRR = SystemParameters.MCGRIC * 3600.0;
+		CZNAVSLV.STAID = PZMPTCSM.StationID;
+	}
+	else
+	{
+		REFS = GZLTRA.IU2_REFSMMAT;
+		GRR = SystemParameters.MCGRIL * 3600.0;
+		CZNAVSLV.STAID = PZMPTLEM.StationID;
+	}
+
+	CZNAVSLV.GETLoadGeneration = GETfromGMT(RTCCPresentTimeGMT());
+	CZNAVSLV.PosS = mul(REFS, R_ecl);
+	CZNAVSLV.DotS = mul(REFS, V_ecl);
+	CZNAVSLV.NUPTIM = GMT - GRR;
 }
 
 //CMC/LGC Landing Site Update Load Generator
@@ -39488,15 +39530,15 @@ void RTCC::PMDARM(EphemerisData sv_CSM, EphemerisData sv_LM)
 
 	disp.MSKNumber = 232;
 
-	DynamicDisplayData.DFLDouble(disp, PZMARM.WT*DEG, "%.2lf", 288, 950);
-	DynamicDisplayData.DFLDouble(disp, PZMARM.E*DEG, "%.2lf", 480, 950);
-	DynamicDisplayData.DFLDouble(disp, PZMARM.CSIFlag, "%.0lf", 640, 950);
-	DynamicDisplayData.DFLInteger(disp, PZMARM.CDHIndicator, "%d", 800, 950);
-	DynamicDisplayData.DFLTime(disp, GETfromGMT(PZMARM.t_TPI_Coell), 288, 918);
-	DynamicDisplayData.DFLDouble(disp, PZMARM.h_min / 1852.0, "%.1lf", 480, 918);
-	DynamicDisplayData.DFLTime(disp, GETfromGMT(PZMARM.t_Ins), 768, 918);
+	DynamicDisplayData.DFLDouble(disp, PZMARM.WT*DEG, "%.2lf", 11, 2);
+	DynamicDisplayData.DFLDouble(disp, PZMARM.E*DEG, "%.2lf", 22, 2);
+	DynamicDisplayData.DFLDouble(disp, PZMARM.CSIFlag, "%.0lf", 33, 2);
+	DynamicDisplayData.DFLInteger(disp, PZMARM.CDHIndicator, "%d", 42, 2);
+	DynamicDisplayData.DFLTime(disp, GETfromGMT(PZMARM.t_TPI_Coell), 14, 3);
+	DynamicDisplayData.DFLDouble(disp, PZMARM.h_min / 1852.0, "%.1lf", 26, 3);
+	DynamicDisplayData.DFLTime(disp, GETfromGMT(PZMARM.t_Ins), 42, 3);
 
-	DynamicDisplayData.DFLInteger(disp, err, "ERR %d", 500, 64);
+	DynamicDisplayData.DFLInteger(disp, err, "ERR %d", 30, 20);
 
 	//Only show display data if display was calculated
 	if (calc)
@@ -39509,19 +39551,19 @@ void RTCC::PMDARM(EphemerisData sv_CSM, EphemerisData sv_LM)
 		{
 			strtemp = "   GO";
 		}
-		DynamicDisplayData.DisplayFormatting(disp, strtemp, 432, 790, oapi::Sketchpad::RIGHT);
+		DynamicDisplayData.DisplayFormatting(disp, strtemp, 21, 7, oapi::Sketchpad::RIGHT);
 
-		DynamicDisplayData.DFLTime(disp, out.tab[0].GETI, 432, 726);
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_Tweak / 0.3048, "%.1lf", 432, 694);
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].HP / 1852.0, "%.1lf", 432, 662);
+		DynamicDisplayData.DFLTime(disp, out.tab[0].GETI, 22, 9);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_Tweak / 0.3048, "%.1lf", 22, 10);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].HP / 1852.0, "%.1lf", 22, 11);
 
-		DynamicDisplayData.DFLTime(disp, out.tab[0].GET_CSI, 432, 598);
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_CSI / 0.3048, "%.1lf", 432, 566);
-		DynamicDisplayData.DFLTime(disp, out.tab[0].GET_CDH, 432, 534);
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_CDH / 0.3048, "%.1lf", 432, 502);
+		DynamicDisplayData.DFLTime(disp, out.tab[0].GET_CSI, 22, 13);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_CSI / 0.3048, "%.1lf", 22, 14);
+		DynamicDisplayData.DFLTime(disp, out.tab[0].GET_CDH, 22, 15);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_CDH / 0.3048, "%.1lf", 22, 16);
 
-		DynamicDisplayData.DFLTime(disp, out.tab[0].GET_Kick, 432, 438);
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_Kick / 0.3048, "%.1lf", 432, 406);
+		DynamicDisplayData.DFLTime(disp, out.tab[0].GET_Kick, 22, 18);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_Kick / 0.3048, "%.1lf", 22, 19);
 	}
 
 	DynamicDisplayData.UpdateDisplay(disp);
@@ -39572,15 +39614,15 @@ void RTCC::PMDSARM(EphemerisData sv_CSM, EphemerisData sv_LM)
 
 	disp.MSKNumber = 233;
 
-	DynamicDisplayData.DFLDouble(disp, PZMARM.WT*DEG, "%.2lf", 288, 950);
-	DynamicDisplayData.DFLDouble(disp, PZMARM.DTHETA*DEG, "%.2lf", 480, 950);
-	DynamicDisplayData.DFLTime(disp, GETfromGMT(PZMARM.t_TPI_Short), 288, 918);
-	DynamicDisplayData.DFLTime(disp, GETfromGMT(PZMARM.t_Ins), 576, 918);
+	DynamicDisplayData.DFLDouble(disp, PZMARM.WT*DEG, "%.2lf", 14, 2);
+	DynamicDisplayData.DFLDouble(disp, PZMARM.DTHETA*DEG, "%.2lf", 29, 2);
+	DynamicDisplayData.DFLTime(disp, GETfromGMT(PZMARM.t_TPI_Short), 14, 3);
+	DynamicDisplayData.DFLTime(disp, GETfromGMT(PZMARM.t_Ins), 29, 3);
 
 	FormatREFSMMATCode(RTCC_REFSMMAT_TYPE_CUR, refs.ID, Buff);
-	DynamicDisplayData.DisplayFormatting(disp, Buff, 918, 918, oapi::Sketchpad::RIGHT);
+	DynamicDisplayData.DisplayFormatting(disp, Buff, 42, 3, oapi::Sketchpad::RIGHT);
 
-	DynamicDisplayData.DFLInteger(disp, err, "ERR %d", 500, 64);
+	DynamicDisplayData.DFLInteger(disp, err, "ERR %d", 30, 20);
 
 	//Only show display data if display was calculated
 	if (calc)
@@ -39593,20 +39635,20 @@ void RTCC::PMDSARM(EphemerisData sv_CSM, EphemerisData sv_LM)
 		{
 			strtemp = "TWEAK";
 		}
-		DynamicDisplayData.DisplayFormatting(disp, strtemp, 432, 790, oapi::Sketchpad::RIGHT);
+		DynamicDisplayData.DisplayFormatting(disp, strtemp, 21, 7, oapi::Sketchpad::RIGHT);
 
-		DynamicDisplayData.DFLTime(disp, out.tab[0].GETI, 432, 726);
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_B.x / 0.3048, "%.1lf", 432, 694);
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_B.y / 0.3048, "%.1lf", 432, 662);
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_B.z / 0.3048, "%.1lf", 432, 630);
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].HP / 1852.0, "%.1lf", 432, 598);
+		DynamicDisplayData.DFLTime(disp, out.tab[0].GETI, 22, 9);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_B.x / 0.3048, "%.1lf", 22, 10);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_B.y / 0.3048, "%.1lf", 22, 11);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_B.z / 0.3048, "%.1lf", 22, 12);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].HP / 1852.0, "%.1lf", 22, 13);
 
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].Att.z*DEG, "%03.0lf", 432, 566);
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].Att.y*DEG, "%03.0lf", 432, 534);
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].Att.x*DEG, "%03.0lf", 432, 502);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].Att.z*DEG, "%03.0lf", 22, 14);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].Att.y*DEG, "%03.0lf", 22, 15);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].Att.x*DEG, "%03.0lf", 22, 16);
 
-		DynamicDisplayData.DFLTime(disp, out.tab[0].GETTPI, 432, 438);
-		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_TPI / 0.3048, "%.1lf", 432, 406);
+		DynamicDisplayData.DFLTime(disp, out.tab[0].GETTPI, 22, 18);
+		DynamicDisplayData.DFLDouble(disp, out.tab[0].DV_TPI / 0.3048, "%.1lf", 22, 19);
 	}
 
 	DynamicDisplayData.UpdateDisplay(disp);

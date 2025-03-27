@@ -648,20 +648,33 @@ struct LunarLiftoffTimeOpt
 
 struct LLTPOpt
 {
+	//CSM state vector
 	EphemerisData sv_CSM;
+	//Yaw steer limit
 	double Y_S;
+	//Desired radial velocity at insertion
 	double V_Z_NOM;
+	//Threshold time (GMT)
 	double T_TH;
+	//Landing site radius, latitude, longitude
 	double R_LS, lat_LS, lng_LS;
+	//Powered flight arc and time
 	double alpha_PF, dt_PF;
+	//DT from insertion to TPI
 	double dt_INS_TPI;
+	//Height of insertion
 	double h_INS;
+	//TPI height and phase offset
 	double DH_TPI, dTheta_TPI;
+	//Angle from TPI to TPF
 	double WT;
 };
 
 struct LunarLaunchTargetingTable
 {
+	std::string CSM_STA_ID;
+	double GETTH = 0.0;
+	double GETV = 0.0;
 	double GETLOR = 0.0;
 	double VH = 0.0;
 	double GET_TPI = 0.0, GET_TPF = 0.0;
@@ -944,12 +957,12 @@ struct DockAlignOpt	//Docking Alignment Processor
 struct FIDOOrbitDigitals
 {
 	FIDOOrbitDigitals();
-	double GET;		//Ground elapsed time associated with present position data
-	char VEHID[64];	//Vehicle name
-	int REV;		//Current revolution number associated with subject vehicle and central body
-	char REF[64];	//Reference planet
-	char STAID[16]; //Last vector used for updating the ephemeris
-	double GMTID;	//GMT of the state vector
+	double GET;		// Ground elapsed time associated with present position data
+	char VEHID[4];	// Vehicle name
+	int REV;		// Current revolution number associated with subject vehicle and central body
+	char REF1[4];	// Central body for present position data
+	char STAID[8];	// Last vector used for updating the ephemeris
+	double GMTID;	// GMT of the state vector
 	double GETID;	//GET of the state vector
 	int NV1;		//Number of vectors used for interpolation for present position values
 	double H;		//Current height
@@ -973,12 +986,13 @@ struct FIDOOrbitDigitals
 	double LNPP;	//Longitude of ascending node (Earth-fixed or moon-fixed)
 	double GETL;	//Time spacecraft will pass over L
 	int REVL;		//Revolution associated with GETL
+	char REF3[4];	// Central body of L
 	double L;		//The longitude associated with GETL
 	double TO;		//Orbital period
 	double K;		//K-Factor
 	double ORBWT;	//Total current weight
 	int REVR;		//Revolution of requested apogee/perigee
-	char REFR[64];	//Reference planet of requested vector
+	char REF2[4];	// Central body for predicted apogee/perigee data
 	double GETBV;	//Time tag of vector from which apogee/perigee values were computed
 	int NV2;		//Number of vectors used in interpolating for base vector for predicted apogee/perigee data
 	double HAR;		//Height of next apogee at GETA, as requested
@@ -989,6 +1003,8 @@ struct FIDOOrbitDigitals
 	double PPR;		//Latitude of next apogee at GETP, as requested
 	double LPR;		//Longitude of next apogee at GETP, as requested
 	double GETPR;	//Time of arrival at next apogee, as requested
+	double PET;		// Phase elapsed time
+	double GETR;	// Event reference time
 	int Error;
 };
 
@@ -1002,14 +1018,14 @@ struct SpaceDigitals
 {
 	SpaceDigitals();
 	int TUP;			//Update number associated with subject vehicle
-	char VecID[16];		//Identification of the last vector used to update the ephemeris
+	char VecID[8];		//Identification of the last vector used to update the ephemeris
 	double WEIGHT;		//Total vehicle weight
 	double GMTV;		//Greenwich time-tag of the vector
 	double GETV;		//Ground elapsed time-tag of the vector
 	double GETAxis;		//Ground elapsed time used to define the earth-moon line
 	double GETR;		//Ground elapsed time reference (elapsed time of an event)
 	double GET;			//Current ground elapsed time for which orb params were computed
-	char REF[64];		//Inertial reference body used to compute orb params
+	char REF1[6];		//Inertial reference body used to compute orb params
 	double V;			//Current velocity
 	double PHI;			//Current latitude
 	double H;			//Current altitude above spherical Earth or above moon assuming landing site radius
@@ -1019,8 +1035,10 @@ struct SpaceDigitals
 	double PSI;			//Current heading angle
 	char VEHID[4];		//Vehicle for which the space digitals are computed
 	double GETVector1;	//Ground elapsed time of the vector used to compute quantities below
-	char REF1[64];		//Inertial reference body used to compute quantities for GET Vector 1
+	char REF2[6];		//Inertial reference body used to compute quantities for GET Vector 1
 	double WT;			//Total vehicle weight at GET vector 1
+	double AREA;		//Total vehicle area at GET vector 1
+	double K;			//Atmospheric density multiplier
 	double GETA;		//Ground elapsed time of next apogee (referenced from GET Vector 1)
 	double HA;			//Height of apogee (referenced from GET Vector 1)
 	double HP;			//Height of perigee (referenced from GET Vector 1)
@@ -1170,6 +1188,7 @@ struct DetailedManeuverTable
 	double L_GMTV;
 	double L_GETV;
 	char REF[10];
+	char X_VEH; //Character for X_STA_ID
 	char X_STA_ID[10];
 	double X_GMTV;
 	double X_GETV;
@@ -1894,8 +1913,6 @@ struct PredictedSiteAcquisitionTable
 	unsigned numcontacts[2];
 	//Station ID of anchor vector
 	std::string STAID;
-	//Vehicle (CSM or LEM)
-	std::string VEHICLE;
 	//Revolution number
 	int REV[2][21];
 	//Sites
@@ -2804,7 +2821,7 @@ public:
 	//CMC and LGC REFSMMAT Update Generator
 	void CMMRFMAT(int L, int id, int addr);
 	//SLV Navigation Update
-	void CMMSLVNAV(VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT);
+	void CMMSLVNAV(int L, VECTOR3 R_ecl, VECTOR3 V_ecl, double GMT);
 	//CMC/LGC Landing Site Update Load Generator
 	void CMMCMCLS(int veh);
 	//LGC Descent Target Update Load Generator
@@ -2863,7 +2880,7 @@ public:
 	//Predicted Site Acquisition Display
 	void EMDPESAD(int num, int veh, int ind, double vala, double valb, int body);
 	//Ground Range and Altitude Subprogram
-	void ECMEXP(EphemerisData sv, StationData *stat, int statbody, double &range, double &alt);
+	void ECMEXP(EphemerisData2 sv, StationData *stat, int statbody, double &range, double &alt);
 	//Landmark Acquisition Display
 	void EMDLANDM(int L, double gmt, double dt, int ref);
 	//Ground Point Characteristics Block Routine
@@ -3444,7 +3461,7 @@ public:
 
 	struct GuidanceOpticsSupportTable
 	{
-		std::string CODE = "ZZZZZZZZ";			//Identification of maneuver to be performed
+		std::string CODE = "ZZZZZZZ";			//Identification of maneuver to be performed
 		VECTOR3 Att_H = _V(0, 0, 0);			//Pitch, yaw and roll attitudes for the maneuver references to the IMU aligned to a local vertical orientation. Associated with DMT REFSMMAT.
 		double GETAC = 0.0;						//Ground elapsed time of alignment check
 		double IGA = 0.0;
@@ -3606,6 +3623,7 @@ public:
 	{
 		bool error = false;
 		int NumVec = 0;
+		double GMT = 0.0;
 		VectorCompareTableData data[4];
 	} BZCCANOE;
 
@@ -3615,8 +3633,8 @@ public:
 		bool showHA[4] = { false,false,false,false };
 		int NumVec = 0;
 		VectorCompareTableData data[4];
-		double PET = 0.0;
-		double GMTR = 0.0;
+		double GET = 0.0;
+		double GMT = 0.0;
 		std::string error = "TABLE NOT INITIALIZED";
 	} VectorCompareDisplayBuffer;
 
@@ -4072,9 +4090,9 @@ public:
 		double GETTH_CSM = 0.0;
 		double GETTH_LM = 0.0;
 		std::string MAN_VEH;
-		std::string GETFRZ;
-		std::string GMTFRZ;
-		std::string GETVAR;
+		char GETFRZ = ' ';
+		char GMTFRZ = ' ';
+		char GETVAR = ' ';
 		std::string OPTION;
 		double WT = 0.0;
 		double PHASE = 0.0;
@@ -4512,6 +4530,7 @@ public:
 		double LM_GMTV = 0.0;
 		double LM_GETV = 0.0;
 		double DT_CSI = 0.0;
+		double LM_LIFETIME = 0.0;
 		double DV_MAX = 0.0;
 		double MINH = 0.0;
 		double WT = 0.0;
@@ -4810,6 +4829,9 @@ public:
 		VECTOR3 PosS = _V(0, 0, 0);
 		VECTOR3 DotS = _V(0, 0, 0);
 		double NUPTIM = 0.0;
+		int SequenceNumber = 0;
+		double GETLoadGeneration = 0.0;
+		std::string STAID;
 	} CZNAVSLV;
 
 	struct LandingSiteMakupBuffer

@@ -386,10 +386,11 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 
 		{ "Select CSM or LM", 0, 'E' },
-		{ "Calc Map Update", 0, 'C' },
 		{ "Earth or Moon", 0, 'V' },
+		{ "Calc Map Update", 0, 'C' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
@@ -405,8 +406,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("SEL", OAPI_KEY_E, &ApolloRTCCMFD::set_Vessel);
-	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuCalcMapUpdate);
 	RegisterFunction("MOD", OAPI_KEY_V, &ApolloRTCCMFD::menuSwitchMapUpdate);
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuCalcMapUpdate);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetPADMenu);
@@ -823,12 +824,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu24[] =
 	{
+		{ "", 0, ' ' },
 		{ "Enter file name", 0, 'F' },
 		{ "Enter load number", 0, 'L' },
 		{ "Initialize", 0, 'I' },
 		{ "Edit octal", 0, 'G' },
 		{ "Delete line", 0, 'D' },
-		{ "", 0, ' ' },
 
 		{ "Load EMP", 0, 'O' },
 		{ "", 0, ' ' },
@@ -840,12 +841,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu24, sizeof(mnu24) / sizeof(MFDBUTTONMENU));
 
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("FIL", OAPI_KEY_F, &ApolloRTCCMFD::menuSetEMPFileName);
 	RegisterFunction("NUM", OAPI_KEY_L, &ApolloRTCCMFD::menuSetEMPUplinkNumber);
 	RegisterFunction("INI", OAPI_KEY_I, &ApolloRTCCMFD::menuInitializeEMP);
 	RegisterFunction("EDI", OAPI_KEY_E, &ApolloRTCCMFD::menuEditEMPOctal);
 	RegisterFunction("DEL", OAPI_KEY_D, &ApolloRTCCMFD::menuDeleteEMPLine);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("LOA", OAPI_KEY_O, &ApolloRTCCMFD::menuLoadEMP);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
@@ -1475,7 +1476,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
-		{ "Update state vector", 0, 'U' },
+		{ "Initialization", 0, 'U' },
 		{ "GET for Vector 1", 0, 'G' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -1492,7 +1493,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 
-	RegisterFunction("UPD", OAPI_KEY_U, &ApolloRTCCMFD::menuSpaceDigitalsInit);
+	RegisterFunction("INI", OAPI_KEY_U, &ApolloRTCCMFD::menuSpaceDigitalsInit);
 	RegisterFunction("GET", OAPI_KEY_G, &ApolloRTCCMFD::menuGenerateSpaceDigitals);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
