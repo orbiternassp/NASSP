@@ -68,58 +68,60 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_CP_TRANSLUNAR17	37
 //Ends at Preliminary TEI-2 Update
 #define MST_CP_TRANSLUNAR18	38
-//Ends at Map Update
+//Ends at Map Update 1/2
 #define MST_CP_TRANSLUNAR19	39
 //Ends at LOI-1 Update
 #define MST_CP_TRANSLUNAR20	40
 //Ends at LOI-2 Update
 
 #define MST_CP_LUNAR_ORBIT1	101
-// Ends at TEI Calculation
+// Ends at TEI-2 Update
 #define MST_CP_LUNAR_ORBIT2	102
-// Ends at TEI Calculation
+// Ends at LOI-2 Update
 #define MST_CP_LUNAR_ORBIT3	103
-// Ends at TEI Calculation
+// Ends at Map Update 2/3
 #define MST_CP_LUNAR_ORBIT4	104
-// Ends at TEI Calculation
+// Ends at TEI-3 Calculation
 #define MST_CP_LUNAR_ORBIT5	105
-// Ends at TEI Calculation
+// Ends at Map Update 3/4
 #define MST_CP_LUNAR_ORBIT6	106
-// Ends at TEI Calculation
+// Ends at TEI-4 Calculation
 #define MST_CP_LUNAR_ORBIT7	107
-// Ends at TEI Calculation
+// Ends at Map Update 4/5
 #define MST_CP_LUNAR_ORBIT8	108
-// Ends at TEI Calculation
+// Blank
 #define MST_CP_LUNAR_ORBIT9	109
-// Ends at TEI Calculation
+// Ends at SV Update
 #define MST_CP_LUNAR_ORBIT10 110
-// Ends at TEI Calculation
+// Ends at TEI-5 Calculation
 #define MST_CP_LUNAR_ORBIT11 111
-// Ends at TEI Calculation
+// Ends at TEI-6 Calculation
 #define MST_CP_LUNAR_ORBIT12 112
-// Ends at TEI Calculation
+// Ends at Map Update 5/6
 #define MST_CP_LUNAR_ORBIT13 113
-// Ends at TEI Calculation
+// Ends at TEI-7 Calculation
 #define MST_CP_LUNAR_ORBIT14 114
-// Ends at TEI Calculation
+// Ends at Map Update 6/7
 #define MST_CP_LUNAR_ORBIT15 115
+// Ends at TEI-8 Calculation
 #define MST_CP_LUNAR_ORBIT16 116
+// Ends at Map Update 7/8
 #define MST_CP_LUNAR_ORBIT17 117
-// Ends at TEI Calculation
+// Ends at SV Update
 #define MST_CP_LUNAR_ORBIT18 118
-// Ends at TEI Calculation
+// Ends at TEI-9 Calculation
 #define MST_CP_LUNAR_ORBIT19 119
-// Ends at TEI Calculation
+// Ends at Map Update 8/9
 #define MST_CP_LUNAR_ORBIT20 120
-// Ends at TEI Calculation
+// Ends at Map Update 9/10
 #define MST_CP_LUNAR_ORBIT21 121
-// Ends at TEI Calculation
+// Ends at Preliminary TEI-10 Calculation
 #define MST_CP_LUNAR_ORBIT22 122
-// Ends at TEI Calculation
+// Ends at TEI-10 Calculation
 #define MST_CP_LUNAR_ORBIT23 123
-// Ends at TEI Calculation
+// Ends at TEI-11 Calculation
 #define MST_CP_LUNAR_ORBIT24 124
-// Ends at TEI BURN
+// Ends at Map Update 10 to TEI Burn
 
 #define MST_CP_TRANSEARTH1	201
 //Ends at Entry REFSMMAT update

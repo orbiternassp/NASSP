@@ -508,7 +508,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, Verb 66, target load");
+			sprintf(upDesc, "CSM state vector, Verb 66, Target load");
 		}
 	}
 	break;
@@ -1492,7 +1492,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, Verb 66, target load");
+			sprintf(upDesc, "CSM state vector, Verb 66, Target load");
 		}
 	}
 	break;
@@ -2198,7 +2198,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, V66, target load, Retrofire REFSMMAT");
+			sprintf(upDesc, "CSM state vector, V66, Target load, Retrofire REFSMMAT");
 		}
 	}
 	break;

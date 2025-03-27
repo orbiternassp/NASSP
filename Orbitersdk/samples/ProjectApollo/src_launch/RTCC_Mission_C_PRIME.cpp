@@ -195,7 +195,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.RV_MCC = sv2;
 		entopt.dv_max = 7000.0*0.3048;
 
-		EntryTargeting(&entopt, &res); //Target Load for uplink
+		EntryTargeting(&entopt, &res); //Target load for uplink
 
 		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -347,7 +347,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.vessel = calcParams.src;
 		entopt.dv_max = 7000.0*0.3048;
 
-		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target Load for uplink
+		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target load for uplink
 
 		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -385,6 +385,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		MATRIX3 REFSMMAT;
 		VECTOR3 dV_LVLH, dv;
 		char manname[8];
+		char ullage[10];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -514,7 +515,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "LM state vector, target load");
+					sprintf(upDesc, "LM state vector, Target load");
 				}
 			}
 		}
@@ -618,8 +619,19 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				manopt.REFSMMAT = REFSMMAT;
 				manopt.RV_MCC = sv_ephem;
 
+				//No ullage remark for pre-LOI SPS burns
+				if (manopt.enginetype == RTCC_ENGINETYPE_CSMSPS)
+				{
+					sprintf(ullage, "No ullage");
+				}
+				else
+				{
+					sprintf(ullage, "");
+				}
+
 				AP11ManeuverPAD(manopt, *form);
 				sprintf(form->purpose, manname);
+				sprintf(form->remarks, ullage);
 
 				char buffer3[1000];
 
@@ -630,7 +642,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "LM & CSM state vectors, target load, LOI-2 REFSMMAT");
+					sprintf(upDesc, "LM & CSM state vectors, Target load, LOI-2 REFSMMAT");
 				}
 			}
 		}
@@ -683,25 +695,35 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		manopt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		AP11ManeuverPAD(manopt, *form);
-		sprintf(form->purpose, "LOI-1");
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
 
 		if (fcn == 31)
 		{
+			sprintf(form->purpose, "LOI-1");
+			sprintf(form->remarks, "No ullage,  Horizon window: At ignition minus 2 minutes; 40 degrees unlit,  At ignition; 27 degrees unlit");
+
 			char buffer1[1000];
 			char buffer2[1000];
+			char buffer3[1000];
 
-			AGCStateVectorUpdate(buffer1, sv, true);
+			//CSM & LM state vector
+			AGCStateVectorUpdate(buffer1, sv, true, false);
+			AGCStateVectorUpdate(buffer3, sv, false, false);
 			CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
-			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+			sprintf(uplinkdata, "%s%s%s", buffer1, buffer3, buffer2);
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load");
+				sprintf(upDesc, "CSM & LM state vectors, Target load");
 			}
+		}
+		else
+		{
+			sprintf(form->purpose, "Preliminary LOI-1");
+			sprintf(form->remarks, "No ullage");
 		}
 	}
 	break;
@@ -903,17 +925,17 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		if (fcn == 41)
 		{
 			//PC+2
-			sprintf(form->remarks, "4 Jet,%s%s", mcc4scrub, alignment);
+			sprintf(form->remarks, "4 jet translation,%s%s", mcc4scrub, alignment);
 		}
 		else if (fcn == 42)
 		{
 			//Flyby PC+2 Fast Return
-			sprintf(form->remarks, "No Ullage, Assumes Flyby,%s", alignment);
+			sprintf(form->remarks, "No ullage, Assumes Flyby,%s", alignment);
 		}
 		else
 		{
 			//MCC4 PC+2 Fast Return
-			sprintf(form->remarks, "No Ullage,%s%s", mcc4scrub, alignment);
+			sprintf(form->remarks, "No ullage,%s%s", mcc4scrub, alignment);
 		}
 
 		//Save parameters for further use
@@ -943,12 +965,14 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "TEI-1");
 			entopt.t_zmin = 122.0*3600.0;
 			sv1 = coast(sv1, 0.5*3600.0);
+			sprintf(form->remarks, "Ullage: 2 jet (B/D), 20 seconds,  X-axis on horizon at ignition minus 3 min, Assumes LOI-1");
 		}
 		else
 		{
 			sprintf(manname, "TEI-2");
 			entopt.t_zmin = 146.0*3600.0;
 			sv1 = coast(sv1, 2.5*3600.0);
+			sprintf(form->remarks, "Ullage: 2 jet (B/D), 20 seconds,  Horizon on minus 2 deg line at ignition minus 3 min, Assumes LOI-1");
 		}
 
 		entopt.EntryLng = -165.0*RAD;
@@ -988,6 +1012,13 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP10MAPUPDATE upd_hyper, upd_ellip, upd_ellip2;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
+		AP11LMARKTRKPAD tempPAD;
+		LMARKTRKPADOpt landmarkopt;
+
+		char buffer1[100];
+		char buffer2[100];
+		char buffer3[100];
+		char buffer4[100];
 
 		sv0 = StateVectorCalcEphem(calcParams.src);
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
@@ -1001,7 +1032,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		LunarOrbitMapUpdate(sv3, upd_ellip2);
 
 		form->type = 3;
-		form->Rev = 1;
+		sprintf(form->RevText, "1/2");
 		form->LOSGET = upd_hyper.LOSGET;
 		form->PMGET = upd_hyper.PMGET;
 		form->AOSGET = upd_ellip.AOSGET;
@@ -1011,6 +1042,43 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->PMGET2 = upd_ellip2.PMGET;
 		form->AOSGET2 = upd_ellip2.AOSGET;
 		form->SSGET2 = upd_ellip2.SSGET;
+
+		landmarkopt.sv0 = sv1;
+		landmarkopt.entries = 4;
+		landmarkopt.Elevation = 90.0*RAD;
+
+		//CP-1
+		landmarkopt.LmkTime[0] = 71.0*3600.0;
+		landmarkopt.lat[0] = -5.250*RAD;
+		landmarkopt.lng[0] = -162.700*RAD;
+		landmarkopt.alt[0] = 0.0*1852.0;
+
+		//CP-2
+		landmarkopt.LmkTime[1] = 71.0*3600.0;
+		landmarkopt.lat[1] = -10.200*RAD;
+		landmarkopt.lng[1] = 155.100*RAD;
+		landmarkopt.alt[1] = 0.0*1852.0;
+
+		//CP-3
+		landmarkopt.LmkTime[2] = 71.0*3600.0 + 30.0*60.0;
+		landmarkopt.lat[2] = -9.100*RAD;
+		landmarkopt.lng[2] = 95.900*RAD;
+		landmarkopt.alt[2] = 0.0*1852.0;
+
+		//B-1
+		landmarkopt.LmkTime[3] = 71.0*3600.0 + 30.0*60.0;
+		landmarkopt.lat[3] = 2.675*RAD;
+		landmarkopt.lng[3] = 35.025*RAD;
+		landmarkopt.alt[3] = -0.99*1852.0;
+
+		LandmarkTrackingPAD(landmarkopt, tempPAD);
+
+		OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T2[0]);
+		OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T2[1]);
+		OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T2[2]);
+		OrbMech::format_time_XXHMMSS(buffer4, tempPAD.T2[3]);
+
+		sprintf(form->remarks, "CP-1 TCA: %s  CP-2 TCA: %s  CP-3 TCA: %s  B-1 TCA: %s", buffer1, buffer2, buffer3, buffer4);
 	}
 	break;
 	case 61: //Map Update Rev 2/3
@@ -1020,6 +1088,10 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP10MAPUPDATE upd_ellip, upd_ellip2;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
+		AP11LMARKTRKPAD tempPAD;
+		LMARKTRKPADOpt landmarkopt;
+
+		char buffer1[100];
 
 		sv0 = StateVectorCalcEphem(calcParams.src);
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
@@ -1031,12 +1103,28 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		LunarOrbitMapUpdate(sv1, upd_ellip2);
 
 		form->type = 1;
-		form->Rev = 2;
+		sprintf(form->RevText, "2/3");
 		form->LOSGET = upd_ellip.LOSGET;
 		form->SRGET = upd_ellip.SRGET;
 		form->PMGET = upd_ellip.PMGET;
 		form->AOSGET = upd_ellip2.AOSGET;
 		form->SSGET = upd_ellip2.SSGET;
+
+		landmarkopt.sv0 = sv1;
+		landmarkopt.entries = 1;
+		landmarkopt.Elevation = 90.0*RAD;
+
+		//B-1
+		landmarkopt.LmkTime[0] = 74.0*3600.0;
+		landmarkopt.lat[0] = 2.675*RAD;
+		landmarkopt.lng[0] = 35.025*RAD;
+		landmarkopt.alt[0] = -0.99*1852.0;
+
+		LandmarkTrackingPAD(landmarkopt, tempPAD);
+
+		OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T1[0]);
+
+		sprintf(form->remarks, "B-1 ACQ: %s", buffer1);
 	}
 	break;
 	case 62: //Map Update Rev 3/4
@@ -1051,42 +1139,204 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP10MAPUPDATE upd_ellip;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
+		AP11LMARKTRKPAD tempPAD;
+		LMARKTRKPADOpt landmarkopt;
+
+		char buffer1[100];
+		char buffer2[100];
+		char buffer3[100];
+		char buffer4[100];
+		char buffer5[100];
 
 		sv0 = StateVectorCalcEphem(calcParams.src);
 
+		landmarkopt.Elevation = 90.0*RAD;
+
 		if (fcn == 62)
 		{
-			form->Rev = 3;
+			sprintf(form->RevText, "3/4");
 			sv1 = sv0;
+
+			landmarkopt.sv0 = sv1;
+			landmarkopt.entries = 2;
+
+			//IP-1 (B-1)
+			landmarkopt.LmkTime[0] = 76.0*3600.0;
+			landmarkopt.lat[0] = 0.580*RAD;
+			landmarkopt.lng[0] = 43.730*RAD;
+			landmarkopt.alt[0] = 0.0*1852.0;
+
+			//IP-2 (B-1)
+			landmarkopt.LmkTime[1] = 76.0*3600.0;
+			landmarkopt.lat[1] = 1.500*RAD;
+			landmarkopt.lng[1] = 40.100*RAD;
+			landmarkopt.alt[1] = 0.00*1852.0;
+
+			LandmarkTrackingPAD(landmarkopt, tempPAD);
+
+			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T1[0]);
+			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T1[1]);
+
+			sprintf(form->remarks, "IP-1 for B-1 ACQ: %s  IP-2 for B-1 ACQ: %s", buffer1, buffer2);
 		}
 		else if (fcn == 63)
 		{
-			form->Rev = 4;
+			form->Rev = 4/5;
 			sv1 = coast(sv0, 15.0*60.0);
+
+			landmarkopt.sv0 = sv1;
+			landmarkopt.entries = 2;
+
+			//IP-1 (CP-2)
+			landmarkopt.LmkTime[0] = 77.0*3600.0;
+			landmarkopt.lat[0] = -8.250*RAD;
+			landmarkopt.lng[0] = 105.750*RAD;
+			landmarkopt.alt[0] = 0.0*1852.0;
+
+			//IP-1 (B-1)
+			landmarkopt.LmkTime[1] = 77.0*3600.0 + 30.0*60.0;
+			landmarkopt.lat[1] = 0.580*RAD;
+			landmarkopt.lng[1] = 43.730*RAD;
+			landmarkopt.alt[1] = 0.0*1852.0;
+
+			LandmarkTrackingPAD(landmarkopt, tempPAD);
+
+			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T1[0]);
+			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T2[1]);
+
+			sprintf(form->remarks, "IP-1 for CP-2 ACQ: %s  IP-1 for B-1 TCA: %s", buffer1, buffer2);
 		}
 		else if (fcn == 64)
 		{
-			form->Rev = 5;
+			sprintf(form->RevText, "5/6");
 			sv1 = sv0;
+
+			landmarkopt.sv0 = sv1;
+			landmarkopt.entries = 3;
+
+			//IP-1 (B-1)
+			landmarkopt.LmkTime[0] = 80.0*3600.0;
+			landmarkopt.lat[0] = 0.580*RAD;
+			landmarkopt.lng[0] = 43.730*RAD;
+			landmarkopt.alt[0] = 0.0*1852.0;
+
+			//CP-1
+			landmarkopt.LmkTime[1] = 79.0*3600.0;
+			landmarkopt.lat[1] = -5.250*RAD;
+			landmarkopt.lng[1] = -162.700*RAD;
+			landmarkopt.alt[1] = 0.0*1852.0;
+
+			//CP-2
+			landmarkopt.LmkTime[2] = 79.0*3600.0;
+			landmarkopt.lat[2] = -10.200*RAD;
+			landmarkopt.lng[2] = 155.100*RAD;
+			landmarkopt.alt[2] = 0.0*1852.0;
+
+			LandmarkTrackingPAD(landmarkopt, tempPAD);
+
+			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T2[0]);
+			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T1[1]);
+			OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T1[2]);
+
+			sprintf(form->remarks, "IP-1 for B-1 TCA: %s  CP-1 ACQ: %s  CP-2 ACQ: %s", buffer1, buffer2, buffer3);
 		}
 		else if (fcn == 65)
 		{
-			form->Rev = 6;
+			sprintf(form->RevText, "6/7");
 			sv1 = sv0;
+
+			landmarkopt.sv0 = sv1;
+			landmarkopt.entries = 5;
+
+			//IP-1 (B-1)
+			landmarkopt.LmkTime[0] = 82.0*3600.0;
+			landmarkopt.lat[0] = 0.580*RAD;
+			landmarkopt.lng[0] = 43.730*RAD;
+			landmarkopt.alt[0] = 0.0*1852.0;
+
+			//CP-1
+			landmarkopt.LmkTime[1] = 81.0*3600.0;
+			landmarkopt.lat[1] = -5.250*RAD;
+			landmarkopt.lng[1] = -162.700*RAD;
+			landmarkopt.alt[1] = 0.0*1852.0;
+
+			//CP-2
+			landmarkopt.LmkTime[2] = 81.0*3600.0;
+			landmarkopt.lat[2] = -10.200*RAD;
+			landmarkopt.lng[2] = 155.100*RAD;
+			landmarkopt.alt[2] = 0.0*1852.0;
+
+			//CP-3
+			landmarkopt.LmkTime[3] = 81.0*3600.0 + 30.0*60.0;
+			landmarkopt.lat[3] = -9.100*RAD;
+			landmarkopt.lng[3] = 95.900*RAD;
+			landmarkopt.alt[3] = 0.0*1852.0;
+
+			//B-1
+			landmarkopt.LmkTime[4] = 81.0*3600.0 + 30.0*60.0;
+			landmarkopt.lat[4] = 2.675*RAD;
+			landmarkopt.lng[4] = 35.025*RAD;
+			landmarkopt.alt[4] = -0.99*1852.0;
+
+			LandmarkTrackingPAD(landmarkopt, tempPAD);
+
+			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T2[0]);
+			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T1[1]);
+			OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T1[2]);
+			OrbMech::format_time_XXHMMSS(buffer4, tempPAD.T1[3]);
+			OrbMech::format_time_XXHMMSS(buffer5, tempPAD.T1[4]);
+
+			sprintf(form->remarks, "IP-1 for B-1 TCA: %s  CP-1 ACQ: %s  CP-2 ACQ: %s  CP-3 ACQ: %s  B-1 ACQ: %s", buffer1, buffer2, buffer3, buffer4, buffer5);
 		}
 		else if (fcn == 66)
 		{
-			form->Rev = 7;
+			sprintf(form->RevText, "7/8");
 			sv1 = sv0;
+
+			landmarkopt.sv0 = sv1;
+			landmarkopt.entries = 4;
+
+			//CP-1
+			landmarkopt.LmkTime[0] = 71.0*3600.0;
+			landmarkopt.lat[0] = -5.250*RAD;
+			landmarkopt.lng[0] = -162.700*RAD;
+			landmarkopt.alt[0] = 0.0*1852.0;
+
+			//CP-2
+			landmarkopt.LmkTime[1] = 71.0*3600.0;
+			landmarkopt.lat[1] = -10.200*RAD;
+			landmarkopt.lng[1] = 155.100*RAD;
+			landmarkopt.alt[1] = 0.0*1852.0;
+
+			//CP-3
+			landmarkopt.LmkTime[2] = 71.0*3600.0 + 30.0*60.0;
+			landmarkopt.lat[2] = -9.100*RAD;
+			landmarkopt.lng[2] = 95.900*RAD;
+			landmarkopt.alt[2] = 0.0*1852.0;
+
+			//B-1
+			landmarkopt.LmkTime[3] = 71.0*3600.0 + 30.0*60.0;
+			landmarkopt.lat[3] = 2.675*RAD;
+			landmarkopt.lng[3] = 35.025*RAD;
+			landmarkopt.alt[3] = -0.99*1852.0;
+
+			LandmarkTrackingPAD(landmarkopt, tempPAD);
+
+			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T1[0]);
+			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T1[1]);
+			OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T1[2]);
+			OrbMech::format_time_XXHMMSS(buffer4, tempPAD.T1[3]);
+
+			sprintf(form->remarks, "CP-1 ACQ: %s  CP-2 ACQ: %s  CP-3 ACQ: %s  B-1 ACQ: %s", buffer1, buffer2, buffer3, buffer4);
 		}
 		else if (fcn == 67)
 		{
-			form->Rev = 8;
+			sprintf(form->RevText, "8/9");
 			sv1 = sv0;
 		}
 		else if (fcn == 68)
 		{
-			form->Rev = 9;
+			sprintf(form->RevText, "9/10");
 			sv1 = coast(sv0, 35.0*60.0);
 		}
 
@@ -1100,7 +1350,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->SSGET = upd_ellip.SSGET;
 	}
 	break;
-	case 69: //Map Update TEI
+	case 69: //Map Update Rev 10 (TEI)
 	{
 		EphemerisData sv0, sv1;
 		PLAWDTOutput WeightsTable, WeightsTable2;
@@ -1169,7 +1419,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;
@@ -1253,7 +1503,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 		else if (fcn == 113) //Preliminary TEI-10
 		{
-			sprintf(manname, "TEI-10");
+			sprintf(manname, "Preliminary TEI-10");
 		}
 		else if (fcn == 200) //TEI-10
 		{
@@ -1318,7 +1568,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM and LM state vectors, target load");
+				sprintf(upDesc, "CSM and LM state vectors, Target load");
 			}
 		}
 
@@ -1527,7 +1777,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "LM state vector, target load, Entry REFSMMAT");
+					sprintf(upDesc, "LM state vector, Target load, Entry REFSMMAT");
 				}
 			}
 			else if (fcn == 204)//MCC6
@@ -1542,7 +1792,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "LM state vector, target load");
+					sprintf(upDesc, "LM state vector, Target load");
 				}
 			}
 			else if (fcn == 205)//Prel. MCC7
@@ -1572,7 +1822,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM+LM state vector, target load, Entry REFSMMAT");
+					sprintf(upDesc, "CSM+LM state vector, Target load, Entry REFSMMAT");
 				}
 			}
 			else if (fcn == 300)//generic MCC
@@ -1589,7 +1839,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector, target load, Desired Entry REFSMMAT");
+					sprintf(upDesc, "CSM state vector, Target load, Desired Entry REFSMMAT");
 				}
 			}
 		}
@@ -1662,7 +1912,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM and LM state vectors, entry target");
+			sprintf(upDesc, "CSM and LM state vectors, Entry target");
 		}
 	}
 	break;
