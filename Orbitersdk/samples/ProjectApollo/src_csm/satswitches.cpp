@@ -1077,6 +1077,29 @@ int DCBusIndicatorSwitch::GetState()
 		return 0;
 }
 
+SaturnDCVoltMeter::SaturnDCVoltMeter(double minVal, double maxVal, double vMin, double vMax) :
+	ElectricMeter(minVal, maxVal, vMin, vMax)
+{
+}
+
+void SaturnDCVoltMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch)
+{
+	ElectricMeter::Init(p0, p1, row, dcindicatorswitch);
+	DCIndicatorSwitch = dcindicatorswitch;
+}
+
+double SaturnDCVoltMeter::QueryValue()
+{
+	//Fuel Cells Return Zero
+	if (DCIndicatorSwitch->GetState() <= 2)
+	{
+		return 0.0;
+	}
+	else
+	{
+		return DCIndicatorSwitch->Voltage();
+	}
+}
 
 SaturnDCAmpMeter::SaturnDCAmpMeter(double minVal, double maxVal, double vMin, double vMax) :
 	ElectricMeter(minVal, maxVal, vMin, vMax)
@@ -1091,11 +1114,20 @@ void SaturnDCAmpMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn
 
 double SaturnDCAmpMeter::QueryValue()
 {
-	// Battery Charger
-	if (DCIndicatorSwitch->GetState() == 7)
+	// Main Busses & Pyro Batteries Return Zero
+	if (DCIndicatorSwitch->GetState() == 3 || DCIndicatorSwitch->GetState() == 4 || DCIndicatorSwitch->GetState() >= 9)
+	{
+		return 0.0;
+	}
+	// Battery Charger Scaling
+	else if (DCIndicatorSwitch->GetState() == 7)
+	{
 		return DCIndicatorSwitch->Current() * 20.0;
-
-	return DCIndicatorSwitch->Current();
+	}
+	else
+	{
+		return DCIndicatorSwitch->Current();
+	}
 }
 
 void BMAGPowerRotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, BMAG *Unit)

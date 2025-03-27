@@ -359,11 +359,19 @@ void AGOP::ReferenceBodyComputation(const AGOPInputs &in, AGOPOutputs &out)
 
 	do
 	{
-		err = Interpolation(GMT, sv);
-		if (err)
+		//Mode 1 only needs a single state vector
+		if (in.Mode == 1)
 		{
-			WriteError(out, 4);
-			return;
+			sv = SingleStateVector();
+		}
+		else
+		{
+			err = Interpolation(GMT, sv);
+			if (err)
+			{
+				WriteError(out, 4);
+				return;
+			}
 		}
 
 		err = pRTCC->PLEFEM(1, sv.GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
@@ -2179,7 +2187,8 @@ void AGOP::WriteError(AGOPOutputs &out, int err)
 
 void AGOP::RightAscension_Display(char *Buff, double angle)
 {
-	double angle2 = abs(round(angle*3600.0));
+	if (angle < 0.0) angle += 360.0;
+	double angle2 = round(angle*3600.0);
 	sprintf_s(Buff, 32, "%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
 }
 
@@ -2442,7 +2451,7 @@ VECTOR3 AGOP::GetNBUnitVectorFromInstrument(const AGOPInputs &in, int set) const
 	else if (in.Instrument == 1)
 	{
 		// LM COAS
-		return GetLMCOASVector(in.COASElevationAngle[0], in.COASPositionAngle[0], in.LMCOASAxis);
+		return GetLMCOASVector(in.COASElevationAngle[set], in.COASPositionAngle[set], in.LMCOASAxis);
 	}
 	else if (in.Instrument == 2)
 	{
@@ -2451,12 +2460,12 @@ VECTOR3 AGOP::GetNBUnitVectorFromInstrument(const AGOPInputs &in, int set) const
 		double AZ, EL;
 
 		GetAOTNBAngle(in.AOTDetent, AZ, EL);
-		return GetAOTNBVector(EL, AZ, in.AOTReticleAngle[0], in.AOTSpiraleAngle[0], in.AOTLineID[0]);
+		return GetAOTNBVector(EL, AZ, in.AOTReticleAngle[set], in.AOTSpiraleAngle[set], in.AOTLineID[set]);
 	}
 	else
 	{
 		// CSM COAS
-		return GetCSMCOASVector(in.COASElevationAngle[0], in.COASPositionAngle[0]);
+		return GetCSMCOASVector(in.COASElevationAngle[set], in.COASPositionAngle[set]);
 	}
 }
 

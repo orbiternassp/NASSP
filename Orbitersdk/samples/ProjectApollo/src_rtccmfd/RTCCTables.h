@@ -617,6 +617,7 @@ struct TimeConstraintsTable
 	double GMTPI = 0.0;
 	std::string StationID;
 	int TUP = 0;
+	int NV = 0;
 	double h_a = 0.0;
 	double h_p = 0.0;
 };

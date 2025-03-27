@@ -2055,7 +2055,7 @@ protected:
 	ACVoltMeter CSMACVoltMeter;
 
 	SwitchRow DCVoltMeterRow;
-	DCVoltMeter CSMDCVoltMeter;
+	SaturnDCVoltMeter CSMDCVoltMeter;
 
 	SwitchRow DCAmpMeterRow;
 	SaturnDCAmpMeter DCAmpMeter;

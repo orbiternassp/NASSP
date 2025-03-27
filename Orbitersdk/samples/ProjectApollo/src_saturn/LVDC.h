@@ -123,8 +123,10 @@ public:
 private:								// Saturn LV
 
 	//Internal Functions
+	void InterruptProcessing();
 	bool GetInterrupt(int rupt);
 	void ProcessInterrupt(int rupt);
+	void ProcessExternalInterrupt(int rupt);
 	void SystemTimeUpdateRoutine();
 	void TimeBaseChangeRoutine();
 	void Timer1Interrupt(bool timer1schedule);
@@ -221,6 +223,8 @@ private:								// Saturn LV
 
 	//Hardware Counters
 	int Timer1Counter, Timer2Counter;
+	//Overflow indicators
+	bool Timer1Overflow, Timer2Overflow;
 
 	//Task tables and indizes
 
@@ -355,6 +359,7 @@ private:								// Saturn LV
 	int IGMCycle;									// IGM Cycle Counter (for debugging)
 	bool SIICenterEngineCutoff;
 	bool FixedAttitudeBurn;
+	bool SIIOrbitInsertion;							// Use S-II for orbit insertion (Skylab 1)
 	double t_TB8Start;
 
 	// Event Times
@@ -871,8 +876,8 @@ private:								// Saturn LV
 	static const unsigned MSKSSCLS1 = 0000003770U; //Class 1 mask
 	static const unsigned MSKSSCLS3 = 0077574000U; //Class 3 mask (NTRS document had 077774000, but that would make TB6D class 3, which is not the case)
 	static const unsigned MSKSSWV   = 0003000000U; //Water valve mask
-	//DVASW
 
+	//DVASW
 	//Class 1
 	static const unsigned MSKSSS4C0 = 0400000000U; //S-IVB cutoff
 	static const unsigned MSKSSSPEC = 0200000000U; //S-IVB pump purge

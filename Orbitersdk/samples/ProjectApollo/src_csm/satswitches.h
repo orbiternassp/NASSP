@@ -441,6 +441,19 @@ public:
 	void DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle);
 };
 
+class SaturnDCVoltMeter : public ElectricMeter
+{
+public:
+	SaturnDCVoltMeter(double minVal, double maxVal, double vMin = 219.6, double vMax = (-39.6));
+
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, PowerStateRotationalSwitch *dcindicatorswitch);
+
+	double QueryValue();
+
+protected:
+	PowerStateRotationalSwitch *DCIndicatorSwitch;
+};
+
 ///
 /// \brief DC current meter for Saturn panel.
 ///

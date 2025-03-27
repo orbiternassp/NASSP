@@ -1009,10 +1009,10 @@ void LEM::JoystickTimestep(double simdt)
 			double yawLeft = aca_keyboard_deflection[THGROUP_ATT_YAWLEFT - THGROUP_ATT_PITCHUP];
 			double yawRight = aca_keyboard_deflection[THGROUP_ATT_YAWRIGHT - THGROUP_ATT_PITCHUP];
 			if (yawLeft > 0) {
-				rhc_pos[2] = (int)(32768 - yawLeft * 32768);
+				rhc_pos[2] = (int)(32768 + yawLeft * 32768);
 			}
 			else if (yawRight > 0) {
-				rhc_pos[2] = (int)(32768 + yawRight * 32768);
+				rhc_pos[2] = (int)(32768 - yawRight * 32768);
 			}
 		}
 
