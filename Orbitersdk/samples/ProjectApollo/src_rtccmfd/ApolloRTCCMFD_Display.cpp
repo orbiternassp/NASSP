@@ -3681,12 +3681,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		case 2:
 			Text(skp, 13, 0, "LGC CSM NAV UPDATE");
 			Text(skp, 38, 0, "0278");
-			tab = &GC->rtcc->CZNAVGEN.CMCLEMUpdate;
+			tab = &GC->rtcc->CZNAVGEN.LGCCSMUpdate;
 			break;
 		case 3:
 			Text(skp, 13, 0, "LGC LM NAV UPDATE");
 			Text(skp, 38, 0, "0279");
-			tab = &GC->rtcc->CZNAVGEN.CMCLEMUpdate;
+			tab = &GC->rtcc->CZNAVGEN.LGCLEMUpdate;
 			break;
 		}
 		Text(skp, 1, 1, "LOAD NO");
