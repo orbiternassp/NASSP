@@ -315,6 +315,7 @@ AP11ManPADOpt::AP11ManPADOpt()
 	sxtstardtime = 0.0;
 	UllageThrusterOpt = true;
 	UllageDT = 0.0;
+	PrefGDCStars = 0;
 }
 
 AP11LMManPADOpt::AP11LMManPADOpt()
@@ -4368,7 +4369,7 @@ void RTCC::AP11ManeuverPAD(const AP11ManPADOpt &opt, AP11MNV &pad)
 	IMUangles = _V(OG, IG, MG);
 
 	//Star checks
-	GDCangles = OrbMech::backupgdcalignment(EZJGSTAR, opt.REFSMMAT, sv1.R, R_E, GDCset);
+	GDCangles = OrbMech::backupgdcalignment(EZJGSTAR, opt.REFSMMAT, sv1.R, R_E, opt.PrefGDCStars, GDCset);
 
 	EphemerisData sv_sxt = coast(sv1, opt.sxtstardtime, opt.WeightsTable.ConfigWeight, opt.WeightsTable.ConfigArea, opt.WeightsTable.KFactor, false);
 
@@ -4416,9 +4417,13 @@ void RTCC::AP11ManeuverPAD(const AP11ManPADOpt &opt, AP11MNV &pad)
 		{
 			sprintf(pad.SetStars, "Navi, Polaris");
 		}
-		else
+		else if (GDCset == 2)
 		{
 			sprintf(pad.SetStars, "Acrux, Atria");
+		}
+		else
+		{
+			sprintf(pad.SetStars, "Sirius, Rigel");
 		}
 	}
 	pad.Shaft = Manshaft*DEG;

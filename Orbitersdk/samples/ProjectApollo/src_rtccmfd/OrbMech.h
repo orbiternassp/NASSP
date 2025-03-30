@@ -275,7 +275,7 @@ namespace OrbMech {
 	void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA);
 	MATRIX3 AXISGEN(VECTOR3 s_NBA, VECTOR3 s_NBB, VECTOR3 s_SMA, VECTOR3 s_SMB);
 	MATRIX3 ROTCOMP(VECTOR3 U_R, double A);
-	VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set);
+	VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int prefset, int &set);
 	MATRIX3 AGSStarAlignment(const VECTOR3 *navstars, VECTOR3 Att1, VECTOR3 Att2, int star1, int star2, int axis, int detent, double AOTCounter);
 	bool oneclickcoast(int Epoch, VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	bool oneclickcoast(int Epoch, VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, int gravref, int &gravout);

@@ -2871,30 +2871,43 @@ int FindNearestStar(const VECTOR3 *navstars, VECTOR3 U_LOS, VECTOR3 R_C, double 
 	return star;
 }
 
-VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
+VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int prefset, int &set)
 {
-	int starset[3][2];
+	int starset[4][2], maxset;
 	double a, SA, TA1, dTA, TA2;
 	VECTOR3 s_SMA, s_SMB, s_NBA, s_NBB, imuang;
 	MATRIX3 SBNB,SMNB;
 
+	maxset = 3;
 	a = -0.5676353234;
 	TA1 = 32.5*RAD; //50° mark is at 7.5° trunnion plus 25° from center 
 	SA = PI;
 
 	//Star 1: 50° mark. Star 2: R line
+
+	//Deneb, Vega
 	starset[0][0] = 34;
 	starset[0][1] = 29;
 
+	//Navi, Polaris
 	starset[1][0] = 2;
 	starset[1][1] = 4;
 
+	//Acrux, Atria
 	starset[2][0] = 20;
 	starset[2][1] = 27;
 
+	//Sirius, Rigel
+	starset[3][0] = 12;
+	starset[3][1] = 9;
+
 	SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
 
-	for (set = 0; set < 3; set++)
+	//In case the input is nonsense
+	prefset = max(0, min(prefset, maxset));
+	set = prefset;
+
+	do
 	{
 		//Get star unit vectors
 		s_SMA = navstars[starset[set][0]];
@@ -2921,7 +2934,15 @@ VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, d
 		{
 			return imuang;
 		}
-	}
+		//Try next one
+		set++;
+		//Starting from the beginning?
+		if (set > maxset)
+		{
+			set = 0;
+		}
+		//Reached first set again?
+	} while (set != prefset);
 	return _V(0, 0, 0);
 }
 
