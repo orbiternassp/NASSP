@@ -7432,51 +7432,12 @@ void ApolloRTCCMFD::set_LiftoffDT(double dt)
 
 void ApolloRTCCMFD::menuLLTPThresholdTime()
 {
-	bool LLTPThresholdTimeInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the threshold time for liftoff (Format: hhh:mm:ss)", LLTPThresholdTimeInput, 0, 20, (void*)this);
-}
-
-bool LLTPThresholdTimeInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss, get;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		get = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_LLTPThresholdTime(get);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LLTPThresholdTime(double get)
-{
-	GC->rtcc->med_k50.GETTH = get;
+	GenericGETInput(&GC->rtcc->PZLLTT.GETTH, "Choose the threshold time for liftoff (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::menuLLTPVectorTime()
 {
-	if (GC->MissionPlanningActive)
-	{
-		bool LLTPVectorTimeInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the vector time for liftoff (Format: hhh:mm:ss)", LLTPVectorTimeInput, 0, 20, (void*)this);
-	}
-}
-
-bool LLTPVectorTimeInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss, get;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		get = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_LLTPVectorTime(get);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LLTPVectorTime(double get)
-{
-	GC->rtcc->med_k50.GETV = get;
+	GenericGETInput(&GC->rtcc->PZLLTT.GETV, "Choose the vector time for liftoff (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::menuLunarLiftoffVHorInput()

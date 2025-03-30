@@ -3539,7 +3539,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (GC->rtcc->EMSFFV(GC->rtcc->GMTfromGET(GC->rtcc->med_k50.GETV), RTCC_MPT_CSM, sv_CSM))
+			if (GC->rtcc->EMSFFV(GC->rtcc->GMTfromGET(GC->rtcc->PZLLTT.GETV), RTCC_MPT_CSM, sv_CSM))
 			{
 				Result = DONE;
 				break;
@@ -3561,7 +3561,7 @@ int ARCore::subThread()
 		opt.sv_CSM = sv_CSM;
 		opt.Y_S = GC->rtcc->PZLTRT.YawSteerCap;
 		opt.V_Z_NOM = 32.0*0.3048;
-		opt.T_TH = GC->rtcc->GMTfromGET(GC->rtcc->med_k50.GETTH);
+		opt.T_TH = GC->rtcc->GMTfromGET(GC->rtcc->PZLLTT.GETTH);
 		opt.R_LS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 		opt.lat_LS = GC->rtcc->BZLAND.lat[0];
 		opt.lng_LS = GC->rtcc->BZLAND.lng[0];
