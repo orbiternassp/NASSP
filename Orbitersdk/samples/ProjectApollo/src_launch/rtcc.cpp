@@ -2861,294 +2861,6 @@ void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
 	PoweredFlightProcessor(opt->RV_MCC, TIG_imp, opt->enginetype, LMmass, DV_imp, true, res->P30TIG, res->dV_LVLH, res->sv_preburn, res->sv_postburn);
 }
 
-int RTCC::PCZYCF(double R1, double R2, double PHIT, double DELT, double VXI2, double VYI2, double VXF1, double VYF1, double SQRMU, int NREVS, int body, double &a, double &e, double &f_T, double &t_PT)
-{
-	double S, P, Q, a_lim, delta_lim, SIGN, dt_lim, S_L, S_P, S_Q, eps, delta, TERM, P_P, a_i, AFAIL, da, da_i, a_N, C_N, P_T, sin_f_T, cos_f_T;
-	double eps_N, delta_N, C_ep, C_e, C_f, C_em, C_fm, C_fp, a_Ni, da_N, dt_N, da_Ni, a_apo, e_apo, f_T_apo, t_pt_apo, V_T, gamma_T, l_R, f_R, gamma_R, V_R, DV_T, DV_T_apo;
-	int i, k, i_N, L;
-
-	if (body == BODY_EARTH)
-	{
-		AFAIL = 1.02*OrbMech::R_Earth;
-	}
-	else
-	{
-		AFAIL = OrbMech::R_Moon;
-	}
-
-	S = sqrt(R1*R1 + R2 * R2 - 2.0*R1*R2*cos(PHIT));
-	P = R1 + R2 + S;
-	Q = R1 + R2 - S;
-	a_lim = P / 4.0;
-	delta_lim = 2.0*atan(sqrt(Q / (P - Q)));
-	i = 0;
-	k = 0;
-	SIGN = sign(PHIT - PI);
-	if (NREVS > 0)
-	{
-		goto RTCC_PCZYCF_4_1;
-	}
-	if (DELT <= 1.0 / (6.0*SQRMU)*(pow(P, 1.5) + SIGN * pow(Q, 1.5)))
-	{
-		return -1;
-	}
-	//Set semi-major axis to start iteration
-	a = a_lim + 10000.0*0.3048;
-	dt_lim = pow(a_lim, 1.5) / SQRMU * (PI + SIGN * (delta_lim - sin(delta_lim)));
-	if (DELT > dt_lim)
-	{
-		S_L = SIGN;
-	}
-	else
-	{
-		S_L = -SIGN;
-	}
-RTCC_PCZYCF_2_1:
-	i++;
-	if (i > 15)
-	{
-		a = a_i;
-	}
-	S_P = sqrt(P / (4.0*a - P));
-	S_Q = sqrt(Q / (4.0*a - Q));
-	eps = 2.0*atan(S_P);
-	delta = 2.0*atan(S_Q);
-	if (i > 15)
-	{
-		goto RTCC_PCZYCF_7_1;
-	}
-	if (i > 1)
-	{
-		goto RTCC_PCZYCF_3_1;
-	}
-	if (DELT <= dt_lim || k > 0)
-	{
-		SIGN = 1.0;
-		TERM = PI2 * (double)NREVS;
-	}
-	else
-	{
-		SIGN = -1.0;
-		TERM = PI2 * (double)(NREVS + 1);
-	}
-RTCC_PCZYCF_3_1:
-	P_P = TERM + SIGN * (eps - sin(eps) - S_L * (delta - sin(delta)));
-	a_i = a - (SQRMU*DELT - pow(a, 1.5)*P_P) / (pow(a, 0.5)*(SIGN*((1.0 - cos(eps))*S_P - S_L * (1.0 - cos(delta))*S_Q) - 1.5*P_P));
-	//Computed value large enough?
-	if (a_i <= a_lim)
-	{
-		if (a_lim > AFAIL)
-		{
-			return -1;
-		}
-		a_i = AFAIL;
-	}
-	da = abs(a_i - a);
-	a = a_i;
-	if (50.0*0.3048 > da)
-	{
-		goto RTCC_PCZYCF_7_1;
-	}
-	if (i > 1)
-	{
-		if (da_i <= da)
-		{
-			goto RTCC_PCZYCF_2_1;
-		}
-		da_i = da;
-		a_i = a;
-	}
-	else
-	{
-		if (a > a_lim)
-		{
-			da_i = da;
-			a_i = a;
-		}
-		else
-		{
-			a = a_lim + 100.0*0.3048;
-			da_i = da;
-		}
-	}
-	goto RTCC_PCZYCF_2_1;
-RTCC_PCZYCF_4_1:
-	//Set semi-major axis to start multiple rev iteration. Initialize iteration counter
-	a_N = a_lim + 50000.0*0.3048;
-	i_N = 0;
-	C_N = 6.0*PI*(double)(NREVS);
-RTCC_PCZYCF_4_2:
-	i_N++;
-	if (i_N > 25)
-	{
-		a_N = a_Ni;
-		goto RTCC_PCZYCF_5_2;
-	}
-	eps_N = 2.0*atan(sqrt(P / (4.0*a_N - P)));
-	delta_N = 2.0*atan(sqrt(Q / (4.0*a_N - Q)));
-	C_e = cos(eps_N);
-	C_f = cos(delta_N);
-	C_em = 1.0 - C_e;
-	C_fm = 1.0 - C_f;
-	C_fp = 1.0 + C_f;
-	C_ep = 1.0 + C_e;
-	a_Ni = a_N - (C_N + 3.0*(eps_N - SIGN * delta_N) - (5.0 + C_e)*sqrt(C_em / C_ep) - SIGN * (5.0 + C_f)*sqrt(C_fm / C_fp)) / (2.0*(pow(C_em, 3.5) / (P*pow(C_ep, 1.5)) + SIGN * pow(C_fm, 3.5) / Q / pow(C_fp, 1.5)));
-	da_N = abs(a_Ni - a_N);
-	a_N = a_Ni;
-	if (da_N <= 10.0*0.3048)
-	{
-		goto RTCC_PCZYCF_5_2;
-	}
-	if (i_N > 1)
-	{
-		if (da_Ni <= da_N)
-		{
-			goto RTCC_PCZYCF_4_2;
-		}
-		da_Ni = da_N;
-		a_Ni = a_N;
-	}
-	else
-	{
-		if (a_N > a_lim)
-		{
-			da_Ni = da_N;
-			a_Ni = a_N;
-		}
-		else
-		{
-			a_N = a_lim + 50.0*0.3048;
-			da_Ni = da_N;
-		}
-	}
-	goto RTCC_PCZYCF_4_2;
-RTCC_PCZYCF_5_2:
-	eps_N = 2.0*atan(sqrt(P / (4.0*a_N - P)));
-	delta_N = 2.0*atan(sqrt(Q / (4.0*a_N - Q)));
-	dt_N = pow(a_N, 1.5) / SQRMU * (PI2*(double)(NREVS)+eps_N-sin(eps_N)+SIGN*(delta_N-sin(delta_N)));
-	if (DELT <= dt_N)
-	{
-		return -1;
-	}
-	dt_lim = pow(a_lim, 1.5) / SQRMU * (PI*(double)(2 * NREVS + 1) + SIGN * (delta_lim - sin(delta_lim)));
-	if (SIGN > 0)
-	{
-		if (DELT > dt_lim)
-		{
-			L = 12;
-			S_L = 1.0;
-		}
-		else
-		{
-			L = 10;
-			S_L = -1.0;
-		}
-	}
-	else
-	{
-		if (DELT > dt_lim)
-		{
-			L = 11;
-			S_L = -1.0;
-		}
-		else
-		{
-			L = 9;
-			S_L = 1.0;
-		}
-	}
-	a = a_lim + 10000.0*0.3048;
-	goto RTCC_PCZYCF_2_1;
-RTCC_PCZYCF_7_1:
-	e = sqrt(pow((R1 - a - (R2 - a)*cos(eps - delta)) / sin(eps - delta), 2) + pow(a - R2, 2)) / a;
-	P_T = a * (1.0 - e * e);
-	cos_f_T = (P_T - R2) / e / R2;
-	sin_f_T = (cos_f_T*cos(PHIT) - (P_T - R1) / e / R1) / sin(PHIT);
-	f_T = atan2(sin_f_T, cos_f_T);
-	if (f_T < 0)
-	{
-		f_T += PI2;
-	}
-	t_PT = a * sqrt(P_T) / SQRMU * (2.0 / sqrt(1.0 - e * e)*atan(sqrt((1.0 - e) / (1.0 + e))*tan(f_T / 2.0)) - e * sin_f_T / (1.0 + e * cos_f_T));
-	if (t_PT < 0)
-	{
-		t_PT += PI2 * pow(a, 1.5) / SQRMU;
-	}
-	if (NREVS <= 0)
-	{
-		return 0;
-	}
-	V_T = SQRMU * sqrt(2.0 / R1 - 1.0 / a);
-	gamma_T = atan(e*sin_f_T / (1.0*e*cos_f_T));
-	l_R = pow(t_PT + DELT, -1.5)*SQRMU;
-	f_R = OrbMech::MeanToTrueAnomaly(l_R, e);
-	gamma_R = atan(e*sin(f_R)/(1.0*e*cos(f_R)));
-	V_R = SQRMU * sqrt(2.0 / R1 - 1.0 / a);
-	DV_T = sqrt(pow(V_T*cos(gamma_T) - VXI2, 2) + pow(V_T*sin(gamma_T) - VYI2, 2)) + sqrt(pow(VXF1 - V_R * cos(gamma_R), 2) + pow(VYF1 - V_R * sin(gamma_R), 2));
-	if (k <= 0)
-	{
-		a_apo = a;
-		e_apo = e;
-		f_T_apo = f_T;
-		t_pt_apo = t_PT;
-		DV_T_apo = DV_T;
-		k = 1;
-		i = 0;
-		if (L == 10 || L == 12)
-		{
-			S_L = -1.0;
-		}
-		else
-		{
-			S_L = 1.0;
-		}
-		a = a_N + 10000.0*0.3048;
-		goto RTCC_PCZYCF_2_1;
-	}
-	//Output lower DV solution
-	if (DV_T_apo < DV_T)
-	{
-		a = a_apo;
-		e = e_apo;
-		f_T = f_T_apo;
-		t_PT = t_pt_apo;
-	}
-	return 0;
-}
-
-void POSVEL(double A, double B, double C, double D, double *E, double SQRMU)
-{
-	double gamma;
-	if (E[0])
-	{
-		//Compute velocity
-		double a = A;
-		double e = B;
-		double f = C;
-		double R = D;
-		gamma = atan(e*sin(f) / (1.0 + e * cos(f)));
-		double V = SQRMU * sqrt(2.0 / R - 1.0 / a);
-		E[0] = V * cos(gamma);
-		E[1] = V * sin(gamma);
-	}
-	else
-	{
-		//Compute position
-		double i = A;
-		double h = B;
-		double u = C;
-		double R = D;
-		gamma = sin(u);
-		double alpha = gamma * cos(i);
-		double beta = cos(u);
-		double eta = cos(h);
-		double psi = sin(h);
-		E[0] = R * (beta*eta - alpha * psi);
-		E[1] = R * (beta*psi + alpha * eta);
-		E[2] = R * (gamma*psi);
-	}
-}
-
 int RTCC::PMMTIS(EphemerisData sv_A1, EphemerisData sv_P1, double dt, double DH, double theta, EphemerisData &sv_A1_apo, EphemerisData &sv_A2, EphemerisData &sv_A2_apo)
 {
 	EphemerisData sv_P2;
@@ -3177,46 +2889,12 @@ int RTCC::PMMTIS(EphemerisData sv_A1, EphemerisData sv_P1, double dt, double DH,
 	}
 
 	IC = 0;
-	/*R_i = sv_A1.R;
-	sv_A1_apo = sv_A1;
-
-	//Calculate chaser orbital elements
-	elem_C = OrbMech::GIMIKC(sv_A1.R, sv_A1.V, mu);
-	f_C = OrbMech::MeanToTrueAnomaly(elem_C.l, elem_C.e);
-	u_C = elem_C.g + f_C;
-	if (u_C >= PI2)
-	{
-		u_C -= PI2;
-	}
-	R_C = length(R_i);
-	//Calculate target orbital elements
-	elem_T = OrbMech::GIMIKC(sv_P1.R, sv_P1.V, mu);
-	f_T = OrbMech::MeanToTrueAnomaly(elem_T.l, elem_T.e);
-	u_T = elem_T.g + f_T;
-	if (u_T >= PI2)
-	{
-		u_T -= PI2;
-	}
-	R_T = length(sv_P1.R);*/
 
 	f_T = 0.0;
 	theta_0 = OrbMech::PHSANG(sv_P1.R, sv_P1.V, sv_A1.R);
 	f3 = f_T + dt * PI2 / OrbMech::period(sv_P1.R, sv_P1.V, mu);
-	//r3 = elem_T.a*(1.0 - elem_T.e*elem_T.e) / (1.0 + elem_T.e*cos(f3)) - DH;
 	WT3 = f3 - f_T + theta_0 - theta;
-	/*u3 = u_C + WT3;
-	while (u3 >= PI2)
-	{
-		u3 -= PI2;
-	}
-	while (u3 < 0)
-	{
-		u3 += PI2;
-	}
 
-	E[0] = 0.0;
-	POSVEL(elem_T.i, elem_T.h, u3, r3, E, sqrt(mu));
-	R3 = _V(E[0], E[1], E[2]);*/
 
 	N = (int)(WT3 / PI2);
 	sv_P2 = coast(sv_P1, dt);
@@ -3266,98 +2944,10 @@ int RTCC::PMMTIS(EphemerisData sv_A1, EphemerisData sv_P1, double dt, double DH,
 		elem_CE.l = elem_T.l;
 	}
 
-	/*if (N != 0)
-	{
-		E[0] = 1.0;
-		POSVEL(elem_C.a, elem_C.e, f_C, R_C, E, sqrt(mu));
-		V_Xi = E[0];
-		V_Yi = E[1];
-		E[0] = 1.0;
-		POSVEL(elem_CE.a, elem_CE.e, f_CE, R_CE, E, sqrt(mu));
-		V_Xf = E[0];
-		V_Yf = E[1];
-	}
-	else
-	{
-		V_Xi = 0.0;
-		V_Yi = 0.0;
-		V_Xf = 0.0;
-		V_Yf = 0.0;
-	}*/
-
 	elem_CE.i = elem_T.i;
 	elem_CE.g = elem_T.g;
 	elem_CE.h = elem_T.h;
 	OrbMech::GIMKIC(elem_CE, mu, RP2off, VP2off);
-/*RTCC_PMMTIS_3_3:
-	WT3 = acos(dotp(unit(R_i), unit(R3)));
-	if (SIGN*(R_i.x*R3.y- R_i.y*R3.x) < 0)
-	{
-		WT3 = PI2 - WT3;
-	}
-
-	PCZYCF(R_C, R_CE, WT3, dt, V_Xi, V_Yi, V_Xf, V_Yf, sqrt(mu), N, sv_A1.RBI, elem_C.a, elem_C.e, f_C, T_PC);
-
-	//Periapsis limit
-	if (elem_C.a*(1.0 - elem_C.e) < RPLIM)
-	{
-		return -1;
-	}
-	u_C = atan(sin(WT3) / (R3.z*length(R_i) / (R_i.z*length(R3)) - cos(WT3)));
-	if (u_C > 0)
-	{
-		if (R_i.z < 0)
-		{
-			u_C += PI;
-		}
-	}
-	else if (u_C < 0)
-	{
-		if (R_i.z > 0)
-		{
-			u_C += PI;
-		}
-	}
-	u3 = u_C + WT3;
-	sin_u_C = sin(u_C);
-	elem_C.i = atan(abs(R_i.z) / sqrt(pow(length(R_i)*sin_u_C, 2) - R_i.z*R_i.z));
-	sin_u3 = sin(u3);
-	TEMP1 = length(R3) / sin_u_C;
-	TEMP2 = length(R_i) / sin_u_C;
-	DEN = cos(u3)*sin_u_C - cos(u_C)*sin_u3;
-	sin_h_C = (R3.y / TEMP1 - R_i.y / TEMP2) / DEN;
-	cos_h_C = (R3.x / TEMP1 - R_i.x / TEMP2) / DEN;
-	elem_C.h = atan2(sin_h_C, cos_h_C);
-	if (elem_C.h < 0)
-	{
-		elem_C.h += PI2;
-	}
-	elem_C.l = T_PC * pow(elem_C.a, -1.5)*sqrt(mu);
-	if (elem_C.l < 0)
-	{
-		elem_C.l += PI2;
-	}
-	elem_C.g = u_C - f_C;
-	if (elem_C.g < 0)
-	{
-		elem_C.g += PI2;
-	}
-	OrbMech::GIMKIC(elem_C, mu, sv_A1_apo.R, sv_A1_apo.V);
-	sv_A2 = coast(sv_A1_apo, dt);
-	DR = sv_A2.R - RP2off;
-	if (length(DR) < 100.0*0.3048)
-	{
-		//sv_A2_apo
-		return 0;
-	}
-	IC++;
-	if (IC >= 15)
-	{
-		return -1;
-	}
-	R3 = R3 - DR;
-	r3 = length(R3);
-	goto RTCC_PMMTIS_3_3;*/
 
 	sv_A1_apo = sv_A1;
 	R3 = RP2off;
@@ -3494,6 +3084,12 @@ void RTCC::PMMTISS()
 
 void RTCC::PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res)
 {
+	TwoImpulseProcessor ti(this);
+
+	ti.PMSTICN(opt, res);
+	return;
+
+
 	TwoImpulseMultipleSolutionTableEntry entry[13];
 	EphemerisData sv_A1, sv_P1, sv_A1_apo, sv_A2, sv_A2_apo;
 	double DH, PhaseAngle, Elev, WT, T1, T2, mu, DV_opt, DVT, T_WSR, DH_WSR, theta_WSR, TMAX, theta_T_min, HthetaR, theta_max, theta_min, du_dot, DV_TP, T_slip;
@@ -3933,7 +3529,7 @@ RTCC_PMSTICN_17_2:
 			goto RTCC_PMSTICN_18_1;
 		}
 	}
-	DH = DH + opt.dh_inc;
+	DH = DH + opt.DH_inc;
 	if (DH > opt.DH_max)
 	{
 		goto RTCC_PMSTICN_18_1;

@@ -45,6 +45,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/LWP.h"
 #include "../src_rtccmfd/AnalyticEphemerisGenerator.h"
 #include "../src_rtccmfd/RTCCDisplayFormatting.h"
+#include "../src_rtccmfd/TwoImpulseProcessor.h"
 #include "MCCPADForms.h"
 
 class Saturn;
@@ -218,54 +219,6 @@ struct MED_M72
 	bool TimeFlag = false;	//false = use optimum time, true = start at impulsive time
 };
 
-struct TwoImpulseOpt
-{
-	int mode;		//1 = Corrective Combination (NCC), 2 = Multiple Solution/Two-Impulse Computation (TPI), 3 = Single Solution, 4 = Transfer Plan, 5 = DKI/SPQ
-	double T1;	//GMT of the maneuver
-	double T2;	// GMT of the arrival
-	EphemerisData sv_A;		//Chaser state vector
-	EphemerisData sv_P;		//Target state vector
-	int ChaserVehicle = 1;	//1 = CSM, 3 = LEM
-	//0 = Time of both maneuvers fixed, 1 = time of first maneuver fixed, 2 = time of second maneuver fixed
-	int IVFLAG = 0;
-	double TimeStep = 10.0;
-	double TimeRange = 0.0;
-
-	//Corrective combination options
-	//Minimum height difference
-	double DH_min;
-	//Maximum height difference
-	double DH_max;
-	double T2_min;
-	double T2_max;
-	//0 = use item 11 as time increment of second maneuver
-	//1 = use item 11 as terminal phase slip time increment
-	int CCReqInd;
-	//Item 11: Time increment of second maneuver
-	double dt_inc;
-	double TPILimit;
-	//Height increment
-	double dh_inc;
-
-	//Single solution options
-	//1 = Multiple, 2 = Corrective Combination
-	int SingSolTable = 1;
-	//1 to 13
-	int SingSolNum = 1;
-	//false = 2 quads, true = 4 quads
-	bool UllageQuads = true;
-	//false = Target, true = Horizon
-	bool LOSMode = false;
-	double DeltaPitch = 0.0;
-	double RelMoTimeStep = 0.0;
-
-	//External request
-	double DH = 0.0;
-	double PhaseAngle = 0.0;
-	double WT = 0.0;
-	double Elev = 0.0;
-};
-
 struct AP7ManPADOpt
 {
 	AP7ManPADOpt();
@@ -394,21 +347,6 @@ struct EntryResults
 	SV sv_preburn;
 	SV sv_postburn;
 	bool solutionfound = false;
-};
-
-struct TwoImpulseResuls
-{
-	EphemerisData sv_tig;		//State vector before NCC/TPI
-	EphemerisData sv_tig_apo;	//State vector after NCC/TPI
-	EphemerisData sv_tig2;		//State vector before NSR/TPF
-	EphemerisData sv_tig2_apo;	//State vector after NSR/TPF
-	VECTOR3 dV;
-	VECTOR3 dV2;
-	VECTOR3 dV_LVLH;
-	VECTOR3 dV_LVLH2;
-	double T1;					//GET of NCC/TPI
-	double T2;					//GET of NSR/TPF
-	bool SolutionFound;
 };
 
 struct SPQResults
@@ -2469,8 +2407,6 @@ public:
 	void LunarAscentPAD(const ASCPADOpt &opt, AP11LMASCPAD &pad);
 	void EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad);
 	void LunarEntryPAD(const LunarEntryPADOpt &opt, AP11ENT &pad);
-	//Conic Fit
-	int PCZYCF(double R1, double R2, double PHIT, double DELT, double VXI2, double VYI2, double VXF1, double VYF1, double SQRMU, int NREVS, int body, double &a, double &e, double &f_T, double &t_PT);
 	int PMMTIS(EphemerisData sv_A1, EphemerisData sv_P1, double dt, double DH, double theta, EphemerisData &sv_A1_apo, EphemerisData &sv_A2, EphemerisData &sv_A2_apo);
 	int PMSTICN_ELEV(EphemerisData sv_A1, EphemerisData sv_P1, double phi_req, double mu, double &T_ELEV);
 	void PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res);

@@ -2722,6 +2722,10 @@ int ARCore::subThread()
 		opt.IVFLAG = GC->rtcc->med_k30.IVFlag;
 		opt.ChaserVehicle = GC->rtcc->med_k30.Vehicle;
 
+		//Temp
+		opt.sv_C.sv = opt.sv_A;
+		opt.sv_T.sv = opt.sv_P;
+
 		GC->rtcc->PMSTICN(opt, res);
 
 		Result = DONE;
