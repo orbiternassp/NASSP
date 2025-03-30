@@ -1726,22 +1726,13 @@ void ApolloRTCCMFD::menuSetAGOPInput()
 		}
 		break;
 	case 8: //Landmark latitude
-		if ((GC->AGOP_Option == 1 && (GC->AGOP_Mode == 3 || GC->AGOP_Mode == 4)) || GC->AGOP_Option == 4)
-		{
-			GenericDoubleInput(&GC->AGOP_Lat, "Enter landmark latitude in degrees:", RAD);
-		}
+		GenericDoubleInput(&GC->AGOP_Lat, "Enter landmark latitude in degrees:", RAD);
 		break;
 	case 9: //Landmark longitude
-		if ((GC->AGOP_Option == 1 && (GC->AGOP_Mode == 3 || GC->AGOP_Mode == 4)) || GC->AGOP_Option == 4)
-		{
-			GenericDoubleInput(&GC->AGOP_Lng, "Enter landmark longitude in degrees:", RAD);
-		}
+		GenericDoubleInput(&GC->AGOP_Lng, "Enter landmark longitude in degrees:", RAD);
 		break;
 	case 10: //Landmark altitude
-		if ((GC->AGOP_Option == 1 && (GC->AGOP_Mode == 3 || GC->AGOP_Mode == 4)) || GC->AGOP_Option == 4)
-		{
-			GenericDoubleInput(&GC->AGOP_Alt, "Enter landmark height in nautical miles:", 1852.0);
-		}
+		GenericDoubleInput(&GC->AGOP_Alt, "Enter landmark height in nautical miles:", 1852.0);
 		break;
 	case 11: //CSM vs LM IMU
 		if (GC->AGOP_Option == 4 || GC->AGOP_Option == 7)
