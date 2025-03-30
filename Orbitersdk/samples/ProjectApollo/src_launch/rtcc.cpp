@@ -29867,7 +29867,7 @@ void RTCC::PMKMED(std::string med, std::vector<std::string> data, int &err, unsi
 		if (out.Ignored[4] == false) PZMARM.t_TPI_Coell = GMTfromGET(out.Values[4].d);
 		if (out.Ignored[5] == false) PZMARM.t_Ins = GMTfromGET(out.Values[5].d);
 		if (out.Ignored[6] == false) PZMARM.h_min = out.Values[6].d;
-		if (out.Ignored[8] == false) PZMARM.DH = out.Values[6].d;
+		if (out.Ignored[7] == false) PZMARM.DH = out.Values[7].d;
 	}
 	else if (med == "39")
 	{
