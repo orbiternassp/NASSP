@@ -650,6 +650,8 @@ struct LLTPOpt
 {
 	//CSM state vector
 	EphemerisData sv_CSM;
+	//CSM state vector station ID
+	std::string CSM_STA_ID;
 	//Yaw steer limit
 	double Y_S;
 	//Desired radial velocity at insertion
