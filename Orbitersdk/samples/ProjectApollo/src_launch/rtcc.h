@@ -297,6 +297,7 @@ struct AP11ManPADOpt
 	PLAWDTOutput WeightsTable;	// Table with spacecraft weights
 	bool UllageThrusterOpt;		// Ullage: false = 2 thrusters, true = 4 thrusters
 	double UllageDT;			// Ullage duration, set to 0.0 if no ullage
+	int PrefGDCStars;			// Preferred star set for the GDC backup alignment. 0 = Deneb, Vega, 1 = Navi, Polaris, 2 = Acrux, Atria, 3 = Sirius, Rigel
 };
 
 struct AP11LMManPADOpt
