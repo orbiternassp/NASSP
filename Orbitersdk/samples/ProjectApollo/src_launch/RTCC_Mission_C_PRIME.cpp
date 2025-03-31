@@ -205,6 +205,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.RV_MCC = ConvertSVtoEphemData(sv2);
 		opt.WeightsTable.CC[RTCC_CONFIG_C] = true;
 		opt.WeightsTable.ConfigWeight = opt.WeightsTable.CSMWeight = sv2.mass;
+		opt.PrefGDCStars = 1; //Navi,Polaris
 
 		AP11ManeuverPAD(opt, *form);
 		form->lat = res.latitude*DEG;
@@ -313,6 +314,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "TLI+11");
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd, Assumes no MCC-1");
 			entopt.t_Z = OrbMech::HHMMSSToSS(50.0, 4.0, 0.0);
+			opt.PrefGDCStars = 1; //Navi,Polaris
 		}
 		else if (fcn == 11)
 		{
@@ -320,6 +322,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "TLI+25");
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd");
 			entopt.t_Z = OrbMech::HHMMSSToSS(74.0, 38.0, 0.0);
+			opt.PrefGDCStars = 1; //Navi,Polaris
 		}
 		else if (fcn == 12)
 		{
@@ -327,6 +330,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "TLI+35");
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,821 for Mid-Pacific landing,  High-speed procedure not req'd");
 			entopt.t_Z = OrbMech::HHMMSSToSS(98.0, 12.0, 0.0);
+			opt.PrefGDCStars = 3; //Sirius,Rigel
 		}
 		else if (fcn == 13)
 		{
@@ -334,6 +338,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(manname, "TLI+44");
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 8,750 for Indian Ocean,  High-speed procedure (-MA) req'd");
 			entopt.t_Z = OrbMech::HHMMSSToSS(98.0, 12.0, 0.0);
+			opt.PrefGDCStars = 3; //Sirius,Rigel
 		}
 
 		sv0 = StateVectorCalc(calcParams.src);
@@ -504,6 +509,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				manopt.HeadsUp = false;
 				manopt.REFSMMAT = REFSMMAT;
 				manopt.RV_MCC = sv_ephem;
+				manopt.PrefGDCStars = 3; //Sirius,Rigel
 
 				AP11ManeuverPAD(manopt, *form);
 				sprintf(form->purpose, manname);
@@ -618,6 +624,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				manopt.HeadsUp = false;
 				manopt.REFSMMAT = REFSMMAT;
 				manopt.RV_MCC = sv_ephem;
+				manopt.PrefGDCStars = 3; //Sirius,Rigel
 
 				//No ullage remark for pre-LOI SPS burns
 				if (manopt.enginetype == RTCC_ENGINETYPE_CSMSPS)
@@ -693,6 +700,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		manopt.RV_MCC = sv_ephem;
 		manopt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
+		manopt.PrefGDCStars = 3; //Sirius,Rigel
 
 		AP11ManeuverPAD(manopt, *form);
 
@@ -754,6 +762,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		opt.RV_MCC = ConvertSVtoEphemData(sv);
 		opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
+		opt.PrefGDCStars = 3; //Sirius,Rigel
 
 		//Save for use with PC+2
 		calcParams.SVSTORE1 = res.sv_postburn;
@@ -888,6 +897,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		opt.RV_MCC = ConvertSVtoEphemData(sv);
 		opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
+		opt.PrefGDCStars = 3; //Sirius,Rigel
 
 		AP11ManeuverPAD(opt, *form);
 
@@ -997,6 +1007,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.RV_MCC = ConvertSVtoEphemData(sv1);
 		opt.WeightsTable.CC[RTCC_CONFIG_C] = true;
 		opt.WeightsTable.ConfigWeight = opt.WeightsTable.CSMWeight = sv1.mass;
+		opt.PrefGDCStars = 3; //Sirius,Rigel
 
 		AP11ManeuverPAD(opt, *form);
 		sprintf(form->purpose, manname);
@@ -1438,6 +1449,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		manopt.RV_MCC = ConvertSVtoEphemData(sv);
 		manopt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
+		manopt.PrefGDCStars = 3; //Sirius,Rigel
 
 		AP11ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "LOI-2");
@@ -1576,6 +1588,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		opt.TIG = res.P30TIG;
 		opt.RV_MCC = ConvertSVtoEphemData(sv);
 		opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
+		opt.PrefGDCStars = 3; //Sirius,Rigel
 
 		AP11ManeuverPAD(opt, *form);
 		sprintf(form->purpose, manname);
@@ -1798,6 +1811,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			opt.HeadsUp = false;
 			opt.REFSMMAT = REFSMMAT;
 			opt.RV_MCC = ConvertSVtoEphemData(sv);
+			opt.PrefGDCStars = 3; //Sirius,Rigel
 
 			AP11ManeuverPAD(opt, *form);
 			sprintf(form->purpose, manname);
