@@ -597,14 +597,6 @@ void SaturnV::SetVehicleStats(){
 	}
 
 	CalculateStageMass ();
-
-	//
-	// Calculate Apollo mission number.
-	//
-
-	if (!ApolloNo && (VehicleNo >= 503 && VehicleNo <= 512)) {
-		ApolloNo = VehicleNo - 495;
-	}
 }
 
 void SaturnV::SaveVehicleStats(FILEHANDLE scn)
