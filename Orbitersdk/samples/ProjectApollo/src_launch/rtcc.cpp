@@ -3076,12 +3076,6 @@ void PMSTICN_PY(VECTOR3 R_A, VECTOR3 V_A, VECTOR3 R_B, VECTOR3 V_B, double &Pitc
 		}
 	}
 }
-
-void RTCC::PMMTISS()
-{
-
-}
-
 void RTCC::PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res)
 {
 	TwoImpulseProcessor ti(this);
@@ -3169,11 +3163,11 @@ RTCC_PMSTICN_3_1:
 		OrbMech::time_theta(opt.sv_P.R, opt.sv_P.V, WT, mu, dt);
 		T2 = T1 + dt;
 	}
-	if (opt.IVFLAG == 1)
+	if (opt.RequestIndicator == 1)
 	{
 		TMAX = T2 + opt.TimeRange;
 	}
-	else if (opt.IVFLAG == 2)
+	else if (opt.RequestIndicator == 2)
 	{
 		TMAX = T1 + opt.TimeRange;
 	}
@@ -3186,8 +3180,8 @@ RTCC_PMSTICN_3_3:
 		if (soln == 0)
 		{
 			//Save state vector
-			PZMYSAVE.SV_mult[0] = sv_A1;
-			PZMYSAVE.SV_mult[1] = sv_P1;
+			PZMYSAVE.SV_mult[0].sv = sv_A1;
+			PZMYSAVE.SV_mult[1].sv = sv_P1;
 		}
 	}
 RTCC_PMSTICN_4_2:
@@ -3236,11 +3230,11 @@ RTCC_PMSTICN_4_2:
 	}
 	soln++;
 RTCC_PMSTICN_7_1:
-	if (opt.IVFLAG < 1)
+	if (opt.RequestIndicator < 1)
 	{
 		goto RTCC_PMSTICN_8_3;
 	}
-	if (opt.IVFLAG == 1)
+	if (opt.RequestIndicator == 1)
 	{
 		//Increment time of 2nd maneuver
 		T2 += opt.TimeStep;
@@ -3255,11 +3249,11 @@ RTCC_PMSTICN_7_1:
 		}
 	}
 	//Has the number of requested cases been computed?
-	if (opt.IVFLAG == 1 && T2 > TMAX)
+	if (opt.RequestIndicator == 1 && T2 > TMAX)
 	{
 		goto RTCC_PMSTICN_8_3;
 	}
-	if (opt.IVFLAG == 2 && T1 > TMAX)
+	if (opt.RequestIndicator == 2 && T1 > TMAX)
 	{
 		goto RTCC_PMSTICN_8_3;
 	}
@@ -3293,9 +3287,9 @@ RTCC_PMSTICN_7_1:
 	}
 RTCC_PMSTICN_8_2:
 	//Restore elements saved at the time of the first maneuver of the first solution computed
-	sv_A1 = PZMYSAVE.SV_mult[0];
-	sv_P1 = PZMYSAVE.SV_mult[1];
-	if (opt.IVFLAG == 2)
+	sv_A1 = PZMYSAVE.SV_mult[0].sv;
+	sv_P1 = PZMYSAVE.SV_mult[1].sv;
+	if (opt.RequestIndicator == 2)
 	{
 		goto RTCC_PMSTICN_3_3;
 	}
@@ -3306,7 +3300,7 @@ RTCC_PMSTICN_8_3:
 		PZTIPREG.data[i] = entry[i];
 	}
 	PZTIPREG.Solutions = soln;
-	PZTIPREG.IVFLAG = opt.IVFLAG;
+	PZTIPREG.IVFLAG = opt.RequestIndicator;
 	PZTIPREG.MAN_VEH = opt.ChaserVehicle;
 	PZTIPREG.Updating = false;
 	display = 63;
@@ -3365,8 +3359,8 @@ RTCC_PMSTICN_10_1:
 	//Get original state vectors for requested solution
 	if (opt.SingSolTable == 1)
 	{
-		sv_A1 = PZMYSAVE.SV_mult[0];
-		sv_P1 = PZMYSAVE.SV_mult[1];
+		sv_A1 = PZMYSAVE.SV_mult[0].sv;
+		sv_P1 = PZMYSAVE.SV_mult[1].sv;
 	}
 	else
 	{
@@ -4922,6 +4916,18 @@ EphemerisData RTCC::StateVectorCalcEphem(VESSEL *vessel)
 	{
 		sv.RBI = BODY_MOON;
 	}
+	return sv;
+}
+
+VehicleDataBlock RTCC::StateVectorCalcDataBlock(VESSEL *vessel)
+{
+	VehicleDataBlock sv;
+
+	sv.sv = StateVectorCalcEphem(vessel);
+	sv.Weight = vessel->GetMass();
+	sv.Area = 129.4*pow(0.3048, 2); //CSM default
+	sv.KFactor = 1.0;
+
 	return sv;
 }
 
@@ -18885,16 +18891,37 @@ RTCC_PMSVCT_15:
 	EMSTRAJ(sv1, L);
 }
 
-int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI)
+int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, StationIDArr &StaID, int &RBI)
 {
-	double mu;
+	VehicleDataBlock block;
+
+	int err = PMSVEC(L, GMT, block, StaID);
+	if (err == 0)
+	{
+		double mu;
+		if (block.sv.RBI == BODY_EARTH)
+		{
+			mu = OrbMech::mu_Earth;
+		}
+		else
+		{
+			mu = OrbMech::mu_Moon;
+		}
+
+		elem = OrbMech::GIMIKC(block.sv.R, block.sv.V, mu);
+	}
+	return err;
+}
+
+int RTCC::PMSVEC(int L, double GMT, VehicleDataBlock &block, StationIDArr &StaID)
+{
 	MissionPlanTable *mpt = GetMPTPointer(L);
 	EphemerisData sv;
 
 	if (mpt->mantable.size() == 0)
 	{
-		Area = mpt->ConfigurationArea;
-		Weight = mpt->TotalInitMass;
+		block.Area = mpt->ConfigurationArea;
+		block.Weight = mpt->TotalInitMass;
 	}
 	else
 	{
@@ -18914,46 +18941,34 @@ int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Ar
 
 		if (mancounter == 0U)
 		{
-			Area = mpt->ConfigurationArea;
-			Weight = mpt->TotalInitMass;
+			block.Area = mpt->ConfigurationArea;
+			block.Weight = mpt->TotalInitMass;
 		}
 		else
 		{
-			Area = mpt->mantable[mancounter].TotalAreaAfter;
-			Weight = mpt->mantable[mancounter].TotalMassAfter;
+			block.Area = mpt->mantable[mancounter].TotalAreaAfter;
+			block.Weight = mpt->mantable[mancounter].TotalMassAfter;
 		}
 
 		if (mancounter > 0U && GMT < mpt->mantable[mancounter - 1].GMT_BO + 3.0*60.0)
 		{
-			sv.R = mpt->mantable[mancounter - 1].R_BO;
-			sv.V = mpt->mantable[mancounter - 1].V_BO;
-			sv.GMT = mpt->mantable[mancounter - 1].GMT_BO;
-			sv.RBI = mpt->mantable[mancounter - 1].RefBodyInd;
+			block.sv.R = mpt->mantable[mancounter - 1].R_BO;
+			block.sv.V = mpt->mantable[mancounter - 1].V_BO;
+			block.sv.GMT = mpt->mantable[mancounter - 1].GMT_BO;
+			block.sv.RBI = mpt->mantable[mancounter - 1].RefBodyInd;
 
 			goto PMSVEC_2_2;
 		}
 	}
 
-	if (EMSFFV(GMT, L, sv))
+	if (EMSFFV(GMT, L, block.sv))
 	{
 		PMXSPT("PMSVEC", 49);
 		return 1;
 	}
 PMSVEC_2_2:
-
-	if (sv.RBI == BODY_EARTH)
-	{
-		mu = OrbMech::mu_Earth;
-	}
-	else
-	{
-		mu = OrbMech::mu_Moon;
-	}
-
-	elem = OrbMech::GIMIKC(sv.R, sv.V, mu);
-	KFactor = mpt->KFactor;
+	block.KFactor = mpt->KFactor;
 	StaID = mpt->StationID;
-
 	return 0;
 }
 
@@ -20834,17 +20849,25 @@ void RTCC::PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, do
 	} while (K < 6);
 }
 
+void RTCC::PMMDAN(VehicleDataBlock sv, int IND, int &ERR, double &T1, double &T2)
+{
+	AEGBlock aeg = SVToAEG(sv.sv, sv.Area, sv.Weight, sv.KFactor);
+	PMMDAN(aeg.Header, aeg.Data, IND, ERR, T1, T2);
+}
+
 void RTCC::PMMDAN(AEGHeader Header, AEGDataBlock aeg, int IND, int &ERR, double &T_c, double &T_c_apo)
 {
+	//OUTPUTS:
+	//ERR: <0 = AEG error return, 0 = no error, 1 = orbit is totally in daylight, 2 = convergence failure
 	AEGDataBlock sv_temp;
 	VECTOR3 R_EM, V_EM, R_ES, R_S, R, V, H, N, N_apo;
-	double MJD, r_S, mu, cos_theta, R_e, r, phi1, phi2, phi3, n, cos_phi1, sin_alpha, h, cos_eta, sin_eta, F, dt, S_T;
+	double r_S, mu, cos_theta, R_e, r, phi1, phi2, phi3, n, cos_phi1, sin_alpha, h, cos_eta, sin_eta, F, dt, S_T;
 	int J, I_c;
 	bool daylight;
 
 	ERR = 0;
 	J = 0;
-	MJD = SystemParameters.GMTBASE + aeg.TS / 24.0 / 3600.0;
+	//Get sun vector
 	PLEFEM(1, aeg.TS / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
 
 	if (Header.AEGInd == BODY_EARTH)
@@ -34477,6 +34500,8 @@ void RTCC::PMDTIMP()
 
 	TwoImpMultDispBuffer.CSMSTAID = PZTIPREG.CSMSTAID;
 	TwoImpMultDispBuffer.LMSTAID = PZTIPREG.LMSTAID;
+	TwoImpMultDispBuffer.GETTH_CSM = GETfromGMT(PZTIPREG.CSM_GMTTH);
+	TwoImpMultDispBuffer.GETTH_LM = GETfromGMT(PZTIPREG.LM_GMTTH);
 	if (PZTIPREG.MAN_VEH == 1)
 	{
 		TwoImpMultDispBuffer.MAN_VEH = "CSM";
@@ -34515,7 +34540,18 @@ void RTCC::PMDTIMP()
 	{
 		TwoImpMultDispBuffer.OPTION = "SECOND FIXED";
 	}
-
+	std::string temp;
+	if (PZTIPREG.DT_Light >= 0.0)
+	{
+		temp = "DAYLIGHT";
+	}
+	else
+	{
+		temp = "DARKNESS";
+	}
+	char Buffer[128];
+	sprintf_s(Buffer, "%.0lf MIN UNTIL %s", abs(PZTIPREG.DT_Light) / 60.0, temp.c_str());
+	TwoImpMultDispBuffer.MinutesUntil.assign(Buffer);
 	TwoImpMultDispBuffer.WT = GZGENCSN.TITravelAngle*DEG;
 	TwoImpMultDispBuffer.PHASE = GZGENCSN.TIPhaseAngle*DEG;
 	TwoImpMultDispBuffer.DH = GZGENCSN.TIDeltaH / 1852.0;
@@ -34542,7 +34578,7 @@ void RTCC::PMDTIMP()
 		{
 			TwoImpMultDispBuffer.data[i].T_TPI = GETfromGMT(PZTIPREG.data[i].T_TPI);
 		}
-		TwoImpMultDispBuffer.data[i].L = 'N';
+		TwoImpMultDispBuffer.data[i].L = PZTIPREG.data[i].L ? 'D' : 'N';
 		TwoImpMultDispBuffer.data[i].C = i + 1;
 	}
 }

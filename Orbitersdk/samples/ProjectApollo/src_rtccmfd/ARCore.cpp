@@ -2631,14 +2631,11 @@ int ARCore::subThread()
 	{
 		TwoImpulseOpt opt;
 		TwoImpulseResuls res;
-		EphemerisData sv_A, sv_P;
+		VehicleDataBlock sv_A, sv_P;
 
 		if (GC->MissionPlanningActive)
 		{
-			EphemerisData EPHEM;
-
 			double GMT;
-			
 			if (GC->rtcc->med_k30.ChaserVectorTime > 0)
 			{
 				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k30.ChaserVectorTime);
@@ -2647,14 +2644,11 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
-
-			if (GC->rtcc->EMSFFV(GMT, GC->rtcc->med_k30.Vehicle, EPHEM))
+			if (GC->rtcc->PMSVEC(GC->rtcc->med_k30.Vehicle, GMT, sv_A, opt.ChaserStationID))
 			{
 				Result = DONE;
 				break;
 			}
-
-			sv_A = EPHEM;
 
 			if (GC->rtcc->med_k30.TargetVectorTime > 0)
 			{
@@ -2664,13 +2658,11 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
-
-			if (GC->rtcc->EMSFFV(GMT, 4 - GC->rtcc->med_k30.Vehicle, EPHEM))
+			if (GC->rtcc->PMSVEC(4 - GC->rtcc->med_k30.Vehicle, GMT, sv_P, opt.TargetStationID))
 			{
 				Result = DONE;
 				break;
 			}
-			sv_P = EPHEM;
 		}
 		else
 		{
@@ -2692,8 +2684,8 @@ int ARCore::subThread()
 				tgt = GC->rtcc->pCSM;
 			}
 
-			sv_A = GC->rtcc->StateVectorCalcEphem(chaser);
-			sv_P = GC->rtcc->StateVectorCalcEphem(tgt);
+			sv_A = GC->rtcc->StateVectorCalcDataBlock(chaser);
+			sv_P = GC->rtcc->StateVectorCalcDataBlock(tgt);
 		}
 
 		opt.mode = 2;
@@ -2717,14 +2709,12 @@ int ARCore::subThread()
 		
 		opt.TimeStep = GC->rtcc->med_k30.TimeStep;
 		opt.TimeRange = GC->rtcc->med_k30.TimeRange;
-		opt.sv_A = sv_A;
-		opt.sv_P = sv_P;
-		opt.IVFLAG = GC->rtcc->med_k30.IVFlag;
+		opt.sv_C = sv_A;
+		opt.sv_T = sv_P;
+		opt.RequestIndicator = GC->rtcc->med_k30.IVFlag;
 		opt.ChaserVehicle = GC->rtcc->med_k30.Vehicle;
-
-		//Temp
-		opt.sv_C.sv = opt.sv_A;
-		opt.sv_T.sv = opt.sv_P;
+		opt.ChaserVectorTime = sv_A.sv.GMT;
+		opt.TargetVectorTime = sv_P.sv.GMT;
 
 		GC->rtcc->PMSTICN(opt, res);
 
@@ -4631,8 +4621,8 @@ int ARCore::subThread()
 					Result = DONE;
 					break;
 				}
-				opt.sv_A = GC->rtcc->PZMYSAVE.SV_mult[0];
-				opt.sv_P = GC->rtcc->PZMYSAVE.SV_mult[1];
+				opt.sv_A = GC->rtcc->PZMYSAVE.SV_mult[0].sv;
+				opt.sv_P = GC->rtcc->PZMYSAVE.SV_mult[1].sv;
 				opt.DH = GC->rtcc->GZGENCSN.TIDeltaH;
 				opt.PhaseAngle = GC->rtcc->GZGENCSN.TIPhaseAngle;
 				opt.T1 = GC->rtcc->PZTIPREG.data[GC->rtcc->med_m72.Plan - 1].Time1;

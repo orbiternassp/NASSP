@@ -2410,8 +2410,6 @@ public:
 	int PMMTIS(EphemerisData sv_A1, EphemerisData sv_P1, double dt, double DH, double theta, EphemerisData &sv_A1_apo, EphemerisData &sv_A2, EphemerisData &sv_A2_apo);
 	int PMSTICN_ELEV(EphemerisData sv_A1, EphemerisData sv_P1, double phi_req, double mu, double &T_ELEV);
 	void PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res);
-	//Two-Impulse Single Solution
-	void PMMTISS();
 	double FindDH(SV sv_A, SV sv_P, double TIGguess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
@@ -2450,6 +2448,7 @@ public:
 	double GetDockedVesselMass(VESSEL *vessel) const;
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	EphemerisData StateVectorCalcEphem(VESSEL *vessel);
+	VehicleDataBlock StateVectorCalcDataBlock(VESSEL *vessel);
 	void ExecuteManeuver(EphemerisData sv, PLAWDTOutput WeightsTable_before, double P30TIG, VECTOR3 dV_LVLH, int Thruster, EphemerisData &sv_after, PLAWDTOutput &WeightsTable_after);
 	SV ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
 	SV ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster, MATRIX3 &Q_Xx, VECTOR3 &V_G);
@@ -2542,6 +2541,7 @@ public:
 	//Time of Longitude Crossing Determination
 	void PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double DESLAM, int &K, int INDVEC);
 	//AEG Day/Night Determination
+	void PMMDAN(VehicleDataBlock sv, int IND, int &ERR, double &T1, double &T2);
 	void PMMDAN(AEGHeader Header, AEGDataBlock aeg, int IND, int &ERR, double &T1, double &T2);
 	//Checkout Monitor Display
 	void EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool feet);
@@ -2671,7 +2671,8 @@ public:
 	void PMSVCT(int QUEID, int L);
 	void PMSVCT(int QUEID, int L, StateVectorTableEntry sv0);
 	//Vector Fetch Load Module
-	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
+	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, StationIDArr &StaID, int &RBI);
+	int PMSVEC(int L, double GMT, VehicleDataBlock &block, StationIDArr &StaID);
 	//Maneuver Execution Program
 	void PMSEXE(int L, double gmt);
 	//Earth Orbit Insertion Processor
@@ -3992,37 +3993,13 @@ public:
 
 	} GZGENCSN;
 
-	struct TwoImpulseMultipleSolutionTableEntry
-	{
-		double Time1 = 0.0;
-		double DELV1 = 0.0;
-		double YAW1 = 0.0;
-		double PITCH1 = 0.0;
-		double Time2 = 0.0;
-		double DELV2 = 0.0;
-		double YAW2 = 0.0;
-		double PITCH2 = 0.0;
-		double T_TPI = 0.0;
-		char L = ' ';
-		int C = 0;
-	};
-
-	struct TwoImpulseMultipleSolutionTable
-	{
-		bool Updating = false;
-		int Solutions = 0;
-		bool showTPI = false;
-		int IVFLAG = 0;
-		int MAN_VEH = 0;
-		std::string CSMSTAID, LMSTAID;
-		TwoImpulseMultipleSolutionTableEntry data[13];
-	} PZTIPREG;
+	TwoImpulseMultipleSolutionTable PZTIPREG;
 
 	struct TwoImpulseMultipleSolutionDisplay
 	{
 		std::string ErrorMessage;
-		std::string CSMSTAID;
-		std::string LMSTAID;
+		StationIDArr CSMSTAID;
+		StationIDArr LMSTAID;
 		double GETTH_CSM = 0.0;
 		double GETTH_LM = 0.0;
 		std::string MAN_VEH;
@@ -4283,7 +4260,7 @@ public:
 	struct AEGBlockSaveTable
 	{
 		//Block 1: Multiple Solution
-		EphemerisData SV_mult[2];
+		VehicleDataBlock SV_mult[2];
 		//Block 2: Corrective Combination
 		EphemerisData SV_CC[2];
 		//Block 3: Transfer Data

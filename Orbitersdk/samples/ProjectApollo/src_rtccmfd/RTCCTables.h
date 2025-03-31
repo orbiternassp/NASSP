@@ -28,6 +28,29 @@
 #include <bitset>
 #include "Orbitersdk.h"
 
+template <int N>
+class CharArray
+{
+public:
+	CharArray()
+	{
+		for (int i = 0; i < N; i++)
+		{
+			data[i] = '\0';
+		}
+	}
+	CharArray& operator=(std::string& other)
+	{
+		strncpy(data, other.c_str(), N);
+		return *this;
+	}
+private:
+	char data[N];
+};
+
+//Station ID with fixed size of 8 characters
+typedef CharArray<8> StationIDArr;
+
 struct EphemerisData
 {
 	double GMT = 0.0;

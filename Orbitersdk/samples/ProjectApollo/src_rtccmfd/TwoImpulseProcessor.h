@@ -1,0 +1,193 @@
+/****************************************************************************
+This file is part of Project Apollo - NASSP
+
+Two Impulse Processor, RTCC Module PMSTICN (Header)
+
+Project Apollo is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+Project Apollo is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Project Apollo; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+See http://nassp.sourceforge.net/license/ for more details.
+
+**************************************************************************/
+
+#pragma once
+
+#include "Orbitersdk.h"
+#include "RTCCModule.h"
+#include "RTCCTables.h"
+
+struct TwoImpulseOpt
+{
+	TwoImpulseOpt();
+
+	//1 = Corrective Combination (NCC), 2 = Multiple Solution/Two-Impulse Computation (TPI), 3 = Single Solution, 4 = Transfer Plan, 5 = DKI/SPQ
+	int mode;
+	// 1 = CSM, 3 = LEM
+	int ChaserVehicle;
+	//Mode 1: 0 = use dt_inc as time increment of second maneuver, 1 = use dt_inc as terminal phase slip time increment
+	//Mode 2: 0 = Time of both maneuvers fixed, 1 = time of first maneuver fixed, 2 = time of second maneuver fixed
+	int RequestIndicator;
+	double ChaserVectorTime;
+	double TargetVectorTime;
+	//Time of first maneuver (GMT)
+	double T1;	
+	//Time of second maneuver (GMT)
+	double T2;
+	EphemerisData sv_A;		//Chaser state vector
+	EphemerisData sv_P;		//Target state vector
+	VehicleDataBlock sv_C;		//Chaser state vector
+	StationIDArr ChaserStationID;
+	VehicleDataBlock sv_T;		//Target state vector
+	StationIDArr TargetStationID;
+
+	//Mode 1 (Corrective Combination) only options
+	//Minimum height difference
+	double DH_min;
+	//Maximum height difference
+	double DH_max;
+	//Height increment
+	double DH_inc;
+	//Minimum time of second (NSR) maneuver
+	double T2_min;
+	//Maximum time of second (NSR) maneuver
+	double T2_max;
+	//Time increment of second maneuver
+	double dt_inc;
+
+	//Mode 2 (Multiple Solution/Two Impulse) only options
+	//Time increment of variable maneuver
+	double TimeStep;
+	//Time range of variable maneuver
+	double TimeRange;
+
+	//Mode 3 (Single Solution) only options
+	//Mode 4 (Transfer Plan) only options
+	//Mode 5 (DKI/SPQ) only options
+	double DH;
+	double PhaseAngle;
+	double WT ;
+	double Elev;
+
+
+
+
+
+
+	//Corrective combination options
+
+
+	//0 = use item 11 as time increment of second maneuver
+	//1 = use item 11 as terminal phase slip time increment
+	int CCReqInd;
+
+	double TPILimit;
+
+
+	//Single solution options
+	//1 = Multiple, 2 = Corrective Combination
+	int SingSolTable = 1;
+	//1 to 13
+	int SingSolNum = 1;
+	//false = 2 quads, true = 4 quads
+	bool UllageQuads = true;
+	//false = Target, true = Horizon
+	bool LOSMode = false;
+	double DeltaPitch = 0.0;
+	double RelMoTimeStep = 0.0;
+};
+
+struct TwoImpulseResuls
+{
+	EphemerisData sv_tig;		//State vector before NCC/TPI
+	EphemerisData sv_tig_apo;	//State vector after NCC/TPI
+	EphemerisData sv_tig2;		//State vector before NSR/TPF
+	EphemerisData sv_tig2_apo;	//State vector after NSR/TPF
+	VECTOR3 dV;
+	VECTOR3 dV2;
+	VECTOR3 dV_LVLH;
+	VECTOR3 dV_LVLH2;
+	double T1;					//GET of NCC/TPI
+	double T2;					//GET of NSR/TPF
+	bool SolutionFound;
+};
+
+struct TwoImpulseMultipleSolutionTableEntry
+{
+	double Time1 = 0.0;
+	double DELV1 = 0.0;
+	double YAW1 = 0.0;
+	double PITCH1 = 0.0;
+	double Time2 = 0.0;
+	double DELV2 = 0.0;
+	double YAW2 = 0.0;
+	double PITCH2 = 0.0;
+	double T_TPI = 0.0;
+	char L = ' ';
+	int C = 0;
+};
+
+struct TwoImpulseMultipleSolutionTable
+{
+	bool Updating = false;
+	int Solutions = 0;
+	bool showTPI = false;
+	int IVFLAG = 0;
+	int MAN_VEH = 0;
+	StationIDArr CSMSTAID, LMSTAID;
+	double CSM_GMTTH = 0.0;
+	double LM_GMTTH  = 0.0;
+	//Number of seconds until the environment change indicated from the frozen maneuver of the first solution (negative for darkness)
+	double DT_Light = 0.0;
+	TwoImpulseMultipleSolutionTableEntry data[13];
+};
+
+class TwoImpulseProcessor : public RTCCModule
+{
+public:
+	TwoImpulseProcessor(RTCC *r);
+	void PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res);
+protected:
+	//Mode 1: Corrective Combination
+	void CorrectiveCombination();
+	//Mode 2: Multiple Solution
+	void MultipleSolution();
+	//Mode 3: Single Solution
+	void SingleSolution();
+	//Mode 4: Transfer Plan
+	void TransferPlan();
+	//Mode 5: External Request
+	void ExternalRequest(TwoImpulseResuls &res);
+	//Two Impulse Impulsive Maneuver Calculation
+	int PMMTIS(VehicleDataBlock sv_A1, VehicleDataBlock sv_P1, double dt, double DH, double theta, VehicleDataBlock &sv_A1_apo, VehicleDataBlock &sv_A2, VehicleDataBlock &sv_A2_apo) const;
+
+	bool ElevationAngleSearch(VehicleDataBlock sv_A0, VehicleDataBlock sv_P0, double Elev, VehicleDataBlock &sv_A1, VehicleDataBlock &sv_P1, double &T1) const;
+	double T2Search();
+	void PMSTICN_PY(VECTOR3 R_A, VECTOR3 V_A, VECTOR3 R_B, VECTOR3 V_B, double &Pitch, double &Yaw) const;
+	bool coast(VehicleDataBlock sv0, double dt, VehicleDataBlock &sv1) const;
+	void SecularRates(EphemerisData sv0, double &l_dot, double &g_dot, double &h_dot) const;
+
+	//Time of first maneuver
+	double T1;
+	//Time of second maneuver
+	double T2;
+	double DH;
+	double PhaseAngle;
+	double Elev;
+	double WT;
+	//Chaser state vector before first maneuver
+	VehicleDataBlock sv_C1;
+	VehicleDataBlock sv_T1;
+
+	TwoImpulseOpt opt;
+};

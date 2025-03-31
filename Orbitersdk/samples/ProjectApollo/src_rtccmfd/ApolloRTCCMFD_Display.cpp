@@ -204,13 +204,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, 5, 8, std::string(GC->rtcc->TwoImpMultDispBuffer.GETFRZ, 1));
 		Text(skp, 5, 9, std::string(GC->rtcc->TwoImpMultDispBuffer.GMTFRZ, 1));
 		Text(skp, 28, 11, std::string(GC->rtcc->TwoImpMultDispBuffer.GETVAR, 1));
+		Text_GET_HHHMMSSC(skp, 22, 5, GC->rtcc->TwoImpMultDispBuffer.GETTH_LM);
 		Text(skp, 22, 6, GC->rtcc->TwoImpMultDispBuffer.MAN_VEH);
 		Text(skp, 22, 7, "%.3lf", GC->rtcc->TwoImpMultDispBuffer.WT);
 		Text_GET_HHHMMSSC(skp, 22, 8, GC->rtcc->TwoImpMultDispBuffer.GET1);
 		Text_GET_HHHMMSSC(skp, 22, 9, GC->rtcc->TwoImpMultDispBuffer.GMT1);
+		Text_GET_HHHMMSSC(skp, 56, 5, GC->rtcc->TwoImpMultDispBuffer.GETTH_CSM);
 		Text(skp, 56, 6, "%.4lf", GC->rtcc->TwoImpMultDispBuffer.PHASE);
 		Text(skp, 56, 7, "%.2lf", GC->rtcc->TwoImpMultDispBuffer.DH);
 		Text(skp, 56, 8, GC->rtcc->TwoImpMultDispBuffer.OPTION);
+		Text(skp, 56, 9, GC->rtcc->TwoImpMultDispBuffer.MinutesUntil);
 
 		for (int i = 0; i < GC->rtcc->TwoImpMultDispBuffer.Solutions; i++)
 		{
