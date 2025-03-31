@@ -376,10 +376,13 @@ struct AP11AGSSVPAD
 
 struct AP10MAPUPDATE
 {
-	AP10MAPUPDATE() :Rev(0), LOSGET(0.0), AOSGET(0.0), PMGET(0.0), SSGET(0.0), SRGET(0.0), type(0), LOSGET2(0.0), AOSGET2(0.0), PMGET2(0.0), SSGET2(0.0) {}
+	AP10MAPUPDATE() : LOSGET(0.0), AOSGET(0.0), PMGET(0.0), SSGET(0.0), SRGET(0.0), type(0), LOSGET2(0.0), AOSGET2(0.0), PMGET2(0.0), SSGET2(0.0)
+	{
+		sprintf(Rev, "");
+		sprintf(remarks, "");
+	}
 
-	int Rev;		//Revolution of update
-	char RevText[10];	//Used for non integer rev number (ie Apollo 8)
+	char Rev[10];	//Revolution of update
 	double LOSGET;	//Time of LOS
 	double AOSGET;	//Time of AOS
 	double PMGET;	//Time of meridian crossing (150° or 180° W), alternative: AOS without burn

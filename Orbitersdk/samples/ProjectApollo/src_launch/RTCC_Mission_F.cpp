@@ -1194,7 +1194,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LunarOrbitMapUpdate(sv2, upd_ellip);
 
 		form->type = 6;
-		form->Rev = 1;
+		sprintf(form->Rev, "1");
 		form->AOSGET = upd_ellip.AOSGET;
 		form->LOSGET = upd_hyper.LOSGET;
 		form->PMGET = upd_hyper.PMGET;
@@ -1237,35 +1237,35 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (fcn == 41)
 		{
-			form->Rev = 2;
+			sprintf(form->Rev, "2");
 		}
 		else if (fcn == 43)
 		{
-			form->Rev = 4;
+			sprintf(form->Rev, "4");
 		}
 		else if (fcn == 44)
 		{
-			form->Rev = 11;
+			sprintf(form->Rev, "11");
 		}
 		else if (fcn == 45 || fcn == 46 || fcn == 47 || fcn == 48 || fcn == 49)
 		{
-			form->Rev = fcn - 23;
+			sprintf(form->Rev, "%d", fcn - 23);
 		}
 		else if (fcn == 140)
 		{
-			form->Rev = 27;
+			sprintf(form->Rev, "27");
 		}
 		else if (fcn == 141)
 		{
-			form->Rev = 29;
+			sprintf(form->Rev, "29");
 		}
 		else if (fcn == 142)
 		{
-			form->Rev = 30;
+			sprintf(form->Rev, "30");
 		}
 		else if (fcn == 143)
 		{
-			form->Rev = 31;
+			sprintf(form->Rev, "31");
 		}
 	}
 	break;
@@ -1286,7 +1286,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LunarOrbitMapUpdate(sv1, upd_postloi);
 
 		form->type = 6;
-		form->Rev = 3;
+		sprintf(form->Rev, "3");
 		form->AOSGET = upd_postloi.AOSGET;
 		form->LOSGET = upd_preloi.LOSGET;
 		form->PMGET = upd_preloi.PMGET;
@@ -1310,7 +1310,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LunarOrbitMapUpdate(sv1, upd_posttei);
 
 		form->type = 7;
-		form->Rev = 32;
+		sprintf(form->Rev, "32");
 		form->AOSGET = upd_pretei.AOSGET;
 		form->AOSGET2 = upd_posttei.AOSGET;
 		form->LOSGET = upd_pretei.LOSGET;

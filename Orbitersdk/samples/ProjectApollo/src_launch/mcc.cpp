@@ -1742,8 +1742,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 		{
 			AP10MAPUPDATE * form = (AP10MAPUPDATE *)padForm;
 
-			SAVE_INT("MCC_AP10MAPUPDATE_REV", form->Rev);
-			SAVE_STRING("MCC_AP10MAPUPDATE_REVTEXT", form->RevText);
+			SAVE_STRING("MCC_AP10MAPUPDATE_REV", form->Rev);
 			SAVE_INT("MCC_AP10MAPUPDATE_type", form->type);
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_AOSGET", form->AOSGET);
 			SAVE_DOUBLE("MCC_AP10MAPUPDATE_LOSGET", form->LOSGET);
@@ -2360,8 +2359,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 		{
 			AP10MAPUPDATE * form = (AP10MAPUPDATE *)padForm;
 
-			papiReadScenario_int(line, "MCC_AP10MAPUPDATE_REV", form->Rev);
-			papiReadScenario_string(line, "MCC_AP10MAPUPDATE_REVTEXT", form->RevText);
+			papiReadScenario_string(line, "MCC_AP10MAPUPDATE_REV", form->Rev);
 			papiReadScenario_int(line, "MCC_AP10MAPUPDATE_type", form->type);
 			papiReadScenario_double(line, "MCC_AP10MAPUPDATE_AOSGET", form->AOSGET);
 			papiReadScenario_double(line, "MCC_AP10MAPUPDATE_LOSGET", form->LOSGET);
@@ -3035,8 +3033,7 @@ void MCC::drawPad(bool writetofile){
 		int hh, mm;
 		double ss;
 
-		sprintf(buffer, "MAP UPDATE REV %d\n", form->Rev);
-		sprintf(buffer, "MAP UPDATE REV %s\n", form->RevText);
+		sprintf(buffer, "MAP UPDATE REV %s\n", form->Rev);
 		OrbMech::SStoHHMMSS(form->LOSGET, hh, mm, ss);
 		sprintf(buffer, "%sLOS: %d:%02d:%02.0f\n", buffer, hh, mm, ss);
 		if (form->type == 0 || form->type == 4 || form->type == 6)
