@@ -399,7 +399,7 @@ struct AP10MAPUPDATE
 struct AP11LMARKTRKPAD
 {
 	int entries;
-	char LmkID[5][128];		// Landmark ID
+	char LmkID[4][128];		// Landmark ID
 	double T1[4];			// T1 time (landmark over horizon)
 	double T2[4];			// T2 time (spacecraft at 35° elevation from landmark)
 	double CRDist[4];		// landmark distance to ground track
