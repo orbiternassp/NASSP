@@ -1051,7 +1051,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		LunarOrbitMapUpdate(sv3, upd_ellip2);
 
 		form->type = 3;
-		sprintf(form->RevText, "1/2");
+		sprintf(form->Rev, "1/2");
 		form->LOSGET = upd_hyper.LOSGET;
 		form->PMGET = upd_hyper.PMGET;
 		form->AOSGET = upd_ellip.AOSGET;
@@ -1122,7 +1122,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		LunarOrbitMapUpdate(sv1, upd_ellip2);
 
 		form->type = 1;
-		sprintf(form->RevText, "2/3");
+		sprintf(form->Rev, "2/3");
 		form->LOSGET = upd_ellip.LOSGET;
 		form->SRGET = upd_ellip.SRGET;
 		form->PMGET = upd_ellip.PMGET;
@@ -1172,7 +1172,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		if (fcn == 62)
 		{
-			sprintf(form->RevText, "3/4");
+			sprintf(form->Rev, "3/4");
 			sv1 = sv0;
 
 			LunarOrbitMapUpdate(sv1, upd_ellip);
@@ -1203,7 +1203,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 		else if (fcn == 63)
 		{
-			sprintf(form->RevText, "4/5");
+			sprintf(form->Rev, "4/5");
 			sv1 = coast(sv0, 15.0*60.0);
 
 			landmarkopt.sv0 = sv1;
@@ -1242,7 +1242,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 		else if (fcn == 64)
 		{
-			sprintf(form->RevText, "5/6");
+			sprintf(form->Rev, "5/6");
 			sv1 = sv0;
 
 			landmarkopt.sv0 = sv1;
@@ -1279,7 +1279,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 		else if (fcn == 65)
 		{
-			sprintf(form->RevText, "6/7");
+			sprintf(form->Rev, "6/7");
 			sv1 = sv0;
 
 			landmarkopt.sv0 = sv1;
@@ -1330,7 +1330,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 		else if (fcn == 66)
 		{
-			sprintf(form->RevText, "7/8");
+			sprintf(form->Rev, "7/8");
 			sv1 = sv0;
 
 			landmarkopt.sv0 = sv1;
@@ -1371,12 +1371,12 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 		else if (fcn == 67)
 		{
-			sprintf(form->RevText, "8/9");
+			sprintf(form->Rev, "8/9");
 			sv1 = sv0;
 		}
 		else if (fcn == 68)
 		{
-			sprintf(form->RevText, "9/10");
+			sprintf(form->Rev, "9/10");
 			sv1 = coast(sv0, 35.0*60.0);
 		}
 
@@ -1407,7 +1407,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		LunarOrbitMapUpdate(sv1, upd_hyper);
 
 		form->type = 1;
-		form->Rev = 10;
+		sprintf(form->Rev, "10");
 		form->LOSGET = upd_ellip.LOSGET;
 		form->SRGET = upd_ellip.SRGET;
 		form->PMGET = upd_ellip.PMGET;

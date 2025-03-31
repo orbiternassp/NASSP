@@ -1768,7 +1768,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		sv2 = coast(sv1, -30.0*60.0);
 		LunarOrbitMapUpdate(sv2, upd_ellip);
 
-		form->Rev = 1;
+		sprintf(form->Rev, "1");
 		form->type = 2;
 		form->AOSGET = upd_hyper.AOSGET;
 		form->LOSGET = upd_hyper.LOSGET;
@@ -1783,7 +1783,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		sv0 = StateVectorCalcEphem(calcParams.src);
 
-		form->Rev = mcc->MoonRev + 1;
+		sprintf(form->Rev, "%d", mcc->MoonRev + 1);
 
 		LunarOrbitMapUpdate(sv0, *form, 180.0*RAD);
 		form->type = 4;
@@ -1809,7 +1809,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		form->PMGET = upd_ellip.PMGET;
 		form->AOSGET = upd_ellip.AOSGET;
 		form->AOSGET2 = upd_hyper.AOSGET;
-		form->Rev = mcc->MoonRev + 1;
+		sprintf(form->Rev, "%d", mcc->MoonRev + 1);
 		form->type = 5;
 	}
 	break;
@@ -2490,7 +2490,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 
 		LunarOrbitMapUpdate(sv_CSM, *form, 180.0*RAD);
-		form->Rev = mcc->MoonRev + 1;
+		sprintf(form->Rev, "%d", mcc->MoonRev + 1);
 		form->type = 4;
 
 		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_CSM_upl);
