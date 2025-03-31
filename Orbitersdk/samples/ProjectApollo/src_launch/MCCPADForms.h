@@ -379,6 +379,7 @@ struct AP10MAPUPDATE
 	AP10MAPUPDATE() :Rev(0), LOSGET(0.0), AOSGET(0.0), PMGET(0.0), SSGET(0.0), SRGET(0.0), type(0), LOSGET2(0.0), AOSGET2(0.0), PMGET2(0.0), SSGET2(0.0) {}
 
 	int Rev;		//Revolution of update
+	char RevText[10];	//Used for non integer rev number (ie Apollo 8)
 	double LOSGET;	//Time of LOS
 	double AOSGET;	//Time of AOS
 	double PMGET;	//Time of meridian crossing (150° or 180° W), alternative: AOS without burn
@@ -390,8 +391,7 @@ struct AP10MAPUPDATE
 	double AOSGET2; //Time of AOS for a second rev (type = 3) or taking LOI into account (type = 2) or TEI (type = 5)
 					//0 = Only LOS/AOS and PM, 1 = Display all parameters, 2 = LOS, AOS with and AOS without LOI, 3 = Like 1 but for two revs, 4 = Like 0 but shows 180° instead of PM,
 	int type;		//5 = like 2 but for TEI, 6 = like 0 but shows 150° instead of PM, 7 = LOS, AOS w/ TEI, AOS w/o TEI
-	char remarks[128];	// remarks
-	char RevText[10];	//Used for non integer rev number (ie Apollo 8)
+	char remarks[256];	// remarks
 };
 
 // APOLLO 11 LANDMARK TRACKING PAD

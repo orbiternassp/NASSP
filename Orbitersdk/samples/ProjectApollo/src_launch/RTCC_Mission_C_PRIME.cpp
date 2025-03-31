@@ -1321,12 +1321,12 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			LandmarkTrackingPAD(landmarkoptTCA, TCAtempPAD);
 
 			OrbMech::format_time_XXHMMSS(buffer1, TCAtempPAD.T2[0]);
-			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T2[0]);
-			OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T2[1]);
-			OrbMech::format_time_XXHMMSS(buffer4, tempPAD.T2[2]);
-			OrbMech::format_time_XXHMMSS(buffer5, tempPAD.T2[3]);
+			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T1[0]);
+			OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T1[1]);
+			OrbMech::format_time_XXHMMSS(buffer4, tempPAD.T1[2]);
+			OrbMech::format_time_XXHMMSS(buffer5, tempPAD.T1[3]);
 
-			sprintf(form->remarks, "IP-1 for B-1 TCA: %s  CP-1 ACQ: %s  CP-2 ACQ: %s  CP-3 ACQ: %s  B-1 ACQ: %s", buffer1, buffer2, buffer3, buffer4, buffer5);
+			sprintf(form->remarks, "IP-1 for B-1 TCA: %s  CP-1 ACQ: %s  CP-2 ACQ: %s  CP-3 ACQ: %s  B-1 ACQ: %s  Acquisition times for when first coming over horizon", buffer1, buffer2, buffer3, buffer4, buffer5);
 		}
 		else if (fcn == 66)
 		{
@@ -1362,10 +1362,10 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 			LandmarkTrackingPAD(landmarkopt, tempPAD);
 
-			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T1[0]);
-			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T1[1]);
-			OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T1[2]);
-			OrbMech::format_time_XXHMMSS(buffer4, tempPAD.T1[3]);
+			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T2[0]);
+			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T2[1]);
+			OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T2[2]);
+			OrbMech::format_time_XXHMMSS(buffer4, tempPAD.T2[3]);
 
 			sprintf(form->remarks, "CP-1 ACQ: %s  CP-2 ACQ: %s  CP-3 ACQ: %s  B-1 ACQ: %s", buffer1, buffer2, buffer3, buffer4);
 		}
