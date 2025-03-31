@@ -13645,6 +13645,7 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargeting
 	res.DV_TPI_LVLH = lamres.dV_LVLH;
 	res.DV_TPF_LVLH = lamres.dV_LVLH2;
 	res.VH = V_H;
+	res.CSM_STA_ID = opt.CSM_STA_ID;
 
 	sv_TPI = coast(sv_INS, T_TPI - sv_INS.GMT);
 	sv_TPI.V = sv_TPI.V + lamres.dV;

@@ -7432,12 +7432,12 @@ void ApolloRTCCMFD::set_LiftoffDT(double dt)
 
 void ApolloRTCCMFD::menuLLTPThresholdTime()
 {
-	GenericGETInput(&GC->rtcc->PZLLTT.GETTH, "Choose the threshold time for liftoff (Format: hhh:mm:ss)");
+	GenericGETInput(&GC->rtcc->med_k50.GETTH, "Choose the threshold time for liftoff (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::menuLLTPVectorTime()
 {
-	GenericGETInput(&GC->rtcc->PZLLTT.GETV, "Choose the vector time for liftoff (Format: hhh:mm:ss)");
+	GenericGETInput(&GC->rtcc->med_k50.GETV, "Choose the vector time for liftoff (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::menuLunarLiftoffVHorInput()

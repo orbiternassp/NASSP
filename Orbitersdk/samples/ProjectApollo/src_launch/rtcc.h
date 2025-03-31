@@ -650,6 +650,8 @@ struct LLTPOpt
 {
 	//CSM state vector
 	EphemerisData sv_CSM;
+	//CSM state vector station ID
+	std::string CSM_STA_ID;
 	//Yaw steer limit
 	double Y_S;
 	//Desired radial velocity at insertion
@@ -3309,6 +3311,13 @@ public:
 		double TimeStep = 60.0;
 		double TimeRange = 600.0;
 	} med_k30;
+
+	//Lunar Launch Targeting Processor (Apollo 14 and later, MED code is not from any documentation!)
+	struct MED_K50
+	{
+		double GETTH = 0.0;
+		double GETV = 0.0;
+	} med_k50;
 
 	//Transfer a GPM to the MPT
 	struct MED_M65

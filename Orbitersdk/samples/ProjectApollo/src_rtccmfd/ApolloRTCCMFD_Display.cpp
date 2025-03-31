@@ -6678,9 +6678,19 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->TextW(CW * 42, CH * 25, L"H\u209AT", 3);
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		SetMOCRFont(skp, 3, true);
-		Text(skp, 19, 1, GC->rtcc->PZLLTT.CSM_STA_ID);
-		Text_GET_HHHMMSS(skp, 16, 2, GC->rtcc->PZLLTT.GETTH);
-		Text_GET_HHHMMSS(skp, 16, 3, GC->rtcc->PZLLTT.GETV);
+		if (GC->MissionPlanningActive)
+		{
+			Text(skp, 19, 1, GC->rtcc->PZLLTT.CSM_STA_ID);
+		}
+		else
+		{
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			PrintCSMVessel(Buffer, false);
+			Text(skp, 12, 1, Buffer);
+			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+		}
+		Text_GET_HHHMMSS(skp, 16, 2, GC->rtcc->med_k50.GETTH);
+		Text_GET_HHHMMSS(skp, 16, 3, GC->rtcc->med_k50.GETV);
 		Text(skp, 55, 1, "%+.4lf", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
 		Text(skp, 55, 2, "%+.4lf", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
 		Text(skp, 55, 3, "%.4lf", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
