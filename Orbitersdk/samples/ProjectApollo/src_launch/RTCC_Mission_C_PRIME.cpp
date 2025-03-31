@@ -702,7 +702,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		if (fcn == 31)
 		{
 			sprintf(form->purpose, "LOI-1");
-			sprintf(form->remarks, "No ullage,  Horizon window: At ignition minus 2 minutes; 40 degrees unlit,  At ignition; 27 degrees unlit");
+			sprintf(form->remarks, "No ullage,  Horizon window: At ignition minus 2 minutes; 40 degrees unlit.  At ignition; 27 degrees unlit");
 
 			char buffer1[1000];
 			char buffer2[1000];
@@ -947,6 +947,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 50:	// MISSION CP TEI-1 (Pre LOI)
 	case 51:	// MISSION CP TEI-2 (Pre LOI)
+	case 52:	// MISSION CP TEI-3 (Assumes LOI-2)
 	{
 		RTEMoonOpt entopt;
 		EntryResults res;
@@ -967,12 +968,19 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sv1 = coast(sv1, 0.5*3600.0);
 			sprintf(form->remarks, "Ullage: 2 jet (B/D), 20 seconds,  X-axis on horizon at ignition minus 3 min, Assumes LOI-1");
 		}
-		else
+		else if (fcn == 51)
 		{
 			sprintf(manname, "TEI-2");
 			entopt.t_zmin = 146.0*3600.0;
 			sv1 = coast(sv1, 2.5*3600.0);
 			sprintf(form->remarks, "Ullage: 2 jet (B/D), 20 seconds,  Horizon on minus 2 deg line at ignition minus 3 min, Assumes LOI-1");
+		}
+		else
+		{
+			sprintf(manname, "TEI-3");
+			entopt.t_zmin = 146.0*3600.0;
+			sv1 = coast(sv1, 0.5*3600.0);
+			sprintf(form->remarks, "Ullage: 2 jet (B/D), 20 seconds,  Horizon on 1 deg line at ignition minus 3 min, Assumes LOI-2");
 		}
 
 		entopt.EntryLng = -165.0*RAD;
@@ -1012,8 +1020,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP10MAPUPDATE upd_hyper, upd_ellip, upd_ellip2;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
-		AP11LMARKTRKPAD tempPAD;
-		LMARKTRKPADOpt landmarkopt;
+		AP11LMARKTRKPAD TCAtempPAD;
+		LMARKTRKPADOpt landmarkoptTCA;
 
 		char buffer1[100];
 		char buffer2[100];
@@ -1043,40 +1051,40 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->AOSGET2 = upd_ellip2.AOSGET;
 		form->SSGET2 = upd_ellip2.SSGET;
 
-		landmarkopt.sv0 = sv1;
-		landmarkopt.entries = 4;
-		landmarkopt.Elevation = 90.0*RAD;
+		landmarkoptTCA.sv0 = sv1;
+		landmarkoptTCA.entries = 4;
+		landmarkoptTCA.Elevation = 90.0*RAD;
 
 		//CP-1
-		landmarkopt.LmkTime[0] = 71.0*3600.0;
-		landmarkopt.lat[0] = -5.250*RAD;
-		landmarkopt.lng[0] = -162.700*RAD;
-		landmarkopt.alt[0] = 0.0*1852.0;
+		landmarkoptTCA.LmkTime[0] = 71.0*3600.0;
+		landmarkoptTCA.lat[0] = -5.250*RAD;
+		landmarkoptTCA.lng[0] = -162.700*RAD;
+		landmarkoptTCA.alt[0] = 0.0*1852.0;
 
 		//CP-2
-		landmarkopt.LmkTime[1] = 71.0*3600.0;
-		landmarkopt.lat[1] = -10.200*RAD;
-		landmarkopt.lng[1] = 155.100*RAD;
-		landmarkopt.alt[1] = 0.0*1852.0;
+		landmarkoptTCA.LmkTime[1] = 71.0*3600.0;
+		landmarkoptTCA.lat[1] = -10.200*RAD;
+		landmarkoptTCA.lng[1] = 155.100*RAD;
+		landmarkoptTCA.alt[1] = 0.0*1852.0;
 
 		//CP-3
-		landmarkopt.LmkTime[2] = 71.0*3600.0 + 30.0*60.0;
-		landmarkopt.lat[2] = -9.100*RAD;
-		landmarkopt.lng[2] = 95.900*RAD;
-		landmarkopt.alt[2] = 0.0*1852.0;
+		landmarkoptTCA.LmkTime[2] = 71.0*3600.0 + 30.0*60.0;
+		landmarkoptTCA.lat[2] = -9.100*RAD;
+		landmarkoptTCA.lng[2] = 95.900*RAD;
+		landmarkoptTCA.alt[2] = 0.0*1852.0;
 
 		//B-1
-		landmarkopt.LmkTime[3] = 71.0*3600.0 + 30.0*60.0;
-		landmarkopt.lat[3] = 2.675*RAD;
-		landmarkopt.lng[3] = 35.025*RAD;
-		landmarkopt.alt[3] = -0.99*1852.0;
+		landmarkoptTCA.LmkTime[3] = 71.0*3600.0 + 30.0*60.0;
+		landmarkoptTCA.lat[3] = 2.675*RAD;
+		landmarkoptTCA.lng[3] = 35.025*RAD;
+		landmarkoptTCA.alt[3] = -0.99*1852.0;
 
-		LandmarkTrackingPAD(landmarkopt, tempPAD);
+		LandmarkTrackingPAD(landmarkoptTCA, TCAtempPAD);
 
-		OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T2[0]);
-		OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T2[1]);
-		OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T2[2]);
-		OrbMech::format_time_XXHMMSS(buffer4, tempPAD.T2[3]);
+		OrbMech::format_time_XXHMMSS(buffer1, TCAtempPAD.T2[0]);
+		OrbMech::format_time_XXHMMSS(buffer2, TCAtempPAD.T2[1]);
+		OrbMech::format_time_XXHMMSS(buffer3, TCAtempPAD.T2[2]);
+		OrbMech::format_time_XXHMMSS(buffer4, TCAtempPAD.T2[3]);
 
 		sprintf(form->remarks, "CP-1 TCA: %s  CP-2 TCA: %s  CP-3 TCA: %s  B-1 TCA: %s", buffer1, buffer2, buffer3, buffer4);
 	}
@@ -1112,7 +1120,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		landmarkopt.sv0 = sv1;
 		landmarkopt.entries = 1;
-		landmarkopt.Elevation = 90.0*RAD;
 
 		//B-1
 		landmarkopt.LmkTime[0] = 74.0*3600.0;
@@ -1122,7 +1129,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		LandmarkTrackingPAD(landmarkopt, tempPAD);
 
-		OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T1[0]);
+		OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T2[0]);
 
 		sprintf(form->remarks, "B-1 ACQ: %s", buffer1);
 	}
@@ -1139,8 +1146,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP10MAPUPDATE upd_ellip;
 
 		AP10MAPUPDATE * form = (AP10MAPUPDATE *)pad;
-		AP11LMARKTRKPAD tempPAD;
-		LMARKTRKPADOpt landmarkopt;
+		AP11LMARKTRKPAD tempPAD, TCAtempPAD;
+		LMARKTRKPADOpt landmarkopt, landmarkoptTCA;
 
 		char buffer1[100];
 		char buffer2[100];
@@ -1150,12 +1157,15 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		sv0 = StateVectorCalcEphem(calcParams.src);
 
-		landmarkopt.Elevation = 90.0*RAD;
+		landmarkoptTCA.Elevation = 90.0*RAD;
 
 		if (fcn == 62)
 		{
 			sprintf(form->RevText, "3/4");
 			sv1 = sv0;
+
+			LunarOrbitMapUpdate(sv1, upd_ellip);
+			double SUBSOLGET = (upd_ellip.SSGET - upd_ellip.SRGET)/2 + upd_ellip.SRGET;
 
 			landmarkopt.sv0 = sv1;
 			landmarkopt.entries = 2;
@@ -1174,37 +1184,50 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 			LandmarkTrackingPAD(landmarkopt, tempPAD);
 
-			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T1[0]);
-			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T1[1]);
+			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T2[0]);
+			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T2[1]);
+			OrbMech::format_time_XXHMMSS(buffer3, SUBSOLGET);
 
-			sprintf(form->remarks, "IP-1 for B-1 ACQ: %s  IP-2 for B-1 ACQ: %s", buffer1, buffer2);
+			sprintf(form->remarks, "Subsolar Point: %s  IP-1 for B-1 ACQ: %s  IP-2 for B-1 ACQ: %s", buffer3, buffer1, buffer2);
 		}
 		else if (fcn == 63)
 		{
-			form->Rev = 4/5;
+			sprintf(form->RevText, "4/5");
 			sv1 = coast(sv0, 15.0*60.0);
 
 			landmarkopt.sv0 = sv1;
-			landmarkopt.entries = 2;
+			landmarkoptTCA.sv0 = sv1;
+			landmarkopt.entries = 1;
+			landmarkoptTCA.entries = 1;
 
 			//IP-1 (CP-2)
 			landmarkopt.LmkTime[0] = 77.0*3600.0;
-			landmarkopt.lat[0] = -8.250*RAD;
-			landmarkopt.lng[0] = 105.750*RAD;
+			landmarkopt.lat[0] = -11.100*RAD;
+			landmarkopt.lng[0] = 165.000*RAD;
 			landmarkopt.alt[0] = 0.0*1852.0;
 
 			//IP-1 (B-1)
-			landmarkopt.LmkTime[1] = 77.0*3600.0 + 30.0*60.0;
-			landmarkopt.lat[1] = 0.580*RAD;
-			landmarkopt.lng[1] = 43.730*RAD;
-			landmarkopt.alt[1] = 0.0*1852.0;
+			landmarkoptTCA.LmkTime[0] = 77.0*3600.0 + 30.0*60.0;
+			landmarkoptTCA.lat[0] = 0.580*RAD;
+			landmarkoptTCA.lng[0] = 43.730*RAD;
+			landmarkoptTCA.alt[0] = 0.0*1852.0;
 
 			LandmarkTrackingPAD(landmarkopt, tempPAD);
+			LandmarkTrackingPAD(landmarkoptTCA, TCAtempPAD);
 
-			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T1[0]);
-			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T2[1]);
+			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T2[0]);
+			OrbMech::format_time_XXHMMSS(buffer2, TCAtempPAD.T2[0]);
 
 			sprintf(form->remarks, "IP-1 for CP-2 ACQ: %s  IP-1 for B-1 TCA: %s", buffer1, buffer2);
+
+			AGCStateVectorUpdate(buffer3, 1, RTCC_MPT_LM, sv0, false);
+
+			sprintf(uplinkdata, "%s", buffer3);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "LM state vector");
+			}
 		}
 		else if (fcn == 64)
 		{
@@ -1212,31 +1235,34 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sv1 = sv0;
 
 			landmarkopt.sv0 = sv1;
+			landmarkoptTCA.sv0 = sv1;
 			landmarkopt.entries = 3;
+			landmarkoptTCA.entries = 1;
 
 			//IP-1 (B-1)
-			landmarkopt.LmkTime[0] = 80.0*3600.0;
-			landmarkopt.lat[0] = 0.580*RAD;
-			landmarkopt.lng[0] = 43.730*RAD;
-			landmarkopt.alt[0] = 0.0*1852.0;
+			landmarkoptTCA.LmkTime[0] = 80.0*3600.0;
+			landmarkoptTCA.lat[0] = 0.580*RAD;
+			landmarkoptTCA.lng[0] = 43.730*RAD;
+			landmarkoptTCA.alt[0] = 0.0*1852.0;
 
 			//CP-1
-			landmarkopt.LmkTime[1] = 79.0*3600.0;
-			landmarkopt.lat[1] = -5.250*RAD;
-			landmarkopt.lng[1] = -162.700*RAD;
-			landmarkopt.alt[1] = 0.0*1852.0;
+			landmarkopt.LmkTime[0] = 79.0*3600.0;
+			landmarkopt.lat[0] = -5.250*RAD;
+			landmarkopt.lng[0] = -162.700*RAD;
+			landmarkopt.alt[0] = 0.0*1852.0;
 
 			//CP-2
-			landmarkopt.LmkTime[2] = 79.0*3600.0;
-			landmarkopt.lat[2] = -10.200*RAD;
-			landmarkopt.lng[2] = 155.100*RAD;
-			landmarkopt.alt[2] = 0.0*1852.0;
+			landmarkopt.LmkTime[1] = 79.0*3600.0;
+			landmarkopt.lat[1] = -10.200*RAD;
+			landmarkopt.lng[1] = 155.100*RAD;
+			landmarkopt.alt[1] = 0.0*1852.0;
 
 			LandmarkTrackingPAD(landmarkopt, tempPAD);
+			LandmarkTrackingPAD(landmarkoptTCA, TCAtempPAD);
 
-			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T2[0]);
-			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T1[1]);
-			OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T1[2]);
+			OrbMech::format_time_XXHMMSS(buffer1, TCAtempPAD.T2[0]);
+			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T2[0]);
+			OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T2[1]);
 
 			sprintf(form->remarks, "IP-1 for B-1 TCA: %s  CP-1 ACQ: %s  CP-2 ACQ: %s", buffer1, buffer2, buffer3);
 		}
@@ -1246,45 +1272,48 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sv1 = sv0;
 
 			landmarkopt.sv0 = sv1;
-			landmarkopt.entries = 5;
+			landmarkoptTCA.sv0 = sv1;
+			landmarkopt.entries = 4;
+			landmarkoptTCA.entries = 1;
 
 			//IP-1 (B-1)
-			landmarkopt.LmkTime[0] = 82.0*3600.0;
-			landmarkopt.lat[0] = 0.580*RAD;
-			landmarkopt.lng[0] = 43.730*RAD;
-			landmarkopt.alt[0] = 0.0*1852.0;
+			landmarkoptTCA.LmkTime[0] = 82.0*3600.0;
+			landmarkoptTCA.lat[0] = 0.580*RAD;
+			landmarkoptTCA.lng[0] = 43.730*RAD;
+			landmarkoptTCA.alt[0] = 0.0*1852.0;
 
 			//CP-1
-			landmarkopt.LmkTime[1] = 81.0*3600.0;
-			landmarkopt.lat[1] = -5.250*RAD;
-			landmarkopt.lng[1] = -162.700*RAD;
-			landmarkopt.alt[1] = 0.0*1852.0;
+			landmarkopt.LmkTime[0] = 81.0*3600.0;
+			landmarkopt.lat[0] = -5.250*RAD;
+			landmarkopt.lng[0] = -162.700*RAD;
+			landmarkopt.alt[0] = 0.0*1852.0;
 
 			//CP-2
-			landmarkopt.LmkTime[2] = 81.0*3600.0;
-			landmarkopt.lat[2] = -10.200*RAD;
-			landmarkopt.lng[2] = 155.100*RAD;
-			landmarkopt.alt[2] = 0.0*1852.0;
+			landmarkopt.LmkTime[1] = 81.0*3600.0;
+			landmarkopt.lat[1] = -10.200*RAD;
+			landmarkopt.lng[1] = 155.100*RAD;
+			landmarkopt.alt[1] = 0.0*1852.0;
 
 			//CP-3
-			landmarkopt.LmkTime[3] = 81.0*3600.0 + 30.0*60.0;
-			landmarkopt.lat[3] = -9.100*RAD;
-			landmarkopt.lng[3] = 95.900*RAD;
-			landmarkopt.alt[3] = 0.0*1852.0;
+			landmarkopt.LmkTime[2] = 81.0*3600.0 + 30.0*60.0;
+			landmarkopt.lat[2] = -9.100*RAD;
+			landmarkopt.lng[2] = 95.900*RAD;
+			landmarkopt.alt[2] = 0.0*1852.0;
 
 			//B-1
-			landmarkopt.LmkTime[4] = 81.0*3600.0 + 30.0*60.0;
-			landmarkopt.lat[4] = 2.675*RAD;
-			landmarkopt.lng[4] = 35.025*RAD;
-			landmarkopt.alt[4] = -0.99*1852.0;
+			landmarkopt.LmkTime[3] = 81.0*3600.0 + 30.0*60.0;
+			landmarkopt.lat[3] = 2.675*RAD;
+			landmarkopt.lng[3] = 35.025*RAD;
+			landmarkopt.alt[3] = -0.99*1852.0;
 
 			LandmarkTrackingPAD(landmarkopt, tempPAD);
+			LandmarkTrackingPAD(landmarkoptTCA, TCAtempPAD);
 
-			OrbMech::format_time_XXHMMSS(buffer1, tempPAD.T2[0]);
-			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T1[1]);
-			OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T1[2]);
-			OrbMech::format_time_XXHMMSS(buffer4, tempPAD.T1[3]);
-			OrbMech::format_time_XXHMMSS(buffer5, tempPAD.T1[4]);
+			OrbMech::format_time_XXHMMSS(buffer1, TCAtempPAD.T2[0]);
+			OrbMech::format_time_XXHMMSS(buffer2, tempPAD.T2[0]);
+			OrbMech::format_time_XXHMMSS(buffer3, tempPAD.T2[1]);
+			OrbMech::format_time_XXHMMSS(buffer4, tempPAD.T2[2]);
+			OrbMech::format_time_XXHMMSS(buffer5, tempPAD.T2[3]);
 
 			sprintf(form->remarks, "IP-1 for B-1 TCA: %s  CP-1 ACQ: %s  CP-2 ACQ: %s  CP-3 ACQ: %s  B-1 ACQ: %s", buffer1, buffer2, buffer3, buffer4, buffer5);
 		}
@@ -1383,6 +1412,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		SV sv;
 		char buffer1[1000];
 		char buffer2[1000];
+		char buffer3[1000];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -1412,14 +1442,17 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP11ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "LOI-2");
 
-		AGCStateVectorUpdate(buffer1, sv, true);
+		//CSM & LM state vector
+		AGCStateVectorUpdate(buffer1, sv, true, false);
+		AGCStateVectorUpdate(buffer3, sv, false, false);
 		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
-		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		sprintf(uplinkdata, "%s%s%s", buffer1, buffer3, buffer2);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, Target load");
+			sprintf(upDesc, "CSM & LM state vectors, Target load");
+			sprintf(form->remarks, "No ullage,  Horizon window: At ignition minus 3 minutes; 27 degrees, horizon left.  At ignition; 18 degrees, horizon left");
 		}
 	}
 	break;
@@ -1467,52 +1500,63 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			entopt.RevsTillTEI = 0;
 			sprintf(manname, "TEI-1");
+			sprintf(form->remarks, "Ullage: 2 jet (B/D), 20 seconds,  X-axis on horizon at ignition minus 3 min, Assumes LOI-1");
 		}
 		if (fcn == 105) //TEI-2
 		{
 			sprintf(manname, "TEI-2");
+			sprintf(form->remarks, "Ullage: 2 jet (B/D), 20 seconds,  Horizon on minus 2 deg line at ignition minus 3 min, Assumes LOI-1");
 		}
 		if (fcn == 106) //TEI-3
 		{
 			sprintf(manname, "TEI-3");
-			sprintf(form->remarks, "Assumes no LOI-2");
+			sprintf(form->remarks, "Ullage: 2 jet (B/D), 20 seconds,  Horizon on 2 deg line at ignition minus 3 min, Assumes no LOI-2");
 		}
 		else if (fcn == 107) //TEI-4
 		{
 			sprintf(manname, "TEI-4");
+			sprintf(form->remarks, "Ullage: 2 jet (B/D), 20 seconds,  Horizon on 2 deg line at ignition minus 3 min");
 		}
 		else if (fcn == 108) //TEI-5
 		{
 			sprintf(manname, "TEI-5");
+			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 4 deg line at ignition minus 3 min");
 		}
 		else if (fcn == 109) //TEI-6
 		{
 			sprintf(manname, "TEI-6");
+			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 6 deg line at ignition minus 3 min");
 		}
 		else if (fcn == 110) //TEI-7
 		{
 			sprintf(manname, "TEI-7");
+			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 2 deg line at ignition");
 		}
 		else if (fcn == 111) //TEI-8
 		{
 			sprintf(manname, "TEI-8");
+			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 4 deg line at ignition");
 		}
 		else if (fcn == 112) //TEI-9
 		{
 			sprintf(manname, "TEI-9");
+			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 1.2 deg line at ignition minus 3 min,  P37 High-speed procedure (-MA) req'd");
 		}
 		else if (fcn == 113) //Preliminary TEI-10
 		{
 			sprintf(manname, "Preliminary TEI-10");
+			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 2.9 deg line at ignition minus 3 min,  P37 High-speed procedure (-MA) req'd");
 		}
 		else if (fcn == 200) //TEI-10
 		{
 			entopt.RevsTillTEI = 0;
 			sprintf(manname, "TEI-10");
+			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 3.2 deg line at ignition minus 3 min,  P37 High-speed procedure (-MA) req'd");
 		}
 		else if (fcn == 201) //TEI-11
 		{
 			sprintf(manname, "TEI-11");
+			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 2.9 deg line at ignition minus 2 min,  P37 High-speed procedure (-MA) req'd");
 		}
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink

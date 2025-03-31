@@ -1399,7 +1399,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "LM state vector, DOI Target load, descent Target load");
+			sprintf(upDesc, "LM state vector, DOI target load, Descent target load");
 		}
 	}
 	break;
@@ -2659,7 +2659,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				char buffer2[1000];
 
 				sprintf(upMessage, "%s has been scrubbed", manname);
-				sprintf(upDesc, "CSM state vector, entry target");
+				sprintf(upDesc, "CSM state vector, Entry target");
 
 				AGCStateVectorUpdate(buffer1, sv, true);
 				CMCEntryUpdate(buffer2, res.latitude, res.longitude);
@@ -2683,7 +2683,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				char buffer3[1000];
 
 				sprintf(upMessage, "%s has been scrubbed", manname);
-				sprintf(upDesc, "CSM state vector, entry target, Entry REFSMMAT");
+				sprintf(upDesc, "CSM state vector, Entry target, Entry REFSMMAT");
 
 				AGCStateVectorUpdate(buffer1, sv, true);
 				CMCEntryUpdate(buffer2, res.latitude, res.longitude);
@@ -2818,7 +2818,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, entry target");
+				sprintf(upDesc, "CSM state vector, Entry target");
 			}
 		}
 	}

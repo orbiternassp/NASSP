@@ -400,12 +400,12 @@ struct AP11LMARKTRKPAD
 {
 	int entries;
 	char LmkID[5][128];		// Landmark ID
-	double T1[5];			// T1 time (landmark over horizon)
-	double T2[5];			// T2 time (spacecraft at 35° elevation from landmark)
-	double CRDist[5];		// landmark distance to ground track
-	double Lat[5];			// landmark latitude
-	double Lng05[5];		// landmark longitude divided by 2
-	double Alt[5];			// landmark altitude
+	double T1[4];			// T1 time (landmark over horizon)
+	double T2[4];			// T2 time (spacecraft at 35° elevation from landmark)
+	double CRDist[4];		// landmark distance to ground track
+	double Lat[4];			// landmark latitude
+	double Lng05[4];		// landmark longitude divided by 2
+	double Alt[4];			// landmark altitude
 };
 
 // APOLLO 10 DAP DATA PAD

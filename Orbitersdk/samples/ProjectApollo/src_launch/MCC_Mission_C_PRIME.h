@@ -81,17 +81,17 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_CP_LUNAR_ORBIT3	103
 // Ends at Map Update 2/3
 #define MST_CP_LUNAR_ORBIT4	104
-// Ends at TEI-3 Calculation
+// Ends at TEI-3 (No LOI-2) Calculation
 #define MST_CP_LUNAR_ORBIT5	105
-// Ends at Map Update 3/4
+// Ends at TEI-3 Calculation
 #define MST_CP_LUNAR_ORBIT6	106
-// Ends at TEI-4 Calculation
+// Ends at Map Update 3/4
 #define MST_CP_LUNAR_ORBIT7	107
-// Ends at Map Update 4/5
+// Ends at TEI-4 Calculation
 #define MST_CP_LUNAR_ORBIT8	108
-// Blank
+// Ends at Map Update 4/5
 #define MST_CP_LUNAR_ORBIT9	109
-// Ends at SV Update
+// Blank
 #define MST_CP_LUNAR_ORBIT10 110
 // Ends at TEI-5 Calculation
 #define MST_CP_LUNAR_ORBIT11 111
@@ -121,7 +121,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_CP_LUNAR_ORBIT23 123
 // Ends at TEI-11 Calculation
 #define MST_CP_LUNAR_ORBIT24 124
-// Ends at Map Update 10 to TEI Burn
+// Ends at TEI Burn
 
 #define MST_CP_TRANSEARTH1	201
 //Ends at Entry REFSMMAT update
