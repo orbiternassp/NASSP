@@ -623,8 +623,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GET_TIG_imp = OrbMech::HHMMSSToSS(27, 30, 0);
 
 		lambert.mode = 5;
-		lambert.T1 = GET_TIG_imp;
-		lambert.T2 = OrbMech::HHMMSSToSS(28, 1, 0);
+		lambert.T1 = GMTfromGET(GET_TIG_imp);
+		lambert.T2 = GMTfromGET(OrbMech::HHMMSSToSS(28, 1, 0));
 		lambert.ChaserVehicle = RTCC_MPT_CSM;
 		lambert.sv_A = sv_A;
 		lambert.sv_P = sv_P;

@@ -344,6 +344,13 @@ AP9LMCDHPADOpt::AP9LMCDHPADOpt()
 	REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 }
 
+TwoImpulseResuls::TwoImpulseResuls()
+{
+	dV = dV2 = dV_LVLH = dV_LVLH2 = _V(0, 0, 0);
+	T1 = T2 = 0.0;
+	SolutionFound = false;
+}
+
 FIDOOrbitDigitals::FIDOOrbitDigitals()
 {
 	A = 0.0;
