@@ -399,6 +399,8 @@ struct EntryResults
 
 struct TwoImpulseResuls
 {
+	TwoImpulseResuls();
+
 	EphemerisData sv_tig;		//State vector before NCC/TPI
 	EphemerisData sv_tig_apo;	//State vector after NCC/TPI
 	EphemerisData sv_tig2;		//State vector before NSR/TPF
