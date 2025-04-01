@@ -304,7 +304,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP11ManPADOpt opt;
 		SV sv0;
 		double TLIplus;
-		char manname[8];
+		char manname[32];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -389,7 +389,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		int engine;
 		MATRIX3 REFSMMAT;
 		VECTOR3 dV_LVLH, dv;
-		char manname[8];
+		char manname[32];
 		char ullage[10];
 
 		AP11MNV * form = (AP11MNV *)pad;
@@ -963,7 +963,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		EntryResults res;
 		AP11ManPADOpt opt;
 		SV sv0, sv1;
-		char manname[8];
+		char manname[32];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -1326,7 +1326,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			OrbMech::format_time_XXHMMSS(buffer4, tempPAD.T1[2]);
 			OrbMech::format_time_XXHMMSS(buffer5, tempPAD.T1[3]);
 
-			sprintf(form->remarks, "IP-1 for B-1 TCA: %s  CP-1 ACQ: %s  CP-2 ACQ: %s  CP-3 ACQ: %s  B-1 ACQ: %s  Acquisition times for when first coming over horizon", buffer1, buffer2, buffer3, buffer4, buffer5);
+			sprintf(form->remarks, "IP-1 for B-1 TCA: %s  CP-1 ACQ: %s  CP-2 ACQ: %s  CP-3 ACQ: %s  B-1 ACQ: %s  Acquisition times for when landmark first coming over horizon", buffer1, buffer2, buffer3, buffer4, buffer5);
 		}
 		else if (fcn == 66)
 		{
@@ -1337,25 +1337,25 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			landmarkopt.entries = 4;
 
 			//CP-1
-			landmarkopt.LmkTime[0] = 71.0*3600.0;
+			landmarkopt.LmkTime[0] = 83.0*3600.0;
 			landmarkopt.lat[0] = -5.250*RAD;
 			landmarkopt.lng[0] = -162.700*RAD;
 			landmarkopt.alt[0] = 0.0*1852.0;
 
 			//CP-2
-			landmarkopt.LmkTime[1] = 71.0*3600.0;
+			landmarkopt.LmkTime[1] = 83.0*3600.0;
 			landmarkopt.lat[1] = -10.200*RAD;
 			landmarkopt.lng[1] = 155.100*RAD;
 			landmarkopt.alt[1] = 0.0*1852.0;
 
 			//CP-3
-			landmarkopt.LmkTime[2] = 71.0*3600.0 + 30.0*60.0;
+			landmarkopt.LmkTime[2] = 83.0*3600.0 + 30.0*60.0;
 			landmarkopt.lat[2] = -9.100*RAD;
 			landmarkopt.lng[2] = 95.900*RAD;
 			landmarkopt.alt[2] = 0.0*1852.0;
 
 			//B-1
-			landmarkopt.LmkTime[3] = 71.0*3600.0 + 30.0*60.0;
+			landmarkopt.LmkTime[3] = 83.0*3600.0 + 30.0*60.0;
 			landmarkopt.lat[3] = 2.675*RAD;
 			landmarkopt.lng[3] = 35.025*RAD;
 			landmarkopt.alt[3] = -0.99*1852.0;
@@ -1406,13 +1406,12 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		ExecuteManeuver(sv0, WeightsTable, TimeofIgnition, DeltaV_LVLH, RTCC_ENGINETYPE_CSMSPS, sv1, WeightsTable2);
 		LunarOrbitMapUpdate(sv1, upd_hyper);
 
-		form->type = 1;
+		form->type = 7;
 		sprintf(form->Rev, "10");
+
 		form->LOSGET = upd_ellip.LOSGET;
-		form->SRGET = upd_ellip.SRGET;
-		form->PMGET = upd_ellip.PMGET;
-		form->AOSGET = upd_hyper.AOSGET;
-		form->SSGET = 0.0;
+		form->AOSGET = upd_ellip.AOSGET;
+		form->AOSGET2 = upd_hyper.AOSGET;
 	}
 	break;
 	case 102:	// MISSION CP LOI-2 MANEUVER
@@ -1502,7 +1501,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		EntryResults res;
 		AP11ManPADOpt opt;
 		SV sv;
-		char manname[8];
+		char manname[32];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -1552,23 +1551,24 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		else if (fcn == 112) //TEI-9
 		{
 			sprintf(manname, "TEI-9");
-			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 1.2 deg line at ignition minus 3 min,  P37 High-speed procedure (-MA) req'd");
+			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 1.2 deg line at ignition minus 3 min,  P37: High-speed procedure (-MA) req'd");
 		}
 		else if (fcn == 113) //Preliminary TEI-10
 		{
 			sprintf(manname, "Preliminary TEI-10");
-			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 2.9 deg line at ignition minus 3 min,  P37 High-speed procedure (-MA) req'd");
+			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 2.9 deg line at ignition minus 3 min,  P37: High-speed procedure (-MA) req'd");
+			opt.sxtstardtime = 120.0;
 		}
 		else if (fcn == 200) //TEI-10
 		{
 			entopt.RevsTillTEI = 0;
 			sprintf(manname, "TEI-10");
-			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 3.2 deg line at ignition minus 3 min,  P37 High-speed procedure (-MA) req'd");
+			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 3.2 deg line at ignition minus 3 min,  P37: High-speed procedure (-MA) req'd");
 		}
 		else if (fcn == 201) //TEI-11
 		{
 			sprintf(manname, "TEI-11");
-			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 2.9 deg line at ignition minus 2 min,  P37 High-speed procedure (-MA) req'd");
+			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 2.9 deg line at ignition minus 2 min,  P37: High-speed procedure (-MA) req'd");
 		}
 
 		sv = StateVectorCalc(calcParams.src); //State vector for uplink
@@ -1598,7 +1598,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		form->VI0 = res.VIO / 0.3048;
 		form->GET05G = res.GET05G;
 
-		if (fcn == 109 || fcn == 110 || fcn == 111 || fcn == 113)
+		if (fcn >= 109 && fcn <= 113)
 		{
 			char buffer1[1000];
 
@@ -1683,7 +1683,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP11ManPADOpt opt;
 		double MCCtime;
 		MATRIX3 REFSMMAT;
-		char manname[8];
+		char manname[32];
 		SV sv;
 
 		AP11MNV * form = (AP11MNV *)pad;

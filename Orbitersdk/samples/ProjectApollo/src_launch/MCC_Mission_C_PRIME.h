@@ -107,7 +107,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_CP_LUNAR_ORBIT16 116
 // Ends at Map Update 7/8
 #define MST_CP_LUNAR_ORBIT17 117
-// Ends at SV Update
+// Blank
 #define MST_CP_LUNAR_ORBIT18 118
 // Ends at TEI-9 Calculation
 #define MST_CP_LUNAR_ORBIT19 119
