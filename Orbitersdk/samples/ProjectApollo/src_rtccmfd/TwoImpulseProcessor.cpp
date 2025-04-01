@@ -40,6 +40,19 @@ TwoImpulseOpt::TwoImpulseOpt()
 	PhaseAngle = 0.0;
 	WT = 0.0;
 	Elev = 0.0;
+
+	TwoImpulseTableIndicator = 1;
+	PlanNumber = 1;
+}
+
+TwoImpulseSingleSolutionTable::TwoImpulseSingleSolutionTable()
+{
+	LM_GMTTH = 0.0;
+	CSM_GMTTH = 0.0;
+	MAN_VEH = 1;
+	PointingMode = 1;
+	PlanNumber = 0;
+	TwoImpulseTableIndicator = 1;
 }
 
 TwoImpulseProcessor::TwoImpulseProcessor(RTCC *r) : RTCCModule(r)
@@ -68,6 +81,10 @@ void TwoImpulseProcessor::PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &re
 	case 2: //Multiple Solution
 		MultipleSolution();
 		break;
+	case 3: //Single Solution
+	case 4: //Transfer Plan
+		SingleSolutionTransferPlan();
+		break;
 	case 5: //External request
 		ExternalRequest(res);
 		break;
@@ -82,7 +99,7 @@ void TwoImpulseProcessor::CorrectiveCombination()
 void TwoImpulseProcessor::MultipleSolution()
 {
 	TwoImpulseMultipleSolutionTableEntry entry[13];
-	VehicleDataBlock sv_C1_apo, sv_C2, sv_C2_apo;
+	VECTOR3 DV_LVLH;
 	double DVT, TMAX, DV_opt, T_c, T_c_apo, DT_Light;
 	int soln, err, OPCASE, PMMDAN_ERR;
 
@@ -177,8 +194,8 @@ void TwoImpulseProcessor::MultipleSolution()
 					entry[soln].DELV2 = length(sv_C2_apo.sv.V - sv_C2.sv.V);
 					entry[soln].Time1 = sv_C1.sv.GMT;
 					entry[soln].Time2 = sv_C2.sv.GMT;
-					PMSTICN_PY(sv_C1_apo.sv.R, sv_C1_apo.sv.V, sv_C1.sv.R, sv_C1.sv.V, entry[soln].PITCH1, entry[soln].YAW1);
-					PMSTICN_PY(sv_C2_apo.sv.R, sv_C2_apo.sv.V, sv_C2.sv.R, sv_C2.sv.V, entry[soln].PITCH2, entry[soln].YAW2);
+					PMSTICN_PY(sv_C1_apo.sv.R, sv_C1_apo.sv.V, sv_C1.sv.R, sv_C1.sv.V, entry[soln].PITCH1, entry[soln].YAW1, DV_LVLH);
+					PMSTICN_PY(sv_C2_apo.sv.R, sv_C2_apo.sv.V, sv_C2.sv.R, sv_C2.sv.V, entry[soln].PITCH2, entry[soln].YAW2, DV_LVLH);
 					DVT = length(sv_C2_apo.sv.V - sv_C2.sv.V) + length(sv_C1_apo.sv.V - sv_C1.sv.V);
 
 					//Is this the 1st solution computed?
@@ -318,9 +335,288 @@ void TwoImpulseProcessor::MultipleSolution()
 	pRTCC->EMSNAP(0, 63);
 }
 
-void TwoImpulseProcessor::SingleSolution()
+void TwoImpulseProcessor::SingleSolutionTransferPlan()
+{
+	int err;
+	bool found;
+
+	//Read desired block of desired table
+	found = false;
+	if (opt.TwoImpulseTableIndicator == 1)
+	{
+		//Multiple
+		if (opt.PlanNumber <= pRTCC->PZTIPREG.Solutions)
+		{
+			found = true;
+		}
+	}
+	else
+	{
+		//Corrective Combination
+		if (opt.PlanNumber <= pRTCC->PZTIPCCD.Solutions)
+		{
+			found = true;
+		}
+	}
+	//Is requested solution available?
+	if (found == false)
+	{
+		//No
+		pRTCC->PMXSPT("PMSTICN", 29);
+		return;
+	}
+
+	StationIDArr LMSTAID, CSMSTAID;
+	double LM_GMTTH, CSM_GMTTH;
+	int MAN_VEH;
+
+	//Get saved block for requested solution
+	if (opt.TwoImpulseTableIndicator == 1)
+	{
+		sv_C1 = pRTCC->PZMYSAVE.SV_mult[0];
+		sv_T1 = pRTCC->PZMYSAVE.SV_mult[1];
+		//Set up STAIDs, maneuver and threshold times and desired offsets for re-computation of desired solution
+		LMSTAID = pRTCC->PZTIPREG.LMSTAID;
+		CSMSTAID = pRTCC->PZTIPREG.CSMSTAID;
+		LM_GMTTH = pRTCC->PZTIPREG.LM_GMTTH;
+		CSM_GMTTH = pRTCC->PZTIPREG.CSM_GMTTH;
+		MAN_VEH = pRTCC->PZTIPREG.MAN_VEH;
+		T1 = pRTCC->PZTIPREG.data[opt.PlanNumber - 1].Time1;
+		T2 = pRTCC->PZTIPREG.data[opt.PlanNumber - 1].Time2;
+		DH = pRTCC->GZGENCSN.TIDeltaH;
+		PhaseAngle = pRTCC->GZGENCSN.TIPhaseAngle;
+	}
+	else
+	{
+		sv_C1 = pRTCC->PZMYSAVE.SV_CC[0];
+		sv_T1 = pRTCC->PZMYSAVE.SV_CC[1];
+		//Set up STAIDs, maneuver and threshold times and desired offsets for re-computation of corrective combination desired solution
+		//T1 = pRTCC->PZTIPCCD.data[opt.PlanNumber - 1].Time1;
+		//T2 = pRTCC->PZTIPCCD.data[opt.PlanNumber - 1].Time2;
+		DH = pRTCC->GZGENCSN.TINSRNominalDeltaH;
+		PhaseAngle = pRTCC->GZGENCSN.TINSRNominalPhaseAngle;
+	}
+
+	//Advance to T1
+	if (coast(sv_C1, T1 - sv_C1.sv.GMT, sv_C1))
+	{
+		//Error: Reentered
+		pRTCC->PMXSPT("PMSTICN", 82);
+		return;
+	}
+	if (coast(sv_T1, T1 - sv_T1.sv.GMT, sv_T1))
+	{
+		//Error: Reentered
+		pRTCC->PMXSPT("PMSTICN", 82);
+		return;
+	}
+	//Calculate solution
+	err = PMMTIS(sv_C1, sv_T1, T2 - T1, DH, PhaseAngle, sv_C1_apo, sv_C2, sv_C2_apo);
+	if (err)
+	{
+		return;
+	}
+	if (opt.mode == 3)
+	{
+		VECTOR3 DV_LVLH1, DV_LVLH2;
+		double T_c1, T_c2, T_c_apo, PITCH1, YAW1, PITCH2, YAW2;
+		int PMMDAN_ERR;
+
+		//Compute impulsive pitch, yaw and VX, VY, VZ components for 1st maneuver
+		PMSTICN_PY(sv_C1_apo.sv.R, sv_C1_apo.sv.V, sv_C1.sv.R, sv_C1.sv.V, PITCH1, YAW1, DV_LVLH1);
+		//Compute impulsive pitch, yaw and VX, VY, VZ components for 2nd maneuver
+		PMSTICN_PY(sv_C2_apo.sv.R, sv_C2_apo.sv.V, sv_C2.sv.R, sv_C2.sv.V, PITCH2, YAW2, DV_LVLH2);
+		//Compute next environment change following each maneuver
+		pRTCC->PMMDAN(sv_C1_apo, 1, PMMDAN_ERR, T_c1, T_c_apo);
+		pRTCC->PMMDAN(sv_C2_apo, 1, PMMDAN_ERR, T_c2, T_c_apo);
+		//Put data in table
+		pRTCC->PZTIPSS.LMSTAID = LMSTAID;
+		pRTCC->PZTIPSS.CSMSTAID = CSMSTAID;
+		pRTCC->PZTIPSS.LM_GMTTH = LM_GMTTH;
+		pRTCC->PZTIPSS.CSM_GMTTH = CSM_GMTTH;
+		pRTCC->PZTIPSS.MAN_VEH = MAN_VEH;
+		pRTCC->PZTIPSS.PointingMode = opt.LOSMode;
+		pRTCC->PZTIPSS.PlanNumber = opt.PlanNumber;
+		pRTCC->PZTIPSS.TwoImpulseTableIndicator = opt.TwoImpulseTableIndicator;
+		pRTCC->PZTIPSS.ActualWT = opt.UllageQuads ? 1.0 : 0.0;
+		pRTCC->PZTIPSS.DeltaPitch = opt.DeltaPitch;
+		pRTCC->PZTIPSS.man[0].TIG = opt.RelMoTimeStep;
+		pRTCC->PZTIPSS.man[0].DV_LVLH = DV_LVLH1;
+		pRTCC->PZTIPSS.man[1].DV_LVLH = DV_LVLH2;
+		pRTCC->PZTIPSS.man[0].MinEnvironChange = T_c1 / 60.0;
+		pRTCC->PZTIPSS.man[1].MinEnvironChange = T_c2 / 60.0;
+		//Single Solution computation
+		SingleSolution(pRTCC->PZTIPSS);
+		//Set up display queue for single solution
+		pRTCC->EMSNAP(0, 65);
+	}
+	else
+	{
+		TransferPlan();
+	}
+}
+
+void LOS_PITCH_YAW(VECTOR3 R_C, VECTOR3 V_C, VECTOR3 R_T, double &pitch, double &yaw)
+{
+	VECTOR3 R4 = mul(OrbMech::LVLH_Matrix(R_C, V_C), R_T - R_C);
+	//Change to different LVLH definition
+	R4 = _V(R4.x, R4.z, -R4.y);
+	pitch = atan(-R4.y / sqrt(R4.x*R4.x + R4.z*R4.z));
+	yaw = atan2(-R4.z, R4.x);
+}
+
+void TwoImpulseProcessor::SingleSolution(TwoImpulseSingleSolutionTable &tab)
 {
 	//Load module PMMTISS
+
+	VECTOR3 DV[2], R_C[2], V_C[2], R_T[2], V_T[2];
+	double RelMoTimeStep, l_dot_T, g_dot_T, h_dot_T, eps, R_E, R[2], WT_BEF[2], WT_AFT[2], T, isp, WDOT;
+	int UllageQuads;
+
+	if (sv_C1.sv.RBI == BODY_EARTH)
+	{
+		R_E = OrbMech::R_Earth;
+	}
+	else
+	{
+		R_E = pRTCC->BZLAND.rad[0];
+	}
+	R_C[0] = sv_C1.sv.R; R_C[1] = sv_C2.sv.R;
+	V_C[0] = sv_C1.sv.V; V_C[1] = sv_C2.sv.V;
+	R_T[0] = sv_T1.sv.R; R_T[1] = sv_T2.sv.R;
+	V_T[0] = sv_T1.sv.V; V_T[1] = sv_T2.sv.V;
+	R[0] = length(sv_C1.sv.R); R[1] = length(sv_C2.sv.R);
+	WT_BEF[0] = sv_C1.Weight; WT_BEF[1] = sv_C2.Weight;
+	WT_AFT[0] = sv_C1_apo.Weight; WT_AFT[1] = sv_C2_apo.Weight;
+
+	if (coast(sv_T1, T2 - sv_C1.sv.GMT, sv_T2))
+	{
+		//Error: Reentered
+		pRTCC->PMXSPT("PMSTICN", 82);
+		return;
+	}
+	//Recover temporarily stored parameters
+	RelMoTimeStep = tab.man[0].TIG;
+	UllageQuads = tab.ActualWT != 0.0 ? 2 : 1;
+	SecularRates(sv_T1.sv, l_dot_T, g_dot_T, h_dot_T);
+
+	//Store times of both maneuvers in single solution table
+	tab.man[0].TIG = sv_C1.sv.GMT;
+	tab.man[1].TIG = sv_C2.sv.GMT;
+	tab.ActualWT = (tab.man[1].TIG - tab.man[0].TIG)*(l_dot_T + g_dot_T);
+
+	//Convert external DV coordinates to components necessary for maneuver execution function
+	for (int i = 0; i < 2; i++)
+	{
+		DV[i] = _V(tab.man[i].DV_LVLH.x, tab.man[i].DV_LVLH.z, -tab.man[i].DV_LVLH.y);
+	}
+	
+	//Is CSM the chaser vehicle?
+	if (tab.MAN_VEH == 1)
+	{
+		eps = 7.25*RAD;
+		T = pRTCC->SystemParameters.MCTCT1;
+		isp = T / pRTCC->SystemParameters.MCTCW1;
+	}
+	else
+	{
+		eps = 0.0;
+		T = pRTCC->SystemParameters.MCTLT1;
+		isp = T / pRTCC->SystemParameters.MCTLW1;
+	}
+	WDOT = T * ((double)UllageQuads) / isp;
+
+	VehicleDataBlock sv_C_temp, sv_T_temp;
+	VECTOR3 DR, U_R, R4;
+	double phi, psi, V_B0, V_B1, V_B2, X_dot, Y_dot, Z_dot, X_BR, Y_BR, Z_BR, a_LAT, DELTA, DT_B0, DT_B1, DT_B2, T_APP, RC, RT, DPHI;
+	TwoImpulseSingleSolutionTableApproachData *app;
+
+	for (int i = 0; i < 2; i++)
+	{
+		//Pointer to approach data table
+		app = i == 0 ? tab.app1 : tab.app2;
+		//Store DV
+		tab.man[i].DV = length(DV[i]);
+		//Re-compute impulsive pitch and yaw for each maneuver of the requested solution
+		tab.man[i].Pitch = atan(-DV[i].y / sqrt(DV[i].x*DV[i].x + DV[i].z*DV[i].z));
+		tab.man[i].Yaw = atan2(-DV[i].z, DV[i].x);
+		//Compute pitch and yaw angles to LOS option (target or horizon)
+		tab.man[i].E_HOR = asin(R_E / R[i]) - PI05;
+		if (tab.PointingMode == 1)
+		{
+			//Target
+			//Compute relative coordinates of first vehicle in second vehicle's coordinate system
+			LOS_PITCH_YAW(R_C[i], V_C[i], R_T[i], tab.man[i].Pitch_LOS, tab.man[i].Yaw_LOS);
+		}
+		else
+		{
+			//Horizon
+			tab.man[i].Pitch_LOS = tab.man[i].E_HOR;
+			tab.man[i].Yaw_LOS = 0.0;
+		}
+		//Compute DV increments in body coordinates with vehicle pitched to view either the target of the horizon. Also compute burn times of each thruster for first maneuver
+		phi = tab.man[i].Pitch_LOS;
+		psi = tab.man[i].Yaw_LOS;
+		V_B0 = DV[i].x*cos(psi)*cos(phi) - DV[i].z*sin(psi)*cos(phi) - DV[i].y*sin(phi);
+		V_B1 = -DV[i].x*sin(psi) - DV[i].z*cos(psi);
+		V_B2 = DV[i].x*cos(psi)*sin(phi) - DV[i].z*sin(psi)*sin(phi) + DV[i].y*cos(phi);
+		//Compute DV increments in body coordinates with vehicle pitch to view either target or horizon
+		X_dot = V_B0 * cos(tab.DeltaPitch) - V_B2 * sin(tab.DeltaPitch);
+		Y_dot = V_B1;
+		Z_dot = V_B2 * cos(tab.DeltaPitch) - V_B0 * sin(tab.DeltaPitch);
+		//Add MED pitch angle for astronaut to view target or horizon to computed LOS pitch
+		tab.man[i].Pitch_LOS += tab.DeltaPitch;
+		//DV increments in body coordinates rotated through offset of thruster
+		X_BR = X_dot;
+		Y_BR = Y_dot * cos(eps) - Z_dot * sin(eps);
+		Z_BR = Z_dot * cos(eps) + Y_dot * sin(eps);
+		//Compute acceleration of lateral thrusters
+		a_LAT = 2.0*T / WT_BEF[i];
+		//Compute burn times with lateral thrusters
+		DT_B1 = abs(Y_BR) / a_LAT;
+		DT_B2 = abs(Z_BR) / a_LAT;
+		//Compute burn times with forward thrusters
+		DELTA = WT_BEF[i] / exp(abs(X_BR) / isp);
+		DT_B0 = (WT_BEF[i] - DELTA) / WDOT;
+		//Store
+		tab.man[i].DV_LOS = _V(X_BR, Y_BR, Z_BR);
+		tab.man[i].BT_LOS = _V(DT_B0, DT_B1, DT_B2);
+		//Three sets of data for the first maneuver, four sets for the second
+		for (int j = 0; j < (i == 0 ? 3 : 4); j++)
+		{
+			if (j == 0)
+			{
+				//First approach time is the time of the maneuver
+				T_APP = tab.man[i].TIG;
+				sv_C_temp = i == 0 ? sv_C1 : sv_C2;
+				sv_T_temp = i == 0 ? sv_T1 : sv_T2;
+			}
+			else
+			{
+				//Advance to next approach time
+				T_APP -= RelMoTimeStep;
+				coast(sv_C_temp, T_APP - sv_C_temp.sv.GMT, sv_C_temp);
+				coast(sv_T_temp, T_APP - sv_T_temp.sv.GMT, sv_T_temp);
+			}
+
+			//Range
+			DR = sv_T_temp.sv.R - sv_C_temp.sv.R;
+			U_R = unit(DR);
+			app[j].Range = length(DR);
+			//Range rate
+			app[j].RangeRate = dotp(sv_T_temp.sv.V - sv_C_temp.sv.V, U_R);
+			//Pitch and yaw
+			LOS_PITCH_YAW(sv_C_temp.sv.R, sv_C_temp.sv.V, sv_T_temp.sv.R, app[j].Elev, app[j].Azi);
+			//Offset
+			R4 = mul(OrbMech::LVLH_Matrix(sv_T_temp.sv.R, sv_T_temp.sv.V), sv_C_temp.sv.R - sv_T_temp.sv.R);
+			//Compute phase angle between chaser and target in target vehicle plane - DPHI is positive if chaser is leading
+			RC = length(sv_C_temp.sv.R);
+			RT = length(sv_T_temp.sv.R);
+			DPHI = atan2(R4.x, RT - R4.y);
+			//Compute curvilinear coordinates of active (chaser) from passive (target)
+			app[j].DX = _V(RT * DPHI, RT - RC, -R4.z);
+		}
+	}
 }
 
 void TwoImpulseProcessor::TransferPlan()
@@ -653,7 +949,7 @@ double TwoImpulseProcessor::T2Search()
 	return T1 + WT / (l_dot + g_dot);
 }
 
-void TwoImpulseProcessor::PMSTICN_PY(VECTOR3 R_A, VECTOR3 V_A, VECTOR3 R_B, VECTOR3 V_B, double &Pitch, double &Yaw) const
+void TwoImpulseProcessor::PMSTICN_PY(VECTOR3 R_A, VECTOR3 V_A, VECTOR3 R_B, VECTOR3 V_B, double &Pitch, double &Yaw, VECTOR3 &DV_LVLH) const
 {
 	VECTOR3 H_A, H_B;
 	double r_B, sin_delta, r_A_dot, r_B_dot, dr_dot, DV, h_A, h_B, VH_A, VH_B, DV_H;
@@ -683,6 +979,9 @@ void TwoImpulseProcessor::PMSTICN_PY(VECTOR3 R_A, VECTOR3 V_A, VECTOR3 R_B, VECT
 			Yaw -= PI2;
 		}
 	}
+	DV_LVLH.z = -dr_dot;
+	DV_LVLH.x = DV_H * cos(Yaw);
+	DV_LVLH.y = DV_H * sin(Yaw);
 }
 
 bool TwoImpulseProcessor::coast(VehicleDataBlock sv0, double dt, VehicleDataBlock &sv1) const

@@ -4018,10 +4018,7 @@ public:
 		TwoImpulseMultipleSolutionTableEntry data[13];
 	} TwoImpMultDispBuffer;
 
-	struct TwoImpulseSingleSolutionTable
-	{
-		std::string CSMSTAID, LMSTAID;
-	} PZTIPSS;
+	TwoImpulseSingleSolutionTable PZTIPSS;
 
 	struct CorrectiveCombinationSolutionTable
 	{
@@ -4262,7 +4259,7 @@ public:
 		//Block 1: Multiple Solution
 		VehicleDataBlock SV_mult[2];
 		//Block 2: Corrective Combination
-		EphemerisData SV_CC[2];
+		VehicleDataBlock SV_CC[2];
 		//Block 3: Transfer Data
 		EphemerisData SV_before[2];
 		VECTOR3 V_after[2];

@@ -51,6 +51,12 @@ struct TwoImpulseOpt
 	VehicleDataBlock sv_T;		//Target state vector
 	StationIDArr TargetStationID;
 
+	//For single solution and transfer
+	//1 = Multiple, 2 = Corrective Combination
+	int TwoImpulseTableIndicator;
+	//1 to 13
+	int PlanNumber;
+
 	//Mode 1 (Corrective Combination) only options
 	//Minimum height difference
 	double DH_min;
@@ -95,14 +101,12 @@ struct TwoImpulseOpt
 
 
 	//Single solution options
-	//1 = Multiple, 2 = Corrective Combination
-	int SingSolTable = 1;
-	//1 to 13
-	int SingSolNum = 1;
+	
+
 	//false = 2 quads, true = 4 quads
 	bool UllageQuads = true;
-	//false = Target, true = Horizon
-	bool LOSMode = false;
+	//1 = Target, 2 = Horizon
+	int LOSMode = 1;
 	double DeltaPitch = 0.0;
 	double RelMoTimeStep = 0.0;
 };
@@ -152,6 +156,55 @@ struct TwoImpulseMultipleSolutionTable
 	TwoImpulseMultipleSolutionTableEntry data[13];
 };
 
+struct TwoImpulseSingleSolutionTableManeuverData
+{
+	double TIG = 0.0;			// Time of maneuver (approach time increment is pre-set in this location for 1st maneuver)
+	double E_HOR = 0.0;			// E_HOR of maneuver
+	double DV = 0.0;			// DV of maneuver
+	double Pitch = 0.0;			// Pitch angle of maneuver
+	double Yaw = 0.0;			// Yaw angle of maneuver
+	VECTOR3 DV_LVLH = _V(0, 0, 0);
+	double Pitch_LOS = 0.0;		// LOS pitch
+	double Yaw_LOS = 0.0;		// LOS yaw
+	VECTOR3 DV_LOS = _V(0, 0, 0); // DV along axes
+	VECTOR3 BT_LOS = _V(0, 0, 0); // Burn times along axes
+	double MinEnvironChange = 0.0;	// Minutes until next environment change
+	double HA = 0.0;				// Apogee height
+	double HP = 0.0;				// Perigee height
+};
+
+struct TwoImpulseSingleSolutionTableApproachData
+{
+	double GMT = 0.0;	// Time of approach data
+	double Azi = 0.0;	// Azimuth
+	double Elev = 0.0;	// Elevation
+	double Range = 0.0;
+	double RangeRate = 0.0;
+	VECTOR3 DX = _V(0, 0, 0);	// Offset in curvilinear system
+};
+
+struct TwoImpulseSingleSolutionTable
+{
+	TwoImpulseSingleSolutionTable();
+
+	StationIDArr LMSTAID;
+	StationIDArr CSMSTAID;
+	double LM_GMTTH;
+	double CSM_GMTTH;
+	int MAN_VEH; //1 = CSM, 3 = LEM
+	int PointingMode; //1 = Target, 2 = Horizon
+	int PlanNumber;
+	int TwoImpulseTableIndicator;	// 1 = Multiple Solution, 2 = CC
+	double ActualPhase = 0.0;		// Actual phase after second maneuver
+	double ActualDH = 0.0;			// Actual height offset after second maneuver
+	double ActualWT = 0.0;			// Actual target terminal phase transfer angle between the two maneuvers (no. of firing quads is preset in this location)
+	double DeltaPitch = 0.0;		// Delta pitch angle
+	
+	TwoImpulseSingleSolutionTableManeuverData man[2];
+	TwoImpulseSingleSolutionTableApproachData app1[3];
+	TwoImpulseSingleSolutionTableApproachData app2[4];
+};
+
 class TwoImpulseProcessor : public RTCCModule
 {
 public:
@@ -162,18 +215,21 @@ protected:
 	void CorrectiveCombination();
 	//Mode 2: Multiple Solution
 	void MultipleSolution();
+	//Common code for single solution and transfer plan
+	void SingleSolutionTransferPlan();
 	//Mode 3: Single Solution
-	void SingleSolution();
+	void SingleSolution(TwoImpulseSingleSolutionTable &tab);
 	//Mode 4: Transfer Plan
 	void TransferPlan();
 	//Mode 5: External Request
 	void ExternalRequest(TwoImpulseResuls &res);
+
 	//Two Impulse Impulsive Maneuver Calculation
 	int PMMTIS(VehicleDataBlock sv_A1, VehicleDataBlock sv_P1, double dt, double DH, double theta, VehicleDataBlock &sv_A1_apo, VehicleDataBlock &sv_A2, VehicleDataBlock &sv_A2_apo) const;
 
 	bool ElevationAngleSearch(VehicleDataBlock sv_A0, VehicleDataBlock sv_P0, double Elev, VehicleDataBlock &sv_A1, VehicleDataBlock &sv_P1, double &T1) const;
 	double T2Search();
-	void PMSTICN_PY(VECTOR3 R_A, VECTOR3 V_A, VECTOR3 R_B, VECTOR3 V_B, double &Pitch, double &Yaw) const;
+	void PMSTICN_PY(VECTOR3 R_A, VECTOR3 V_A, VECTOR3 R_B, VECTOR3 V_B, double &Pitch, double &Yaw, VECTOR3 &DV_LVLH) const;
 	bool coast(VehicleDataBlock sv0, double dt, VehicleDataBlock &sv1) const;
 	void SecularRates(EphemerisData sv0, double &l_dot, double &g_dot, double &h_dot) const;
 
@@ -187,7 +243,16 @@ protected:
 	double WT;
 	//Chaser state vector before first maneuver
 	VehicleDataBlock sv_C1;
+	//Target state vector at time of first maneuver
 	VehicleDataBlock sv_T1;
+	//Chaser state vector after first maneuver
+	VehicleDataBlock sv_C1_apo;
+	//Chaser state vector before second maneuver
+	VehicleDataBlock sv_C2;
+	//Chaser state vector after second maneuver
+	VehicleDataBlock sv_C2_apo;
+	//Target state vector at time of second maneuver
+	VehicleDataBlock sv_T2;
 
 	TwoImpulseOpt opt;
 };
