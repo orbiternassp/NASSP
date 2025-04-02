@@ -675,6 +675,7 @@ void TLIGuidanceSim::PCMGN()
 	{
 		goto PMMSIU_PCMGN_20;
 	}
+	//Target update calculations
 	RN = P;
 	E = RMAG * (E - 1.0) / RN + 1.0;
 	TEMP1 = E * E;
@@ -701,6 +702,7 @@ PMMSIU_PCMGN_1A:
 	DDLT = T - TLAST;
 	goto PMMSIU_PCMGN_2A;
 PMMSIU_PCMGN_1B:
+	//Target update calculations
 	ALPHD = ALPHD - acos(TEMP4);
 	TEMP2 = E * cos(F);
 	RT = P / (1.0 + TEMP2);

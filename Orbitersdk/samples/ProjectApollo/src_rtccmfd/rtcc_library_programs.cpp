@@ -2037,6 +2037,14 @@ RTCC_PLAWDT_8_Z:
 RTCC_PLAWDT_9_T:
 	out.Err = 3;
 	//Move areas and weights to output
+	out.CSMArea = in.CSMArea;
+	out.SIVBArea = in.SIVBArea;
+	out.LMAscArea = in.LMAscArea;
+	out.LMDscArea = in.LMDscArea;
+	out.CSMWeight = in.CSMWeight;
+	out.SIVBWeight = in.SIVBWeight;
+	out.LMAscWeight = in.LMAscWeight;
+	out.LMDscWeight = in.LMDscWeight;
 	goto RTCC_PLAWDT_M_5;
 }
 

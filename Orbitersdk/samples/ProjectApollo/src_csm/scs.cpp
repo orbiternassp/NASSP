@@ -836,7 +836,7 @@ void GDC::Timestep(double simdt) {
 			pitchrate = pitchBmag->GetRates().y*cos(Attitude.x) - yawBmag->GetRates().z*sin(Attitude.x);
 			if (A9K3)
 			{
-				//Assumption: secant amplifier gets saturated at +/-80° yaw
+				//Assumption: secant amplifier gets saturated at +/-80Â° yaw
 				pitchrate *= min(5.75877, max(-5.75877, 1.0 / cos(Attitude.z)));
 			}
 		}
@@ -850,7 +850,7 @@ void GDC::Timestep(double simdt) {
 			//GDC align
 			//Factor 3.33 because:
 			//ASCP output: 19.1V * sin(error)
-			//BMAG output: 0.1V per °/s (so 5.729 V per rad/s)
+			//BMAG output: 0.1V per Â°/s (so 5.729 V per rad/s)
 			//ASCP output basically needs to be convered to an attitude rate in rad/s, so the factor should be 19.1 divided by 5.729
 			//Source: Apollo SCS Detailed Training Program
 			if (E0_503PR)
@@ -1095,7 +1095,7 @@ void GDC::LoadState(FILEHANDLE scn){
 ASCP::ASCP(Sound &clicksound) : ClickSound(clicksound)
 
 {
-	// These are the nominal values for a 72° launch azimuth.
+	// These are the nominal values for a 72Â° launch azimuth.
 	output.x = 162;
 	output.y = 90;
 	output.z = 0;
@@ -2386,7 +2386,7 @@ void EDA::Timestep(double simdt)
 	VECTOR3 bmag1rates = sat->bmag1.GetRates();
 	VECTOR3 bmag2rates = sat->bmag2.GetRates();
 	VECTOR3 imuatt = sat->imu.GetTotalAttitude();
-	VECTOR3 cmcerr = _V(sat->gdc.fdai_err_x, sat->gdc.fdai_err_y, sat->gdc.fdai_err_z) * 5.0 / 0.3 / 384.0*RAD;	//Converted from -384/384 to radians (-16.66°/16.66°)
+	VECTOR3 cmcerr = _V(sat->gdc.fdai_err_x, sat->gdc.fdai_err_y, sat->gdc.fdai_err_z) * 5.0 / 0.3 / 384.0*RAD;	//Converted from -384/384 to radians (-16.66Â°/16.66Â°)
 
 	double rate, err;
 
@@ -2426,11 +2426,11 @@ void EDA::Timestep(double simdt)
 	{
 		//Disable logic
 		rate = (T3QS76 ? 0.0 : bmag1rates.y) + (T3QS64 ? 0.0 : bmag2rates.y);
-		//Scale factor for 1°/s
+		//Scale factor for 1Â°/s
 		rate /= (1.0*RAD);
-		//Scale to 5°/s
+		//Scale to 5Â°/s
 		if (T3QS71) rate /= 5.0;
-		//Scale to 10°/s
+		//Scale to 10Â°/s
 		if (T3QS72) rate /= 2.0;
 		FDAI1AttitudeRate.x = rate;
 	}
@@ -2444,11 +2444,11 @@ void EDA::Timestep(double simdt)
 	{
 		//Disable logic
 		rate = (T3QS77 ? 0.0 : bmag1rates.y) + (T3QS65 ? 0.0 : bmag2rates.y);
-		//Scale factor for 1°/s
+		//Scale factor for 1Â°/s
 		rate /= (1.0*RAD);
-		//Scale to 5°/s
+		//Scale to 5Â°/s
 		if (T3QS71) rate /= 5.0;
-		//Scale to 10°/s
+		//Scale to 10Â°/s
 		if (T3QS72) rate /= 2.0;
 		FDAI2AttitudeRate.x = rate;
 	}
@@ -2478,9 +2478,9 @@ void EDA::Timestep(double simdt)
 	if (E1_307)
 	{
 		err = (T3QS73 ? 0.0 : -sat->gdc.GetPitchBodyError()) + (T3QS55 ? 0.0 : -sat->ascp.GetPitchEulerAttitudeSetError()) + (T3QS59 ? 0.0 : cmcerr.y) + (T3QS57 ? 0.0 : NormalizeAngle(-sat->bmag1.GetAttitudeError().y));
-		//Scale factor for 15°/s
+		//Scale factor for 15Â°/s
 		err /= (15.0*RAD);
-		//Scale to 5°/s
+		//Scale to 5Â°/s
 		if (T3QS67) err *= 3.0;
 		FDAI1AttitudeError.y = 41.0*err;
 	}
@@ -2493,9 +2493,9 @@ void EDA::Timestep(double simdt)
 	if (E2_307)
 	{
 		err = (T3QS74 ? 0.0 : -sat->gdc.GetPitchBodyError()) + (T3QS56 ? 0.0 : -sat->ascp.GetPitchEulerAttitudeSetError()) + (T3QS60 ? 0.0 : cmcerr.y) + (T3QS58 ? 0.0 : NormalizeAngle(-sat->bmag1.GetAttitudeError().y));
-		//Scale factor for 15°/s
+		//Scale factor for 15Â°/s
 		err /= (15.0*RAD);
-		//Scale to 5°/s
+		//Scale to 5Â°/s
 		if (T3QS67) err *= 3.0;
 		FDAI2AttitudeError.y = 41.0*err;
 	}
@@ -2549,11 +2549,11 @@ void EDA::Timestep(double simdt)
 	{
 		//Disable logic
 		rate = (T2QS76 ? 0.0 : -bmag1rates.z) + (T2QS64 ? 0.0 : -bmag2rates.z) + (T2QS68 ? 0.0 : -bmag1rates.x*tan(21.0*RAD)) + (T2QS63 ? 0.0 : -bmag2rates.x*tan(21.0*RAD));
-		//Scale factor for 1°/s
+		//Scale factor for 1Â°/s
 		rate /= (1.0*RAD);
-		//Scale to 5°/s
+		//Scale to 5Â°/s
 		if (T2QS71) rate /= 5.0;
-		//Scale to 10°/s
+		//Scale to 10Â°/s
 		if (T2QS72) rate /= 2.0;
 		FDAI1AttitudeRate.y = rate;
 	}
@@ -2567,11 +2567,11 @@ void EDA::Timestep(double simdt)
 	{
 		//Disable logic
 		rate = (T2QS77 ? 0.0 : -bmag1rates.z) + (T2QS65 ? 0.0 : -bmag2rates.z) + (T2QS69 ? 0.0 : -bmag1rates.x*tan(21.0*RAD)) + (T2QS66 ? 0.0 : -bmag2rates.x*tan(21.0*RAD));
-		//Scale factor for 1°/s
+		//Scale factor for 1Â°/s
 		rate /= (1.0*RAD);
-		//Scale to 5°/s
+		//Scale to 5Â°/s
 		if (T2QS71) rate /= 5.0;
-		//Scale to 10°/s
+		//Scale to 10Â°/s
 		if (T2QS72) rate /= 2.0;
 		FDAI2AttitudeRate.y = rate;
 	}
@@ -2601,9 +2601,9 @@ void EDA::Timestep(double simdt)
 	if (E1_307)
 	{
 		err = (T2QS73 ? 0.0 : sat->gdc.GetYawBodyError()) + (T2QS55 ? 0.0 : sat->ascp.GetYawEulerAttitudeSetError()) + (T2QS59 ? 0.0 : cmcerr.z) + (T2QS57 ? 0.0 : NormalizeAngle(sat->bmag1.GetAttitudeError().z));
-		//Scale factor for 15°/s
+		//Scale factor for 15Â°/s
 		err /= (15.0*RAD);
-		//Scale to 5°/s
+		//Scale to 5Â°/s
 		if (T2QS67) err *= 3.0;
 		//FDAI error is -scaled -41 to 41
 		FDAI1AttitudeError.z = 41.0*err;
@@ -2617,9 +2617,9 @@ void EDA::Timestep(double simdt)
 	if (E2_307)
 	{
 		err = (T2QS74 ? 0.0 : sat->gdc.GetYawBodyError()) + (T2QS56 ? 0.0 : sat->ascp.GetYawEulerAttitudeSetError()) + (T2QS60 ? 0.0 : cmcerr.z) + (T2QS58 ? 0.0 : NormalizeAngle(sat->bmag1.GetAttitudeError().z));
-		//Scale factor for 15°/s
+		//Scale factor for 15Â°/s
 		err /= (15.0*RAD);
-		//Scale to 5°/s
+		//Scale to 5Â°/s
 		if (T2QS67) err *= 3.0;
 		//FDAI error is -scaled -41 to 41
 		FDAI2AttitudeError.z = 41.0*err;
@@ -2674,11 +2674,11 @@ void EDA::Timestep(double simdt)
 	{
 		//Disable logic
 		rate = (T1QS64 ? 0.0 : bmag1rates.x) + (T1QS68 ? 0.0 : bmag2rates.x);
-		//Scale factor for 1°/s
+		//Scale factor for 1Â°/s
 		rate /= (1.0*RAD);
-		//Scale to 5°/s
+		//Scale to 5Â°/s
 		if (T1QS71) rate /= 5.0;
-		//Scale to 50°/s
+		//Scale to 50Â°/s
 		if (T1QS72) rate /= 10.0;
 		FDAI1AttitudeRate.z = rate;
 	}
@@ -2691,11 +2691,11 @@ void EDA::Timestep(double simdt)
 	{
 		//Disable logic
 		rate = (T1QS65 ? 0.0 : bmag1rates.x) + (T1QS63 ? 0.0 : bmag2rates.x);
-		//Scale factor for 1°/s
+		//Scale factor for 1Â°/s
 		rate /= (1.0*RAD);
-		//Scale to 5°/s
+		//Scale to 5Â°/s
 		if (T1QS71) rate /= 5.0;
-		//Scale to 50°/s
+		//Scale to 50Â°/s
 		if (T1QS72) rate /= 10.0;
 		FDAI2AttitudeRate.z = rate;
 	}
@@ -2724,11 +2724,11 @@ void EDA::Timestep(double simdt)
 	if (E1_307)
 	{
 		err = (T1QS55 ? 0.0 : ((T1QS73 ? 0.0 : sat->gdc.GetRollBodyMinusEulerError()) + sat->ascp.GetRollEulerAttitudeSetError())) + (T1QS59 ? 0.0 : cmcerr.x) + (T1QS57 ? 0.0 : NormalizeAngle(sat->bmag1.GetAttitudeError().x));
-		//Scale factor for 50°/s
+		//Scale factor for 50Â°/s
 		err /= (50.0*RAD);
-		//Scale to 5.0°/s
+		//Scale to 5.0Â°/s
 		if (T1QS67) err *= 10.0;
-		//Scale to 12.5°/s (for CDU)
+		//Scale to 12.5Â°/s (for CDU)
 		if (!T1QS75) err *= 4.0;
 		//error is -scaled -41 to 41
 		FDAI1AttitudeError.x = 41.0*err;
@@ -2742,11 +2742,11 @@ void EDA::Timestep(double simdt)
 	if (E2_307)
 	{
 		err = (T1QS56 ? 0.0 : ((T1QS73 ? 0.0 : sat->gdc.GetRollBodyMinusEulerError()) + sat->ascp.GetRollEulerAttitudeSetError())) + (T1QS60 ? 0.0 : cmcerr.x) + (T1QS58 ? 0.0 : NormalizeAngle(sat->bmag1.GetAttitudeError().x));
-		//Scale factor for 50°/s
+		//Scale factor for 50Â°/s
 		err /= (50.0*RAD);
-		//Scale to 5.0°/s
+		//Scale to 5.0Â°/s
 		if (T1QS67) err *= 10.0;
-		//Scale to 12.5°/s (for CDU)
+		//Scale to 12.5Â°/s (for CDU)
 		if (!T1QS76) err *= 4.0;
 		//FDAI error is -scaled -41 to 41
 		FDAI2AttitudeError.x = 41.0*err;
@@ -3941,7 +3941,7 @@ void ECA::TimeStep(double simdt) {
 		else
 			cmd_rate.z = errors.z;
 		
-		//Attitude error gain
+		// Attitude error gain
 		if (R1K25)
 			cmd_rate.x *= 0.5;
 		else
@@ -4044,7 +4044,7 @@ void ECA::TimeStep(double simdt) {
 
 		//Roll to yaw cross coupling
 		if (T1QS26)
-			rate_damp.z += -rate_damp.x * 0.38386; //tan(21.0°)
+			rate_damp.z += -rate_damp.x * 0.38386; //tan(21.0Â°)
 
 		// PSEUDORATE FEEDBACK
 		if (E1_506 && !T1QS44 && sat->ManualAttRollSwitch.GetState() == THREEPOSSWITCH_CENTER){
@@ -4106,9 +4106,9 @@ void ECA::TimeStep(double simdt) {
 		rate_err.y = cmd_rate.y - (rate_damp.y + pseudorate.y);
 		rate_err.z = cmd_rate.z - (rate_damp.z + pseudorate.z);
 		
-		// sprintf(oapiDebugString(),"SCS: RATE CMD r%.3f p%.3f y%.3f ERR r%.3f p%.3f y%.3f",
+		//sprintf(oapiDebugString(),"SCS: RATE CMD r%.3f p%.3f y%.3f ERR r%.3f p%.3f y%.3f",
 		//	cmd_rate.x * DEG, cmd_rate.y * DEG, cmd_rate.z * DEG, 
-		//	rate_err.x * DEG, rate_err.y * DEG, rate_err.z * DEG);	
+		//	rate_err.x * DEG, rate_err.y * DEG, rate_err.z * DEG);
 		// sprintf(oapiDebugString(),"SCS PITCH err %.4f rate %.3f cmd %.3f pseudo %.3f rate error %.3f", errors.y*DEG, pitchrate * DEG, cmd_rate.y * DEG, pseudorate.y * DEG, rate_err.y * DEG);
 		// sprintf(oapiDebugString(),"SCS ROLL rate %.3f cmd %.3f pseudo %.3f rate_err %.3f errors %.3f", rollrate * DEG, cmd_rate.x * DEG, pseudorate.x * DEG, rate_err.x * DEG, errors.x * DEG);
 		// sprintf(oapiDebugString(),"SCS YAW rate %.3f cmd %.3f pseudo %.3f rate_err %.3f errors %.3f", yawrate * DEG, cmd_rate.z * DEG, pseudorate.z * DEG, rate_err.z * DEG, errors.z * DEG);
@@ -4117,6 +4117,10 @@ void ECA::TimeStep(double simdt) {
 		// ROTATION
 		//
 
+		// Rate error deadband dependent on RATE switch on MDC-1. 0.2 deg/s or 2.0 deg/s for LOW and HIGH respectively.
+		// Our constant is the same regardless because we scale the inputs and not the deadband.
+		const double RATE_DEADBAND = 2.0 * RAD;
+
 		// Roll
 		switch(sat->ManualAttRollSwitch.GetState()){
 			case THREEPOSSWITCH_UP:
@@ -4124,7 +4128,7 @@ void ECA::TimeStep(double simdt) {
 				break;
 			case THREEPOSSWITCH_CENTER:  // RATE CMD
 				// Automatic mode and proportional-rate mode
-				if (rate_err.x > 0.034906585) {
+				if (rate_err.x > RATE_DEADBAND) {
 					// ACCEL PLUS
 					sat->rjec.SetThruster(9,1);
 					sat->rjec.SetThruster(11,1);
@@ -4136,7 +4140,7 @@ void ECA::TimeStep(double simdt) {
 					sat->rjec.SetThruster(16,0);
 					accel_roll_trigger=1; accel_roll_flag=1;
 				}
-				if (rate_err.x < -0.034906585) {
+				if (rate_err.x < -RATE_DEADBAND) {
 					// ACCEL MINUS
 					sat->rjec.SetThruster(10,1);
 					sat->rjec.SetThruster(12,1);
@@ -4179,7 +4183,7 @@ void ECA::TimeStep(double simdt) {
 				break;
 			case THREEPOSSWITCH_CENTER:  // RATE CMD
 				// Automatic mode and proportional-rate mode
-				if(rate_err.y > 0.034906585){
+				if(rate_err.y > RATE_DEADBAND){
 					// ACCEL PLUS
 					sat->rjec.SetThruster(1,1);
 					sat->rjec.SetThruster(3,1);
@@ -4187,7 +4191,7 @@ void ECA::TimeStep(double simdt) {
 					sat->rjec.SetThruster(4,0);
 					accel_pitch_trigger=1; accel_pitch_flag=1;
 				}
-				if(rate_err.y < -0.034906585){
+				if(rate_err.y < -RATE_DEADBAND){
 					// ACCEL MINUS
 					sat->rjec.SetThruster(2,1);
 					sat->rjec.SetThruster(4,1);
@@ -4222,7 +4226,7 @@ void ECA::TimeStep(double simdt) {
 				break;
 			case THREEPOSSWITCH_CENTER:  // RATE CMD
 				// Automatic mode and proportional-rate mode
-				if(rate_err.z > 0.034906585){
+				if(rate_err.z > RATE_DEADBAND){
 					// ACCEL PLUS
 					sat->rjec.SetThruster(5, 1);
 					sat->rjec.SetThruster(7, 1);
@@ -4230,7 +4234,7 @@ void ECA::TimeStep(double simdt) {
 					sat->rjec.SetThruster(8, 0);
 					accel_yaw_trigger=1; accel_yaw_flag=-1;
 				}
-				if(rate_err.z < -0.034906585){
+				if(rate_err.z < -RATE_DEADBAND){
 					// ACCEL MINUS
 					sat->rjec.SetThruster(6, 1);
 					sat->rjec.SetThruster(8, 1);
@@ -4328,7 +4332,7 @@ void ECA::TimeStep(double simdt) {
 		YawAutoTVCIntegrator.Reset();
 	}
 
-	//sprintf(oapiDebugString(), "MTVC Pitch: S18_2 %d thc_cw %d T3QS1 %d E2_507 %d E1_509 %d E2_509 %d RHC1 %f Rate: %f Pos: %f°", S18_2, thc_cw, T3QS1, E2_507, E1_509, E2_509, sat->rhc1.GetPitchPropRate(), rhc_rate.y, pitchMTVCPosition*DEG);
+	//sprintf(oapiDebugString(), "MTVC Pitch: S18_2 %d thc_cw %d T3QS1 %d E2_507 %d E1_509 %d E2_509 %d RHC1 %f Rate: %f Pos: %fÂ°", S18_2, thc_cw, T3QS1, E2_507, E1_509, E2_509, sat->rhc1.GetPitchPropRate(), rhc_rate.y, pitchMTVCPosition*DEG);
 
 	// If accel thrust fired and is no longer needed, kill it.
 	if(accel_roll_flag == 0 && accel_roll_trigger){
@@ -4928,7 +4932,6 @@ void EMS::TimeStep(double simdt) {
 			// dV/Range display
 			if (xacc > 0 || status == EMS_STATUS_DV) {
 				dVRangeCounter -= dV;
-				dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
 			}				
 			//sprintf(oapiDebugString(), "xacc %.10f", xacc);
 			break;
@@ -5099,6 +5102,8 @@ void EMS::TimeStep(double simdt) {
 			dVRangeCounter = sat->vhfranging.GetRange();
 			break;
 	}
+
+	dVRangeCounter = max(-1000.0, min(14000.0, dVRangeCounter));
 
 	// If powered, drive Glevel
 	if (status == EMS_STATUS_ENTRY || 

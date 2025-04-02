@@ -223,6 +223,12 @@ static MESHHANDLE hsat5stg32;
 static MESHHANDLE hsat5stg33;
 static MESHHANDLE hsat5stg34;
 
+static MESHHANDLE hsat5stg3wide;
+static MESHHANDLE hsat5stg31wide;
+static MESHHANDLE hsat5stg32wide;
+static MESHHANDLE hsat5stg33wide;
+static MESHHANDLE hsat5stg34wide;
+
 static MESHHANDLE hsat5stg1low;
 static MESHHANDLE hsat5intstglow;
 static MESHHANDLE hsat5stg2low;
@@ -269,6 +275,12 @@ void LoadSat5Meshes()
 	LOAD_MESH(hsat5stg33low, "ProjectApollo/LowRes/sat5stg33");
 	LOAD_MESH(hsat5stg34low, "ProjectApollo/LowRes/sat5stg34");
 
+	LOAD_MESH(hsat5stg3wide, "ProjectApollo/sat5stg3wide");
+	LOAD_MESH(hsat5stg31wide, "ProjectApollo/sat5stg31wide");
+	LOAD_MESH(hsat5stg32wide, "ProjectApollo/sat5stg32wide");
+	LOAD_MESH(hsat5stg33wide, "ProjectApollo/sat5stg33wide");
+	LOAD_MESH(hsat5stg34wide, "ProjectApollo/sat5stg34wide");
+
 	LOAD_MESH(hsat5stg3, "ProjectApollo/sat5stg3");
 	LOAD_MESH(hsat5stg3base, "ProjectApollo/sat5stg3base");
 	LOAD_MESH(hsat5stg31, "ProjectApollo/sat5stg31");
@@ -308,11 +320,20 @@ void SaturnV::SetupMeshes()
 	{
 		hStage1Mesh = hsat5stg1;
 		hStage2Mesh = hsat5stg2;
-		hStage3Mesh = hsat5stg3;
-		hStageSLA1Mesh = hsat5stg31;
-		hStageSLA2Mesh = hsat5stg32;
-		hStageSLA3Mesh = hsat5stg33;
-		hStageSLA4Mesh = hsat5stg34;
+		if (!UseWideSLA) {
+			hStage3Mesh = hsat5stg3;
+			hStageSLA1Mesh = hsat5stg31;
+			hStageSLA2Mesh = hsat5stg32;
+			hStageSLA3Mesh = hsat5stg33;
+			hStageSLA4Mesh = hsat5stg34;
+		}
+		else {
+			hStage3Mesh = hsat5stg3wide;
+			hStageSLA1Mesh = hsat5stg31wide;
+			hStageSLA2Mesh = hsat5stg32wide;
+			hStageSLA3Mesh = hsat5stg33wide;
+			hStageSLA4Mesh = hsat5stg34wide;
+		}
 	}
 }
 

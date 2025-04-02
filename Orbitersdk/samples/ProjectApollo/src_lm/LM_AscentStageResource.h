@@ -76,3 +76,6 @@
 #define AS_GRP_zCDR11 60
 #define AS_GRP_zLMP11 61
 #define AS_GRP_zWindowGlass 62
+#define AS_GRP_EVA_Ant 63
+#define AS_GRP_EVA_AntCone 64
+#define AS_GRP_EVA_AntTop 65

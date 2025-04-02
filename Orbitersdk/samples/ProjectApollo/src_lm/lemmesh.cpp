@@ -128,6 +128,15 @@ void LEM::ToggleEVA(bool isCDR)
 	}
 }
 
+void LEM::AnimEVAAntHandle()
+{
+	if (EVAAntHandleStatus) {
+		EVAAntHandleState.action = AnimState::OPENING;
+	} else {
+		EVAAntHandleState.action = AnimState::CLOSING;
+	}
+}
+
 void LEM::StopEVA(bool isCDR)
 
 {
@@ -253,6 +262,7 @@ void LEM::SetLmAscentHoverStage()
 	ClearAttExhaustRefs();
 	eds.DeleteAnimations();
 	DPS.DeleteAnimations();
+	LR.DeleteAnimations();
 
 	DefineTouchdownPoints(2);
 
@@ -466,6 +476,7 @@ void LEM::SetLMMeshVisDsc() {
 
 	if (pMission->LMHasLegs()) {
 		HideDeflectors();
+		HideCask();
 	}
 }
 
@@ -553,6 +564,23 @@ void LEM::HideDeflectors()
 
 		for (int i = 0; i < 2; i++) {
 			oapiEditMeshGroup(deflectors, meshgroup_deflectors[i], &ges);
+		}
+	}
+}
+
+void LEM::HideCask()
+{
+	if (!cask)
+		return;
+	if (!pMission->LMHasCask()) {
+		static UINT meshgroup_cask[4] = { DS_GRP_Cask, DS_GRP_CaskFoil, DS_GRP_CaskMount, DS_GRP_Cask_Handle };
+
+		GROUPEDITSPEC ges;
+		ges.flags = (GRPEDIT_ADDUSERFLAG);
+		ges.UsrFlag = 3;
+
+		for (int i = 0; i < 4; i++) {
+			oapiEditMeshGroup(cask, meshgroup_cask[i], &ges);
 		}
 	}
 }

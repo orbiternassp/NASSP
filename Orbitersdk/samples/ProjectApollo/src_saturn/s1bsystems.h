@@ -38,7 +38,7 @@ public:
 	void SetGSECutoff() { GSECutoff = true; }
 	void SetThrustNotOKCutoff() { ThrustNotOKCutoff = true; }
 	void SetThrusterDir(double beta_y, double beta_p);
-	void SetFailed() { EngineFailed = true; }
+	void SetFailed(bool fail) { EngineFailed = fail; }
 
 	bool GetThrustOK() { return ThrustOK; }
 	double GetThrustLevel() { return ThrustLevel; }
@@ -82,7 +82,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
-	void SetEngineFailed(int n);
+	void SetEngineFailed(int n, bool fail);
 
 	virtual void SetEngineStart(int n);
 	void SwitchSelector(int channel);

@@ -28,6 +28,7 @@
 #include <fstream>
 #include <atomic>
 #include "thread.h"
+#include "MCC_Calculations.h"
 
 // Save file strings
 #define MCC_START_STRING	"MCC_BEGIN"
@@ -298,6 +299,7 @@ public:
 	void MissionSequence_SL();
 
 	RTCC *rtcc;												// Pointer to RTCC
+	MCC_Calculations mcc_calcs;
 	Saturn *cm;												// Pointer to CM
 	LEM *lm;												// Pointer to LM
 	SIVB *sivb;												// Pointer to SIVB

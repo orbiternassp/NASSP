@@ -42,6 +42,7 @@ public:
 	void clbkSetClassCaps(FILEHANDLE cfg);
 	void HideProbes();
 	void HideDeflectors();
+	void HideCask();
 	void clbkVisualCreated(VISHANDLE vis, int refcount);
 	void clbkVisualDestroyed(VISHANDLE vis, int refcount);
 

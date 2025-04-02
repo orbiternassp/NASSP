@@ -61,8 +61,10 @@ public:
 		         Sound &undocksound, Sound &dockfailedsound, PanelSDK &p);
 	virtual ~DockingProbe();
 
+	void Init(Saturn *s);
 	double GetStatus() { return Status; }
 	bool IsDocked() { return Docked; }
+	bool IsInstalled();
 	bool IsHardDocked();
 	bool IsExtended() { return (Status == DOCKINGPROBE_STATUS_EXTENDED); };
 	bool IsRetracted() { return (Status == DOCKINGPROBE_STATUS_RETRACTED); };
@@ -84,6 +86,7 @@ protected:
 	double CollisionDetection(VECTOR3 prbP, VECTOR3 prbD, VECTOR3 drgV, VECTOR3 drgA);
 	bool IsPowered() { return DCPower.Voltage() > SP_MIN_DCVOLTAGE; };
 
+	Saturn *saturn;
 	bool Enabled;
 	double Status;
 	int ExtendingRetracting;
@@ -96,6 +99,9 @@ protected:
 	Saturn *OurVessel;
 	bool FirstTimeStepDone;
 	bool UndockNextTimestep;
+
+	h_Radiator *DockProbe;
+	h_HeatExchanger *DockProbeHX;
 
 	///
 	/// Number of docking events to ignore. This is required in special cases, such as LEM creation, and

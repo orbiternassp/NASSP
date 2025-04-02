@@ -152,9 +152,9 @@ void IMU::SetPIPABias(const VECTOR3 PIPABias) // input is in cm/sec
 
 void IMU::SetPIPAScale(const VECTOR3 PIPAScale) // input is in ppm
 {
-	pipaBiasScale.PIPA_ScalePPM_X = (PIPAScale.x / 1E6) + 1;
-	pipaBiasScale.PIPA_ScalePPM_Y = (PIPAScale.y / 1E6) + 1;
-	pipaBiasScale.PIPA_ScalePPM_Z = (PIPAScale.z / 1E6) + 1;
+	pipaBiasScale.PIPA_ScalePPM_X = (-PIPAScale.x / 1E6) + 1;
+	pipaBiasScale.PIPA_ScalePPM_Y = (-PIPAScale.y / 1E6) + 1;
+	pipaBiasScale.PIPA_ScalePPM_Z = (-PIPAScale.z / 1E6) + 1;
 }
 
 VECTOR3 IMU::GetNBDriftRates()
@@ -834,40 +834,40 @@ void IMU::LoadState(FILEHANDLE scn)
 			sscanf(line + 5, "%lf", &imuDriftRates.NBD_Z);
 		}
 		else if (!strnicmp(line, "ADIA_X", 6)) {
-			sscanf(line + 5, "%lf", &imuDriftRates.ADIA_X);
+			sscanf(line + 6, "%lf", &imuDriftRates.ADIA_X);
 		}
 		else if (!strnicmp(line, "ADIA_Y", 6)) {
-			sscanf(line + 5, "%lf", &imuDriftRates.ADIA_Y);
+			sscanf(line + 6, "%lf", &imuDriftRates.ADIA_Y);
 		}
 		else if (!strnicmp(line, "ADIA_Z", 6)) {
-			sscanf(line + 5, "%lf", &imuDriftRates.ADIA_Z);
+			sscanf(line + 6, "%lf", &imuDriftRates.ADIA_Z);
 		}
 		else if (!strnicmp(line, "ADSRA_X", 7)) {
-			sscanf(line + 5, "%lf", &imuDriftRates.ADSRA_X);
+			sscanf(line + 7, "%lf", &imuDriftRates.ADSRA_X);
 		}
 		else if (!strnicmp(line, "ADSRA_Y", 7)) {
-			sscanf(line + 5, "%lf", &imuDriftRates.ADSRA_Y);
+			sscanf(line + 7, "%lf", &imuDriftRates.ADSRA_Y);
 		}
 		else if (!strnicmp(line, "ADSRA_Z", 7)) {
-			sscanf(line + 5, "%lf", &imuDriftRates.ADSRA_Z);
+			sscanf(line + 7, "%lf", &imuDriftRates.ADSRA_Z);
 		}
 		else if (!strnicmp(line, "PBIAS_X", 7)) {
-			sscanf(line + 5, "%lf", &pipaBiasScale.PIPA_BiasX);
+			sscanf(line + 7, "%lf", &pipaBiasScale.PIPA_BiasX);
 		}
 		else if (!strnicmp(line, "PBIAS_Y", 7)) {
-			sscanf(line + 5, "%lf", &pipaBiasScale.PIPA_BiasY);
+			sscanf(line + 7, "%lf", &pipaBiasScale.PIPA_BiasY);
 		}
 		else if (!strnicmp(line, "PBIAS_Z", 7)) {
-			sscanf(line + 5, "%lf", &pipaBiasScale.PIPA_BiasZ);
+			sscanf(line + 7, "%lf", &pipaBiasScale.PIPA_BiasZ);
 		}
 		else if (!strnicmp(line, "PSCALE_X", 8)) {
-			sscanf(line + 5, "%lf", &pipaBiasScale.PIPA_ScalePPM_X);
+			sscanf(line + 8, "%lf", &pipaBiasScale.PIPA_ScalePPM_X);
 		}
 		else if (!strnicmp(line, "PSCALE_Y", 8)) {
-			sscanf(line + 5, "%lf", &pipaBiasScale.PIPA_ScalePPM_Y);
+			sscanf(line + 8, "%lf", &pipaBiasScale.PIPA_ScalePPM_Y);
 		}
 		else if (!strnicmp(line, "PSCALE_Z", 8)) {
-			sscanf(line + 5, "%lf", &pipaBiasScale.PIPA_ScalePPM_Z);
+			sscanf(line + 8, "%lf", &pipaBiasScale.PIPA_ScalePPM_Z);
 		}
 	}
 }

@@ -583,6 +583,8 @@ struct RetrofireDisplayParametersTableData
 	double H_Sep;
 	double H_apo_sep, H_peri_sep;
 	double P_G_Sep, Y_G_Sep;
+	//External DV vector for sep/shaping
+	VECTOR3 VG_XDV_Sep;
 };
 
 struct RetrofireDisplayParametersTable
@@ -615,6 +617,7 @@ struct TimeConstraintsTable
 	double GMTPI = 0.0;
 	std::string StationID;
 	int TUP = 0;
+	int NV = 0;
 	double h_a = 0.0;
 	double h_p = 0.0;
 };

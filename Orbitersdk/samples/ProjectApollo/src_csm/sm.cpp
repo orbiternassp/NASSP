@@ -804,7 +804,7 @@ void SM::clbkPostCreation()
 
 {
 	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
-	soundlib.LoadSound(BreakS, CRASH_SOUND);
+	soundlib.LoadSound(BreakS, CRASH_SOUND, BOTHVIEW_FADED_CLOSE);
 }
 
 void SM::clbkSaveState (FILEHANDLE scn)

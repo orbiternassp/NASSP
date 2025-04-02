@@ -161,6 +161,10 @@ void Saturn1b::initSaturn1b()
 	//
 	SLAWillSeparate = false;
 
+	UseWideSLA = false;
+
+	SLAHasBeacons = false;
+
 	// Moved to instantiation time
 	// lvdc.init(this);
 }
@@ -652,10 +656,10 @@ void Saturn1b::SetFailure(int failuretype, bool condition)
 	case CSMFailures_SI_Engine_6_Failure:
 	case CSMFailures_SI_Engine_7_Failure:
 	case CSMFailures_SI_Engine_8_Failure:
-		if (sib) sib->SetEngineFailed(failuretype - CSMFailures_SI_Engine_1_Failure);
+		if (sib) sib->SetEngineFailed(failuretype - CSMFailures_SI_Engine_1_Failure, condition);
 		break;
 	case CSMFailures_SIVB_Engine_Failure:
-		if (sivb) sivb->SetEngineFailed();
+		if (sivb) sivb->SetEngineFailed(condition);
 		break;
 	}
 }

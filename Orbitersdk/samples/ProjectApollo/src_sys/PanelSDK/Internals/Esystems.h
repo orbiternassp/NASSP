@@ -271,6 +271,8 @@ public:
 	void refresh(double dt);
 	void Reaction(double dt);
 	void Clogging(double dt);
+	double GetCondTempVoltage();
+	double GetSkinTempVoltage();
 	void Load(char *line);
 	void Save(FILEHANDLE scn);
 	void* GetComponent(char *component_name);

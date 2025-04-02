@@ -101,6 +101,26 @@ DockingProbe::~DockingProbe()
 	// Nothing for now.
 }
 
+void DockingProbe::Init(Saturn *s)
+{
+	saturn = s;
+	DockProbe = (h_Radiator *)saturn->Panelsdk.GetPointerByString("HYDRAULIC:DOCKPROBE");
+	DockProbeHX = (h_HeatExchanger *)saturn->Panelsdk.GetPointerByString("HYDRAULIC:DOCKPROBEINCABIN");
+}
+
+bool DockingProbe::IsInstalled()
+
+{
+	if (OurVessel->HasProbe == false || IsHardDocked())
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
 void DockingProbe::Extend()
 
 {
@@ -361,11 +381,33 @@ void DockingProbe::UpdatePort(VECTOR3 off,double simdt)
 }  
 
 
-void DockingProbe::SystemTimestep(double simdt) 
+void DockingProbe::SystemTimestep(double simdt)
 
 {
 	if (ExtendingRetracting) {
-		DCPower.DrawPower(100.0);	// The real power consumption is unknown yet
+		DCPower.DrawPower(100.0);	// The real power consumption is unknown yet, max would be 240W (10A*28V)
+	}
+
+	if (!IsInstalled())
+	{
+		DockProbeHX->SetPumpOn();
+		DockProbe->rad = 0.0;
+		DockProbe->isolation = 0.0;
+	}
+	else
+	{
+		DockProbeHX->SetPumpOff();
+		DockProbe->rad = 3.0;
+		DockProbe->isolation = 0.001;
+	}
+
+	if (!IsPowered())
+	{
+		saturn->DockProbeTempSensor.WireTo(NULL);
+	}
+	else
+	{
+		saturn->DockProbeTempSensor.WireTo(&saturn->Panel276CB2);
 	}
 }
 

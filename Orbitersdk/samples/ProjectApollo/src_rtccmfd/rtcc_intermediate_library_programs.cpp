@@ -678,74 +678,58 @@ void RTCC::PIMCKC(VECTOR3 R, VECTOR3 V, int body, double &a, double &e, double &
 	}
 }
 
-void RTCC::PITFPC(double MU, int K, double AORP, double ECC, double rad, double &TIME, double &P, bool erunits)
+void RTCC::PITFPC(double MU, int K, double AINV, double p, double rad, double &TIME, double &PER, double &e) const
 {
 	//INPUT:
 	//MU: gravitational constant
-	//K: outward leg (0.) and return lef (1.) flag. k is input as a floating point number
-	//AORP: semimajor axis or semilatus rectum (abs(e-1) < 0.00001 is the deciding number)
-	//ECC: eccentricity
+	//K: outward leg (0.) and return lef (1.) flag
+	//AINV: inverse of semimajor axis
+	//p: semi-latus rectum
 	//rad: radial distance from focus
 	//erunits: Input units are Earth radii
 	//OUTPUT:
 	//TIME: Time from periapsis to the desired radial distance
-	//P: Orbital period, only calculared if orbit is eccentric
+	//P: Orbital period, only calculated if orbit is elliptic
+	//e = Eccentricity
 
-	double eps;
+	const double tol = 1e-12;
 
-	if (erunits)
+	//Calculate eccentricity
+	e = sqrt(1.0 - p * AINV);
+	//Set period to zero
+	PER = 0.0;
+
+	if (e > (1.0 + tol))
 	{
-		eps = 1.e-5;
-	}
-	else
-	{
-		eps = 63.78165;
-	}
+		//Hyperbolic
+		double coshE, a, E;
 
-	//Parabolic case
-	if (abs(ECC - 1.0) < 0.00001)
-	{
-		double C3;
-
-		//Calculate characteristic energy
-		C3 = MU * (ECC*ECC - 1.0) / AORP;
-		if (abs(C3) < eps)
-		{
-			//Calculate true anomaly at given distance r
-			double eta_apo = acos(abs(AORP) / rad - 1.0);
-			double TEMP1 = tan(eta_apo / 2.0);
-			//Calculate time
-			TIME = abs(AORP) / 2.0*sqrt(abs(AORP) / MU)*(TEMP1 + 1.0 / 3.0*pow(TEMP1, 3.0));
-
-			if (K != 0)
-			{
-				TIME = -TIME;
-			}
-			return;
-		}
-		else
-		{
-			//Calculate semi major axis, use non parabolic calculations
-			AORP = AORP / (1.0 - ECC * ECC);
-		}
-	}
-
-	double E;
-
-	//Elliptical case
-	if (ECC < 1.0)
-	{
-		E = acos(1.0 / ECC * (1.0 - rad / AORP));
-		P = PI2 * AORP*sqrt(AORP / MU);
-		TIME = AORP * sqrt(AORP / MU)*(E - ECC * sin(E));
-	}
-	//Hyperbolic case
-	else
-	{
-		double coshE;
-		coshE = 1.0 / ECC * (1.0 - rad / AORP);
+		a = 1.0 / AINV;
+		coshE = 1.0 / e * (1.0 - rad * AINV);
 		E = log(coshE + sqrt(coshE*coshE - 1.0));
-		TIME = AORP * sqrt(abs(AORP) / MU)*(E - ECC * (exp(E) - exp(-E)) / 2.0);
+		TIME = a * sqrt(abs(a) / MU)*(E - e * (exp(E) - exp(-E)) / 2.0);
+	}
+	else if (e < (1.0 - tol))
+	{
+		//Elliptical
+		double a, E;
+
+		a = 1.0 / AINV;
+		E = acos(1.0 / e * (1.0 - rad * AINV));
+		PER = PI2 * a * sqrt(a / MU);
+		TIME = a * sqrt(a / MU)*(E - e * sin(E));
+	}
+	else
+	{
+		//Parabolic
+		double eta_apo, TEMP1;
+
+		//Calculate true anomaly at given distance r
+		eta_apo = acos(p / rad - 1.0);
+		//Temporary variable
+		TEMP1 = tan(eta_apo / 2.0);
+		//Time
+		TIME = p / 2.0*sqrt(p / MU)*(TEMP1 + 1.0 / 3.0*pow(TEMP1, 3.0));
 	}
 
 	if (K != 0)

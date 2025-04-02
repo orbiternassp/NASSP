@@ -392,6 +392,7 @@ static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
 #define PAYLOAD_LTA2R				6	///< Payload is LTA-2R (Apollo 6).
 #define PAYLOAD_EMPTY				7	///< Payload is empty (i.e. no payload).
 #define PAYLOAD_DOCKING_ADAPTER		8	///< Payload is SIVB docking adapter (i.e. Apollo to Venus).
+#define PAYLOAD_CUSTOM				9   ///< Payload is a vessel specified by the user.
 
 //
 // Saturn types.
@@ -426,6 +427,8 @@ static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
 #define TEXTURES_8K 4
 
 const int TexMul = TEXTURES_4K;
+
+#define VC_MAT_NONE 0xffff
 
 #ifdef OAPI_MSGTYPE
 #define _OPENORBITER

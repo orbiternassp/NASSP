@@ -44,7 +44,7 @@ public:
 	void SetEDSCutoff() { EDSCutoff = true; }
 	void ResetEDSCutoff() { EDSCutoff = false; }
 	void SetThrusterDir(double beta_y, double beta_p);
-	void SetFailed() { EngineFailed = true; }
+	void SetFailed(bool fail) { EngineFailed = fail; }
 
 	bool GetThrustOK() { return ThrustOK; }
 	bool GetFailed() { return EngineFailed; }

@@ -850,6 +850,7 @@ void CommandedThrustInd::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 	MeterSwitch::Init(row);
 	lem = s;
 	NeedleSurface = surf;
+	minMaxTime = 0;	// Don't animate/interpolate between reported values
 }
 
 double CommandedThrustInd::QueryValue()
@@ -1863,6 +1864,7 @@ void LEMDPSDigitalMeter::Init(SURFHANDLE surf, SwitchRow &row, LEM *l)
 	MeterSwitch::Init(row);
 	Digits = surf;
 	lem = l;
+	minMaxTime = 0;	// Don't animate/interpolate between reported values
 }
 
 void LEMDPSDigitalMeter::InitVC(SURFHANDLE surf)
@@ -1877,13 +1879,13 @@ void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 
 	double percent = v * 100.0;
 
-	const int DigitWidth = 19;
-	const int DigitHeight = 21;
-	int Curdigit2 = (int)percent;
-	int Curdigit = (int)percent / 10;
+	const int DigitWidth = 21;
+	const int DigitHeight = 23;
+	int Curdigit2 = (int)percent % 10;
+	int Curdigit = (int)(percent / 10) % 10;
 
 	oapiBlt(drawSurface, Digits, 0, 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
-	oapiBlt(drawSurface, Digits, DigitWidth + 1, 0, DigitWidth * (Curdigit2 - (Curdigit * 10)), 0, DigitWidth, DigitHeight);
+	oapiBlt(drawSurface, Digits, DigitWidth, 0, DigitWidth * Curdigit2, 0, DigitWidth, DigitHeight);
 }
 
 void LEMDPSDigitalMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
@@ -1893,13 +1895,13 @@ void LEMDPSDigitalMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 
 	double percent = GetDisplayValue() * 100.0;
 
-	const int DigitWidth = 19*TexMul;
-	const int DigitHeight = 21*TexMul;
-	int Curdigit2 = (int)percent;
-	int Curdigit = (int)percent / 10;
+	const int DigitWidth = 21*TexMul;
+	const int DigitHeight = 23*TexMul;
+	int Curdigit2 = (int)percent % 10;
+	int Curdigit = (int)(percent / 10) % 10;
 
 	oapiBlt(surf, DigitsVC, 0, 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
-	oapiBlt(surf, DigitsVC, DigitWidth + 1, 0, DigitWidth * (Curdigit2 - (Curdigit * 10)), 0, DigitWidth, DigitHeight);
+	oapiBlt(surf, DigitsVC, DigitWidth, 0, DigitWidth * Curdigit2, 0, DigitWidth, DigitHeight);
 }
 
 double LEMDPSOxidPercentMeter::QueryValue()
@@ -1927,6 +1929,7 @@ void LEMDigitalHeliumPressureMeter::Init(SURFHANDLE surf, SwitchRow &row, Rotati
 	source = s;
 	Digits = surf;
 	lem = l;
+	minMaxTime = 0;	// Don't animate/interpolate between reported values
 }
 
 double LEMDigitalHeliumPressureMeter::QueryValue()
@@ -1962,17 +1965,15 @@ void LEMDigitalHeliumPressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurfac
 {
 	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.GetNumericVoltage() < 25.0) return;
 
-	const int DigitWidth = 19;
-	const int DigitHeight = 21;
-	int Curdigit4 = (int)v;
-	int Curdigit3 = (int)v / 10;
-	int Curdigit2 = (int)v / 100;
-	int Curdigit = (int)v / 1000;
+	const int DigitWidth = 21;
+	const int DigitHeight = 23;
+	int divisor = 1000;
 
-	oapiBlt(drawSurface, Digits, 0, 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
-	oapiBlt(drawSurface, Digits, (DigitWidth + 1), 0, DigitWidth * (Curdigit2 - (Curdigit * 10)), 0, DigitWidth, DigitHeight);
-	oapiBlt(drawSurface, Digits, (DigitWidth + 1) * 2, 0, DigitWidth * (Curdigit3 - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
-	oapiBlt(drawSurface, Digits, (DigitWidth + 1) * 3, 0, DigitWidth * (Curdigit4 - (Curdigit3 * 10)), 0, DigitWidth, DigitHeight);
+	for (int i = 0; i < 4; ++i) {
+		int Curdigit = (int)(v / divisor) % 10;
+		oapiBlt(drawSurface, Digits, (int)(DigitWidth * i * 1.15), 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+		divisor /= 10;
+	}
 }
 
 void LEMDigitalHeliumPressureMeter::InitVC(SURFHANDLE surf)
@@ -1986,17 +1987,15 @@ void LEMDigitalHeliumPressureMeter::DrawSwitchVC(int id, int event, SURFHANDLE s
 
 	double v = GetDisplayValue();
 
-	const int DigitWidth = 19*TexMul;
-	const int DigitHeight = 21*TexMul;
-	int Curdigit4 = (int)v;
-	int Curdigit3 = (int)v / 10;
-	int Curdigit2 = (int)v / 100;
-	int Curdigit = (int)v / 1000;
+	const int DigitWidth = 21*TexMul;
+	const int DigitHeight = 23*TexMul;
+	int divisor = 1000;
 
-	oapiBlt(surf, DigitsVC, 0, 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
-	oapiBlt(surf, DigitsVC, (DigitWidth + 1), 0, DigitWidth * (Curdigit2 - (Curdigit * 10)), 0, DigitWidth, DigitHeight);
-	oapiBlt(surf, DigitsVC, (DigitWidth + 1) * 2, 0, DigitWidth * (Curdigit3 - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
-	oapiBlt(surf, DigitsVC, (DigitWidth + 1) * 3, 0, DigitWidth * (Curdigit4 - (Curdigit3 * 10)), 0, DigitWidth, DigitHeight);
+	for (int i = 0; i < 4; ++i) {
+		int Curdigit = (int)(v / divisor) % 10;
+		oapiBlt(surf, DigitsVC, (int)(DigitWidth * i * 1.15), 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+		divisor /= 10;
+	}
 }
 
 void DEDAPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
