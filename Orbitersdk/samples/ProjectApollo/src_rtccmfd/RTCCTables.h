@@ -44,7 +44,6 @@ public:
 		strncpy(data, other.c_str(), N);
 		return *this;
 	}
-private:
 	char data[N];
 };
 

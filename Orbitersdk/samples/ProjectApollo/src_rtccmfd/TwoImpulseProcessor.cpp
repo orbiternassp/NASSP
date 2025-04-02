@@ -31,7 +31,8 @@ TwoImpulseOpt::TwoImpulseOpt()
 	ChaserVectorTime = TargetVectorTime = 0.0;
 	T1 = T2 = 0.0;
 
-	DH_min = DH_max = DH_inc = T2_min = T2_max = dt_inc = 0.0;
+	DH_min = DH_max = DH_inc = T2_min = T2_max = 0.0;
+	dt_TPI_slip = 0.0;
 
 	TimeStep = 10.0;
 	TimeRange = 0.0;
@@ -43,6 +44,16 @@ TwoImpulseOpt::TwoImpulseOpt()
 
 	TwoImpulseTableIndicator = 1;
 	PlanNumber = 1;
+	UllageQuads = true;
+	LOSMode = 1;
+	DeltaPitch = 0.0;
+}
+
+TwoImpulseResuls::TwoImpulseResuls()
+{
+	dV = dV2 = dV_LVLH = dV_LVLH2 = _V(0, 0, 0);
+	T1 = T2 = 0.0;
+	SolutionFound = false;
 }
 
 TwoImpulseSingleSolutionTable::TwoImpulseSingleSolutionTable()
@@ -65,21 +76,11 @@ void TwoImpulseProcessor::PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &re
 	//Initialization
 	this->opt = opt;
 
-	if (opt.mode == 1 || opt.mode == 2)
-	{
-		//CC or MS request
-		//Load chaser and target state vectors, area, weight, drag, STAID
-		sv_C1 = opt.sv_C;
-		sv_T1 = opt.sv_T;
-	}
-
 	switch (opt.mode)
 	{
 	case 1: //Corrective Combination
-		CorrectiveCombination();
-		break;
 	case 2: //Multiple Solution
-		MultipleSolution();
+		CCAndML();
 		break;
 	case 3: //Single Solution
 	case 4: //Transfer Plan
@@ -91,9 +92,214 @@ void TwoImpulseProcessor::PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &re
 	}
 }
 
+void TwoImpulseProcessor::CCAndML()
+{
+	//Load chaser and target state vectors, area, weight, drag, STAID
+	sv_C1 = opt.sv_C;
+	sv_T1 = opt.sv_T;
+
+	if (opt.mode == 1)
+	{
+		CorrectiveCombination();
+	}
+	else
+	{
+		MultipleSolution();
+	}
+}
+
 void TwoImpulseProcessor::CorrectiveCombination()
 {
+	CorrectiveCombinationSolutionTable tab;
+	double DV_opt, K, T_WSR, DH_WSR, theta_WSR, theta_T_min, HthetaR, du_dot, DV_TP, D[4], theta_max, theta_min, DVT, DH_OPTH, TIME_OPTH, theta_OPTH, T_SLIP;
+	int err;
+	bool coast_err;
 
+	tab.Solutions = 0;
+	if (opt.sv_C.sv.RBI == BODY_EARTH)
+	{
+		K = 5.9853114 / 3600.0 / OrbMech::R_Earth;
+		//Curve fit for terminal phase (TPI and TPF)
+		D[0] = 7.252527071926806e-03;
+		D[1] = -5.702884489551252e-03;
+		D[2] = 1.593340751920636e-03;
+		D[3] = -1.441405564950315e-04;
+	}
+	else
+	{
+		K = 16.38140036 / 3600.0 / OrbMech::R_Earth;
+		//Curve fit for terminal phase (TPI and TPF)
+		D[0] = 5.515531567368726e-03;
+		D[1] = -4.337031646358014e-03;
+		D[2] = 1.211732286900968e-03;
+		D[3] = -1.096185897107027e-04;
+	}
+
+	//Load MED request quantities
+	T1 = opt.T1;
+	//Set C.C. Table to updating condition
+	pRTCC->PZTIPCCD.Updating = true;
+	//DTREAD: GZGENCSN Blks. 12-15
+	WT = pRTCC->GZGENCSN.TITravelAngle;
+	T_WSR = pRTCC->GZGENCSN.TINSRNominalTime;
+	DH_WSR = pRTCC->GZGENCSN.TINSRNominalDeltaH;
+	theta_WSR = pRTCC->GZGENCSN.TINSRNominalPhaseAngle;
+	//Build first block of corrective combination table: Station IDs, threshold times and time of 1st maneuver (NCC)
+	tab.MAN_VEH = opt.ChaserVehicle;
+	tab.T_NCC = T1;
+	if (opt.ChaserVehicle == 1)
+	{
+		tab.LMSTAID = opt.TargetStationID;
+		tab.CSMSTAID = opt.ChaserStationID;
+		tab.LM_GMTTH = opt.TargetVectorTime;
+		tab.CSM_GMTTH = opt.ChaserVectorTime;
+	}
+	else
+	{
+		tab.LMSTAID = opt.ChaserStationID;
+		tab.CSMSTAID = opt.TargetStationID;
+		tab.LM_GMTTH = opt.ChaserVectorTime;
+		tab.CSM_GMTTH = opt.TargetVectorTime;
+	}
+	//Advance chaser and target to the time of the NCC maneuver
+	coast_err = coast(sv_C1, T1 - sv_C1.sv.GMT, sv_C1);
+	if (coast_err == false)
+	{
+		coast_err = coast(sv_T1, T1 - sv_T1.sv.GMT, sv_T1);
+	}
+	if (coast_err)
+	{
+		//Error: Reentered
+		pRTCC->PMXSPT("PMSTICN", 82);
+		//Write available solutions
+		pRTCC->PZTIPCCD = tab;
+		//Update display
+		pRTCC->EMSNAP(0, 64);
+		return;
+	}
+	//Save initial elements for regeneration
+	pRTCC->PZMYSAVE.SV_CC[0] = sv_C1;
+	pRTCC->PZMYSAVE.SV_CC[1] = sv_T1;
+	//Initialize optimum DV to max, height offset and time of NSR maneuver to MED request minimum
+	DV_opt = 10000000000.0;
+	DH = opt.DH_min;
+	T2 = opt.T2_min;
+	theta_T_min = theta_WSR - (opt.T2_min - T_WSR)*K*DH_WSR;
+	if (theta_T_min == 0.0 || DH_WSR == 0.0)
+	{
+		//Error
+		pRTCC->PMXSPT("PMSTICN", 28);
+		//Write available solutions
+		pRTCC->PZTIPCCD = tab;
+		//Update display
+		pRTCC->EMSNAP(0, 64);
+		return;
+	}
+	//Compute phase angle for 1st case
+	HthetaR = DH_WSR / theta_T_min;
+	PhaseAngle = opt.DH_min / HthetaR;
+	//Outer, DH loop
+	do
+	{
+		//Compute catchup rate at this height offset
+		du_dot = DH * K;
+		//Compute terminal phase approximation for this height
+		DV_TP = abs((D[0] + WT * (D[1] + WT * (D[2] + WT * D[3]))) * DH);
+		//Is this a slip time option request?
+		if (opt.RequestIndicator == 1)
+		{
+			theta_max = PhaseAngle - opt.dt_TPI_slip * du_dot;
+			theta_min = PhaseAngle + opt.dt_TPI_slip * du_dot;
+			PhaseAngle = theta_min;
+		}
+		else
+		{
+			T2 = opt.T2_min;
+		}
+		//Inner, phase angle loop
+		do
+		{
+			//Calculate solution
+			err = PMMTIS(sv_C1, sv_T1, T2 - T1, DH, PhaseAngle, sv_C1_apo, sv_C2, sv_C2_apo);
+			//Was a solution available?
+			if (err == 0)
+			{
+				//Compute total dv for this solution
+				DVT = length(sv_C1_apo.sv.V - sv_C1.sv.V) + length(sv_C2_apo.sv.V - sv_C2.sv.V) + DV_TP;
+				//Is this the best solution for this DH?
+				if (DVT < DV_opt)
+				{
+					//Save DV, DH, time and phase for this case
+					DV_opt = DVT;
+					DH_OPTH = DH;
+					TIME_OPTH = T2;
+					theta_OPTH = PhaseAngle;
+				}
+			}
+			//Compute phase angle for next solution
+			PhaseAngle = PhaseAngle - du_dot * opt.TimeStep;
+			//Is this a slip time option request?
+			if (opt.RequestIndicator == 0)
+			{
+				//No
+				//Compute next NSR time at this height
+				T2 = T2 + opt.TimeStep;
+				//Is the new NSR time past the MED maximum?
+				if (T2 >= opt.T2_max)
+				{
+					break;
+				}
+			}
+			else
+			{
+				//Have all phase angles been tried at this height?
+				if (PhaseAngle <= theta_max)
+				{
+					//Yes
+					break;
+				}
+			}
+		} while (true);
+		//Was a solution obtained for this DH?
+		if (DV_opt < 10000000.0)
+		{
+			//Yes
+			//Is this a slip time option?
+			if (opt.RequestIndicator == 1)
+			{
+				//Yes
+				T_SLIP = (theta_min - opt.dt_TPI_slip * du_dot - theta_OPTH) / du_dot;
+			}
+			else
+			{
+				//No
+				T_SLIP = 0.0;
+			}
+			//Store solution here?
+			tab.data[tab.Solutions].GMT_NSR = TIME_OPTH;
+			tab.data[tab.Solutions].DV_T = DV_opt;
+			tab.data[tab.Solutions].DH = DH_OPTH;
+			tab.data[tab.Solutions].PhaseAngle = theta_OPTH;
+			tab.data[tab.Solutions].T_SLIP = T_SLIP;
+			tab.Solutions++;
+			//Reset optimum to maximum
+			DV_opt = 10000000000.0;
+			//Are there 13 solutions yet?
+			if (tab.Solutions >= 13) break;
+		}
+		DH += opt.DH_inc;
+		//Has last MED height request been attempted?
+		if (DH > opt.DH_max)
+		{
+			//Yes
+			break;
+		}
+		PhaseAngle = DH / HthetaR;
+	} while (true);
+	//Write available solutions
+	pRTCC->PZTIPCCD = tab;
+	//Update display
+	pRTCC->EMSNAP(0, 64);
 }
 
 void TwoImpulseProcessor::MultipleSolution()
@@ -440,7 +646,7 @@ void TwoImpulseProcessor::SingleSolutionTransferPlan()
 		pRTCC->PZTIPSS.TwoImpulseTableIndicator = opt.TwoImpulseTableIndicator;
 		pRTCC->PZTIPSS.ActualWT = opt.UllageQuads ? 1.0 : 0.0;
 		pRTCC->PZTIPSS.DeltaPitch = opt.DeltaPitch;
-		pRTCC->PZTIPSS.man[0].TIG = opt.RelMoTimeStep;
+		pRTCC->PZTIPSS.man[0].TIG = opt.TimeStep;
 		pRTCC->PZTIPSS.man[0].DV_LVLH = DV_LVLH1;
 		pRTCC->PZTIPSS.man[1].DV_LVLH = DV_LVLH2;
 		pRTCC->PZTIPSS.man[0].MinEnvironChange = T_c1 / 60.0;
@@ -469,7 +675,8 @@ void TwoImpulseProcessor::SingleSolution(TwoImpulseSingleSolutionTable &tab)
 {
 	//Load module PMMTISS
 
-	VECTOR3 DV[2], R_C[2], V_C[2], R_T[2], V_T[2];
+	VehicleDataBlock sv_C[2], sv_C_apo[2], sv_T[2];
+	VECTOR3 DV[2];
 	double RelMoTimeStep, l_dot_T, g_dot_T, h_dot_T, eps, R_E, R[2], WT_BEF[2], WT_AFT[2], T, isp, WDOT;
 	int UllageQuads;
 
@@ -481,20 +688,22 @@ void TwoImpulseProcessor::SingleSolution(TwoImpulseSingleSolutionTable &tab)
 	{
 		R_E = pRTCC->BZLAND.rad[0];
 	}
-	R_C[0] = sv_C1.sv.R; R_C[1] = sv_C2.sv.R;
-	V_C[0] = sv_C1.sv.V; V_C[1] = sv_C2.sv.V;
-	R_T[0] = sv_T1.sv.R; R_T[1] = sv_T2.sv.R;
-	V_T[0] = sv_T1.sv.V; V_T[1] = sv_T2.sv.V;
-	R[0] = length(sv_C1.sv.R); R[1] = length(sv_C2.sv.R);
-	WT_BEF[0] = sv_C1.Weight; WT_BEF[1] = sv_C2.Weight;
-	WT_AFT[0] = sv_C1_apo.Weight; WT_AFT[1] = sv_C2_apo.Weight;
 
+	//Take target to T2
 	if (coast(sv_T1, T2 - sv_C1.sv.GMT, sv_T2))
 	{
 		//Error: Reentered
 		pRTCC->PMXSPT("PMSTICN", 82);
 		return;
 	}
+	//Save data in tabular form
+	sv_C[0] = sv_C1; sv_C_apo[0] = sv_C1_apo;
+	sv_C[1] = sv_C2; sv_C_apo[1] = sv_C2_apo;
+	sv_T[0] = sv_T1; sv_T[1] = sv_T2;
+	R[0] = length(sv_C1.sv.R); R[1] = length(sv_C2.sv.R);
+	WT_BEF[0] = sv_C1.Weight; WT_BEF[1] = sv_C2.Weight;
+	WT_AFT[0] = sv_C1_apo.Weight; WT_AFT[1] = sv_C2_apo.Weight;
+
 	//Recover temporarily stored parameters
 	RelMoTimeStep = tab.man[0].TIG;
 	UllageQuads = tab.ActualWT != 0.0 ? 2 : 1;
@@ -529,6 +738,8 @@ void TwoImpulseProcessor::SingleSolution(TwoImpulseSingleSolutionTable &tab)
 	VehicleDataBlock sv_C_temp, sv_T_temp;
 	VECTOR3 DR, U_R, R4;
 	double phi, psi, V_B0, V_B1, V_B2, X_dot, Y_dot, Z_dot, X_BR, Y_BR, Z_BR, a_LAT, DELTA, DT_B0, DT_B1, DT_B2, T_APP, RC, RT, DPHI;
+	double INFO[10];
+	AEGBlock aeg;
 	TwoImpulseSingleSolutionTableApproachData *app;
 
 	for (int i = 0; i < 2; i++)
@@ -546,7 +757,7 @@ void TwoImpulseProcessor::SingleSolution(TwoImpulseSingleSolutionTable &tab)
 		{
 			//Target
 			//Compute relative coordinates of first vehicle in second vehicle's coordinate system
-			LOS_PITCH_YAW(R_C[i], V_C[i], R_T[i], tab.man[i].Pitch_LOS, tab.man[i].Yaw_LOS);
+			LOS_PITCH_YAW(sv_C[i].sv.R, sv_C[i].sv.V, sv_T[i].sv.R, tab.man[i].Pitch_LOS, tab.man[i].Yaw_LOS);
 		}
 		else
 		{
@@ -616,12 +827,35 @@ void TwoImpulseProcessor::SingleSolution(TwoImpulseSingleSolutionTable &tab)
 			//Compute curvilinear coordinates of active (chaser) from passive (target)
 			app[j].DX = _V(RT * DPHI, RT - RC, -R4.z);
 		}
+		//HA and HP
+		aeg = pRTCC->SVToAEG(sv_C_apo[i].sv, sv_C_apo[i].Area, sv_C_apo[i].Weight, sv_C_apo[i].KFactor);
+		pRTCC->PMMAPD(aeg.Header, aeg.Data, 0, 0, INFO, NULL, NULL);
+		tab.man[i].HA = INFO[4];
+		tab.man[i].HP = INFO[9];
 	}
 }
 
 void TwoImpulseProcessor::TransferPlan()
 {
+	pRTCC->PZMYSAVE.SV_before[0] = sv_C1;
+	pRTCC->PZMYSAVE.V_after[0] = sv_C1_apo.sv.V;
+	pRTCC->PZMYSAVE.SV_before[1] = sv_C2;
+	pRTCC->PZMYSAVE.V_after[1] = sv_C2_apo.sv.V;
+	pRTCC->PZMYSAVE.code[0] = "C1";
+	pRTCC->PZMYSAVE.code[1] = "C2";
+	if (opt.TwoImpulseTableIndicator == 1)
+	{
+		pRTCC->PZMYSAVE.plan[0] = pRTCC->PZTIPREG.MAN_VEH;
+		pRTCC->PZMYSAVE.plan[1] = pRTCC->PZTIPREG.MAN_VEH;
+	}
+	else
+	{
+		pRTCC->PZMYSAVE.plan[0] = pRTCC->PZTIPCCD.MAN_VEH;
+		pRTCC->PZMYSAVE.plan[1] = pRTCC->PZTIPCCD.MAN_VEH;
+	}
 
+	std::vector<std::string> str;
+	pRTCC->PMMMED("72", str);
 }
 
 void TwoImpulseProcessor::ExternalRequest(TwoImpulseResuls &res)
@@ -688,6 +922,179 @@ void TwoImpulseProcessor::ExternalRequest(TwoImpulseResuls &res)
 		res.T1 = pRTCC->GETfromGMT(T1);
 		res.T2 = pRTCC->GETfromGMT(T2);
 		res.SolutionFound = true;
+	}
+}
+
+void TwoImpulseProcessor::PMDTIMP()
+{
+	//Pointers to tables
+	TwoImpulseMultipleSolutionTable *intab = &pRTCC->PZTIPREG;
+	TwoImpulseMultipleSolutionDisplay *outtab = &pRTCC->TwoImpMultDispBuffer;
+
+	*outtab = TwoImpulseMultipleSolutionDisplay();
+	outtab->ErrorMessage = "";
+	if (intab->Solutions == 0)
+	{
+		if (intab->Updating)
+		{
+			outtab->ErrorMessage = "TABLE BEING UPDATED";
+			return;
+		}
+		else
+		{
+			outtab->ErrorMessage = "NO TWO IMPULSE PLANS AVAILABLE";
+			return;
+		}
+	}
+
+	outtab->CSMSTAID = intab->CSMSTAID;
+	outtab->LMSTAID = intab->LMSTAID;
+	outtab->GETTH_CSM = pRTCC->GETfromGMT(intab->CSM_GMTTH);
+	outtab->GETTH_LM = pRTCC->GETfromGMT(intab->LM_GMTTH);
+	if (intab->MAN_VEH == 1)
+	{
+		outtab->MAN_VEH = "CSM";
+	}
+	else
+	{
+		outtab->MAN_VEH = "LEM";
+	}
+
+	if (intab->IVFLAG == 2)
+	{
+		outtab->GETFRZ = '2';
+		outtab->GMTFRZ = '2';
+		outtab->GETVAR = '1';
+		outtab->GET1 = pRTCC->GETfromGMT(intab->data[0].Time2);
+		outtab->GMT1 = intab->data[0].Time2;
+	}
+	else
+	{
+		outtab->GETFRZ = '1';
+		outtab->GMTFRZ = '1';
+		outtab->GETVAR = '2';
+		outtab->GET1 = pRTCC->GETfromGMT(intab->data[0].Time1);
+		outtab->GMT1 = intab->data[0].Time1;
+	}
+
+	if (intab->IVFLAG == 0)
+	{
+		outtab->OPTION = "BOTH FIXED";
+	}
+	else if (intab->IVFLAG == 1)
+	{
+		outtab->OPTION = "FIRST FIXED";
+	}
+	else
+	{
+		outtab->OPTION = "SECOND FIXED";
+	}
+	std::string temp;
+	if (intab->DT_Light >= 0.0)
+	{
+		temp = "DAYLIGHT";
+	}
+	else
+	{
+		temp = "DARKNESS";
+	}
+	char Buffer[128];
+	sprintf_s(Buffer, "%.0lf MIN UNTIL %s", abs(intab->DT_Light) / 60.0, temp.c_str());
+	outtab->MinutesUntil.assign(Buffer);
+	outtab->WT = pRTCC->GZGENCSN.TITravelAngle*DEG;
+	outtab->PHASE = pRTCC->GZGENCSN.TIPhaseAngle*DEG;
+	outtab->DH = pRTCC->GZGENCSN.TIDeltaH / 1852.0;
+
+	outtab->Solutions = intab->Solutions;
+	outtab->showTPI = intab->showTPI;
+	for (int i = 0; i < intab->Solutions; i++)
+	{
+		outtab->data[i].DELV1 = intab->data[i].DELV1 / 0.3048;
+		outtab->data[i].YAW1 = intab->data[i].YAW1*DEG;
+		outtab->data[i].PITCH1 = intab->data[i].PITCH1*DEG;
+		if (intab->IVFLAG == 2)
+		{
+			outtab->data[i].Time2 = pRTCC->GETfromGMT(intab->data[i].Time1);
+		}
+		else
+		{
+			outtab->data[i].Time2 = pRTCC->GETfromGMT(intab->data[i].Time2);
+		}
+		outtab->data[i].DELV2 = intab->data[i].DELV2 / 0.3048;
+		outtab->data[i].YAW2 = intab->data[i].YAW2*DEG;
+		outtab->data[i].PITCH2 = intab->data[i].PITCH2*DEG;
+		if (outtab->showTPI)
+		{
+			outtab->data[i].T_TPI = pRTCC->GETfromGMT(intab->data[i].T_TPI);
+		}
+		outtab->data[i].L = intab->data[i].L ? 'D' : 'N';
+		outtab->data[i].C = i + 1;
+	}
+}
+
+void TwoImpulseProcessor::PMDDTVCC()
+{
+	//Pointers to tables
+	CorrectiveCombinationSolutionTable *intab = &pRTCC->PZTIPCCD;
+	TwoImpulseCorrectiveCombinationDisplay *outtab = &pRTCC->TwoImpCCDispBuffer;
+
+	*outtab = TwoImpulseCorrectiveCombinationDisplay();
+	outtab->ErrorMessage = "";
+	if (intab->Solutions == 0)
+	{
+		if (intab->Updating)
+		{
+			outtab->ErrorMessage = "TABLE BEING UPDATED";
+			return;
+		}
+		else
+		{
+			outtab->ErrorMessage = "NO CORRECTIVE COMBINATION PLANS AVAILABLE";
+			return;
+		}
+	}
+
+	outtab->CSMSTAID = intab->CSMSTAID;
+	outtab->LMSTAID = intab->LMSTAID;
+	outtab->GETTH_CSM = pRTCC->GETfromGMT(intab->CSM_GMTTH);
+	outtab->GETTH_LM = pRTCC->GETfromGMT(intab->LM_GMTTH);
+	if (intab->MAN_VEH == 1)
+	{
+		outtab->MAN_VEH = "CSM";
+	}
+	else
+	{
+		outtab->MAN_VEH = "LEM";
+	}
+	outtab->GMT_NCC = intab->T_NCC;
+	outtab->GET_NCC = pRTCC->GETfromGMT(intab->T_NCC);
+	outtab->Solutions = intab->Solutions;
+	for (int i = 0; i < intab->Solutions; i++)
+	{
+		outtab->data[i].Code = i + 1;
+		outtab->data[i].GET_NSR = pRTCC->GETfromGMT(intab->data[i].GMT_NSR);
+		outtab->data[i].GMT_NSR = intab->data[i].GMT_NSR;
+		outtab->data[i].DVT = intab->data[i].DV_T / 0.3048;
+		outtab->data[i].DH = intab->data[i].DH / 1852.0;
+		outtab->data[i].PhaseAngle = intab->data[i].PhaseAngle*DEG;
+		outtab->data[i].DT = (intab->data[i].GMT_NSR - intab->T_NCC) / 60.0;
+		outtab->data[i].TSLIP = intab->data[i].T_SLIP / 60.0;
+	}
+}
+
+void TwoImpulseProcessor::PMDTIPSS()
+{
+	//Pointers to tables
+	TwoImpulseSingleSolutionTable *intab = &pRTCC->PZTIPSS;
+	TwoImpulseSingleSolutionDisplay *outtab = &pRTCC->TwoImpSingleDispBuffer;
+
+	*outtab = TwoImpulseSingleSolutionDisplay();
+	outtab->ErrorMessage = "";
+
+	if (intab->man[0].TIG == 0.0)
+	{
+		outtab->ErrorMessage = "NO INFORMATION AVAILABLE AT THIS TIME";
+		return;
 	}
 }
 

@@ -35,7 +35,7 @@ struct TwoImpulseOpt
 	int mode;
 	// 1 = CSM, 3 = LEM
 	int ChaserVehicle;
-	//Mode 1: 0 = use dt_inc as time increment of second maneuver, 1 = use dt_inc as terminal phase slip time increment
+	//Mode 1: 0 = use TimeStep as time increment of second maneuver, 1 = use TimeStep as terminal phase slip time increment
 	//Mode 2: 0 = Time of both maneuvers fixed, 1 = time of first maneuver fixed, 2 = time of second maneuver fixed
 	int RequestIndicator;
 	double ChaserVectorTime;
@@ -44,12 +44,12 @@ struct TwoImpulseOpt
 	double T1;	
 	//Time of second maneuver (GMT)
 	double T2;
-	EphemerisData sv_A;		//Chaser state vector
-	EphemerisData sv_P;		//Target state vector
 	VehicleDataBlock sv_C;		//Chaser state vector
 	StationIDArr ChaserStationID;
 	VehicleDataBlock sv_T;		//Target state vector
 	StationIDArr TargetStationID;
+	//Time increment of variable maneuver
+	double TimeStep;
 
 	//For single solution and transfer
 	//1 = Multiple, 2 = Corrective Combination
@@ -68,51 +68,31 @@ struct TwoImpulseOpt
 	double T2_min;
 	//Maximum time of second (NSR) maneuver
 	double T2_max;
-	//Time increment of second maneuver
-	double dt_inc;
-
+	//Limit of TPI slip time
+	double dt_TPI_slip;
 	//Mode 2 (Multiple Solution/Two Impulse) only options
-	//Time increment of variable maneuver
-	double TimeStep;
 	//Time range of variable maneuver
 	double TimeRange;
 
 	//Mode 3 (Single Solution) only options
-	//Mode 4 (Transfer Plan) only options
+	//false = 2 quads, true = 4 quads
+	bool UllageQuads;
+	//1 = Target, 2 = Horizon
+	int LOSMode;
+	//Pitch angle (i.e. the angle between astronauts line-of-sight and the X body axis)
+	double DeltaPitch;
+
 	//Mode 5 (DKI/SPQ) only options
 	double DH;
 	double PhaseAngle;
-	double WT ;
+	double WT;
 	double Elev;
-
-
-
-
-
-
-	//Corrective combination options
-
-
-	//0 = use item 11 as time increment of second maneuver
-	//1 = use item 11 as terminal phase slip time increment
-	int CCReqInd;
-
-	double TPILimit;
-
-
-	//Single solution options
-	
-
-	//false = 2 quads, true = 4 quads
-	bool UllageQuads = true;
-	//1 = Target, 2 = Horizon
-	int LOSMode = 1;
-	double DeltaPitch = 0.0;
-	double RelMoTimeStep = 0.0;
 };
 
 struct TwoImpulseResuls
 {
+	TwoImpulseResuls();
+
 	EphemerisData sv_tig;		//State vector before NCC/TPI
 	EphemerisData sv_tig_apo;	//State vector after NCC/TPI
 	EphemerisData sv_tig2;		//State vector before NSR/TPF
@@ -124,6 +104,32 @@ struct TwoImpulseResuls
 	double T1;					//GET of NCC/TPI
 	double T2;					//GET of NSR/TPF
 	bool SolutionFound;
+};
+
+struct CorrectiveCombinationSolutionTableEntry
+{
+	//Impulsive GMT of the second maneuver of the plan
+	double GMT_NSR = 0.0;
+	//Sum of the impulsive DVs for both maneuvers plus an approximation of the DV required for terminal phase
+	double DV_T = 0.0;
+	//Height offset after the second maneuver
+	double DH = 0.0;
+	//Phase angle after the second maneuver
+	double PhaseAngle = 0.0;
+	//Time slip
+	double T_SLIP = 0.0;
+};
+
+struct CorrectiveCombinationSolutionTable
+{
+	bool Updating = false;
+	int Solutions = 0;
+	int MAN_VEH = 0;
+	StationIDArr CSMSTAID, LMSTAID;
+	double CSM_GMTTH = 0.0;
+	double LM_GMTTH = 0.0;
+	double T_NCC = 0.0;
+	CorrectiveCombinationSolutionTableEntry data[13];
 };
 
 struct TwoImpulseMultipleSolutionTableEntry
@@ -205,12 +211,76 @@ struct TwoImpulseSingleSolutionTable
 	TwoImpulseSingleSolutionTableApproachData app2[4];
 };
 
+struct TwoImpulseMultipleSolutionDisplay
+{
+	std::string ErrorMessage = "NO TWO IMPULSE PLANS AVAILABLE";
+	StationIDArr CSMSTAID;
+	StationIDArr LMSTAID;
+	double GETTH_CSM = 0.0;
+	double GETTH_LM = 0.0;
+	std::string MAN_VEH;
+	char GETFRZ = ' ';
+	char GMTFRZ = ' ';
+	char GETVAR = ' ';
+	std::string OPTION;
+	double WT = 0.0;
+	double PHASE = 0.0;
+	double DH = 0.0;
+	double GET1 = 0.0;
+	double GMT1 = 0.0;
+	std::string MinutesUntil;
+	int Solutions = 0;
+	bool showTPI = false;
+	TwoImpulseMultipleSolutionTableEntry data[13];
+};
+
+struct TwoImpulseCorrectiveCombinationDisplayEntry
+{
+	int Code = 0;
+	double GET_NSR = 0.0;
+	double GMT_NSR = 0.0;
+	double DVT = 0.0;
+	double DH = 0.0;
+	double PhaseAngle = 0.0;
+	double DT = 0.0;
+	double TSLIP = 0.0;
+};
+
+struct TwoImpulseCorrectiveCombinationDisplay
+{
+	std::string ErrorMessage = "NO CORRECTIVE COMBINATION PLANS AVAILABLE";
+	StationIDArr CSMSTAID;
+	StationIDArr LMSTAID;
+	double GETTH_CSM = 0.0;
+	double GETTH_LM = 0.0;
+	std::string MAN_VEH;
+	double GET_NCC = 0.0;
+	double GMT_NCC = 0.0;
+	int Solutions = 0;
+	TwoImpulseCorrectiveCombinationDisplayEntry data[13];
+};
+
+struct TwoImpulseSingleSolutionDisplay
+{
+	std::string ErrorMessage = "NO INFORMATION AVAILABLE AT THIS TIME";
+};
+
 class TwoImpulseProcessor : public RTCCModule
 {
 public:
 	TwoImpulseProcessor(RTCC *r);
 	void PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res);
+
+	//DISPLAYS
+	//Two Impulse Multiple Solution
+	void PMDTIMP();
+	//Two Impulse Corrective Combination
+	void PMDDTVCC();
+	//Two Impulse Multiple Solution
+	void PMDTIPSS();
 protected:
+	//Common code for CC and ML
+	void CCAndML();
 	//Mode 1: Corrective Combination
 	void CorrectiveCombination();
 	//Mode 2: Multiple Solution

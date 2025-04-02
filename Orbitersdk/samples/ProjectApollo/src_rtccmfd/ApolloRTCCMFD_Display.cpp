@@ -45,7 +45,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		break;
 	case 1:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
-		skp->Text(W / 2, CH/2, "Two Impulse Computation (K30)", 29);
+		skp->Text(W / 2, CH/2, "TI Multiple Solution (K30)", 26);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 		if (GC->rtcc->med_k30.IVFlag == 0)
@@ -2605,10 +2605,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		skp->Text(W / 2, CH / 2, "Rendezvous Processors", 22);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-		skp->Text(CW, 2 * H / 14, "Two Impulse Processor", 21);
-		skp->Text(CW, 4 * H / 14, "Coelliptic Sequence Processor", 29);
-		skp->Text(CW, 6 * H / 14, "Docking Initiation Processor", 28);
-		skp->Text(CW, 10 * H / 14, "TPI Times", 9);
+		skp->Text(CW, 2 * H / 14, "Two Impulse Multiple Solution", 29);
+		skp->Text(CW, 4 * H / 14, "Two Impulse Corrective Combination", 34);
+		skp->Text(CW, 6 * H / 14, "Two Impulse Single Solution", 27);
+		skp->Text(CW, 8 * H / 14, "Coelliptic Sequence Processor", 29);
+		skp->Text(CW, 10 * H / 14, "Docking Initiation Processor", 28);
+		skp->Text(CW, 12 * H / 14, "TPI Times", 9);
 		break;
 	case 33:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
@@ -2813,7 +2815,112 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(CW, 2 * H / 14, Buffer, strlen(Buffer));
 		break;
 	case 37:
-		//Spare
+		if (subscreen == 0)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text(W / 2, CH / 2, "TI Corrective Combination (K32)", 31);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			x = 1;  y = 3; dx = 7;
+			Text(skp, x, marker + y, "*");
+			x++;
+			Text(skp, x, y, "VEH:");
+			if (GC->rtcc->med_k32.Vehicle == 1) Text(skp, x + dx, y, "CSM");
+			else Text(skp, x + dx, y, "LEM");
+			y++;
+			Text(skp, x, y, "REQ:");
+			if (GC->rtcc->med_k32.RequestIndicator == 0) Text(skp, x + dx, y, "0: Second maneuver time varied");
+			else Text(skp, x + dx, y, "1: Second maneuver time fixed");
+			y++;
+			Text(skp, x, y, "CVT:");
+			if (GC->MissionPlanningActive)
+			{
+				Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_k32.ChaserVectorTime); y++;
+			}
+			else
+			{
+				if (GC->rtcc->med_k32.Vehicle == 1) PrintCSMVessel(Buffer);
+				else PrintLMVessel(Buffer);
+				Text(skp, x + dx, y, Buffer); y++;
+			}
+			Text(skp, x, y, "TVT:");
+			if (GC->MissionPlanningActive)
+			{
+				Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_k32.TargetVectorTime); y++;
+			}
+			else
+			{
+				if (GC->rtcc->med_k32.Vehicle == 1) PrintLMVessel(Buffer);
+				else PrintCSMVessel(Buffer);
+				Text(skp, x + dx, y, Buffer); y++;
+			}
+			Text(skp, x, y, "NCC:");
+			Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_k32.T_NCC); y++;
+			Text(skp, x, y, "DHMIN:");
+			Text(skp, x + dx, y, "%.1lf NM", GC->rtcc->med_k32.DH_min); y++;
+			Text(skp, x, y, "DHMAX:");
+			Text(skp, x + dx, y, "%.1lf NM", GC->rtcc->med_k32.DH_max); y++;
+			Text(skp, x, y, "DHINC:");
+			Text(skp, x + dx, y, "%.1lf NM", GC->rtcc->med_k32.DH_inc); y++;
+			Text(skp, x, y, "T2MIN:");
+			Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_k32.T2_min); y++;
+			if (GC->rtcc->med_k32.RequestIndicator == 0)
+			{
+				Text(skp, x, y, "T2MAX:");
+				Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_k32.T2_max);
+			}
+			y++;
+			Text(skp, x, y, "DT:");
+			Text(skp, x + dx, y, "%.1lf min", GC->rtcc->med_k32.TimeStep); y++;
+			if (GC->rtcc->med_k32.RequestIndicator == 1)
+			{
+				Text(skp, x, y, "SLIP:");
+				Text(skp, x + dx, y, "%.1lf min", GC->rtcc->med_k32.dt_TPI_slip);
+			}
+			Text(skp, 1, 21, "NSR NOMINALS:");
+			Text(skp, 1, 22, "GET");
+			Text(skp, 1, 23, "DEL H");
+			Text(skp, 1, 24, "PHASE");
+			Text_GET_HHHMMSSC(skp, 7, 22, GC->rtcc->GETfromGMT(GC->rtcc->GZGENCSN.TINSRNominalTime));
+			Text(skp, 7, 23, " %.2lf NM", GC->rtcc->GZGENCSN.TINSRNominalDeltaH / 1852.0);
+			Text(skp, 7, 24, " %.2lf deg", GC->rtcc->GZGENCSN.TINSRNominalPhaseAngle*DEG);
+		}
+		else
+		{
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			SetMOCRFont(skp, 3, false);
+			GetCharSize(skp, CW, CH);
+			Text(skp, 15, 0, "TWO IMPULSE DIGITALS");
+			Text(skp, 52, 0, "0064");
+			Text(skp, 0, 2, "LM STA ID");
+			Text(skp, 0, 3, "LM GETTHS");
+			Text(skp, 0, 4, "GETNCC");
+			Text(skp, 0, 5, "GMTNCC");
+			Text(skp, 36, 2, "CSM STA ID");
+			Text(skp, 36, 3, "CSM GETTHS");
+			Text(skp, 39, 4, "MAN VEH");
+			Text(skp, 0, 7, "CODE  GETNSR    GMTNSR   DVT     DH     DP    DT   TSLIP");
+			SetMOCRFont(skp, 3, true);
+			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+			Text(skp, 19, 2, GC->rtcc->TwoImpCCDispBuffer.LMSTAID.data);
+			Text_GET_HHHMMSS(skp, 19, 3, GC->rtcc->TwoImpCCDispBuffer.GETTH_LM);
+			Text_GET_HHHMMSS(skp, 19, 4, GC->rtcc->TwoImpCCDispBuffer.GET_NCC);
+			Text_GET_HHHMMSS(skp, 19, 5, GC->rtcc->TwoImpCCDispBuffer.GMT_NCC);
+			Text(skp, 56, 2, GC->rtcc->TwoImpCCDispBuffer.CSMSTAID.data);
+			Text_GET_HHHMMSS(skp, 56, 3, GC->rtcc->TwoImpCCDispBuffer.GETTH_CSM);
+			Text(skp, 56, 4, GC->rtcc->TwoImpCCDispBuffer.MAN_VEH);
+			for (int i = 0; i < GC->rtcc->TwoImpCCDispBuffer.Solutions; i++)
+			{
+				Text(skp, 3, 8 + i, "%d", GC->rtcc->TwoImpCCDispBuffer.data[i].Code);
+				Text_GET_HHHMMSS(skp, 13, 8 + i, GC->rtcc->TwoImpCCDispBuffer.data[i].GET_NSR);
+				Text_GET_HHHMMSS(skp, 23, 8 + i, GC->rtcc->TwoImpCCDispBuffer.data[i].GMT_NSR);
+				Text(skp, 30, 8 + i, "%.1lf", GC->rtcc->TwoImpCCDispBuffer.data[i].DVT);
+				Text(skp, 37, 8 + i, "%.2lf", GC->rtcc->TwoImpCCDispBuffer.data[i].DH);
+				Text(skp, 44, 8 + i, "%.2lf", GC->rtcc->TwoImpCCDispBuffer.data[i].PhaseAngle);
+				Text(skp, 50, 8 + i, "%.1lf", GC->rtcc->TwoImpCCDispBuffer.data[i].DT);
+				Text(skp, 56, 8 + i, "%.1lf", GC->rtcc->TwoImpCCDispBuffer.data[i].TSLIP);
+			}
+			Text(skp, 45, 27, GC->rtcc->TwoImpCCDispBuffer.ErrorMessage);
+		}
 		break;
 	case 38:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
@@ -3000,14 +3107,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(W - CW, 4 * H / 14, Buffer, strlen(Buffer));
 		break;
 	case 41:
-	case 71:
 	{
 		SetMOCRFont(skp, 3, false);
 		GetCharSize(skp, CW, CH);
 
 		FIDOOrbitDigitals *tab;
 
-		if (screen == 41)
+		if (subscreen == 0)
 		{
 			skp->Text(CW * 18, CH / 2, "FDO ORBIT DIGITALS NO 1", 23);
 			skp->Text(CW * 52, CH / 2, "0046", 4);
@@ -5334,7 +5440,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 		}
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-		sprintf(Buffer, "%d/5", subscreen);
+		sprintf(Buffer, "%d/%d", subscreen, subscreenmax);
 		skp->Text(W - CW, 2 * H / 14, Buffer, strlen(Buffer));
 		break;
 	case 67: //Detailed Maneuver Table 1
@@ -5605,6 +5711,45 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		if (GC->rtcc->med_k00.I4)
 		{
 			Text_Double(skp, CW, 12 * H / 14, "%.1f min", GC->rtcc->med_k00.dt_NCC_NSR / 60.0);
+		}
+		break;
+	case 71:
+		if (subscreen == 0)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text(W / 2, CH / 2, "TI Single Solution (K31)", 24);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			x = 1;  y = 3; dx = 7;
+			Text(skp, x, marker + y, "*");
+			x++;
+			Text(skp, x, y, "TAB:");
+			if (GC->rtcc->med_k31.TableIndicator == 1) Text(skp, x + dx, y, "Multiple Solution");
+			else Text(skp, x + dx, y, "Corrective Combination");
+			y++;
+			Text(skp, x, y, "SOL:");
+			Text(skp, x + dx, y, "%d", GC->rtcc->med_k31.PlanNumber); y++;
+			Text(skp, x, y, "QUAD:");
+			if (GC->rtcc->med_k31.UllageQuads) Text(skp, x + dx, y, "4 Quads");
+			else Text(skp, x + dx, y, "2 Quads");
+			y++;
+			Text(skp, x, y, "LOS:");
+			if (GC->rtcc->med_k31.LOSMode == 1) Text(skp, x + dx, y, "Target");
+			else Text(skp, x + dx, y, "Horizon");
+			y++;
+			Text(skp, x, y, "PIT:");
+			Text(skp, x + dx, y, "%.1lf deg", GC->rtcc->med_k31.DeltaPitch); y++;
+			Text(skp, x, y, "DT:");
+			Text(skp, x + dx, y, "%.1lf sec", GC->rtcc->med_k31.TimeStep);
+		}
+		else
+		{
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			SetMOCRFont(skp, 3, false);
+			GetCharSize(skp, CW, CH);
+			Text(skp, 15, 0, "TWO IMPULSE SINGLE SOLUTION");
+			Text(skp, 52, 0, "0064");
+			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+			SetMOCRFont(skp, 3, true);
 		}
 		break;
 	case 75:

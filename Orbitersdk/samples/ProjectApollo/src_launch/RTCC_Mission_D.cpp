@@ -1010,28 +1010,28 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP9LMTPI * form = (AP9LMTPI *)pad;
 
-		EphemerisData sv_A, sv_P;
+		VehicleDataBlock sv_A, sv_P;
 		TwoImpulseOpt opt;
 		TwoImpulseResuls res;
 		AP9LMTPIPADOpt manopt;
 
-		sv_P = StateVectorCalcEphem(calcParams.src);
-		sv_A = StateVectorCalcEphem(calcParams.tgt);
+		sv_P = StateVectorCalcDataBlock(calcParams.src);
+		sv_A = StateVectorCalcDataBlock(calcParams.tgt);
 
 		opt.mode = 5;
 		opt.T1 = GMTfromGET(TimeofIgnition);
 		opt.T2 = -1.0;
 		opt.ChaserVehicle = RTCC_MPT_LM;
-		opt.sv_A = sv_A;
-		opt.sv_P = sv_P;
+		opt.sv_C = sv_A;
+		opt.sv_T = sv_P;
 		opt.WT = 130.0*RAD;
 
 		PMSTICN(opt, res);
 
 		manopt.dV_LVLH = res.dV_LVLH;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		manopt.sv_A = sv_A;
-		manopt.sv_P = sv_P;
+		manopt.sv_A = sv_A.sv;
+		manopt.sv_P = sv_P.sv;
 		manopt.GMT_TIG = opt.T1;
 
 		AP9LMTPIPAD(manopt, *form);
@@ -1164,20 +1164,20 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP9LMTPI * form = (AP9LMTPI *)pad;
 
-		EphemerisData sv_A, sv_P;
+		VehicleDataBlock sv_A, sv_P;
 		TwoImpulseOpt opt;
 		AP9LMTPIPADOpt manopt;
 		TwoImpulseResuls res;
 
-		sv_P = StateVectorCalcEphem(calcParams.src);
-		sv_A = StateVectorCalcEphem(calcParams.tgt);
+		sv_P = StateVectorCalcDataBlock(calcParams.src);
+		sv_A = StateVectorCalcDataBlock(calcParams.tgt);
 
 		opt.mode = 5;
 		opt.T1 = -1.0;
 		opt.T2 = -1.0;
 		opt.ChaserVehicle = RTCC_MPT_LM;
-		opt.sv_A = sv_A;
-		opt.sv_P = sv_P;
+		opt.sv_C = sv_A;
+		opt.sv_T = sv_P;
 		opt.Elev = 27.5*RAD;
 		opt.WT = 130.0*RAD;
 
@@ -1187,8 +1187,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		manopt.dV_LVLH = res.dV_LVLH;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		manopt.sv_A = sv_A;
-		manopt.sv_P = sv_P;
+		manopt.sv_A = sv_A.sv;
+		manopt.sv_P = sv_P.sv;
 		manopt.GMT_TIG = res.sv_tig.GMT;
 
 		AP9LMTPIPAD(manopt, *form);

@@ -1722,8 +1722,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.DH = 15.0*1852.0;
 		//Angle confirmed by Apollo 11 FIDO loop (finally!)
 		opt.PhaseAngle = 4.475*RAD;
-		opt.sv_A = ConvertSVtoEphemData(sv_LM2);
-		opt.sv_P = ConvertSVtoEphemData(sv_CSM2);
+		opt.sv_C.sv = ConvertSVtoEphemData(sv_LM2);
+		opt.sv_T.sv = ConvertSVtoEphemData(sv_CSM2);
 		//PDI+12
 		opt.T1 = GMTfromGET(calcParams.PDI + 12.0*60.0);
 		//Estimate for T2
@@ -1734,7 +1734,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			PMSTICN(opt, res);
 
 			//Find TPI time
-			PMSTICN_ELEV(res.sv_tig2_apo, opt.sv_P, GZGENCSN.TIElevationAngle, OrbMech::mu_Moon, t_TPI_actual);
+			//PMSTICN_ELEV(res.sv_tig2_apo, opt.sv_T, GZGENCSN.TIElevationAngle, OrbMech::mu_Moon, t_TPI_actual);
 
 			dt = GMTfromGET(t_TPI) - t_TPI_actual;
 			opt.T2 += dt;

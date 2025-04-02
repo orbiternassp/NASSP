@@ -59,6 +59,7 @@ struct RTCCMFDData
 {
 	int screen = 0;
 	int subscreen = 0;
+	int subscreenmax = 0;
 	int marker = 0;
 	int markermax = 0;
 	UINT ID = 0;
@@ -117,6 +118,11 @@ public:
 	void t1dialogue();
 	void t2dialogue();
 	void menuCycleK30Vehicle();
+	void menuSetCorrectiveCombinationInput();
+	void CorrectiveCombinationOffset();
+	void menuCorrectiveCombinationCalc();
+	void menuSetTwoImpulseSingleSolutionInput();
+	void menuTwoImpulseSingleSolutionCalc();
 	void SPQtimedialogue();
 	void set_SPQtime(double tig);
 	void menuSetSPQChaserThresholdTime();
@@ -136,7 +142,9 @@ public:
 	void menuSLVInsertionSVtoMPT();
 	void menuSLVLaunchUplink();
 	void menuVoid();
-	void menuSetLambertPage();
+	void menuSetTIMultipleSolutionInputsPage();
+	void menuSetTICorrectiveCombinationPage();
+	void menuSetTISingleSolutionPage();
 	void menuSetSPQPage();
 	void menuSetTIMultipleSolutionPage();
 	void menuSetREFSMMATPage();
@@ -668,7 +676,7 @@ public:
 	void menuSetFIDOLaunchAnalogNo1Page();
 	void menuSetFIDOLaunchAnalogNo2Page();
 	void menuSetRTETradeoffDisplayPage();
-	void menuCycleRTETradeoffPage();
+	void menuCycleSubscreen();
 	void menuCalcRTETradeoff();
 	void menuSetRTETradeoffSite();
 	void menuSetRTETradeoffRemoteEarthPage();
@@ -918,6 +926,7 @@ protected:
 	int x, y, dx, dy; //Display spacing helper variables
 	int screen;
 	int subscreen;
+	int subscreenmax;
 	int marker;
 	int markermax;
 	int status; //Page dependent status, reset to 0 when new page is entered

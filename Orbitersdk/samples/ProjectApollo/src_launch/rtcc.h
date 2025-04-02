@@ -2407,8 +2407,6 @@ public:
 	void LunarAscentPAD(const ASCPADOpt &opt, AP11LMASCPAD &pad);
 	void EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad);
 	void LunarEntryPAD(const LunarEntryPADOpt &opt, AP11ENT &pad);
-	int PMMTIS(EphemerisData sv_A1, EphemerisData sv_P1, double dt, double DH, double theta, EphemerisData &sv_A1_apo, EphemerisData &sv_A2, EphemerisData &sv_A2_apo);
-	int PMSTICN_ELEV(EphemerisData sv_A1, EphemerisData sv_P1, double phi_req, double mu, double &T_ELEV);
 	void PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res);
 	double FindDH(SV sv_A, SV sv_P, double TIGguess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
@@ -2527,6 +2525,7 @@ public:
 	void DockingAlignmentProcessor(DockAlignOpt &opt);
 	VECTOR3 SkylabDockingAttitude(EphemerisData sv, MATRIX3 REFSMMAT, double DDA = 0.0);
 	AEGBlock SVToAEG(EphemerisData sv, double Area, double Weight, double KFactor);
+	VehicleDataBlock SVToVehicleDataBlock(EphemerisData sv, double Area, double Weight, double KFactor) const;
 	//Apsides Determination Subroutine
 	int PMMAPD(AEGHeader Header, AEGDataBlock Z, int KAOP, int KE, double *INFO, AEGDataBlock *sv_A, AEGDataBlock *sv_P);
 	bool PDIIgnitionAlgorithm(SV sv, VECTOR3 R_LS, double TLAND, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
@@ -3234,7 +3233,7 @@ public:
 		double DPSScaleFactor = 0.0;
 	} med_k28;
 
-	//Two Impulse Computation
+	//Two Impulse Multiple Solution
 	struct MED_K30
 	{
 		int Vehicle = 1; //1 = CSM, 3 = LEM
@@ -3246,6 +3245,36 @@ public:
 		double TimeStep = 60.0;
 		double TimeRange = 600.0;
 	} med_k30;
+
+	//Two Impulse Single Solution
+	struct MED_K31
+	{
+		int TableIndicator = 1;		// 1 = Multiple, 2 = Corrective Combination
+		int PlanNumber = 1;			// 1-13
+		bool UllageQuads = false;	// false = 2 quads, true = 4 quads
+		int LOSMode = 1;			// 1 = Target, 2 = Horizon
+		double DeltaPitch = 0.0;	//
+		double TimeStep = 300.0;	// Time step for approach data
+	} med_k31;
+
+	//Two Impulse Corrective Combination
+	struct MED_K32
+	{
+		int Vehicle = 1; //1 = CSM, 3 = LEM
+		int RequestIndicator = 0;  //0 = use TimeStep as time increment of second maneuver, 1 = use TimeStep as terminal phase slip time increment
+		double ChaserVectorTime = 0.0;
+		double TargetVectorTime = 0.0;
+		double T_NCC = 0.0; //GET
+		double DH_min = 7.0; //NM
+		double DH_max = 9.0; //NM
+		double DH_inc = 0.5; //NM
+		double T2_min = 0.0; //GET
+		double T2_max = 0.0; //GET
+		double TimeStep = 1.0; //Minutes
+		double dt_TPI_slip = 5.0; //Minutes
+		StationIDArr ChaserVectorID;
+		StationIDArr TargetVectorID;
+	} med_k32;
 
 	//Lunar Launch Targeting Processor (Apollo 14 and later, MED code is not from any documentation!)
 	struct MED_K50
@@ -3994,38 +4023,11 @@ public:
 	} GZGENCSN;
 
 	TwoImpulseMultipleSolutionTable PZTIPREG;
-
-	struct TwoImpulseMultipleSolutionDisplay
-	{
-		std::string ErrorMessage;
-		StationIDArr CSMSTAID;
-		StationIDArr LMSTAID;
-		double GETTH_CSM = 0.0;
-		double GETTH_LM = 0.0;
-		std::string MAN_VEH;
-		char GETFRZ = ' ';
-		char GMTFRZ = ' ';
-		char GETVAR = ' ';
-		std::string OPTION;
-		double WT = 0.0;
-		double PHASE = 0.0;
-		double DH = 0.0;
-		double GET1 = 0.0;
-		double GMT1 = 0.0;
-		std::string MinutesUntil;
-		int Solutions = 0;
-		bool showTPI = false;
-		TwoImpulseMultipleSolutionTableEntry data[13];
-	} TwoImpMultDispBuffer;
-
 	TwoImpulseSingleSolutionTable PZTIPSS;
-
-	struct CorrectiveCombinationSolutionTable
-	{
-		bool Updating = false;
-		int Solutions = 0;
-		int MAN_VEH = 0;
-	} PZTIPCCD;
+	CorrectiveCombinationSolutionTable PZTIPCCD;
+	TwoImpulseMultipleSolutionDisplay TwoImpMultDispBuffer;
+	TwoImpulseCorrectiveCombinationDisplay TwoImpCCDispBuffer;
+	TwoImpulseSingleSolutionDisplay TwoImpSingleDispBuffer;
 
 	struct LaunchInterfaceTable
 	{
@@ -4261,7 +4263,7 @@ public:
 		//Block 2: Corrective Combination
 		VehicleDataBlock SV_CC[2];
 		//Block 3: Transfer Data
-		EphemerisData SV_before[2];
+		VehicleDataBlock SV_before[2];
 		VECTOR3 V_after[2];
 		int plan[2];
 		std::string code[2];
@@ -4979,6 +4981,10 @@ private:
 	void PMDRPT();
 	//Two-Impulse Multiple Solution Display
 	void PMDTIMP();
+	//Two-Impulse Corrective Combination Display
+	void PMDDTVCC();
+	//Two-Impulse Single Solution Display
+	void PMDTIPSS();
 public:
 		//Ascent Rendezvous Monitoring Display
 		void PMDARM(EphemerisData sv_CSM, EphemerisData sv_LM);
