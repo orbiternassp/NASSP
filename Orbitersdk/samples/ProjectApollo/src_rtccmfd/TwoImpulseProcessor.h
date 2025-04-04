@@ -159,6 +159,8 @@ struct TwoImpulseMultipleSolutionTable
 	double LM_GMTTH  = 0.0;
 	//Number of seconds until the environment change indicated from the frozen maneuver of the first solution (negative for darkness)
 	double DT_Light = 0.0;
+	double DH = 0.0;
+	double PhaseAngle = 0.0;
 	TwoImpulseMultipleSolutionTableEntry data[13];
 };
 
@@ -201,14 +203,14 @@ struct TwoImpulseSingleSolutionTable
 	int PointingMode; //1 = Target, 2 = Horizon
 	int PlanNumber;
 	int TwoImpulseTableIndicator;	// 1 = Multiple Solution, 2 = CC
-	double ActualPhase = 0.0;		// Actual phase after second maneuver
-	double ActualDH = 0.0;			// Actual height offset after second maneuver
-	double ActualWT = 0.0;			// Actual target terminal phase transfer angle between the two maneuvers (no. of firing quads is preset in this location)
-	double DeltaPitch = 0.0;		// Delta pitch angle
+	double ActualPhase;		// Actual phase after second maneuver
+	double ActualDH;		// Actual height offset after second maneuver
+	double ActualWT;		// Actual target terminal phase transfer angle between the two maneuvers (no. of firing quads is preset in this location)
+	double DeltaPitch;		// Delta pitch angle
 	
 	TwoImpulseSingleSolutionTableManeuverData man[2];
-	TwoImpulseSingleSolutionTableApproachData app1[3];
-	TwoImpulseSingleSolutionTableApproachData app2[4];
+	//3 for maneuver 1, 4 for maneuver 2
+	TwoImpulseSingleSolutionTableApproachData app[7];
 };
 
 struct TwoImpulseMultipleSolutionDisplay
@@ -260,9 +262,59 @@ struct TwoImpulseCorrectiveCombinationDisplay
 	TwoImpulseCorrectiveCombinationDisplayEntry data[13];
 };
 
+struct TwoImpulseSingleSolutionDisplayManeuverData
+{
+	double GET = 0.0;
+	double GMT = 0.0;
+	double E_HOR = 0.0;			// E_HOR of maneuver
+	double DV = 0.0;			// DV of maneuver
+	double Pitch = 0.0;			// Pitch angle of maneuver
+	double Yaw = 0.0;			// Yaw angle of maneuver
+	VECTOR3 DV_LVLH = _V(0, 0, 0);
+	double Pitch_LOS = 0.0;		// LOS pitch
+	double Yaw_LOS = 0.0;		// LOS yaw
+	VECTOR3 DV_LOS = _V(0, 0, 0); // DV along axes
+	VECTOR3 BT_LOS = _V(0, 0, 0); // Burn times along axes
+	char BT_LOS_DIR[3] = {' ', ' ', ' '};
+	double MinEnvironChange = 0.0;	// Minutes until next environment change
+	std::string Condition;			// Darkness or daylight
+	double HA = 0.0;				// Apogee height
+	double HP = 0.0;				// Perigee height
+};
+
+struct TwoImpulseSingleSolutionDisplayApproachData
+{
+	double GET = 0.0;	// Time of approach data
+	double TGT_AZ = 0.0;
+	char TGT_AZ_DIR = ' ';
+	double TGT_EL = 0.0;
+	char TGT_EL_DIR = ' ';
+	double RANGE = 0.0;
+	double RDOT = 0.0;
+	VECTOR3 OFF = _V(0, 0, 0);
+	char X = ' ';
+	char Y = ' ';
+	char Z = ' ';
+};
+
 struct TwoImpulseSingleSolutionDisplay
 {
 	std::string ErrorMessage = "NO INFORMATION AVAILABLE AT THIS TIME";
+	StationIDArr LMSTAID;
+	StationIDArr CSMSTAID;
+	double LM_GETTH = 0.0;
+	double CSM_GETTH = 0.0;
+	std::string MAN_VEH;
+	std::string PointingMode;
+	std::string TwoImpulseTableIndicator;
+	int ID = 0;
+	double DTR = 0.0; //Time between the two maneuvers
+	double WT = 0.0;
+	double PHASE = 0.0;
+	double DELH = 0.0;
+	double DELPITCH = 0.0;
+	TwoImpulseSingleSolutionDisplayManeuverData man[2];
+	TwoImpulseSingleSolutionDisplayApproachData app[7];
 };
 
 class TwoImpulseProcessor : public RTCCModule
@@ -297,8 +349,9 @@ protected:
 	//Two Impulse Impulsive Maneuver Calculation
 	int PMMTIS(VehicleDataBlock sv_A1, VehicleDataBlock sv_P1, double dt, double DH, double theta, VehicleDataBlock &sv_A1_apo, VehicleDataBlock &sv_A2, VehicleDataBlock &sv_A2_apo) const;
 
+	//Utility functions
 	bool ElevationAngleSearch(VehicleDataBlock sv_A0, VehicleDataBlock sv_P0, double Elev, VehicleDataBlock &sv_A1, VehicleDataBlock &sv_P1, double &T1) const;
-	double T2Search();
+	double T2Search() const;
 	void PMSTICN_PY(VECTOR3 R_A, VECTOR3 V_A, VECTOR3 R_B, VECTOR3 V_B, double &Pitch, double &Yaw, VECTOR3 &DV_LVLH) const;
 	bool coast(VehicleDataBlock sv0, double dt, VehicleDataBlock &sv1) const;
 	void SecularRates(EphemerisData sv0, double &l_dot, double &g_dot, double &h_dot) const;

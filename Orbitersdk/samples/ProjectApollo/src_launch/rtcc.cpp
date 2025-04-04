@@ -6475,8 +6475,12 @@ void RTCC::SaveState(FILEHANDLE scn) {
 		oapiWriteScenario_string(scn, "RTCCMFD_LM", pLM->GetName());
 	}
 	//MED
-	sprintf(Buffer, "%d ", med_k32.Vehicle);
-	oapiWriteScenario_string(scn, "K32", Buffer);
+	sprintf(Buffer, "%d %d %lf %lf %lf %lf %lf %lf",
+		med_k30.Vehicle, med_k30.IVFlag, med_k30.ChaserVectorTime, med_k30.TargetVectorTime, med_k30.StartTime, med_k30.EndTime, med_k30.TimeStep, med_k30.TimeRange);
+	oapiWriteScenario_string(scn, "MED_K30", Buffer);
+	sprintf(Buffer, "%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", med_k32.Vehicle, med_k32.RequestIndicator, med_k32.ChaserVectorTime, med_k32.TargetVectorTime, med_k32.T_NCC, med_k32.DH_min,
+		med_k32.DH_max, med_k32.DH_inc, med_k32.T2_min, med_k32.T2_max, med_k32.TimeStep, med_k32.dt_TPI_slip);
+	oapiWriteScenario_string(scn, "MED_K32", Buffer);
 
 	oapiWriteLine(scn, RTCC_END_STRING);
 }
@@ -6738,6 +6742,16 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		}
 		papiReadScenario_string(line, "RTCCMFD_CSM", CSMName);
 		papiReadScenario_string(line, "RTCCMFD_LM", LEMName);
+
+		if (!strnicmp(line, "MED_K30", 7)) {
+			sscanf(line + 8, "%d %d %lf %lf %lf %lf %lf %lf",
+				&med_k30.Vehicle, &med_k30.IVFlag, &med_k30.ChaserVectorTime, &med_k30.TargetVectorTime, &med_k30.StartTime, &med_k30.EndTime, &med_k30.TimeStep, &med_k30.TimeRange);
+		}
+		else if (!strnicmp(line, "MED_K32", 7)) {
+			sscanf(line + 8, "%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",
+				&med_k32.Vehicle, &med_k32.RequestIndicator, &med_k32.ChaserVectorTime, &med_k32.TargetVectorTime, &med_k32.T_NCC, &med_k32.DH_min,
+				&med_k32.DH_max, &med_k32.DH_inc, &med_k32.T2_min, &med_k32.T2_max, &med_k32.TimeStep, &med_k32.dt_TPI_slip);
+		}
 	}
 
 	//PMSVCT might need to use RTCC GMT
@@ -20204,6 +20218,7 @@ void RTCC::PMMDAN(AEGHeader Header, AEGDataBlock aeg, int IND, int &ERR, double 
 {
 	//OUTPUTS:
 	//ERR: <0 = AEG error return, 0 = no error, 1 = orbit is totally in daylight, 2 = convergence failure
+	//T_c and T_c_apo: Times of two next environment changes. A positive time indicate an upcoming environment of daylight and a negative time for darkness.
 	AEGDataBlock sv_temp;
 	VECTOR3 R_EM, V_EM, R_ES, R_S, R, V, H, N, N_apo;
 	double r_S, mu, cos_theta, R_e, r, phi1, phi2, phi3, n, cos_phi1, sin_alpha, h, cos_eta, sin_eta, F, dt, S_T;

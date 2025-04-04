@@ -111,13 +111,7 @@ public:
 	void DFLDynamicData(oapi::Sketchpad *skp, unsigned display, int fontsize);
 
 	//Inputs
-	void menuTIChaserVectorTime();
-	void menuTITargetVectorTime();
-	void menuTITimeIncrement();
-	void menuTITimeRange();
-	void t1dialogue();
-	void t2dialogue();
-	void menuCycleK30Vehicle();
+	void menuSetTIMultipleSolutionInput();
 	void menuSetCorrectiveCombinationInput();
 	void CorrectiveCombinationOffset();
 	void menuCorrectiveCombinationCalc();
@@ -142,11 +136,10 @@ public:
 	void menuSLVInsertionSVtoMPT();
 	void menuSLVLaunchUplink();
 	void menuVoid();
-	void menuSetTIMultipleSolutionInputsPage();
+	void menuSetTIMultipleSolutionPage();
 	void menuSetTICorrectiveCombinationPage();
 	void menuSetTISingleSolutionPage();
 	void menuSetSPQPage();
-	void menuSetTIMultipleSolutionPage();
 	void menuSetREFSMMATPage();
 	void menuSetReturnToEarthPage();
 	void menuSetAGSSVPage();

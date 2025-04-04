@@ -157,6 +157,14 @@ namespace OrbMech{
 		seconds = (mins - minutes) * 60.0;
 	}
 
+	void SStoMMSS(double time, int &minutes, double &seconds, double precision)
+	{
+		time = round_to(time, precision);
+
+		minutes = (int)trunc(time / 60.0);
+		seconds = (time / 60.0 - minutes) * 60.0;
+	}
+
 	// Format time to HHH:MM:SS.
 	void format_time(char *buf, double time)
 	{

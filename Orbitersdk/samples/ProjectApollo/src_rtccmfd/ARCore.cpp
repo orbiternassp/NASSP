@@ -2627,7 +2627,7 @@ int ARCore::subThread()
 		Sleep(5000); // Waste 5 seconds
 		Result = DONE;  // Success (negative = error)
 		break;
-	case 1: //Lambert Targeting
+	case 1: //Two Impulse Multiple Solution
 	{
 		TwoImpulseOpt opt;
 		TwoImpulseResuls res;
@@ -4611,6 +4611,9 @@ int ARCore::subThread()
 		}
 		else
 		{
+			int MAN_VEH, plan;
+			plan = GC->rtcc->med_m72.Plan - 1;
+
 			if (GC->rtcc->med_m72.Table == 1)
 			{
 				if (GC->rtcc->med_m72.Plan > GC->rtcc->PZTIPREG.Solutions)
@@ -4620,16 +4623,26 @@ int ARCore::subThread()
 				}
 				opt.sv_C = GC->rtcc->PZMYSAVE.SV_mult[0];
 				opt.sv_T = GC->rtcc->PZMYSAVE.SV_mult[1];
-				opt.DH = GC->rtcc->GZGENCSN.TIDeltaH;
-				opt.PhaseAngle = GC->rtcc->GZGENCSN.TIPhaseAngle;
-				opt.T1 = GC->rtcc->PZTIPREG.data[GC->rtcc->med_m72.Plan - 1].Time1;
-				opt.T2 = GC->rtcc->PZTIPREG.data[GC->rtcc->med_m72.Plan - 1].Time2;
+				opt.DH = GC->rtcc->PZTIPREG.DH;
+				opt.PhaseAngle = GC->rtcc->PZTIPREG.PhaseAngle;
+				opt.T1 = GC->rtcc->PZTIPREG.data[plan].Time1;
+				opt.T2 = GC->rtcc->PZTIPREG.data[plan].Time2;
+				MAN_VEH = GC->rtcc->PZTIPREG.MAN_VEH;
 			}
 			else
 			{
-				//TBD
-				Result = DONE;
-				break;
+				if (GC->rtcc->med_m72.Plan > GC->rtcc->PZTIPCCD.Solutions)
+				{
+					Result = DONE;
+					break;
+				}
+				opt.sv_C = GC->rtcc->PZMYSAVE.SV_CC[0];
+				opt.sv_T = GC->rtcc->PZMYSAVE.SV_CC[1];
+				opt.DH = GC->rtcc->PZTIPCCD.data[plan].DH;
+				opt.PhaseAngle = GC->rtcc->PZTIPCCD.data[plan].PhaseAngle;
+				opt.T1 = GC->rtcc->PZTIPCCD.T_NCC;
+				opt.T2 = GC->rtcc->PZTIPCCD.data[plan].GMT_NSR;
+				MAN_VEH = GC->rtcc->PZTIPCCD.MAN_VEH;
 			}
 
 			opt.mode = 5;
@@ -4638,7 +4651,7 @@ int ARCore::subThread()
 			PMMMPTInput in;
 
 			//Get all required data for PMMMPT and error checking
-			if (GetVesselParameters(GC->rtcc->PZTIPREG.MAN_VEH == RTCC_MPT_CSM, vesselisdocked, GC->rtcc->med_m72.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
+			if (GetVesselParameters(MAN_VEH == RTCC_MPT_CSM, vesselisdocked, GC->rtcc->med_m72.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
 			{
 				//Error
 				Result = DONE;
@@ -5726,6 +5739,19 @@ int ARCore::subThread()
 	break;
 	case 60: //Two Impulse Single Solution
 	{
+		TwoImpulseOpt opt;
+		TwoImpulseResuls res;
+
+		opt.mode = 3;
+		opt.TwoImpulseTableIndicator = GC->rtcc->med_k31.TableIndicator;
+		opt.PlanNumber = GC->rtcc->med_k31.PlanNumber;
+		opt.UllageQuads = GC->rtcc->med_k31.UllageQuads;
+		opt.LOSMode = GC->rtcc->med_k31.LOSMode;
+		opt.DeltaPitch = GC->rtcc->med_k31.DeltaPitch*RAD;
+		opt.TimeStep = GC->rtcc->med_k31.TimeStep;
+
+		GC->rtcc->PMSTICN(opt, res);
+
 		Result = DONE;
 	}
 	break;
