@@ -389,24 +389,18 @@ void DockingProbe::SystemTimestep(double simdt)
 	}
 
 	//Shares heat with cabin while "stowed"
-	//Disabled until boost heat determined
-	DockProbeHX->SetPumpOff();
-	DockProbe->rad = 1.0;
-	DockProbe->isolation = 0.001;
-	/*
+
 	if (!IsInstalled())
 	{
 		DockProbeHX->SetPumpOn();
-		DockProbe->rad = 0.0;
-		DockProbe->isolation = 0.0;
+		DockProbe->rad = 0.0; //prevents heating/cooling from space exposure while in cabin
 	}
 	else
 	{
 		DockProbeHX->SetPumpOff();
-		DockProbe->rad = 1.0;
-		DockProbe->isolation = 0.001;
+		DockProbe->rad = 0.0001;
 	}
-	*/
+
 	if (!IsPowered())
 	{
 		saturn->DockProbeTempSensor.WireTo(NULL);
