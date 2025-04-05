@@ -45,9 +45,9 @@ struct TwoImpulseOpt
 	//Time of second maneuver (GMT)
 	double T2;
 	VehicleDataBlock sv_C;		//Chaser state vector
-	StationIDArr ChaserStationID;
+	std::string ChaserStationID;
 	VehicleDataBlock sv_T;		//Target state vector
-	StationIDArr TargetStationID;
+	std::string TargetStationID;
 	//Time increment of variable maneuver
 	double TimeStep;
 
@@ -125,7 +125,7 @@ struct CorrectiveCombinationSolutionTable
 	bool Updating = false;
 	int Solutions = 0;
 	int MAN_VEH = 0;
-	StationIDArr CSMSTAID, LMSTAID;
+	std::string CSMSTAID, LMSTAID;
 	double CSM_GMTTH = 0.0;
 	double LM_GMTTH = 0.0;
 	double T_NCC = 0.0;
@@ -154,7 +154,7 @@ struct TwoImpulseMultipleSolutionTable
 	bool showTPI = false;
 	int IVFLAG = 0;
 	int MAN_VEH = 0;
-	StationIDArr CSMSTAID, LMSTAID;
+	std::string CSMSTAID, LMSTAID;
 	double CSM_GMTTH = 0.0;
 	double LM_GMTTH  = 0.0;
 	//Number of seconds until the environment change indicated from the frozen maneuver of the first solution (negative for darkness)
@@ -195,8 +195,8 @@ struct TwoImpulseSingleSolutionTable
 {
 	TwoImpulseSingleSolutionTable();
 
-	StationIDArr LMSTAID;
-	StationIDArr CSMSTAID;
+	std::string LMSTAID;
+	std::string CSMSTAID;
 	double LM_GMTTH;
 	double CSM_GMTTH;
 	int MAN_VEH; //1 = CSM, 3 = LEM
@@ -216,8 +216,8 @@ struct TwoImpulseSingleSolutionTable
 struct TwoImpulseMultipleSolutionDisplay
 {
 	std::string ErrorMessage = "NO TWO IMPULSE PLANS AVAILABLE";
-	StationIDArr CSMSTAID;
-	StationIDArr LMSTAID;
+	std::string CSMSTAID;
+	std::string LMSTAID;
 	double GETTH_CSM = 0.0;
 	double GETTH_LM = 0.0;
 	std::string MAN_VEH;
@@ -251,8 +251,8 @@ struct TwoImpulseCorrectiveCombinationDisplayEntry
 struct TwoImpulseCorrectiveCombinationDisplay
 {
 	std::string ErrorMessage = "NO CORRECTIVE COMBINATION PLANS AVAILABLE";
-	StationIDArr CSMSTAID;
-	StationIDArr LMSTAID;
+	std::string CSMSTAID;
+	std::string LMSTAID;
 	double GETTH_CSM = 0.0;
 	double GETTH_LM = 0.0;
 	std::string MAN_VEH;
@@ -300,8 +300,8 @@ struct TwoImpulseSingleSolutionDisplayApproachData
 struct TwoImpulseSingleSolutionDisplay
 {
 	std::string ErrorMessage = "NO INFORMATION AVAILABLE AT THIS TIME";
-	StationIDArr LMSTAID;
-	StationIDArr CSMSTAID;
+	std::string LMSTAID;
+	std::string CSMSTAID;
 	double LM_GETTH = 0.0;
 	double CSM_GETTH = 0.0;
 	std::string MAN_VEH;

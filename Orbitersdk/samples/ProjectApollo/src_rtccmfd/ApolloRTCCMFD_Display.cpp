@@ -58,9 +58,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			else Text(skp, x + dx, y, "LEM");
 			y++;
 			Text(skp, x, y, "IV:");
-			if (GC->rtcc->med_k30.IVFlag == 0) Text(skp, x + dx, y, "Both Fixed");
-			else if (GC->rtcc->med_k30.IVFlag == 1) Text(skp, x + dx, y, "First Fixed");
-			else Text(skp, x + dx, y, "Second Fixed");
+			if (GC->rtcc->med_k30.IVFlag == 0) Text(skp, x + dx, y, "0: Both Fixed");
+			else if (GC->rtcc->med_k30.IVFlag == 1) Text(skp, x + dx, y, "1: First Fixed");
+			else Text(skp, x + dx, y, "2: Second Fixed");
 			y++;
 			Text(skp, x, y, "CVT:");
 			if (GC->MissionPlanningActive)
@@ -2784,7 +2784,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, x, y, "CVT:");
 			if (GC->MissionPlanningActive)
 			{
-				Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_k32.ChaserVectorTime); y++;
+				if (GC->rtcc->med_k32.ChaserVectorTime > 0) Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_k32.ChaserVectorTime);
+				else Text(skp, x + dx, y, "Present Time");
+				y++;
 			}
 			else
 			{
@@ -2795,7 +2797,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, x, y, "TVT:");
 			if (GC->MissionPlanningActive)
 			{
-				Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_k32.TargetVectorTime); y++;
+				if (GC->rtcc->med_k32.TargetVectorTime > 0) Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_k32.TargetVectorTime);
+				else Text(skp, x + dx, y, "Present Time");
+				y++;
 			}
 			else
 			{
@@ -2839,7 +2843,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
 			SetMOCRFont(skp, 3, false);
 			GetCharSize(skp, CW, CH);
-			Text(skp, 15, 0, "TWO IMPULSE DIGITALS");
+			Text(skp, 18, 0, "TWO IMPULSE DIGITALS");
 			Text(skp, 52, 0, "0064");
 			Text(skp, 0, 2, "LM STA ID");
 			Text(skp, 0, 3, "LM GETTHS");
@@ -2848,14 +2852,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, 36, 2, "CSM STA ID");
 			Text(skp, 36, 3, "CSM GETTHS");
 			Text(skp, 39, 4, "MAN VEH");
-			Text(skp, 0, 7, "CODE  GETNSR    GMTNSR   DVT     DH     DP    DT   TSLIP");
+			Text(skp, 0, 7, "CODE  GETNSR    GMTNSR    DVT     DH     DP    DT  TSLIP");
 			SetMOCRFont(skp, 3, true);
 			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-			Text(skp, 19, 2, GC->rtcc->TwoImpCCDispBuffer.LMSTAID.data);
+			Text(skp, 19, 2, GC->rtcc->TwoImpCCDispBuffer.LMSTAID);
 			Text_GET_HHHMMSS(skp, 19, 3, GC->rtcc->TwoImpCCDispBuffer.GETTH_LM);
 			Text_GET_HHHMMSS(skp, 19, 4, GC->rtcc->TwoImpCCDispBuffer.GET_NCC);
 			Text_GET_HHHMMSS(skp, 19, 5, GC->rtcc->TwoImpCCDispBuffer.GMT_NCC);
-			Text(skp, 56, 2, GC->rtcc->TwoImpCCDispBuffer.CSMSTAID.data);
+			Text(skp, 56, 2, GC->rtcc->TwoImpCCDispBuffer.CSMSTAID);
 			Text_GET_HHHMMSS(skp, 56, 3, GC->rtcc->TwoImpCCDispBuffer.GETTH_CSM);
 			Text(skp, 56, 4, GC->rtcc->TwoImpCCDispBuffer.MAN_VEH);
 			for (int i = 0; i < GC->rtcc->TwoImpCCDispBuffer.Solutions; i++)
@@ -3964,7 +3968,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, 40, 6, "%+.1f", tab->DV.x);
 			Text(skp, 40, 8, "%+.1f", tab->DV.y);
 			Text(skp, 40, 10, "%+.1f", tab->DV.z);
-			Text_GET_HHHMMSSCS(skp, 39, 12, tab->GET);
+			Text_GET_HHHMMSSCS(skp, 40, 12, tab->GET);
 		}
 		else
 		{
@@ -5736,9 +5740,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 			SetMOCRFont(skp, 2, true);
-			Text(skp, 19, 2, GC->rtcc->TwoImpSingleDispBuffer.LMSTAID.data);
+			Text(skp, 19, 2, GC->rtcc->TwoImpSingleDispBuffer.LMSTAID);
 			Text_GET_HHHMMSS(skp, 19, 3, GC->rtcc->TwoImpSingleDispBuffer.LM_GETTH);
-			Text(skp, 64, 2, GC->rtcc->TwoImpSingleDispBuffer.CSMSTAID.data);
+			Text(skp, 64, 2, GC->rtcc->TwoImpSingleDispBuffer.CSMSTAID);
 			Text_GET_HHHMMSS(skp, 64, 3, GC->rtcc->TwoImpSingleDispBuffer.CSM_GETTH);
 			Text(skp, 16, 4, GC->rtcc->TwoImpSingleDispBuffer.MAN_VEH);
 			Text(skp, 16, 5, GC->rtcc->TwoImpSingleDispBuffer.PointingMode);
@@ -6282,7 +6286,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text_Double(skp, W - CW * x, y * H / 28, "HALOI2 %.1lf", GC->rtcc->PZMCCPLN.H_A_LPO2 / 1852.0); y++;
 		Text_Double(skp, W - CW * x, y * H / 28, "HPLOI2 %.2lf", GC->rtcc->PZMCCPLN.H_P_LPO2 / 1852.0); y++;
 		Text_Double(skp, W - CW * x, y * H / 28, "REVS1 %.2lf", GC->rtcc->PZMCCPLN.REVS1); y++;
-		Text_Double(skp, W - CW * x, y * H / 28, "REVS2 %d", GC->rtcc->PZMCCPLN.REVS2); y++;
+		Text_Int(skp, W - CW * x, y * H / 28, "REVS2 %d", GC->rtcc->PZMCCPLN.REVS2); y++;
 		Text_Double(skp, W - CW * x, y * H / 28, "SITEROT %.1lf°", GC->rtcc->PZMCCPLN.SITEROT*DEG); y++;
 		Text_Double(skp, W - CW * x, y * H / 28, "ETA1 %.3lf°", GC->rtcc->PZMCCPLN.ETA1*DEG); y++; y++;
 		skp->Text(W - CW * 27, y * H / 28, "Mission Constants", 17); y++;
@@ -9433,7 +9437,6 @@ void ApolloRTCCMFD::GetCharSize(oapi::Sketchpad*skp, int &CW, int &CH)
 	DWORD charsize = skp->GetCharSize();
 	CW = HIWORD(charsize);
 	CH = LOWORD(charsize);
-	W
 }
 
 void  ApolloRTCCMFD::SetMOCRFont(oapi::Sketchpad*skp, int size, bool dynamic)

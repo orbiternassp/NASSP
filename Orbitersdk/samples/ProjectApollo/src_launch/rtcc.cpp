@@ -18250,7 +18250,7 @@ RTCC_PMSVCT_15:
 	EMSTRAJ(sv1, L);
 }
 
-int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, StationIDArr &StaID, int &RBI)
+int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI)
 {
 	VehicleDataBlock block;
 
@@ -18272,50 +18272,63 @@ int RTCC::PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Ar
 	return err;
 }
 
-int RTCC::PMSVEC(int L, double GMT, VehicleDataBlock &block, StationIDArr &StaID)
+int RTCC::PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID)
 {
 	MissionPlanTable *mpt = GetMPTPointer(L);
 	EphemerisData sv;
 
+	//Are there any maneuvers?
 	if (mpt->mantable.size() == 0)
 	{
+		//No
 		block.Area = mpt->ConfigurationArea;
 		block.Weight = mpt->TotalInitMass;
 	}
 	else
 	{
-		unsigned mancounter = 0;
-
+		//Find the maneuver before the input time
+		unsigned num = 1;
+		bool stop = false;
 		do
 		{
-			if (GMT < mpt->mantable[mancounter].GMTMAN)
+			if (GMT < mpt->TimeToBeginManeuver[num - 1])
 			{
-				break;
+				//gmt is before this maneuver
+				num--;
+				stop = true;
 			}
-			if (mancounter >= mpt->mantable.size() - 1)
+			else
 			{
-				break;
+				if (mpt->ManeuverNum > num)
+				{
+					//Increment maneuver counter
+					num++;
+				}
+				else
+				{
+					//gmt is after last maneuver
+					stop = true;
+				}
 			}
-		} while (mancounter < mpt->mantable.size());
-
-		if (mancounter == 0U)
+		} while (stop == false);
+		//Use area and mass at correct time
+		if (num == 0U)
 		{
 			block.Area = mpt->ConfigurationArea;
 			block.Weight = mpt->TotalInitMass;
 		}
 		else
 		{
-			block.Area = mpt->mantable[mancounter].TotalAreaAfter;
-			block.Weight = mpt->mantable[mancounter].TotalMassAfter;
+			block.Area = mpt->mantable[num - 1].TotalAreaAfter;
+			block.Weight = mpt->mantable[num - 1].TotalMassAfter;
 		}
-
-		if (mancounter > 0U && GMT < mpt->mantable[mancounter - 1].GMT_BO + 3.0*60.0)
+		//Is vector time within 3 minutes of last maneuver time?
+		if (num > 0U && GMT < mpt->mantable[num - 1].GMT_BO + 3.0*60.0)
 		{
-			block.sv.R = mpt->mantable[mancounter - 1].R_BO;
-			block.sv.V = mpt->mantable[mancounter - 1].V_BO;
-			block.sv.GMT = mpt->mantable[mancounter - 1].GMT_BO;
-			block.sv.RBI = mpt->mantable[mancounter - 1].RefBodyInd;
-
+			block.sv.R = mpt->mantable[num - 1].R_BO;
+			block.sv.V = mpt->mantable[num - 1].V_BO;
+			block.sv.GMT = mpt->mantable[num - 1].GMT_BO;
+			block.sv.RBI = mpt->mantable[num - 1].RefBodyInd;
 			goto PMSVEC_2_2;
 		}
 	}
@@ -22240,7 +22253,7 @@ int RTCC::PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsign
 		Guid = 'U';
 	}
 
-	sprintf(Buffer, "%c%c%c%c%02d%s", Tab, Veh, Thr, Guid, Maneuver, ID.c_str());
+	sprintf(Buffer, "%c%c%c%c%02d%s", Tab, Veh, Thr, Guid, Maneuver, ID.substr(0, 2).c_str());
 	code.assign(Buffer);
 	
 	return 0;

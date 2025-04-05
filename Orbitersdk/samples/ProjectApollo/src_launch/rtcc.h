@@ -2670,8 +2670,8 @@ public:
 	void PMSVCT(int QUEID, int L);
 	void PMSVCT(int QUEID, int L, StateVectorTableEntry sv0);
 	//Vector Fetch Load Module
-	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, StationIDArr &StaID, int &RBI);
-	int PMSVEC(int L, double GMT, VehicleDataBlock &block, StationIDArr &StaID);
+	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
+	int PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID);
 	//Maneuver Execution Program
 	void PMSEXE(int L, double gmt);
 	//Earth Orbit Insertion Processor
@@ -3272,8 +3272,8 @@ public:
 		double T2_max = 0.0; //GET
 		double TimeStep = 1.0; //Minutes
 		double dt_TPI_slip = 5.0; //Minutes
-		StationIDArr ChaserVectorID;
-		StationIDArr TargetVectorID;
+		std::string ChaserVectorID;
+		std::string TargetVectorID;
 	} med_k32;
 
 	//Lunar Launch Targeting Processor (Apollo 14 and later, MED code is not from any documentation!)

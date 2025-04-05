@@ -4190,12 +4190,7 @@ bool MPTM70DeleteGETInput(void *id, char *str, void *data)
 	int hh, mm, ss;
 	double tig;
 
-	if (sscanf(str, "%lf", &tig) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_MPTM70DeleteGET(tig);
-		return true;
-	}
-	else if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
 	{
 		tig = ss + 60 * (mm + 60 * hh);
 		((ApolloRTCCMFD*)data)->set_MPTM70DeleteGET(tig);
@@ -5523,22 +5518,22 @@ void ApolloRTCCMFD::menuSetCorrectiveCombinationInput()
 	case 2:
 		if (GC->MissionPlanningActive)
 		{
-			GenericGETInput(&GC->rtcc->med_k32.ChaserVectorTime, "Choose the chaser vector time (Format: hhh:mm:ss)");
+			GenericGETInput(&GC->rtcc->med_k32.ChaserVectorTime, "Choose the chaser vector time (Format: hhh:mm:ss), 0 or smaller for present time");
 		}
 		else
 		{
-			if (GC->rtcc->med_k30.Vehicle == 1) set_CSMVessel();
+			if (GC->rtcc->med_k32.Vehicle == 1) set_CSMVessel();
 			else set_LMVessel();
 		}
 		break;
 	case 3:
 		if (GC->MissionPlanningActive)
 		{
-			GenericGETInput(&GC->rtcc->med_k32.TargetVectorTime, "Choose the target vector time (Format: hhh:mm:ss)");
+			GenericGETInput(&GC->rtcc->med_k32.TargetVectorTime, "Choose the target vector time (Format: hhh:mm:ss), 0 or smaller for present time");
 		}
 		else
 		{
-			if (GC->rtcc->med_k30.Vehicle == 1) set_LMVessel();
+			if (GC->rtcc->med_k32.Vehicle == 1) set_LMVessel();
 			else set_CSMVessel();
 		}
 		break;
@@ -6245,18 +6240,6 @@ bool ApolloRTCCMFD::REFSMMATUplinkCalc(char *str)
 		}
 	}
 	return false;
-}
-
-void ApolloRTCCMFD::menuCycleTwoImpulseOption()
-{
-	if (GC->rtcc->med_k30.IVFlag < 2)
-	{
-		GC->rtcc->med_k30.IVFlag++;
-	}
-	else
-	{
-		GC->rtcc->med_k30.IVFlag = 0;
-	}
 }
 
 void ApolloRTCCMFD::menuSwitchHeadsUp()

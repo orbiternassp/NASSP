@@ -578,7 +578,7 @@ void TwoImpulseProcessor::SingleSolutionTransferPlan()
 		return;
 	}
 
-	StationIDArr LMSTAID, CSMSTAID;
+	std::string LMSTAID, CSMSTAID;
 	double LM_GMTTH, CSM_GMTTH;
 	int MAN_VEH;
 
@@ -1123,11 +1123,11 @@ void TwoImpulseProcessor::PMDTIPSS()
 	}
 	if (intab->PointingMode == 1)
 	{
-		outtab->PointingMode = "TGI";
+		outtab->PointingMode = "TGT";
 	}
 	else
 	{
-		outtab->PointingMode = "LOS";
+		outtab->PointingMode = "HOR";
 	}
 	if (intab->TwoImpulseTableIndicator == 1)
 	{

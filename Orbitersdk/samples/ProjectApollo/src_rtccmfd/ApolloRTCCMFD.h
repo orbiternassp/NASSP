@@ -241,7 +241,6 @@ public:
 	void menuRevertRLSToPrelaunch();
 	void menuAGSSVCalc();
 	void menuEntryUpdateUpload();
-	void menuCycleTwoImpulseOption();
 	void menuSwitchHeadsUp();
 	void menuCalcManPAD();
 	void set_ManPADMPTInput(int mpt, int num);
