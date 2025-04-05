@@ -104,6 +104,8 @@ typedef struct {
 	int crewStatus;
 	int cdrStatus;	//0 = cabin, 1 = suit, 2 = EVA, 3 = PLSS
 	int lmpStatus;
+	std::string cdrName;
+	std::string lmpName;
 } LEMECSStatus;
 
 // Systems things

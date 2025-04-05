@@ -678,23 +678,13 @@ void ApolloRTCCMFD::AGC_Display(char* Buff, double vel)
 
 void ApolloRTCCMFD::FormatLatitude(char * Buff, double lat)
 {
-	double iPart, fPart;
-	fPart = modf(abs(lat), &iPart);
-
-	//Rounding
-	if (fPart*60.0 >= 59.5)
-	{
-		iPart += 1.0;
-		fPart = 0.0;
-	}
-
 	if (lat >= 0)
 	{
-		sprintf_s(Buff, 64, "%02.0lf:%02.0lfN", iPart, fPart*60.0);
+		sprintf_s(Buff, 64, "0.2lf °N", lat);
 	}
 	else
 	{
-		sprintf_s(Buff, 64, "%02.0lf:%02.0lfS", iPart, fPart*60.0);
+		sprintf_s(Buff, 64, "0.2lf °S", lat);
 	}
 }
 
@@ -709,23 +699,13 @@ void ApolloRTCCMFD::FormatLongitude(char * Buff, double lng, int precision)
 		lng += 360.0;
 	}
 
-	double iPart, fPart;
-	fPart = modf(abs(lng), &iPart);
-
-	//Rounding
-	if (fPart*60.0 >= 59.5)
-	{
-		iPart += 1.0;
-		fPart = 0.0;
-	}
-
 	if (lng >= 0)
 	{
-		sprintf_s(Buff, 64, "%03.0lf:%0*.0lfE", iPart, precision, fPart*60.0);
+		sprintf_s(Buff, 64, "%0.2lf °E", lng);
 	}
 	else
 	{
-		sprintf_s(Buff, 64, "%03.0lf:%0*.0lfW", iPart, precision, fPart*60.0);
+		sprintf_s(Buff, 64, "%0.2lf °W", lng);
 	}
 }
 

@@ -896,6 +896,10 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 		// Do DSKY stuff
 		DSKYPushSwitch* dskyKeyChanged = nullptr;
 		switch (key) {
+			case OAPI_KEY_K:
+				//kill rotation
+				SetAngularVel(_V(0, 0, 0));
+				break;
 			case OAPI_KEY_DECIMAL:
 				dskyKeyChanged = &DskySwitchClear;
 				break;
