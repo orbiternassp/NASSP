@@ -826,7 +826,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		if (length(DeltaV_LVLH) != 0.0)
 		{
-			sprintf(mcc4scrub, " Assumes MCC4,");
+			sprintf(mcc4scrub, " Assumes MCC-4,");
 		}
 		else
 		{
@@ -1557,7 +1557,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			sprintf(manname, "Preliminary TEI-10");
 			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds,  Horizon on 2.9 deg line at ignition minus 3 min,  P37: High-speed procedure (-MA) req'd");
-			opt.sxtstardtime = 120.0;
 		}
 		else if (fcn == 200) //TEI-10
 		{
@@ -1660,9 +1659,31 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 202: //Entry REFSMMAT
 	{
+		AP11MNV tempPAD;
+		AP11ManPADOpt opt;
+		MATRIX3 REFSMMAT;
+		EphemerisData sv_ephem;
+
 		char buffer1[1000];
 
-		AGCDesiredREFSMMATUpdate(buffer1, EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT);
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		sv_ephem = StateVectorCalcEphem(calcParams.src);
+
+		REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT;
+
+		opt.TIG = calcParams.TEI + 45.0 * 60.0;
+		opt.RV_MCC = sv_ephem;
+		opt.REFSMMAT = REFSMMAT;
+		opt.PrefGDCStars = 3; //Sirius,Rigel
+		opt.sxtstardtime = 0.0;
+		opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
+
+		AP11ManeuverPAD(opt, tempPAD);
+
+		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT);
+
+		sprintf(form->paddata, "Backup GDC Alignment:  SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", tempPAD.SetStars, tempPAD.GDCangles.x, tempPAD.GDCangles.y, tempPAD.GDCangles.z);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -1685,6 +1706,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		MATRIX3 REFSMMAT;
 		char manname[32];
 		SV sv;
+		char ullage[32];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -1778,7 +1800,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			else
 			{
 				AGCStateVectorUpdate(buffer1, sv, true, true);
-				sprintf(upDesc, "CSM+LM state vector");
+				sprintf(upDesc, "CSM & LM state vectors");
 			}
 
 			sprintf(uplinkdata, "%s", buffer1);
@@ -1813,6 +1835,16 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			opt.RV_MCC = ConvertSVtoEphemData(sv);
 			opt.PrefGDCStars = 3; //Sirius,Rigel
 
+			//Ullage remark for TEC burns
+			if (opt.enginetype == RTCC_ENGINETYPE_CSMSPS)
+			{
+				sprintf(ullage, "Ullage: 4 jet, 15 seconds, ");
+			}
+			else
+			{
+				sprintf(ullage, "4 jet translation, ");
+			}
+
 			AP11ManeuverPAD(opt, *form);
 			sprintf(form->purpose, manname);
 			form->lat = res.latitude*DEG;
@@ -1827,21 +1859,24 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				char buffer2[1000];
 				char buffer3[1000];
 
+				sprintf(form->remarks, "%sP37: High-speed procedure (-MA) req'd", ullage);
+
 				AGCStateVectorUpdate(buffer1, sv, false);
 				CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
-				AGCREFSMMATUpdate(buffer3, REFSMMAT, true);
 
-				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+				sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "LM state vector, Target load, Entry REFSMMAT");
+					sprintf(upDesc, "LM state vector, Target load");
 				}
 			}
 			else if (fcn == 204)//MCC6
 			{
 				char buffer1[1000];
 				char buffer2[1000];
+
+				sprintf(form->remarks, "%sP37: High-speed procedure (-MA) req'd", ullage);
 
 				AGCStateVectorUpdate(buffer1, sv, false);
 				CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
@@ -1856,6 +1891,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			else if (fcn == 205)//Prel. MCC7
 			{
 				char buffer1[1000];
+
+				sprintf(form->remarks, "%sPerigee in P30 is %.0f NM", ullage, res.FlybyAlt / 1852.0);
 
 				AGCStateVectorUpdate(buffer1, sv, false);
 
@@ -1872,6 +1909,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				char buffer2[1000];
 				char buffer3[1000];
 
+				sprintf(form->remarks, "%s", ullage);
+
 				AGCStateVectorUpdate(buffer1, sv, true, true);
 				CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
 				AGCREFSMMATUpdate(buffer3, REFSMMAT, true);
@@ -1880,7 +1919,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM+LM state vector, Target load, Entry REFSMMAT");
+					sprintf(upDesc, "CSM and LM state vectors, Target load, Entry REFSMMAT");
 				}
 			}
 			else if (fcn == 300)//generic MCC
@@ -1897,7 +1936,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector, Target load, Desired Entry REFSMMAT");
+					sprintf(upDesc, "CSM state vector, Target load, Entry REFSMMAT");
 				}
 			}
 		}
@@ -1938,7 +1977,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sprintf(form->Area[0], "MIDPAC");
 		if (entopt.direct == false)
 		{
-			sprintf(form->remarks[0], "Assumes MCC7");
+			sprintf(form->remarks[0], "Use non-exit EMS pattern, Assumes MCC-7");
+		}
+		else
+		{
+			sprintf(form->remarks[0], "Use non-exit EMS pattern, Assumes No MCC-7");
 		}
 	}
 	break;
@@ -1966,11 +2009,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AGCStateVectorUpdate(buffer2, sv, false);
 		CMCEntryUpdate(buffer3, SplashLatitude, SplashLongitude);
 
-		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+		sprintf(uplinkdata, "%s%s%s", buffer2, buffer1, buffer3);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM and LM state vectors, Entry target");
+			sprintf(upDesc, "LM and CSM state vectors, Entry target");
 		}
 	}
 	break;

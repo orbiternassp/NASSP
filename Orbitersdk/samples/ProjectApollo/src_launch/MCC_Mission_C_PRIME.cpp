@@ -211,29 +211,29 @@ void MCC::MissionSequence_C_Prime()
 		{
 			MissionPhase = MMST_TE_COAST;
 		}
-		if (mcc_calcs.GETEval(rtcc->calcParams.TEI + 45 * 60))
+		if (mcc_calcs.GETEval(rtcc->calcParams.TEI + 45.0*60.0))
 		{
 			SlowIfDesired();
 			setState(MST_CP_TRANSEARTH2);
 		}
 		break;
 	case MST_CP_TRANSEARTH2: //ENTRY REFSMMAT to MCC5 Update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(rtcc->calcParams.TEI + 13.5 * 3600.0), 202, MST_CP_TRANSEARTH3);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, mcc_calcs.GETEval(rtcc->calcParams.TEI + 13*3600.0 + 15.0*60.0), 202, MST_CP_TRANSEARTH3);
 		break;
 	case MST_CP_TRANSEARTH3: //MCC5 Update to MCC6 Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.TEI + 31.5 * 3600.0), 203, MST_CP_TRANSEARTH4, rtcc->calcParams.TEI + 37.0*3600.0 > rtcc->calcParams.EI - 2.0*3600.0, mcc_calcs.GETEval(rtcc->calcParams.EI - 3.5 * 3600.0), MST_CP_TRANSEARTH6);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.TEI + 31.0*3600.0 + 30.0*60.0), 203, MST_CP_TRANSEARTH4, rtcc->calcParams.TEI + 37.0*3600.0 > rtcc->calcParams.EI - 2.0*3600.0, mcc_calcs.GETEval(rtcc->calcParams.EI - 3.0*3600.0 + 30.0*60.0), MST_CP_TRANSEARTH7);
 		break;
 	case MST_CP_TRANSEARTH4: //MCC6 Update to Prel. MCC7 Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.EI - 15.0 * 3600.0), 204, MST_CP_TRANSEARTH5, rtcc->calcParams.TEI + 34.0*3600.0 > rtcc->calcParams.EI - 15.0*3600.0, mcc_calcs.GETEval(rtcc->calcParams.EI - 3.5 * 3600.0), MST_CP_TRANSEARTH6);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.EI - 15.0*3600.0), 204, MST_CP_TRANSEARTH5, rtcc->calcParams.TEI + 34.0*3600.0 > rtcc->calcParams.EI - 15.0*3600.0, mcc_calcs.GETEval(rtcc->calcParams.EI - 3.0*3600.0 + 30.0*60.0), MST_CP_TRANSEARTH7);
 		break;
-	case MST_CP_TRANSEARTH5: //Prel. MCC7 Update to MCC7 Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.EI - 3.5 * 3600.0), 205, MST_CP_TRANSEARTH6);
+	case MST_CP_TRANSEARTH5: //Prel. MCC7 Update to Prel. Entry PAD
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 3.0*60.0, 205, MST_CP_TRANSEARTH6);
 		break;
-	case MST_CP_TRANSEARTH6: //MCC7 Update to Prel. Entry PAD
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 5 * 60, 206, MST_CP_TRANSEARTH7);
+	case MST_CP_TRANSEARTH6: //Prel. Entry PAD to MCC7 Update
+		UpdateMacro(UTP_PADONLY, PT_AP11ENT, mcc_calcs.GETEval(rtcc->calcParams.EI - 3.0*3600.0 + 30.0*60.0), 207, MST_CP_TRANSEARTH7);
 		break;
-	case MST_CP_TRANSEARTH7: //Prel. Entry PAD to Final Entry PAD
-		UpdateMacro(UTP_PADONLY, PT_AP11ENT, mcc_calcs.GETEval(rtcc->calcParams.EI - 45.0*60.0), 207, MST_CP_TRANSEARTH8);
+	case MST_CP_TRANSEARTH7: //MCC7 Update to Final Entry PAD
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.EI - 45.0*60.0), 206, MST_CP_TRANSEARTH8);
 		break;
 	case MST_CP_TRANSEARTH8: //Final Entry PAD to Separation
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11ENT, cm->GetStage() == CM_STAGE, 208, MST_ENTRY);
