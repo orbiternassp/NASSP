@@ -410,9 +410,7 @@ public:
 	void menuSetLiftoffDT();
 	void set_LiftoffDT(double dt);
 	void menuLLTPThresholdTime();
-	void set_LLTPThresholdTime(double get);
 	void menuLLTPVectorTime();
-	void set_LLTPVectorTime(double get);
 	void menuLunarLiftoffVHorInput();
 	void menuLunarLiftoffVVertInput();
 	void menuLunarLiftoffSaveInsertionSV();

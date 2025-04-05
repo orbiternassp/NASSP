@@ -1762,22 +1762,13 @@ void ApolloRTCCMFD::menuSetAGOPInput()
 		}
 		break;
 	case 8: //Landmark latitude
-		if ((GC->AGOP_Option == 1 && (GC->AGOP_Mode == 3 || GC->AGOP_Mode == 4)) || GC->AGOP_Option == 4)
-		{
-			GenericDoubleInput(&GC->AGOP_Lat, "Enter landmark latitude in degrees:", RAD);
-		}
+		GenericDoubleInput(&GC->AGOP_Lat, "Enter landmark latitude in degrees:", RAD);
 		break;
 	case 9: //Landmark longitude
-		if ((GC->AGOP_Option == 1 && (GC->AGOP_Mode == 3 || GC->AGOP_Mode == 4)) || GC->AGOP_Option == 4)
-		{
-			GenericDoubleInput(&GC->AGOP_Lng, "Enter landmark longitude in degrees:", RAD);
-		}
+		GenericDoubleInput(&GC->AGOP_Lng, "Enter landmark longitude in degrees:", RAD);
 		break;
 	case 10: //Landmark altitude
-		if ((GC->AGOP_Option == 1 && (GC->AGOP_Mode == 3 || GC->AGOP_Mode == 4)) || GC->AGOP_Option == 4)
-		{
-			GenericDoubleInput(&GC->AGOP_Alt, "Enter landmark height in nautical miles:", 1852.0);
-		}
+		GenericDoubleInput(&GC->AGOP_Alt, "Enter landmark height in nautical miles:", 1852.0);
 		break;
 	case 11: //CSM vs LM IMU
 		if (GC->AGOP_Option == 4 || GC->AGOP_Option == 7)
@@ -7539,51 +7530,12 @@ void ApolloRTCCMFD::set_LiftoffDT(double dt)
 
 void ApolloRTCCMFD::menuLLTPThresholdTime()
 {
-	bool LLTPThresholdTimeInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the threshold time for liftoff (Format: hhh:mm:ss)", LLTPThresholdTimeInput, 0, 20, (void*)this);
-}
-
-bool LLTPThresholdTimeInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss, get;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		get = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_LLTPThresholdTime(get);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LLTPThresholdTime(double get)
-{
-	GC->rtcc->med_k50.GETTH = get;
+	GenericGETInput(&GC->rtcc->med_k50.GETTH, "Choose the threshold time for liftoff (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::menuLLTPVectorTime()
 {
-	if (GC->MissionPlanningActive)
-	{
-		bool LLTPVectorTimeInput(void *id, char *str, void *data);
-		oapiOpenInputBox("Choose the vector time for liftoff (Format: hhh:mm:ss)", LLTPVectorTimeInput, 0, 20, (void*)this);
-	}
-}
-
-bool LLTPVectorTimeInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss, get;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		get = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_LLTPVectorTime(get);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LLTPVectorTime(double get)
-{
-	GC->rtcc->med_k50.GETV = get;
+	GenericGETInput(&GC->rtcc->med_k50.GETV, "Choose the vector time for liftoff (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::menuLunarLiftoffVHorInput()

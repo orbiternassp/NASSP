@@ -3535,6 +3535,7 @@ int ARCore::subThread()
 				Result = DONE;
 				break;
 			}
+			opt.CSM_STA_ID = GC->rtcc->PZMPTCSM.StationID;
 		}
 		else
 		{

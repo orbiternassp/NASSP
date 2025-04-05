@@ -312,9 +312,10 @@ AP11ManPADOpt::AP11ManPADOpt()
 	enginetype = RTCC_ENGINETYPE_CSMSPS;
 	HeadsUp = false;
 	REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
-	sxtstardtime = 0.0;
+	sxtstardtime = -20.0*60.0;
 	UllageThrusterOpt = true;
 	UllageDT = 0.0;
+	PrefGDCStars = 0;
 }
 
 AP11LMManPADOpt::AP11LMManPADOpt()
@@ -3274,11 +3275,11 @@ void RTCC::AP11ManeuverPAD(const AP11ManPADOpt &opt, AP11MNV &pad)
 
 	IMUangles = _V(OG, IG, MG);
 
-	//Star checks
-	GDCangles = OrbMech::backupgdcalignment(EZJGSTAR, opt.REFSMMAT, sv1.R, R_E, GDCset);
-
+	//Star checks. Take TIG state vector to sextant star check time
 	EphemerisData sv_sxt = coast(sv1, opt.sxtstardtime, opt.WeightsTable.ConfigWeight, opt.WeightsTable.ConfigArea, opt.WeightsTable.KFactor, false);
-
+	//Calculate backup GDC alignment stars and angles
+	GDCangles = OrbMech::backupgdcalignment(EZJGSTAR, opt.REFSMMAT, sv_sxt.R, R_E, opt.PrefGDCStars, GDCset);
+	//Calculate sextant and COAS star checks
 	OrbMech::checkstar(EZJGSTAR, opt.REFSMMAT, _V(OrbMech::round(IMUangles.x*DEG)*RAD, OrbMech::round(IMUangles.y*DEG)*RAD, OrbMech::round(IMUangles.z*DEG)*RAD), sv_sxt.R, R_E, Manstaroct, Mantrunnion, Manshaft);
 	OrbMech::coascheckstar(EZJGSTAR, opt.REFSMMAT, _V(OrbMech::round(IMUangles.x*DEG)*RAD, OrbMech::round(IMUangles.y*DEG)*RAD, OrbMech::round(IMUangles.z*DEG)*RAD), sv_sxt.R, R_E, ManCOASstaroct, ManBSSpitch, ManBSSXPos);
 
@@ -3323,9 +3324,13 @@ void RTCC::AP11ManeuverPAD(const AP11ManPADOpt &opt, AP11MNV &pad)
 		{
 			sprintf(pad.SetStars, "Navi, Polaris");
 		}
-		else
+		else if (GDCset == 2)
 		{
 			sprintf(pad.SetStars, "Acrux, Atria");
+		}
+		else
+		{
+			sprintf(pad.SetStars, "Sirius, Rigel");
 		}
 	}
 	pad.Shaft = Manshaft*DEG;
@@ -12593,6 +12598,7 @@ bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargeting
 	res.DV_TPI_LVLH = lamres.dV_LVLH;
 	res.DV_TPF_LVLH = lamres.dV_LVLH2;
 	res.VH = V_H;
+	res.CSM_STA_ID = opt.CSM_STA_ID;
 
 	sv_TPI = coast(sv_INS, T_TPI - sv_INS.GMT);
 	sv_TPI.V = sv_TPI.V + lamres.dV;
@@ -28859,7 +28865,7 @@ void RTCC::PMKMED(std::string med, std::vector<std::string> data, int &err, unsi
 		if (out.Ignored[4] == false) PZMARM.t_TPI_Coell = GMTfromGET(out.Values[4].d);
 		if (out.Ignored[5] == false) PZMARM.t_Ins = GMTfromGET(out.Values[5].d);
 		if (out.Ignored[6] == false) PZMARM.h_min = out.Values[6].d;
-		if (out.Ignored[8] == false) PZMARM.DH = out.Values[6].d;
+		if (out.Ignored[7] == false) PZMARM.DH = out.Values[7].d;
 	}
 	else if (med == "39")
 	{
