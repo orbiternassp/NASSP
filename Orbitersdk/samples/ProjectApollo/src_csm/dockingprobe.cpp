@@ -390,6 +390,9 @@ void DockingProbe::SystemTimestep(double simdt)
 
 	//Shares heat with cabin while "stowed"
 	//Disabled until boost heat determined
+	DockProbeHX->SetPumpOff();
+	DockProbe->rad = 1.0;
+	DockProbe->isolation = 0.001;
 	/*
 	if (!IsInstalled())
 	{
