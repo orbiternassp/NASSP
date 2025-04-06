@@ -6483,6 +6483,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	sprintf(Buffer, "%d %d %lf %lf %lf %lf %lf %lf",
 		med_k30.Vehicle, med_k30.IVFlag, med_k30.ChaserVectorTime, med_k30.TargetVectorTime, med_k30.StartTime, med_k30.EndTime, med_k30.TimeStep, med_k30.TimeRange);
 	oapiWriteScenario_string(scn, "MED_K30", Buffer);
+	sprintf(Buffer, "%d %d %d %d %lf %lf", med_k31.TableIndicator, med_k31.PlanNumber, med_k31.UllageQuads, med_k31.LOSMode, med_k31.DeltaPitch, med_k31.TimeStep);
+	oapiWriteScenario_string(scn, "MED_K31", Buffer);
 	sprintf(Buffer, "%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", med_k32.Vehicle, med_k32.RequestIndicator, med_k32.ChaserVectorTime, med_k32.TargetVectorTime, med_k32.T_NCC, med_k32.DH_min,
 		med_k32.DH_max, med_k32.DH_inc, med_k32.T2_min, med_k32.T2_max, med_k32.TimeStep, med_k32.dt_TPI_slip);
 	oapiWriteScenario_string(scn, "MED_K32", Buffer);
@@ -6751,6 +6753,10 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		if (!strnicmp(line, "MED_K30", 7)) {
 			sscanf(line + 8, "%d %d %lf %lf %lf %lf %lf %lf",
 				&med_k30.Vehicle, &med_k30.IVFlag, &med_k30.ChaserVectorTime, &med_k30.TargetVectorTime, &med_k30.StartTime, &med_k30.EndTime, &med_k30.TimeStep, &med_k30.TimeRange);
+		}
+		else if (!strnicmp(line, "MED_K31", 7)) {
+			sscanf(line + 8, "%d %d %d %d %lf %lf", &med_k31.TableIndicator, &med_k31.PlanNumber, &inttemp, &med_k31.LOSMode, &med_k31.DeltaPitch, &med_k31.TimeStep);
+			med_k31.UllageQuads = (inttemp != 0);
 		}
 		else if (!strnicmp(line, "MED_K32", 7)) {
 			sscanf(line + 8, "%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf",

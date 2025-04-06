@@ -723,6 +723,16 @@ void TwoImpulseProcessor::SingleSolution(TwoImpulseSingleSolutionTable &tab)
 	tab.man[0].TIG = sv_C1.sv.GMT;
 	tab.man[1].TIG = sv_C2.sv.GMT;
 	tab.ActualWT = (tab.man[1].TIG - tab.man[0].TIG)*(l_dot_T + g_dot_T);
+	AEGBlock aeg_C = pRTCC->SVToAEG(sv_C2_apo.sv, sv_C2_apo.Area, sv_C2_apo.Weight, sv_C2_apo.KFactor);
+	AEGBlock aeg_T = pRTCC->SVToAEG(sv_T2.sv, sv_T2.Area, sv_T2.Weight, sv_T2.KFactor);
+	//Initialize
+	pRTCC->PMMAEGS(aeg_C.Header, aeg_C.Data, aeg_C.Data);
+	//Initialize and get DH/phase
+	aeg_T.Data.TIMA = 6;
+	pRTCC->PMMAEGS(aeg_T.Header, aeg_T.Data, aeg_T.Data);
+	//Get actual phase and DH
+	tab.ActualDH = aeg_T.Data.Item8;
+	tab.ActualPhase = aeg_T.Data.Item10;
 
 	//Convert external DV coordinates to components necessary for maneuver execution function
 	for (int i = 0; i < 2; i++)
