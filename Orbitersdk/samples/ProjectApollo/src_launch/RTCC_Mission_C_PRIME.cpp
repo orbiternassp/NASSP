@@ -1790,20 +1790,23 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			res.P30TIG = entopt.TIGguess;
 
 			char buffer1[1000];
+			char buffer2[1000];
 
 			//Every update except final MCC-7 gets a LM state vector
 			if (fcn != 206)
 			{
 				AGCStateVectorUpdate(buffer1, sv, false);
 				sprintf(upDesc, "LM state vector");
+				sprintf(uplinkdata, "%s", buffer1);
 			}
 			else
 			{
-				AGCStateVectorUpdate(buffer1, sv, true, true);
-				sprintf(upDesc, "CSM & LM state vectors");
+				AGCStateVectorUpdate(buffer1, sv, true, false);
+				AGCStateVectorUpdate(buffer2, sv, false, false);
+				sprintf(upDesc, "LM and CSM state vectors vectors");
+				sprintf(uplinkdata, "%s%s", buffer2, buffer1);
 			}
 
-			sprintf(uplinkdata, "%s", buffer1);
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
@@ -1908,18 +1911,20 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				char buffer1[1000];
 				char buffer2[1000];
 				char buffer3[1000];
+				char buffer4[1000];
 
 				sprintf(form->remarks, "%s", ullage);
 
-				AGCStateVectorUpdate(buffer1, sv, true, true);
-				CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
-				AGCREFSMMATUpdate(buffer3, REFSMMAT, true);
+				AGCStateVectorUpdate(buffer1, sv, true, false);
+				AGCStateVectorUpdate(buffer2, sv, false, false);
+				CMCRetrofireExternalDeltaVUpdate(buffer3, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
+				AGCREFSMMATUpdate(buffer4, REFSMMAT, true);
 
-				sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+				sprintf(uplinkdata, "%s%s%s%s", buffer2, buffer1, buffer3, buffer4);
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM and LM state vectors, Target load, Entry REFSMMAT");
+					sprintf(upDesc, "LM and CSM state vectors, Target load, Entry REFSMMAT");
 				}
 			}
 			else if (fcn == 300)//generic MCC
@@ -1949,7 +1954,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		SplashLongitude = res.longitude;
 	}
 	break;
-	case 207: //MISSION CP PRELIMINARY ENTRY PAD
+	case 207: //MISSION CP PRELIMINARY ENTRY PAD 1
+	case 208: //MISSION CP PRELIMINARY ENTRY PAD 2
 	{
 		AP11ENT * form = (AP11ENT *)pad;
 
@@ -1983,9 +1989,14 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			sprintf(form->remarks[0], "Use non-exit EMS pattern, Assumes No MCC-7");
 		}
+
+		if (fcn == 208)
+		{
+
+		}
 	}
 	break;
-	case 208: //MISSION CP FINAL ENTRY PAD AND STATE VECTORS
+	case 209: //MISSION CP FINAL ENTRY PAD AND STATE VECTORS
 	{
 		AP11ENT * form = (AP11ENT *)pad;
 		SV sv;

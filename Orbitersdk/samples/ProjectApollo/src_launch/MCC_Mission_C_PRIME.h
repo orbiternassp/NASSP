@@ -139,6 +139,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 //Ends at Entry Update
 #define MST_CP_TRANSEARTH8	208
 //Ends at Final Entry Update
+#define MST_CP_TRANSEARTH9	209
+//Ends at Separation
 
 // Ends at entry interface, goes to entry.
 #define MST_CP_ABORT_ORBIT	300
