@@ -684,12 +684,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		GC->rtcc->FormatREFSMMATCode(RTCC_REFSMMAT_TYPE_CUR, refsdata->ID, Buffer);
-		skp->Text(CW * 17, 3 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(CW * 18, 3 * H / 14, Buffer, strlen(Buffer));
 
 		for (int i = 0; i < 9; i++)
 		{
 			sprintf(Buffer, "%+f", refsdata->REFSMMAT.data[i]);
-			skp->Text(CW * 16, (4 + i) * H / 14, Buffer, strlen(Buffer));
+			skp->Text(CW * 17, (4 + i) * H / 14, Buffer, strlen(Buffer));
 		}
 		break;
 	case 6:
@@ -9145,7 +9145,7 @@ void ApolloRTCCMFD::AGOPDisplayOption7(oapi::Sketchpad*skp)
 		}
 
 		GC->rtcc->EMGSTGENName(GC->AGOP_CSM_REFSMMAT, Buffer);
-		skp->Text(CW * 16, 8 * H / 22, Buffer, strlen(Buffer));
+		skp->Text(CW * 22, 8 * H / 22, Buffer, strlen(Buffer));
 	}
 
 	if (GetLMREFSMMAT)
@@ -9159,7 +9159,7 @@ void ApolloRTCCMFD::AGOPDisplayOption7(oapi::Sketchpad*skp)
 			skp->Text(CW * 2, 9 * H / 22, "LM REFSMMAT:", 12);
 		}
 		GC->rtcc->EMGSTGENName(GC->AGOP_LM_REFSMMAT, Buffer);
-		skp->Text(CW * 16, 9 * H / 22, Buffer, strlen(Buffer));
+		skp->Text(CW * 22, 9 * H / 22, Buffer, strlen(Buffer));
 	}
 
 	if (GC->AGOP_Mode == 5)
