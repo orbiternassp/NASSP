@@ -1281,8 +1281,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.IsTwoSegment = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-		opt.sv_A = sv_INP;
-		opt.sv_P = sv2;
+		opt.sv_A = SVToVehicleDataBlock(ConvertSVtoEphemData(sv_INP), 1.0, sv_INP.mass, 1.0);
+		opt.sv_P = SVToVehicleDataBlock(ConvertSVtoEphemData(sv2), 1.0, sv2.mass, 1.0);
 		opt.TLAND = CZTDTGTU.GETTD;
 
 		PoweredDescentAbortProgram(opt, res);
@@ -1646,9 +1646,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11PDIPAD * form = (AP11PDIPAD *)pad;
 
 		PDIPADOpt opt;
-		SV sv;
+		VehicleDataBlock sv;
 
-		sv = StateVectorCalc(calcParams.tgt);
+		sv = StateVectorCalcDataBlock(calcParams.tgt);
 
 		opt.direct = false;
 		opt.dV_LVLH = DeltaV_LVLH;

@@ -633,9 +633,9 @@ struct PDIPADOpt
 	MATRIX3 REFSMMAT;
 	bool direct; //0 = with MCC, 1 = without
 	VECTOR3 R_LS;	//Landing Site Vector
-	double t_land;
+	double t_land; //GET
 	bool HeadsUp; //Orientation during the maneuver
-	SV sv0;
+	VehicleDataBlock sv0;
 };
 
 struct ASCPADOpt
@@ -827,9 +827,9 @@ struct SPQOpt //Coelliptic Sequence Processor
 
 struct PDAPOpt //Powered Descent Abort Program
 {
-	SV sv_A;
-	SV sv_P;
-	double TLAND;
+	VehicleDataBlock sv_A;
+	VehicleDataBlock sv_P;
+	double TLAND; //GET
 	MATRIX3 REFSMMAT;
 	VECTOR3 R_LS;
 	double dt_stage;
@@ -1686,8 +1686,8 @@ struct PMMSPTInput
 
 struct PMMLDPInput
 {
-	double TLAND;
-	SV sv;
+	double TLAND; //GMT
+	VehicleDataBlock sv;
 	MissionPlanTable *mpt;
 	unsigned CurrentManeuver;
 	int TrimAngleInd;
@@ -1696,8 +1696,8 @@ struct PMMLDPInput
 
 struct PMMLDIInput
 {
-	double TLAND = 0.0;
-	SV sv;
+	double TLAND = 0.0; //GMT
+	VehicleDataBlock sv;
 	double W_LMA;
 	double W_LMD;
 };
@@ -2495,7 +2495,7 @@ public:
 	};
 
 	void LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscentProcessorOutputs &out);
-	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, SV sv, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, SV &sv_PDI, SV &sv_land, double &dv);
+	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, VehicleDataBlock sv, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, VehicleDataBlock &sv_PDI, VehicleDataBlock &sv_land, double &dv);
 	void EntryUpdateCalc(SV sv0, double entryrange, bool highspeed, EntryResults *res);
 	void PMMDKI(SPQOpt &opt, SPQResults &res);
 	//Velocity maneuver performer
@@ -2523,6 +2523,7 @@ public:
 	EphemerisData coast(EphemerisData sv1, double dt);
 	EphemerisData coast(EphemerisData sv1, double dt, int veh);
 	EphemerisData coast(EphemerisData sv1, double dt, double Weight, double Area, double KFactor, bool Venting);
+	VehicleDataBlock coast(VehicleDataBlock sv1, double dt);
 	VECTOR3 HatchOpenThermalControl(double GMT, MATRIX3 REFSMMAT);
 	VECTOR3 PointAOTWithCSM(MATRIX3 REFSMMAT, EphemerisData sv, int AOTdetent, int star, double dockingangle);
 	void DockingAlignmentProcessor(DockAlignOpt &opt);
@@ -2531,7 +2532,7 @@ public:
 	VehicleDataBlock SVToVehicleDataBlock(EphemerisData sv, double Area, double Weight, double KFactor) const;
 	//Apsides Determination Subroutine
 	int PMMAPD(AEGHeader Header, AEGDataBlock Z, int KAOP, int KE, double *INFO, AEGDataBlock *sv_A, AEGDataBlock *sv_P);
-	bool PDIIgnitionAlgorithm(SV sv, VECTOR3 R_LS, double TLAND, SV &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
+	bool PDIIgnitionAlgorithm(VehicleDataBlock sv, VECTOR3 R_LS, double TLAND, VehicleDataBlock &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
 	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, bool cmc);
 	bool CalculateAGSKFactor(agc_t *agc, ags_t *aea, double &KFactor);
@@ -2587,7 +2588,7 @@ public:
 	
 	//Sunrise/Sunset, Moonrise/Moonset Display
 	void EMDSSMMD(bool sun, int ind, double param);
-	int NewMPTTrajectory(int L, SV &sv0);
+	int NewMPTTrajectory(int L, VehicleDataBlock &sv0);
 	//RTE Tradeoff Display Sort and Order Routine
 	int PMQREAP(const std::vector<TradeoffData> &TOdata);
 	//Return to Earth Abort Planning Supervisor
