@@ -221,10 +221,10 @@ void MCC::MissionSequence_C_Prime()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, mcc_calcs.GETEval(rtcc->calcParams.TEI + 13*3600.0 + 15.0*60.0), 202, MST_CP_TRANSEARTH3);
 		break;
 	case MST_CP_TRANSEARTH3: //MCC5 Update to MCC6 Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.TEI + 31.0*3600.0 + 30.0*60.0), 203, MST_CP_TRANSEARTH4, rtcc->calcParams.TEI + 37.0*3600.0 > rtcc->calcParams.EI - 2.0*3600.0, mcc_calcs.GETEval(rtcc->calcParams.EI - 3.0*3600.0 + 30.0*60.0), MST_CP_TRANSEARTH7);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.TEI + 31.0*3600.0 + 30.0*60.0), 203, MST_CP_TRANSEARTH4, rtcc->calcParams.TEI + 37.0*3600.0 > rtcc->calcParams.EI - 2.0*3600.0, mcc_calcs.GETEval(rtcc->calcParams.EI - (3.0*3600.0 + 30.0*60.0)), MST_CP_TRANSEARTH7);
 		break;
 	case MST_CP_TRANSEARTH4: //MCC6 Update to Prel. MCC7 Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.EI - 15.0*3600.0), 204, MST_CP_TRANSEARTH5, rtcc->calcParams.TEI + 34.0*3600.0 > rtcc->calcParams.EI - 15.0*3600.0, mcc_calcs.GETEval(rtcc->calcParams.EI - 3.0*3600.0 + 30.0*60.0), MST_CP_TRANSEARTH7);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.EI - 15.0*3600.0), 204, MST_CP_TRANSEARTH5, rtcc->calcParams.TEI + 34.0*3600.0 > rtcc->calcParams.EI - 15.0*3600.0, mcc_calcs.GETEval(rtcc->calcParams.EI - (3.0*3600.0 + 30.0*60.0)), MST_CP_TRANSEARTH7);
 		break;
 	case MST_CP_TRANSEARTH5: //Prel. MCC7 Update to Prel. Entry PAD 1
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 3.0*60.0, 205, MST_CP_TRANSEARTH6);
