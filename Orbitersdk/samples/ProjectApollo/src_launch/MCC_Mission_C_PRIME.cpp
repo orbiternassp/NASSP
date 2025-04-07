@@ -233,7 +233,7 @@ void MCC::MissionSequence_C_Prime()
 		UpdateMacro(UTP_PADONLY, PT_AP11ENT, mcc_calcs.GETEval(rtcc->calcParams.EI - 3.0*3600.0 + 30.0*60.0), 207, MST_CP_TRANSEARTH7);
 		break;
 	case MST_CP_TRANSEARTH7: //MCC7 Update to Prel. Entry PAD 2
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, PT_AP11MNV, StateTime > 3.0*60.0, 206, MST_CP_TRANSEARTH8);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 3.0*60.0, 206, MST_CP_TRANSEARTH8);
 		break;
 	case MST_CP_TRANSEARTH8: //Prel. Entry PAD 2 to Final Entry PAD
 		UpdateMacro(UTP_PADONLY, PT_AP11ENT, mcc_calcs.GETEval(rtcc->calcParams.EI - 45.0*60.0), 208, MST_CP_TRANSEARTH9);
