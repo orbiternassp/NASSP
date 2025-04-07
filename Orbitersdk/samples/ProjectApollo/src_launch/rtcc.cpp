@@ -12417,7 +12417,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 			}
 
 			conopt.sv_P = ConvertEphemDatatoSV(sv_CSM_Ins.sv, sv_CSM_Ins.Weight);
-			conopt.t_CSI = t_CSI;
+			conopt.t_CSI = GETfromGMT(t_CSI);
 
 			ConcentricRendezvousProcessor(conopt, conres);
 			K_loop++;
@@ -16375,7 +16375,7 @@ int RTCC::PMMLDP(PMMLDPInput in, MPTManeuver &man)
 	}
 	man.GMTMAN = GMTBB;// -7.5;
 	man.GMTI = GMTBB;
-	man.GMT_BO = GMTfromGET(in.TLAND);
+	man.GMT_BO = in.TLAND;
 	in.mpt->TimeToBeginManeuver[in.CurrentManeuver] = in.mpt->TimeToEndManeuver[in.CurrentManeuver] = GMTBB;
 
 	return 0;
