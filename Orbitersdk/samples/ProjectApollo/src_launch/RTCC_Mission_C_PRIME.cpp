@@ -1991,11 +1991,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sprintf(form->Area[0], "MIDPAC");
 		if (entopt.direct == false)
 		{
-			sprintf(form->remarks[0], "Use non-exit EMS pattern, Entry will not involve P65  Assumes MCC-7");
+			sprintf(form->remarks[0], "Use non-exit EMS pattern, Entry will not involve P65,  Assumes MCC-7");
 		}
 		else
 		{
-			sprintf(form->remarks[0], "Use non-exit EMS pattern, Entry will not involve P65  Assumes No MCC-7");
+			sprintf(form->remarks[0], "Use non-exit EMS pattern, Entry will not involve P65,  Assumes No MCC-7");
 		}
 
 		if (fcn == 208)
@@ -2023,6 +2023,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		LunarEntryPAD(entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");
+		sprintf(form->remarks[0], "Use non-exit EMS pattern");
 
 		AGCStateVectorUpdate(buffer1, sv, true);
 		AGCStateVectorUpdate(buffer2, sv, false);
