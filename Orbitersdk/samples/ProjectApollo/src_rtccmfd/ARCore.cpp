@@ -2627,18 +2627,14 @@ int ARCore::subThread()
 		Sleep(5000); // Waste 5 seconds
 		Result = DONE;  // Success (negative = error)
 		break;
-	case 1: //Lambert Targeting
+	case 1: //Two Impulse Multiple Solution
 	{
 		TwoImpulseOpt opt;
 		TwoImpulseResuls res;
-		EphemerisData sv_A, sv_P;
 
 		if (GC->MissionPlanningActive)
 		{
-			EphemerisData EPHEM;
-
 			double GMT;
-			
 			if (GC->rtcc->med_k30.ChaserVectorTime > 0)
 			{
 				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k30.ChaserVectorTime);
@@ -2647,14 +2643,11 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
-
-			if (GC->rtcc->EMSFFV(GMT, GC->rtcc->med_k30.Vehicle, EPHEM))
+			if (GC->rtcc->PMSVEC(GC->rtcc->med_k30.Vehicle, GMT, opt.sv_C, opt.ChaserStationID))
 			{
 				Result = DONE;
 				break;
 			}
-
-			sv_A = EPHEM;
 
 			if (GC->rtcc->med_k30.TargetVectorTime > 0)
 			{
@@ -2664,13 +2657,11 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
-
-			if (GC->rtcc->EMSFFV(GMT, 4 - GC->rtcc->med_k30.Vehicle, EPHEM))
+			if (GC->rtcc->PMSVEC(4 - GC->rtcc->med_k30.Vehicle, GMT, opt.sv_T, opt.TargetStationID))
 			{
 				Result = DONE;
 				break;
 			}
-			sv_P = EPHEM;
 		}
 		else
 		{
@@ -2692,8 +2683,8 @@ int ARCore::subThread()
 				tgt = GC->rtcc->pCSM;
 			}
 
-			sv_A = GC->rtcc->StateVectorCalcEphem(chaser);
-			sv_P = GC->rtcc->StateVectorCalcEphem(tgt);
+			opt.sv_C = GC->rtcc->StateVectorCalcDataBlock(chaser);
+			opt.sv_T = GC->rtcc->StateVectorCalcDataBlock(tgt);
 		}
 
 		opt.mode = 2;
@@ -2717,10 +2708,10 @@ int ARCore::subThread()
 		
 		opt.TimeStep = GC->rtcc->med_k30.TimeStep;
 		opt.TimeRange = GC->rtcc->med_k30.TimeRange;
-		opt.sv_A = sv_A;
-		opt.sv_P = sv_P;
-		opt.IVFLAG = GC->rtcc->med_k30.IVFlag;
+		opt.RequestIndicator = GC->rtcc->med_k30.IVFlag;
 		opt.ChaserVehicle = GC->rtcc->med_k30.Vehicle;
+		opt.ChaserVectorTime = opt.sv_C.sv.GMT;
+		opt.TargetVectorTime = opt.sv_T.sv.GMT;
 
 		GC->rtcc->PMSTICN(opt, res);
 
@@ -4615,12 +4606,15 @@ int ARCore::subThread()
 		if (GC->MissionPlanningActive)
 		{
 			opt.mode = 4;
-			opt.SingSolNum = GC->rtcc->med_m72.Plan;
-			opt.SingSolTable = GC->rtcc->med_m72.Table;
+			opt.PlanNumber = GC->rtcc->med_m72.Plan;
+			opt.TwoImpulseTableIndicator = GC->rtcc->med_m72.Table;
 			GC->rtcc->PMSTICN(opt, res);
 		}
 		else
 		{
+			int MAN_VEH, plan;
+			plan = GC->rtcc->med_m72.Plan - 1;
+
 			if (GC->rtcc->med_m72.Table == 1)
 			{
 				if (GC->rtcc->med_m72.Plan > GC->rtcc->PZTIPREG.Solutions)
@@ -4628,18 +4622,28 @@ int ARCore::subThread()
 					Result = DONE;
 					break;
 				}
-				opt.sv_A = GC->rtcc->PZMYSAVE.SV_mult[0];
-				opt.sv_P = GC->rtcc->PZMYSAVE.SV_mult[1];
-				opt.DH = GC->rtcc->GZGENCSN.TIDeltaH;
-				opt.PhaseAngle = GC->rtcc->GZGENCSN.TIPhaseAngle;
-				opt.T1 = GC->rtcc->PZTIPREG.data[GC->rtcc->med_m72.Plan - 1].Time1;
-				opt.T2 = GC->rtcc->PZTIPREG.data[GC->rtcc->med_m72.Plan - 1].Time2;
+				opt.sv_C = GC->rtcc->PZMYSAVE.SV_mult[0];
+				opt.sv_T = GC->rtcc->PZMYSAVE.SV_mult[1];
+				opt.DH = GC->rtcc->PZTIPREG.DH;
+				opt.PhaseAngle = GC->rtcc->PZTIPREG.PhaseAngle;
+				opt.T1 = GC->rtcc->PZTIPREG.data[plan].Time1;
+				opt.T2 = GC->rtcc->PZTIPREG.data[plan].Time2;
+				MAN_VEH = GC->rtcc->PZTIPREG.MAN_VEH;
 			}
 			else
 			{
-				//TBD
-				Result = DONE;
-				break;
+				if (GC->rtcc->med_m72.Plan > GC->rtcc->PZTIPCCD.Solutions)
+				{
+					Result = DONE;
+					break;
+				}
+				opt.sv_C = GC->rtcc->PZMYSAVE.SV_CC[0];
+				opt.sv_T = GC->rtcc->PZMYSAVE.SV_CC[1];
+				opt.DH = GC->rtcc->PZTIPCCD.data[plan].DH;
+				opt.PhaseAngle = GC->rtcc->PZTIPCCD.data[plan].PhaseAngle;
+				opt.T1 = GC->rtcc->PZTIPCCD.T_NCC;
+				opt.T2 = GC->rtcc->PZTIPCCD.data[plan].GMT_NSR;
+				MAN_VEH = GC->rtcc->PZTIPCCD.MAN_VEH;
 			}
 
 			opt.mode = 5;
@@ -4648,7 +4652,7 @@ int ARCore::subThread()
 			PMMMPTInput in;
 
 			//Get all required data for PMMMPT and error checking
-			if (GetVesselParameters(GC->rtcc->PZTIPREG.MAN_VEH == RTCC_MPT_CSM, vesselisdocked, GC->rtcc->med_m72.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
+			if (GetVesselParameters(MAN_VEH == RTCC_MPT_CSM, vesselisdocked, GC->rtcc->med_m72.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
 			{
 				//Error
 				Result = DONE;
@@ -4763,9 +4767,83 @@ int ARCore::subThread()
 		Result = DONE;
 	}
 	break;
-	case 40: //Spare
+	case 40: //Corrective Combination
 	{
+		TwoImpulseOpt opt;
+		TwoImpulseResuls res;
 
+		if (GC->MissionPlanningActive)
+		{
+			double GMT;
+			if (GC->rtcc->med_k32.ChaserVectorTime > 0)
+			{
+				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k32.ChaserVectorTime);
+			}
+			else
+			{
+				GMT = GC->rtcc->RTCCPresentTimeGMT();
+			}
+			if (GC->rtcc->PMSVEC(GC->rtcc->med_k32.Vehicle, GMT, opt.sv_C, opt.ChaserStationID))
+			{
+				Result = DONE;
+				break;
+			}
+
+			if (GC->rtcc->med_k32.TargetVectorTime > 0)
+			{
+				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k32.TargetVectorTime);
+			}
+			else
+			{
+				GMT = GC->rtcc->RTCCPresentTimeGMT();
+			}
+			if (GC->rtcc->PMSVEC(4 - GC->rtcc->med_k32.Vehicle, GMT, opt.sv_T, opt.TargetStationID))
+			{
+				Result = DONE;
+				break;
+			}
+		}
+		else
+		{
+			if (GC->rtcc->pCSM == NULL || GC->rtcc->pLM == NULL)
+			{
+				Result = DONE;
+				break;
+			}
+
+			VESSEL *chaser, *tgt;
+			if (GC->rtcc->med_k32.Vehicle == 1)
+			{
+				chaser = GC->rtcc->pCSM;
+				tgt = GC->rtcc->pLM;
+			}
+			else
+			{
+				chaser = GC->rtcc->pLM;
+				tgt = GC->rtcc->pCSM;
+			}
+
+			opt.sv_C = GC->rtcc->StateVectorCalcDataBlock(chaser);
+			opt.sv_T = GC->rtcc->StateVectorCalcDataBlock(tgt);
+		}
+
+		opt.mode = 1;
+		opt.ChaserVehicle = GC->rtcc->med_k32.Vehicle;
+		opt.RequestIndicator = GC->rtcc->med_k32.RequestIndicator;
+		opt.ChaserVectorTime = opt.sv_C.sv.GMT;
+		opt.TargetVectorTime = opt.sv_T.sv.GMT;
+		opt.T1 = GC->rtcc->GMTfromGET(GC->rtcc->med_k32.T_NCC);
+		opt.DH_min = GC->rtcc->med_k32.DH_min*1852.0;
+		opt.DH_max = GC->rtcc->med_k32.DH_max*1852.0;
+		opt.DH_inc = GC->rtcc->med_k32.DH_inc*1852.0;
+		opt.T2_min = GC->rtcc->GMTfromGET(GC->rtcc->med_k32.T2_min);
+		opt.T2_max = GC->rtcc->GMTfromGET(GC->rtcc->med_k32.T2_max);
+		opt.TimeStep = GC->rtcc->med_k32.TimeStep*60.0;
+		opt.dt_TPI_slip = GC->rtcc->med_k32.dt_TPI_slip*60.0;
+
+		GC->rtcc->PMSTICN(opt, res);
+
+		Result = DONE;
 	}
 	break;
 	case 41: //Direct Input to the MPT
@@ -5638,6 +5716,7 @@ int ARCore::subThread()
 		sv_LM = GC->rtcc->StateVectorCalcEphem(GC->rtcc->pLM);
 
 		GC->rtcc->PMDARM(sv_CSM, sv_LM);
+		Result = DONE;
 	}
 	break;
 	case 59: //Short ARM display
@@ -5656,6 +5735,25 @@ int ARCore::subThread()
 		sv_LM = GC->rtcc->StateVectorCalcEphem(GC->rtcc->pLM);
 
 		GC->rtcc->PMDSARM(sv_CSM, sv_LM);
+		Result = DONE;
+	}
+	break;
+	case 60: //Two Impulse Single Solution
+	{
+		TwoImpulseOpt opt;
+		TwoImpulseResuls res;
+
+		opt.mode = 3;
+		opt.TwoImpulseTableIndicator = GC->rtcc->med_k31.TableIndicator;
+		opt.PlanNumber = GC->rtcc->med_k31.PlanNumber;
+		opt.UllageQuads = GC->rtcc->med_k31.UllageQuads;
+		opt.LOSMode = GC->rtcc->med_k31.LOSMode;
+		opt.DeltaPitch = GC->rtcc->med_k31.DeltaPitch*RAD;
+		opt.TimeStep = GC->rtcc->med_k31.TimeStep;
+
+		GC->rtcc->PMSTICN(opt, res);
+
+		Result = DONE;
 	}
 	break;
 	}

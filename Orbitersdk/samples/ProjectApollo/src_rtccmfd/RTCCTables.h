@@ -748,3 +748,18 @@ struct StationTable
 {
 	std::vector<StationData> table;
 };
+
+//State vector and more
+struct VehicleDataBlock
+{
+	VehicleDataBlock::VehicleDataBlock()
+	{
+		KFactor = 0.0;
+		Area = 0.0;
+		Weight = 1.0;
+	}
+	EphemerisData sv;
+	double KFactor;
+	double Area;
+	double Weight;
+};

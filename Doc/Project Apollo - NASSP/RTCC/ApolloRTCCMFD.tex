@@ -115,29 +115,172 @@ This MFD page contains the three main calculation tools for rendezvous maneuvers
 \textbf{SKY:} Skylab rendezvous. Replicates the rendezvous programs of the onboard software in the AGC of the Skylab missions.\\ 
 
 \newpage
-\subsubsection{Lambert Targeting (TI)}
+\subsubsection{Two-Impulse Processor (TI)}
 
-The MFD uses advanced algorithms to efficiently solve \href{https://en.wikipedia.org/wiki/Lambert%27s_problem}{Lambert's Problem}.
-Lambert's Problem can be explained as finding the velocity vector V1 that leads to an orbit between position vectors R1 and R2 in the time DT. \\
+The purpose of the Two-Impulse section of the RTCC is to provide the flight controller with a set of two maneuvers to achieve desired orbit conditions of the maneuvering vehicle. The section works in terms of chaser and target vehicle, and in terms of a transfer initiation time and transfer completion time. The first maneuver computed is a chaser transfer initiation maneuver needed to intercept a point in space which is defined in terms of the target vehicle. This intercept point is defined using phase angle and height difference offsets from the target vehicle at the transfer completion time. The second maneuver of the set, which is done at this intercept point, is a coelliptic maneuver. For example, if the desired offsets are both zero at the transfer completion time, the transfer initiation maneuver will cause the chaser to intercept the target at transfer completion time, and the transfer completion maneuver would be a velocity matching maneuver.\\
 
-The Lambert Targeting functionality of this MFD allows multi-revolution calculations and uses a predictor-corrector algorithm to find a solution even in a non-spherical gravity field. This functionality has its limits and will not work beyond a few revolutions. In this MFD instead of a time difference DT the user can set the GET for the maneuver (T1) and the time of arrival (T2). The position vector R2 is always the position of a target vessel or an offset to a target vessel. The displayed maneuver Delta V is the difference between the calculated V1 and the velocity at T1 before a maneuver.\\
+The Two-Impulse section has two major areas to accomplish its purpose: (1) the regular Two-Impulse or Multiple Solution option, and (2) a Corrective Combination or Digital Option.\\
 
+The regular Two-Impulse request generates a maximum of thirteen solutions that may be displayed on the Multiple Solution Display. If more than thirteen solutions are computed, the thirteen that require the least fuel expenditure are displayed. The flight controller may fix the time of the first maneuver and vary the time of the second maneuver through a time increment; he may hold the second maneuver time fixed and vary the first maneuver time; or he may compute only one solution at the input times. An option also exists to compute the time of the first maneuver in terms of an elevation angle to the target. The time of the second maneuver may also be computed in terms of a target vehicle central angle of travel from transfer initiation time to transfer completion time. These two options are normally used for the terminal phase maneuvers, i.e., zero offsets.\\
 
-\textbf{OPT:} Calculation option. General calculation mode, NCC/NSR maneuver sequence, TPI/TPF maneuver sequence\\
-\textbf{VTI:} Time tag of the state vectors used in the calclation (MPT mode only)\\
-\textbf{T1:} Maneuver Time. If the maneuver is supposed to be executed with a specified elevation angle relative to the target, input any negative time.\\
-\textbf{T2:} Arrival time at the (offset) target. If this time is specified as an orbital travel angle, input any negative time.\\
-\textbf{N:} The number of revolutions from the maneuver (T1) to arrival (T2).\\
-\textbf{SPH:} Changes the calculation mode between spherical and non-spherical (perturbed) gravity. The Perturbed mode forces a multi-axis manuever.\\
-\textbf{TGT:} The input for the target vessel. Switches between all vessels in the simulation (non-MPT mode)\\
-\textbf{CLC:} Calculate the burn solution.\\
-\textbf{OFF:} Set the offset from the target. In the general calculation mode use e.g. "X=2.05" to set the individual parameters. In the NCC/NSR and TPI/PTF modes the inputs are phase angle and delta height.\\
-\textbf{PHA:} Choose a phase angle relative to the target vessel. This will calculate the necessary offset distance in front or behind the target.\\
-\textbf{AXI:} Multi-Axis maneuver as the default. An X-Axis maneuver only consists of a prograde or retrograde impulse. This can be used to achieve phasing relative to a target, without the need to also achieve a specific relative height or position offset left or right. Useful to minimize DV for simple phasing maneuvers.\\
-\textbf{BCK:} Go back to the main menu.\\
+The Corrective Combination area of the Two-Impulse section is normally used to obtain satisfactory coelliptic conditions prior to terminal phase. This may be
+used when launch dispersion or improper maneuver execution may cause other rendezvous techniques some problems. There are two methods of obtaining the optimum corrective combination solution.\\
 
+\begin{enumerate}
+	\item The first method requires a range of height differences to be input. A range of times for the transfer completion maneuver are also input, and the phase angle for each time is computed. For each height difference the range of solutions are computed, and the impulsive solution at each height difference that requires the least amount of fuel expenditure is displayed.
+	\item The second method involves a series of solutions that also requires a range of height differences at a transfer completion time. For each height difference requested, a range of phase angles at transfer completion time is used, and the optimum solution for each height is displayed. This range of phase angles for each height is computed from a time limit on each side of terminal phase initiation, with an input increment determining the number of solutions attempted. A terminal phase slip time is computed for each solution displayed.
+\end{enumerate}
+
+Another display that is driven by this section is the Single Solution Display. The flight controller may view any one solution from either the multiple or corrective
+combination table. This display contains components in external DV coordinates, day light-darkness information, and pitch and yaw angles so that the window is along a. given line of sight, and contains range, range rate and azimuth approach data at requested times.\\
+
+\paragraph{Two Impulse Computation (K30)}\mbox{} \\
+
+\textbf{Inputs}:\\
+
+\textbf{VEH:} Choose the chaser vehicle, CSM or LEM.\\
+\textbf{IV:} Maneuver fixing mode. 0 = Time of both maneuvers fixed, 1 = time of first maneuver fixed, 2 = time of second maneuver fixed\\
+\textbf{CVT:} Chaser vector time. With the MPT inactive this option can be used to select the chaser vehicle.\\
+\textbf{TVT:} Target vector time. With the MPT inactive this option can be used to select the target vehicle.\\
+\textbf{T1:} Transfer initiation time. Set to a negative value for the processor to find T1 as the time at which the elevation angle from the chaser to the target equals the input target elevation angle (P51 button).\\
+\textbf{T2:} Transfer completion time. Set to a negative value for the processor to find T2 as the time after the first maneuver required for the target vehicle to traverse through an angle equal to the input target transfer angle (P51 button).\\
+\textbf{INC:} Time increment between the variable maneuver times; used if one of the maneuver times is not fixed.\\
+\textbf{RAN:} Time range over which the variable time maneuver is to be computed; used if one of the maneuver times is not fixed.\\
+
+\textbf{P51:} Offsets and elevation angle for two-impulse solution. Special logic is used if all inputs here are non-zero. In this case the assumption is made that the maneuvers are a NCC/NSR combination with the eventual goal of performing a terminal phase intercept (TPI) maneuver. The multiple solution display then shows the predicted TPI time instead of pitch and yaw angles of the second maneuver. The parameters are the delta height in NM and phase angle in degrees, as well as the target elevation angle at the first maneuver point (deg), and the target angle of travel from the first to the second maneuver (deg).\\
 \newpage
+\textbf{Display}:\\
 
+\begin{figure}[hp]
+	\centering
+		\includegraphics[width=0.8\textwidth]{./ApolloRTCCMFDFiles/TwoImpulseMultipleSolution.png}
+	\caption{Multiple Solution Display}
+	\label{fig:TwoImpulseMultipleSolution}
+\end{figure}
+
+\textbf{LM STA ID:} standard seven-character ID code indicating the LM anchor vector radar station at the time the display quantities were generated\\
+\textbf{CSM STA ID:} same as above except for CSM\\
+\textbf{LM GETTHS:} time tag of the vector from the current ephemeris table to be used in computing the maneuver, hr:min:sec\\
+\textbf{CSM GETTHS:} same as above except for CSM\\
+\textbf{MAN VEH:} maneuvering vehicle\\
+\textbf{PHASE:} desired phase angle at the second maneuver, deg\\
+\textbf{WT:} central angle of travel between the first and second maneuver, deg\\
+\textbf{DEL H:} maneuvering vehicle\\
+\textbf{GET1:} ground elapsed time of the fixed maneuver, hr:min:sec\\
+\textbf{OPTION:} ID indicating whether the first, second, or both maneuver times are fixed\\
+\textbf{GMT1:} Greenwich mean time of the first maneuver, hr:min:sec\\
+\textbf{DAY/NIGHT INFO:} time until daylight or darkness for the fixed time maneuver, min\\
+\textbf{DEL V1:} impulsive DV for the first maneuver, fps\\
+\textbf{YAW:} yaw angle of the first maneuver, deg\\
+\textbf{PITCH:} pitch angle above local horizontal of the first maneuver, deg\\
+\textbf{GET2:} ground elapsed time of the variable maneuver, hr:min:sec\\
+\textbf{DEL V2:} impulsive DV for the second maneuver, fps\\
+\textbf{YAW:} yaw angle of the second maneuver, deg\\
+\textbf{PITCH:} pitch angle above local horizontal of the second maneuver, deg\\
+\textbf{TTPI:} With the special display logic explained above, the time of TPI is displayed instead of yaw and pitch of the second maneuver, hr:min:sec\\
+\newpage
+\paragraph{Corrective Combination (K32)}\mbox{} \\
+
+\textbf{Inputs}:\\
+
+\textbf{VEH:} Choose the chaser vehicle, CSM or LEM\\
+\textbf{REQ:} Request type. 0 = second maneuver time incremented between the minimum and maximum times, 1 = second maneuver time is fixed\\
+\textbf{CVT:} Chaser vector time. With the MPT inactive this option can be used to select the chaser vehicle\\
+\textbf{TVT:} Target vector time. With the MPT inactive this option can be used to select the target vehicle\\
+\textbf{NCC:} The time of the first maneuver (GET in hrs:min:sec)\\
+\textbf{DHMIN:} Minimum target height offset at the second maneuver point (NM)\\
+\textbf{DHMAX:} Maximum target height offset at the second maneuver point (NM)\\
+\textbf{DHINC:} Height increment between minimum and maximum height offset (NM)\\
+\textbf{T2MIN:} Minimum (mode 0) or actual (mode 1) time of the second maneuver (GET in hrs:min:sec)\\
+\textbf{T2MAX:} Maximum time of the second maneuver for mode 0 (GET in hrs:min:sec)\\
+\textbf{DT:} Time increment for incrementing the time of the second maneuver in mode 0 or for slipping TPI time in mode 1 (min)\\
+\textbf{SLIP:} The amount by which TPI time is allowed to slip on either side of the nominal time for mode 1 (min)\\
+
+\underline{NOTE}: If the mode designation is (1), thus fixing the second maneuver time at the input minimum time, TPI time is allowed to slip over the input range; whereas, if the mode designation is, (0), the time of the second maneuver is varied over its input range. For either mode, the time of the first maneuver is fixed, and the solution which requires the minimum DV for each height offset requested is displayed as the solution for that height.\\
+
+\underline{NOTE}: The total DV (DVT) calculation for this display uses a curve fit to estimate TPI and TPF DVs. In this curve fit the terminal phase travel angle (WT) entered on the P51 MED is used. This is the WT on the multiple solution input page.\\
+
+\textbf{P52:} Two-Impulse Corrective Combination Nominals. Input of the offsets is required for the corrective combination calculation. The inputs are the nominal time of NSR (GET in hrs:min:sec) and the nominal target height and phase angle offsets of NSR (NM and deg, respectively)
+\newpage
+\textbf{Display}:\\
+
+\begin{figure}[hp]
+	\centering
+		\includegraphics[width=0.8\textwidth]{./ApolloRTCCMFDFiles/TwoImpulseCorrectiveCombination.png}
+	\caption{Corrective Combination Display}
+	\label{fig:TwoImpulseCorrectiveCombination}
+\end{figure}
+\textbf{CSM STA ID:} Current CSM STA ID in MPT\\
+\textbf{LM STA ID:} Current LM STA ID in MPT\\
+\textbf{LM GETTHS:} time tag of the vector from the current ephemeris table to be used in computing the maneuver, hr:min:sec\\
+\textbf{CSM GETTHS:} same as above except for CSM\\
+\textbf{MAN VEH:} Maneuver vehicle code\\
+\textbf{GETNCC:} Impulsive elapsed time of first maneuver of all solutions, hr:min:sec\\
+\textbf{GMTNCC:} Impulsive GMT of same, hr:min:sec\\
+\textbf{CODE:} Numeric code specifying the plan number of each solution in the table\\
+\textbf{GETNSR:} Impulsive elapsed time of the second maneuver of the plane, hr:min:sec\\
+\textbf{GMTNSR:} Impulsive GMT of same, hr:min:sec\\
+\textbf{DVT:} Sum of the impulsive DVs for both maneuvers plus an approximation of the DV required for terminal phase\\
+\textbf{DH:} Height offset after the second maneuver, NM\\
+\textbf{DP:} Phase angle after the second maneuver, deg\\
+\textbf{DT:} Time interval between first and second maneuvers, min\\
+\textbf{TSLIP:} Amount of time terminal phase initiation will differ from the nominal if this solution is used, min\\
+\newpage
+\paragraph{Single Solution (K31)}\mbox{} \\
+
+\textbf{Inputs}:\\
+
+\textbf{TAB:} The two-impulse table indicator, either multiple solution or corrective combination\\
+\textbf{SOL:} Solution number from that table (1 to 13)\\
+\textbf{QUAD:} The number of RCS quads to be used in computing the burn times for the required DV components\\
+\textbf{LOS:} The line-of-sight mode (i.e. whether the component DVs are in a body axes coordinate system defined by the astronauts line-of-sight aligned to the horizon or to the target vehicle)\\
+\textbf{PIT:} The pitch angle (i.e. the angle between astronauts line-of-sight and the X body axis-deg)\\
+\textbf{DT:} The time step between the relative motion data displayed (sec)\\
+
+\textbf{Display}:\\
+\begin{figure}[hp]
+	\centering
+		\includegraphics[width=0.8\textwidth]{./ApolloRTCCMFDFiles/TwoImpulseSingleSolution.png}
+	\caption{Single Solution Display}
+	\label{fig:TwoImpulseSingleSolution}
+\end{figure}
+
+\textbf{LM STA ID:} standard seven-character ID code indicating the LM anchor vector radar station at the time the display quantities were generated \\
+\textbf{CSM STA ID:} same as above except for CSM\\
+\textbf{LM GETTHS:} time tag of the vector from the current ephemeris table to be used in computing the maneuver, hr:min:sec\\
+\textbf{CSM GETTHS:} same as above except for CSM\\
+\textbf{MAN VEH:} Maneuver vehicle code\\
+\textbf{PHASE:} actual phase lag at the second maneuver, deg\\
+\textbf{MODE:} ID (either TGT or HOR) indicating the body-referenced coordinate system selected via input for the (XD, YD, ZD) DV definition defined below)\\
+\textbf{DTR:} time between the two maneuvers, hr:min:sec\\
+\textbf{DEL H:} actual differential altitude at the second maneuver time, NM\\
+\textbf{ID:} code identifying the row number of the corresponding solution in the two-impulse multiple solution table or the two- impulse digital display\\
+\textbf{WT:} central angle of travel of the target vehicle between maneuvers, deg\\
+\textbf{DEL PITCH:} angle between the astronaut's line of sight (LOS) and the X-axis of the spacecraft (+ represents a counterclockwise rotation about the Y axis)\\
+\textbf{GET:} ground elapsed time of the impulsive maneuver time, hr:min:sec\\
+\textbf{EHOR:} angle between the astronaut's LOS to the horizon and the local horizontal plane, deg\\
+\textbf{GMT:} Greenwich mean time of the impulsive maneuver time, hr:min:sec\\
+\textbf{DV:} impulsive incremental velocity required by the maneuver, fps\\
+\textbf{YAW} (on the left of display): yaw attitude relative to the local vertical/local horizontal (LVLH) reference frame at main engine ignition required to place the thrust vector along the DV vector (+ to the right), deg\\
+\textbf{PITCH} (on the left of display): pitch attitude relative to the LVLH reference frame at main engine ignition required to place the thrust vector along the DV vector (+ up), deg\\
+\textbf{VX, VY, VZ:} components of the incremental velocity along the X-, Y-, Z-axis, respectively, of either the target-defined or horizontal-defined body axis system, fps\\
+\textbf{YAW} (in center of display): yaw angle between the X-axis of the (in center of display) spacecraft and the local horizontal
+plane whenever the astronaut's LOS is to the target or the horizon, deg\\
+\textbf{PITCH} (in center of display): pitch angle between X-axis of spacecraft and local horizontal plane whenever astronaut's LOS is to the target or horizon, deg\\
+\textbf{XD, YD, ZD:} components of the incremental velocity along the X-, Y-, and Z-axis, respectively, of either the target-defined or horizontal-defined body axis system, fps\\
+\textbf{DT} (associated with XD): burn time required to impart the velocity increment XD along the X-axis of the body axis system, by firing the fore or aft firing RCS thrusters, min:sec\\
+\textbf{DT} (associated with YD): burn time required to impart the velocity increment YD along the Y-axis of the body axis system, by firing the left or right firing RCS thrusters, min:sec\\
+\textbf{DT} (associated with ZD): burn time required to impart the velocity increment ZD along the Z-axis of the body axis system, by firing the up or down firing RCS thrusters, min:sec\\
+\textbf{DAY/NIGHT INFO:} time until daylight or darkness for the fixed time maneuver, min\\
+\textbf{HA:} apogee height after the maneuver, NM\\
+\textbf{HP:} perigee height after the maneuver, NM\\
+\textbf{GET:} ground elapsed time corresponding to the particular row of the approach data displayed, hr:min:sec\\
+\textbf{TGT AZ:} azimuth of the target vehicle in the chaser vehicle's local vertical/local horizontal coordinate system, deg\\
+\textbf{TGT EL:} elevation of the target vehicle in the chaser vehicle's local vertical/local horizontal coordinate system, deg\\
+\textbf{RANGE:} range from the chaser to the target, NM\\
+\textbf{R DOT:} range rate between chaser and the target, fps\\
+\textbf{X, Y, Z:} position coordinates of the chaser vehicle in a target-centered curvilinear coordinate system, NM The letters L or T, R or L, and U or D are to be printed out with the position coordinates X, Y, and Z, respectively, to indicate whether the target vehicle is leading or trailing, to the right or to the left of, and above or below, the chaser vehicle\\
+\newpage
 \subsubsection{Coelliptic Maneuver Processor (SPQ)}
 
 \paragraph{Explanation}\mbox{} \\
@@ -1433,46 +1576,26 @@ On the left side of this page appear the input parameters that are automatically
 This MFD can be used to replicate the ground solutions for the rendezvous and other SPS burns during the Apollo 7 mission. As an example the inputs for the following maneuvers will be presented:
 
 \begin{enumerate}
-	\item {Separation burn at 3:20:00 GET.}
 	\item {NCC1 burn at 26:25:00 GET.}
-	%\item {NCC2 burn at 27:30:00 GET.}
-	\item {NSR burn at 28:00:00 GET.}
+	\item {NCC2 burn at 27:30:00 GET.}
+	\item {NSR burn at 28:01:00 GET.}
 	\item {TPI burn at ca. 29:25:00 GET.}
 \end{enumerate}
 
-\subsection{Separation burn}
-
-These calculations should be done shortly before the time of the maneuver. The following steps have to be done for the separation burn:
-
-\begin{itemize}
-	\item{Maneuver time (T1) is at 003:20:00h GET.}
-	\item{The time for the next maneuver (T2) will be at 026:25:00h.}
-	\item{The time between T1 and T2 is 23:05h, which can be calculated as about 15.4 revolutions with the current orbital period. The correct value for the input N is therefore 15.}
-	\item{AXI: The phasing maneuver was an x-axis only maneuver, so this option should be chosen here.}
-	\item{SPH: 15 orbits is too long a time to calculate the maneuver with non-spherical gravity. Therefore choose the option "Spherical".}
-	\item{The target vessel of the rendezvous is the Apollo 7 SIVB, which has the name "AS-205-S4BSTG".}
-	\item{At the arrival time the CSM has to be 70NM in front of the SIVB. Set this value pressing OFF and type "X=70" to set a 70NM offset in front (positive x-axis) of the S-IVB stage. }
-	\item{A value for YOFF would be "Left" or "Right" from the vessel at arrival time. This is not desired, so this can be left as zero. A ZOFF value is not specified, so this should remain 0 for now.}
-\end{itemize}
-
-The resulting DV vector should be close to (-1.7,0,0). These values can now be used for P30 in the AGC or directly uplinked.\\
-
 \subsection{NCC1 burn}
 
-At 26:25:00 GET a SPS burn was executed that will put the CSM on a trajectory resulting in a phase angle of 1.32$^{\circ}$ behind and 8NM below the SIVB at 28:00:00GET. The required inputs are here:
+At 26:25:00 GET a SPS burn was executed that will put the CSM on a trajectory resulting in a phase angle of 1.32$^{\circ}$ behind and 8NM below the SIVB at 28:00:00GET. The maneuver is calculated with the Two-Impulse Multiple Solution display. The required inputs are:
 
 \begin{itemize}
+  \item{VEH is set to CSM.}
+	\item{Both maneuver times are fixed (IV option)}
+	\item{The Chaser vessel is AS-205, the target vessel is AS-205-S4BSTG.}
 	\item{T1 is set to 26:25:00 GET (NCC1 time).}
-	\item{T2 is set to 28:00:00 GET (NSR time).}
-	\item{The time between T1 and T2 is with 1:35h slightly longer than an orbital period. No good results were found with N set to 0, so it should be set to 1.}
-	\item{AXI: Because a precise position relative to the S-IVB is desired for the rendezvous sequence, the option multi-axis should be chose.}
-	\item{TGT is  the same as before.}
-	\item{For this short, 90 minute transfer between T1 and T2 the "Perturbed" calculation option can be used.}
-	\item{The phase angle function can be used to create the x-offset. The value -1.32$^{\circ}$ results in approx. --82.58 NM for XOF.}
-	\item{The ZOF value in the CSM coordinate system is positive for an offset below the target. 8NM is used for ZOFF during the coelliptic rendezvous phase.}
+	\item{T2 is set to 28:01:00 GET (NSR time).}
+	\item{The desired offsets are 8.0 NM for DEL H, 1.32 deg for PHASE, 27.45 deg for ELEV (at TPI) and 140 deg for WT (travel angle from TPI to TPF)} 
 \end{itemize}
 
-The resulting burn solution should be close to the vector (66.5, -1.8, 180.5). This can be used in a P30/P40 automatic SPS burn with the CSM.
+On the TI Multiple Solution display only this one maneuver will appear. With the TRA button the maneuver can be converted to a finite burn, taking the maneuver engine into account (SPS). The resulting burn solution should be close to the vector (+62.7, -1.0, +154.8). This can be used in a P30/P40 automatic SPS burn with the CSM.
 
 %\subsection{NCC2 burn}
 
@@ -1495,7 +1618,7 @@ These numbers can be used for the external DV program (P30).
 \subsection{TPI burn}
 
 The TPI maneuver nominally was calculated by the AGC itself, but a backup solution was calculated on the ground. This backup solution can be replicated with the MFD.\\
-On the Lambert page first set the S-IVB as the target. Then press T1 and type "E=27.45". The MFD will now try to find the T1, when an elevation angle of 27.45$^{\circ}$ occurs. To find the T2, which is 35 minutes after T1, press T2 and type "T1+35min". T2 will now be set to that time. Leave N as zero, calculation mode to "Perturbed" and the three offset coordinates to zero. Usual values for the maneuver:
+On the Two Impulse Multiple Solution page first set the S-IVB as the target. Then press T1 and enter any negative number. The MFD will now try to find the T1, when an elevation angle of 27.45$^{\circ}$ occurs, provided this angle has been entered using the P51 button. To find the T2 time, which is 140 degrees of orbital travel after T1, press T2 and enter a negative time again. T2 will now be calculated in the TI processor. Usual values for the maneuver:
 
 \begin{itemize}
 	\item{29:21:38 GET}

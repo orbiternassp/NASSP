@@ -298,16 +298,16 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		if (preliminary)
 		{
-			opt.sv_A = ConvertSVtoEphemData(calcParams.SVSTORE1);
+			opt.sv_C = SVToVehicleDataBlock(ConvertSVtoEphemData(calcParams.SVSTORE1), 129.4*pow(0.3048, 2), calcParams.SVSTORE1.mass, 1.0);
 			CSMMass = calcParams.SVSTORE1.mass;
 		}
 		else
 		{
-			opt.sv_A = StateVectorCalcEphem(calcParams.src);
+			opt.sv_C = StateVectorCalcDataBlock(calcParams.src);
 			CSMMass = calcParams.src->GetMass();
 		}
 
-		opt.sv_P = StateVectorCalcEphem(calcParams.tgt);
+		opt.sv_T = StateVectorCalcDataBlock(calcParams.tgt);
 		opt.DH = 10.0*1852.0;
 		opt.PhaseAngle = calcParams.LunarLiftoff; //Angle was stored here
 
@@ -334,7 +334,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		manopt.sxtstardtime = 0.0;
 		manopt.UllageDT = 20.0;
 		manopt.UllageThrusterOpt = false;
-		manopt.sv0 = opt.sv_A;
+		manopt.sv0 = opt.sv_C.sv;
 		manopt.WeightsTable.CC[RTCC_CONFIG_C] = true;
 		manopt.WeightsTable.ConfigWeight = manopt.WeightsTable.CSMWeight = CSMMass;
 
@@ -378,8 +378,8 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.mode = 5;
 		opt.T1 = -1.0;
 		opt.T2 = -1.0;
-		opt.sv_A = StateVectorCalcEphem(calcParams.src);
-		opt.sv_P = StateVectorCalcEphem(calcParams.tgt);
+		opt.sv_C = StateVectorCalcDataBlock(calcParams.src);
+		opt.sv_T = StateVectorCalcDataBlock(calcParams.tgt);
 		opt.DH = opt.PhaseAngle = 0.0;
 		opt.Elev = 27.0*RAD;
 		opt.WT = 130.0*RAD;
@@ -397,7 +397,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		manopt.sxtstardtime = 0.0;
 		manopt.UllageDT = 15.0;
 		manopt.UllageThrusterOpt = true;
-		manopt.sv0 = opt.sv_A;
+		manopt.sv0 = opt.sv_C.sv;
 		manopt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		AP7ManeuverPAD(manopt, *form);
