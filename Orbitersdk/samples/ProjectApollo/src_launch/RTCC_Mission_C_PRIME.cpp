@@ -1791,6 +1791,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 			char buffer1[1000];
 			char buffer2[1000];
+			char buffer3[1000];
 
 			//Every update except final MCC-7 gets a LM state vector
 			if (fcn != 206)
@@ -1801,10 +1802,17 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			}
 			else
 			{
+				REFSMMATOpt refsopt;
+				refsopt.REFSMMATopt = 3;
+				refsopt.vessel = calcParams.src;
+
+				REFSMMAT = REFSMMATCalc(&refsopt);
+
 				AGCStateVectorUpdate(buffer1, sv, true, false);
 				AGCStateVectorUpdate(buffer2, sv, false, false);
-				sprintf(upDesc, "LM and CSM state vectors vectors");
-				sprintf(uplinkdata, "%s%s", buffer2, buffer1);
+				AGCREFSMMATUpdate(buffer3, REFSMMAT, true);
+				sprintf(upDesc, "LM and CSM state vectors, Entry REFSMMAT");
+				sprintf(uplinkdata, "%s%s%s", buffer2, buffer1, buffer3);
 			}
 
 			if (upString != NULL) {
@@ -1913,7 +1921,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				char buffer3[1000];
 				char buffer4[1000];
 
-				sprintf(form->remarks, "%s", ullage);
+				sprintf(form->remarks, "%s  If loss of comm, do not burn", ullage);
 
 				AGCStateVectorUpdate(buffer1, sv, true, false);
 				AGCStateVectorUpdate(buffer2, sv, false, false);
@@ -1983,11 +1991,11 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		sprintf(form->Area[0], "MIDPAC");
 		if (entopt.direct == false)
 		{
-			sprintf(form->remarks[0], "Use non-exit EMS pattern, Assumes MCC-7");
+			sprintf(form->remarks[0], "Use non-exit EMS pattern, Entry will not involve P65  Assumes MCC-7");
 		}
 		else
 		{
-			sprintf(form->remarks[0], "Use non-exit EMS pattern, Assumes No MCC-7");
+			sprintf(form->remarks[0], "Use non-exit EMS pattern, Entry will not involve P65  Assumes No MCC-7");
 		}
 
 		if (fcn == 208)
