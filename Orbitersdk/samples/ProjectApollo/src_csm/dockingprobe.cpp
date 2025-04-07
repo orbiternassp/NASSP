@@ -108,16 +108,16 @@ void DockingProbe::Init(Saturn *s)
 	DockProbeHX = (h_HeatExchanger *)saturn->Panelsdk.GetPointerByString("HYDRAULIC:DOCKPROBEINCABIN");
 }
 
-bool DockingProbe::IsInstalled()
+bool DockingProbe::InCabin()
 
 {
-	if (OurVessel->HasProbe == false || IsHardDocked())
+	if (OurVessel->HasProbe == true && IsHardDocked())
 	{
-		return false;
+		return true;
 	}
 	else
 	{
-		return true;
+		return false;
 	}
 }
 
@@ -389,8 +389,7 @@ void DockingProbe::SystemTimestep(double simdt)
 	}
 
 	//Shares heat with cabin while "stowed"
-
-	if (!IsInstalled())
+	if (InCabin())
 	{
 		DockProbeHX->SetPumpOn();
 		DockProbe->rad = 0.0; //prevents heating/cooling from space exposure while in cabin
