@@ -1983,25 +1983,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			entopt.direct = true;
 		}
 
-		if () //Check to determine if P65 would be expected TBD
-		{
-			sprintf(P65, "Entry will not use P65,  ");
-		}
-		else
-		{
-			sprintf(P65, "Entry will use P65,  ");
-		}
-
-		if () //Check to determine if P66 would be expected TBD
-		{
-			sprintf(P65, "Use non-exit EMS pattern, ");
-		}
-		else
-		{
-			sprintf(P65, "Use exit EMS pattern, ");
-		}
-
-
 		entopt.dV_LVLH = DeltaV_LVLH;
 		entopt.lat = SplashLatitude;
 		entopt.lng = SplashLongitude;
@@ -2011,6 +1992,25 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 
 		LunarEntryPAD(entopt, *form);
+
+		if (form->UsesP65[0]) //Check to determine if P65 would be expected
+		{
+			sprintf(P65, "Entry will use P65,  ");
+		}
+		else
+		{
+			sprintf(P65, "Entry will not use P65,  ");
+		}
+
+		if (form->UsesP66[0]) //Check to determine if P66 would be expected
+		{
+			sprintf(P66, "Use exit EMS pattern, Entry will use P66, ");
+		}
+		else
+		{
+			sprintf(P66, "Use non-exit EMS pattern, ");
+		}
+
 		sprintf(form->Area[0], "MIDPAC");
 		if (entopt.direct == false)
 		{
@@ -2041,25 +2041,26 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		entopt.sv0 = sv;
 
-		if () //Check to determine if P65 would be expected
-		{
-			sprintf(P65, "Entry will not use P65");
-		}
-		else
+		LunarEntryPAD(entopt, *form);
+
+		if (form->UsesP65[0]) //Check to determine if P65 would be expected
 		{
 			sprintf(P65, "Entry will use P65");
 		}
-
-		if () //Check to determine if P66 would be expected
+		else
 		{
-			sprintf(P65, "Use non-exit EMS pattern, ");
+			sprintf(P65, "Entry will not use P65");
+		}
+
+		if (form->UsesP66[0]) //Check to determine if P66 would be expected
+		{
+			sprintf(P66, "Use exit EMS pattern, Entry will use P66, ");
 		}
 		else
 		{
-			sprintf(P65, "Use exit EMS pattern, ");
+			sprintf(P66, "Use non-exit EMS pattern, ");
 		}
 
-		LunarEntryPAD(entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");
 		sprintf(form->remarks[0], "%s%s", P66, P65);
 
