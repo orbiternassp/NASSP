@@ -199,6 +199,9 @@ struct AP11ENT
 	double SXP[2];				// BSS X position on COAS for entry attitude check
 	char LiftVector[2][4];		// Lift vector desired at .05G's based on entry corridor
 	char remarks[2][128];		// Remarks
+	//Additional information
+	bool UsesP65[2];			// True if P65 is used in the reentry
+	bool UsesP66[2];			// True if P66 is used in the reentry
 };
 
 // APOLLO 11 - TRANSLUNAR INJECTION

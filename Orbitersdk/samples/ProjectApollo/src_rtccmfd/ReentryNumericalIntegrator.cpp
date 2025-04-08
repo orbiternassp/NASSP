@@ -137,6 +137,7 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	ISGNInit = false;
 	t_2G = 0.0;
 	t_BBO = t_EBO = 0.0;
+	t_BBO2 = t_EBO2 = 0.0;
 	DRE_2g = 0.0;
 	droguedeployed = false;
 	maindeployed = false;
@@ -149,6 +150,10 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	dt_prev = dt2 = dt22 = dt28 = dt6 = 0.0;
 	R_EMS = V_EMS = 0.0;
 	t_V_Circ = 0.0;
+	t_GN_Mode_2 = 0.0;
+	t_GN_Mode_3 = 0.0;
+	t_GN_Mode_4 = 0.0;
+	t_GN_Mode_5 = 0.0;
 	TLAST = 0.0;
 
 	//Null output table
@@ -162,8 +167,13 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	out.t_drogue = 0.0;
 	out.t_main = 0.0;
 	out.t_EBO = out.t_BBO = 0.0;
+	out.t_EBO2 = out.t_BBO2 = 0.0;
 	out.R_EMS = out.V_EMS = 0.0;
 	out.t_V_Circ = 0.0;
+	out.t_GN_Mode_2 = 0.0;
+	out.t_GN_Mode_3 = 0.0;
+	out.t_GN_Mode_4 = 0.0;
+	out.t_GN_Mode_5 = 0.0;
 
 	double fpa;
 
@@ -300,7 +310,13 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 		out.gmax = gmax;
 		out.t_BBO = t_BBO;
 		out.t_EBO = t_EBO;
+		out.t_BBO2 = t_BBO2;
+		out.t_EBO2 = t_EBO2;
 		out.t_V_Circ = t_V_Circ;
+		out.t_GN_Mode_2 = t_GN_Mode_2;
+		out.t_GN_Mode_3 = t_GN_Mode_3;
+		out.t_GN_Mode_4 = t_GN_Mode_4;
+		out.t_GN_Mode_5 = t_GN_Mode_5;
 		out.R_EMS = R_EMS;
 		out.V_EMS = V_EMS0;
 		if (droguedeployed)
@@ -463,7 +479,7 @@ void ReentryNumericalIntegrator::EventsRoutine()
 		gmax = A_X / 9.80665;
 		t_gmax = T;
 	}
-	//Blackout
+	//First and second blackout
 	if (t_BBO == 0.0)
 	{
 		if (IsInBlackout(v_R, alt))
@@ -476,6 +492,20 @@ void ReentryNumericalIntegrator::EventsRoutine()
 		if (IsInBlackout(v_R, alt) == false)
 		{
 			t_EBO = GMT0 + T;
+		}
+	}
+	else if (t_BBO2 == 0.0)
+	{
+		if (IsInBlackout(v_R, alt))
+		{
+			t_BBO2 = GMT0 + T;
+		}
+	}
+	else if (t_EBO2 == 0.0)
+	{
+		if (IsInBlackout(v_R, alt) == false)
+		{
+			t_EBO2 = GMT0 + T;
 		}
 	}
 	if (K05G && t_V_Circ == 0.0)
@@ -844,6 +874,7 @@ void ReentryNumericalIntegrator::GNInitialRoll()
 		if (GNData.v - GNData.VFINAL1 < 0)
 		{
 			GNData.SELECTOR = 4;
+			t_GN_Mode_4 = GMT0 + T;
 			GNRoutine310();
 			return;
 		}
@@ -877,6 +908,7 @@ void ReentryNumericalIntegrator::GNInitialRoll()
 		else
 		{
 			GNData.SELECTOR = 2;
+			t_GN_Mode_2 = GMT0 + T;
 			GNHuntest();
 			return;
 		}
@@ -908,6 +940,7 @@ void ReentryNumericalIntegrator::GNHuntest()
 	if (GNData.VL - GNData.VLMIN < 0)
 	{
 		GNData.SELECTOR = 5;
+		t_GN_Mode_5 = GMT0 + T;
 		GNData.EGSW = true;
 		GNFinalPhase();
 		return;
@@ -955,6 +988,7 @@ void ReentryNumericalIntegrator::GNRangePrediction()
 	if (abs(GNData.DIFF) - 25.0*1852.0 < 0.0)
 	{
 		GNData.SELECTOR = 3;
+		t_GN_Mode_3 = GMT0 + T;
 		GNUpcontrol();
 		return;
 	}
@@ -1022,12 +1056,14 @@ void ReentryNumericalIntegrator::GNUpcontrol()
 	if (GNData.D - GNData.Q7 <= 0)
 	{
 		GNData.SELECTOR = 4;
+		t_GN_Mode_4 = GMT0 + T;
 		GNBallistic();
 		return;
 	}
 	if (GNData.RDOT < 0 && GNData.v - GNData.VL - GNData.C18 < 0)
 	{
 		GNData.SELECTOR = 5;
+		t_GN_Mode_5 = GMT0 + T;
 		GNData.EGSW = true;
 		GNFinalPhase();
 		return;
@@ -1080,6 +1116,7 @@ void ReentryNumericalIntegrator::GNBallistic()
 	{
 		GNData.EGSW = true;
 		GNData.SELECTOR = 5;
+		t_GN_Mode_5 = GMT0 + T;
 		GNModeSelector();
 		return;
 	}
