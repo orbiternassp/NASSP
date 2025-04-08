@@ -1970,7 +1970,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		SV sv;
 		char P65[64];
 		char P66[64];
-		char ullage[32];
 
 		sv = StateVectorCalc(calcParams.src);
 
