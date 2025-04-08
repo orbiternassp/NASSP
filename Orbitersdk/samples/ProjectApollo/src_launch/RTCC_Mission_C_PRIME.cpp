@@ -1704,8 +1704,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		AP11ManPADOpt opt;
 		double MCCtime;
 		MATRIX3 REFSMMAT;
-		char manname[32];
 		SV sv;
+		char manname[32];
 		char ullage[32];
 
 		AP11MNV * form = (AP11MNV *)pad;
@@ -1868,7 +1868,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			{
 				char buffer1[1000];
 				char buffer2[1000];
-				char buffer3[1000];
 
 				sprintf(form->remarks, "%sP37: High-speed procedure (-MA) req'd", ullage);
 
@@ -1969,6 +1968,9 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		LunarEntryPADOpt entopt;
 		SV sv;
+		char P65[64];
+		char P66[64];
+		char ullage[32];
 
 		sv = StateVectorCalc(calcParams.src);
 
@@ -1980,6 +1982,26 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		{
 			entopt.direct = true;
 		}
+
+		if () //Check to determine if P65 would be expected TBD
+		{
+			sprintf(P65, "Entry will not use P65,  ");
+		}
+		else
+		{
+			sprintf(P65, "Entry will use P65,  ");
+		}
+
+		if () //Check to determine if P66 would be expected TBD
+		{
+			sprintf(P65, "Use non-exit EMS pattern, ");
+		}
+		else
+		{
+			sprintf(P65, "Use exit EMS pattern, ");
+		}
+
+
 		entopt.dV_LVLH = DeltaV_LVLH;
 		entopt.lat = SplashLatitude;
 		entopt.lng = SplashLongitude;
@@ -1987,20 +2009,16 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		entopt.sv0 = sv;
 
+
 		LunarEntryPAD(entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");
 		if (entopt.direct == false)
 		{
-			sprintf(form->remarks[0], "Use non-exit EMS pattern, Entry will not involve P65,  Assumes MCC-7");
+			sprintf(form->remarks[0], "%s%sAssumes MCC-7", P66, P65);
 		}
 		else
 		{
-			sprintf(form->remarks[0], "Use non-exit EMS pattern, Entry will not involve P65,  Assumes No MCC-7");
-		}
-
-		if (fcn == 208)
-		{
-
+			sprintf(form->remarks[0], "%s%sAssumes No MCC-7", P66, P65);
 		}
 	}
 	break;
@@ -2008,6 +2026,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	{
 		AP11ENT * form = (AP11ENT *)pad;
 		SV sv;
+		char P65[64];
+		char P66[64];
 
 		LunarEntryPADOpt entopt;
 		char buffer1[1000];
@@ -2021,9 +2041,27 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		entopt.sv0 = sv;
 
+		if () //Check to determine if P65 would be expected
+		{
+			sprintf(P65, "Entry will not use P65");
+		}
+		else
+		{
+			sprintf(P65, "Entry will use P65");
+		}
+
+		if () //Check to determine if P66 would be expected
+		{
+			sprintf(P65, "Use non-exit EMS pattern, ");
+		}
+		else
+		{
+			sprintf(P65, "Use exit EMS pattern, ");
+		}
+
 		LunarEntryPAD(entopt, *form);
 		sprintf(form->Area[0], "MIDPAC");
-		sprintf(form->remarks[0], "Use non-exit EMS pattern");
+		sprintf(form->remarks[0], "%s%s", P66, P65);
 
 		AGCStateVectorUpdate(buffer1, sv, true);
 		AGCStateVectorUpdate(buffer2, sv, false);
