@@ -695,11 +695,11 @@ void ApolloRTCCMFD::FormatLatitude(char * Buff, double lat)
 {
 	if (lat >= 0)
 	{
-		sprintf_s(Buff, 64, "0.2lf °N", lat);
+		sprintf_s(Buff, 64, "%0.2lf °N", lat);
 	}
 	else
 	{
-		sprintf_s(Buff, 64, "0.2lf °S", lat);
+		sprintf_s(Buff, 64, "%0.2lf °S", lat);
 	}
 }
 
