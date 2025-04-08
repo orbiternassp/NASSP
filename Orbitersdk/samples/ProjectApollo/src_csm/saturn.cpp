@@ -2007,6 +2007,12 @@ void Saturn::QuicksaveScenario()
 {
 	double time = MissionTime;
 	VECTOR3 hhhmmss = _V(0, 0, 0);
+	char timeSign = '+';
+
+	if (time < 0) {
+		time = abs(time);
+		timeSign = '-';
+	}
 
 	for (time; time > 3600;) {
 		time -= 3600;
@@ -2023,7 +2029,7 @@ void Saturn::QuicksaveScenario()
 	char scnTime[64] = "";
 	strcpy(scnPath,"/Quicksave/");
 	strcpy(scnMission, pMission->GetMissionName().c_str());
-	sprintf(scnTime, " - %dh %dm %0.2fs", (int)hhhmmss.x, (int)hhhmmss.y, hhhmmss.z);
+	sprintf(scnTime, " %c%03dh %02dm %05.2fs", timeSign, (int)hhhmmss.x, (int)hhhmmss.y, hhhmmss.z);
 
 	char scnName[256] = "";
 	strcat(scnName, scnPath);
