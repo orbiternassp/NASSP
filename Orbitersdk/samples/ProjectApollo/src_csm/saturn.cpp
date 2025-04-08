@@ -2003,6 +2003,36 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	eventControl.save(scn);
 }
 
+void Saturn::QuicksaveScenario()
+{
+	double time = MissionTime;
+	VECTOR3 hhhmmss = _V(0, 0, 0);
+
+	for (time; time > 3600;) {
+		time -= 3600;
+		hhhmmss.x += 1;
+	}
+	for (time; time > 60;) {
+		time -= 60;
+		hhhmmss.y += 1;
+	}
+	hhhmmss.z = time;
+
+	char scnPath[64] = "";
+	char scnMission[128] = "";
+	char scnTime[64] = "";
+	strcpy(scnPath,"/Quicksave/");
+	strcpy(scnMission, pMission->GetMissionName().c_str());
+	sprintf(scnTime, " - %dh %dm %0.2fs", (int)hhhmmss.x, (int)hhhmmss.y, hhhmmss.z);
+
+	char scnName[256] = "";
+	strcat(scnName, scnPath);
+	strcat(scnName, scnMission);
+	strcat(scnName, scnTime);
+
+	oapiSaveScenario(scnName, "");
+}
+
 //
 // Scenario state functions.
 //
@@ -3785,6 +3815,17 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 			}
 		}
 		return 0;
+	}
+
+	if (!KEYMOD_SHIFT(kstate) && KEYMOD_CONTROL(kstate) && KEYMOD_ALT(kstate))
+	{
+		if (down) {
+			switch (key) {
+			case OAPI_KEY_S:
+				QuicksaveScenario();
+				break;
+			}
+		}
 	}
 
 	if (KEYMOD_CONTROL(kstate)) {
