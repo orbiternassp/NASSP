@@ -59,6 +59,7 @@ struct RTCCMFDData
 {
 	int screen = 0;
 	int subscreen = 0;
+	int subscreenmax = 0;
 	int marker = 0;
 	int markermax = 0;
 	UINT ID = 0;
@@ -110,13 +111,12 @@ public:
 	void DFLDynamicData(oapi::Sketchpad *skp, unsigned display, int fontsize);
 
 	//Inputs
-	void menuTIChaserVectorTime();
-	void menuTITargetVectorTime();
-	void menuTITimeIncrement();
-	void menuTITimeRange();
-	void t1dialogue();
-	void t2dialogue();
-	void menuCycleK30Vehicle();
+	void menuSetTIMultipleSolutionInput();
+	void menuSetCorrectiveCombinationInput();
+	void CorrectiveCombinationOffset();
+	void menuCorrectiveCombinationCalc();
+	void menuSetTwoImpulseSingleSolutionInput();
+	void menuTwoImpulseSingleSolutionCalc();
 	void SPQtimedialogue();
 	void set_SPQtime(double tig);
 	void menuSetSPQChaserThresholdTime();
@@ -136,9 +136,10 @@ public:
 	void menuSLVInsertionSVtoMPT();
 	void menuSLVLaunchUplink();
 	void menuVoid();
-	void menuSetLambertPage();
-	void menuSetSPQPage();
 	void menuSetTIMultipleSolutionPage();
+	void menuSetTICorrectiveCombinationPage();
+	void menuSetTISingleSolutionPage();
+	void menuSetSPQPage();
 	void menuSetREFSMMATPage();
 	void menuSetReturnToEarthPage();
 	void menuSetAGSSVPage();
@@ -240,7 +241,6 @@ public:
 	void menuRevertRLSToPrelaunch();
 	void menuAGSSVCalc();
 	void menuEntryUpdateUpload();
-	void menuCycleTwoImpulseOption();
 	void menuSwitchHeadsUp();
 	void menuCalcManPAD();
 	void set_ManPADMPTInput(int mpt, int num);
@@ -666,7 +666,7 @@ public:
 	void menuSetFIDOLaunchAnalogNo1Page();
 	void menuSetFIDOLaunchAnalogNo2Page();
 	void menuSetRTETradeoffDisplayPage();
-	void menuCycleRTETradeoffPage();
+	void menuCycleSubscreen();
 	void menuCalcRTETradeoff();
 	void menuSetRTETradeoffSite();
 	void menuSetRTETradeoffRemoteEarthPage();
@@ -916,6 +916,7 @@ protected:
 	int x, y, dx, dy; //Display spacing helper variables
 	int screen;
 	int subscreen;
+	int subscreenmax;
 	int marker;
 	int markermax;
 	int status; //Page dependent status, reset to 0 when new page is entered

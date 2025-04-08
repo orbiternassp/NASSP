@@ -157,6 +157,14 @@ namespace OrbMech{
 		seconds = (mins - minutes) * 60.0;
 	}
 
+	void SStoMMSS(double time, int &minutes, double &seconds, double precision)
+	{
+		time = round_to(time, precision);
+
+		minutes = (int)trunc(time / 60.0);
+		seconds = (time / 60.0 - minutes) * 60.0;
+	}
+
 	// Format time to HHH:MM:SS.
 	void format_time(char *buf, double time)
 	{
@@ -1052,10 +1060,15 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 		}
 		else
 		{
-			h1 = OrbMech::power(l + x, 2.0) / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*(3.0 * OrbMech::power(1.0 + x, 2.0) * (N*PI / 2.0 + atan(sqrt(x))) / sqrt(x) - (3.0 + 5.0 * x));
-			h2 = m / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*((OrbMech::power(x, 2.0) - (1.0 + l)*x - 3.0 * l)*(N*PI / 2.0 + atan(sqrt(x))) / sqrt(x) + (3.0 * l + x));
+			if (x < 0.0)
+			{
+				//Error
+				return _V(0, 0, 0);
+			}
+			h1 = OrbMech::power(l + x, 2.0) / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*(3.0 * OrbMech::power(1.0 + x, 2.0) * (PI*(double)N / 2.0 + atan(sqrt(x))) / sqrt(x) - (3.0 + 5.0 * x));
+			h2 = m / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*((OrbMech::power(x, 2.0) - (1.0 + l)*x - 3.0 * l)*(PI*(double)N / 2.0 + atan(sqrt(x))) / sqrt(x) + (3.0 * l + x));
 		}
-		B = 27 * h2 / (4 * OrbMech::power(1 + h1, 3));
+		B = 27.0 * h2 / (4.0 * OrbMech::power(1.0 + h1, 3));
 		if (B >= 0)
 		{
 			z = 2.0 * cosh(1.0 / 3.0 * acosh(sqrt(B + 1.0)));

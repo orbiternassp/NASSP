@@ -1745,8 +1745,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_DOI2 = ConvertEphemDatatoSV(sv_DOI, WeightsTable_LM2.ConfigWeight);
 
 		lamopt.mode = 5; //External request
-		lamopt.sv_A = ConvertSVtoEphemData(sv_DOI2);
-		lamopt.sv_P = sv_CSM;
+		lamopt.sv_C.sv = ConvertSVtoEphemData(sv_DOI2);
+		lamopt.sv_T.sv = sv_CSM;
 		lamopt.T1 = GMTfromGET(calcParams.Phasing);
 		lamopt.T2 = GMTfromGET(calcParams.Insertion);
 		lamopt.DH = 60.0*1852.0 - 60000.0*0.3048; //Aiming for 60000 ft altitude
@@ -1878,8 +1878,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_LM = StateVectorCalc(calcParams.tgt);
 
 		lamopt.mode = 5; //External request
-		lamopt.sv_A = ConvertSVtoEphemData(sv_CSM);
-		lamopt.sv_P = ConvertSVtoEphemData(sv_LM);
+		lamopt.sv_C.sv = ConvertSVtoEphemData(sv_CSM);
+		lamopt.sv_T.sv = ConvertSVtoEphemData(sv_LM);
 		lamopt.T1 = GMTfromGET(calcParams.Insertion + 3.0*60.0);
 		lamopt.T2 = GMTfromGET(calcParams.CSI);
 		lamopt.DH = -14.7*1852.0; //14.7 NM
@@ -1955,8 +1955,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv_LM.mass = lem->GetAscentStageMass();
 
 		lamopt.mode = 5; //External request
-		lamopt.sv_A = ConvertSVtoEphemData(sv_LM);
-		lamopt.sv_P = ConvertSVtoEphemData(sv_CSM);
+		lamopt.sv_C.sv = ConvertSVtoEphemData(sv_LM);
+		lamopt.sv_T.sv = ConvertSVtoEphemData(sv_CSM);
 		lamopt.T1 = GMTfromGET(calcParams.Insertion);
 		lamopt.T2 = GMTfromGET(calcParams.CSI);
 		lamopt.DH = 14.7*1852.0; //14.7 NM

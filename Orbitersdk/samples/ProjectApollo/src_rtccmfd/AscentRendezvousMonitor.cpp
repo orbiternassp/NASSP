@@ -373,8 +373,8 @@ int ShortAscentRendezvousMonitor::Calc(const ShortARMInputs &in, ShortARMDisplay
 		//Compute two-impulse solution to TPI offsets
 		opt.T1 = TWEAK;
 		opt.T2 = TPI;
-		opt.sv_A = in.sv_LM[i];
-		opt.sv_P = in.sv_CSM;
+		opt.sv_C.sv = in.sv_LM[i];
+		opt.sv_T.sv = in.sv_CSM;
 		opt.DH = in.DH;
 		opt.PhaseAngle = in.DTHETA;
 
@@ -420,8 +420,8 @@ int ShortAscentRendezvousMonitor::Calc(const ShortARMInputs &in, ShortARMDisplay
 		//Compute two-impulse solution for TPI
 		opt.T1 = TPI;
 		opt.T2 = -1.0;
-		opt.sv_A = in.sv_LM[i];
-		opt.sv_P = in.sv_CSM;
+		opt.sv_C.sv = in.sv_LM[i];
+		opt.sv_T.sv = in.sv_CSM;
 		opt.DH = 0.0;
 		opt.PhaseAngle = 0.0;
 		opt.WT = in.WT;

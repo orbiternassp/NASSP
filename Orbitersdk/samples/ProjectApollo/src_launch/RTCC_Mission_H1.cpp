@@ -2229,7 +2229,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		SV sv_CSM2, sv_LM2;
 		PLAWDTOutput WeightsTable_CSM, WeightsTable_LM, WeightsTable_LM2;
 		VECTOR3 dV_LVLH;
-		double t_sunrise, t_CSI, t_TPI, dt, P30TIG, t_P, t_TPI_actual;
+		double t_sunrise, t_CSI, t_TPI, P30TIG, t_P;
 
 		sv_CSM = StateVectorCalcEphem(calcParams.src);
 		WeightsTable_CSM = GetWeightsTable(calcParams.src, true, false);
@@ -2240,6 +2240,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		t_sunrise = calcParams.PDI + 3.0*3600.0;
 		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(sv_CSM2, t_sunrise) - 23.0*60.0;
+		t_TPI = round(t_TPI / 30.0)*30.0; //Round to next 30 seconds
 
 		GZGENCSN.TIElevationAngle = 26.6*RAD;
 
@@ -2258,23 +2259,14 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.DH = 15.0*1852.0;
 		//Angle confirmed by Apollo 11 FIDO loop (finally!)
 		opt.PhaseAngle = 4.475*RAD;
-		opt.sv_A = ConvertSVtoEphemData(sv_LM2);
-		opt.sv_P = ConvertSVtoEphemData(sv_CSM2);
+		opt.sv_C.sv = ConvertSVtoEphemData(sv_LM2);
+		opt.sv_T.sv = ConvertSVtoEphemData(sv_CSM2);
 		//PDI+12
 		opt.T1 = GMTfromGET(calcParams.PDI + 12.0*60.0);
-		//Estimate for T2
-		opt.T2 = GMTfromGET(opt.T1 + 3600.0 + 46.0*60.0);
-
-		for (int i = 0; i < 2; i++)
-		{
-			PMSTICN(opt, res);
-
-			//Find TPI time
-			PMSTICN_ELEV(res.sv_tig2_apo, opt.sv_P, GZGENCSN.TIElevationAngle, OrbMech::mu_Moon, t_TPI_actual);
-
-			dt = GMTfromGET(t_TPI) - t_TPI_actual;
-			opt.T2 += dt;
-		}
+		//T2 at 40 minutes before TPI
+		opt.T2 = GMTfromGET(t_TPI - 40.0*60.0);
+		//Calculate two impulse solution
+		PMSTICN(opt, res);
 
 		t_P = OrbMech::period(sv_INP.R, sv_INP.V + res.dV, OrbMech::mu_Moon);
 		t_CSI = GETfromGMT(opt.T2) - t_P / 2.0;

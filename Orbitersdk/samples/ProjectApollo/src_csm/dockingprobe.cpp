@@ -388,6 +388,12 @@ void DockingProbe::SystemTimestep(double simdt)
 		DCPower.DrawPower(100.0);	// The real power consumption is unknown yet, max would be 240W (10A*28V)
 	}
 
+	//Shares heat with cabin while "stowed"
+	//Disabled until boost heat determined
+	DockProbeHX->SetPumpOff();
+	DockProbe->rad = 1.0;
+	DockProbe->isolation = 0.001;
+	/*
 	if (!IsInstalled())
 	{
 		DockProbeHX->SetPumpOn();
@@ -397,10 +403,10 @@ void DockingProbe::SystemTimestep(double simdt)
 	else
 	{
 		DockProbeHX->SetPumpOff();
-		DockProbe->rad = 3.0;
+		DockProbe->rad = 1.0;
 		DockProbe->isolation = 0.001;
 	}
-
+	*/
 	if (!IsPowered())
 	{
 		saturn->DockProbeTempSensor.WireTo(NULL);
