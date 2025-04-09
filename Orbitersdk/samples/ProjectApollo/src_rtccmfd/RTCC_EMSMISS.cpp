@@ -981,14 +981,9 @@ void RTCC_EMSMISS::CallDescentIntegrator()
 {
 	PMMLDIInput integin;
 
-	integin.sv.R = svtemp.R;
-	integin.sv.V = svtemp.V;
-	integin.sv.MJD = OrbMech::MJDfromGET(svtemp.GMT, pRTCC->SystemParameters.GMTBASE);
-	integin.sv.gravref = pRTCC->GetGravref(svtemp.RBI);
-
-	integin.TLAND = pRTCC->GETfromGMT(mpt->mantable[i].GMT_BO);
-
-	integin.sv.mass = state.WeightsTable.ConfigWeight;
+	integin.sv.sv = svtemp;
+	integin.TLAND = mpt->mantable[i].GMT_BO;
+	integin.sv.Weight = state.WeightsTable.ConfigWeight;
 	integin.W_LMA = state.WeightsTable.LMAscWeight;
 	integin.W_LMD = state.WeightsTable.LMDscWeight;
 
