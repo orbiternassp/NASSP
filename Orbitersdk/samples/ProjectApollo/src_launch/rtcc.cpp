@@ -3948,6 +3948,10 @@ void RTCC::LunarEntryPAD(const LunarEntryPADOpt &opt, AP11ENT &pad)
 
 	RMMYNI(entin, entout);
 
+	//Use reentry sim output data
+	pad.UsesP65[0] = (entout.t_GN_Mode_3 != 0.0);
+	pad.UsesP66[0] = (entout.t_GN_Mode_4 != 0.0 && entout.t_GN_Mode_4 != entout.t_GN_Mode_5); //Second check is for cases where mode 5 is instantly started after mode 4 had been selected
+
 	dt2 = OrbMech::time_radius_integ(SystemParameters.AGCEpoch, svEI.R, svEI.V, svEI.MJD, OrbMech::R_Earth + EMSAlt, -1, hEarth, hEarth, sv05G.R, sv05G.V);
 	sv05G.gravref = hEarth;
 	sv05G.mass = svEI.mass;
