@@ -199,3 +199,53 @@ void CryoPressureSwitch::SaveState(FILEHANDLE scn, char *name_str)
 	sprintf(buffer, "%d %d", PressureSwitch1, PressureSwitch2);
 	oapiWriteScenario_string(scn, name_str, buffer);
 }
+
+ExteriorLighting::ExteriorLighting()
+{
+	saturn = NULL;
+	SpotDeployed = false;
+	EVALtDeployed = false;
+}
+
+ExteriorLighting::~ExteriorLighting()
+{
+
+}
+
+void ExteriorLighting::Init(Saturn *s, CircuitBrakerSwitch *MNB, ThreeSourceTwoDestSwitch *RDZSPOT)
+{
+	saturn = s;
+	RNDZSPOTMNBcb = MNB;
+	RDZSPOTsw = RDZSPOT;
+}
+
+void ExteriorLighting::SystemTimestep(double simdt)
+{
+	if (!saturn->LETAttached())
+	{
+		SpotDeployed = true;
+	}
+
+	if (RDZSPOTsw->IsDown() && RNDZSPOTMNBcb->IsPowered())
+	{
+		EVALtDeployed = true;
+	}
+}
+
+void ExteriorLighting::LoadState(char *line, int strlen)
+{
+	int i, j;
+
+	sscanf(line + strlen + 1, "%i %i", &i, &j);
+
+	SpotDeployed = (i != 0);
+	EVALtDeployed = (j != 0);
+}
+
+void ExteriorLighting::SaveState(FILEHANDLE scn, char *name_str)
+{
+	char buffer[100];
+
+	sprintf(buffer, "%d %d", SpotDeployed, EVALtDeployed);
+	oapiWriteScenario_string(scn, name_str, buffer);
+}

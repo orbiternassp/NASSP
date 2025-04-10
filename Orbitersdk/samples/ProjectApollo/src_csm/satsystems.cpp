@@ -139,11 +139,13 @@ void Saturn::SystemsInit() {
 	FuelCellN2Blanket[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET");
 
 	//
-	// Electric Lights
+	// Exterior Lights
 	//
 
 	SpotLight = (ElectricLight *)Panelsdk.GetPointerByString("ELECTRIC:SPOTLIGHT");
 	RndzLight = (ElectricLight *)Panelsdk.GetPointerByString("ELECTRIC:RNDZLIGHT");
+
+	ExteriorLighting.Init(this, &LightingRndzMNBCB, &RndzLightSwitch);
 
 	//
 	// EPS/Cryo devices
@@ -1862,6 +1864,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		EventTimer306Display.SystemTimestep(tFactor);
 		H2CryoPressureSwitch.SystemTimestep(tFactor);
 		O2CryoPressureSwitch.SystemTimestep(tFactor);
+		ExteriorLighting.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
