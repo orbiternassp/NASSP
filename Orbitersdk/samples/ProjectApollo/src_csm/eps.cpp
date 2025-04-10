@@ -223,12 +223,12 @@ void ExteriorLighting::SystemTimestep(double simdt)
 {
 	if (!saturn->LETAttached())
 	{
-		SpotDeployed = true;
+		EVALtDeployed = true;
 	}
 
 	if (RDZSPOTsw->IsDown() && RNDZSPOTMNBcb->IsPowered())
 	{
-		EVALtDeployed = true;
+		SpotDeployed = true;
 	}
 }
 
