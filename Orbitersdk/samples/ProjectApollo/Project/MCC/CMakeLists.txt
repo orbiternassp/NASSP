@@ -60,6 +60,7 @@ set(SOURCES
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/TLIProcessor.cpp
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/TLMCC.cpp
     ${NASSP_SOURCE_ROOT}/src_rtccmfd/TLTrajectoryComputers.cpp
+    ${NASSP_SOURCE_ROOT}/src_rtccmfd/TwoImpulseProcessor.cpp
     ${NASSP_SOURCE_ROOT}/src_sys/thread.cpp
 )
 
