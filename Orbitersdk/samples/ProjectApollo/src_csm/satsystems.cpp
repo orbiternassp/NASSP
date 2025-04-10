@@ -1165,12 +1165,14 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//sprintf(oapiDebugString(), "Pixel %.2f MeterValue: %.2f XducerV %.2f", (129 - (O2Pressure1Meter.QueryValue()) * 20.6), O2Pressure1Meter.QueryValue(), O2Tank1PressSensor.Voltage());
 	*/
 
-// Structure Temperature Debug Lines
+	// Structure Temperature Debug Lines
 	/*
+	h_Radiator *DockProbe = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:DOCKPROBE");
 	double *DockProbeTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DOCKPROBE:TEMP");
+	double *DockProbeRad = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DOCKPROBE:RAD");
 	int *DockProbeHX = (int *)Panelsdk.GetPointerByString("HYDRAULIC:DOCKPROBEINCABIN:PUMP");
 
-	//sprintf(oapiDebugString(), "Volts: %.2f Temp: %.4f Installed: %d HX: %d", DockProbeTempSensor.Voltage(), KelvinToFahrenheit(*DockProbeTemp), dockingprobe.IsInstalled(), *DockProbeHX);
+	sprintf(oapiDebugString(), "Volts: %.2f Temp: %.4f Rad %.5f Isolation %.5f In Cabin: %d HX: %d", DockProbeTempSensor.Voltage(), KelvinToFahrenheit(*DockProbeTemp), *DockProbeRad, DockProbe->isolation, dockingprobe.InCabin(), *DockProbeHX);
 	*/
 
 // GSE Cryo Debug Lines
