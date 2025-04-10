@@ -2476,15 +2476,11 @@ void LEM::QuicksaveScenario()
 		timeSign = '-';
 	}
 
-	for (time; time > 3600;) {
-		time -= 3600;
-		hhhmmss.x += 1;
-	}
-	for (time; time > 60;) {
-		time -= 60;
-		hhhmmss.y += 1;
-	}
-	hhhmmss.z = time;
+	time = round(time / 0.01) * 0.01;
+
+	hhhmmss.x = (int)trunc(time / 3600.0);
+	hhhmmss.y = (int)trunc((time - 3600.0 * hhhmmss.x) / 60.0);
+	hhhmmss.z = time - (double)(3600 * hhhmmss.x + 60 * hhhmmss.y);
 
 	char scnPath[64] = "";
 	char scnMission[128] = "";
