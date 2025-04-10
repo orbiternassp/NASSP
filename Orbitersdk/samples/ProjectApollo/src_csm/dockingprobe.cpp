@@ -387,9 +387,17 @@ void DockingProbe::SystemTimestep(double simdt)
 	if (ExtendingRetracting) {
 		DCPower.DrawPower(100.0);	// The real power consumption is unknown yet, max would be 240W (10A*28V)
 	}
-	//Isolates probe while LET is attached
-	if (OurVessel->LETAttached())
+	//Stops interaction if no probe is attached
+	if (OurVessel->HasProbe == false)
 	{
+		DockProbeHX->SetPumpOff();
+		DockProbe->isolation = 0.0;  //prevents heating/cooling from space exposure
+		DockProbe->rad = 0.0;
+	}
+	//Isolates probe while LET is attached
+	else if (OurVessel->LETAttached())
+	{
+		DockProbeHX->SetPumpOff();
 		DockProbe->isolation = 0.0; //prevents heating/cooling from space exposure
 		DockProbe->rad = 0.0;
 	}
@@ -408,7 +416,7 @@ void DockingProbe::SystemTimestep(double simdt)
 		DockProbe->rad = 0.001;
 	}
 
-	if (!IsPowered())
+	if (!IsPowered() || OurVessel->HasProbe == false)
 	{
 		saturn->DockProbeTempSensor.WireTo(NULL);
 	}
