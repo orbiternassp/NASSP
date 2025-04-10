@@ -380,24 +380,32 @@ void DockingProbe::UpdatePort(VECTOR3 off,double simdt)
 	OurVessel->DefSetState(&vs);
 }  
 
-
 void DockingProbe::SystemTimestep(double simdt)
-
 {
+	DockProbe->isolation = 0.008; //Initiializes docking probe isolation value
+
 	if (ExtendingRetracting) {
 		DCPower.DrawPower(100.0);	// The real power consumption is unknown yet, max would be 240W (10A*28V)
 	}
-
+	//Isolates probe while LET is attached
+	if (OurVessel->LETAttached())
+	{
+		DockProbe->isolation = 0.0; //prevents heating/cooling from space exposure
+		DockProbe->rad = 0.0;
+	}
 	//Shares heat with cabin while "stowed"
-	if (InCabin())
+	else if (InCabin())
 	{
 		DockProbeHX->SetPumpOn();
-		DockProbe->rad = 0.0; //prevents heating/cooling from space exposure while in cabin
+		DockProbe->isolation = 0.0;  //prevents heating/cooling from space exposure
+		DockProbe->rad = 0.0;
 	}
+	//"Exposes" probe to space/sun
 	else
 	{
 		DockProbeHX->SetPumpOff();
-		DockProbe->rad = 0.0001;
+		DockProbe->isolation = 0.008;
+		DockProbe->rad = 0.001;
 	}
 
 	if (!IsPowered())
