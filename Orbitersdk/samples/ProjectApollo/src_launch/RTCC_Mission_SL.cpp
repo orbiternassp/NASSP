@@ -280,6 +280,22 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "NC2");
+		if (preliminary == false)
+		{
+			char buffer1[1000];
+			char buffer2[1000];
+
+			AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, opt.sv_CSM);
+			AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, opt.sv_LM);
+
+			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM & SWS state vectors");
+			}
+		}
+	}
 	}
 	break;
 	case 16: //NCC preliminary update
