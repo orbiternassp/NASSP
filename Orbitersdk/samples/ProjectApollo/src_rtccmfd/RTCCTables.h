@@ -455,9 +455,15 @@ struct RMMYNIOutputTable
 	double t_gmax = 0.0;
 	double t_BBO = 0.0;
 	double t_EBO = 0.0;
+	double t_BBO2 = 0.0;
+	double t_EBO2 = 0.0;
 	double R_EMS = 0.0;
 	double V_EMS = 0.0;
 	double t_V_Circ = 0.0;
+	double t_GN_Mode_2 = 0.0; //Time when G&N starts mode 2 (Huntest, P64)
+	double t_GN_Mode_3 = 0.0; //Time when G&N starts mode 3 (Upcontrol, P65)
+	double t_GN_Mode_4 = 0.0; //Time when G&N starts mode 4 (Ballistic, P66)
+	double t_GN_Mode_5 = 0.0; //Time when G&N starts mode 5 (Final, P67)
 	//1 = time limit, 2 = impact, 3 = skipout
 	int IEND;
 };

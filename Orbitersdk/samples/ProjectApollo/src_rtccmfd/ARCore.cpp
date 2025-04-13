@@ -3753,7 +3753,7 @@ int ARCore::subThread()
 				break;
 			}
 
-			opt.sv0 = GC->rtcc->StateVectorCalc(GC->rtcc->pLM);
+			opt.sv0 = GC->rtcc->StateVectorCalcDataBlock(GC->rtcc->pLM);
 		}
 
 		opt.direct = true;
@@ -4031,7 +4031,7 @@ int ARCore::subThread()
 	{
 		PDAPOpt opt;
 		PDAPResults res;
-		SV sv_LM, sv_CSM;
+		VehicleDataBlock sv_LM, sv_CSM;
 
 		if (GC->rtcc->pCSM == NULL || GC->rtcc->pLM == NULL)
 		{
@@ -4060,16 +4060,16 @@ int ARCore::subThread()
 				break;
 			}
 
-			opt.W_TAPS = 0.0;
-			opt.W_TDRY = 0.0;
+			opt.W_TAPS = 0.0; //TBD
+			opt.W_TDRY = 0.0; //TBD
 		}
 		else
 		{
-			opt.W_TAPS = l->GetAscentStageMass();
-			opt.W_TDRY = opt.sv_A.mass - l->GetPropellantMass(l->GetPropellantHandleByIndex(0));
+			sv_LM = GC->rtcc->StateVectorCalcDataBlock(GC->rtcc->pLM);
+			sv_CSM = GC->rtcc->StateVectorCalcDataBlock(GC->rtcc->pCSM);
 
-			sv_LM = GC->rtcc->StateVectorCalc(GC->rtcc->pLM);
-			sv_CSM = GC->rtcc->StateVectorCalc(GC->rtcc->pCSM);
+			opt.W_TAPS = l->GetAscentStageMass();
+			opt.W_TDRY = sv_LM.Weight - l->GetPropellantMass(l->GetPropellantHandleByIndex(0));
 		}
 
 		if (PDAPEngine == 0)
@@ -4331,9 +4331,14 @@ int ARCore::subThread()
 			{
 				if (GC->MissionPlanningActive)
 				{
-					if (GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, opt.sv0))
+					VehicleDataBlock sv0;
+					if (GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, sv0))
 					{
 						opt.sv0 = GC->rtcc->StateVectorCalc(v);
+					}
+					else
+					{
+						opt.sv0 = GC->rtcc->ConvertEphemDatatoSV(sv0.sv, sv0.Weight);
 					}
 				}
 				else

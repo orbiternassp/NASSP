@@ -91,11 +91,12 @@ public:
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, int val);
 	void Text_GET_MMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double val);
-	void Text_GET_HHMM(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHHMM(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMMSSC(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GMT_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
@@ -178,8 +179,7 @@ public:
 	void GMT_Display2(char * Buff, double time) const;
 	void GET_Display2(char * Buff, double time) const;
 	void GET_Display3(char* Buff, double time);
-	void GET_Display4(char* Buff, double time);
-	void GET_Display_HHMM(char *Buff, double time);
+	void GET_Display_HHHMM(char *Buff, double time);
 	void AGC_Display(char * Buff, double time);
 	void FormatLatitude(char * Buff, double lat);
 	void FormatLongitude(char * Buff, double lng, int precision = 2);

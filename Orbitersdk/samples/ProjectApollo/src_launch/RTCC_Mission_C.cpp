@@ -306,7 +306,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load, REFSMMAT");
+			sprintf(upDesc, "CSM state vector, Target load, REFSMMAT");
 		}
 	}
 	break;
@@ -601,7 +601,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM and S-IVB state vectors, target load");
+			sprintf(upDesc, "CSM and S-IVB state vectors, Target load");
 		}
 	}
 	break;
@@ -763,7 +763,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM and S-IVB state vectors, target load");
+			sprintf(upDesc, "CSM and S-IVB state vectors, Target load");
 		}
 	}
 	break;
@@ -1043,7 +1043,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;
@@ -1217,7 +1217,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;
@@ -1513,7 +1513,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;
@@ -1775,7 +1775,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;

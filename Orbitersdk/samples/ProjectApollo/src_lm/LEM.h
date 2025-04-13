@@ -692,6 +692,9 @@ public:
 	// Floodlight LM Commander
 	PointLight* floodLight_Right;
 
+	// Custom quicksave behaviour
+	void QuicksaveScenario();
+
 protected:
 
 	//

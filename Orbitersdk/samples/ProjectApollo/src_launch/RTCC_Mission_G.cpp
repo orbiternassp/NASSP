@@ -242,7 +242,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.vessel = calcParams.src;
 		entopt.RV_MCC = sv1;
 
-		EntryTargeting(&entopt, &res); //Target Load for uplink
+		EntryTargeting(&entopt, &res); //Target load for uplink
 
 		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -539,7 +539,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector, target load");
+					sprintf(upDesc, "CSM state vector, Target load");
 				}
 			}
 		}
@@ -619,7 +619,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load");
+				sprintf(upDesc, "CSM state vector, Target load");
 			}
 		}
 	}
@@ -796,7 +796,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load");
+				sprintf(upDesc, "CSM state vector, Target load");
 			}
 		}
 	}
@@ -929,7 +929,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load, Landing Site REFSMMAT");
+				sprintf(upDesc, "CSM state vector, Target load, Landing Site REFSMMAT");
 			}
 		}
 	}
@@ -1057,7 +1057,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;
@@ -1108,7 +1108,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;
@@ -1281,8 +1281,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.IsTwoSegment = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-		opt.sv_A = sv_INP;
-		opt.sv_P = sv2;
+		opt.sv_A = SVToVehicleDataBlock(ConvertSVtoEphemData(sv_INP), 1.0, sv_INP.mass, 1.0);
+		opt.sv_P = SVToVehicleDataBlock(ConvertSVtoEphemData(sv2), 1.0, sv2.mass, 1.0);
 		opt.TLAND = CZTDTGTU.GETTD;
 
 		PoweredDescentAbortProgram(opt, res);
@@ -1399,7 +1399,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "LM state vector, DOI target load, descent target load");
+			sprintf(upDesc, "LM state vector, DOI target load, Descent target load");
 		}
 	}
 	break;
@@ -1543,7 +1543,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load");
+				sprintf(upDesc, "CSM state vector, Target load");
 			}
 		}
 	}
@@ -1565,7 +1565,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv2 = coast(sv1, -30.0*60.0);
 		LunarOrbitMapUpdate(sv2, upd_ellip);
 
-		form->Rev = 1;
+		sprintf(form->Rev, "1");
 		form->type = 2;
 		form->AOSGET = upd_hyper.AOSGET;
 		form->LOSGET = upd_hyper.LOSGET;
@@ -1646,9 +1646,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11PDIPAD * form = (AP11PDIPAD *)pad;
 
 		PDIPADOpt opt;
-		SV sv;
+		VehicleDataBlock sv;
 
-		sv = StateVectorCalc(calcParams.tgt);
+		sv = StateVectorCalcDataBlock(calcParams.tgt);
 
 		opt.direct = false;
 		opt.dV_LVLH = DeltaV_LVLH;
@@ -2274,7 +2274,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load");
+				sprintf(upDesc, "CSM state vector, Target load");
 			}
 		}
 	}
@@ -2651,7 +2651,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				char buffer2[1000];
 
 				sprintf(upMessage, "%s has been scrubbed", manname);
-				sprintf(upDesc, "CSM state vector, entry target");
+				sprintf(upDesc, "CSM state vector, Entry target");
 
 				AGCStateVectorUpdate(buffer1, sv, true);
 				CMCEntryUpdate(buffer2, res.latitude, res.longitude);
@@ -2675,7 +2675,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				char buffer3[1000];
 
 				sprintf(upMessage, "%s has been scrubbed", manname);
-				sprintf(upDesc, "CSM state vector, entry target, Entry REFSMMAT");
+				sprintf(upDesc, "CSM state vector, Entry target, Entry REFSMMAT");
 
 				AGCStateVectorUpdate(buffer1, sv, true);
 				CMCEntryUpdate(buffer2, res.latitude, res.longitude);
@@ -2703,7 +2703,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector, target load");
+					sprintf(upDesc, "CSM state vector, Target load");
 				}
 			}
 			//MCC-6 and 7 decision
@@ -2726,7 +2726,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector, target load, Entry REFSMMAT");
+					sprintf(upDesc, "CSM state vector, Target load, Entry REFSMMAT");
 				}
 			}
 		}
@@ -2810,7 +2810,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, entry target");
+				sprintf(upDesc, "CSM state vector, Entry target");
 			}
 		}
 	}
