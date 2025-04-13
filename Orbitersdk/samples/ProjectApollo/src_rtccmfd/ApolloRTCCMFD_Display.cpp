@@ -3424,7 +3424,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		Text(skp, 23, 24, "%.1lf", GC->rtcc->EZSPACE.L1);
 		Text(skp, 23, 25, "%.4lf", GC->rtcc->EZSPACE.E1);
-		Text(skp, 22, 26, "%.3lf", GC->rtcc->EZSPACE.E1);
+		Text(skp, 23, 26, "%.3lf", GC->rtcc->EZSPACE.I1);
 		Text(skp, 14, 27, "%d", GC->rtcc->EZSPACE.TUN1);
 		Text_GET_HHHMMSS(skp, 36, 8, GC->rtcc->EZSPACE.GETVector2);
 		Text_GET_HHHMMSS(skp, 39, 9, GC->rtcc->EZSPACE.GETSI);
