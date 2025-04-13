@@ -1325,6 +1325,11 @@ public:
 	PointLight* floodLight_P8;
 	PointLight* floodLight_P100;
 
+	//
+	// Custom quicksave behaviour
+	//
+	void QuicksaveScenario();
+
 protected:
 
 	///
