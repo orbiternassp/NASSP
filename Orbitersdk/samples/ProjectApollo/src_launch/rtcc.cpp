@@ -65,28 +65,6 @@ using namespace nassp;
 #define LOAD_M3(KEY,VALUE) if(strnicmp(line,KEY,strlen(KEY))==0){ sscanf(line+strlen(KEY),"%lf %lf %lf %lf %lf %lf %lf %lf %lf",&VALUE.m11,&VALUE.m12,&VALUE.m13,&VALUE.m21,&VALUE.m22,&VALUE.m23,&VALUE.m31,&VALUE.m32,&VALUE.m33); }
 #define LOAD_STRING(KEY,VALUE,LEN) if(strnicmp(line,KEY,strlen(KEY))==0){ strncpy(VALUE, line + (strlen(KEY)+1), LEN); }
 
-void format_time_rtcc(char *buf, double time) {
-	buf[0] = 0; // Clobber
-	int hours, minutes, seconds;
-	bool negative = false;
-	if (time < 0)
-	{
-		time = abs(time);
-		negative = true;
-	}
-	hours = (int)(time / 3600);
-	minutes = (int)((time / 60) - (hours * 60));
-	seconds = (int)((time - (hours * 3600)) - (minutes * 60));
-	if (negative)
-	{
-		sprintf_s(buf, 64, "-%03d:%02d:%02d", hours, minutes, seconds);
-	}
-	else
-	{
-		sprintf_s(buf, 64, "%03d:%02d:%02d", hours, minutes, seconds);
-	}
-}
-
 //Ephemeris format 2 to format 1
 EphemerisData Eph2ToEph1(EphemerisData2 in, int RBI)
 {
@@ -17059,7 +17037,7 @@ void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGM
 
 				double get = GETfromGMT(InTable.NIAuxOutputTable.sv_cutoff.GMT);
 				char Buff[64];
-				format_time_rtcc(Buff, get);
+				OrbMech::format_time_HHHMMSS(Buff, get);
 				RTCCONLINEMON.TextBuffer[2].assign(Buff);
 
 				double lat, lng, alt;
@@ -17149,9 +17127,9 @@ void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGM
 		}
 		EMGPRINT("EMSEPH", 12);
 		char Buff[64];
-		format_time_rtcc(Buff, table->EPHEM.Header.TL);
+		OrbMech::format_time_HHHMMSS(Buff, table->EPHEM.Header.TL);
 		RTCCONLINEMON.TextBuffer[1].assign(Buff);
-		format_time_rtcc(Buff, table->EPHEM.Header.TR);
+		OrbMech::format_time_HHHMMSS(Buff, table->EPHEM.Header.TR);
 		RTCCONLINEMON.TextBuffer[2].assign(Buff);
 		EMGPRINT("EMSEPH", 15);
 
@@ -35577,7 +35555,7 @@ void RTCC::BMDVPS()
 	int i, j;
 	MissionPlanTable *mpt;
 	
-	format_time_rtcc(Buff, RTCCPresentTimeGMT());
+	OrbMech::format_time_HHHMMSS(Buff, RTCCPresentTimeGMT());
 	VectorPanelSummaryBuffer.CurrentGMT.assign(Buff);
 	for (i = 0;i < 2;i++)
 	{
@@ -35592,7 +35570,7 @@ void RTCC::BMDVPS()
 		if (mpt->GMTAV != 0.0)
 		{
 			VectorPanelSummaryBuffer.AnchorVectorID[i] = mpt->StationID;
-			format_time_rtcc(Buff, mpt->GMTAV);
+			OrbMech::format_time_HHHMMSS(Buff, mpt->GMTAV);
 			VectorPanelSummaryBuffer.AnchorVectorGMT[i].assign(Buff);
 		}
 		else
@@ -35605,7 +35583,7 @@ void RTCC::BMDVPS()
 			if (BZUSEVEC.data[6 * i + j].ID > 0)
 			{
 				VectorPanelSummaryBuffer.CompUsableID[i][j] = BZUSEVEC.data[6 * i + j].VectorCode;
-				format_time_rtcc(Buff, BZUSEVEC.data[6 * i + j].Vector.GMT);
+				OrbMech::format_time_HHHMMSS(Buff, BZUSEVEC.data[6 * i + j].Vector.GMT);
 				VectorPanelSummaryBuffer.CompUsableGMT[i][j].assign(Buff);
 			}
 			else
@@ -35616,7 +35594,7 @@ void RTCC::BMDVPS()
 			if (BZEVLVEC.data[4 * i + j].ID > 0)
 			{
 				VectorPanelSummaryBuffer.CompEvalID[i][j] = BZEVLVEC.data[4 * i + j].VectorCode;
-				format_time_rtcc(Buff, BZEVLVEC.data[4 * i + j].Vector.GMT);
+				OrbMech::format_time_HHHMMSS(Buff, BZEVLVEC.data[4 * i + j].Vector.GMT);
 				VectorPanelSummaryBuffer.CompEvalGMT[i][j].assign(Buff);
 			}
 			else
@@ -35629,7 +35607,7 @@ void RTCC::BMDVPS()
 		if (BZUSEVEC.data[6 * i + 4].Vector.RBI != -1)
 		{
 			VectorPanelSummaryBuffer.HSRID[i] = BZUSEVEC.data[6 * i + 4].VectorCode;
-			format_time_rtcc(Buff, BZUSEVEC.data[6 * i + 4].Vector.GMT);
+			OrbMech::format_time_HHHMMSS(Buff, BZUSEVEC.data[6 * i + 4].Vector.GMT);
 			VectorPanelSummaryBuffer.HSRGMT[i].assign(Buff);
 		}
 		else
@@ -35640,7 +35618,7 @@ void RTCC::BMDVPS()
 		if (BZUSEVEC.data[6 * i + 5].Vector.RBI != -1)
 		{
 			VectorPanelSummaryBuffer.DCID[i] = BZUSEVEC.data[6 * i + 5].VectorCode;
-			format_time_rtcc(Buff, BZUSEVEC.data[6 * i + 5].Vector.GMT);
+			OrbMech::format_time_HHHMMSS(Buff, BZUSEVEC.data[6 * i + 5].Vector.GMT);
 			VectorPanelSummaryBuffer.DCGMT[i].assign(Buff);
 		}
 		else
@@ -35651,9 +35629,9 @@ void RTCC::BMDVPS()
 		if (mpt->LastExecutedManeuver > 0)
 		{
 			gmttemp = mpt->mantable[mpt->LastExecutedManeuver - 1].GMT_BI - mpt->mantable[mpt->LastExecutedManeuver - 1].dt_ullage + 1.0;
-			format_time_rtcc(Buff, gmttemp);
+			OrbMech::format_time_HHHMMSS(Buff, gmttemp);
 			VectorPanelSummaryBuffer.LastManGMTUL[i].assign(Buff);
-			format_time_rtcc(Buff, mpt->mantable[mpt->LastExecutedManeuver - 1].GMT_BO);
+			OrbMech::format_time_HHHMMSS(Buff, mpt->mantable[mpt->LastExecutedManeuver - 1].GMT_BO);
 			VectorPanelSummaryBuffer.LastManGMTBO[i].assign(Buff);
 		}
 		else
@@ -35665,7 +35643,7 @@ void RTCC::BMDVPS()
 	}
 	if (BZSTLM.HighSpeedCMCCSMVector.RBI != -1)
 	{
-		format_time_rtcc(Buff, BZSTLM.HighSpeedCMCCSMVector.GMT);
+		OrbMech::format_time_HHHMMSS(Buff, BZSTLM.HighSpeedCMCCSMVector.GMT);
 		VectorPanelSummaryBuffer.CompTelemetryHighGMT[0][0].assign(Buff);
 	}
 	else
@@ -35674,7 +35652,7 @@ void RTCC::BMDVPS()
 	}
 	if (BZSTLM.HighSpeedLGCCSMVector.RBI != -1)
 	{
-		format_time_rtcc(Buff, BZSTLM.HighSpeedLGCCSMVector.GMT);
+		OrbMech::format_time_HHHMMSS(Buff, BZSTLM.HighSpeedLGCCSMVector.GMT);
 		VectorPanelSummaryBuffer.CompTelemetryHighGMT[0][1].assign(Buff);
 	}
 	else
@@ -35683,7 +35661,7 @@ void RTCC::BMDVPS()
 	}
 	if (BZSTLM.HighSpeedAGSCSMVector.RBI != -1)
 	{
-		format_time_rtcc(Buff, BZSTLM.HighSpeedAGSCSMVector.GMT);
+		OrbMech::format_time_HHHMMSS(Buff, BZSTLM.HighSpeedAGSCSMVector.GMT);
 		VectorPanelSummaryBuffer.CompTelemetryHighGMT[0][2].assign(Buff);
 	}
 	else
@@ -35692,7 +35670,7 @@ void RTCC::BMDVPS()
 	}
 	if (BZSTLM.HighSpeedIUVector.RBI != -1)
 	{
-		format_time_rtcc(Buff, BZSTLM.HighSpeedIUVector.GMT);
+		OrbMech::format_time_HHHMMSS(Buff, BZSTLM.HighSpeedIUVector.GMT);
 		VectorPanelSummaryBuffer.CompTelemetryHighGMT[0][3].assign(Buff);
 	}
 	else
@@ -35701,7 +35679,7 @@ void RTCC::BMDVPS()
 	}
 	if (BZSTLM.HighSpeedCMCLEMVector.RBI != -1)
 	{
-		format_time_rtcc(Buff, BZSTLM.HighSpeedCMCLEMVector.GMT);
+		OrbMech::format_time_HHHMMSS(Buff, BZSTLM.HighSpeedCMCLEMVector.GMT);
 		VectorPanelSummaryBuffer.CompTelemetryHighGMT[1][0].assign(Buff);
 	}
 	else
@@ -35710,7 +35688,7 @@ void RTCC::BMDVPS()
 	}
 	if (BZSTLM.HighSpeedLGCLEMVector.RBI != -1)
 	{
-		format_time_rtcc(Buff, BZSTLM.HighSpeedLGCLEMVector.GMT);
+		OrbMech::format_time_HHHMMSS(Buff, BZSTLM.HighSpeedLGCLEMVector.GMT);
 		VectorPanelSummaryBuffer.CompTelemetryHighGMT[1][1].assign(Buff);
 	}
 	else
@@ -35719,7 +35697,7 @@ void RTCC::BMDVPS()
 	}
 	if (BZSTLM.HighSpeedAGSLEMVector.RBI != -1)
 	{
-		format_time_rtcc(Buff, BZSTLM.HighSpeedAGSLEMVector.GMT);
+		OrbMech::format_time_HHHMMSS(Buff, BZSTLM.HighSpeedAGSLEMVector.GMT);
 		VectorPanelSummaryBuffer.CompTelemetryHighGMT[1][2].assign(Buff);
 	}
 	else
@@ -35728,7 +35706,7 @@ void RTCC::BMDVPS()
 	}
 	if (BZSTLM.HighSpeedIUVector.RBI != -1)
 	{
-		format_time_rtcc(Buff, BZSTLM.HighSpeedIUVector.GMT);
+		OrbMech::format_time_HHHMMSS(Buff, BZSTLM.HighSpeedIUVector.GMT);
 		VectorPanelSummaryBuffer.CompTelemetryHighGMT[1][3].assign(Buff);
 	}
 	else

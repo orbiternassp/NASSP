@@ -1773,8 +1773,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			MJD_100E = OrbMech::P29TimeOfLongitude(SystemParameters.MAT_J2000_BRCS, sv_DOI.R, sv_DOI.V, sv_DOI2.MJD, sv_DOI2.gravref, 100.0*RAD);
 			t_100E = (MJD_100E - GETbase)*24.0*3600.0;
 
-			OrbMech::format_time_MMSS(GETbuffer, P30TIG - t_100E);
-			OrbMech::format_time_MMSS(GETbuffer2, P30TIG - t_LS);
+			OrbMech::format_time_XMSS(GETbuffer, P30TIG - t_100E);
+			OrbMech::format_time_XMSS(GETbuffer2, P30TIG - t_LS);
 			sprintf(form->remarks, "100-degree east time is %s. Site 2 time is %s", GETbuffer, GETbuffer2);
 		}
 	}
