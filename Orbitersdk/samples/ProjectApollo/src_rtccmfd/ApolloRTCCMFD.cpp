@@ -483,7 +483,7 @@ void ApolloRTCCMFD::Text_Longitude(oapi::Sketchpad *skp, int x, int y, double va
 void ApolloRTCCMFD::Text_Dot(oapi::Sketchpad *skp, int x, int y)
 {
 	//Writes a dot above the letter location indicated with x and y
-	skp->Text(CW * x, CH * (y * 4 - 3) / 4, ".", 1);
+	skp->Text(CW * (x * 20 - 1) / 20, CH * (y * 10 - 8) / 10, ".", 1);
 }
 
 void ApolloRTCCMFD::menuEntryUpdateUpload()

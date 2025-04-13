@@ -5460,10 +5460,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, 0, 10, "VF");
 		Text(skp, 0, 11, "VS");
 		Text(skp, 0, 12, "VD");
-		Text(skp, 0, 13, "DH");
-		Text(skp, 1, 14, "T");
-		Text(skp, 0, 15, "TD");
-		Text(skp, 0, 16, "WG");
+		skp->TextW(0, CH * 13, L"\u0394H", 2);
+		skp->TextW(CW * 1, CH * 14, L"\u03B8", 1);
+		skp->TextW(CW * 1, CH * 15, L"\u03B8", 1);
+		Text_Dot(skp, 1, 15);
+		skp->TextW(CW * 1, CH * 16, L"\u03B4", 1);
 		Text(skp, 0, 17, "YD");
 		Text(skp, 12, 10, "HBI");
 		Text(skp, 12, 11, "PBI");
@@ -5591,7 +5592,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, 34, 24, "%.2lf", tab->AGS_DV.z);
 		}
 		Text_GET_HHHMMSSCS(skp, 17, 21, tab->PGNS_GETI);
-		Text(skp, 10, 26, tab->error);
+		Text(skp, 30, 26, tab->error);
 	}
 	break;
 	case 69:
