@@ -12972,6 +12972,9 @@ void RTCC::PMXSPT(std::string source, int n)
 	case 302:
 		message.push_back("SKELETON FLIGHT PLAN TABLE NOT AVAILABLE");
 		break;
+	case 303:
+		message.push_back("IGNITION ALGORITHM FAILED - PROCESSING TERMINATED");
+		break;
 	default:
 		return;
 	}
@@ -14654,13 +14657,19 @@ int RTCC::EMDSPACE(int queid, int option, double val, double incl, double ascnod
 				sprintf(EZSPACE.REF2, "LUNAR");
 				mu = OrbMech::mu_Moon;
 			}
-			
+			//Get weight, area and K-factor
 			PLAWDTInput pin;
 			PLAWDTOutput pout;
+
 			pin.T_UP = sv.GMT;
 			pin.TableCode = EZETVMED.SpaceDigVehID;
+			pin.KFactorOpt = true;
+
 			PLAWDT(pin, pout);
+
 			EZSPACE.WT = pout.ConfigWeight * LBS*1000.0;
+			EZSPACE.AREA = pout.ConfigArea / pow(0.3048, 2);
+			EZSPACE.K = pout.KFactor;
 
 			int csi_out;
 			if (sv.RBI == BODY_EARTH)
@@ -21946,7 +21955,11 @@ int RTCC::PMMXFR(int id, void *data)
 		in.TrimAngleInd = med_m86.TrimAngleIndicator;
 
 		//Determine time
-		PMMLDP(in, man);
+		if (PMMLDP(in, man))
+		{
+			PMXSPT("PMMLDP", 303);
+			return 1;
+		}
 
 		//Check ground rules
 		err = PMMXFRGroundRules(mpt, man.GMTI, med_m86.ReplaceCode, LastManReplaceFlag, LowerLimit, UpperLimit, CurMan, VectorFetchTime);
@@ -27928,13 +27941,13 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		{
 			return 1;
 		}
-		if (column < 0 || column>4)
+		if (column < 0 || column > 6)
 		{
 			return 1;
 		}
 		if (column == 0)
 		{
-			for (int i = 0;i < 4;i++)
+			for (int i = 0;i < 6;i++)
 			{
 				PZMCCDIS.data[i].Mode = 0;
 			}
