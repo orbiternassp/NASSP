@@ -1049,6 +1049,17 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 		return 0;
 	}
 
+	if (!KEYMOD_SHIFT(keystate) && KEYMOD_CONTROL(keystate) && KEYMOD_ALT(keystate))
+	{
+		if (down) {
+			switch (key) {
+			case OAPI_KEY_S:
+				QuicksaveScenario();
+				break;
+			}
+		}
+	}
+
 	if (down){
 		switch(key){
 			// Valid shaft positions should be:
@@ -2452,6 +2463,38 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	MissionTimerDisplay.SaveState(scn, "MISSIONTIMER_START", MISSIONTIMER_END_STRING, false);
 	EventTimerDisplay.SaveState(scn, "EVENTTIMER_START", EVENTTIMER_END_STRING, true);
 	checkControl.save(scn);
+}
+
+void LEM::QuicksaveScenario()
+{
+	double time = MissionTime;
+	VECTOR3 hhhmmss = _V(0, 0, 0);
+	char timeSign = '+';
+
+	if (time < 0) {
+		time = abs(time);
+		timeSign = '-';
+	}
+
+	time = round(time / 0.01) * 0.01;
+
+	hhhmmss.x = (int)trunc(time / 3600.0);
+	hhhmmss.y = (int)trunc((time - 3600.0 * hhhmmss.x) / 60.0);
+	hhhmmss.z = time - (double)(3600 * hhhmmss.x + 60 * hhhmmss.y);
+
+	char scnPath[64] = "";
+	char scnMission[128] = "";
+	char scnTime[64] = "";
+	strcpy(scnPath, "/Quicksave/");
+	strcpy(scnMission, pMission->GetMissionName().c_str());
+	sprintf(scnTime, " %c%03dh %02dm %05.2fs", timeSign, (int)hhhmmss.x, (int)hhhmmss.y, hhhmmss.z);
+
+	char scnName[256] = "";
+	strcat(scnName, scnPath);
+	strcat(scnName, scnMission);
+	strcat(scnName, scnTime);
+
+	oapiSaveScenario(scnName, "");
 }
 
 bool LEM::clbkLoadGenericCockpit ()
