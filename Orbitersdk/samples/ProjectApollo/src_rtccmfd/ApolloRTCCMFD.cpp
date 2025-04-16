@@ -1411,6 +1411,8 @@ void ApolloRTCCMFD::menuSetRTEDEntryProfilePage()
 
 void ApolloRTCCMFD::menuSetLunarTargetingProgramPage()
 {
+	marker = 0;
+	markermax = 7;
 	SelectPage(115);
 }
 
@@ -1937,34 +1939,36 @@ void ApolloRTCCMFD::menuCycleLWPSubscreen()
 	}
 }
 
-void ApolloRTCCMFD::LUNTAR_TIGInput()
+void ApolloRTCCMFD::menuSetLUNTARInput()
 {
-	GenericGETInput(&G->LUNTAR_TIG, "Enter GET (Format: HH:MM:SS). Enter zero for trajectory evaluation (no maneuver):");
-}
-
-void ApolloRTCCMFD::LUNTAR_BTInput()
-{
-	GenericDoubleInput(&G->LUNTAR_bt_guess, "Enter burn time in seconds:", 1.0);
-}
-
-void ApolloRTCCMFD::LUNTAR_PitchInput()
-{
-	GenericDoubleInput(&G->LUNTAR_pitch_guess, "Enter estimated pitch in degrees:", RAD);
-}
-
-void ApolloRTCCMFD::LUNTAR_YawInput()
-{
-	GenericDoubleInput(&G->LUNTAR_yaw_guess, "Enter estimated yaw in degrees:", RAD);
-}
-
-void ApolloRTCCMFD::LUNTAR_LatInput()
-{
-	GenericDoubleInput(&G->LUNTAR_lat, "Enter desired impact latitude in degrees:", RAD);
-}
-
-void ApolloRTCCMFD::LUNTAR_LngInput()
-{
-	GenericDoubleInput(&G->LUNTAR_lng, "Enter desired impact longitude in degrees:", RAD);
+	switch (marker)
+	{
+	case 0:
+		if (G->LUNTAR_Input.mode < 2) G->LUNTAR_Input.mode++;
+		else G->LUNTAR_Input.mode = 0;
+		break;
+	case 1:
+		GenericGETInput(&G->LUNTAR_Input.tig_guess, "Enter GET (Format: HH:MM:SS):");
+		break;
+	case 2:
+		GenericDoubleInput(&G->LUNTAR_Input.bt_guess, "Enter burn time in seconds:");
+		break;
+	case 3:
+		GenericDoubleInput(&G->LUNTAR_Input.pitch_guess, "Enter estimated pitch in degrees:");
+		break;
+	case 4:
+		GenericDoubleInput(&G->LUNTAR_Input.yaw_guess, "Enter estimated yaw in degrees:");
+		break;
+	case 5:
+		GenericDoubleInput(&G->LUNTAR_Input.lat_tgt, "Enter desired impact latitude in degrees:");
+		break;
+	case 6:
+		GenericDoubleInput(&G->LUNTAR_Input.lng_tgt, "Enter desired impact longitude in degrees:");
+		break;
+	case 7:
+		G->LUNTAR_Input.bOptimize = !G->LUNTAR_Input.bOptimize;
+		break;
+	}
 }
 
 void ApolloRTCCMFD::LUNTARCalc()

@@ -831,12 +831,7 @@ public:
 	void menuAGCLiftoffTimeComparision();
 	void set_AGCLiftoffTimeComparision(double tim);
 	void menuSetLunarTargetingProgramPage();
-	void LUNTAR_TIGInput();
-	void LUNTAR_BTInput();
-	void LUNTAR_PitchInput();
-	void LUNTAR_YawInput();
-	void LUNTAR_LatInput();
-	void LUNTAR_LngInput();
+	void menuSetLUNTARInput();
 	void LUNTARCalc();
 	void menuSetRetrofireSeparationPage();
 	void menuRetroShapingGET();

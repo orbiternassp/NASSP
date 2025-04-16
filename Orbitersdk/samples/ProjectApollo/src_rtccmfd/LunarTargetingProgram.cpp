@@ -26,6 +26,20 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "GeneralizedIterator.h"
 #include "rtcc.h"
 
+LunarTargetingProgramInput::LunarTargetingProgramInput()
+{
+	mode = 0;
+	bOptimize = false;
+	mass = 0.0;
+	pitch_guess = 0.0;
+	yaw_guess = 0.0;
+	bt_guess = 0.0;
+	tig_guess = 0.0;
+	lat_tgt = 0.0;
+	lng_tgt = 0.0;
+	TB8 = 0.0;
+}
+
 LunarTargetingProgram::LunarTargetingProgram(RTCC *r) : RTCCModule(r)
 {
 	F = 2.0*310.0;
@@ -44,7 +58,7 @@ void LunarTargetingProgram::Call(const LunarTargetingProgramInput &in, LunarTarg
 	int ITS;
 
 	//Propagate to TIG, if applicable
-	if (in.tig_guess != 0.0)
+	if (in.mode != 0)
 	{
 		double mass_f;
 
@@ -80,16 +94,28 @@ void LunarTargetingProgram::Call(const LunarTargetingProgramInput &in, LunarTarg
 		return;
 	}
 
-	if (in.tig_guess == 0.0)
+	if (in.mode != 2)
 	{
 		//Impact evaluation
 		double alt;
 		pRTCC->GLSSAT(sv_imp.R, sv_imp.GMT, sv_imp.RBI, out.lat_imp, out.lng_imp, alt);
+		out.fpa_imp = asin(dotp(unit(sv_imp.R), unit(sv_imp.V)));
 		out.get_imp = pRTCC->GETfromGMT(sv_imp.GMT);
-		out.tig = 0.0;
-		out.pitch = 0.0;
-		out.yaw = 0.0;
-		out.bt = 0.0;
+		if (in.mode == 0)
+		{
+			out.tig = 0.0;
+			out.pitch = 0.0;
+			out.yaw = 0.0;
+			out.bt = 0.0;
+		}
+		else
+		{
+			double temp = sv_tig.GMT - pRTCC->GetIUClockZero();
+			out.tig = temp - in.TB8;
+			out.pitch = in.pitch_guess;
+			out.yaw = in.yaw_guess;
+			out.bt = in.bt_guess;
+		}
 		return;
 	}
 
@@ -112,7 +138,7 @@ void LunarTargetingProgram::Call(const LunarTargetingProgramInput &in, LunarTarg
 	}
 
 	//Converge and optimize lat/lng
-	err = ConvergeOnImpact(outarray.dv, outarray.dgamma, outarray.dpsi, in.lat_tgt, in.lng_tgt);
+	err = ConvergeOnImpact(outarray.dv, outarray.dgamma, outarray.dpsi, in.lat_tgt, in.lng_tgt, in.bOptimize);
 	if (err)
 	{
 		out.err = 2;
@@ -138,6 +164,7 @@ void LunarTargetingProgram::Call(const LunarTargetingProgramInput &in, LunarTarg
 	out.tig = temp - in.TB8;
 	out.lat_imp = outarray.lat;
 	out.lng_imp = outarray.lng;
+	out.fpa_imp = outarray.fpa;
 	out.get_imp = pRTCC->GETfromGMT(outarray.gmt_imp);
 }
 
@@ -182,7 +209,7 @@ bool LunarTargetingProgram::ConvergeOnImpactSTR(double dv, double dgamma, double
 	return GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-bool LunarTargetingProgram::ConvergeOnImpact(double dv, double dgamma, double dpsi, double lat, double lng)
+bool LunarTargetingProgram::ConvergeOnImpact(double dv, double dgamma, double dpsi, double lat, double lng, bool optimize)
 {
 	void *constPtr;
 
@@ -207,7 +234,7 @@ bool LunarTargetingProgram::ConvergeOnImpact(double dv, double dgamma, double dp
 	block.IndVarWeight[2] = 512.0;
 	block.DepVarSwitch[0] = true;
 	block.DepVarSwitch[1] = true;
-	block.DepVarSwitch[2] = true;
+	block.DepVarSwitch[2] = optimize;
 	block.DepVarLowerLimit[0] = lat - 0.1*RAD;
 	block.DepVarLowerLimit[1] = lng - 0.1*RAD;
 	block.DepVarLowerLimit[2] = mass + 100.0;
@@ -407,6 +434,7 @@ bool LunarTargetingProgram::TrajectoryComputer(std::vector<double> &var, void *v
 	}
 	vars->gmt_imp = sv_imp.GMT;
 	pRTCC->GLSSAT(sv_imp.R, sv_imp.GMT, sv_imp.RBI, vars->lat, vars->lng, alt);
+	vars->fpa = asin(dotp(unit(sv_imp.R), unit(sv_imp.V)));
 
 	arr[0] = vars->lat;
 	arr[1] = vars->lng;

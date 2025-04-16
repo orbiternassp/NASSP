@@ -149,7 +149,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, 45, 26, GC->rtcc->TwoImpMultDispBuffer.ErrorMessage);
 			Text(skp, 5, 8, std::string(1, GC->rtcc->TwoImpMultDispBuffer.GETFRZ));
 			Text(skp, 5, 9, std::string(1, GC->rtcc->TwoImpMultDispBuffer.GMTFRZ));
-			Text(skp, 28, 11, std::string(1, GC->rtcc->TwoImpMultDispBuffer.GETVAR));
+			Text(skp, 27, 11, std::string(1, GC->rtcc->TwoImpMultDispBuffer.GETVAR));
 			Text_GET_HHHMMSSC(skp, 22, 5, GC->rtcc->TwoImpMultDispBuffer.GETTH_LM);
 			Text(skp, 22, 6, GC->rtcc->TwoImpMultDispBuffer.MAN_VEH);
 			Text(skp, 22, 7, "%.3lf", GC->rtcc->TwoImpMultDispBuffer.WT);
@@ -7889,39 +7889,57 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		skp->Text(W / 2, CH / 2, "LUNAR TARGETING PROGRAM", 33);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-		if (G->LUNTAR_TIG)
+		skp->SetFont(font_menu3);
+		GetCharSize(skp, CW, CH);
+		x = 1;  y = 3; dx = 5;
+		Text(skp, x, marker + y, "*");
+		x++;
+		Text(skp, x, y, "MOD:");
+		if (G->LUNTAR_Input.mode == 0) Text(skp, x + dx, y, "Trajectory Evaluation");
+		else if (G->LUNTAR_Input.mode == 1) Text(skp, x + dx, y, "Burn Evaluation");
+		else Text(skp, x + dx, y, "Calculate Burn");
+		y++;
+		if (G->LUNTAR_Input.mode != 0)
 		{
-			GET_Display(skp, CW, 2 * H / 14, G->LUNTAR_TIG, false);
-			Text_Double(skp, CW, 10 * H / 14, "%.2lf°", G->LUNTAR_lat*DEG);
-			Text_Double(skp, CW, 12 * H / 14, "%.2lf°", G->LUNTAR_lng*DEG);
-
-			if (G->LUNTAR_bt_guess)
+			Text(skp, x, y, "TIG:");
+			GET_Display(skp, CW * (x + dx), CH * y, G->LUNTAR_Input.tig_guess, false); y++;
+			Text(skp, x, y, "BT:");
+			Text_Double(skp, CW * (x + dx), CH * y, "%.1lf s", G->LUNTAR_Input.bt_guess); y++;
+			Text(skp, x, y, "PIT:");
+			Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.pitch_guess); y++;
+			Text(skp, x, y, "YAW:");
+			Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.yaw_guess); y++;
+			if (G->LUNTAR_Input.mode == 2)
 			{
-				Text_Double(skp, CW, 4 * H / 14, "%.1lf s", G->LUNTAR_bt_guess);
-				Text_Double(skp, CW, 6 * H / 14, "%.2lf°", G->LUNTAR_pitch_guess*DEG);
-				Text_Double(skp, CW, 8 * H / 14, "%.2lf°", G->LUNTAR_yaw_guess*DEG);
+				Text(skp, x, y, "LAT:");
+				Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.lat_tgt); y++;
+				Text(skp, x, y, "LNG:");
+				Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.lng_tgt); y++;
+				Text(skp, x, y, "OPT:");
+				if (G->LUNTAR_Input.bOptimize) Text(skp, x + dx, y, "Optimization On");
+				else Text(skp, x + dx, y, "Optimization Off");
 			}
-			else
-			{
-				skp->Text(CW, 4 * H / 14, "No initial guess", 16);
-			}
-		}
-		else
-		{
-			skp->Text(CW, 2 * H / 14, "Trajectory Evaluation", 21);
 		}
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		PrintIUVessel(Buffer);
 		skp->Text(W - CW, 2 * H / 14, Buffer, strlen(Buffer));
 		skp->Text(W - CW, 9 * H / 20, "Burn Data:", 10);
-		Text_Double(skp, W - CW, 10 * H / 20, "TIG: TB8 + %.0lf s", G->LUNTAR_Output.tig);
-		Text_Double(skp, W - CW, 11 * H / 20, "Burn time: %.1lf s", G->LUNTAR_Output.bt);
-		Text_Double(skp, W - CW, 12 * H / 20, "Pitch: %.1lf°", G->LUNTAR_Output.pitch*DEG);
-		Text_Double(skp, W - CW, 13 * H / 20, "Yaw: %.1lf°", G->LUNTAR_Output.yaw*DEG);
+		if (G->LUNTAR_Output.tig == 0.0 || G->LUNTAR_Output.bt == 0.0)
+		{
+			skp->Text(W - CW, 10 * H / 20, "No burn", 9);
+		}
+		else
+		{
+			Text_Double(skp, W - CW, 10 * H / 20, "TIG: TB8 + %.0lf s", G->LUNTAR_Output.tig);
+			Text_Double(skp, W - CW, 11 * H / 20, "Burn time: %.1lf s", G->LUNTAR_Output.bt);
+			Text_Double(skp, W - CW, 12 * H / 20, "Pitch: %.1lf°", G->LUNTAR_Output.pitch*DEG);
+			Text_Double(skp, W - CW, 13 * H / 20, "Yaw: %.1lf°", G->LUNTAR_Output.yaw*DEG);
+		}
 		skp->Text(W - CW, 14 * H / 20, "Impact:", 7);
 		GET_Display(skp, W - CW, 15 * H / 20, G->LUNTAR_Output.get_imp);
 		Text_Double(skp, W - CW, 16 * H / 20, "Lat: %.2lf°", G->LUNTAR_Output.lat_imp*DEG);
 		Text_Double(skp, W - CW, 17 * H / 20, "Lng: %.2lf°", G->LUNTAR_Output.lng_imp*DEG);
+		Text_Double(skp, W - CW, 18 * H / 20, "FPA: %.2lf°", G->LUNTAR_Output.fpa_imp*DEG);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		if (G->LUNTAR_Output.err > 0)
 		{
@@ -7937,7 +7955,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			{
 				sprintf_s(Buffer, "Timebase 8 not started");
 			}
-			skp->Text(CW, 26 * H / 28, Buffer, strlen(Buffer));
+			skp->Text(CW, 19 * H / 20, Buffer, strlen(Buffer));
 		}
 		break;
 	case 116:
