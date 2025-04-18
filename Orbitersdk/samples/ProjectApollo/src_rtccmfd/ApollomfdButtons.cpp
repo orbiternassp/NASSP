@@ -3915,12 +3915,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu115[] =
 	{
-		{ "Desired TIG", 0, 'E' },
-		{ "Estimated burn time", 0, 'T' },
-		{ "Estimated pitch", 0, 'G' },
-		{ "Estimated yaw", 0, 'L' },
-		{ "Impact latitude", 0, 'F' },
-		{ "Impact longitude", 0, 'P' },
+		{ "Set item", 0, 'P' },
+		{ "Next item", 0, 'Q' },
+		{ "Previous item", 0, 'V' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 
 		{ "S-IVB vessel", 0, 'D' },
 		{ "Calculate solution", 0, 'C' },
@@ -3932,12 +3932,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu115, sizeof(mnu115) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("TIG", OAPI_KEY_E, &ApolloRTCCMFD::LUNTAR_TIGInput);
-	RegisterFunction("BT", OAPI_KEY_T, &ApolloRTCCMFD::LUNTAR_BTInput);
-	RegisterFunction("PIT", OAPI_KEY_G, &ApolloRTCCMFD::LUNTAR_PitchInput);
-	RegisterFunction("YAW", OAPI_KEY_L, &ApolloRTCCMFD::LUNTAR_YawInput);
-	RegisterFunction("LAT", OAPI_KEY_F, &ApolloRTCCMFD::LUNTAR_LatInput);
-	RegisterFunction("LNG", OAPI_KEY_P, &ApolloRTCCMFD::LUNTAR_LngInput);
+	RegisterFunction("SET", OAPI_KEY_O, &ApolloRTCCMFD::menuSetLUNTARInput);
+	RegisterFunction("<<", OAPI_KEY_Q, &ApolloRTCCMFD::menuCycleMarkerDown);
+	RegisterFunction(">>", OAPI_KEY_V, &ApolloRTCCMFD::menuCycleMarkerUp);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	
 	RegisterFunction("S4B", OAPI_KEY_D, &ApolloRTCCMFD::set_IUVessel);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::LUNTARCalc);

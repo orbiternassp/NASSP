@@ -149,7 +149,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, 45, 26, GC->rtcc->TwoImpMultDispBuffer.ErrorMessage);
 			Text(skp, 5, 8, std::string(1, GC->rtcc->TwoImpMultDispBuffer.GETFRZ));
 			Text(skp, 5, 9, std::string(1, GC->rtcc->TwoImpMultDispBuffer.GMTFRZ));
-			Text(skp, 28, 11, std::string(1, GC->rtcc->TwoImpMultDispBuffer.GETVAR));
+			Text(skp, 27, 11, std::string(1, GC->rtcc->TwoImpMultDispBuffer.GETVAR));
 			Text_GET_HHHMMSSC(skp, 22, 5, GC->rtcc->TwoImpMultDispBuffer.GETTH_LM);
 			Text(skp, 22, 6, GC->rtcc->TwoImpMultDispBuffer.MAN_VEH);
 			Text(skp, 22, 7, "%.3lf", GC->rtcc->TwoImpMultDispBuffer.WT);
@@ -5460,26 +5460,27 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, 0, 10, "VF");
 		Text(skp, 0, 11, "VS");
 		Text(skp, 0, 12, "VD");
-		Text(skp, 0, 13, "DH");
-		Text(skp, 1, 14, "T");
-		Text(skp, 0, 15, "TD");
-		Text(skp, 0, 16, "WG");
+		TextW(skp, 0, 13, L"\u0394H");
+		TextW(skp, 1, 14, L"\u03B8");
+		TextW(skp, 1, 15, L"\u03B8");
+		TextW(skp, 1, 15, L"\u02D9");
+		TextW(skp, 1, 16, L"\u03B4");
 		Text(skp, 0, 17, "YD");
 		Text(skp, 12, 10, "HBI");
-		Text(skp, 12, 11, "PBI");
-		Text(skp, 12, 12, "LBI");
-		Text(skp, 12, 13, "FBI");
-		Text(skp, 26, 10, "HA");
-		Text(skp, 26, 11, "HP");
+		TextW(skp, 12, 11, L"\u03C6BI");
+		TextW(skp, 12, 12, L"\u03BBBI");
+		TextW(skp, 12, 13, L"\u03BDBI");
+		TextW(skp, 26, 10, L"h\u2090");
+		TextW(skp, 26, 11, L"h\u209A");
 		Text(skp, 25, 12, "LAN");
 		Text(skp, 26, 13, "E");
 		Text(skp, 26, 14, "I");
-		Text(skp, 26, 15, "WP");
-		Text(skp, 39, 10, "VP");
-		Text(skp, 39, 11, "THETAP");
-		Text(skp, 39, 12, "DELTAP");
-		Text(skp, 39, 13, "PLLS");
-		Text(skp, 39, 14, "LLLS");
+		TextW(skp, 26, 15, L"\u03C9\u209A");
+		TextW(skp, 39, 10, L"V\u209A");
+		TextW(skp, 39, 11, L"\u03B8\u209A");
+		TextW(skp, 39, 12, L"\u03B4\u209A");
+		TextW(skp, 39, 13, L"\u03C6LLS");
+		TextW(skp, 39, 14, L"\u03BBLLS");
 		Text(skp, 39, 15, "RLLS");
 		Text(skp, 26, 18, "TARGETS");
 		skp->Line(0, (CH * 37) / 2, CW * 25, (CH * 37) / 2);
@@ -5535,9 +5536,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, 36, 8, "%.1lf", tab->IMUAtt.y);
 		Text(skp, 36, 9, "%.1lf", tab->IMUAtt.z);
 		Text(skp, 46, 6, tab->REFSMMAT_Code);
-		Text(skp, 45, 7, "%.1lf", tab->FDAIAtt.x);
-		Text(skp, 45, 8, "%.1lf", tab->FDAIAtt.y);
-		Text(skp, 45, 9, "%.1lf", tab->FDAIAtt.z);
+		if (tab->isCSMTV == false)
+		{
+			Text(skp, 45, 7, "%.1lf", tab->FDAIAtt.x);
+			Text(skp, 45, 8, "%.1lf", tab->FDAIAtt.y);
+			Text(skp, 45, 9, "%.1lf", tab->FDAIAtt.z);
+		}
 		Text(skp, 56, 5, "%+.2lf", tab->DEL_P);
 		Text(skp, 56, 6, "%+.2lf", tab->DEL_Y);
 		Text(skp, 54, 7, "%.1lf", tab->LVLHAtt.x);
@@ -5591,7 +5595,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, 34, 24, "%.2lf", tab->AGS_DV.z);
 		}
 		Text_GET_HHHMMSSCS(skp, 17, 21, tab->PGNS_GETI);
-		Text(skp, 10, 26, tab->error);
+		Text(skp, 30, 26, tab->error);
 	}
 	break;
 	case 69:
@@ -7888,39 +7892,70 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		skp->Text(W / 2, CH / 2, "LUNAR TARGETING PROGRAM", 33);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-		if (G->LUNTAR_TIG)
+		skp->SetFont(font_menu3);
+		GetCharSize(skp, CW, CH);
+		x = 1;  y = 3; dx = 5;
+		Text(skp, x, marker + y, "*");
+		x++;
+		Text(skp, x, y, "MOD:");
+		if (G->LUNTAR_Input.mode == 0) Text(skp, x + dx, y, "Trajectory Evaluation");
+		else if (G->LUNTAR_Input.mode == 1) Text(skp, x + dx, y, "Burn Evaluation");
+		else Text(skp, x + dx, y, "Calculate Burn");
+		y++;
+		if (G->LUNTAR_Input.mode != 0)
 		{
-			GET_Display(skp, CW, 2 * H / 14, G->LUNTAR_TIG, false);
-			Text_Double(skp, CW, 10 * H / 14, "%.2lf°", G->LUNTAR_lat*DEG);
-			Text_Double(skp, CW, 12 * H / 14, "%.2lf°", G->LUNTAR_lng*DEG);
-
-			if (G->LUNTAR_bt_guess)
+			Text(skp, x, y, "TIG:");
+			GET_Display(skp, CW * (x + dx), CH * y, G->LUNTAR_Input.tig_guess, false); y++;
+			Text(skp, x, y, "BT:");
+			if (G->LUNTAR_Input.mode == 1 || G->LUNTAR_Input.bt_guess != 0.0) //Always show burn parameters for burn evaluation mode
 			{
-				Text_Double(skp, CW, 4 * H / 14, "%.1lf s", G->LUNTAR_bt_guess);
-				Text_Double(skp, CW, 6 * H / 14, "%.2lf°", G->LUNTAR_pitch_guess*DEG);
-				Text_Double(skp, CW, 8 * H / 14, "%.2lf°", G->LUNTAR_yaw_guess*DEG);
+				Text_Double(skp, CW * (x + dx), CH * y, "%.1lf s", G->LUNTAR_Input.bt_guess); y++;
+				Text(skp, x, y, "PIT:");
+				Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.pitch_guess); y++;
+				Text(skp, x, y, "YAW:");
+				Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.yaw_guess); y++;
 			}
 			else
 			{
-				skp->Text(CW, 4 * H / 14, "No initial guess", 16);
+				Text(skp, x + dx, y, "No initial guess"); y += 3;
 			}
-		}
-		else
-		{
-			skp->Text(CW, 2 * H / 14, "Trajectory Evaluation", 21);
+			if (G->LUNTAR_Input.mode == 2)
+			{
+				Text(skp, x, y, "LAT:");
+				Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.lat_tgt); y++;
+				Text(skp, x, y, "LNG:");
+				Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.lng_tgt); y++;
+				Text(skp, x, y, "OPT:");
+				if (G->LUNTAR_Input.bOptimize) Text(skp, x + dx, y, "Optimize DV");
+				else Text(skp, x + dx, y, "Desired impact time");
+				y++;
+				if (G->LUNTAR_Input.bOptimize == false)
+				{
+					Text(skp, x, y, "IMP:");
+					GET_Display(skp, CW * (x + dx), CH * y, G->LUNTAR_Input.gmt_imp_tgt, false);
+				}
+			}
 		}
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		PrintIUVessel(Buffer);
 		skp->Text(W - CW, 2 * H / 14, Buffer, strlen(Buffer));
 		skp->Text(W - CW, 9 * H / 20, "Burn Data:", 10);
-		Text_Double(skp, W - CW, 10 * H / 20, "TIG: TB8 + %.0lf s", G->LUNTAR_Output.tig);
-		Text_Double(skp, W - CW, 11 * H / 20, "Burn time: %.1lf s", G->LUNTAR_Output.bt);
-		Text_Double(skp, W - CW, 12 * H / 20, "Pitch: %.1lf°", G->LUNTAR_Output.pitch*DEG);
-		Text_Double(skp, W - CW, 13 * H / 20, "Yaw: %.1lf°", G->LUNTAR_Output.yaw*DEG);
+		if (G->LUNTAR_Output.tig == 0.0 || G->LUNTAR_Output.bt == 0.0)
+		{
+			skp->Text(W - CW, 10 * H / 20, "No burn", 9);
+		}
+		else
+		{
+			Text_Double(skp, W - CW, 10 * H / 20, "TIG: TB8 + %.0lf s", G->LUNTAR_Output.tig);
+			Text_Double(skp, W - CW, 11 * H / 20, "Burn time: %.1lf s", G->LUNTAR_Output.bt);
+			Text_Double(skp, W - CW, 12 * H / 20, "Pitch: %.1lf°", G->LUNTAR_Output.pitch*DEG);
+			Text_Double(skp, W - CW, 13 * H / 20, "Yaw: %.1lf°", G->LUNTAR_Output.yaw*DEG);
+		}
 		skp->Text(W - CW, 14 * H / 20, "Impact:", 7);
 		GET_Display(skp, W - CW, 15 * H / 20, G->LUNTAR_Output.get_imp);
 		Text_Double(skp, W - CW, 16 * H / 20, "Lat: %.2lf°", G->LUNTAR_Output.lat_imp*DEG);
 		Text_Double(skp, W - CW, 17 * H / 20, "Lng: %.2lf°", G->LUNTAR_Output.lng_imp*DEG);
+		Text_Double(skp, W - CW, 18 * H / 20, "FPA: %.2lf°", G->LUNTAR_Output.fpa_imp*DEG);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		if (G->LUNTAR_Output.err > 0)
 		{
@@ -7936,7 +7971,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			{
 				sprintf_s(Buffer, "Timebase 8 not started");
 			}
-			skp->Text(CW, 26 * H / 28, Buffer, strlen(Buffer));
+			skp->Text(CW, 19 * H / 20, Buffer, strlen(Buffer));
 		}
 		break;
 	case 116:

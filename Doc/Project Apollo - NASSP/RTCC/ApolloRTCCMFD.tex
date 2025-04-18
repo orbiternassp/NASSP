@@ -1535,6 +1535,36 @@ The VECPOINT page, named after a routine in the AGC, is calculating the IMU angl
 \textbf{DIR:} Choose the direction of the spacecraft to be pointed at the celestial object.\\
 \textbf{CLC:} Calculate the IMU angles.\\
 \newpage
+\subsection{S-IVB Lunar Impact Targeting}
+The Lunar Targeting Program (LUNTAR) was a software available at the Marshall Space Flight Center to calculate the burns of the S-IVB Auxiliary Propulsion System (APS) to cause the S-IVB to impact the Moon in a desired place (Apollo 13 and later). The S-IVB performed a short APS burn and a LOX dump shortly after the CSM/LM separated from it which caused the S-IVB to be on an impact trajectory, but not yet to the desired coordinates. There were usually two midcourse corrections scheduled for the S-IVB, the first one being non-zero.\\
+
+The targeting available in the RTCC MFD has three different modes. First a Trajectory Evaluation mode which checks where (if at all) the S-IVB will impact the Moon without any further APS burn. Then a Burn Evaluation mode which shows the impact coordinates given an input APS burn. And lastly the actual targeting mode which calculates the required burn to reach the required coordinates. The desired coordinates and the initial guess for the APS MCC-1 can be found in lunar impact postflight evaluation reports which can be found on NTRS, e.g. this one for \href{https://ntrs.nasa.gov/citations/19710002523}{Apollo 13}. \\
+
+The uplink to the IU for the impact targeting can currently not be done in the RTCC MFD, but in the Project Apollo MFD instead. This might be moved in the future.\\
+
+\subsubsection{Inputs}
+\textbf{MOD:} Cycle between the three calculation modes described above.\\
+\textbf{TIG:} Enter the time of ignition in Ground Elapsed Time.\\
+\textbf{BT:} Enter the estimated burn time in seconds.\\
+\textbf{PIT:} Enter the estimated LVLH pitch attitude of the maneuver in degrees.\\
+\textbf{YAW:} Enter the estimated LVLH yaw attitude of the maneuver in degrees.\\
+\textbf{LAT:} Enter the desired lunar impact latitude in degrees.\\
+\textbf{LNG:} Enter the desired lunar impact longitude in degrees.\\
+\textbf{OPT:} Either optimize the Delta V of the burn or enforce a specific lunar impact time.\\
+\textbf{IMP:} Enter the desired lunar impact time in Ground Elapsed Time.\\
+
+\subsubsection{Outputs}
+\begin{itemize}
+	\item Time of ignition referenced to the start of Timebase 8
+	\item Calculated (or input) burn time
+	\item Calculated (or input) LVLH pitch angle in degrees
+	\item Calculated (or input) LVLH yaw angle in degrees
+	\item Actual lunar impact latitude in degrees
+	\item Actual lunar impact longitude in degrees
+	\item Actual lunar impact flight-path angle in degrees
+\end{itemize}
+
+\newpage
 \subsection{Configuration}
 
 \textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\
@@ -2636,9 +2666,105 @@ Trajectory Update Number&Update number associated with subject vehicle ephemeris
 \subsection{Mission Plan Table (MSK 0047)}
 
 \subsubsection{Function}
-
 \newpage
-
+\subsection{FDO Detailed Maneuver Table (MSK 0054 and 0069)}
+\subsubsection{Function}
+The Detailed Maneuver Table Display module provides detailed maneuver information for any specified maneuver in either the CSM or LM Mission Plan Table. Two  maneuvers may be evaluated by simultaneous display of a DMT for each maneuver. The information displayed is obtained as follows:
+\begin{enumerate}
+	\item Maneuver execution parameters, including times, DV quantities, vehicle attitudes and weights, are picked up from the appropriate MPT block. IMU attitudes and VG are computed based on a specified reference matrix. FDAI angles for the LM are computed from IMU attitudes (FDAI and IMU angles will be the same for CSM).
+	\item Resultant trajectory parameters are also picked up from the appropriate MPT block. When two ephemerides exist at cutoff, rendezvous-related quantities are computed by the DMT.
+	\item Targeting parameters are displayed when applicable. The following are the available guidance types for the indicated on-board computers:
+	\begin{enumerate}
+		\item IU - Translunar injection IGM
+		\item CMC - Lambert or external DV
+		\item LGC - Lambert or external DV
+		\item AGS - External DV
+	\end{enumerate}
+	\item For unfrozen maneuvers where the LM primary external DV guidance mode is specified, LM AGS external DV target parameters are computed and displayed as backup guidance parameters. The parameters remain unchanged after the maneuver is frozen.
+\end{enumerate}
+\newpage
+\subsubsection{Display}
+\begin{center}
+\begin{tabular}{ L{2.4cm} L{7.1cm} L{3cm} }
+\underline{QUANTITY} & \underline{DEFINITION} & \underline{DIMENSIONS} \\
+C STA ID&standard identification for CSM vector used in generation of maneuver&\\
+GMTV&Greenwich mean time of CSM vector&hr:min:sec\\
+GETV&Ground elapsed time of CSM vector&hr:min:sec\\
+CODE&code assigned to the maneuver in the MPT&\\
+L STA ID&standard identification for LM vector used in generation of maneuver&\\
+GMTV&Greenwich mean time of LM vector&hr:min:sec\\
+GETV&Ground elapsed time of LM vector&hr:min:sec\\
+REF&prints out either EARTH or LUNAR depending on the reference body&\\
+X STA ID&standard identification for the CSM or LM vector that was used to generate the frozen profile of the maneuver displayed in the DMT&\\
+GMTV&Greenwich mean time of frozen maneuver vector&hr:min:sec\\
+GETV&Ground elapsed time of frozen maneuver vector&hr:min:sec\\
+GETR&Reference ground elapsed time for phase elapsed time &hr:min:sec\\
+WT&Weight of the total maneuvering vehicle prior to the maneuver&lb\\
+WC&CSM total weight prior to the maneuver&lb\\
+WL&LM total weight prior to the maneuver&lb\\
+WF&Weight prior to the maneuver of the engine performing the maneuver&lb\\
+GETI&Ground elapsed time of ignition&hr:min:sec\\
+PETI&Phase elapsed time of ignition&hr:min:sec\\
+DTB&Duration of main engine burn&min:sec\\
+DTU&Duration of ullage&sec\\
+DTTO&Effective duration of main engine tailoff&sec\\
+DVTO&Velocity increment of main engine tailoff&fps\\
+REFSMMAT&Identification of REFSMMAT used to compute gimbal angles&\\
+DP&Main engine pitch gimbal trim angle from the electronic null position for the SPS or the positive handover position for the DPS&deg\\
+DY&Main engine yaw gimbal trim angle from the electronic null position for the SPS or the positive handover position for the DPS&deg\\
+\end{tabular}
+\newpage
+\begin{tabular}{ L{2.4cm} L{7.1cm} L{3cm} }
+\underline{QUANTITY} & \underline{DEFINITION} & \underline{DIMENSIONS} \\
+DVM&Total velocity increment of maneuver&fps\\
+DVREM&Total velocity remaining after maneuver&fps\\
+DVC&Total velocity increment, less tailoff, to the applied along the vehicle X-axis&fps\\
+VGX, VGY, VGZ&Prethrust VG output from the guidance equations displayed in IMU coordinates. Computed based on a free-flight vector at GETI&fps\\
+OY, IP, MR&Outer, inner and middle gimbal angles at ignition (0° - 360°). These labels will be dynamic and displayed as follows: for the CSM, roll pitch, yaw. For the LM: Yaw, pitch, roll. For the S-IVB maneuver these will be CSM gimbal angles&deg\\
+YP, PB, RB&FDAI angles. These are the same as the gimbal angles yaw, pitch, roll for CSM maneuvers, but correspond to pilot yaw, pitch, roll for LM maneuvers&deg\\
+YH, PH, RH&Local vertical-local horizontal yaw, pitch and roll at ignition&deg\\
+VF, VS, VD&Components of VGX, VGY, VGZ transformed to local vertical coordinates defined at GETI&fps\\
+$\Delta$H&Differential altitude at cutoff between LM (S-IVB) and CSM, positive when maneuver vehicle is below&NM\\
+$\theta$&Phase angle at cutoff between LM (S-IVB) and CSM measured from chaser to target in the direction of motion (0°-360°)&deg\\
+$\dot\theta$&Rate of change of phase angle at cutoff, positive when phase angle is decreasing&deg per orbit\\
+$\delta$&Crossrange distance from CSM orbit to LM at insertion following ascent. Will be zero for any maneuver other than the ascent maneuver&NM\\
+H\textsubscript{BI}&Altitude of maneuvering vehicle above spherical earth or moon (defined by REF) at ignition time&NM\\
+$\phi$\textsubscript{BI}&Geodetic latitude of maneuver vehicle at ignition while in earth orbit. Otherwise it is geocentric latitude&deg\\
+$\lambda$\textsubscript{BI}&Longitude of maneuver vehicle at ignition&deg\\
+$\nu$\textsubscript{BI}&True anomaly of maneuver vehicle at ignition&deg\\
+\end{tabular}
+\newpage
+\begin{tabular}{ L{2.4cm} L{7.1cm} L{3cm} }
+\underline{QUANTITY} & \underline{DEFINITION} & \underline{DIMENSIONS} \\
+UNTIL&Lighting conditions at GETI&hr:min until day/night\\
+h\textsubscript{a}&Altitude of next apoapsis after cutoff above spherical reference&NM\\
+h\textsubscript{p}&Altitude of next periapsis after cutoff above spherical reference&NM\\
+LAN&Longitude of next ascending node after cutoff&deg:min\\
+E&Orbital eccentricity at cutoff\\
+I&Trajectory inclination to (earth or moon defined by REF) resulting from maneuver&deg\\
+$\omega$\textsubscript{p}&Argument of perigee or pericynthion (defined by REF) resulting from maneuver&deg\\
+VP&Velocity at next pericynthion after maneuver for maneuver performed while in lunar orbit&fps\\
+$\theta$\textsubscript{p}&Central angle between radius vector passing through the next pericynthion after cutoff and the lunar landing
+site at the time of next pericynthion and negative when the landing site is beyond pericynthion; driven only for maneuvers while in lunar orbit&deg\\
+$\delta$\textsubscript{p}&Wedge angle between orbit at cutoff and a parallel plane passing through the lunar landing site; driven
+only for maneuver while in lunar orbit&deg\\
+$\phi$LLS&Latitude of lunar landing site as a result of the powered landing time&deg:min\\
+$\lambda$LLS&Longitude of lunar landing site as a result of the powered landing time&deg:min\\
+RLLS&Radius of lunar landing site&NM\\
+\end{tabular}
+\newpage
+\begin{tabular}{ L{2.4cm} L{7.1cm} L{3cm} }
+\underline{QUANTITY} & \underline{DEFINITION} & \underline{DIMENSIONS} \\
+TARGETS&These quantities are driven according to the type of maneuver displayed. They are as follows:\\
+PGNS EXT DV&Primary guidance and navigation system ID for vehicle doing the external DV maneuver\\
+PGNS GETI&Ground elapsed time of ignition&hr:min:sec\\
+PGNS VX, VY, VZ&Components of external DV vector required for targeting the onboard PGNS external DV guidance for maneuver execution&fps\\
+AGS EXT DV&Abort Guidance System ID for vehicle doing the external DV maneuver\\
+AGS GETI&Ground elapsed time of ignition&hr:min:sec\\
+AGS VX, VY, VZ&Components of external DV vector required for targeting the onboard AGS external DV guidance for maneuver execution&fps\\
+\end{tabular}
+\end{center}
+\newpage
 \subsection{Space Digitals (MSK 0082)}
 
 \subsubsection{Function}

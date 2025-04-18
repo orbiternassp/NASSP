@@ -379,12 +379,7 @@ public:
 	int iuUplinkResult; //0 = no uplink, 1 = uplink accepted, 2 = vessel has no IU, 3 = uplink rejected, 4 = No targeting parameters
 
 	//LUNAR TARGETING PROGRAM
-	double LUNTAR_lat;
-	double LUNTAR_lng;
-	double LUNTAR_bt_guess;
-	double LUNTAR_pitch_guess;
-	double LUNTAR_yaw_guess;
-	double LUNTAR_TIG;
+	LunarTargetingProgramInput LUNTAR_Input;
 	LunarTargetingProgramOutput LUNTAR_Output;
 
 	//DEBUG

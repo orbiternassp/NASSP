@@ -805,13 +805,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	iuUplinkResult = 0;
 
-	LUNTAR_lat = 0.0;
-	LUNTAR_lng = 0.0;
-	LUNTAR_bt_guess = 0.0;
-	LUNTAR_pitch_guess = 0.0;
-	LUNTAR_yaw_guess = 0.0;
-	LUNTAR_TIG = 0.0;
-
 	DebugIMUTorquingAngles = _V(0, 0, 0);
 
 	for (int i = 0; i < 6; i++)
@@ -5239,14 +5232,17 @@ int ARCore::subThread()
 
 		LunarTargetingProgramInput in;
 		
+		in.mode = LUNTAR_Input.mode;
 		in.sv_in = GC->rtcc->StateVectorCalcEphem(iuvessel);
 		in.mass = iuvessel->GetMass();
-		in.lat_tgt = LUNTAR_lat;
-		in.lng_tgt = LUNTAR_lng;
-		in.bt_guess = LUNTAR_bt_guess;
-		in.pitch_guess = LUNTAR_pitch_guess;
-		in.yaw_guess = LUNTAR_yaw_guess;
-		in.tig_guess = LUNTAR_TIG;
+		in.lat_tgt = LUNTAR_Input.lat_tgt*RAD;
+		in.lng_tgt = LUNTAR_Input.lng_tgt*RAD;
+		in.gmt_imp_tgt = GC->rtcc->GMTfromGET(LUNTAR_Input.gmt_imp_tgt);
+		in.bt_guess = LUNTAR_Input.bt_guess;
+		in.pitch_guess = LUNTAR_Input.pitch_guess*RAD;
+		in.yaw_guess = LUNTAR_Input.yaw_guess*RAD;
+		in.tig_guess = GC->rtcc->GMTfromGET(LUNTAR_Input.tig_guess);
+		in.bOptimize = LUNTAR_Input.bOptimize;
 		in.TB8 = lvdc->TB8;
 
 		LunarTargetingProgram luntar(GC->rtcc);
