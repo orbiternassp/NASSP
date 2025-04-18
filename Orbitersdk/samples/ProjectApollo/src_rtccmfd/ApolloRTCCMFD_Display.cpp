@@ -722,11 +722,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			PrintLMVessel(Buffer);
 		}
 		skp->Text(CW, 4 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(CW, 5 * H / 14, "REFSMMAT:", 9);
+		GC->rtcc->FormatREFSMMATCode(GC->rtcc->EZETVMED.AGSNavUpdREFSMMAT, GC->rtcc->EZJGMTX3.data[GC->rtcc->EZETVMED.AGSNavUpdREFSMMAT - 1].ID, Buffer);
+		skp->Text(CW, 6 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(CW, 7 * H / 14, "REFSMMAT:", 9);
-
-		GC->rtcc->FormatREFSMMATCode(RTCC_REFSMMAT_TYPE_CUR, GC->rtcc->EZJGMTX3.data[0].ID, Buffer);
-		skp->Text(CW, 8 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(CW * 8, 13 * H / 14, "AGS REFSMMAT:", 13);
+		GC->rtcc->FormatREFSMMATCode(RTCC_REFSMMAT_TYPE_AGS, GC->rtcc->EZJGMTX3.data[RTCC_REFSMMAT_TYPE_AGS - 1].ID, Buffer);
+		skp->Text(CW * 22, 13 * H / 14, Buffer, strlen(Buffer));
 
 		GET_Display2(Buffer, GC->rtcc->GetAGSClockZero() - GC->rtcc->GetLGCClockZero());
 		skp->Text(CW, 10 * H / 14, Buffer, strlen(Buffer));

@@ -6098,6 +6098,15 @@ void ApolloRTCCMFD::menuSVCalc()
 	}
 }
 
+void ApolloRTCCMFD::menuCycleAGSNavUpdREFSMMAT()
+{
+	CycleREFSMMATType(GC->rtcc->EZETVMED.AGSNavUpdREFSMMAT, false);
+}
+
+void ApolloRTCCMFD::menuSaveAGSREFSMMAT()
+{
+	GeneralMEDRequest("G00,LEM,CUR,LEM,AGS;");
+}
 
 void ApolloRTCCMFD::menuAGSSVCalc()
 {
@@ -9958,6 +9967,28 @@ void ApolloRTCCMFD::CycleCSMOrLMSelection()
 void ApolloRTCCMFD::CycleEnableCalculation()
 {
 	EnableCalculation = !EnableCalculation;
+}
+
+void ApolloRTCCMFD::CycleREFSMMATType(int &type, bool csm)
+{
+	//Cycle between the REFSMMAT types, different for CSM vs. LM
+	int max;
+	if (csm)
+	{
+		max = RTCC_REFSMMAT_TYPE_LCV;
+	}
+	else
+	{
+		max = RTCC_REFSMMAT_TYPE_LLD;
+	}
+	if (type < max)
+	{
+		type++;
+	}
+	else
+	{
+		type = 1;
+	}
 }
 
 void ApolloRTCCMFD::SetMEDInputPageM75()

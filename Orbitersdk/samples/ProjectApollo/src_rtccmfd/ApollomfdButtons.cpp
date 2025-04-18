@@ -247,7 +247,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	{
 		{ "State Vector Slot", 0, 'D' },
 		{ "Set Target", 0, 'T' },
-		{ "", 0, ' ' },
+		{ "REFSMMAT used for calc", 0, 'G' },
 		{ "", 0, ' ' },
 		{ "Set AGS K Factor", 0, 'A' },
 		{ "Get AGS K Factor", 0, 'U' },
@@ -256,7 +256,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Save CUR as AGS REFS", 0, 'L' },
 		{ "Back to menu", 0, 'B' },
 	};
 
@@ -264,7 +264,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("SLT", OAPI_KEY_D, &ApolloRTCCMFD::CycleCSMOrLMSelection);
 	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_Vessel);
-	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("REF", OAPI_KEY_N, &ApolloRTCCMFD::menuCycleAGSNavUpdREFSMMAT);
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("AGS", OAPI_KEY_A, &ApolloRTCCMFD::menuSetAGSKFactor);
 	RegisterFunction("KFA", OAPI_KEY_U, &ApolloRTCCMFD::menuGetAGSKFactor);
@@ -273,7 +273,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_M, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("SAV", OAPI_KEY_L, &ApolloRTCCMFD::menuSaveAGSREFSMMAT);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetPADMenu);
 
 	static const MFDBUTTONMENU mnu8[] =

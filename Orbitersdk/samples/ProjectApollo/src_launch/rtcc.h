@@ -4614,6 +4614,8 @@ public:
 
 	struct UMEDSaveTable
 	{
+		//Block 1
+		int AGSNavUpdREFSMMAT = RTCC_REFSMMAT_TYPE_AGS;
 		//Block 3
 		int SpaceDigVehID = -1;
 		int SpaceDigCentralBody = -1;

@@ -1362,11 +1362,10 @@ void ARCore::GetStateVectorsFromAGS()
 
 	//Convert to RTCC coordinates
 	EphemerisData sv_CSM, sv_LM;
-	MATRIX3 Rot = GC->rtcc->EZJGMTX3.data[RTCC_REFSMMAT_TYPE_AGS - 1].REFSMMAT;
-	sv_LM.R = tmul(Rot, R_LM);
-	sv_LM.V = tmul(Rot, V_LM);
-	sv_CSM.R = tmul(Rot, R_CSM);
-	sv_CSM.V = tmul(Rot, V_CSM);
+	sv_LM.R = R_LM;
+	sv_LM.V = V_LM;
+	sv_CSM.R = R_CSM;
+	sv_CSM.V = V_CSM;
 	sv_CSM.GMT = sv_LM.GMT = T_SV + GC->rtcc->GetAGSClockZero();
 
 	if (GC->rtcc->AGCGravityRef(v) == oapiGetObjectByName("Moon"))

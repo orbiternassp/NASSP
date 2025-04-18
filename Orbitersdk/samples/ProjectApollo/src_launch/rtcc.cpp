@@ -35088,6 +35088,33 @@ RTCC_BMSVPS_1:
 			break;
 		}
 
+		//Vector conversions
+		if (tabid == 2 || tabid == 6)
+		{
+			//AGS
+			//Get matrix
+			REFSMMATData data;
+			data = EZJGMTX3.data[RTCC_REFSMMAT_TYPE_AGS - 1];
+			//Available?
+			if (data.ID <= 0 || data.GMT > sv.GMT)
+			{
+				//Error 14: The matrix to rotate the telemetry vector requested is not available
+				RTCCONLINEMON.IntBuffer[0] = 14;
+				BMGPRIME("BMSVPS", 24);
+				return;
+			}
+			//Convert
+			sv.R = tmul(data.REFSMMAT, sv.R);
+			sv.V = tmul(data.REFSMMAT, sv.V);
+		}
+		else if (tabid == 3 || tabid == 7)
+		{
+			//IU
+			//TBD: Make sure the IU REFSMMAT is valid. Also, IU1 vs IU2
+			sv.R = tmul(GZLTRA.IU1_REFSMMAT, sv.R);
+			sv.V = tmul(GZLTRA.IU1_REFSMMAT, sv.V);
+		}
+
 		char Buff2[16];
 
 		//Save in correct slot of evaluation table
@@ -35688,6 +35715,7 @@ void RTCC::BMDVPS()
 void RTCC::BMGPRIME(std::string source, int n)
 {
 	std::vector<std::string> message;
+	char Buffer[128];
 
 	switch (n)
 	{
@@ -35696,6 +35724,10 @@ void RTCC::BMGPRIME(std::string source, int n)
 		break;
 	case 10:
 		message.push_back("INTERPOLATION ERROR");
+		break;
+	case 24:
+		sprintf(Buffer, "ERROR NUMBER %d", RTCCONLINEMON.IntBuffer[0]);
+		message.push_back(Buffer);
 		break;
 	case 42:
 		message.push_back(RTCCONLINEMON.TextBuffer[0] + " NOW A POSSIBLE " + RTCCONLINEMON.TextBuffer[1] + " ANCHOR VECTOR");
