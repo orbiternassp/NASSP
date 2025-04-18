@@ -5237,10 +5237,11 @@ int ARCore::subThread()
 		in.mass = iuvessel->GetMass();
 		in.lat_tgt = LUNTAR_Input.lat_tgt*RAD;
 		in.lng_tgt = LUNTAR_Input.lng_tgt*RAD;
+		in.gmt_imp_tgt = GC->rtcc->GMTfromGET(LUNTAR_Input.gmt_imp_tgt);
 		in.bt_guess = LUNTAR_Input.bt_guess;
 		in.pitch_guess = LUNTAR_Input.pitch_guess*RAD;
 		in.yaw_guess = LUNTAR_Input.yaw_guess*RAD;
-		in.tig_guess = LUNTAR_Input.tig_guess;
+		in.tig_guess = GC->rtcc->GMTfromGET(LUNTAR_Input.tig_guess);
 		in.bOptimize = LUNTAR_Input.bOptimize;
 		in.TB8 = lvdc->TB8;
 
