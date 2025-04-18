@@ -7909,11 +7909,18 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, x, y, "TIG:");
 			GET_Display(skp, CW * (x + dx), CH * y, G->LUNTAR_Input.tig_guess, false); y++;
 			Text(skp, x, y, "BT:");
-			Text_Double(skp, CW * (x + dx), CH * y, "%.1lf s", G->LUNTAR_Input.bt_guess); y++;
-			Text(skp, x, y, "PIT:");
-			Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.pitch_guess); y++;
-			Text(skp, x, y, "YAW:");
-			Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.yaw_guess); y++;
+			if (G->LUNTAR_Input.mode == 1 || G->LUNTAR_Input.bt_guess != 0.0) //Always show burn parameters for burn evaluation mode
+			{
+				Text_Double(skp, CW * (x + dx), CH * y, "%.1lf s", G->LUNTAR_Input.bt_guess); y++;
+				Text(skp, x, y, "PIT:");
+				Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.pitch_guess); y++;
+				Text(skp, x, y, "YAW:");
+				Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.yaw_guess); y++;
+			}
+			else
+			{
+				Text(skp, x + dx, y, "No initial guess"); y += 3;
+			}
 			if (G->LUNTAR_Input.mode == 2)
 			{
 				Text(skp, x, y, "LAT:");
@@ -7921,8 +7928,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				Text(skp, x, y, "LNG:");
 				Text_Double(skp, CW * (x + dx), CH * y, "%.2lf°", G->LUNTAR_Input.lng_tgt); y++;
 				Text(skp, x, y, "OPT:");
-				if (G->LUNTAR_Input.bOptimize) Text(skp, x + dx, y, "Optimization On");
-				else Text(skp, x + dx, y, "Optimization Off");
+				if (G->LUNTAR_Input.bOptimize) Text(skp, x + dx, y, "Optimize DV");
+				else Text(skp, x + dx, y, "Desired impact time");
+				y++;
+				if (G->LUNTAR_Input.bOptimize == false)
+				{
+					Text(skp, x, y, "IMP:");
+					GET_Display(skp, CW * (x + dx), CH * y, G->LUNTAR_Input.gmt_imp_tgt, false);
+				}
 			}
 		}
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);

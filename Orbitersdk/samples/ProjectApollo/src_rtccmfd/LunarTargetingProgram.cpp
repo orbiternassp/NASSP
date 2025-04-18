@@ -62,7 +62,7 @@ void LunarTargetingProgram::Call(const LunarTargetingProgramInput &in, LunarTarg
 	{
 		double mass_f;
 
-		pRTCC->PMMCEN(in.sv_in, 0.0, 0.0, 1, pRTCC->GMTfromGET(in.tig_guess) - in.sv_in.GMT, 1.0, sv_tig, ITS);
+		pRTCC->PMMCEN(in.sv_in, 0.0, 0.0, 1, in.tig_guess - in.sv_in.GMT, 1.0, sv_tig, ITS);
 
 		//Simulate maneuver, if applicable
 		if (in.bt_guess != 0.0)
@@ -138,7 +138,7 @@ void LunarTargetingProgram::Call(const LunarTargetingProgramInput &in, LunarTarg
 	}
 
 	//Converge and optimize lat/lng
-	err = ConvergeOnImpact(outarray.dv, outarray.dgamma, outarray.dpsi, in.lat_tgt, in.lng_tgt, in.bOptimize);
+	err = ConvergeOnImpact(outarray.dv, outarray.dgamma, outarray.dpsi, in.lat_tgt, in.lng_tgt, in.gmt_imp_tgt, in.bOptimize);
 	if (err)
 	{
 		out.err = 2;
@@ -209,8 +209,10 @@ bool LunarTargetingProgram::ConvergeOnImpactSTR(double dv, double dgamma, double
 	return GenIterator::GeneralizedIterator(fptr, block, constPtr, (void*)this, result, y_vals);
 }
 
-bool LunarTargetingProgram::ConvergeOnImpact(double dv, double dgamma, double dpsi, double lat, double lng, bool optimize)
+bool LunarTargetingProgram::ConvergeOnImpact(double dv, double dgamma, double dpsi, double lat, double lng, double gmt_imp, bool optimize)
 {
+	//optimize: true = optimize DV, false = converge on desired impact time
+
 	void *constPtr;
 
 	constPtr = &outarray;
@@ -235,16 +237,20 @@ bool LunarTargetingProgram::ConvergeOnImpact(double dv, double dgamma, double dp
 	block.DepVarSwitch[0] = true;
 	block.DepVarSwitch[1] = true;
 	block.DepVarSwitch[2] = optimize;
+	block.DepVarSwitch[3] = !optimize;
 	block.DepVarLowerLimit[0] = lat - 0.1*RAD;
 	block.DepVarLowerLimit[1] = lng - 0.1*RAD;
 	block.DepVarLowerLimit[2] = mass + 100.0;
+	block.DepVarLowerLimit[3] = (gmt_imp - 1.0) / 3600.0;
 	block.DepVarUpperLimit[0] = lat + 0.1*RAD;
 	block.DepVarUpperLimit[1] = lng + 0.1*RAD;
 	block.DepVarUpperLimit[2] = mass + 100.0;
+	block.DepVarUpperLimit[3] = (gmt_imp + 1.0) / 3600.0;
 	block.DepVarWeight[2] = 1.0;
 	block.DepVarClass[0] = 1;
 	block.DepVarClass[1] = 1;
 	block.DepVarClass[2] = 3;
+	block.DepVarClass[3] = 1;
 
 	std::vector<double> result;
 	std::vector<double> y_vals;
@@ -408,6 +414,7 @@ bool LunarTargetingProgram::TrajectoryComputer(std::vector<double> &var, void *v
 	//0: Impact latitude in rad
 	//1: Impact longitude in rad
 	//2: Burnout mass in kg
+	//3: Impact time in hours GMT
 
 	LUNTARGeneralizedIteratorArray *vars;
 	vars = static_cast<LUNTARGeneralizedIteratorArray*>(varPtr);
@@ -439,5 +446,6 @@ bool LunarTargetingProgram::TrajectoryComputer(std::vector<double> &var, void *v
 	arr[0] = vars->lat;
 	arr[1] = vars->lng;
 	arr[2] = vars->mass_f;
+	arr[3] = vars->gmt_imp / 3600.0;
 	return false;
 }

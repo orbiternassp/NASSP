@@ -39,10 +39,11 @@ struct LunarTargetingProgramInput
 	double pitch_guess;
 	double yaw_guess;
 	double bt_guess;
-	double tig_guess; //In GET
+	double tig_guess; //In GMT
 
-	double lat_tgt;
-	double lng_tgt;
+	double lat_tgt; //Desired latitude of impact
+	double lng_tgt; //Desired longitude of impact
+	double gmt_imp_tgt; //Desired GMT of impact
 	double TB8; //Time of TB8 since GRR
 };
 
@@ -88,7 +89,7 @@ public:
 	LUNTARGeneralizedIteratorArray outarray;
 protected:
 	bool ConvergeOnImpactSTR(double dv, double dgamma, double dpsi, double lat, double lng);
-	bool ConvergeOnImpact(double dv, double dgamma, double dpsi, double lat, double lng, bool optimize);
+	bool ConvergeOnImpact(double dv, double dgamma, double dpsi, double lat, double lng, double gmt_imp, bool optimize);
 	EphemerisData SimulateBurn(double pitch, double yaw, double dv, double &mass_f, double &bt);
 	VECTOR3 BurnAttitude(double pitch, double yaw);
 

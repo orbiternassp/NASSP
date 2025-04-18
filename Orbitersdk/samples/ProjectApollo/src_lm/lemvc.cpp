@@ -3608,9 +3608,11 @@ void LEM::MoveFlashlight()
 	if (flashlightOn) { //Only move the light emmitter if the flashlight is on
 		//Huge thanks the Jordan64 for helping get the direction stuff working! :)
 
-		VECTOR3 flashlightDirGlobal, vesselPosGlobal;
+		VECTOR3 flashlightPosGlobal, flashlightDirGlobal, vesselPosGlobal;
 
-		GetCameraOffset(flashlightPos);
+		oapiCameraGlobalPos(&flashlightPosGlobal);
+		Global2Local(flashlightPosGlobal, flashlightPos);
+
 		oapiCameraGlobalDir(&flashlightDirGlobal);
 		GetGlobalPos(vesselPosGlobal);
 		Global2Local(vesselPosGlobal + flashlightDirGlobal, flashlightDirLocal);
