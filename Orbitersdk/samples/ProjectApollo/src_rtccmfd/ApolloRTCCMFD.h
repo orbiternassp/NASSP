@@ -87,6 +87,7 @@ public:
 	void Text_String(oapi::Sketchpad *skp, int x, int y, std::string message);
 	//Functions using CW and CH
 	void Text(oapi::Sketchpad *skp, int x, int y, std::string message);
+	void TextW(oapi::Sketchpad *skp, int x, int y, LPWSTR message);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, double val);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, int val);
 	void Text_GET_MMSS(oapi::Sketchpad *skp, int x, int y, double val);

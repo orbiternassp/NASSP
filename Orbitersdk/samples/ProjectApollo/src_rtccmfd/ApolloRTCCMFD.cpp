@@ -378,6 +378,11 @@ void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, std::string message
 	skp->Text(CW * x, CH * y, message.c_str(), message.size());
 }
 
+void ApolloRTCCMFD::TextW(oapi::Sketchpad *skp, int x, int y, LPWSTR message)
+{
+	skp->TextW(CW * x, CH * y, message, wcslen(message));
+}
+
 void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, char *format, double val)
 {
 	sprintf(Buffer, format, val);
