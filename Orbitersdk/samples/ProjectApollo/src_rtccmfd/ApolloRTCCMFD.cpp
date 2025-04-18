@@ -392,47 +392,25 @@ void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, char *format, int v
 
 void ApolloRTCCMFD::Text_GET_MMSS(oapi::Sketchpad *skp, int x, int y, double val)
 {
-	int mm;
-	double ss;
-	OrbMech::SStoMMSS(abs(val), mm, ss);
-
-	if (val >= 0.0)
-	{
-		sprintf_s(Buffer, "%d:%02.0f", mm, ss);
-	}
-	else
-	{
-		sprintf_s(Buffer, "-%d:%02.0f", mm, ss);
-	}
+	OrbMech::format_time_XMSS(Buffer, val);
 	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double val)
 {
-	int mm;
-	double ss;
-	OrbMech::SStoMMSS(abs(val), mm, ss, 0.1);
-
-	if (val >= 0.0)
-	{
-		sprintf_s(Buffer, "%d:%04.1f", mm, ss);
-	}
-	else
-	{
-		sprintf_s(Buffer, "-%d:%04.1f", mm, ss);
-	}
+	OrbMech::format_time_MMSSC(Buffer, val);
 	Text(skp, x, y, Buffer);
 }
 
-void ApolloRTCCMFD::Text_GET_HHMM(oapi::Sketchpad *skp, int x, int y, double val)
+void ApolloRTCCMFD::Text_GET_HHHMM(oapi::Sketchpad *skp, int x, int y, double val)
 {
-	GET_Display_HHMM(Buffer, val);
+	GET_Display_HHHMM(Buffer, val);
 	Text(skp, x, y, Buffer);
 }
 
 void ApolloRTCCMFD::Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val)
 {
-	GET_Display4(Buffer, val);
+	OrbMech::format_time_HHMMSS(Buffer, val);
 	Text(skp, x, y, Buffer);
 }
 
@@ -451,6 +429,12 @@ void ApolloRTCCMFD::Text_GET_HHHMMSSC(oapi::Sketchpad *skp, int x, int y, double
 void ApolloRTCCMFD::Text_GET_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val)
 {
 	GET_Display2(Buffer, val);
+	Text(skp, x, y, Buffer);
+}
+
+void ApolloRTCCMFD::Text_GMT_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	GMT_Display2(Buffer, val);
 	Text(skp, x, y, Buffer);
 }
 
@@ -586,18 +570,10 @@ void ApolloRTCCMFD::FormatDeclination(char *Buff, double angle)
 
 void ApolloRTCCMFD::GET_Display(char* Buff, double time, bool DispGET) //Display a time in the format hhh:mm:ss
 {
-	int hours, minutes;
-	double seconds;
-
-	OrbMech::SStoHHMMSS(time, hours, minutes, seconds);
-
+	OrbMech::format_time_HHHMMSS(Buff, time);
 	if (DispGET)
 	{
-		sprintf_s(Buff, 32, "%03d:%02d:%02.0f GET", hours, minutes, seconds);
-	}
-	else
-	{
-		sprintf_s(Buff, 32, "%03d:%02d:%02.0f", hours, minutes, seconds);
+		strcat(Buff, " GET");
 	}
 }
 
@@ -622,58 +598,17 @@ void ApolloRTCCMFD::GMT_Display2(char* Buff, double time) const
 
 void ApolloRTCCMFD::GET_Display2(char* Buff, double time) const //Display a time in the format hhh:mm:ss.ss
 {
-	bool pos = true;
-	if (time < 0)
-	{
-		pos = false;
-		time = abs(time);
-	}
-
-	int hours, minutes;
-	double seconds;
-
-	OrbMech::SStoHHMMSS(time, hours, minutes, seconds, 0.01);
-
-	if (pos)
-	{
-		sprintf(Buff, "%03d:%02d:%05.2lf", hours, minutes, seconds);
-	}
-	else
-	{
-		sprintf(Buff, "-%03d:%02d:%05.2lf", hours, minutes, seconds);
-	}
+	OrbMech::format_time_HHHMMSSCS(Buff, time);
 }
 
 void ApolloRTCCMFD::GET_Display3(char* Buff, double time) //Display a time in the format hhh:mm:ss.s
 {
-	int hours, minutes;
-	double seconds;
-
-	OrbMech::SStoHHMMSS(time, hours, minutes, seconds, 0.1);
-
-	sprintf(Buff, "%03d:%02d:%04.1f", hours, minutes, seconds);
+	OrbMech::format_time_HHHMMSSC(Buff, time);
 }
 
-//Format: HH:MM:SS
-void ApolloRTCCMFD::GET_Display4(char* Buff, double time) //Display a time in the format hh:mm:ss
+void ApolloRTCCMFD::GET_Display_HHHMM(char *Buff, double time) //Displays a time in the format HHH:MM
 {
-	int hours, minutes;
-	double seconds;
-
-	OrbMech::SStoHHMMSS(time, hours, minutes, seconds);
-
-	sprintf(Buff, "%02d:%02d:%02.0f", hours, minutes, seconds);
-}
-
-//Format: HH:MM
-void ApolloRTCCMFD::GET_Display_HHMM(char *Buff, double time)
-{
-	int hours, minutes;
-	double seconds;
-
-	OrbMech::SStoHHMMSS(time, hours, minutes, seconds, 60.0);
-
-	sprintf(Buff, "%03d:%02d", hours, minutes);
+	OrbMech::format_time_HHHMM(Buff, time);
 }
 
 void ApolloRTCCMFD::AGC_Display(char* Buff, double vel)
