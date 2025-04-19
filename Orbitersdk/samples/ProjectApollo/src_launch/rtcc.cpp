@@ -27065,7 +27065,7 @@ void RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data, in
 			//REM: REFSMMAT in RTE manual column
 			rtcc::AddTextMEDItem(opt, 1, {"LLD", "OST-M", "DMT"});
 
-			err = rtcc::GenericMEDProcessing(opt, data, out, 2, 3);
+			err = rtcc::GenericMEDProcessing(opt, data, out);
 			if (err)
 			{
 				param = out.errorItem;
