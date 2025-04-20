@@ -1446,8 +1446,19 @@ The Map Update is very different in Earth and Moon orbit. In Earth orbit the nex
 \textbf{CLC:} Calculate map update.\\
 \textbf{MOD:} Cycle between Earth and Moon orbit.\\
 \newpage
-\subsection{AGS Navigation Updates}
-This page
+\subsection{AGS State Vector Update}
+\subsubsection{Explanation}
+This page shows the AGS State Vector Update PAD. There would also be a MOCR display for the same function (MSK 277) but this page has been modelled after the PAD given to the crew for covenience. The AGS SV PAD can be used to manually input CSM and LM state vectors on the DEDA. This is a backup method, the main method of updating the state vectors would be via downlink from the PGNS (Verb 47).\\
+Because the AEA uses no REFSMMAT the coordinate system of the state vectors depends on the current alignment being used. For that the current REFSMMAT in use can be selected. The RTCC keeps several REFSMMAT stored, the main ones for this page would be the current (CUR) or AGS REFSMMATs. As the PGNS and AGS typically use the same alignment the CUR REFSMMAT would be saved as the AGS REFSMMAT and then the AGS REFSMMSAT is used for the state vector calculation. But any REFSMMAT in the LM REFSMMAT table can be used.\\
+This page can also be used to manually or automatically update the AGS K-Factor. For the automatic option the current PGNS and AGS clocks are compared and the difference is then saved as the K-Factor.\\
+\subsubsection{Buttons}
+\textbf{SLT:} Cycle between updating the CSM or the LM part of the PAD.\\
+\textbf{TGT:} Update the CSM or LM vessel.\\
+\textbf{REF:} Choose the REFSMMAT in the LM REFSMMAT table to use for the state vector calculation.\\
+\textbf{AGS:} Manually enter the AGS K-Factor.\\
+\textbf{KFA:} Run the automatic calculation to update the K-Factor.\\
+\textbf{CLC:} Calculate the AGS state vector PAD. CSM and LM state vectors are calculated separately.\\
+\textbf{SAV:} Save the present LM CUR REFSMMAT as the AGS REFSMMAT. All REFSMMATs in the LM REFSMMAT table can be used for the state vector calculation, but only the AGS REFSMMAT is used in converting telemetry vectors (see Vector Panel Summary) so this is a simple way to update the AGS REFSMMAT. The alternative would be using the G00 MED.\\
 \newpage
 \section{Utilities}
 \subsection{REFSMMAT}
