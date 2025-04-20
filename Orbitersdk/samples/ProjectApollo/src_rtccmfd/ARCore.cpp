@@ -1360,7 +1360,7 @@ void ARCore::GetStateVectorsFromAGS()
 
 	T_SV = (double)(timeoct[0])*2.0 + (double)(timeoct[1]) *pow(2, -16);
 
-	//Convert to RTCC coordinates
+	//Save in correct state vector format
 	EphemerisData sv_CSM, sv_LM;
 	sv_LM.R = R_LM;
 	sv_LM.V = V_LM;
