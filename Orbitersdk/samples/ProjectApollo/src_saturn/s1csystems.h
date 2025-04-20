@@ -37,7 +37,7 @@ public:
 	void SetEDSCutoff() { EDSCutoff = true; }
 	void SetGSECutoff() { GSECutoff = true; }
 	void SetThrusterDir(double beta_y, double beta_p);
-	void SetFailed() { EngineFailed = true; }
+	void SetFailed(bool fail) { EngineFailed = fail; }
 
 	bool GetThrustOK() { return ThrustOK; }
 	double GetThrustLevel() { return ThrustLevel; }
@@ -96,7 +96,7 @@ public:
 	void SetThrusterDir(int n, double beta_y, double beta_p);
 	void SwitchSelector(int channel);
 
-	void SetEngineFailed(int n);
+	void SetEngineFailed(int n, bool condition);
 
 	bool PropellantLowLevel();
 	void GetThrustOK(bool *ok);

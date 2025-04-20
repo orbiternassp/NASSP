@@ -108,16 +108,16 @@ void DockingProbe::Init(Saturn *s)
 	DockProbeHX = (h_HeatExchanger *)saturn->Panelsdk.GetPointerByString("HYDRAULIC:DOCKPROBEINCABIN");
 }
 
-bool DockingProbe::IsInstalled()
+bool DockingProbe::InCabin()
 
 {
-	if (OurVessel->HasProbe == false || IsHardDocked())
+	if (OurVessel->HasProbe == true && IsHardDocked())
 	{
-		return false;
+		return true;
 	}
 	else
 	{
-		return true;
+		return false;
 	}
 }
 
@@ -380,28 +380,43 @@ void DockingProbe::UpdatePort(VECTOR3 off,double simdt)
 	OurVessel->DefSetState(&vs);
 }  
 
-
 void DockingProbe::SystemTimestep(double simdt)
-
 {
+	DockProbe->isolation = 0.008; //Initiializes docking probe isolation value
+
 	if (ExtendingRetracting) {
 		DCPower.DrawPower(100.0);	// The real power consumption is unknown yet, max would be 240W (10A*28V)
 	}
-
-	if (!IsInstalled())
+	//Stops interaction if no probe is attached
+	if (OurVessel->HasProbe == false)
+	{
+		DockProbeHX->SetPumpOff();
+		DockProbe->isolation = 0.0;  //prevents heating/cooling from space exposure
+		DockProbe->rad = 0.0;
+	}
+	//Isolates probe while LET is attached
+	else if (OurVessel->LETAttached())
+	{
+		DockProbeHX->SetPumpOff();
+		DockProbe->isolation = 0.0; //prevents heating/cooling from space exposure
+		DockProbe->rad = 0.0;
+	}
+	//Shares heat with cabin while "stowed"
+	else if (InCabin())
 	{
 		DockProbeHX->SetPumpOn();
+		DockProbe->isolation = 0.0;  //prevents heating/cooling from space exposure
 		DockProbe->rad = 0.0;
-		DockProbe->isolation = 0.0;
 	}
+	//"Exposes" probe to space/sun
 	else
 	{
 		DockProbeHX->SetPumpOff();
-		DockProbe->rad = 3.0;
-		DockProbe->isolation = 0.001;
+		DockProbe->isolation = 0.008;
+		DockProbe->rad = 0.001;
 	}
 
-	if (!IsPowered())
+	if (!IsPowered() || OurVessel->HasProbe == false)
 	{
 		saturn->DockProbeTempSensor.WireTo(NULL);
 	}

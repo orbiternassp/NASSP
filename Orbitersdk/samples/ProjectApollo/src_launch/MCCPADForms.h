@@ -199,6 +199,9 @@ struct AP11ENT
 	double SXP[2];				// BSS X position on COAS for entry attitude check
 	char LiftVector[2][4];		// Lift vector desired at .05G's based on entry corridor
 	char remarks[2][128];		// Remarks
+	//Additional information
+	bool UsesP65[2];			// True if P65 is used in the reentry
+	bool UsesP66[2];			// True if P66 is used in the reentry
 };
 
 // APOLLO 11 - TRANSLUNAR INJECTION
@@ -263,6 +266,8 @@ struct AP11MNV {
 		LMWeight = 0.0;
 		dV = _V(0, 0, 0);
 		GETI = 0.0;
+		HA_P30 = 0.0;
+		HP_P30 = 0.0;
 		sprintf(remarks, "");
 	}
 
@@ -273,7 +278,7 @@ struct AP11MNV {
 	double GETI;		// TIG
 	VECTOR3 dV;			// P30 dV
 	VECTOR3 Att;		// Attitude at TIG
-	double HA, HP;		// Predicted apogee/perigee after maneuver
+	double HA, HP;		// Predicted apogee/perigee after maneuver. Equivalent to a V82 after the maneuver.
 	double Vt;			//Total dV
 	double burntime;	// Burn time
 	double Vc;			// EMS dV
@@ -291,7 +296,8 @@ struct AP11MNV {
 	char remarks[128];	// remarks
 	int type;           // 1 = Full PAD, 2 = Abbreviated PAD
 
-	double LMWeight;	// LM weight
+	double LMWeight;		// LM weight
+	double HA_P30, HP_P30;	// Predicted P30 apogee/perigee after maneuver. The HA/HP displayed by P30 before the maneuver.
 };
 
 // APOLLO 11 LM - MANEUVER
@@ -373,9 +379,13 @@ struct AP11AGSSVPAD
 
 struct AP10MAPUPDATE
 {
-	AP10MAPUPDATE() :Rev(0), LOSGET(0.0), AOSGET(0.0), PMGET(0.0), SSGET(0.0), SRGET(0.0), type(0), LOSGET2(0.0), AOSGET2(0.0), PMGET2(0.0), SSGET2(0.0) {}
+	AP10MAPUPDATE() : LOSGET(0.0), AOSGET(0.0), PMGET(0.0), SSGET(0.0), SRGET(0.0), type(0), LOSGET2(0.0), AOSGET2(0.0), PMGET2(0.0), SSGET2(0.0)
+	{
+		sprintf(Rev, "");
+		sprintf(remarks, "");
+	}
 
-	int Rev;		//Revolution of update
+	char Rev[10];	//Revolution of update
 	double LOSGET;	//Time of LOS
 	double AOSGET;	//Time of AOS
 	double PMGET;	//Time of meridian crossing (150° or 180° W), alternative: AOS without burn
@@ -385,8 +395,9 @@ struct AP10MAPUPDATE
 	double SSGET2;  //Time of sunset for a second rev (type = 3)
 	double PMGET2;	//Time of meridian crossing (150° or 180°W) for a second rev (type = 3)
 	double AOSGET2; //Time of AOS for a second rev (type = 3) or taking LOI into account (type = 2) or TEI (type = 5)
-					//0 = Only LOS/AOS and PM, 1 = Display all parameters, 2 = LOS, AOS with and AOS without LOI, 3 = Like 1 but for two revs, 4 = Like 0 but shows 180° instead of PM,
-	int type;		//5 = like 2 but for TEI, 6 = like 0 but shows 150° instead of PM, 7 = LOS, AOS w/ TEI, AOS w/o TEI
+	int type;		//0 = Only LOS/AOS and PM, 1 = Display all parameters, 2 = LOS, AOS with and AOS without LOI, 3 = Like 1 but for two revs, 4 = Like 0 but shows 180° instead of PM,
+					//5 = like 2 but for TEI, 6 = like 0 but shows 150° instead of PM, 7 = LOS, AOS w/ TEI, AOS w/o TEI
+	char remarks[256];	// remarks
 };
 
 // APOLLO 11 LANDMARK TRACKING PAD

@@ -233,14 +233,12 @@ bool SCERA::IsPowered()
 
 double SCERA::scale_data(double data, double low, double high)
 {
-	double step = 0;
-
 	// First eliminate cases outside of the scales
 	if (data >= high) { return 5.0; }
 	if (data <= low) { return 0.0; }
 
 	// Now figure step value
-	step = ((high - low) / 5.0);
+	double step = ((high - low) / 5.0);
 	// and return result
 	return (data - low) / step;
 }

@@ -44,7 +44,7 @@ namespace rtcc
 	class RTCCDisplayPrint
 	{
 	public:
-		void Print(oapi::Sketchpad *skp, DWORD W, DWORD H, unsigned dispnum) const;
+		void Print(oapi::Sketchpad *skp, DWORD CW, DWORD CH, unsigned dispnum) const;
 	protected:
 		std::vector<RTCCDisplay> displays;
 	};
@@ -55,8 +55,6 @@ namespace rtcc
 		RTCCBackgroundSlides();
 	protected:
 
-		void AddTitle(struct RTCCDisplay &disp, std::string title) const;
-		void AddMSK(struct RTCCDisplay &disp, std::string msk) const;
 		void AddText(struct RTCCDisplay &disp, std::string Text, int x, int y, oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::LEFT) const;
 	};
 
@@ -69,7 +67,6 @@ namespace rtcc
 		void DFLDouble(RTCCDisplay &disp, double val, const char* format, int x, int y, oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::RIGHT) const;
 		void DFLInteger(RTCCDisplay &disp, int val, const char* format, int x, int y, oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::RIGHT) const;
 		void DFLTime(RTCCDisplay &display, double val, int x, int y, oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::RIGHT) const;
-		void format_time_rtcc(char *buf, double time) const;
 	protected:
 	};
 }

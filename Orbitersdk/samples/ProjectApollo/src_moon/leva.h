@@ -105,6 +105,7 @@ private:
 	void ScanMotherShip();
 	void MoveEVA(double SimDT, VESSELSTATUS *eva, double heading);
 	void SetFlag();
+	void SetEquip();
 	OBJHANDLE GetLRVHandle();
 	void BoardLRV(OBJHANDLE lrvHandle);
 	void DeboardLRV(OBJHANDLE lrvHandle);
@@ -141,6 +142,12 @@ protected:
 	bool KEYSUBTRACT;
 	bool GoFlag;		 
 	bool FlagPlanted;
+
+	bool GoEquip;
+	bool TvPlanted;
+	bool EasepSwcPlanted;
+	bool EasepPsepPlanted;
+	bool EasepLr3Planted;
 
 	ATTACHMENTHANDLE lrvSeat;
 

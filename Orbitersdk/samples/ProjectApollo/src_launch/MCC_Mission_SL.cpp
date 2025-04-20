@@ -30,25 +30,25 @@ void MCC::MissionSequence_SL()
 	switch (MissionState)
 	{
 	case MST_SL_PRELAUNCH: //Scenario start to targeting update
-		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval2(-95.0*60.0), 1, MST_SL_PRELAUNCH_TARGETING);
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(-95.0*60.0), 1, MST_SL_PRELAUNCH_TARGETING);
 		break;
 	case MST_SL_PRELAUNCH_TARGETING: //Targeting update to prelaunch
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, rtcc->GETEval2(-16.0*60.0), 2, MST_1B_PRELAUNCH);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(-16.0*60.0), 2, MST_1B_PRELAUNCH);
 		break;
 	case MST_SL_INSERTION: //Insertion to Rendezvous planning
-		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval2(30.0*60.0), 10, MST_SL_RENDEZVOUS_PLAN);
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(30.0*60.0), 10, MST_SL_RENDEZVOUS_PLAN);
 		break;
 	case MST_SL_RENDEZVOUS_PLAN: //Rendezvous planning to NC1 preliminary update
-		UpdateMacro(UTP_NONE, PT_NONE, rtcc->GETEval2(1.0*3600.0 + 35.0*60.0), 11, MST_SL_PRELIM_NC1);
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(1.0*3600.0 + 35.0*60.0), 11, MST_SL_PRELIM_NC1);
 		break;
 	case MST_SL_PRELIM_NC1: //NC1 preliminary update to NC1 final update
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(1.0 * 3600.0 + 55.0*60.0), 12, MST_SL_FINAL_NC1);
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(1.0 * 3600.0 + 55.0*60.0), 12, MST_SL_FINAL_NC1);
 		break;
 	case MST_SL_FINAL_NC1: //NC1 final update to NC2 preliminary update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, rtcc->GETEval2(3.0 * 3600.0 + 5.0*60.0), 13, MST_SL_PRELIM_NC2);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(3.0 * 3600.0 + 5.0*60.0), 13, MST_SL_PRELIM_NC2);
 		break;
 	case MST_SL_PRELIM_NC2: //NC2 preliminary update to NC2 final update
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(4.0 * 3600.0 + 12.0*60.0), 14, MST_SL_FINAL_NC2);
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(4.0 * 3600.0 + 12.0*60.0), 14, MST_SL_FINAL_NC2);
 		break;
 	case MST_SL_FINAL_NC2: //NC2 final update to NCC preliminary update
 		UpdateMacro(UTP_PADONLY, PT_AP7MNV, SubStateTime > 2.0*60.0, 15, MST_SL_PRELIM_NCC);
@@ -57,22 +57,22 @@ void MCC::MissionSequence_SL()
 		UpdateMacro(UTP_PADONLY, PT_AP7MNV, SubStateTime > 2.0*60.0, 16, MST_SL_PRELIM_NSR);
 		break;
 	case MST_SL_PRELIM_NSR: //NSR preliminary update to NCC final update
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(rtcc->calcParams.CSI - 24.0*60.0), 18, MST_SL_FINAL_NCC);
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(rtcc->calcParams.CSI - 24.0*60.0), 18, MST_SL_FINAL_NCC);
 		break;
 	case MST_SL_FINAL_NCC: //NCC final update to NSR final update
 		UpdateMacro(UTP_PADONLY, PT_AP7MNV, SubStateTime > 2.0*60.0, 17, MST_SL_FINAL_NSR);
 		break;
 	case MST_SL_FINAL_NSR: //NSR final update to TPI preliminary update
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(rtcc->calcParams.TPI - 32.0*60.0), 19, MST_SL_PRELIM_TPI);
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(rtcc->calcParams.TPI - 32.0*60.0), 19, MST_SL_PRELIM_TPI);
 		break;
 	case MST_SL_PRELIM_TPI: //TPI preliminary update to docking attitude PAD
 		UpdateMacro(UTP_PADONLY, PT_AP7MNV, SubStateTime > 2.0*60.0, 20, MST_DOCKING_ATTITUDE_PAD);
 		break;
 	case MST_DOCKING_ATTITUDE_PAD: //Docking attitude PAD to TPI final update
-		UpdateMacro(UTP_PADONLY, PT_GENERIC, rtcc->GETEval2(rtcc->calcParams.TPI - 24.0*60.0), 22, MST_SL_FINAL_TPI);
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(rtcc->calcParams.TPI - 24.0*60.0), 22, MST_SL_FINAL_TPI);
 		break;
 	case MST_SL_FINAL_TPI: //TPI final update to Skylab Solar Inertial Command
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, rtcc->GETEval2(rtcc->calcParams.TPI + 3.0*60.0), 21, MST_SL_SOLAR_INERTIAL);
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(rtcc->calcParams.TPI + 3.0*60.0), 21, MST_SL_SOLAR_INERTIAL);
 		break;
 	case MST_SL_SOLAR_INERTIAL: //Skylab Solar Inertial Command to
 		UpdateMacro(UTP_NONE, PT_NONE, false, 23, MST_ENTRY);

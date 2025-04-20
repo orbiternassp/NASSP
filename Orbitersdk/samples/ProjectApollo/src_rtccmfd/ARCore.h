@@ -67,7 +67,6 @@ public:
 	double LmkElevation;
 
 	//APOLLO GENERALIZED OPTICS PROGRAM
-	int AGOP_Page;
 	int AGOP_Option;
 	int AGOP_Mode;
 	int AGOP_AdditionalOption;
@@ -138,8 +137,7 @@ public:
 	void SkylabSaturnIBLaunchCalc();
 	void SkylabSaturnIBLaunchUplink();
 	void TransferTIToMPT();
-	void TransferSPQToMPT();
-	void TransferDKIToMPT();
+	void Transfer_SPQ_Or_DKI_To_MPT();
 	void TransferDescentPlanToMPT();
 	void TransferPoweredDescentToMPT();
 	void TransferPoweredAscentToMPT();
@@ -381,12 +379,7 @@ public:
 	int iuUplinkResult; //0 = no uplink, 1 = uplink accepted, 2 = vessel has no IU, 3 = uplink rejected, 4 = No targeting parameters
 
 	//LUNAR TARGETING PROGRAM
-	double LUNTAR_lat;
-	double LUNTAR_lng;
-	double LUNTAR_bt_guess;
-	double LUNTAR_pitch_guess;
-	double LUNTAR_yaw_guess;
-	double LUNTAR_TIG;
+	LunarTargetingProgramInput LUNTAR_Input;
 	LunarTargetingProgramOutput LUNTAR_Output;
 
 	//DEBUG

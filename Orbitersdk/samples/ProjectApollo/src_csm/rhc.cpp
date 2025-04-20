@@ -27,6 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "nasspsound.h"
 #include "toggleswitch.h"
 #include "rhc.h"
+#include <cmath>
 
 RHC::RHC()
 {
@@ -52,9 +53,9 @@ void RHC::Reset()
 void RHC::Timestep(int* rhc_pos, bool normdc, bool normac, bool dirdcab, bool dirdcredun)
 {
 	//Map to -11.5° to 11.5°
-	for (int i = 0;i < 3;i++)
+	for (int i = 0; i < 3; i++)
 	{
-		deflection.data[i] = ((double)(rhc_pos[i] - 32768))*23.0 / 65536.0;
+		deflection.data[i] = ((double)(rhc_pos[i] - 32768)) * 23.0 / 65536.0;
 	}
 
 

@@ -597,14 +597,6 @@ void SaturnV::SetVehicleStats(){
 	}
 
 	CalculateStageMass ();
-
-	//
-	// Calculate Apollo mission number.
-	//
-
-	if (!ApolloNo && (VehicleNo >= 503 && VehicleNo <= 512)) {
-		ApolloNo = VehicleNo - 495;
-	}
 }
 
 void SaturnV::SaveVehicleStats(FILEHANDLE scn)
@@ -1033,17 +1025,17 @@ void SaturnV::SetFailure(int failuretype, bool condition)
 	case CSMFailures_SI_Engine_3_Failure:
 	case CSMFailures_SI_Engine_4_Failure:
 	case CSMFailures_SI_Engine_5_Failure:
-		if (sic) sic->SetEngineFailed(failuretype - CSMFailures_SI_Engine_1_Failure);
+		if (sic) sic->SetEngineFailed(failuretype - CSMFailures_SI_Engine_1_Failure, condition);
 		break;
 	case CSMFailures_SII_Engine_1_Failure:
 	case CSMFailures_SII_Engine_2_Failure:
 	case CSMFailures_SII_Engine_3_Failure:
 	case CSMFailures_SII_Engine_4_Failure:
 	case CSMFailures_SII_Engine_5_Failure:
-		if (sii) sii->SetEngineFailed(failuretype - CSMFailures_SII_Engine_1_Failure);
+		if (sii) sii->SetEngineFailed(failuretype - CSMFailures_SII_Engine_1_Failure, condition);
 		break;
 	case CSMFailures_SIVB_Engine_Failure:
-		if (sivb) sivb->SetEngineFailed();
+		if (sivb) sivb->SetEngineFailed(condition);
 		break;
 	case CSMFailures_SIVB_O2_H2_Burner_Failure:
 		if (sivb) sivb->SetO2H2BurnerFailed(condition);

@@ -306,7 +306,7 @@ PMMRKJ_LABEL_13B:
 	TI = T + DTSPAN[7];
 	THRUST = THRUST / THPS[9] * THPS[7];
 	WTLRT = WTLRT / WDOTPS[9] * WDOTPS[7] * TArr.WDMULT;
-	TEND = TLARGE;
+	TEND = DTMAN = TLARGE; //IBM document only sets DTMAN to TLARGE
 PMMRKJ_LABEL_14B:
 	MPHASE++;
 PMMRKJ_LABEL_14C:
@@ -561,7 +561,7 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 	DV_ul = 0.0;
 	X_B = Y_B = Z_B = _V(0, 0, 0);
 	Kg = 0;
-	VGN = _V(0, 0, 0);
+	VG = VGN = _V(0, 0, 0);
 
 	//This only for Earth
 	if (TArr.sv0.RBI == BODY_EARTH)

@@ -25,6 +25,7 @@
 
 #include "../src_rtccmfd/RTCCModule.h"
 #include "../src_rtccmfd/RTCCTables.h"
+#include "../src_rtccmfd/OrbMech.h"
 
 // A class with utility calculations for the MCC class, with access to the RTCC class
 // Anything that does not belong in the RTCC class, because it does not correspond to real RTCC code
@@ -40,4 +41,17 @@ public:
 	double Sunrise(EphemerisDataTable2 &ephem, double gmt_estimate);
 	double TerminatorRise(EphemerisDataTable2 &ephem, double gmt_estimate);
 	bool LongitudeCrossing(EphemerisDataTable2 &ephem, double lng, double gmt_estimate, double &gmt_cross);
+	double FindOrbitalSunrise(SV sv, double t_sunrise_guess);
+	double FindOrbitalMidnight(SV sv, double t_TPI_guess);
+	void FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS);
+	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
+	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
+	void PrelaunchMissionInitialization();
+
+	//Mission specific rendezvous plans
+	void DMissionRendezvousPlan(SV sv_A0, double &t_TPI0);
+	void FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV sv_A0, double t_TIG, double t_TPI, double &t_Ins, double &CSI);
+
+	//Returns true if the current Ground Elapsed Time is greater than the input value
+	bool GETEval(double get);
 };

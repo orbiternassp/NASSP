@@ -146,41 +146,141 @@ namespace OrbMech{
 		return round(value / precision) * precision;
 	}
 
-	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds, double precision)
+	void SStoMMSS(double time, int &minutes, double &seconds, double precision)
 	{
+		//Only call with positive time
 		time = round_to(time, precision);
 
-		double mins;
-		hours = (int)trunc(time / 3600.0);
-		mins = fmod(time / 60.0, 60.0);
-		minutes = (int)trunc(mins);
-		seconds = (mins - minutes) * 60.0;
+		minutes = (int)trunc(time / 60.0);
+		seconds = (time / 60.0 - minutes) * 60.0;
 	}
 
-	// Format time to HHH:MM:SS.
-	void format_time(char *buf, double time)
+	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds, double precision)
 	{
-		buf[0] = 0; // Clobber
-		if (time < 0) { return; } // don't do that
+		//Only call with positive time
+		time = round_to(time, precision);
 
-		int hours, minutes;
+		hours = (int)trunc(time / 3600.0);
+		minutes = (int)trunc((time - 3600.0*hours) / 60.0);
+		seconds = time - (double)(3600 * hours + 60 * minutes);
+	}
+
+	void SStoDDHHMMSS(double time, int &days, int &hours, int &minutes, double &seconds, double precision)
+	{
+		//Only call with positive time
+		time = round_to(time, precision);
+
+		days = (int)trunc(time / 86400.0);
+		hours = (int)trunc((time - 86400.0*days) / 3600.0);
+		minutes = (int)trunc((time - 86400.0*days - 3600.0*hours) / 60.0);
+		seconds = time - (double)(86400*days + 3600*hours + 60*minutes);
+	}
+
+	void format_time_XMSS(char *buf, double time)
+	{
+		// Format time to XM:SS. (no leading zeros)
 		double seconds;
+		int minutes;
 
-		SStoHHMMSS(time, hours, minutes, seconds);
+		SStoMMSS(abs(time), minutes, seconds);
+		if (time < 0.0) minutes = -minutes;
+
+		sprintf(buf, "%d:%02.0lf", minutes, seconds);
+	}
+
+	void format_time_MMSSC(char *buf, double time)
+	{
+		// Format time to XM:SS.C
+		double seconds;
+		int minutes;
+
+		SStoMMSS(abs(time), minutes, seconds, 0.1);
+		if (time < 0.0) minutes = -minutes;
+
+		sprintf(buf, "%d:%02.1lf", minutes, seconds);
+	}
+
+	void format_time_HHHMM(char *buf, double time)
+	{
+		// Format time to HHH:MM
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds, 60.0);
+		if (time < 0.0) hours = -hours;
+
+		sprintf(buf, "%03d:%02d", hours, minutes);
+	}
+
+	void format_time_HHMMSS(char *buf, double time)
+	{
+		// Format time to HH:MM:SS.
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds);
+		if (time < 0.0) hours = -hours;
+
+		sprintf(buf, "%02d:%02d:%02.0lf", hours, minutes, seconds);
+	}
+
+	void format_time_HHHMMSS(char *buf, double time)
+	{
+		// Format time to HHH:MM:SS.
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds);
+		if (time < 0.0) hours = -hours;
 
 		sprintf(buf, "%03d:%02d:%02.0lf", hours, minutes, seconds);
+	}
+
+	void format_time_XXHMMSS(char *buf, double time)
+	{
+		// Format time to XXH:MM:SS. (no leading zeros)
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds);
+		if (time < 0.0) hours = -hours;
+
+		sprintf(buf, "%d:%02d:%02.0lf", hours, minutes, seconds);
+	}
+
+	void format_time_HHHMMSSC(char *buf, double time)
+	{
+		// Format time to HHH:MM:SS.C
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds, 0.1);
+		if (time < 0.0) hours = -hours;
+
+		sprintf(buf, "%03d:%02d:%04.1lf", hours, minutes, seconds);
+	}
+
+	void format_time_HHHMMSSCS(char *buf, double time)
+	{
+		// Format time to HHH:MM:SS.CS
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds, 0.01);
+		if (time < 0.0) hours = -hours;
+
+		sprintf(buf, "%03d:%02d:%05.2lf", hours, minutes, seconds);
 	}
 
 	// Format precise time.
 	void format_time_prec(char *buf, double time)
 	{
-		buf[0] = 0; // Clobber
-		if (time < 0) { return; } // don't do that
-
 		int hours, minutes;
 		double seconds;
+		int length = 0;
 
-		SStoHHMMSS(time, hours, minutes, seconds, 0.01);
+		SStoHHMMSS(abs(time), hours, minutes, seconds, 0.01);
+		if (time < 0.0) hours = -hours;
 
 		sprintf(buf, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
 	}
@@ -1052,10 +1152,15 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 		}
 		else
 		{
-			h1 = OrbMech::power(l + x, 2.0) / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*(3.0 * OrbMech::power(1.0 + x, 2.0) * (N*PI / 2.0 + atan(sqrt(x))) / sqrt(x) - (3.0 + 5.0 * x));
-			h2 = m / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*((OrbMech::power(x, 2.0) - (1.0 + l)*x - 3.0 * l)*(N*PI / 2.0 + atan(sqrt(x))) / sqrt(x) + (3.0 * l + x));
+			if (x < 0.0)
+			{
+				//Error
+				return _V(0, 0, 0);
+			}
+			h1 = OrbMech::power(l + x, 2.0) / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*(3.0 * OrbMech::power(1.0 + x, 2.0) * (PI*(double)N / 2.0 + atan(sqrt(x))) / sqrt(x) - (3.0 + 5.0 * x));
+			h2 = m / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*((OrbMech::power(x, 2.0) - (1.0 + l)*x - 3.0 * l)*(PI*(double)N / 2.0 + atan(sqrt(x))) / sqrt(x) + (3.0 * l + x));
 		}
-		B = 27 * h2 / (4 * OrbMech::power(1 + h1, 3));
+		B = 27.0 * h2 / (4.0 * OrbMech::power(1.0 + h1, 3));
 		if (B >= 0)
 		{
 			z = 2.0 * cosh(1.0 / 3.0 * acosh(sqrt(B + 1.0)));
@@ -1326,168 +1431,6 @@ void SolveQuartic(double *A, double *R, int &N)
 			R[3] = 0.5*sqrt((-1.0)*(-4.0*S*S - 2.0*p + q / S));
 		}
 	}
-}
-
-VECTOR3 Vinti(int Epoch, VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double mjd0, double dt, int N, bool prog, int gravref, int gravin, int gravout, VECTOR3 V_guess, double tol)
-{
-	double h, rho, error3, mu, max_dr;
-	int nMax, nMax2, n;
-	VECTOR3 Vt1, V1_star, dr2, R2_star, V2_star, R1_ref, V1_ref, R2_ref;
-	VECTOR3 v_l[3][4];
-	VECTOR3 R2l[3][4];
-	VECTOR3 V2l[3][4];
-	VECTOR3 T[3];
-	MATRIX3 T2;
-
-	h = 10e-3;
-	rho = 0.5;
-	error3 = 100.0;
-	dr2 = _V(1.0, 1.0, 1.0);
-	n = 0;
-	nMax = 100;
-	nMax2 = 10;
-
-	if (gravref == BODY_EARTH)
-	{
-		mu = mu_Earth;
-	}
-	else
-	{
-		mu = mu_Moon;
-	}
-
-	double hvec[4] = { h / 2, -h / 2, rho*h / 2, -rho*h / 2 };
-
-	if (length(V_guess) == 0.0)
-	{
-		if (gravref != gravin)
-		{
-			oneclickcoast(Epoch, R1, V1, mjd0, 0.0, R1_ref, V1_ref, gravin, gravref);
-			R2_ref = R2;
-		}
-		else if (gravref != gravout)
-		{
-			VECTOR3 V2_ref;
-			R1_ref = R1;
-			V1_ref = V1;
-			oneclickcoast(Epoch, R2, V1, mjd0 + dt / 24.0 / 3600.0, 0.0, R2_ref, V2_ref, gravout, gravref);
-		}
-		else
-		{
-			R1_ref = R1;
-			V1_ref = V1;
-			R2_ref = R2;
-		}
-
-		if (dt > 0)
-		{
-			Vt1 = elegant_lambert(R1_ref, V1_ref, R2_ref, dt, N, prog, mu);
-		}
-		else
-		{
-			Vt1 = elegant_lambert(R1_ref, V1_ref, R2_ref, -dt, N, !prog, mu);
-		}
-		if (gravref != gravin)
-		{
-			VECTOR3 R1_unused;
-			oneclickcoast(Epoch, R1_ref, Vt1, mjd0, 0.0, R1_unused, Vt1, gravref, gravin);
-		}
-		V1_star = Vt1*sign(dt);
-	}
-	else
-	{
-		V1_star = V_guess;
-	}
-
-	if (gravref == BODY_EARTH && gravin == gravout && dt>0)
-	{
-		rv_from_r0v0_obla(R1, V1_star, mjd0, dt, R2_star, V2_star);
-		dr2 = R2 - R2_star;
-
-		while (length(dr2) > error3 && nMax2 >= n)
-		{
-			n += 1;
-			for (int i = 0; i < 4; i++)
-			{
-				v_l[0][i] = V1_star + _V(1, 0, 0)*hvec[i];
-				v_l[1][i] = V1_star + _V(0, 1, 0)*hvec[i];
-				v_l[2][i] = V1_star + _V(0, 0, 1)*hvec[i];
-			}
-			for (int i = 0; i < 3; i++)
-			{
-				for (int j = 0; j < 4; j++)
-				{
-					rv_from_r0v0_obla(R1, v_l[i][j], mjd0, dt, R2l[i][j], V2l[i][j]);
-				}
-			}
-			for (int i = 0; i < 3; i++)
-			{
-				T[i] = (R2l[i][2] - R2l[i][3] - (R2l[i][0] - R2l[i][1])*OrbMech::power(rho, 3.0)) * 1.0 / (rho*h*(1.0 - OrbMech::power(rho, 2.0)));
-			}
-			T2 = _M(T[0].x, T[1].x, T[2].x, T[0].y, T[1].y, T[2].y, T[0].z, T[1].z, T[2].z);
-			V1_star = V1_star + mul(inverse(T2), dr2);
-			rv_from_r0v0_obla(R1, V1_star, mjd0, dt, R2_star, V2_star);
-			dr2 = R2 - R2_star;
-		}
-		//return V1_star;
-
-		if (n == nMax2 || _isnan(R2_star.x))// || isinf(R2_star.x))
-		{
-			return _V(0, 0, 0);
-		}
-
-		dr2 = _V(1.0, 1.0, 1.0);
-		n = 0;
-	}
-
-	oneclickcoast(Epoch, R1, V1_star, mjd0, dt, R2_star, V2_star, gravin, gravout);
-	dr2 = R2 - R2_star;
-	max_dr = 0.5*length(R2_star);
-	if (length(dr2) > max_dr)
-	{
-		dr2 = unit(dr2)*max_dr;
-	}
-
-	while (length(dr2) > tol && nMax >= n)
-	{
-		n += 1;
-		for (int i = 0; i < 4; i++)
-		{
-			v_l[0][i] = V1_star + _V(1, 0, 0)*hvec[i];
-			v_l[1][i] = V1_star + _V(0, 1, 0)*hvec[i];
-			v_l[2][i] = V1_star + _V(0, 0, 1)*hvec[i];
-		}
-		for (int i = 0; i < 3; i++)
-		{
-			for (int j = 0; j < 4; j++)
-			{
-				oneclickcoast(Epoch, R1, v_l[i][j], mjd0, dt, R2l[i][j], V2l[i][j], gravin, gravout);
-			}
-		}
-		for (int i = 0; i < 3; i++)
-		{
-			T[i] = (R2l[i][2] - R2l[i][3] - (R2l[i][0] - R2l[i][1])*OrbMech::power(rho, 3.0)) * 1.0 / (rho*h*(1.0 - OrbMech::power(rho, 2.0)));
-		}
-		T2 = _M(T[0].x, T[1].x, T[2].x, T[0].y, T[1].y, T[2].y, T[0].z, T[1].z, T[2].z);
-		V1_star = V1_star + mul(inverse(T2), dr2);
-		oneclickcoast(Epoch, R1, V1_star, mjd0, dt, R2_star, V2_star, gravin, gravout);
-		dr2 = R2 - R2_star;
-		max_dr = 0.5*length(R2_star);
-		if (length(dr2) > max_dr)
-		{
-			dr2 = unit(dr2)*max_dr;
-		}
-	}
-	return V1_star;
-}
-
-void planeinter(VECTOR3 n1, double h1, VECTOR3 n2, double h2, VECTOR3 &m1, VECTOR3 &m2)
-{
-	double c1, c2;
-	c1 = (h1 - h2*dotp(n1, n2)) / (1.0 - power(dotp(n1, n2), 2.0));
-	c2 = (h2 - h1*dotp(n1, n2)) / (1.0 - power(dotp(n1, n2), 2.0));
-	m1 = n1*c1 + n2*c2;
-	m2 = crossp(n1, n2);
 }
 
 double NSRsecant(int Epoch, VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, double x, double DH, OBJHANDLE gravref)
@@ -3033,30 +2976,43 @@ int FindNearestStar(const VECTOR3 *navstars, VECTOR3 U_LOS, VECTOR3 R_C, double 
 	return star;
 }
 
-VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
+VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int prefset, int &set)
 {
-	int starset[3][2];
+	int starset[4][2], maxset;
 	double a, SA, TA1, dTA, TA2;
 	VECTOR3 s_SMA, s_SMB, s_NBA, s_NBB, imuang;
 	MATRIX3 SBNB,SMNB;
 
+	maxset = 3;
 	a = -0.5676353234;
 	TA1 = 32.5*RAD; //50° mark is at 7.5° trunnion plus 25° from center 
 	SA = PI;
 
 	//Star 1: 50° mark. Star 2: R line
+
+	//Deneb, Vega
 	starset[0][0] = 34;
 	starset[0][1] = 29;
 
+	//Navi, Polaris
 	starset[1][0] = 2;
 	starset[1][1] = 4;
 
+	//Acrux, Atria
 	starset[2][0] = 20;
 	starset[2][1] = 27;
 
+	//Sirius, Rigel
+	starset[3][0] = 12;
+	starset[3][1] = 9;
+
 	SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
 
-	for (set = 0; set < 3; set++)
+	//In case the input is nonsense
+	prefset = max(0, min(prefset, maxset));
+	set = prefset;
+
+	do
 	{
 		//Get star unit vectors
 		s_SMA = navstars[starset[set][0]];
@@ -3083,7 +3039,15 @@ VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, d
 		{
 			return imuang;
 		}
-	}
+		//Try next one
+		set++;
+		//Starting from the beginning?
+		if (set > maxset)
+		{
+			set = 0;
+		}
+		//Reached first set again?
+	} while (set != prefset);
 	return _V(0, 0, 0);
 }
 
@@ -4477,84 +4441,6 @@ MATRIX3 GetVesselToLocalRotMatrix(VESSEL *v)
 	return MatrixRH_LH(mul(tmat(Rot_LG), Rot_VG));
 }
 
-void xaxislambert(VECTOR3 RA1, VECTOR3 VA1, VECTOR3 RP2off, double dt2, int N, bool tgtprograde, double mu, VECTOR3 &VAP2, double &zoff)
-{
-	VECTOR3 RPP1, RPP2, VAP1, dVLV1, dVLV2;
-	double f1, f2, r1, r2, y;
-	MATRIX3 Q_Xx;
-	int nmax, n;
-
-	Q_Xx = LVLH_Matrix(RA1, VA1);
-
-	f2 = 1;
-	n = 0;
-	nmax = 10;
-
-	RPP1 = RP2off;
-	RPP2 = RP2off*(length(RP2off) + 10.0) / length(RP2off);
-
-	VAP1 = elegant_lambert(RA1, VA1, RPP1, dt2, N, tgtprograde, mu);
-	VAP2 = elegant_lambert(RA1, VA1, RPP2, dt2, N, tgtprograde, mu);
-
-	r1 = length(RPP1);
-	r2 = length(RPP2);
-
-	while (abs(f2)>0.01 && nmax >= n)
-	{
-		dVLV1 = mul(Q_Xx, VAP1 - VA1);
-		dVLV2 = mul(Q_Xx, VAP2 - VA1);
-
-		f1 = dVLV1.z;
-		f2 = dVLV2.z;
-
-		y = r2 - f2*(r2 - r1) / (f2 - f1);
-		VAP1 = VAP2;
-		r1 = r2;
-		r2 = y;
-
-		VAP2 = elegant_lambert(RA1, VA1, unit(RP2off)*r2, dt2, N, tgtprograde, mu);
-
-		n++;
-	}
-
-	zoff += length(RP2off) - r2;
-}
-
-/*void poweredflight(VESSEL* vessel, VECTOR3 R, VECTOR3 V, OBJHANDLE gravref, THRUSTER_HANDLE thruster, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &t_go)
-{
-	double v_ex, f_T, a_T, tau, L, S, J, mu, dV;
-	VECTOR3 R_thrust, V_thrust, R_c1, V_c1, R_c2, V_c2, R_grav, V_grav, U_TD;
-
-	dV = length(V_G);
-	U_TD = unit(V_G);
-
-	mu = GGRAV*oapiGetMass(gravref);
-
-	v_ex = vessel->GetThrusterIsp0(thruster);
-	f_T = vessel->GetThrusterMax0(thruster);
-	a_T = f_T / m;
-	tau = v_ex / a_T;
-
-	L = dV;
-	t_go = tau*(1.0 - exp(-L / v_ex));
-	J = L*tau - v_ex*t_go;
-	S = -J + t_go*L;
-
-	R_thrust = U_TD*S;
-	V_thrust = U_TD*L;
-
-	R_c1 = R - R_thrust*1.0 / 10.0 - V_thrust*1.0 / 30.0*t_go;
-	V_c1 = V + R_thrust*6.0 / 5.0 / t_go - V_thrust*1.0 / 10.0;
-
-	rv_from_r0v0(R_c1, V_c1, t_go, R_c2, V_c2, mu);
-
-	V_grav = V_c2 - V_c1;
-	R_grav = R_c2 - R_c1 - V_c1*t_go;
-
-	R_cutoff = R + V*t_go + R_grav + R_thrust;
-	V_cutoff = V + V_grav + V_thrust;
-}*/
-
 void poweredflight(VECTOR3 R, VECTOR3 V, double mjd0, OBJHANDLE gravref, double f_T, double v_ex, double m, VECTOR3 V_G, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &m_cutoff, double &t_go)
 {
 	double dt, dt_max, a_T, tau, m0, mnow, dV, dVnow, t_remain, t;
@@ -4723,53 +4609,6 @@ void impulsive(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, d
 	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
 }
 
-void impulsive2(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, double f_T, double f_av, double isp, double m, VECTOR3 R_ref, VECTOR3 V_ref, VECTOR3 &Llambda, double &t_slip, VECTOR3 &R_cutoff, VECTOR3 &V_cutoff, double &MJD_cutoff, double &m_cutoff)
-{
-	VECTOR3 R_ig, V_ig, V_go, dV_go, R_d, V_d, R_p, V_p, i_z, i_y;
-	double t_slip_old, mu, t_go, v_goz, dr_z, dt_go, m_p;
-	int n, nmax;
-
-	nmax = 100;
-	t_slip = 0;
-	t_slip_old = 1;
-	dt_go = 1;
-	mu = GGRAV * oapiGetMass(gravref);
-	V_go = V_ref - V;
-	i_y = -unit(crossp(R_ref, V_ref));
-
-	while (abs(t_slip - t_slip_old) > 0.01)
-	{
-		n = 0;
-		//rv_from_r0v0(R, V, t_slip, R_ig, V_ig, mu);
-		oneclickcoast(Epoch, R, V, MJD, t_slip, R_ig, V_ig, gravref, gravref);
-		while ((length(dV_go) > 0.01 || n < 2) && n <= nmax)
-		{
-			poweredflight(R_ig, V_ig, MJD, gravref, f_av, isp, m, V_go, R_p, V_p, m_p, t_go);
-			//rv_from_r0v0(R_ref, V_ref, t_go + t_slip, R_d, V_d, mu);
-			oneclickcoast(Epoch, R_ref, V_ref, MJD, t_go + t_slip, R_d, V_d, gravref, gravref);
-			i_z = unit(crossp(R_d, i_y));
-			dr_z = dotp(i_z, R_d - R_p);
-			v_goz = dotp(i_z, V_go);
-			dt_go = -2.0 * dr_z / v_goz;
-			dV_go = V_d - V_p;
-			//dV_go = (V_go_apo - V_go)*0.5;
-			V_go = V_go + dV_go;
-			n++;
-		}
-		t_slip_old = t_slip;
-		t_slip += dt_go * 0.1;
-	}
-	if (n >= nmax)
-	{
-		sprintf(oapiDebugString(), "Iteration failed!");
-	}
-	Llambda = V_go;
-	R_cutoff = R_p;
-	V_cutoff = V_p;
-	m_cutoff = m_p;
-	MJD_cutoff = MJD + (t_go + t_slip) / 24.0 / 3600.0;
-}
-
 double GETfromMJD(double MJD, double GETBase)
 {
 	return (MJD - GETBase)*24.0*3600.0;
@@ -4778,37 +4617,6 @@ double GETfromMJD(double MJD, double GETBase)
 double MJDfromGET(double GET, double GETBase)
 {
 	return GETBase + GET / 24.0 / 3600.0;
-}
-
-void format_time_HHMMSS(char *buf, double time) {
-	buf[0] = 0; // Clobber
-	int hours, minutes, seconds;
-	bool neg = false;
-	if (time < 0)
-	{
-		time = abs(time);
-		neg = true;
-	}
-	hours = (int)(time / 3600);
-	minutes = (int)((time / 60) - (hours * 60));
-	seconds = (int)((time - (hours * 3600)) - (minutes * 60));
-	if (neg)
-	{
-		sprintf(buf, "-%03d:%02d:%02d", hours, minutes, seconds);
-	}
-	else
-	{
-		sprintf(buf, "%03d:%02d:%02d", hours, minutes, seconds);
-	}
-}
-
-void format_time_MMSS(char *buf, double time) {
-	buf[0] = 0; // Clobber
-	int minutes, seconds;
-	if (time < 0) { return; } // don't do that
-	minutes = (int)(time / 60);
-	seconds = (int)(time - (minutes * 60));
-	sprintf(buf, "%d:%02d", minutes, seconds);
 }
 
 void checkstar(const VECTOR3 *navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft)

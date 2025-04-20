@@ -242,6 +242,18 @@ struct RTCCSystemParameters
 		MCSRMU = 0.494857310015327;
 		MCERMU = 4.461996919999204;
 
+		//Earth
+		MDCMAT[0] = -1.1619e-9; MDCMAT[1] = 1.5654e-6; MDCMAT[2] = 2.1625e-6; MDCMAT[3] = 3.18750e-7; MDCMAT[4] = 9.7078e-8;
+		MDCMAT[5] = -5.1257e-7; MDCMAT[6] = 7.739e-8; MDCMAT[7] =  5.7700e-8; MDCMAT[8] = -3.4567e-9;
+		MDSMAT[0] = -4.1312e-9; MDSMAT[1] = -8.9613e-7; MDSMAT[2] = 2.6809e-7; MDSMAT[3] = -2.15567e-8; MDSMAT[4] = 1.9885e-7;
+		MDSMAT[5] = -4.4095e-7; MDSMAT[6] = 1.497e-7; MDSMAT[7] = -1.2389e-8; MDSMAT[8] = 6.4464e-9;
+		MGTESE = 0; //4 to use the full tesseral data. Use 0 in Orbiter Beta and earlier, 4 in Open Orbiter
+
+		//Moon
+		MMCMAT[0] = 0.0; MMCMAT[1] = 0.20715e-4; MMCMAT[2] = 0.34e-4; MMCMAT[3] = 0.0; MMCMAT[4] = 0.02583e-4; MMCMAT[5] = 0.0; MMCMAT[6] = 0.0; MMCMAT[7] = 0.0; MMCMAT[8] = 0.0;
+		MMSMAT[0] = 0.0; MMSMAT[1] = 0.0; MMSMAT[2] = 0.0; MMSMAT[3] = 0.0; MMSMAT[4] = 0.0; MMSMAT[5] = 0.0; MMSMAT[6] = 0.0; MMSMAT[7] = 0.0; MMSMAT[8] = 0.0;
+		MMTESE = 0; //3 with L1 model. Use 0 in Orbiter Beta and earlier, 3 in Open Orbiter
+
 		//Time from launch to EOI, seconds
 		MDLIEV[0] = 0.76673814e3;
 		MDLIEV[1] = -0.18916781e1;
@@ -826,6 +838,21 @@ struct RTCCSystemParameters
 	double MCSRMU;
 	//Square root of gravitational constant of the Earth (Er^3/hr^2)^1/2
 	double MCERMU;
+
+	//C-matrix used in Earth potential
+	double MDCMAT[9];
+	//S-matrix used in Earth potential
+	double MDSMAT[9];
+	//Number of tesseral and sectorial coefficients in Earth potential
+	int MGTESE;
+
+	//C-matrix used in Moon potential
+	double MMCMAT[9];
+	//S-matrix used in Moon potential
+	double MMSMAT[9];
+	//Number of tesseral and sectorial coefficients in Moon potential
+	int MMTESE;
+
 	//Polynomial coefficients for insertion conditions
 	double MDLIEV[16];
 	//Earth orbit insertion constants
