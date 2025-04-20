@@ -1645,11 +1645,29 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 		// MAT_LIGHT changes the Brightness of the Material
 		// MAT_EMISSION changes the Brightness of the Material controlled by its _emis Texture
-		SetVCLighting(vcidx, FloodLights_LMVC,    MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(FloodLights_LMVC));
+		SetVCLighting(vcidx, FloodLights_LMVC, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(FloodLights_LMVC));
 		floodLight_Left->SetIntensity(FloodLights.GetCDRRotaryVoltage() / 28.0);
 		floodLight_Right->SetIntensity(FloodLights.GetLMPRotaryVoltage() / 28.0);
 		SetVCLighting(vcidx, IntegralLights_LMVC, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
 		SetVCLighting(vcidx, IntegralLights_LMVC_NoTex, MAT_LIGHT, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
+
+		if (LtgSidePanelsSwitch.GetState() == TOGGLESWITCH_UP){	// Panel 8, 11
+			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_8_11, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
+			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
+		}else{
+			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_8_11, MAT_EMISSION, 0, 1);
+			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, 0, 1);
+		}
+		if (SidePanelsSwitch.GetState() == TOGGLESWITCH_UP){ // Panel 12, 14, 16
+			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_12_14_16, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
+			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
+			SetVCLighting(vcidx, VC_MAT_Rotary_LM_Panel_12_14, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
+		}else{
+			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_12_14_16, MAT_EMISSION, 0, 1);
+			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, 0, 1);
+			SetVCLighting(vcidx, VC_MAT_Rotary_LM_Panel_12_14, MAT_EMISSION, 0, 1);
+		}
+
 		SetVCLighting(vcidx, NumericLights_LMVC,  MAT_LIGHT, (lca.GetNumericVoltage() / 115.0) + floodRotaryValue, NUM_ELEMENTS(NumericLights_LMVC));
 
 		if (CWEA.GetMasterAlarm()) {

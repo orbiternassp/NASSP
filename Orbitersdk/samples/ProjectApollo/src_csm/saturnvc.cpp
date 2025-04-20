@@ -2122,16 +2122,18 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 			}
 		}
 
-		if ((cws.GetMasterAlarm() || cws.GetCWLightTest() == CWS_TEST_LIGHTS_LEFT) && cws.GetMode() != CWS_MODE_BOOST) {
-			SetVCLighting(vcidx, VC_MAT_MASTERALARM_PANEL1, MAT_LIGHT, 1.0, 1);
-		}
+		if (cws.IsPowered()) {
+			if ((cws.GetMasterAlarm() || cws.GetCWLightTest() == CWS_TEST_LIGHTS_LEFT) && cws.GetMode() != CWS_MODE_BOOST) {
+				SetVCLighting(vcidx, VC_MAT_MASTERALARM_PANEL1, MAT_LIGHT, 1.0, 1);
+			}
 		
-		if (cws.GetMasterAlarm() || cws.GetCWLightTest() == CWS_TEST_LIGHTS_RIGHT) {
-			SetVCLighting(vcidx, VC_MAT_MASTERALARM_PANEL2, MAT_LIGHT, 1.0, 1);
-		}
+			if (cws.GetMasterAlarm() || cws.GetCWLightTest() == CWS_TEST_LIGHTS_RIGHT) {
+				SetVCLighting(vcidx, VC_MAT_MASTERALARM_PANEL2, MAT_LIGHT, 1.0, 1);
+			}
 
-		if (cws.GetMasterAlarm()) {
-			SetVCLighting(vcidx, VC_MAT_MasterAlarm_LEB, MAT_LIGHT, 1.0, 1);
+			if (cws.GetMasterAlarm()) {
+				SetVCLighting(vcidx, VC_MAT_MasterAlarm_LEB, MAT_LIGHT, 1.0, 1);
+			}
 		}
 
 		if (SI_EngineNum > 5){
