@@ -47,6 +47,8 @@ public:
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
 	void PrelaunchMissionInitialization();
+	//Returns the time in GET that the LVDC saved as the orbital insertion time
+	double GetLVDCOrbitalInsertionTime(VESSEL *v);
 
 	//Mission specific rendezvous plans
 	void DMissionRendezvousPlan(SV sv_A0, double &t_TPI0);
