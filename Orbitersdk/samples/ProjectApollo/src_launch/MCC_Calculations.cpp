@@ -22,7 +22,16 @@
   **************************************************************************/
 
 #include "MCC_Calculations.h"
+#include "nassputils.h"
+#include "soundlib.h"
+#include "apolloguidance.h"
+#include "saturn.h"
+#include "iu.h"
+#include "sivb.h"
+#include "LVDC.h"
 #include "rtcc.h"
+
+using namespace nassp;
 
 MCC_Calculations::MCC_Calculations(RTCC *r) : RTCCModule(r)
 {
@@ -211,6 +220,47 @@ void MCC_Calculations::PrelaunchMissionInitialization()
 	//P80 MED: mission initialization
 	sprintf_s(Buff, "P80,1,CSM,%d,%d,%d;", pRTCC->GZGENCSN.MonthofLiftoff, pRTCC->GZGENCSN.DayofLiftoff, pRTCC->GZGENCSN.Year);
 	pRTCC->GMGMED(Buff);
+}
+
+double MCC_Calculations::GetLVDCOrbitalInsertionTime(VESSEL *v)
+{
+	if (utils::IsVessel(v, utils::SaturnIB) || utils::IsVessel(v, utils::SaturnIB_SIVB))
+	{
+		//Saturn IB LVDC
+		LVDC1B *lvdc;
+
+		if (utils::IsVessel(v, utils::SaturnIB))
+		{
+			Saturn *sat = (Saturn*)v;
+			lvdc = (LVDC1B*)sat->GetIU()->GetLVDC();
+		}
+		else
+		{
+			SIVB *sivb = (SIVB*)v;
+			lvdc = (LVDC1B*)sivb->GetIU()->GetLVDC();
+		}
+
+		return (lvdc->T_CO - 17.0); //TBD: Time when TB4 was established would be better, but it is not being saved yet
+	}
+	else if (utils::IsVessel(v, utils::SaturnV) || utils::IsVessel(v, utils::SaturnV_SIVB))
+	{
+		//Saturn V LVDC
+		LVDCSV *lvdc;
+
+		if (utils::IsVessel(v, utils::SaturnV))
+		{
+			Saturn *sat = (Saturn*)v;
+			lvdc = (LVDCSV*)sat->GetIU()->GetLVDC();
+		}
+		else
+		{
+			SIVB *sivb = (SIVB*)v;
+			lvdc = (LVDCSV*)sivb->GetIU()->GetLVDC();
+		}
+
+		return (lvdc->TB5 - 17.0);
+	}
+	else return 0.0;
 }
 
 void MCC_Calculations::DMissionRendezvousPlan(SV sv_A0, double &t_TPI0)
