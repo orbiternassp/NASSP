@@ -38,6 +38,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY0STATE8	18
 #define MST_C_DAY0STATE9	19
 #define MST_C_DAY0STATE10	20
+#define MST_C_DAY0STATE11	21
+#define MST_C_DAY0STATE12	22
 
 // DAY 1
 #define MST_C_DAY1STATE1	30

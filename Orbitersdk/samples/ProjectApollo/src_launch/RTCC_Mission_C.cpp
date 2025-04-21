@@ -1990,6 +1990,81 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
+	case 62: //SV WITH LOX DUMP PAD
+	{
+		SV sv;
+		double INSTIME;
+
+		char buffer1[1000];
+		char buffer2[1000];
+		char LOXSTART[32];
+		char LOXEND[32];
+
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		INSTIME = mcc->mcc_calcs.GetLVDCOrbitalInsertionTime(calcParams.src);
+
+		OrbMech::format_time_XXHMMSS(LOXSTART, INSTIME + 5052.0);
+		OrbMech::format_time_XXHMMSS(LOXEND, INSTIME + 5773.0);
+
+		AGCStateVectorUpdate(buffer1, sv, true);
+		AGCStateVectorUpdate(buffer2, sv, false);
+
+		sprintf(form->paddata, "LOX Dump Start: %s  LOX Dump End: %s", LOXSTART, LOXEND);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector");
+		}
+	}
+	break;
+	case 63: //P52 NAV STAR PAD
+	{
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		sprintf(form->paddata, "P52 Nav Stars:  Star 2 and Star 4");
+	}
+	break;
+	case 64: //SIVB PITCHDOWN PAD
+	{
+		double GRRTIME;
+
+		char PITCHDWN[32];
+		char INERTIAL[32];
+
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		GRRTIME = GETfromGMT(GetIUClockZero());
+
+		OrbMech::format_time_XXHMMSS(PITCHDWN, GRRTIME + 9780.0);
+		OrbMech::format_time_XXHMMSS(INERTIAL, GRRTIME + 10275.0);
+
+		sprintf(form->paddata, "GET of S-IVB Pitchdown: %s  GET of S-IVB Inertial Attitude: %s", PITCHDWN, INERTIAL);
+	}
+	break;
+	case 65: //GENERIC CSM STATE VECTOR UPDATE (BOTH SLOTS)
+	{
+		SV sv;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+
+		AGCStateVectorUpdate(buffer1, sv, true);
+		AGCStateVectorUpdate(buffer2, sv, false);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM state vector");
+		}
+	}
+	break;
 	}
 
 	return scrubbed;

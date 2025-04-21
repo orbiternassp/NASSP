@@ -32,13 +32,19 @@ See http://nassp.sourceforge.net/license/ for more details.
 void MCC::MissionSequence_C()
 {
 	switch (MissionState) {
-	case MST_C_INSERTION: //Insertion to state vector uplink
+	case MST_C_INSERTION: //Insertion to state vector uplink & LOX times
 		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(56.0 * 60.0), 100, MST_C_DAY0STATE1);
 		break;
-	case MST_C_DAY0STATE1: //State vector uplink to CSM/LV separation
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, cm->GetStage() == CSM_LEM_STAGE, 50, MST_C_DAY0STATE2);
+	case MST_C_DAY0STATE1: //State vector uplink & LOX times to P52 Nav Star Update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, mcc_calcs.GETEval(1.0 * 3600.0 + 50.0 * 60.0), 62, MST_C_DAY0STATE2);
 		break;
-	case MST_C_DAY0STATE2: //CSM/LV separation to phasing maneuver update
+	case MST_C_DAY0STATE2: //P52 Nav Star Update to SIVB Pitch & Inertial Times
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(2.0 * 3600.0 + 20.0 * 60.0), 63, MST_C_DAY0STATE3);
+		break;
+	case MST_C_DAY0STATE3: //SIVB Pitch & Inertial Times to CSM/LV separation
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, cm->GetStage() == CSM_LEM_STAGE, 64, MST_C_DAY0STATE4);
+		break;
+	case MST_C_DAY0STATE4: //CSM/LV separation to phasing maneuver update
 		switch (SubState) {
 		case 0:
 			addMessage("SEPARATION");
@@ -49,33 +55,33 @@ void MCC::MissionSequence_C()
 			if (mcc_calcs.GETEval(3.0 * 3600.0 + 5.0 * 60.0))
 			{
 				SlowIfDesired();
-				setState(MST_C_DAY0STATE3);
+				setState(MST_C_DAY0STATE5);
 			}
 			break;
 		}
 		break;
-	case MST_C_DAY0STATE3: //Phasing maneuver update to S-IVB navigation update
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(4.0 * 3600.0 + 31.0 * 60.0), 1, MST_C_DAY0STATE4);
+	case MST_C_DAY0STATE5: //Phasing maneuver update to S-IVB navigation update
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(4.0 * 3600.0 + 31.0 * 60.0), 1, MST_C_DAY0STATE6);
 		break;
-	case MST_C_DAY0STATE4: // S-IVB navigation update to 6-4 Deorbit Maneuver update
-		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(4.0 * 3600.0 + 45.0 * 60.0), 101, MST_C_DAY0STATE5);
+	case MST_C_DAY0STATE6: // S-IVB navigation update to 6-4 Deorbit Maneuver update
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(4.0 * 3600.0 + 45.0 * 60.0), 101, MST_C_DAY0STATE7);
 		break;
-	case MST_C_DAY0STATE5: // 6-4 Deorbit Maneuver update to Retro Orientation Test
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, SubStateTime > 3.0*60.0, 2, MST_C_DAY0STATE6);
+	case MST_C_DAY0STATE7: // 6-4 Deorbit Maneuver update to Retro Orientation Test
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, SubStateTime > 3.0*60.0, 2, MST_C_DAY0STATE8);
 		break;
-	case MST_C_DAY0STATE6: // Retro Orientation Test update to Block Data 2
-		UpdateMacro(UTP_PADONLY, PT_RETROORIENTATION, mcc_calcs.GETEval(10.0 * 3600.0 + 30.0 * 60.0), 102, MST_C_DAY0STATE7);
+	case MST_C_DAY0STATE8: // Retro Orientation Test update to Block Data 2
+		UpdateMacro(UTP_PADONLY, PT_RETROORIENTATION, mcc_calcs.GETEval(10.0 * 3600.0 + 30.0 * 60.0), 102, MST_C_DAY0STATE9);
 		break;
-	case MST_C_DAY0STATE7: //Block Data 2 to 2nd Phasing Maneuver Update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(14.0 * 3600.0 + 16.0 * 60.0), 3, MST_C_DAY0STATE8);
+	case MST_C_DAY0STATE9: //Block Data 2 to 2nd Phasing Maneuver Update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(14.0 * 3600.0 + 16.0 * 60.0), 3, MST_C_DAY0STATE10);
 		break;
-	case MST_C_DAY0STATE8: // 2nd Phasing Maneuver Update to Block Data 3
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(21.0 * 3600.0 + 50.0 * 60.0), 4, MST_C_DAY0STATE9);
+	case MST_C_DAY0STATE10: // 2nd Phasing Maneuver Update to Block Data 3
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(21.0 * 3600.0 + 50.0 * 60.0), 4, MST_C_DAY0STATE11);
 		break;
-	case MST_C_DAY0STATE9: // Block Data 3 to Preliminary NCC1 Update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(22.0 * 3600.0 + 25.0 * 60.0), 5, MST_C_DAY0STATE10);
+	case MST_C_DAY0STATE11: // Block Data 3 to Preliminary NCC1 Update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(22.0 * 3600.0 + 25.0 * 60.0), 5, MST_C_DAY0STATE12);
 		break;
-	case MST_C_DAY0STATE10: // Preliminary NCC1 Update to Final NCC1 Update
+	case MST_C_DAY0STATE12: // Preliminary NCC1 Update to Final NCC1 Update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(25.0 * 3600.0 + 30.0 * 60.0), 6, MST_C_DAY1STATE1);
 		break;
 	case MST_C_DAY1STATE1: // Final NCC1 Update to NCC2 Update
