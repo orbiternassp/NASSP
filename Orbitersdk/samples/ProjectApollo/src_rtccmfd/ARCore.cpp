@@ -1301,8 +1301,10 @@ void ARCore::GetStateVectorFromIU()
 void ARCore::GetStateVectorsFromAGS()
 {
 	VESSEL *v = GC->rtcc->pLM;
-
+	//LM vessel set?
 	if (v == NULL) return;
+	//Is vehicle a LM?
+	if (utils::IsVessel(v, utils::LEM) == false) return;
 
 	//0-6: pos and vel
 	int csmvecoct[6], lmvecoct[6];
@@ -5755,6 +5757,11 @@ int ARCore::subThread()
 
 		Result = DONE;
 	}
+	break;
+	case 61: //Vector Control PBI
+		GC->rtcc->VectorPanelSummaryBuffer.gmt = -10000000000000.0; //To update the display immediately
+		GC->rtcc->BMSVPS(0, GC->rtcc->RTCCONLINEMON.IntBuffer[0]);
+		Result = DONE;
 	break;
 	}
 

@@ -224,7 +224,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv = StateVectorCalcEphem(calcParams.src);
 
-		TLIBase = floor((TimeofIgnition / 1800.0) + 0.5)*1800.0; //Round to next half hour
+		TLIBase = floor((TimeofIgnition / 60.0))*60.0; //Round down to next minute
 		TIG = TLIBase + 90.0*60.0;
 		entopt.lng = -25.0*RAD;
 

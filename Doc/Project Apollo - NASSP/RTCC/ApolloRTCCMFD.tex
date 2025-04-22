@@ -3105,7 +3105,30 @@ Differential Correction (DC) is the state vector derived from long period ground
 The last panel shows the last executed maneuver in the mission plan table of the vehicle. The displayed times are ullage on and end of the thrust tailoff period after cutoff.\\
 
 To cause an ephemeris update the TUP button on each side can be pressed and then a vector from the usable vector table is chosen to do the update.\\
+\subsubsection{Errors}
+If any function of the VPS does not work as expected, an error might have occurred. An associated error message will have been written to the on-line monitor display (MSK 1629). Here follows a list of possible error messages:\\
 
+\begin{tabular}{p{3cm} p{10cm}}
+\underline{Code}&\underline{Error Description}\\
+1&An unrecognizable queue ID was detected.\\
+2&Not used.\\
+3&Not used.\\
+4&The PBI request made was not a valid request (missing information, two sources indicated, etc.).\\
+5&Request to move vector to Usable Slot cannot be honored because there is no vector in the corresponding Evaluation Slot.\\
+6&Request to move vector to ephemeris update cannot be honored because there is no vector in the corresponding Usable Slot.\\
+7&Not used.\\
+8&Test of PBI message header failed; improper message was routed to module.\\
+9&Unidentifiable vector ID in the S84 MED.\\
+10&Vector to be moved to ephemeris update could not be transformed to ECI coordinates.\\
+11&Telemetry vector requested by PBI cannot be furnished this mission.\\
+12&Not used.\\
+13&Not used.\\
+14&The matrix to rotate the telemetry vector requested is not available.\\
+15&Request is for a telemetry vector that is not available in the collection slot for this type vector.\\
+16&Invalid vehicle code from high-speed processor.\\
+17&Invalid vector source code from high-speed processor.\\
+18&Vector with lunar landing site indicator set cannot be routed to CSM ephemeris update.\\
+\end{tabular}
 \newpage
 \section{Config Files}
 
