@@ -136,8 +136,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		EphemerisData sv_A;
 		PLAWDTOutput WeightsTable;
 		double GET_TIG;
+		double GRRTIME;
+
+		char RETRO[32];
 
 		AP7MNV * form = (AP7MNV *)pad;
+
+		GRRTIME = GETfromGMT(GetIUClockZero());
+
+		OrbMech::format_time_XXHMMSS(RETRO, GRRTIME + 11820.0);
 
 		sv_A = StateVectorCalcEphem(calcParams.src);
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
@@ -155,8 +162,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.WeightsTable = WeightsTable;
 
 		AP7ManeuverPAD(opt, *form);
-		sprintf(form->purpose, "PHASING BURN");
-		sprintf(form->remarks, "heads down, retrograde, -X thrusters");
+		sprintf(form->purpose, "PHASING");
+		sprintf(form->remarks, "Heads down, Retrograde, -X thrusters  Be in retro attitude by 3:16:30  GET of S-IVB Retro Maneuver: %s", RETRO);
 	}
 	break;
 	case 101: //S-IVB STATE VECTOR UPLINK
@@ -192,7 +199,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		EphemerisData sv, sv_upl;
 		PLAWDTOutput WeightsTable;
 		EMSMISSInputTable intab;
-		EphemerisDataTable2 tab; 
+		EphemerisDataTable2 tab;
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
@@ -291,6 +298,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			sprintf(form->purpose, "6-4 DEORBIT");
 			sv_upl = sv;
+			sprintf(form->remarks, "Star check not available after 8:40:00");
 		}
 		else
 		{
@@ -413,7 +421,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		r_t = length(sv_P2.R);
 		R_t_u = unit(sv_P2.R);
 		H_t_u = unit(crossp(sv_P2.R, sv_P2.V));
-		
+
 		do
 		{
 			//Simulate maneuver
@@ -468,11 +476,11 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			if (opt.enginetype == RTCC_ENGINETYPE_CSMRCSPLUS4)
 			{
-				sprintf(form->remarks, "heads up, +X thrusters");
+				sprintf(form->remarks, "Heads up, +X thrusters");
 			}
 			else
 			{
-				sprintf(form->remarks, "heads up, 4 jets, 15 seconds ullage");
+				sprintf(form->remarks, "Heads up, 4 jets, 15 seconds ullage");
 			}
 		}
 	}
@@ -587,7 +595,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 			opt.navcheckGET = 25 * 60 * 60 + 42 * 60;
-			sprintf(form->remarks, "posigrade, heads up");
+			sprintf(form->remarks, "Posigrade, Heads up");
 		}
 
 		AP7ManeuverPAD(opt, *form);
@@ -753,7 +761,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "NSR");
-		sprintf(form->remarks, "heads down, retrograde");
+		sprintf(form->remarks, "Heads down, Retrograde");
 
 		AGCStateVectorUpdate(buffer1, sv_A, true);
 		AGCStateVectorUpdate(buffer2, sv_P, false);
@@ -823,7 +831,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "SEPARATION");
-		sprintf(form->remarks, "posigrade, heads down, -X Thrusters");
+		sprintf(form->remarks, "Posigrade, Heads down, -X thrusters");
 	}
 	break;
 	case 12: //MISSION C BLOCK DATA 4
@@ -1703,7 +1711,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		orbopt.sv_in = sv;
 
 		//Do this three times to converge properly
-		for (int i = 0;i < 3;i++)
+		for (int i = 0; i < 3; i++)
 		{
 			//Take state vector to estimated time of rev 164 crossing
 			sv1 = coast(sv0, GMTfromGET(260.0*3600.0) - sv0.GMT, RTCC_MPT_CSM);
@@ -1715,7 +1723,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			PMMAPD(aeg.Header, aeg.Data, KAOP, KE, INFO, NULL, &sv_P);
 			//Place perigee at 30°W (actual Apollo 7 mission)
 			orbopt.dLOA += OrbMech::calculateDifferenceBetweenAngles(INFO[8], -30.0*RAD);
-			
+
 			GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
 
 			sv0 = PZGPMELM.SV_before;
@@ -1990,7 +1998,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 62: //SV WITH LOX DUMP PAD
+	case 62: //SV WITH LOX DUMP TIMES
 	{
 		SV sv;
 		double INSTIME;
@@ -2029,7 +2037,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->paddata, "P52 Nav Stars:  Star 2 and Star 4");
 	}
 	break;
-	case 64: //SIVB PITCHDOWN PAD
+	case 64: //SIVB PITCHDOWN UPDATE
 	{
 		double GRRTIME;
 

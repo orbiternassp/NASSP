@@ -67,7 +67,7 @@ void MCC::MissionSequence_C()
 		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(4.0 * 3600.0 + 45.0 * 60.0), 101, MST_C_DAY0STATE7);
 		break;
 	case MST_C_DAY0STATE7: // 6-4 Deorbit Maneuver update to Retro Orientation Test
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, SubStateTime > 3.0*60.0, 2, MST_C_DAY0STATE8);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, SubStateTime > 3.0 * 60.0, 2, MST_C_DAY0STATE8);
 		break;
 	case MST_C_DAY0STATE8: // Retro Orientation Test update to Block Data 2
 		UpdateMacro(UTP_PADONLY, PT_RETROORIENTATION, mcc_calcs.GETEval(10.0 * 3600.0 + 30.0 * 60.0), 102, MST_C_DAY0STATE9);
