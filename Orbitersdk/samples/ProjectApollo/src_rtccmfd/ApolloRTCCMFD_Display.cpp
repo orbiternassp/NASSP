@@ -821,9 +821,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(CW, 10 * H / 14, "Ascent Stage", 12);
 		}
 
-		sprintf(Buffer, "Sxt/Star Check: %.0f min", -G->sxtstardtime / 60.0);
-		skp->Text(CW, 12 * H / 14, Buffer, strlen(Buffer));
-
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		sprintf(Buffer, "%02d:%02d:%04d", GC->rtcc->GZGENCSN.DayofLiftoff, GC->rtcc->GZGENCSN.MonthofLiftoff, GC->rtcc->GZGENCSN.Year);
 		skp->Text(W - CW, 2 * H / 14, Buffer, strlen(Buffer));
@@ -840,8 +837,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		if (G->manpadopt == 0 || G->manpadopt == 1)
 		{
 			skp->SetPen(pen2);
-			skp->Line(CW * 31 / 2 , CH * 2, CW * 31 / 2, CH * 12);
-			skp->Line(0, CH * 12, CW * 31 / 2, CH * 12);
+			skp->Line(CW * 31 / 2, CH * 2, CW * 31 / 2, CH * 33 / 2);
+			skp->Line(0, CH * 23 / 2, CW * 31 / 2, CH * 23 / 2);
+			skp->Line(0, CH * 33 / 2, CW * 31 / 2, CH * 33 / 2);
 
 			ThrusterName(Buffer, G->manpadenginetype);
 			skp->Text(CW, CH * 4, Buffer, strlen(Buffer));
@@ -868,6 +866,10 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf(Buffer, "%+07.1f", G->dV_LVLH.z / 0.3048);
 			skp->Text(CW, CH * 10, Buffer, strlen(Buffer));
 
+			skp->Text(CW, CH * 12, "Star Check:", 11);
+			sprintf(Buffer,"%.0f min", -G->sxtstardtime / 60.0);
+			skp->Text(CW, CH * 13, Buffer, strlen(Buffer));
+
 			if (G->manpadopt == 0)
 			{
 				skp->SetTextAlign(oapi::Sketchpad::CENTER);
@@ -890,22 +892,32 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 					skp->Text(CW, CH * 3, GC->manpad.remarks, strlen(GC->manpad.remarks));
 				}
 
+				skp->Text(CW, CH * 14, "Pref. Stars:", 12);
+				switch (G->manpad_pref_GDC_stars)
+				{
+				case 0: sprintf(Buffer, "Deneb, Vega"); break;
+				case 1: sprintf(Buffer, "Navi, Polaris"); break;
+				case 2: sprintf(Buffer, "Acrux, Atria"); break;
+				case 3: sprintf(Buffer, "Sirius, Rigel"); break;
+				}
+				skp->Text(CW, CH * 15, Buffer, strlen(Buffer));
+
 				if (GC->MissionPlanningActive || G->vesselisdocked)
 				{
-					skp->Text(CW, CH * 13, "LM Weight:", 10);
+					skp->Text(CW, CH * 17, "LM Weight:", 10);
 					sprintf(Buffer, "%.0lf", GC->manpad.LMWeight);
-					skp->Text(CW, CH * 14, Buffer, strlen(Buffer));
+					skp->Text(CW, CH * 18, Buffer, strlen(Buffer));
 				}
 
-				skp->Text(CW, CH * 18, "Set Stars:", 10);
-				skp->Text(CW, CH * 19, GC->manpad.SetStars, strlen(GC->manpad.SetStars));
+				skp->Text(CW, CH * 20, "Set Stars:", 10);
+				skp->Text(CW, CH * 21, GC->manpad.SetStars, strlen(GC->manpad.SetStars));
 
 				sprintf(Buffer, "R %03.0f", OrbMech::round(GC->manpad.GDCangles.x));
-				skp->Text(CW, CH * 20, Buffer, strlen(Buffer));
-				sprintf(Buffer, "P %03.0f", OrbMech::round(GC->manpad.GDCangles.y));
-				skp->Text(CW, CH * 21, Buffer, strlen(Buffer));
-				sprintf(Buffer, "Y %03.0f", OrbMech::round(GC->manpad.GDCangles.z));
 				skp->Text(CW, CH * 22, Buffer, strlen(Buffer));
+				sprintf(Buffer, "P %03.0f", OrbMech::round(GC->manpad.GDCangles.y));
+				skp->Text(CW, CH * 23, Buffer, strlen(Buffer));
+				sprintf(Buffer, "Y %03.0f", OrbMech::round(GC->manpad.GDCangles.z));
+				skp->Text(CW, CH * 24, Buffer, strlen(Buffer));
 
 				skp->Text(CW * 35, CH * 2, "N47", 3);
 				skp->Text(CW * 35, CH * 3, "N48", 3);
@@ -1019,14 +1031,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 					skp->Text(CW, CH * 3, GC->lmmanpad.remarks, strlen(GC->lmmanpad.remarks));
 				}
 
-				skp->Text(CW, CH * 13, "LM Weight:", 10);
+				skp->Text(CW, CH * 17, "LM Weight:", 10);
 				sprintf(Buffer, "%.0lf", GC->lmmanpad.LMWeight);
-				skp->Text(CW, CH * 14, Buffer, strlen(Buffer));
+				skp->Text(CW, CH * 18, Buffer, strlen(Buffer));
 				if (GC->MissionPlanningActive || G->vesselisdocked)
 				{
-					skp->Text(CW, CH * 15, "CSM Weight:", 11);
+					skp->Text(CW, CH * 19, "CSM Weight:", 11);
 					sprintf(Buffer, "%.0lf", GC->lmmanpad.CSMWeight);
-					skp->Text(CW, CH * 16, Buffer, strlen(Buffer));
+					skp->Text(CW, CH * 20, Buffer, strlen(Buffer));
 				}
 
 				OrbMech::SStoHHMMSS(GC->lmmanpad.GETI, hh, mm, secs, 0.01);
