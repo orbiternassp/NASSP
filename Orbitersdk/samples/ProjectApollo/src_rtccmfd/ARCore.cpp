@@ -674,6 +674,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	sxtstardtime = -30.0*60.0;
 	manpad_ullage_dt = 0.0;
 	manpad_ullage_opt = true;
+	manpad_pref_GDC_stars = 0;
 	ManPADMPT = 1;
 	ManPADMPTManeuver = 1;
 	TLIPAD_StudyAid = false;
@@ -3384,6 +3385,7 @@ int ARCore::subThread()
 			opt.WeightsTable = WeightsTable;
 			opt.UllageDT = manpad_ullage_dt;
 			opt.UllageThrusterOpt = manpad_ullage_opt;
+			opt.PrefGDCStars = manpad_pref_GDC_stars;
 
 			GC->rtcc->AP11ManeuverPAD(opt, GC->manpad);
 		}
