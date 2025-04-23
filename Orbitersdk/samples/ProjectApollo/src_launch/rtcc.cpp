@@ -11988,7 +11988,7 @@ void RTCC::LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscen
 	EphemerisData sv_CSM_TIG;
 	MATRIX3 Rot;
 	VECTOR3 R0, V0, R, V, U_FDP, U_M, u, R0_proj, U_R, Q;
-	double r_LS, t_go, Thrust, w_M, dt, t_total, dv, isp, m1, t_total_old, R_D, Y, CR;
+	double r_LS, t_go, Thrust, w_M, dt, t_total, dv, m1, t_total_old, R_D, Y, CR, RY, RZ, WDOT;
 	bool stop = false;
 
 	//Null ascent dv and burn time
@@ -12030,8 +12030,13 @@ void RTCC::LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscen
 
 	while (stop == false)
 	{
-		asc.Guidance(R, V, m1, t_total, U_FDP, t_go, Thrust, isp);
-		stop = integ.Integration(R, V, m1, t_total, U_FDP, t_go, Thrust, isp);
+		//Get thrust from APS thrust table
+		GIMGBL(0.0, m1, RY, RZ, Thrust, WDOT, 34, 12, 0, 1, 0.0);
+		//Calculate thrust direction and time-to-go
+		asc.Guidance(R, V, m1, Thrust, t_total, U_FDP, t_go);
+		//Integrate for one step
+		stop = integ.Integration(R, V, m1, t_total, U_FDP, t_go, Thrust, Thrust / WDOT);
+		//Accumulate DV
 		dv += Thrust / m1 * (t_total - t_total_old);
 		t_total_old = t_total;
 	}
@@ -12216,11 +12221,10 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	MATRIX3 Rot, Q_Xx, REFSMMAT;
 	VECTOR3 U_FDP, WM, WI, W, R_LSP, U_FDP_abort;
 	double GMT_LAND, t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, t_Ins, TS, theta, r_Ins, A_Ins, H_a, t_CSI, DH_D;
-	double SLOPE, dV_Inc, dh_apo, w_M, V_H_min, t_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo, t_go_abort;
+	double SLOPE, dV_Inc, dh_apo, w_M, V_H_min, t_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo, t_go_abort, RY, RZ, WDOT;
 	int K_loop;
-	bool K_stage;
-	//false = CSI/CDH, true = Boost + CSI/CDH
-	bool K3;
+	bool K_stage; //false = staging has not happened yet, true = staging has happened
+	bool K3; //false = CSI/CDH, true = Boost + CSI/CDH
 	bool LandFlag = false;
 	bool InsertionFlag = false;
 	bool stop = false;
@@ -12333,11 +12337,19 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 					{
 						K_stage = true;
 						W_TA = opt.W_TAPS;
-						ascguid.SetThrustParams(true);
+						ascguid.SetThrustParams(W_TA, true);
 					}
 				}
-
-				ascguid.Guidance(sv_D.sv.R, sv_D.sv.V, W_TA, t, U_FDP, t_go, T, isp);
+				//Get actual engine performance
+				if (K_stage)
+				{
+					GIMGBL(0.0, W_TA, RY, RZ, T, WDOT, 34, 12, 0, 1, 0.0); //APS
+				}
+				else
+				{
+					GIMGBL(0.0, W_TA, RY, RZ, T, WDOT, 35, 12, 0, 0, 0.0); //DPS
+				}
+				ascguid.Guidance(sv_D.sv.R, sv_D.sv.V, W_TA, T, t, U_FDP, t_go);
 				if (dotp(U_FDP, integ.GetCurrentTD()) < 0)
 				{
 					if (acos(dotp(integ.GetCurrentTD(), unit(sv_D.sv.R))) > 30.0*RAD)
@@ -12345,7 +12357,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 						U_FDP = unit(sv_D.sv.R);
 					}
 				}
-				InsertionFlag = integ.Integration(sv_D.sv.R, sv_D.sv.V, W_TA, t, U_FDP, t_go, T, isp);
+				InsertionFlag = integ.Integration(sv_D.sv.R, sv_D.sv.V, W_TA, t, U_FDP, t_go, T, T / WDOT);
 			} while (InsertionFlag == false);
 			t_Ins = t;
 			sv_LM_Ins = sv_D;

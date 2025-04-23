@@ -3965,8 +3965,8 @@ int ARCore::subThread()
 				break;
 			}
 			asc_in.sv_CSM = GC->rtcc->StateVectorCalcEphem(GC->rtcc->pCSM);
-			LEM *l = (LEM *)GC->rtcc->pLM;
-			asc_in.m0 = l->GetAscentStageMass();
+			//LEM *l = (LEM *)GC->rtcc->pLM;
+			asc_in.m0 = 4856.6;// l->GetAscentStageMass();
 		}
 
 		asc_in.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
