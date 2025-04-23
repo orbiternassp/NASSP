@@ -3890,23 +3890,19 @@ void ApolloRTCCMFD::menuCycleRTEDColumn()
 
 void ApolloRTCCMFD::menusextantstartime()
 {
-	bool SextantStarTimeInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Minutes before Maneuver", SextantStarTimeInput, 0, 20, (void*)this);
+	GenericDoubleInput(&G->sxtstardtime, "Minutes before Maneuver for sextant/boresight star check:", -60.0);
 }
 
-bool SextantStarTimeInput(void *id, char *str, void *data)
+void ApolloRTCCMFD::menuCyclePreferredGDCStarSet()
 {
-	if (strlen(str)<20 && atof(str) >= 0.0 && atof(str) <=60.0)
+	if (G->manpad_pref_GDC_stars < 3)
 	{
-		((ApolloRTCCMFD*)data)->set_sextantstartime(atof(str));
-		return true;
+		G->manpad_pref_GDC_stars++;
 	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_sextantstartime(double time)
-{
-	G->sxtstardtime = -time * 60.0;
+	else
+	{
+		G->manpad_pref_GDC_stars = 0;
+	}
 }
 
 void ApolloRTCCMFD::REFSMMATTimeDialogue()
