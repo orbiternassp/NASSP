@@ -35025,6 +35025,11 @@ void RTCC::BMSVPS(int queid, int PBIID)
 		goto RTCC_BMSVPS_1;
 	}
 
+	//Error 1: An unrecognizable queue ID was detected
+	RTCCONLINEMON.IntBuffer[0] = 1;
+	BMGPRIME("BMSVPS", 24);
+	return;
+
 	//PBI Queue
 RTCC_BMSVPS_1:
 	//To evaluation slot?
@@ -35088,6 +35093,15 @@ RTCC_BMSVPS_1:
 			break;
 		}
 
+		//Vector available?
+		if (sv.RBI == -1)
+		{
+			//Error 15: Request is for a telemetry vector that is not available in the collection slot for this type vector
+			RTCCONLINEMON.IntBuffer[0] = 15;
+			BMGPRIME("BMSVPS", 24);
+			return;
+		}
+
 		//Vector conversions
 		if (tabid == 2 || tabid == 6)
 		{
@@ -35113,6 +35127,26 @@ RTCC_BMSVPS_1:
 			//TBD: Make sure the IU REFSMMAT is valid. Also, IU1 vs IU2
 			sv.R = tmul(GZLTRA.IU1_REFSMMAT, sv.R);
 			sv.V = tmul(GZLTRA.IU1_REFSMMAT, sv.V);
+		}
+
+		//"Upon rotation of telemetry vectors through the appropriate conversion matrix,
+		// a test will be made of the position components. If the position is less than one
+		// radius for the reference body, the vector will not be further processed."
+		double R_E;
+		if (sv.RBI == BODY_EARTH)
+		{
+			R_E = OrbMech::R_Earth;
+		}
+		else
+		{
+			R_E = BZLAND.rad[0];
+		}
+		if (length(sv.R) < R_E)
+		{
+			//Error 11: Telemetry vector requested by PBI cannot be furnished this mission
+			RTCCONLINEMON.IntBuffer[0] = 14;
+			BMGPRIME("BMSVPS", 24);
+			return;
 		}
 
 		char Buff2[16];
@@ -35147,9 +35181,12 @@ RTCC_BMSVPS_1:
 		}
 
 		//Get Evaluation vector
+		//Vector available?
 		if (BZEVLVEC.data[etabid].ID < 0)
 		{
-			//Error
+			//Error 5: Request to move vector to Usable Slot cannot be honored because there is no vector in the corresponding Evaluation Slot
+			RTCCONLINEMON.IntBuffer[0] = 5;
+			BMGPRIME("BMSVPS", 24);
 			return;
 		}
 
@@ -35214,9 +35251,12 @@ RTCC_BMSVPS_1:
 		int id = PBIID - 324;
 
 		//Get vector to cause ephemeris update
+		//Vector available?
 		if (BZUSEVEC.data[id].ID < 0)
 		{
-			//Error
+			//Error 6: Request to move vector to ephemeris update cannot be honored because there is no vector in the corresponding Usable Slot
+			RTCCONLINEMON.IntBuffer[0] = 6;
+			BMGPRIME("BMSVPS", 24);
 			return;
 		}
 
@@ -35247,10 +35287,20 @@ RTCC_BMSVPS_1:
 		//Never use a landing site vector for the CSM ephemeris
 		if (L == RTCC_MPT_CSM && BZUSEVEC.data[id].LandingSiteIndicator)
 		{
+			//Error 18: Vector with lunar landing site indicator set cannot be routed to CSM ephemeris update
+			RTCCONLINEMON.IntBuffer[0] = 18;
+			BMGPRIME("BMSVPS", 24);
 			return;
 		}
 
 		PMSVCT(queid, L, BZUSEVEC.data[id]);
+	}
+	else
+	{
+		//Error 8: Test of PBI message header failed; improper message was routed to module
+		RTCCONLINEMON.IntBuffer[0] = 8;
+		BMGPRIME("BMSVPS", 24);
+		return;
 	}
 }
 
