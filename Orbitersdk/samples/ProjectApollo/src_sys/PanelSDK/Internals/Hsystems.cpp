@@ -1300,6 +1300,7 @@ h_crew::h_crew(char* i_name, int nr, h_Tank* i_src, h_Pipe* i_pipe, h_Tank* i_ur
 void h_crew::refresh(double dt) {
 
 	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)
+	double urine = 0.0162037 * number * dt;  //grams of urine based on production of 1.4 L/day (1400 g/day) per crew member
 
 	if (drinkpipe && !(drinkpipe->in->pz)) {
 
@@ -1319,8 +1320,6 @@ void h_crew::refresh(double dt) {
 	if (UCD)
 	{
 		double ucdTemp = UCD->GetTemp();
-
-		double urine = 0.0162037 * number * dt;  //grams of urine based on production of 1.4 L/day (1400 g/day) per crew member
 		UCD->space.composition[SUBSTANCE_H2O].mass += urine;
 		UCD->space.composition[SUBSTANCE_H2O].SetTemp(ucdTemp);
 
@@ -1329,10 +1328,8 @@ void h_crew::refresh(double dt) {
 
 		if (UCD->space.composition[SUBSTANCE_H2O].mass >= UCD->space.Volume * 1000.0 || UCD->OUT_valve.open || UCD->OUT2_valve.open) //stops urine buildup if storage is full or if dump valve is open
 		{
-			double urine = 0.0;
+			urine = 0.0;
 		}
-
-		//sprintf(oapiDebugString(), "urine %.5f", urine);
 	}
 
 	if (SRC)
