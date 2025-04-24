@@ -1326,7 +1326,7 @@ void h_crew::refresh(double dt) {
 	if (SRC)
 	{
 		double srcTemp = SRC->GetTemp();
-		therm_obj* t = SRC->GetThermalInterface();
+		therm_obj *t = SRC->GetThermalInterface();
 
 		if (SRC->space.composition[SUBSTANCE_O2].vapor_mass < oxygen)
 			oxygen = SRC->space.composition[SUBSTANCE_O2].vapor_mass;
