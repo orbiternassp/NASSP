@@ -1287,16 +1287,6 @@ h_crew::h_crew(char* i_name, int nr, h_Tank* i_src, h_Pipe* i_pipe, h_Tank* i_ur
 	UCD = i_urine;
 }
 
-h_crew::h_crew(char* i_name, int nr, h_Tank* i_src, h_Pipe* i_pipe, h_Tank* i_urine) {
-
-	strcpy(name, i_name);
-	max_stage = 99;
-	number = nr;
-	SRC = i_src;
-	drinkpipe = i_pipe;
-	UCD = i_urine;
-}
-
 void h_crew::refresh(double dt) {
 
 	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)
