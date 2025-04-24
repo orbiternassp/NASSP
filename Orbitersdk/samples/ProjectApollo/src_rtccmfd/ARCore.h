@@ -301,6 +301,7 @@ public:
 	double sxtstardtime;
 	double manpad_ullage_dt;
 	bool manpad_ullage_opt; //true = 4 jets, false = 2 jets
+	int manpad_pref_GDC_stars; // Preferred star set for the GDC backup alignment. 0 = Deneb, Vega, 1 = Navi, Polaris, 2 = Acrux, Atria, 3 = Sirius, Rigel
 	int ManPADMPT; //1 = CSM, 3 = LEM
 	int ManPADMPTManeuver; //1-15
 	bool TLIPAD_StudyAid; //False = nominal TLI, true = study aid

@@ -557,6 +557,10 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOf
 		if (hasAltVel) {
 			DSKYLightBlt(surf, lights, 52*TexMul, 121*TexMul, false, xOffset, yOffset, TexMul);
 			DSKYLightBlt(surf, lights, 52*TexMul, 144*TexMul, false, xOffset, yOffset, TexMul);
+
+			if (!hasDAPPrioDisp) {
+				oapiBlt(surf, lights, 0, 121 * TexMul, 0, 169 * TexMul, 49 * TexMul, 46 * TexMul);
+			}
 		}
 
 		if (hasDAPPrioDisp) {
@@ -587,8 +591,9 @@ void DSKY::RenderLights(SURFHANDLE surf, SURFHANDLE lights, int xOffset, int yOf
 		DSKYLightBlt(surf, lights, 52*TexMul, 121*TexMul, AltLit(), xOffset, yOffset, TexMul);
 		DSKYLightBlt(surf, lights, 52*TexMul, 144*TexMul, VelLit(), xOffset, yOffset, TexMul);
 
-		oapiBlt(surf, lights, 0, 121*TexMul, 0, 169*TexMul, 49*TexMul, 23*TexMul);
-		oapiBlt(surf, lights, 0, 144*TexMul, 0, 168*TexMul, 49*TexMul, 23*TexMul);
+		if (!hasDAPPrioDisp) {
+				oapiBlt(surf, lights, 0, 121 * TexMul, 0, 169 * TexMul, 49 * TexMul, 46 * TexMul);
+		}
 	}
 
 	if (hasDAPPrioDisp) {

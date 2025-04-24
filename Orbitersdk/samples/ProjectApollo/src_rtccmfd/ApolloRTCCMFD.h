@@ -254,7 +254,7 @@ public:
 	void menuManPADUllage();
 	void menuManPADTIG();
 	void menusextantstartime();
-	void set_sextantstartime(double time);
+	void menuCyclePreferredGDCStarSet();
 	void menuManPADDV();
 	void set_P30DV(VECTOR3 dv);
 	void menuREFSMMATAtt();

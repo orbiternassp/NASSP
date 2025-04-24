@@ -1394,16 +1394,18 @@ The Maneuver Pre-Advisory Data (PAD) contains all necessary numbers to safely co
 
 \subsubsection{Buttons}
 
-\textbf{VEH:}The vehicle configuration is only displayed here and chosen on the configuration page.\\
-\textbf{ENG:} Choose between the Service Propulsion System (SPS) and the Reaction Control System (RCS) for the maneuver.\\
+\textbf{VEH:} Cycle between using the docked (CSM/LM) or undocked vehicle configuration for the maneuver.\\
+\textbf{ENG:} Cycle between the available thrusters for the maneuver.\\
 \textbf{HEA:} Choose between conducting the maneuver in a heads-up or a heads-down orientation.\\
+\textbf{ULL:} Choose the ullage thrusters (2 or 4) and ullage duration for the maneuver.\\
 \textbf{TIG:} If you want to display a Maneuver PAD for a maneuver not calculated with the Apollo RTCC MFD you can manually enter the desired Time of Ignition and Delta V.\\
 \textbf{DV:} See above.\\
-\textbf{CLC:} Calculate the missing numbers on the Maneuver PAD.\\
-\textbf{OPT:} Switch between the Maneuver PAD, the Apollo 7 TPI PAD and the TLI PAD.\\
-\textbf{REQ:} Request a maneuver solution calculated with LTMFD or IMFD.\\
+\textbf{CLC:} Calculate the Maneuver PAD.\\
+\textbf{OPT:} Switch between the CSM and LM Maneuver PADs, the Apollo 7 TPI PAD, the TLI PAD and the PDI PAD.\\
+\textbf{STA:} Choose the time before the maneuver for which the sextant star check, boresight star check and backup GDC alignment are calculated.\\
+\textbf{GDC:} Choose the preferred star set for the backup GDC alignment. There are four sets of stars that can be used for the alignment. The Maneuver PAD logic will usually first try Deneb and Vega and perform an occultation check and a yaw angle check (75 deg max.). If this set is not available it will attempt to use the next one. With this button the preferred set, which will be checked first, can be selected. If it is not available the PAD would still show a different set that is available. The time for which the checks are performed is the same time as selected for the sextant and boresight star check.\\
 \textbf{BCK:} Go back to the main menu.\\
-
+\newpage
 \subsection{Entry PAD}
 
 \subsubsection{Explanation}
@@ -1610,8 +1612,6 @@ On the left side of this page appear the input parameters that are automatically
 \textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\
 \textbf{TYP:} Choose the type of vehicle configuration (CSM or LM, docked or undocked).\\
 \textbf{STA:} Choose the type of LM configuration that is currently being used, ascent or descent configuration.\\
-\textbf{SXT:} Change the time of the sextant star check, which is part of the procedure for a normal maneuver. During Earth orbit missions the Earth often blocks the sextant from viewing many stars, so adjusting the time of the check before the maneuver allows the MFD to find a suitable star.\\
-\textbf{UPL:} Inhibit or enable uplinks during times of no available ground stations. Currently all ground stations being used for Apollo 7 are implemented.\\
 \textbf{DAT:} Choose the launch date for the mission.\\
 \textbf{TIM:} Choose the launch time for the mission. This will update the launch time of the CSM stored in the RTCC.\\
 \textbf{EPO:} Choose the AGC epoch. Usually this is a MJD at around January 1st of the yearly coordinate system defining period. This value should be automatically chose correctly for the AGC version in use.\\
