@@ -934,11 +934,13 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 
 			if (ecs.UCTAStatus >= 95.0)
 			{
+				skp->SetTextColor(RGB(255, 0, 0));
 				skp->Text((int)(width * 0.6), (int)(height * 0.8), "FULL", 4);
 				skp->SetTextColor(RGB(0, 255, 0));
 			}
 			else if (ecs.UCTAStatus >= 85.0)
 			{
+				skp->SetTextColor(RGB(255, 255, 0));
 				sprintf(buffer, "%.2f%%", ecs.UCTAStatus);
 				skp->Text((int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
 				skp->SetTextColor(RGB(0, 255, 0));
@@ -978,11 +980,13 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 
 			if (ecs.UCTAStatus >= 95.0)
 			{
+				skp->SetTextColor(RGB(255, 0, 0));
 				skp->Text((int)(width * 0.6), (int)(height * 0.8), "FULL", 4);
 				skp->SetTextColor(RGB(0, 255, 0));
 			}
 			else if (ecs.UCTAStatus >= 85.0)
 			{
+				skp->SetTextColor(RGB(255, 255, 0));
 				sprintf(buffer, "%.2f%%", ecs.UCTAStatus);
 				skp->Text((int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
 				skp->SetTextColor(RGB(0, 255, 0));
