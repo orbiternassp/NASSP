@@ -436,8 +436,8 @@ void Saturn::SystemsInit() {
 	SetPipeMaxFlow("HYDRAULIC:WASTEH2OVENTPIPE", 150./ LBH);
 	SetPipeMaxFlow("HYDRAULIC:WASTEH2OINLETVENTPIPE", 100./ LBH);
 
-	SetPipeMaxFlow("HYDRAULIC:OVBDDUMPPIPE", 150./ LBH); // Need to find max urine dump flows
-	SetPipeMaxFlow("HYDRAULIC:HATCHDUMPPIPE", 150./ LBH); // Need to find max urine dump flows via hatch dump
+	SetPipeMaxFlow("HYDRAULIC:OVBDDUMPPIPE", 50./ LBH);
+	SetPipeMaxFlow("HYDRAULIC:HATCHDUMPPIPE", 50./ LBH);
 
 	CrewStatus.Init(this);
 
