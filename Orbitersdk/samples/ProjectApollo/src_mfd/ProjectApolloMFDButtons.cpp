@@ -49,32 +49,52 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("KILR", OAPI_KEY_K, &ProjectApolloMFD::menuKillRot);
 	RegisterFunction("EMS", OAPI_KEY_E, &ProjectApolloMFD::menuSaveEMSScroll);
 	RegisterFunction("DMP", OAPI_KEY_D, &ProjectApolloMFD::menuVAGCCoreDump);
-	RegisterFunction("TLO", OAPI_KEY_D, &ProjectApolloMFD::menuChangeLaunchTime);
+	RegisterFunction("TLO", OAPI_KEY_T, &ProjectApolloMFD::menuChangeLaunchTime);
 
 
-	static const MFDBUTTONMENU mnuECS[8] = {
+	static const MFDBUTTONMENU mnuECS[7] = {
 		{ "Back", 0, 'B' },
-		{ "Crew number", 0, 'C' },
-		{ "CDR in suit", 0, 'D' },
+		{ "Crew number", 0, 'N' },
+		{ "CDR in suit", 0, 'C' },
 		{ "LMP in suit", 0, 'L' },
 		{ "Start EVA",0,'E' },
 		{ "Connect CSM O2 Hose to LM",0,'H' },
-		{ "Primary coolant loop test heating", 0, 'P' },
-		{ "Secondary coolant loop test heating", 0, 'S' }
+		{ "ECS Debug", 0, 'D' }
 	};
 
 	page.ECS = RegisterPage(mnuECS, sizeof(mnuECS) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
-	RegisterFunction("CRW", OAPI_KEY_C, &ProjectApolloMFD::menuSetCrewNumber);
-	RegisterFunction("CDR", OAPI_KEY_D, &ProjectApolloMFD::menuSetCDRInSuit);
+	RegisterFunction("CRW", OAPI_KEY_N, &ProjectApolloMFD::menuSetCrewNumber);
+	RegisterFunction("CDR", OAPI_KEY_C, &ProjectApolloMFD::menuSetCDRInSuit);
 	RegisterFunction("LMP", OAPI_KEY_L, &ProjectApolloMFD::menuSetLMPInSuit);
 	RegisterFunction("EVA", OAPI_KEY_E, &ProjectApolloMFD::menuStartEVA);
-	RegisterFunction("HOS", OAPI_KEY_A, &ProjectApolloMFD::menuConnectCSMO2Hose);
+	RegisterFunction("HOS", OAPI_KEY_H, &ProjectApolloMFD::menuConnectCSMO2Hose);
 
+	RegisterFunction("DBG", OAPI_KEY_D, &ProjectApolloMFD::menuSetECSDebugPage);
+
+
+	static const MFDBUTTONMENU mnuECSDBG[8] = {
+	{ "Back", 0, 'B' },
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ 0,0,0 },
+	{ "Primary coolant loop test heating", 0, 'P' },
+	{ "Secondary coolant loop test heating", 0, 'S' }
+	};
+
+	page.ECSDBG = RegisterPage(mnuECSDBG, sizeof(mnuECSDBG) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetECSPage);
+	RegisterFunction("", OAPI_KEY_B, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_C, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_F, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_H, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_S, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("PRM", OAPI_KEY_P, &ProjectApolloMFD::menuSetPrimECSTestHeaterPower);
 	RegisterFunction("SEC", OAPI_KEY_S, &ProjectApolloMFD::menuSetSecECSTestHeaterPower);
-
 
 	static const MFDBUTTONMENU mnuIU[12] = {
 		{ "Back", 0, 'B' },
@@ -107,6 +127,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_P, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Y, &ProjectApolloMFD::menuVoid);
+
 
 	static const MFDBUTTONMENU mnuTELE[11] = {
 		{ "Back", 0, 'B' },

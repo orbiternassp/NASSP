@@ -3679,6 +3679,8 @@ void Saturn::GetECSStatus(ECSStatus &ecs)
 		ecs.SecECSTestHeating += SecECSTestHeater->max_boiler_power;
 
 	ecs.CSMO2HoseConnected = GetCSMO2Hose()->out != NULL;
+
+	ecs.UTCAStatus = WaterController.UTCAPct();
 }
 
 void Saturn::SetCrewNumber(int number) {

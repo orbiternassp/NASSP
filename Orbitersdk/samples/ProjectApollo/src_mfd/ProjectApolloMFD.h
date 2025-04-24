@@ -73,6 +73,7 @@ public:
 	void menuSetMainPage();
 	void menuSetGNCPage();
 	void menuSetECSPage();
+	void menuSetECSDebugPage();
 	void menuSetIUPage();
 	void menuSetTELEPage();
 	void menuSetLGCPage();

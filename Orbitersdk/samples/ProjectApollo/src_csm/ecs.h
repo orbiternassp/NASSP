@@ -287,6 +287,7 @@ public:
 	void SystemTimestep(double simdt);
 	double *GetWasteWaterDumpLevelRef() { return &wasteWaterDumpLevel; }
 	double *GetUrineDumpLevelRef() { return &urineDumpLevel; }
+	double UTCAPct() { return ((UTCATank->space.GetMass() / (UTCATank->space.Volume * 1000.0)) * 100.0); }
 	void FoodPreparationWaterSwitchToggled(PanelSwitchItem *s);
 
 protected:
