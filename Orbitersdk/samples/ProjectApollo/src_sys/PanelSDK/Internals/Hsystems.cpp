@@ -1277,7 +1277,7 @@ void h_MixingPipe::Save(FILEHANDLE scn) {
 }
 
 
-h_crew::h_crew(char* i_name, int nr, h_Tank* i_src, h_Pipe* i_pipe, h_Tank* i_urine) {
+h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Pipe *i_pipe, h_Tank *i_urine) {
 
 	strcpy(name, i_name);
 	max_stage = 99;
