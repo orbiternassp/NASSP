@@ -453,7 +453,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (scrubbed)
 		{
-			sprintf(upMessage, "Second Phasing Maneuver not necessary.");
+			sprintf(upMessage, "Second Phasing Maneuver Scrubbed");
 		}
 		else
 		{
@@ -472,7 +472,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 			AP7ManeuverPAD(opt, *form);
-			sprintf(form->purpose, "PHASING BURN");
+			sprintf(form->purpose, "PHASING 2");
 
 			if (opt.enginetype == RTCC_ENGINETYPE_CSMRCSPLUS4)
 			{
