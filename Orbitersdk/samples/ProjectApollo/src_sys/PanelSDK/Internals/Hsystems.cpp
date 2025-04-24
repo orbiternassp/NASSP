@@ -1319,17 +1319,17 @@ void h_crew::refresh(double dt) {
 
 	if (UCD)
 	{
+		if (UCD->space.composition[SUBSTANCE_H2O].mass >= UCD->space.Volume * 1000.0 || UCD->OUT_valve.open || UCD->OUT2_valve.open) //stops urine buildup if storage is full or if dump valve is open
+		{
+			urine = 0.0;
+		}
+
 		double ucdTemp = UCD->GetTemp();
 		UCD->space.composition[SUBSTANCE_H2O].mass += urine;
 		UCD->space.composition[SUBSTANCE_H2O].SetTemp(ucdTemp);
 
 		UCD->space.GetQ();
 		UCD->space.GetMass();
-
-		if (UCD->space.composition[SUBSTANCE_H2O].mass >= UCD->space.Volume * 1000.0 || UCD->OUT_valve.open || UCD->OUT2_valve.open) //stops urine buildup if storage is full or if dump valve is open
-		{
-			urine = 0.0;
-		}
 	}
 
 	if (SRC)

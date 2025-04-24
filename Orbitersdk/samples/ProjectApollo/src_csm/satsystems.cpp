@@ -1272,9 +1272,12 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *UrineMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK:MASS");
 	double *UrineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK:TEMP");
 	double *UrinePress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK:PRESS");
+	double *OVBDPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:OVBDDUMPPIPE:FLOW");
+	double *OVBDPipeFlowmax = (double *)Panelsdk.GetPointerByString("HYDRAULIC:OVBDDUMPPIPE:FLOWMAX");
+	int *OVBDvlv = (int *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK:OUT:ISOPEN");
 
 	//sprintf(oapiDebugString(), "Mass: %lf VapMass: %.5f Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *PotH2OMass, *PotH2OVapMass, KelvinToFahrenheit(*PotH2OTemp), *PotH2OPress *PSI, *DrinkPipeFlow, *DrinkPipeFlowmax, *PotH2OLeakVlv, *NumCrew);
-	//sprintf(oapiDebugString(), "Mass: %lf Temp: %.3f Press %.3f Crew %d", *UrineMass, KelvinToFahrenheit(*UrineTemp), *UrinePress *PSI, *NumCrew);
+	//sprintf(oapiDebugString(), "Mass: %lf Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *UrineMass, KelvinToFahrenheit(*UrineTemp), *UrinePress *PSI, *OVBDPipeFlow, *OVBDPipeFlowmax, *OVBDvlv, *NumCrew);
 	*/
 
 //GSE Oxygen Purge Debug Lines	
