@@ -973,6 +973,26 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			LEMECSStatus ecs;
 			lem->GetECSStatus(ecs);
 
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.8), "UCD Percentage:", 16);
+
+			if (ecs.UCTAStatus >= 95.0)
+			{
+				skp->Text((int)(width * 0.6), (int)(height * 0.8), "FULL", 4);
+				skp->SetTextColor(RGB(0, 255, 0));
+			}
+			else if (ecs.UCTAStatus >= 85.0)
+			{
+				sprintf(buffer, "%.2f%%", ecs.UCTAStatus);
+				skp->Text((int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
+				skp->SetTextColor(RGB(0, 255, 0));
+			}
+			else
+			{
+				sprintf(buffer, "%.2f%%", ecs.UCTAStatus);
+				skp->Text((int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
+			}
+
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			if (ecs.crewStatus == ECS_CREWSTATUS_OK) {
 				skp->Text((int)(width * 0.7), (int)(height * 0.4), "OK", 2);

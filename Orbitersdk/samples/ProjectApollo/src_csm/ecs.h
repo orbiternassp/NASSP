@@ -287,7 +287,7 @@ public:
 	void SystemTimestep(double simdt);
 	double *GetWasteWaterDumpLevelRef() { return &wasteWaterDumpLevel; }
 	double *GetUrineDumpLevelRef() { return &urineDumpLevel; }
-	double UTCAPct() { return ((UTCATank->space.GetMass() / (UTCATank->space.Volume * 1000.0)) * 100.0); }
+	double GetCMUCDPct() { return ((UCDTank->space.GetMass() / (UCDTank->space.Volume * 1000.0)) * 100.0); }
 	void FoodPreparationWaterSwitchToggled(PanelSwitchItem *s);
 
 protected:
@@ -302,7 +302,7 @@ protected:
 	h_Tank *wasteInletTank;
 	h_Pipe *wasteVentPipe;
 	h_Pipe *wasteInletVentPipe;
-	h_Tank *UTCATank;
+	h_Tank *UCDTank;
 	h_Pipe *OVBDDumpPipe;
 	h_Pipe *hatchDumpPipe;
 };

@@ -51,9 +51,10 @@ LEMCrewStatus::LEMCrewStatus(Sound &crewdeadsound) : crewDeadSound(crewdeadsound
 LEMCrewStatus::~LEMCrewStatus() {
 }
 
-void LEMCrewStatus::Init(LEM *s) {
+void LEMCrewStatus::Init(LEM *s, h_Tank *ucdt) {
 
 	lem = s;
+	UCDTank = ucdt;
 }
 
 void LEMCrewStatus::Timestep(double simdt) {

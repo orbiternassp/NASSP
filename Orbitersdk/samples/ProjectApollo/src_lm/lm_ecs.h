@@ -42,9 +42,10 @@ class LEMCrewStatus {
 public:
 	LEMCrewStatus(Sound &crewdeadsound);
 	virtual ~LEMCrewStatus();
-	void Init(LEM *s);
+	void Init(LEM *s, h_Tank *ucdt);
 	void Timestep(double simdt);
 	int GetStatus() { return status; };
+	double GetLMUCDPct() { return ((UCDTank->space.GetMass() / (UCDTank->space.Volume * 1000.0)) * 100.0); }
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 
@@ -61,6 +62,7 @@ protected:
 	double lastVerticalVelocity;
 
 	LEM *lem;
+	h_Tank *UCDTank;
 	Sound &crewDeadSound;
 	bool firstTimestepDone;
 };
