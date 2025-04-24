@@ -1026,6 +1026,7 @@ void SaturnSideHatch::DefineAnimationsVC(UINT idx)
 	saturn->SetAnimation(anim_ventvalve, 0.5);
 }
 
+
 SaturnWaterController::SaturnWaterController() {
 }
 
@@ -1138,9 +1139,10 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 	}
 
 	// Overboard urine dump
+	urineDumpLevel = OVBDDumpPipe->flow / OVBDDumpPipe->flowMax;
 	if (UTCATank->OUT_valve.open)
 	{
-		urineDumpLevel = OVBDDumpPipe->flow / OVBDDumpPipe->flowMax;
+		urineDumpLevel = 0.5 * (urineDumpLevel + (OVBDDumpPipe->flow / OVBDDumpPipe->flowMax));
 	}
 
 	// Hatch urine dump
@@ -1155,7 +1157,7 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 	}
 
 	//sprintf(oapiDebugString(), "wasteWaterDumpLevel %f", wasteWaterDumpLevel);
-	//sprintf(oapiDebugString(), "urineDumpLevel %f", urineDumpLevel);
+	sprintf(oapiDebugString(), "urineDumpLevel %f", urineDumpLevel);
 }
 
 void SaturnWaterController::FoodPreparationWaterSwitchToggled(PanelSwitchItem *s) {
