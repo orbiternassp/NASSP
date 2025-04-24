@@ -1157,7 +1157,7 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 	}
 
 	//sprintf(oapiDebugString(), "wasteWaterDumpLevel %f", wasteWaterDumpLevel);
-	sprintf(oapiDebugString(), "urineDumpLevel %f", urineDumpLevel);
+	//sprintf(oapiDebugString(), "urineDumpLevel %f", urineDumpLevel);
 }
 
 void SaturnWaterController::FoodPreparationWaterSwitchToggled(PanelSwitchItem *s) {
