@@ -3680,7 +3680,7 @@ void Saturn::GetECSStatus(ECSStatus &ecs)
 
 	ecs.CSMO2HoseConnected = GetCSMO2Hose()->out != NULL;
 
-	ecs.UTCAStatus = WaterController.UTCAPct();
+	ecs.UCTAStatus = WaterController.UCDPct();
 }
 
 void Saturn::SetCrewNumber(int number) {

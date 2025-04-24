@@ -172,7 +172,7 @@ typedef struct {
 typedef struct {
 	int crewNumber;
 	int crewStatus;
-	double UTCAStatus;
+	double UCTAStatus;
 	double PrimECSHeating;
 	double PrimECSTestHeating;
 	double SecECSHeating;

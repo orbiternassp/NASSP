@@ -1046,7 +1046,7 @@ void SaturnWaterController::Init(Saturn *s, h_Tank *pt, h_Tank *wt, h_Tank *pit,
 	wasteInletTank = wit;
 	wasteVentPipe = wvp;
 	wasteInletVentPipe = wivp;
-	UTCATank = ucdt;
+	UCDTank = ucdt;
 	OVBDDumpPipe = odp;
 	hatchDumpPipe = hdp;
 }
@@ -1057,7 +1057,7 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 	if (potableInletTank->OUT_valve.pz || potableInletTank->OUT2_valve.pz ||
 		wasteInletTank->OUT_valve.pz || potableTank->OUT_valve.pz ||
 		wasteTank->OUT_valve.pz || wasteInletTank->OUT2_valve.pz ||
-		UTCATank->OUT_valve.pz || UTCATank->OUT2_valve.pz) return;
+		UCDTank->OUT_valve.pz || UCDTank->OUT2_valve.pz) return;
 
 	// Potable tank inlet
 	if (saturn->PotableTankInletRotary.GetState() == 0) {	// open
@@ -1087,11 +1087,11 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 	// OVBD dump valve
 	if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3 && saturn->UrineDumpHeater.IsFrozen() == false)
 	{
-		UTCATank->OUT_valve.Open();
+		UCDTank->OUT_valve.Open();
 	}
 	else
 	{
-		UTCATank->OUT_valve.Close();
+		UCDTank->OUT_valve.Close();
 	}
 
 	// Hatch dump valve
@@ -1140,7 +1140,7 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 
 	// Overboard urine dump
 	urineDumpLevel = OVBDDumpPipe->flow / OVBDDumpPipe->flowMax;
-	if (UTCATank->OUT_valve.open)
+	if (UCDTank->OUT_valve.open)
 	{
 		urineDumpLevel = 0.5 * (urineDumpLevel + (OVBDDumpPipe->flow / OVBDDumpPipe->flowMax));
 	}
