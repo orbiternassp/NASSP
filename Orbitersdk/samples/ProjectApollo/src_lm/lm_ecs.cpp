@@ -557,19 +557,20 @@ void LEMForwardHatch::Toggle()
 
 void LEMForwardHatch::LoadState(char *line) {
 
-	int i1;
+	int i1, j;
 	double a, b;
 
-	sscanf(line + 13, "%d %lf %lf", &i1, &a, &b);
+	sscanf(line + 13, "%d %lf %lf %i", &i1, &a, &b, &j);
 	open = (i1 != 0);
 	hatch_state.SetState(a, b);
+	jettComplete = (j != 0);
 }
 
 void LEMForwardHatch::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
 
-	sprintf(buffer, "%i %lf %lf", (open ? 1 : 0), hatch_state.State(), hatch_state.Speed());
+	sprintf(buffer, "%i %lf %lf %d", (open ? 1 : 0), hatch_state.State(), hatch_state.Speed(), jettComplete);
 	oapiWriteScenario_string(scn, "FORWARDHATCH", buffer);
 }
 
