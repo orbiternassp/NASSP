@@ -2087,7 +2087,7 @@ void ProjectApolloMFD::menuConnectCSMO2Hose()
 		}
 		else
 		{
-			if (saturn->ForwardHatch.IsOpen()) //TBD: Require LM hatch to be open as well
+			if (saturn->ForwardHatch.IsOpen() && lem->OverheadHatch.IsOpen())
 			{
 				saturn->lemECSConnector.ConnectCSMO2Hose();
 			}
