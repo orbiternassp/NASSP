@@ -51,10 +51,9 @@ LEMCrewStatus::LEMCrewStatus(Sound &crewdeadsound) : crewDeadSound(crewdeadsound
 LEMCrewStatus::~LEMCrewStatus() {
 }
 
-void LEMCrewStatus::Init(LEM *s, h_Tank *ucdt) {
+void LEMCrewStatus::Init(LEM *s) {
 
 	lem = s;
-	UCDTank = ucdt;
 }
 
 void LEMCrewStatus::Timestep(double simdt) {
@@ -431,10 +430,12 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 	OpenSound(opensound), CloseSound(closesound)
 {
 	open = false;
+	jettComplete = false;
 	ForwardHatchHandle = NULL;
 	ForwardHatchReliefValve = NULL;
 	lem = NULL;
 	cabin = NULL;
+	UCDTank = NULL;
 
 	hatch_state.SetOperatingSpeed(0.2);
 	anim_Hatch = -1;
@@ -443,12 +444,28 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 	anim_FwdHatchReliefValve = -1;
 }
 
-void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab)
+void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab, h_Tank *ucdt)
 {
 	lem = l;
 	ForwardHatchHandle = fhh;
 	ForwardHatchReliefValve = fhr;
 	cabin = cab;
+	UCDTank = ucdt;
+}
+
+void LEMForwardHatch::JettisonEquipment()
+{
+	if (IsOpen() && !jettComplete)
+	{
+		double ucdTemp = UCDTank->GetTemp();
+		UCDTank->space.composition[SUBSTANCE_H2O].mass -= (UCDTank->space.composition[SUBSTANCE_H2O].mass * 0.999);
+		UCDTank->space.composition[SUBSTANCE_H2O].SetTemp(ucdTemp);
+
+		UCDTank->space.GetQ();
+		UCDTank->space.GetMass();
+
+		jettComplete = true;
+	}
 }
 
 void LEMForwardHatch::DefineAnimations(UINT idx)

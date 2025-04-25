@@ -89,6 +89,7 @@ public:
 	void menuSetLMPInSuit();
 	void menuStartEVA();
 	void menuConnectCSMO2Hose();
+	void menuJettisonEquipment();
 	void menuSetPrimECSTestHeaterPower();
 	void menuSetSecECSTestHeaterPower();
 	void menuAbortUplink();

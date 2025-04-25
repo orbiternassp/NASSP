@@ -2095,6 +2095,17 @@ void ProjectApolloMFD::menuConnectCSMO2Hose()
 	}
 }
 
+void ProjectApolloMFD::menuJettisonEquipment()
+{
+	if (lem)
+	{
+		if (!lem->ForwardHatch.GetJettisonStatus())
+		{
+			lem->ForwardHatch.JettisonEquipment();
+		}
+	}
+}
+
 void ProjectApolloMFD::menuSetPrimECSTestHeaterPower()
 {
 	if (saturn != NULL)

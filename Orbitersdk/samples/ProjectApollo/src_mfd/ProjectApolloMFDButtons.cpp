@@ -52,13 +52,18 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("TLO", OAPI_KEY_T, &ProjectApolloMFD::menuChangeLaunchTime);
 
 
-	static const MFDBUTTONMENU mnuECS[7] = {
+	static const MFDBUTTONMENU mnuECS[12] = {
 		{ "Back", 0, 'B' },
 		{ "Crew number", 0, 'N' },
 		{ "CDR in suit", 0, 'C' },
 		{ "LMP in suit", 0, 'L' },
 		{ "Start EVA",0,'E' },
 		{ "Connect CSM O2 Hose to LM",0,'H' },
+		{ "Jettison Equipment",0,'J' },
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ 0,0,0 },
+		{ 0,0,0 },
 		{ "ECS Debug", 0, 'D' }
 	};
 
@@ -70,7 +75,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("LMP", OAPI_KEY_L, &ProjectApolloMFD::menuSetLMPInSuit);
 	RegisterFunction("EVA", OAPI_KEY_E, &ProjectApolloMFD::menuStartEVA);
 	RegisterFunction("HOS", OAPI_KEY_H, &ProjectApolloMFD::menuConnectCSMO2Hose);
-
+	RegisterFunction("JET", OAPI_KEY_J, &ProjectApolloMFD::menuJettisonEquipment);
 	RegisterFunction("DBG", OAPI_KEY_D, &ProjectApolloMFD::menuSetECSDebugPage);
 
 

@@ -42,10 +42,9 @@ class LEMCrewStatus {
 public:
 	LEMCrewStatus(Sound &crewdeadsound);
 	virtual ~LEMCrewStatus();
-	void Init(LEM *s, h_Tank *ucdt);
+	void Init(LEM *s);
 	void Timestep(double simdt);
 	int GetStatus() { return status; };
-	double GetLMUCDPct() { return ((UCDTank->space.GetMass() / (UCDTank->space.Volume * 1000.0)) * 100.0); }
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 
@@ -62,7 +61,6 @@ protected:
 	double lastVerticalVelocity;
 
 	LEM *lem;
-	h_Tank *UCDTank;
 	Sound &crewDeadSound;
 	bool firstTimestepDone;
 };
@@ -115,9 +113,12 @@ class LEMForwardHatch
 {
 public:
 	LEMForwardHatch(Sound &opensound, Sound &closesound);
-	void Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab);
+	void Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab, h_Tank *ucdt);
+	virtual void JettisonEquipment();
+	bool GetJettisonStatus() { return jettComplete; }
 	void DefineAnimations(UINT idx);
 	void DefineAnimationsVC(UINT idx);
+	double GetLMUCDPct() { return ((UCDTank->space.GetMass() / (UCDTank->space.Volume * 1000.0)) * 100.0); }
 	void Timestep(double simdt);
 	void Toggle();
 
@@ -128,11 +129,13 @@ public:
 protected:
 	AnimState2 hatch_state;
 	bool open;
+	bool jettComplete;
 
 	LEM *lem;
 	ToggleSwitch *ForwardHatchHandle;
 	ToggleSwitch *ForwardHatchReliefValve;
 	h_Tank *cabin;
+	h_Tank *UCDTank;
 
 	Sound &OpenSound;
 	Sound &CloseSound;
