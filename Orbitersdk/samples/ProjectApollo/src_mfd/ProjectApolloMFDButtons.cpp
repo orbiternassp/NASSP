@@ -75,6 +75,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("LMP", OAPI_KEY_L, &ProjectApolloMFD::menuSetLMPInSuit);
 	RegisterFunction("EVA", OAPI_KEY_E, &ProjectApolloMFD::menuStartEVA);
 	RegisterFunction("HOS", OAPI_KEY_H, &ProjectApolloMFD::menuConnectCSMO2Hose);
+
 	RegisterFunction("JET", OAPI_KEY_J, &ProjectApolloMFD::menuJettisonEquipment);
 	RegisterFunction("", OAPI_KEY_Z, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Y, &ProjectApolloMFD::menuVoid);
@@ -102,6 +103,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("", OAPI_KEY_F, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ProjectApolloMFD::menuVoid);
+
 	RegisterFunction("PRM", OAPI_KEY_P, &ProjectApolloMFD::menuSetPrimECSTestHeaterPower);
 	RegisterFunction("SEC", OAPI_KEY_S, &ProjectApolloMFD::menuSetSecECSTestHeaterPower);
 
