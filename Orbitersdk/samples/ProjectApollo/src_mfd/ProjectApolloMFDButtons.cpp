@@ -59,7 +59,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "LMP in suit", 0, 'L' },
 		{ "Start EVA",0,'E' },
 		{ "Connect CSM O2 Hose to LM",0,'H' },
-		{ "Jettison Equipment",0,'J' },
+		{ "Jettison LM Equipment",0,'J' },
 		{ 0,0,0 },
 		{ 0,0,0 },
 		{ 0,0,0 },
@@ -76,6 +76,10 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("EVA", OAPI_KEY_E, &ProjectApolloMFD::menuStartEVA);
 	RegisterFunction("HOS", OAPI_KEY_H, &ProjectApolloMFD::menuConnectCSMO2Hose);
 	RegisterFunction("JET", OAPI_KEY_J, &ProjectApolloMFD::menuJettisonEquipment);
+	RegisterFunction("", OAPI_KEY_Z, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Y, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_X, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_W, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("DBG", OAPI_KEY_D, &ProjectApolloMFD::menuSetECSDebugPage);
 
 
