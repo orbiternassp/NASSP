@@ -557,7 +557,8 @@ void LEMForwardHatch::Toggle()
 
 void LEMForwardHatch::LoadState(char *line) {
 
-	int i1, j;
+	int i1;
+	int j = 0;
 	double a, b;
 
 	sscanf(line + 13, "%d %lf %lf %i", &i1, &a, &b, &j);
