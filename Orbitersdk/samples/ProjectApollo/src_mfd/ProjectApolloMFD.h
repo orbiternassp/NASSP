@@ -73,6 +73,7 @@ public:
 	void menuSetMainPage();
 	void menuSetGNCPage();
 	void menuSetECSPage();
+	void menuSetECSDebugPage();
 	void menuSetIUPage();
 	void menuSetTELEPage();
 	void menuSetLGCPage();
@@ -88,6 +89,7 @@ public:
 	void menuSetLMPInSuit();
 	void menuStartEVA();
 	void menuConnectCSMO2Hose();
+	void menuJettisonEquipment();
 	void menuSetPrimECSTestHeaterPower();
 	void menuSetSecECSTestHeaterPower();
 	void menuAbortUplink();

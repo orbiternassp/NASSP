@@ -913,57 +913,54 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			if (ecs.crewStatus == ECS_CREWSTATUS_OK) {
-				skp->Text((int)(width * 0.7), (int)(height * 0.4), "OK", 2);
+				skp->Text((int)(width * 0.6), (int)(height * 0.4), "OK", 2);
 			}
 			else if (ecs.crewStatus == ECS_CREWSTATUS_CRITICAL) {
 				skp->SetTextColor(RGB(255, 255, 0));
-				skp->Text((int)(width * 0.7), (int)(height * 0.4), "CRITICAL", 8);
+				skp->Text((int)(width * 0.6), (int)(height * 0.4), "CRITICAL", 8);
 				skp->SetTextColor(RGB(0, 255, 0));
 			}
 			else {
 				skp->SetTextColor(RGB(255, 0, 0));
-				skp->Text((int)(width * 0.7), (int)(height * 0.4), "DEAD", 4);
+				skp->Text((int)(width * 0.6), (int)(height * 0.4), "DEAD", 4);
 				skp->SetTextColor(RGB(0, 255, 0));
 			}
 
 			sprintf(buffer, "%d", ecs.crewNumber);
-			skp->Text((int)(width * 0.7), (int)(height * 0.45), buffer, strlen(buffer));
-
-			skp->Text((int)(width * 0.5), (int)(height * 0.525), "Glycol Coolant Loops", 20);
-			skp->Text((int)(width * 0.6), (int)(height * 0.6), "Prim.", 5);
-			skp->Text((int)(width * 0.8), (int)(height * 0.6), "Sec.", 4);
+			skp->Text((int)(width * 0.6), (int)(height * 0.45), buffer, strlen(buffer));
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.1), (int)(height * 0.6), "Heating:", 8);
-			skp->Text((int)(width * 0.1), (int)(height * 0.65), "Actual:", 7);
-			skp->Text((int)(width * 0.1), (int)(height * 0.7), "Test:", 5);
-			skp->Text((int)(width * 0.1), (int)(height * 0.8), "Total:", 6);
-			skp->Text((int)(width * 0.1), (int)(height * 0.9), "CSM O2 Hose:", 12);
+			skp->Text((int)(width * 0.1), (int)(height * 0.8), "UCD Percentage:", 16);
 
-			skp->SetTextAlign(oapi::Sketchpad::CENTER);
-			sprintf(buffer, "%.0lfW", ecs.PrimECSHeating);
-			skp->Text((int)(width * 0.6), (int)(height * 0.65), buffer, strlen(buffer));
-			sprintf(buffer, "%.0lfW", ecs.PrimECSTestHeating);
-			skp->Text((int)(width * 0.6), (int)(height * 0.7), buffer, strlen(buffer));
-			sprintf(buffer, "%.0lfW", ecs.PrimECSHeating + ecs.PrimECSTestHeating);
-			skp->Text((int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
-			sprintf(buffer, "%.0lfW", ecs.SecECSHeating);
-			skp->Text((int)(width * 0.8), (int)(height * 0.65), buffer, strlen(buffer));
-			sprintf(buffer, "%.0lfW", ecs.SecECSTestHeating);
-			skp->Text((int)(width * 0.8), (int)(height * 0.7), buffer, strlen(buffer));
-			sprintf(buffer, "%.0lfW", ecs.SecECSHeating + ecs.SecECSTestHeating);
-			skp->Text((int)(width * 0.8), (int)(height * 0.8), buffer, strlen(buffer));
-
-			skp->MoveTo((int)(width * 0.5), (int)(height * 0.775));
-			skp->LineTo((int)(width * 0.9), (int)(height * 0.775));
-
-			if (ecs.CSMO2HoseConnected)
+			if (ecs.UCTAStatus >= 95.0)
 			{
-				skp->Text((int)(width * 0.7), (int)(height * 0.9), "Connected", 9);
+				skp->SetTextColor(RGB(255, 0, 0));
+				skp->Text((int)(width * 0.6), (int)(height * 0.8), "FULL", 4);
+				skp->SetTextColor(RGB(0, 255, 0));
+			}
+			else if (ecs.UCTAStatus >= 85.0)
+			{
+				skp->SetTextColor(RGB(255, 255, 0));
+				sprintf(buffer, "%.2f%%", ecs.UCTAStatus);
+				skp->Text((int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
+				skp->SetTextColor(RGB(0, 255, 0));
 			}
 			else
 			{
-				skp->Text((int)(width * 0.7), (int)(height * 0.9), "Disconnected", 12);
+				sprintf(buffer, "%.2f%%", ecs.UCTAStatus);
+				skp->Text((int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
+			}
+
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.9), "CSM O2 Hose:", 12);
+
+			if (ecs.CSMO2HoseConnected)
+			{
+				skp->Text((int)(width * 0.6), (int)(height * 0.9), "Connected", 9);
+			}
+			else
+			{
+				skp->Text((int)(width * 0.6), (int)(height * 0.9), "Disconnected", 12);
 			}
 
 		}
@@ -977,6 +974,28 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 
 			LEMECSStatus ecs;
 			lem->GetECSStatus(ecs);
+
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.8), "UCD Percentage:", 16);
+
+			if (ecs.UCTAStatus >= 95.0)
+			{
+				skp->SetTextColor(RGB(255, 0, 0));
+				skp->Text((int)(width * 0.6), (int)(height * 0.8), "FULL", 4);
+				skp->SetTextColor(RGB(0, 255, 0));
+			}
+			else if (ecs.UCTAStatus >= 85.0)
+			{
+				skp->SetTextColor(RGB(255, 255, 0));
+				sprintf(buffer, "%.2f%%", ecs.UCTAStatus);
+				skp->Text((int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
+				skp->SetTextColor(RGB(0, 255, 0));
+			}
+			else
+			{
+				sprintf(buffer, "%.2f%%", ecs.UCTAStatus);
+				skp->Text((int)(width * 0.6), (int)(height * 0.8), buffer, strlen(buffer));
+			}
 
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			if (ecs.crewStatus == ECS_CREWSTATUS_OK) {
@@ -1033,10 +1052,55 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 		}
 		else
 		{
-		skp->Text(width / 2, (int)(height * 0.4), "Unsupported vehicle", 19);
+			skp->Text(width / 2, (int)(height * 0.4), "Unsupported vehicle", 19);
 		}
+	}
+
+	// Draw ECS Debug
+	else if (screen == m_buttonPages.page.ECSDBG) {
+		skp->Text(width / 2, (int)(height * 0.3), "ECS Debugging", 28);
+
+		if (saturn)
+		{
+			ECSStatus ecs;
+			saturn->GetECSStatus(ecs);
+
+			skp->Text((int)(width * 0.5), (int)(height * 0.4), "Glycol Coolant Loops", 20);
+			skp->Text((int)(width * 0.6), (int)(height * 0.5), "Prim.", 5);
+			skp->Text((int)(width * 0.8), (int)(height * 0.5), "Sec.", 4);
+
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.5), "Heating:", 8);
+			skp->Text((int)(width * 0.1), (int)(height * 0.55), "Actual:", 7);
+			skp->Text((int)(width * 0.1), (int)(height * 0.6), "Test:", 5);
+			skp->Text((int)(width * 0.1), (int)(height * 0.675), "Total:", 6);
+
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			sprintf(buffer, "%.0lfW", ecs.PrimECSHeating);
+			skp->Text((int)(width * 0.6), (int)(height * 0.55), buffer, strlen(buffer));
+			sprintf(buffer, "%.0lfW", ecs.PrimECSTestHeating);
+			skp->Text((int)(width * 0.6), (int)(height * 0.6), buffer, strlen(buffer));
+			sprintf(buffer, "%.0lfW", ecs.PrimECSHeating + ecs.PrimECSTestHeating);
+			skp->Text((int)(width * 0.6), (int)(height * 0.675), buffer, strlen(buffer));
+			sprintf(buffer, "%.0lfW", ecs.SecECSHeating);
+			skp->Text((int)(width * 0.8), (int)(height * 0.55), buffer, strlen(buffer));
+			sprintf(buffer, "%.0lfW", ecs.SecECSTestHeating);
+			skp->Text((int)(width * 0.8), (int)(height * 0.6), buffer, strlen(buffer));
+			sprintf(buffer, "%.0lfW", ecs.SecECSHeating + ecs.SecECSTestHeating);
+			skp->Text((int)(width * 0.8), (int)(height * 0.675), buffer, strlen(buffer));
+
+			skp->MoveTo((int)(width * 0.5), (int)(height * 0.65));
+			skp->LineTo((int)(width * 0.9), (int)(height * 0.65));
+		}
+
+		else
+		{
+			skp->Text(width / 2, (int)(height * 0.4), "Unsupported vehicle", 19);
+		}
+	}
+
 	// Draw IMFD
-	} else if (screen == m_buttonPages.page.IU) {
+	else if (screen == m_buttonPages.page.IU) {
 		skp->Text(width / 2, (int)(height * 0.3), "IU Uplink Data", 14);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		skp->Text((int)(width * 0.1), (int)(height * 0.35), "Type:", 5);
@@ -1911,6 +1975,15 @@ void ProjectApolloMFD::menuSetECSPage()
 	}
 }
 
+void ProjectApolloMFD::menuSetECSDebugPage()
+{
+	if (saturn != NULL || lem != NULL)
+	{
+		screen = m_buttonPages.page.ECSDBG;
+		m_buttonPages.SelectPage(this, screen);
+	}
+}
+
 void ProjectApolloMFD::menuSetIUPage()
 {
 	if (saturn != NULL || lem != NULL)
@@ -2018,6 +2091,17 @@ void ProjectApolloMFD::menuConnectCSMO2Hose()
 			{
 				saturn->lemECSConnector.ConnectCSMO2Hose();
 			}
+		}
+	}
+}
+
+void ProjectApolloMFD::menuJettisonEquipment()
+{
+	if (lem)
+	{
+		if (!lem->ForwardHatch.GetJettisonStatus())
+		{
+			lem->ForwardHatch.JettisonEquipment();
 		}
 	}
 }
