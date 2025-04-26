@@ -685,7 +685,6 @@ public:
 	bool flashlightOn;
 
 	// Floodlight LM Pilot
-	void UpdateFloodLights();
 	PointLight* floodLight_Left;
 
 	// Floodlight LM Commander

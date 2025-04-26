@@ -1321,7 +1321,6 @@ public:
 	//
 	// FloodLight
 	//
-	void UpdateFloodLights();
 	PointLight* floodLight_P5;
 	PointLight* floodLight_P8;
 	PointLight* floodLight_P100;
