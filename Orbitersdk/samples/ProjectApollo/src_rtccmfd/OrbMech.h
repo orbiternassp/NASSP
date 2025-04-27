@@ -275,7 +275,7 @@ namespace OrbMech {
 	void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA);
 	MATRIX3 AXISGEN(VECTOR3 s_NBA, VECTOR3 s_NBB, VECTOR3 s_SMA, VECTOR3 s_SMB);
 	MATRIX3 ROTCOMP(VECTOR3 U_R, double A);
-	VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set);
+	VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int prefset, int &set);
 	MATRIX3 AGSStarAlignment(const VECTOR3 *navstars, VECTOR3 Att1, VECTOR3 Att2, int star1, int star2, int axis, int detent, double AOTCounter);
 	bool oneclickcoast(int Epoch, VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
 	bool oneclickcoast(int Epoch, VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, int gravref, int &gravout);
@@ -297,8 +297,6 @@ namespace OrbMech {
 	VECTOR3 r_from_latlong(double lat, double lng, double r);
 	double GETfromMJD(double MJD, double GETBase);
 	double MJDfromGET(double GET, double GETBase);
-	void format_time_HHMMSS(char *buf, double time);
-	void format_time_MMSS(char *buf, double time);
 	bool groundstation(MATRIX3 Rot_J_B, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet, double lat, double lng, bool rise, double &dt);
 	bool gslineofsight(VECTOR3 R, VECTOR3 V, VECTOR3 sun, OBJHANDLE planet, bool rise, double &v1);
 	int findNextAOS(MATRIX3 Rot_J_B, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE planet);
@@ -434,11 +432,32 @@ namespace OrbMech {
 	void DROOTS(double A, double B, double C, double D, double E, int N, double *x, int &M, int &I);
 
 	//Time formatting functions
+	//To seconds
 	double HHMMSSToSS(int H, int M, int S);
 	double HHMMSSToSS(double H, double M, double S);
+	//Round to given precision
 	double round_to(double value, double precision = 1.0);
+	//Split up seconds in minutes etc.
+	void SStoMMSS(double time, int &minutes, double &seconds, double precision = 1.0);
 	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds, double precision = 1.0);
-	void format_time(char *buf, double time);
+	void SStoDDHHMMSS(double time, int &days, int &hours, int &minutes, double &seconds, double precision = 1.0);
+	//Formatting time into a character array
+	//Time format XM:SS (no leading zeros)
+	void format_time_XMSS(char *buf, double time);
+	//Time format MM:SS.C
+	void format_time_MMSSC(char *buf, double time);
+	//Time format HH:MM
+	void format_time_HHHMM(char *buf, double time);
+	//Time format HH:MM:SS
+	void format_time_HHMMSS(char *buf, double time);
+	//Time format HHH:MM:SS
+	void format_time_HHHMMSS(char *buf, double time);
+	//Time format XXH:MM:SS (no leading zeros)
+	void format_time_XXHMMSS(char *buf, double time);
+	//Time format HHH:MM:SS.C
+	void format_time_HHHMMSSC(char *buf, double time);
+	//Time format HHH:MM:SS.CS
+	void format_time_HHHMMSSCS(char *buf, double time);
 	void format_time_prec(char *buf, double time);
 }
 

@@ -740,16 +740,20 @@ bool LEM::clbkLoadVC (int id)
 	flashlight->SetVisibility(LightEmitter::VIS_COCKPIT);
 	flashlight->Activate(flashlightOn);
 
+	//Get mesh offset
+	VECTOR3 ofs;
+	GetMeshOffset(vcidx, ofs);
+
 	//FloodLight Right Pilot
 	DelLightEmitter(floodLight_Right);
-	floodLight_Right = (::PointLight*)AddPointLight(floodLightPos_Right, 3, 0, 0, 3, floodLightColor_Right, floodLightColor_Right, floodLightColor2_Right);
+	floodLight_Right = (::PointLight*)AddPointLight(floodLightPos_Right + ofs, 3, 0, 0, 3, floodLightColor_Right, floodLightColor_Right, floodLightColor2_Right);
 	floodLight_Right->SetVisibility(LightEmitter::VIS_COCKPIT);
 	floodLight_Right->Activate(true);
 	floodLight_Right->SetIntensity(1);
 
 	//FloodLight Left Commander
 	DelLightEmitter(floodLight_Left);
-	floodLight_Left = (::PointLight*)AddPointLight(floodLightPos_Left, 3, 0, 0, 3, floodLightColor_Left, floodLightColor_Left, floodLightColor2_Left);
+	floodLight_Left = (::PointLight*)AddPointLight(floodLightPos_Left + ofs, 3, 0, 0, 3, floodLightColor_Left, floodLightColor_Left, floodLightColor2_Left);
 	floodLight_Left->SetVisibility(LightEmitter::VIS_COCKPIT);
 	floodLight_Left->Activate(true);
 	floodLight_Left->SetIntensity(1);
@@ -1625,11 +1629,15 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			if (dsky.StbyLit())       { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_STBY); }
 			if (dsky.KbRelLit())      { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_KEY_REL); }
 			if (dsky.OprErrLit())     { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_OPR_ERR); }
+			if (dsky.PrioDispLit())   { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_PRIO_DISP); }
+			if (dsky.NoDAPLit())	  { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_NO_DAP); }
 			if (dsky.TempLit())       { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_TEMP); }
 			if (dsky.GimbalLockLit()) { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_GIMBAL_LOCK); }
 			if (dsky.ProgLit())       { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_PROG); }
 			if (dsky.RestartLit())    { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_RESTART); }
 			if (dsky.TrackerLit())    { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_TRACKER); }
+			if (dsky.AltLit())        { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_ALT); }
+			if (dsky.VelLit())        { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_VEL); }
 		}
 
 //		sprintf(oapiDebugString(), "Integral Voltage = %lf", lca.GetNumericVoltage());
@@ -1641,11 +1649,29 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 		// MAT_LIGHT changes the Brightness of the Material
 		// MAT_EMISSION changes the Brightness of the Material controlled by its _emis Texture
-		SetVCLighting(vcidx, FloodLights_LMVC,    MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(FloodLights_LMVC));
+		SetVCLighting(vcidx, FloodLights_LMVC, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(FloodLights_LMVC));
 		floodLight_Left->SetIntensity(FloodLights.GetCDRRotaryVoltage() / 28.0);
 		floodLight_Right->SetIntensity(FloodLights.GetLMPRotaryVoltage() / 28.0);
 		SetVCLighting(vcidx, IntegralLights_LMVC, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
 		SetVCLighting(vcidx, IntegralLights_LMVC_NoTex, MAT_LIGHT, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
+
+		if (LtgSidePanelsSwitch.GetState() == TOGGLESWITCH_UP){	// Panel 8, 11
+			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_8_11, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
+			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
+		}else{
+			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_8_11, MAT_EMISSION, 0, 1);
+			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, 0, 1);
+		}
+		if (SidePanelsSwitch.GetState() == TOGGLESWITCH_UP){ // Panel 12, 14, 16
+			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_12_14_16, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
+			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
+			SetVCLighting(vcidx, VC_MAT_Rotary_LM_Panel_12_14, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
+		}else{
+			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_12_14_16, MAT_EMISSION, 0, 1);
+			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, 0, 1);
+			SetVCLighting(vcidx, VC_MAT_Rotary_LM_Panel_12_14, MAT_EMISSION, 0, 1);
+		}
+
 		SetVCLighting(vcidx, NumericLights_LMVC,  MAT_LIGHT, (lca.GetNumericVoltage() / 115.0) + floodRotaryValue, NUM_ELEMENTS(NumericLights_LMVC));
 
 		if (CWEA.GetMasterAlarm()) {
@@ -3608,9 +3634,11 @@ void LEM::MoveFlashlight()
 	if (flashlightOn) { //Only move the light emmitter if the flashlight is on
 		//Huge thanks the Jordan64 for helping get the direction stuff working! :)
 
-		VECTOR3 flashlightDirGlobal, vesselPosGlobal;
+		VECTOR3 flashlightPosGlobal, flashlightDirGlobal, vesselPosGlobal;
 
-		GetCameraOffset(flashlightPos);
+		oapiCameraGlobalPos(&flashlightPosGlobal);
+		Global2Local(flashlightPosGlobal, flashlightPos);
+
 		oapiCameraGlobalDir(&flashlightDirGlobal);
 		GetGlobalPos(vesselPosGlobal);
 		Global2Local(vesselPosGlobal + flashlightDirGlobal, flashlightDirLocal);
@@ -3632,19 +3660,4 @@ void LEM::ToggleFlashlight()
 	if ((oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
 		SetFlashlightOn(!flashlightOn);
 	}
-}
-
-void LEM::UpdateFloodLights()
-{
-	VECTOR3 camPos;
-	VECTOR3 ofs;
-	GetCameraOffset(camPos);
-	GetMeshOffset(vcidx, ofs); // First get or VC Offset
-
-	// Debug string for finding Camera and VC mesh Position
-//	sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ", camPos.x, camPos.y, camPos.z, ofs.x, ofs.y, ofs.z );
-
-	// Set the Floodlights 
-	floodLight_Left->SetPosition(ofs + floodLightPos_Left);
-	floodLight_Right->SetPosition(ofs + floodLightPos_Right);
 }

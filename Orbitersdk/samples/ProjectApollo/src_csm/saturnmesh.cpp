@@ -106,7 +106,7 @@ PARTICLESTREAMSPEC o2_venting_spec = {
 	0.2,	// growthrate
 	0.5,    // atmslowdown 
 	PARTICLESTREAMSPEC::DIFFUSE,
-	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
+	PARTICLESTREAMSPEC::LVL_LIN, 1.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
@@ -148,7 +148,7 @@ PARTICLESTREAMSPEC wastewaterdump_spec = {
 	0.001,	// growthrate
 	0,      // atmslowdown 
 	PARTICLESTREAMSPEC::DIFFUSE,
-	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
+	PARTICLESTREAMSPEC::LVL_LIN, 1.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
@@ -162,7 +162,7 @@ PARTICLESTREAMSPEC urinedump_spec = {
 	0.001,	// growthrate
 	0,		// atmslowdown 
 	PARTICLESTREAMSPEC::DIFFUSE,
-	PARTICLESTREAMSPEC::LVL_FLAT, 1.0, 1.0,
+	PARTICLESTREAMSPEC::LVL_LIN, 1.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
@@ -1879,7 +1879,8 @@ void Saturn::SetRecovery()
 	SetCOASMesh();
 
 	if (Crewed) {
-		mesh_dir =_V(2.7,1.8,-1.5);
+		//old values 2.7,1.8,-1.5
+		mesh_dir =_V(0,0,-1.5);
 		meshidx = AddMesh (hCRB, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
 	}

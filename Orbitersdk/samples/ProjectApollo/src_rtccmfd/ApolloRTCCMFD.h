@@ -59,6 +59,7 @@ struct RTCCMFDData
 {
 	int screen = 0;
 	int subscreen = 0;
+	int subscreenmax = 0;
 	int marker = 0;
 	int markermax = 0;
 	UINT ID = 0;
@@ -81,23 +82,43 @@ public:
 	void RecallStatus(void);
 
 	void Text(oapi::Sketchpad *skp, std::string message, int x, int y, int xmax = 1024, int ymax = 1024);
+	void Text_Double(oapi::Sketchpad *skp, int x, int y, char *format, double val);
+	void Text_Int(oapi::Sketchpad *skp, int x, int y, char *format, int val);
+	void Text_String(oapi::Sketchpad *skp, int x, int y, std::string message);
+	//Functions using CW and CH
+	void Text(oapi::Sketchpad *skp, int x, int y, std::string message);
+	void TextW(oapi::Sketchpad *skp, int x, int y, LPWSTR message);
+	void Text(oapi::Sketchpad *skp, int x, int y, char *format, double val);
+	void Text(oapi::Sketchpad *skp, int x, int y, char *format, int val);
+	void Text_GET_MMSS(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHHMM(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHHMMSSC(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GMT_HHHMMSSCS(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
+	void Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
+	void Text_Dot(oapi::Sketchpad *skp, int x, int y);
 
 	void SelectPage(int page);
 
 	//Pages
 
 	//Display Formatting Language functions
-	void DFLBackgroundSlide(oapi::Sketchpad *skp, unsigned display);
-	void DFLDynamicData(oapi::Sketchpad *skp, unsigned display);
+	void DFLBackgroundSlide(oapi::Sketchpad *skp, unsigned display, int fontsize);
+	void DFLDynamicData(oapi::Sketchpad *skp, unsigned display, int fontsize);
 
 	//Inputs
-	void menuTIChaserVectorTime();
-	void menuTITargetVectorTime();
-	void menuTITimeIncrement();
-	void menuTITimeRange();
-	void t1dialogue();
-	void t2dialogue();
-	void menuCycleK30Vehicle();
+	void menuSetTIMultipleSolutionInput();
+	void menuSetCorrectiveCombinationInput();
+	void CorrectiveCombinationOffset();
+	void menuCorrectiveCombinationCalc();
+	void menuSetTwoImpulseSingleSolutionInput();
+	void menuTwoImpulseSingleSolutionCalc();
 	void SPQtimedialogue();
 	void set_SPQtime(double tig);
 	void menuSetSPQChaserThresholdTime();
@@ -117,9 +138,10 @@ public:
 	void menuSLVInsertionSVtoMPT();
 	void menuSLVLaunchUplink();
 	void menuVoid();
-	void menuSetLambertPage();
-	void menuSetSPQPage();
 	void menuSetTIMultipleSolutionPage();
+	void menuSetTICorrectiveCombinationPage();
+	void menuSetTISingleSolutionPage();
+	void menuSetSPQPage();
 	void menuSetREFSMMATPage();
 	void menuSetReturnToEarthPage();
 	void menuSetAGSSVPage();
@@ -152,16 +174,16 @@ public:
 	void menuGPMCycleVessel();
 	void SPQcalc();
 	void lambertcalc();
-	void Angle_Display(char *Buff, double angle, bool DispPlus = true);
+	void FormatDeclination(char *Buff, double angle);
 	void GET_Display(char * Buff, double time, bool DispGET = true);
+	void GET_Display(oapi::Sketchpad *skp, int x, int y, double time, bool DispGET = true);
 	void GMT_Display2(char * Buff, double time) const;
 	void GET_Display2(char * Buff, double time) const;
 	void GET_Display3(char* Buff, double time);
-	void GET_Display4(char* Buff, double time);
-	void GET_Display_HHMM(char *Buff, double time);
+	void GET_Display_HHHMM(char *Buff, double time);
 	void AGC_Display(char * Buff, double time);
 	void FormatLatitude(char * Buff, double lat);
-	void FormatLongitude(char * Buff, double lng);
+	void FormatLongitude(char * Buff, double lng, int precision = 2);
 	void FormatIMUAngle0(char *Buff, double ang); //0 digits
 	void FormatIMUAngle1(char *Buff, double ang); //0 digits
 	void FormatIMUAngle2(char *Buff, double ang); //0 digits
@@ -218,9 +240,10 @@ public:
 	void menuSVUpload();
 	void menuLSCalc();
 	void menuRevertRLSToPrelaunch();
+	void menuCycleAGSNavUpdREFSMMAT();
+	void menuSaveAGSREFSMMAT();
 	void menuAGSSVCalc();
 	void menuEntryUpdateUpload();
-	void menuCycleTwoImpulseOption();
 	void menuSwitchHeadsUp();
 	void menuCalcManPAD();
 	void set_ManPADMPTInput(int mpt, int num);
@@ -231,7 +254,7 @@ public:
 	void menuManPADUllage();
 	void menuManPADTIG();
 	void menusextantstartime();
-	void set_sextantstartime(double time);
+	void menuCyclePreferredGDCStarSet();
 	void menuManPADDV();
 	void set_P30DV(VECTOR3 dv);
 	void menuREFSMMATAtt();
@@ -390,9 +413,7 @@ public:
 	void menuSetLiftoffDT();
 	void set_LiftoffDT(double dt);
 	void menuLLTPThresholdTime();
-	void set_LLTPThresholdTime(double get);
 	void menuLLTPVectorTime();
-	void set_LLTPVectorTime(double get);
 	void menuLunarLiftoffVHorInput();
 	void menuLunarLiftoffVVertInput();
 	void menuLunarLiftoffSaveInsertionSV();
@@ -648,7 +669,7 @@ public:
 	void menuSetFIDOLaunchAnalogNo1Page();
 	void menuSetFIDOLaunchAnalogNo2Page();
 	void menuSetRTETradeoffDisplayPage();
-	void menuCycleRTETradeoffPage();
+	void menuCycleSubscreen();
 	void menuCalcRTETradeoff();
 	void menuSetRTETradeoffSite();
 	void menuSetRTETradeoffRemoteEarthPage();
@@ -813,12 +834,7 @@ public:
 	void menuAGCLiftoffTimeComparision();
 	void set_AGCLiftoffTimeComparision(double tim);
 	void menuSetLunarTargetingProgramPage();
-	void LUNTAR_TIGInput();
-	void LUNTAR_BTInput();
-	void LUNTAR_PitchInput();
-	void LUNTAR_YawInput();
-	void LUNTAR_LatInput();
-	void LUNTAR_LngInput();
+	void menuSetLUNTARInput();
 	void LUNTARCalc();
 	void menuSetRetrofireSeparationPage();
 	void menuRetroShapingGET();
@@ -853,6 +869,7 @@ public:
 	void menuSetRTACFPage();
 	void CycleCSMOrLMSelection();
 	void CycleEnableCalculation();
+	void CycleREFSMMATType(int &type, bool csm);
 
 	void SetMEDInputPageM75();
 	void SetMEDInputPageP13();
@@ -873,22 +890,36 @@ public:
 	void GenericStringInput(std::string *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL);
 	void GenericUllageInput(bool *Use4Jets, double *UllageDuration, bool AllowDefault = true);
 protected:
-	oapi::Font *font;
-	oapi::Font *font2;
-	oapi::Font *font2vert;
-	oapi::Font *fonttest;
-	oapi::Font *font3;
-	oapi::Font *font4;
-	oapi::Font *font5;
+	oapi::Font *font_mocr1; //Used for displays with 42 x 84 static characters
+	oapi::Font *font_mocr2; //Used for displays with 32 x 64 static characters
+	oapi::Font *font_mocr3; //Used for displays with 28 x 56 static characters
+	oapi::Font *font_mocr4; //Used for displays with 21 x 42 static characters
+	oapi::Font *font_mocr5; //Used for displays with 17 x 34 static characters
+	oapi::Font *font_mocr3_vert; //Like font_mocr3 just vertical
+	oapi::Font *font_mocr1_dyn; //Used for displays with 42 x 84 dynamic characters
+	oapi::Font *font_mocr2_dyn; //Used for displays with 32 x 64 dynamic characters
+	oapi::Font *font_mocr3_dyn; //Used for displays with 28 x 56 dynamic characters
+	oapi::Font *font_mocr4_dyn; //Used for displays with 21 x 42 dynamic characters
+	oapi::Font *font_mocr5_dyn; //Used for displays with 17 x 34 dynamic characters
+	oapi::Font *font_mocr_plot; //Proportional font for launch analog display labels
+
+	oapi::Font *font_menu; //Guaranteed to give 25 lines
+	oapi::Font *font_menu2; //Guaranteed to give 32 lines
+	oapi::Font *font_menu3; //Guaranteed to give 28 lines
+
 	oapi::Pen *pen;
 	oapi::Pen *pen2;
-	Saturn *saturn;
-	LEM *lem;
+
+	int CW; //Character width
+	int CH; //Character height
+	int x, y, dx, dy; //Display spacing helper variables
 	int screen;
 	int subscreen;
+	int subscreenmax;
 	int marker;
 	int markermax;
 	int status; //Page dependent status, reset to 0 when new page is entered
+	char Buffer[256];
 private:
 	void SaveState();
 	void LoadState();
@@ -924,6 +955,8 @@ private:
 	void PrintIUVessel(char *Buffer);
 	void PrintTargetVessel(char *Buffer);
 	void PrintUllage(char *Buffer, int Thruster, bool Use4Jets, double Duration);
+	void GetCharSize(oapi::Sketchpad*skp, int &CW, int &CH);
+	void SetMOCRFont(oapi::Sketchpad*skp, int size, bool dynamic);
 };
 
 #endif // !__ApolloRTCCMFD_H

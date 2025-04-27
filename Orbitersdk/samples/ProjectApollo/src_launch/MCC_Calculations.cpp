@@ -277,7 +277,7 @@ void MCC_Calculations::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV
 	lamopt.DH = 60.0*1852.0 - 60000.0*0.3048; //Aiming for 60000 ft altitude
 	lamopt.PhaseAngle = 15.509*RAD; //270 NM behind CSM
 	lamopt.T1 = pRTCC->GMTfromGET(t_Phasing);
-	lamopt.sv_P = pRTCC->ConvertSVtoEphemData(sv_P0);
+	lamopt.sv_T.sv = pRTCC->ConvertSVtoEphemData(sv_P0);
 
 	lamopt2 = lamopt;
 	lamopt2.DH = 14.7*1852.0; //14.7 NM
@@ -293,7 +293,7 @@ void MCC_Calculations::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV
 		t_Insertion = t_Phasing + dt;
 
 		lamopt.T2 = pRTCC->GMTfromGET(t_Insertion);
-		lamopt.sv_A = pRTCC->ConvertSVtoEphemData(sv_Phasing);
+		lamopt.sv_C.sv = pRTCC->ConvertSVtoEphemData(sv_Phasing);
 
 		pRTCC->PMSTICN(lamopt, lamres);
 		dV_Phasing = lamres.dV;
@@ -306,7 +306,7 @@ void MCC_Calculations::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV
 
 		lamopt2.T1 = pRTCC->GMTfromGET(t_Insertion);
 		lamopt2.T2 = pRTCC->GMTfromGET(t_CSI);
-		lamopt2.sv_A = pRTCC->ConvertSVtoEphemData(sv_Phasing_apo);
+		lamopt2.sv_C.sv = pRTCC->ConvertSVtoEphemData(sv_Phasing_apo);
 
 		pRTCC->PMSTICN(lamopt2, lamres);
 		dV_Insertion = lamres.dV;

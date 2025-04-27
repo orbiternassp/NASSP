@@ -146,41 +146,141 @@ namespace OrbMech{
 		return round(value / precision) * precision;
 	}
 
-	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds, double precision)
+	void SStoMMSS(double time, int &minutes, double &seconds, double precision)
 	{
+		//Only call with positive time
 		time = round_to(time, precision);
 
-		double mins;
-		hours = (int)trunc(time / 3600.0);
-		mins = fmod(time / 60.0, 60.0);
-		minutes = (int)trunc(mins);
-		seconds = (mins - minutes) * 60.0;
+		minutes = (int)trunc(time / 60.0);
+		seconds = (time / 60.0 - minutes) * 60.0;
 	}
 
-	// Format time to HHH:MM:SS.
-	void format_time(char *buf, double time)
+	void SStoHHMMSS(double time, int &hours, int &minutes, double &seconds, double precision)
 	{
-		buf[0] = 0; // Clobber
-		if (time < 0) { return; } // don't do that
+		//Only call with positive time
+		time = round_to(time, precision);
 
-		int hours, minutes;
+		hours = (int)trunc(time / 3600.0);
+		minutes = (int)trunc((time - 3600.0*hours) / 60.0);
+		seconds = time - (double)(3600 * hours + 60 * minutes);
+	}
+
+	void SStoDDHHMMSS(double time, int &days, int &hours, int &minutes, double &seconds, double precision)
+	{
+		//Only call with positive time
+		time = round_to(time, precision);
+
+		days = (int)trunc(time / 86400.0);
+		hours = (int)trunc((time - 86400.0*days) / 3600.0);
+		minutes = (int)trunc((time - 86400.0*days - 3600.0*hours) / 60.0);
+		seconds = time - (double)(86400*days + 3600*hours + 60*minutes);
+	}
+
+	void format_time_XMSS(char *buf, double time)
+	{
+		// Format time to XM:SS. (no leading zeros)
 		double seconds;
+		int minutes;
 
-		SStoHHMMSS(time, hours, minutes, seconds);
+		SStoMMSS(abs(time), minutes, seconds);
+		if (time < 0.0) minutes = -minutes;
+
+		sprintf(buf, "%d:%02.0lf", minutes, seconds);
+	}
+
+	void format_time_MMSSC(char *buf, double time)
+	{
+		// Format time to XM:SS.C
+		double seconds;
+		int minutes;
+
+		SStoMMSS(abs(time), minutes, seconds, 0.1);
+		if (time < 0.0) minutes = -minutes;
+
+		sprintf(buf, "%d:%02.1lf", minutes, seconds);
+	}
+
+	void format_time_HHHMM(char *buf, double time)
+	{
+		// Format time to HHH:MM
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds, 60.0);
+		if (time < 0.0) hours = -hours;
+
+		sprintf(buf, "%03d:%02d", hours, minutes);
+	}
+
+	void format_time_HHMMSS(char *buf, double time)
+	{
+		// Format time to HH:MM:SS.
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds);
+		if (time < 0.0) hours = -hours;
+
+		sprintf(buf, "%02d:%02d:%02.0lf", hours, minutes, seconds);
+	}
+
+	void format_time_HHHMMSS(char *buf, double time)
+	{
+		// Format time to HHH:MM:SS.
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds);
+		if (time < 0.0) hours = -hours;
 
 		sprintf(buf, "%03d:%02d:%02.0lf", hours, minutes, seconds);
+	}
+
+	void format_time_XXHMMSS(char *buf, double time)
+	{
+		// Format time to XXH:MM:SS. (no leading zeros)
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds);
+		if (time < 0.0) hours = -hours;
+
+		sprintf(buf, "%d:%02d:%02.0lf", hours, minutes, seconds);
+	}
+
+	void format_time_HHHMMSSC(char *buf, double time)
+	{
+		// Format time to HHH:MM:SS.C
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds, 0.1);
+		if (time < 0.0) hours = -hours;
+
+		sprintf(buf, "%03d:%02d:%04.1lf", hours, minutes, seconds);
+	}
+
+	void format_time_HHHMMSSCS(char *buf, double time)
+	{
+		// Format time to HHH:MM:SS.CS
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds, 0.01);
+		if (time < 0.0) hours = -hours;
+
+		sprintf(buf, "%03d:%02d:%05.2lf", hours, minutes, seconds);
 	}
 
 	// Format precise time.
 	void format_time_prec(char *buf, double time)
 	{
-		buf[0] = 0; // Clobber
-		if (time < 0) { return; } // don't do that
-
 		int hours, minutes;
 		double seconds;
+		int length = 0;
 
-		SStoHHMMSS(time, hours, minutes, seconds, 0.01);
+		SStoHHMMSS(abs(time), hours, minutes, seconds, 0.01);
+		if (time < 0.0) hours = -hours;
 
 		sprintf(buf, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
 	}
@@ -1052,10 +1152,15 @@ VECTOR3 elegant_lambert(VECTOR3 R1, VECTOR3 V1, VECTOR3 R2, double dt, int N, bo
 		}
 		else
 		{
-			h1 = OrbMech::power(l + x, 2.0) / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*(3.0 * OrbMech::power(1.0 + x, 2.0) * (N*PI / 2.0 + atan(sqrt(x))) / sqrt(x) - (3.0 + 5.0 * x));
-			h2 = m / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*((OrbMech::power(x, 2.0) - (1.0 + l)*x - 3.0 * l)*(N*PI / 2.0 + atan(sqrt(x))) / sqrt(x) + (3.0 * l + x));
+			if (x < 0.0)
+			{
+				//Error
+				return _V(0, 0, 0);
+			}
+			h1 = OrbMech::power(l + x, 2.0) / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*(3.0 * OrbMech::power(1.0 + x, 2.0) * (PI*(double)N / 2.0 + atan(sqrt(x))) / sqrt(x) - (3.0 + 5.0 * x));
+			h2 = m / (4.0 * OrbMech::power(x, 2.0) * (1.0 + 2.0 * x + l))*((OrbMech::power(x, 2.0) - (1.0 + l)*x - 3.0 * l)*(PI*(double)N / 2.0 + atan(sqrt(x))) / sqrt(x) + (3.0 * l + x));
 		}
-		B = 27 * h2 / (4 * OrbMech::power(1 + h1, 3));
+		B = 27.0 * h2 / (4.0 * OrbMech::power(1.0 + h1, 3));
 		if (B >= 0)
 		{
 			z = 2.0 * cosh(1.0 / 3.0 * acosh(sqrt(B + 1.0)));
@@ -2871,30 +2976,43 @@ int FindNearestStar(const VECTOR3 *navstars, VECTOR3 U_LOS, VECTOR3 R_C, double 
 	return star;
 }
 
-VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int &set)
+VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int prefset, int &set)
 {
-	int starset[3][2];
+	int starset[4][2], maxset;
 	double a, SA, TA1, dTA, TA2;
 	VECTOR3 s_SMA, s_SMB, s_NBA, s_NBB, imuang;
 	MATRIX3 SBNB,SMNB;
 
+	maxset = 3;
 	a = -0.5676353234;
 	TA1 = 32.5*RAD; //50° mark is at 7.5° trunnion plus 25° from center 
 	SA = PI;
 
 	//Star 1: 50° mark. Star 2: R line
+
+	//Deneb, Vega
 	starset[0][0] = 34;
 	starset[0][1] = 29;
 
+	//Navi, Polaris
 	starset[1][0] = 2;
 	starset[1][1] = 4;
 
+	//Acrux, Atria
 	starset[2][0] = 20;
 	starset[2][1] = 27;
 
+	//Sirius, Rigel
+	starset[3][0] = 12;
+	starset[3][1] = 9;
+
 	SBNB = _M(cos(a), 0, -sin(a), 0, 1, 0, sin(a), 0, cos(a));
 
-	for (set = 0; set < 3; set++)
+	//In case the input is nonsense
+	prefset = max(0, min(prefset, maxset));
+	set = prefset;
+
+	do
 	{
 		//Get star unit vectors
 		s_SMA = navstars[starset[set][0]];
@@ -2921,7 +3039,15 @@ VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, d
 		{
 			return imuang;
 		}
-	}
+		//Try next one
+		set++;
+		//Starting from the beginning?
+		if (set > maxset)
+		{
+			set = 0;
+		}
+		//Reached first set again?
+	} while (set != prefset);
 	return _V(0, 0, 0);
 }
 
@@ -4491,37 +4617,6 @@ double GETfromMJD(double MJD, double GETBase)
 double MJDfromGET(double GET, double GETBase)
 {
 	return GETBase + GET / 24.0 / 3600.0;
-}
-
-void format_time_HHMMSS(char *buf, double time) {
-	buf[0] = 0; // Clobber
-	int hours, minutes, seconds;
-	bool neg = false;
-	if (time < 0)
-	{
-		time = abs(time);
-		neg = true;
-	}
-	hours = (int)(time / 3600);
-	minutes = (int)((time / 60) - (hours * 60));
-	seconds = (int)((time - (hours * 3600)) - (minutes * 60));
-	if (neg)
-	{
-		sprintf(buf, "-%03d:%02d:%02d", hours, minutes, seconds);
-	}
-	else
-	{
-		sprintf(buf, "%03d:%02d:%02d", hours, minutes, seconds);
-	}
-}
-
-void format_time_MMSS(char *buf, double time) {
-	buf[0] = 0; // Clobber
-	int minutes, seconds;
-	if (time < 0) { return; } // don't do that
-	minutes = (int)(time / 60);
-	seconds = (int)(time - (minutes * 60));
-	sprintf(buf, "%d:%02d", minutes, seconds);
 }
 
 void checkstar(const VECTOR3 *navstars, MATRIX3 REFSMMAT, VECTOR3 IMU, VECTOR3 R_C, double R_E, int &staroct, double &trunnion, double &shaft)

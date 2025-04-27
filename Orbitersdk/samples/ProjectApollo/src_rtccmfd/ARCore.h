@@ -67,7 +67,6 @@ public:
 	double LmkElevation;
 
 	//APOLLO GENERALIZED OPTICS PROGRAM
-	int AGOP_Page;
 	int AGOP_Option;
 	int AGOP_Mode;
 	int AGOP_AdditionalOption;
@@ -302,6 +301,7 @@ public:
 	double sxtstardtime;
 	double manpad_ullage_dt;
 	bool manpad_ullage_opt; //true = 4 jets, false = 2 jets
+	int manpad_pref_GDC_stars; // Preferred star set for the GDC backup alignment. 0 = Deneb, Vega, 1 = Navi, Polaris, 2 = Acrux, Atria, 3 = Sirius, Rigel
 	int ManPADMPT; //1 = CSM, 3 = LEM
 	int ManPADMPTManeuver; //1-15
 	bool TLIPAD_StudyAid; //False = nominal TLI, true = study aid
@@ -380,12 +380,7 @@ public:
 	int iuUplinkResult; //0 = no uplink, 1 = uplink accepted, 2 = vessel has no IU, 3 = uplink rejected, 4 = No targeting parameters
 
 	//LUNAR TARGETING PROGRAM
-	double LUNTAR_lat;
-	double LUNTAR_lng;
-	double LUNTAR_bt_guess;
-	double LUNTAR_pitch_guess;
-	double LUNTAR_yaw_guess;
-	double LUNTAR_TIG;
+	LunarTargetingProgramInput LUNTAR_Input;
 	LunarTargetingProgramOutput LUNTAR_Output;
 
 	//DEBUG

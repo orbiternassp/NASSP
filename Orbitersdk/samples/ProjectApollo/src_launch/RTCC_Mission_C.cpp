@@ -169,7 +169,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		EphemerisData sv1 = StateVectorCalcEphem(calcParams.tgt);
 		EphemerisData sv2 = coast(sv1, GMTfromGET(17460.0) - sv1.GMT); //TBD: Take drag into account?
-		CMMSLVNAV(sv2.R, sv2.V, sv2.GMT);
+		CMMSLVNAV(1, sv2.R, sv2.V, sv2.GMT);
 
 		upl.PosS = CZNAVSLV.PosS;
 		upl.DotS = CZNAVSLV.DotS;
@@ -306,7 +306,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load, REFSMMAT");
+			sprintf(upDesc, "CSM state vector, Target load, REFSMMAT");
 		}
 	}
 	break;
@@ -507,7 +507,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PMMMPTInput in;
 		VECTOR3 dV_LVLH;
 		double GET_TIG_imp, GMT_TIG_imp, P30TIG;
-		EphemerisData sv_A, sv_P;//, sv_A1, sv_P1;
+		VehicleDataBlock sv_A, sv_P;
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
@@ -527,8 +527,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GMT_TIG_imp = GMTfromGET(GET_TIG_imp);
 
 		//Get state vectors
-		sv_A = StateVectorCalcEphem(calcParams.src);
-		sv_P = StateVectorCalcEphem(calcParams.tgt);
+		sv_A = StateVectorCalcDataBlock(calcParams.src);
+		sv_P = StateVectorCalcDataBlock(calcParams.tgt);
 
 		//Propagate to time tags
 		//sv_A1 = coast(sv_A, GMT_TIG_imp - 12.0*60.0 - sv_A.GMT, RTCC_MPT_CSM);
@@ -538,8 +538,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		lambert.T1 = GMT_TIG_imp;
 		lambert.T2 = GMTfromGET(OrbMech::HHMMSSToSS(28, 1, 0));
 		lambert.ChaserVehicle = RTCC_MPT_CSM;
-		lambert.sv_A = sv_A;
-		lambert.sv_P = sv_P;
+		lambert.sv_C = sv_A;
+		lambert.sv_T = sv_P;
 		lambert.DH = 8.0*1852.0;
 		lambert.PhaseAngle = 1.32*RAD;
 
@@ -569,7 +569,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sxtstardtime = -30 * 60;
 		opt.UllageDT = 15.0;
 		opt.UllageThrusterOpt = true;
-		opt.sv0 = sv_A;
+		opt.sv0 = sv_A.sv;
 		opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		if (preliminary)
@@ -593,15 +593,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "NCC1");
 
-		AGCStateVectorUpdate(buffer1, 1, 1, sv_A);
-		AGCStateVectorUpdate(buffer2, 1, 3, sv_P);
+		AGCStateVectorUpdate(buffer1, 1, 1, sv_A.sv);
+		AGCStateVectorUpdate(buffer2, 1, 3, sv_P.sv);
 		CMCExternalDeltaVUpdate(buffer3, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM and S-IVB state vectors, target load");
+			sprintf(upDesc, "CSM and S-IVB state vectors, Target load");
 		}
 	}
 	break;
@@ -610,24 +610,24 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		TwoImpulseOpt lambert;
 		TwoImpulseResuls res;
 		AP7ManPADOpt opt;
-		EphemerisData sv_A, sv_P;
+		VehicleDataBlock sv_A, sv_P;
 		PLAWDTOutput WeightsTable;
 		double GET_TIG_imp, P30TIG;
 
 		AP7MNV * form = (AP7MNV *)pad;
 
-		sv_A = StateVectorCalcEphem(calcParams.src);
-		sv_P = StateVectorCalcEphem(calcParams.tgt);
+		sv_A = StateVectorCalcDataBlock(calcParams.src);
+		sv_P = StateVectorCalcDataBlock(calcParams.tgt);
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		GET_TIG_imp = OrbMech::HHMMSSToSS(27, 30, 0);
 
 		lambert.mode = 5;
-		lambert.T1 = GET_TIG_imp;
-		lambert.T2 = OrbMech::HHMMSSToSS(28, 1, 0);
+		lambert.T1 = GMTfromGET(GET_TIG_imp);
+		lambert.T2 = GMTfromGET(OrbMech::HHMMSSToSS(28, 1, 0));
 		lambert.ChaserVehicle = RTCC_MPT_CSM;
-		lambert.sv_A = sv_A;
-		lambert.sv_P = sv_P;
+		lambert.sv_C = sv_A;
+		lambert.sv_T = sv_P;
 		lambert.DH = 8.0*1852.0;
 		lambert.PhaseAngle = 1.32*RAD;
 
@@ -676,7 +676,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 			opt.navcheckGET = 0;
 			opt.UllageDT = 15.0;
 			opt.UllageThrusterOpt = true;
-			opt.sv0 = sv_A;
+			opt.sv0 = sv_A.sv;
 			opt.WeightsTable = WeightsTable;
 
 			AP7ManeuverPAD(opt, *form);
@@ -763,7 +763,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM and S-IVB state vectors, target load");
+			sprintf(upDesc, "CSM and S-IVB state vectors, Target load");
 		}
 	}
 	break;
@@ -772,19 +772,19 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		TwoImpulseOpt lambert;
 		TwoImpulseResuls res;
 		AP7TPIPADOpt opt;
-		EphemerisData sv_A, sv_P;
+		VehicleDataBlock sv_A, sv_P;
 
 		AP7TPI * form = (AP7TPI *)pad;
 
-		sv_A = StateVectorCalcEphem(calcParams.src);
-		sv_P = StateVectorCalcEphem(calcParams.tgt);
+		sv_A = StateVectorCalcDataBlock(calcParams.src);
+		sv_P = StateVectorCalcDataBlock(calcParams.tgt);
 
 		lambert.mode = 5;
 		lambert.T1 = -1.0;
 		lambert.T2 = -1.0;
 		lambert.ChaserVehicle = RTCC_MPT_CSM;
-		lambert.sv_A = sv_A;
-		lambert.sv_P = sv_P;
+		lambert.sv_C = sv_A;
+		lambert.sv_T = sv_P;
 		lambert.Elev = 27.45*RAD;
 		lambert.WT = 140.0*RAD;
 
@@ -792,8 +792,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.dV_LVLH = res.dV_LVLH;
 		opt.TIG = res.T1;
-		opt.sv_A = sv_A;
-		opt.sv_P = sv_P;
+		opt.sv_A = sv_A.sv;
+		opt.sv_P = sv_P.sv;
 		opt.mass = calcParams.src->GetMass();
 
 		AP7TPIPAD(opt, *form);
@@ -1043,7 +1043,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;
@@ -1217,7 +1217,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;
@@ -1513,7 +1513,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;
@@ -1775,7 +1775,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;

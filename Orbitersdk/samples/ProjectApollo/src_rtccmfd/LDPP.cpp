@@ -1747,27 +1747,27 @@ void LDPP::PDICalculations()
 	if (opt.W_LM == 0.0) return;
 
 	RTCCNIAuxOutputTable aux;
-	SV sv, sv_PDI, sv_land;
+	VehicleDataBlock sv, sv_PDI, sv_land;
 	VECTOR3 R_LS;
 	double TLAND;
 	bool calcdescent;
 
 	R_LS = OrbMech::r_from_latlong(opt.Lat_LS, opt.Lng_LS, opt.R_LS);
-	TLAND = pRTCC->GETfromGMT(t_TD);
-	sv = pRTCC->ConvertEphemDatatoSV(sv_LM, opt.W_LM);
+	TLAND = t_TD;
+	sv = pRTCC->SVToVehicleDataBlock(sv_LM, 0.0, opt.W_LM, 0.0);
 	calcdescent = true;
 
 	if (opt.I_TPD)
 	{
 		//Input time to begin powered descent T_PD
 		t_IGN = opt.T_PD;
-		TLAND = pRTCC->GETfromGMT(t_IGN + opt.t_D);
+		TLAND = t_IGN + opt.t_D;
 	}
 	else
 	{
 		//Allow program to compute time to begin powered descent T_PD
 
-		SV sv_IG;
+		VehicleDataBlock sv_IG;
 		MATRIX3 REFSMMAT;
 		VECTOR3 U_IG;
 		double t_go, CR;
@@ -1776,7 +1776,7 @@ void LDPP::PDICalculations()
 		{
 			//No error
 			//TBD: More output parameters
-			t_IGN = OrbMech::GETfromMJD(sv_IG.MJD, pRTCC->GetGMTBase());
+			t_IGN = sv_IG.sv.GMT;
 			t_TD = t_IGN + opt.t_D;
 		}
 		else
