@@ -4843,7 +4843,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, 32, 2, "TL");
 		Text(skp, 41, 1, "LAT LLS");
 		Text(skp, 41, 2, "LNG LLS");
-		skp->Text(0, (CH * 7) / 2, "MVR/REV GETTH/GETIG LIG/DV HAC/HPC DEL/THPC DVX/DVY DVZ", 55);
+		Text(skp, 0, 7, "MVR/REV GETTH/GETIG LIG/DV HAC/HPC DEL/THPC DVX/DVY DVZ", 1, 2);
 		Text(skp, 1, 17, "POWERED DESCENT");
 		Text(skp, 1, 18, "THETA IGN");
 		Text(skp, 1, 19, "PROP.REM");
