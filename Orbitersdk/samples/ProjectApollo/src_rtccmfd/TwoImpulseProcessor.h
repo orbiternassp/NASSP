@@ -93,10 +93,10 @@ struct TwoImpulseResuls
 {
 	TwoImpulseResuls();
 
-	EphemerisData sv_tig;		//State vector before NCC/TPI
-	EphemerisData sv_tig_apo;	//State vector after NCC/TPI
-	EphemerisData sv_tig2;		//State vector before NSR/TPF
-	EphemerisData sv_tig2_apo;	//State vector after NSR/TPF
+	VehicleDataBlock sv_tig;		//State vector before NCC/TPI
+	VehicleDataBlock sv_tig_apo;	//State vector after NCC/TPI
+	VehicleDataBlock sv_tig2;		//State vector before NSR/TPF
+	VehicleDataBlock sv_tig2_apo;	//State vector after NSR/TPF
 	VECTOR3 dV;
 	VECTOR3 dV2;
 	VECTOR3 dV_LVLH;

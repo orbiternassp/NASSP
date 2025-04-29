@@ -556,8 +556,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 		in.CONFIG = 1; //CSM
 		in.CSMWeight = med_m50.CSMWT;
-		in.sv_before = res.sv_tig;
-		in.V_aft = res.sv_tig.V + res.dV;
+		in.sv_before = res.sv_tig.sv;
+		in.V_aft = res.sv_tig.sv.V + res.dV;
 		in.DETU = 15.0; //Ullage
 		in.UT = true; //4 jets
 		in.IgnitionTimeOption = false;
@@ -682,8 +682,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 			in.CONFIG = 1; //CSM
 			in.CSMWeight = WeightsTable.CSMWeight;
-			in.sv_before = res.sv_tig;
-			in.V_aft = res.sv_tig.V + res.dV;
+			in.sv_before = res.sv_tig.sv;
+			in.V_aft = res.sv_tig.sv.V + res.dV;
 			in.DETU = 15.0; //Ullage
 			in.UT = true; //4 jets
 			in.IgnitionTimeOption = false;

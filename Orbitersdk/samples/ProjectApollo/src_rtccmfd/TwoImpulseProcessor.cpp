@@ -934,10 +934,10 @@ void TwoImpulseProcessor::ExternalRequest(TwoImpulseResuls &res)
 	else
 	{
 		//Pass solution back
-		res.sv_tig = sv_C1.sv;
-		res.sv_tig_apo = sv_C1_apo.sv;
-		res.sv_tig2 = sv_C2.sv;
-		res.sv_tig2_apo = sv_C2_apo.sv;
+		res.sv_tig = sv_C1;
+		res.sv_tig_apo = sv_C1_apo;
+		res.sv_tig2 = sv_C2;
+		res.sv_tig2_apo = sv_C2_apo;
 		res.dV = sv_C1_apo.sv.V - sv_C1.sv.V;
 		res.dV2 = sv_C2_apo.sv.V - sv_C2.sv.V;
 		res.dV_LVLH = mul(OrbMech::LVLH_Matrix(sv_C1.sv.R, sv_C1.sv.V), res.dV);
