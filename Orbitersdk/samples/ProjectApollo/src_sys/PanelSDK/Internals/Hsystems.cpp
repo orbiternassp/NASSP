@@ -1277,18 +1277,20 @@ void h_MixingPipe::Save(FILEHANDLE scn) {
 }
 
 
-h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Pipe *i_pipe) {
-	
+h_crew::h_crew(char *i_name, int nr, h_Tank *i_src, h_Pipe *i_pipe, h_Tank *i_urine) {
+
 	strcpy(name, i_name);
 	max_stage = 99;
 	number = nr;
 	SRC = i_src;
 	drinkpipe = i_pipe;
+	UCD = i_urine;
 }
 
 void h_crew::refresh(double dt) {
 
 	double oxygen = 0.00949 * number * dt; //grams of O2 (0.082 to 0.124 LB/Man Hour (37.19 to 56.25 g/Man Hour) per LM-8 Systems Handbook)
+	double urine = 0.0162037 * number * dt;  //grams of urine based on production of 1.4 L/day (1400 g/day) per crew member
 
 	if (drinkpipe && !(drinkpipe->in->pz)) {
 
@@ -1305,7 +1307,23 @@ void h_crew::refresh(double dt) {
 		}
 	}
 
-	if (SRC) {
+	if (UCD)
+	{
+		if (UCD->space.composition[SUBSTANCE_H2O].mass >= (UCD->space.Volume * 1000.0) || UCD->OUT_valve.open || UCD->OUT2_valve.open) //stops urine buildup if storage is full or if dump valve is open
+		{
+			urine = 0.0;
+		}
+
+		double ucdTemp = UCD->GetTemp();
+		UCD->space.composition[SUBSTANCE_H2O].mass += urine;
+		UCD->space.composition[SUBSTANCE_H2O].SetTemp(ucdTemp);
+
+		UCD->space.GetQ();
+		UCD->space.GetMass();
+	}
+
+	if (SRC)
+	{
 		double srcTemp = SRC->GetTemp();
 		therm_obj *t = SRC->GetThermalInterface();
 
@@ -1322,13 +1340,13 @@ void h_crew::refresh(double dt) {
 
 		double sweatRate = srcTemp < 310.2 ? 0.0685522320142486 + 1.99493308786737E-63 * exp(srcTemp * 0.4654878554362358) : 1.0;
 		double h2o = 1.1 * sweatRate * number * dt;  //grams of H2O water vapor (lung loss should be 2.64 lb/day and sweat should be 1.32 lb/day per crew)
-		SRC->space.composition[SUBSTANCE_H2O].mass += h2o;	
-		SRC->space.composition[SUBSTANCE_H2O].vapor_mass += h2o;	
+		SRC->space.composition[SUBSTANCE_H2O].mass += h2o;
+		SRC->space.composition[SUBSTANCE_H2O].vapor_mass += h2o;
 		SRC->space.composition[SUBSTANCE_H2O].SetTemp(srcTemp);
 
 		SRC->space.GetQ();
 		SRC->space.GetMass();
-			
+
 		double heat = 1.77 * (310.2 - srcTemp) * number * dt;  //heat (400 to 760 BTU/Man Hour (117.23 to 222.73 Watts) per LM-8 Systems Handbook)
 		t->thermic(heat);
 	}
@@ -1338,7 +1356,7 @@ void h_crew::Save(FILEHANDLE scn) {
 
 	char text[100];
 
-	sprintf(text," %s %i", name, number);
+	sprintf(text, " %s %i", name, number);
 	oapiWriteScenario_string(scn, "   <CREW>", text);
 }
 

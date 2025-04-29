@@ -333,8 +333,8 @@ public:
 class h_crew : public h_object {
 
 public:
-    h_crew(char *i_name, int nr, h_Tank *i_src, h_Pipe *i_pipe);
-	h_Tank *SRC;
+	h_crew(char *i_name, int nr, h_Tank *i_src, h_Pipe *i_pipe, h_Tank *i_urine);
+	h_Tank *SRC, *UCD;
 	h_Pipe *drinkpipe;
 	int number;
 	virtual	void refresh(double dt);	//this called at each timestep

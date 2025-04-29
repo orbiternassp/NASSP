@@ -4705,7 +4705,7 @@ void ApolloRTCCMFD::menuMPTUpdate()
 void ApolloRTCCMFD::menuMPTTrajectoryUpdateCSM()
 {
 	bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Choose vessel for the CSM ground tracking solution:", DifferentialCorrectionSolutionCSMInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Choose vessel for the CSM ground tracking solution (leave blank for CSM selected on config page):", DifferentialCorrectionSolutionCSMInput, 0, 50, (void*)this);
 }
 
 bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data)
@@ -4720,7 +4720,7 @@ bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuMPTTrajectoryUpdateLEM()
 {
 	bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Choose vessel for the LEM ground tracking solution:", DifferentialCorrectionSolutionLEMInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Choose vessel for the LM ground tracking solution (leave blank for LM selected on config page):", DifferentialCorrectionSolutionLEMInput, 0, 50, (void*)this);
 }
 
 bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data)
@@ -4737,18 +4737,37 @@ bool ApolloRTCCMFD::set_DifferentialCorrectionSolution(char *str, bool csm)
 	//To update display immediately
 	GC->rtcc->VectorPanelSummaryBuffer.gmt = -10000000000000.0;
 
-	OBJHANDLE hVessel = oapiGetVesselByName(str);
-	if (hVessel)
+	OBJHANDLE hVessel;
+	VESSEL *v = NULL;
+
+	if (strcmp(str, "") == 0) //If str is empty, use CSM or LM from config page
 	{
-		VESSEL *v = oapiGetVesselInterface(hVessel);
-		if (v)
+		if (csm)
 		{
-			if (GC->MPTTrajectoryUpdate(v, csm))
-			{
-				return false;
-			}
-			return true;
+			v = GC->rtcc->pCSM;
 		}
+		else
+		{
+			v = GC->rtcc->pLM;
+		}
+	}
+	else //Otherwise use the input string to get the vessel name
+	{
+		hVessel = oapiGetVesselByName(str);
+		if (hVessel)
+		{
+			v = oapiGetVesselInterface(hVessel);
+		}
+		else return false;
+	}
+
+	if (v)
+	{
+		if (GC->MPTTrajectoryUpdate(v, csm))
+		{
+			return false;
+		}
+		return true;
 	}
 	return false;
 }

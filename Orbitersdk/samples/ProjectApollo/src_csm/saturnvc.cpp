@@ -807,6 +807,10 @@ bool Saturn::clbkLoadVC (int id)
 	vcFreeCamy = 0;
 	vcFreeCamz = 0;
 
+	//Get mesh offset
+	VECTOR3 ofs;
+	GetMeshOffset(vcidx, ofs);
+
 	//Flashlight
 	DelLightEmitter(flashlight);
 	flashlight = (::SpotLight*)AddSpotLight(flashlightPos, flashlightDirLocal, 3, 0, 0, 3, 0, RAD * 45, flashlightColor, flashlightColor, flashlightColor2);
@@ -815,21 +819,21 @@ bool Saturn::clbkLoadVC (int id)
 
 	//FloodLight Panel 5
 	DelLightEmitter(floodLight_P5);
-	floodLight_P5 = (::PointLight*)AddPointLight(floodLightPos_P5, 3, 0, 0, 3, floodLightColor_P5, floodLightColor_P5, floodLightColor2_P5);
+	floodLight_P5 = (::PointLight*)AddPointLight(floodLightPos_P5 + ofs, 3, 0, 0, 3, floodLightColor_P5, floodLightColor_P5, floodLightColor2_P5);
 	floodLight_P5->SetVisibility(LightEmitter::VIS_COCKPIT);
 	floodLight_P5->Activate(true);
 	floodLight_P5->SetIntensity(1);
 
 	//FloodLight Panel 8
 	DelLightEmitter(floodLight_P8);
-	floodLight_P8 = (::PointLight*)AddPointLight(floodLightPos_P8, 3, 0, 0, 3, floodLightColor_P8, floodLightColor_P8, floodLightColor2_P8);
+	floodLight_P8 = (::PointLight*)AddPointLight(floodLightPos_P8 + ofs, 3, 0, 0, 3, floodLightColor_P8, floodLightColor_P8, floodLightColor2_P8);
 	floodLight_P8->SetVisibility(LightEmitter::VIS_COCKPIT);
 	floodLight_P8->Activate(true);
 	floodLight_P8->SetIntensity(1);
 
 	//FloodLight Panel 100(LEB)
 	DelLightEmitter(floodLight_P100);
-	floodLight_P100 = (::PointLight*)AddPointLight(floodLightPos_P100, 3, 0, 0, 3, floodLightColor_P100, floodLightColor_P100, floodLightColor2_P100);
+	floodLight_P100 = (::PointLight*)AddPointLight(floodLightPos_P100 + ofs, 3, 0, 0, 3, floodLightColor_P100, floodLightColor_P100, floodLightColor2_P100);
 	floodLight_P100->SetVisibility(LightEmitter::VIS_COCKPIT);
 	floodLight_P100->Activate(true);
 	floodLight_P100->SetIntensity(1);
@@ -5758,22 +5762,6 @@ void Saturn::SetVCLighting(UINT meshidx, int material, int EmissionMode, double 
 		pCore->MeshMaterial(hMesh, material, EmissionMode, &value, true);
 #endif
 	}
-}
-
-void Saturn::UpdateFloodLights()
-{
-	VECTOR3 camPos;
-	VECTOR3 ofs;
-	GetCameraOffset(camPos);
-	GetMeshOffset(vcidx, ofs); // First get or VC Offset
-
-	// Debug string for finding Camera and VC mesh Position
-	//sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ", camPos.x, camPos.y, camPos.z, ofs.x, ofs.y, ofs.z );
-
-	// Set the Floodlights 
-	floodLight_P5->SetPosition(ofs + floodLightPos_P5);
-	floodLight_P8->SetPosition(ofs + floodLightPos_P8);
-	floodLight_P100->SetPosition(ofs + floodLightPos_P100);
 }
 
 void Saturn::MoveFlashlight()

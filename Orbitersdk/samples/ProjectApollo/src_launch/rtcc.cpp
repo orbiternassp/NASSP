@@ -13191,6 +13191,7 @@ void RTCC::EMGGPCHR(double lat, double lng, double alt, int body, double GHA, St
 
 void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
 {
+	//Input coordinate system should be ECT or MCT. sv_present is part of TimeConstraintsTable but is not stored.
 	VECTOR3 H, E, N, K;
 	double mu, eps, v, r, lng, lat, fpa, azi, h, r_apo, r_peri, R_E;
 
@@ -13240,7 +13241,6 @@ void RTCC::EMMDYNEL(EphemerisData sv, TimeConstraintsTable &tab)
 	{
 		tab.RA = PI2 - tab.RA;
 	}
-	tab.sv_present = sv;
 	if (tab.e < 1.0)
 	{
 		tab.T0 = OrbMech::period(sv.R, sv.V, mu);
@@ -13643,6 +13643,7 @@ void RTCC::EMSTIME(int L, int ID)
 		in.GMT = RTCCPresentTimeGMT();
 		in.L = L;
 
+		//Interpolate the main ephemeris for a present position vector
 		ELVCTR(in, out);
 
 		//Error code 2 is acceptable ("Order of interpolation performed less than order requested")
@@ -13652,12 +13653,15 @@ void RTCC::EMSTIME(int L, int ID)
 			return;
 		}
 
+		//Rotate vector to MCI
 		EphemerisData2 sv_MCI, sv_I;
 		ELVCNV(out.SV, 0, 2, sv_MCI);
 
+		//Is the vector in the lunar SOI?
 		int coor1, coor2, RBI;
 		if (length(sv_MCI.R) > 9.0*OrbMech::R_Earth)
 		{
+			//No
 			sv_I = out.SV;
 			RBI = BODY_EARTH;
 			coor1 = 0;
@@ -13665,6 +13669,7 @@ void RTCC::EMSTIME(int L, int ID)
 		}
 		else
 		{
+			//Yes
 			sv_I = sv_MCI;
 			RBI = BODY_MOON;
 			coor1 = 2;
@@ -13680,6 +13685,7 @@ void RTCC::EMSTIME(int L, int ID)
 		}
 
 		EMMDYNEL(Eph2ToEph1(sv_true, RBI), *tab);
+		tab->sv_present = Eph2ToEph1(sv_I, RBI);
 
 		tab->RevNum = CapeCrossingRev(L, sv_true.GMT);
 		tab->TUP = out.TUP;
@@ -13757,6 +13763,17 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 	CurGET = GETfromGMT(CurGMT);
 	tab->Error = 0;
 
+	if (ephtab->EPHEM.Header.TUP == 0)
+	{
+		tab->Error = 1; //Error 1: The trajectory for subject vehicle is not generated
+		return;
+	}
+	if (mpt->CommonBlock.TUP < 0 || mpt->CommonBlock.TUP != ephtab->EPHEM.Header.TUP)
+	{
+		tab->Error = 2; //Error 2: The Mission Plan table is either in an update state or inconsistent with trajectory update number
+		return;
+	}
+
 	if (queid == 1 || queid == 2)
 	{
 		//TBD: move this
@@ -13766,6 +13783,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 	//For now don't even allow processing if time constraints table is invalid
 	if (tcontab->TUP <= 0)
 	{
+		tab->Error = 19; //Error 19: Present position data not initialized in Time Constraints Page
 		return;
 	}
 
@@ -13892,11 +13910,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 				AEGDataBlock sv_a;
 				double INFO[10];
 
-				PIMCKC(tcontab->sv_present.R, tcontab->sv_present.V, tcontab->sv_present.RBI, aeg.Data.coe_osc.a, aeg.Data.coe_osc.e, aeg.Data.coe_osc.i, aeg.Data.coe_osc.g, aeg.Data.coe_osc.h, aeg.Data.coe_osc.l);
-
-				aeg.Header.AEGInd = tcontab->sv_present.RBI;
-				aeg.Data.TS = aeg.Data.TE = tcontab->sv_present.GMT;
-
+				aeg = SVToAEG(tcontab->sv_present, 0.0, 1.0, mpt->KFactor); //TBD, weight and area
 				PMMAPD(aeg.Header, aeg.Data, 1, 0, INFO, &sv_a, NULL);
 
 				tab->HA = INFO[4] / 1852.0;
@@ -13921,11 +13935,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 				AEGDataBlock sv_p;
 				double INFO[10];
 
-				PIMCKC(tcontab->sv_present.R, tcontab->sv_present.V, tcontab->sv_present.RBI, aeg.Data.coe_osc.a, aeg.Data.coe_osc.e, aeg.Data.coe_osc.i, aeg.Data.coe_osc.g, aeg.Data.coe_osc.h, aeg.Data.coe_osc.l);
-
-				aeg.Header.AEGInd = tcontab->sv_present.RBI;
-				aeg.Data.TS = aeg.Data.TE = tcontab->sv_present.GMT;
-
+				aeg = SVToAEG(tcontab->sv_present, 0.0, 1.0, mpt->KFactor); //TBD, weight and area
 				PMMAPD(aeg.Header, aeg.Data, -1, 0, INFO, NULL, &sv_p);
 
 				tab->HP = INFO[9] / 1852.0;
@@ -13989,6 +13999,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 			unsigned man = (unsigned)param;
 			if (man > mpt->mantable.size())
 			{
+				tab->Error = 14; //Error 14: The maneuver number requested is greater than the number of maneuvers in the Mission Plan Table
 				return;
 			}
 			sv_pred.R = mpt->mantable[man - 1].R_BO;
@@ -14109,25 +14120,27 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		intab.L = L;
 
 		ELVCTR(intab, outtab);
+
 		if (outtab.ErrorCode)
 		{
+			tab->Error = 8; //Error 8: The time on the U14 MED preceeds/exceeds the end of the ephemeris
 			return;
 		}
-		int out;
-		if (DetermineSVBody(outtab.SV) == BODY_EARTH)
+
+		EphemerisData sv_L = RotateSVToSOI(outtab.SV);
+
+		if (sv_L.RBI == BODY_EARTH)
 		{
-			out = 1;
 			sprintf_s(tab->REF3, "ECT");
 		}
 		else
 		{
-			out = 3;
 			sprintf_s(tab->REF3, "MCT");
 		}
-		EphemerisData2 sv_true;
-		ELVCNV(outtab.SV, 0, out, sv_true);
-		double lat, lng;
-		OrbMech::latlong_from_r(sv_true.R, lat, lng);
+
+		double lat, lng, alt;
+		GLSSAT(sv_L.R, sv_L.GMT, sv_L.RBI, lat, lng, alt);
+
 		tab->GETL = param;
 		tab->L = lng * DEG;
 		tab->REVL = CapeCrossingRev(L, gmt);

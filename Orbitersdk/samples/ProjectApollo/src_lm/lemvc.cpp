@@ -740,16 +740,20 @@ bool LEM::clbkLoadVC (int id)
 	flashlight->SetVisibility(LightEmitter::VIS_COCKPIT);
 	flashlight->Activate(flashlightOn);
 
+	//Get mesh offset
+	VECTOR3 ofs;
+	GetMeshOffset(vcidx, ofs);
+
 	//FloodLight Right Pilot
 	DelLightEmitter(floodLight_Right);
-	floodLight_Right = (::PointLight*)AddPointLight(floodLightPos_Right, 3, 0, 0, 3, floodLightColor_Right, floodLightColor_Right, floodLightColor2_Right);
+	floodLight_Right = (::PointLight*)AddPointLight(floodLightPos_Right + ofs, 3, 0, 0, 3, floodLightColor_Right, floodLightColor_Right, floodLightColor2_Right);
 	floodLight_Right->SetVisibility(LightEmitter::VIS_COCKPIT);
 	floodLight_Right->Activate(true);
 	floodLight_Right->SetIntensity(1);
 
 	//FloodLight Left Commander
 	DelLightEmitter(floodLight_Left);
-	floodLight_Left = (::PointLight*)AddPointLight(floodLightPos_Left, 3, 0, 0, 3, floodLightColor_Left, floodLightColor_Left, floodLightColor2_Left);
+	floodLight_Left = (::PointLight*)AddPointLight(floodLightPos_Left + ofs, 3, 0, 0, 3, floodLightColor_Left, floodLightColor_Left, floodLightColor2_Left);
 	floodLight_Left->SetVisibility(LightEmitter::VIS_COCKPIT);
 	floodLight_Left->Activate(true);
 	floodLight_Left->SetIntensity(1);
@@ -3656,19 +3660,4 @@ void LEM::ToggleFlashlight()
 	if ((oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
 		SetFlashlightOn(!flashlightOn);
 	}
-}
-
-void LEM::UpdateFloodLights()
-{
-	VECTOR3 camPos;
-	VECTOR3 ofs;
-	GetCameraOffset(camPos);
-	GetMeshOffset(vcidx, ofs); // First get or VC Offset
-
-	// Debug string for finding Camera and VC mesh Position
-//	sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ", camPos.x, camPos.y, camPos.z, ofs.x, ofs.y, ofs.z );
-
-	// Set the Floodlights 
-	floodLight_Left->SetPosition(ofs + floodLightPos_Left);
-	floodLight_Right->SetPosition(ofs + floodLightPos_Right);
 }

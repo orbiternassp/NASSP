@@ -12,6 +12,7 @@ public:
 		int None;
 		int GNC;
 		int ECS;
+		int ECSDBG;
 		int IU;
 		int TELE;
 		int Debug;
