@@ -1189,7 +1189,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		manopt.sv_A = sv_A.sv;
 		manopt.sv_P = sv_P.sv;
-		manopt.GMT_TIG = res.sv_tig.GMT;
+		manopt.GMT_TIG = res.sv_tig.sv.GMT;
 
 		AP9LMTPIPAD(manopt, *form);
 	}
