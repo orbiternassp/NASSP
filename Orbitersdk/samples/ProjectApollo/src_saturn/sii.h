@@ -179,4 +179,6 @@ protected:
 	THRUSTER_HANDLE th_retro[4], th_main[5];
 	THGROUP_HANDLE thg_retro, thg_main;
 	PROPELLANT_HANDLE ph_retro, ph_main;
+
+	DOCKHANDLE hSIVbDock, hSICSIIIntStgDock;
 };

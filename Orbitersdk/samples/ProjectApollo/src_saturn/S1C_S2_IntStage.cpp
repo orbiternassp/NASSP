@@ -68,6 +68,39 @@ void S1C_S2_Interstage::clbkSaveState(FILEHANDLE scn)
 	VESSEL4::clbkSaveState(scn);
 }
 
+void S1C_S2_Interstage::SetupTouchdownPoints()
+{
+	double td_mass = 2214000.0;
+	double td_width = 10.0;
+	double td_tdph = -49.0;
+	double td_height = 40.0;
+
+	static DWORD ntdp = 4;
+	static TOUCHDOWNVTX td[8];
+	double stiffness = (-1) * (td_mass * 9.80655) / (3 * -0.05);
+	double damping = 0.9 * (2 * sqrt(td_mass * stiffness));
+	for (int i = 0; i < 4; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = -cos(30 * RAD) * td_width;
+	td[0].pos.y = -sin(30 * RAD) * td_width;
+	td[0].pos.z = td_tdph;
+	td[1].pos.x = 0;
+	td[1].pos.y = 1 * td_width;
+	td[1].pos.z = td_tdph;
+	td[2].pos.x = cos(30 * RAD) * td_width;
+	td[2].pos.y = -sin(30 * RAD) * td_width;
+	td[2].pos.z = td_tdph;
+	td[3].pos.x = 0;
+	td[3].pos.y = 0;
+	td[3].pos.z = td_tdph + td_height;
+
+	SetTouchdownPoints(td, ntdp);
+}
+
 //void S1C_S2_Interstage::clbkLoadStateEx(FILEHANDLE scn, void* vstatus)
 //{
 //}
