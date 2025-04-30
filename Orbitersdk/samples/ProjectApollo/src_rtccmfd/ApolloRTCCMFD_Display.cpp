@@ -194,7 +194,83 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		break;
 	case 2:
-		//Spare
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(W / 2, CH / 2, "Thrust and CG Tables", 20);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+		skp->Text(CW, 2 * H / 14, "Table:", 10);
+		if (subscreen < 3)
+		{
+			//SPS, APS, DPS
+			RTCCSystemParameters::ThrustTable *tab;
+			if (subscreen == 0)
+			{
+				tab = &GC->rtcc->SystemParameters.MHTSTC; //SPS
+				if (subsubscreen == 0) skp->Text(CW * 8, 2 * H / 14, "SPS (Page 1)", 12);
+				else skp->Text(CW * 8, 2 * H / 14, "SPS (Page 2)", 12);
+			}
+			else if (subscreen == 1)
+			{
+				tab = &GC->rtcc->SystemParameters.MHTATC; //APS
+				if (subsubscreen == 0) skp->Text(CW * 8, 2 * H / 14, "APS (Page 1)", 12);
+				else skp->Text(CW * 8, 2 * H / 14, "APS (Page 2)", 12);
+			}
+			else
+			{
+				tab = &GC->rtcc->SystemParameters.MHTDTC; //DPS
+				if (subsubscreen == 0) skp->Text(CW * 8, 2 * H / 14, "DPS (Page 1)", 12);
+				else skp->Text(CW * 8, 2 * H / 14, "DPS (Page 2)", 12);
+			}
+			skp->Text(CW * 2, 6 * H / 28, "N  Weight Thrust  WLR", 21);
+			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+			int j;
+			if (subsubscreen == 1) j = 20;
+			else j = 0;
+			for (int i = 0; i < 20; i++)
+			{
+				if (i + j + 1 > tab->N) break;
+				Text_Int(skp, CW * 4, (7 + i)*H / 28, "%02d", j + i + 1);
+				Text_Double(skp, CW * 10, (7 + i) * H / 28, "%.0lf", tab->Weight[j + i] * LBS * 1000.0);
+				Text_Double(skp, CW * 17, (7 + i) * H / 28, "%.0lf", tab->Thrust[j + i].x * LBF);
+				Text_Double(skp, CW * 25, (7 + i) * H / 28, "%.3lf", tab->Thrust[j + i].y * LBS * 1000.0);
+			}
+		}
+		else
+		{
+			//CSM, full LM, ascent stage
+			RTCCSystemParameters::CGTable *tab;
+			if (subscreen == 3)
+			{
+				tab = &GC->rtcc->SystemParameters.MHVCCG; //CSM
+				if (subsubscreen == 0) skp->Text(CW * 8, 2 * H / 14, "CSM (Page 1)", 12);
+				else skp->Text(CW * 8, 2 * H / 14, "CSM (Page 2)", 12);
+			}
+			else if (subscreen == 4)
+			{
+				tab = &GC->rtcc->SystemParameters.MHVLCG; //LM ascent + descent
+				if (subsubscreen == 0) skp->Text(CW * 8, 2 * H / 14, "Full LM (Page 1)", 16);
+				else skp->Text(CW * 8, 2 * H / 14, "Full LM (Page 2)", 16);
+			}
+			else
+			{
+				tab = &GC->rtcc->SystemParameters.MHVACG; //LM ascent
+				if (subsubscreen == 0) skp->Text(CW * 8, 2 * H / 14, "Ascent Stage (Page 1)", 21);
+				else skp->Text(CW * 8, 2 * H / 14, "Ascent Stage (Page 2)", 21);
+			}
+			skp->Text(CW * 2, 6 * H / 28, "N  Weight     X        Y        Z", 33);
+			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+			int j;
+			if (subsubscreen == 1) j = 20;
+			else j = 0;
+			for (int i = 0; i < 20; i++)
+			{
+				if (i + j + 1 > tab->N) break;
+				Text_Int(skp, CW * 4, (7 + i)*H / 28, "%02d", j + i + 1);
+				Text_Double(skp, CW * 10, (7 + i) * H / 28, "%.0lf", tab->Weight[j + i] * LBS * 1000.0);
+				Text_Double(skp, CW * 20, (7 + i) * H / 28, "%.3lf", tab->CG[j + i].x / 0.0254);
+				Text_Double(skp, CW * 29, (7 + i) * H / 28, "%.3lf", tab->CG[j + i].y / 0.0254);
+				Text_Double(skp, CW * 38, (7 + i) * H / 28, "%.3lf", tab->CG[j + i].z / 0.0254);
+			}
+		}
 		break;
 	case 3:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
@@ -820,6 +896,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			skp->Text(CW, 10 * H / 14, "Ascent Stage", 12);
 		}
+		skp->Text(CW, 12 * H / 14, "Thrust and CG Tables", 20);
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		sprintf(Buffer, "%02d:%02d:%04d", GC->rtcc->GZGENCSN.DayofLiftoff, GC->rtcc->GZGENCSN.MonthofLiftoff, GC->rtcc->GZGENCSN.Year);

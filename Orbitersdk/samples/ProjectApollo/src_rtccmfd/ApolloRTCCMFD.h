@@ -60,6 +60,8 @@ struct RTCCMFDData
 	int screen = 0;
 	int subscreen = 0;
 	int subscreenmax = 0;
+	int subsubscreen = 0;
+	int subsubscreenmax = 0;
 	int marker = 0;
 	int markermax = 0;
 	UINT ID = 0;
@@ -154,6 +156,8 @@ public:
 	void menuREFSMMATLockerMovement();
 	void cycleREFSMMATHeadsUp();
 	void calcREFSMMAT();
+	void menuSetMEDM10();
+	void menuSetMEDM11();
 	void GMPInput1Dialogue();
 	void set_GMPInput1(double val);
 	void GMPInput2Dialogue();
@@ -670,6 +674,7 @@ public:
 	void menuSetFIDOLaunchAnalogNo2Page();
 	void menuSetRTETradeoffDisplayPage();
 	void menuCycleSubscreen();
+	void menuCycleSubSubscreen();
 	void menuCalcRTETradeoff();
 	void menuSetRTETradeoffSite();
 	void menuSetRTETradeoffRemoteEarthPage();
@@ -870,6 +875,7 @@ public:
 	void CycleCSMOrLMSelection();
 	void CycleEnableCalculation();
 	void CycleREFSMMATType(int &type, bool csm);
+	void menuSetThrustCGPage();
 
 	void SetMEDInputPageM75();
 	void SetMEDInputPageP13();
@@ -916,6 +922,8 @@ protected:
 	int screen;
 	int subscreen;
 	int subscreenmax;
+	int subsubscreen;
+	int subsubscreenmax;
 	int marker;
 	int markermax;
 	int status; //Page dependent status, reset to 0 when new page is entered

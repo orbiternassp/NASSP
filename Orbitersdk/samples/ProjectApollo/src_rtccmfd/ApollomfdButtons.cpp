@@ -74,15 +74,15 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu2[] =
 	{
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Next table", 0, 'C' },
+		{ "Next page", 0, 'Y' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Thrust Input", 0, 'X' },
+		{ "CG Input", 0, 'O' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -91,19 +91,19 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu2, sizeof(mnu2) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("", OAPI_KEY_X, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_Y, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("TAB", OAPI_KEY_C, &ApolloRTCCMFD::menuCycleSubscreen);
+	RegisterFunction("PAG", OAPI_KEY_Y, &ApolloRTCCMFD::menuCycleSubSubscreen);
 	RegisterFunction("", OAPI_KEY_Z, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_B, &ApolloRTCCMFD::menuVoid);
 
-	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("M10", OAPI_KEY_X, &ApolloRTCCMFD::menuSetMEDM10);
+	RegisterFunction("M11", OAPI_KEY_O, &ApolloRTCCMFD::menuSetMEDM11);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuSetConfigPage);
 
 
 	static const MFDBUTTONMENU mnu3[] =
@@ -283,7 +283,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Choose LM", 0, 'A' },
 		{ "Vessel status", 0, 'V' },
 		{ "LM stage", 0, 'T' },
-		{ "", 0, ' ' },
+		{ "Thrust and CG tables", 0, 'S' },
 		
 
 		{ "Set launch day", 0, 'M' },
@@ -301,7 +301,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("LM", OAPI_KEY_A, &ApolloRTCCMFD::set_LMVessel);
 	RegisterFunction("TYP", OAPI_KEY_V, &ApolloRTCCMFD::menuChangeVesselStatus);
 	RegisterFunction("STA", OAPI_KEY_T, &ApolloRTCCMFD::menuCycleLMStage);
-	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("CG", OAPI_KEY_S, &ApolloRTCCMFD::menuSetThrustCGPage);
 
 	RegisterFunction("DAT", OAPI_KEY_M, &ApolloRTCCMFD::menuSetLaunchDate);
 	RegisterFunction("TIM", OAPI_KEY_K, &ApolloRTCCMFD::menuSetLaunchTime);

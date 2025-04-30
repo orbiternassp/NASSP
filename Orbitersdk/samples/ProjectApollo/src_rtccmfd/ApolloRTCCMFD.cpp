@@ -47,6 +47,8 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	screen = 0;
 	subscreen = 0;
 	subscreenmax = 0;
+	subsubscreen = 0;
+	subsubscreenmax = 0;
 
 	if (!g_SC) {
 		g_SC = new AR_GCore(vessel);                     // First time only in this Orbiter session. Init the static core.
@@ -168,6 +170,8 @@ void ApolloRTCCMFD::SaveState()
 	temp.screen = screen;
 	temp.subscreen = subscreen;
 	temp.subscreenmax = subscreenmax;
+	temp.subsubscreen = subsubscreen;
+	temp.subsubscreenmax = subsubscreenmax;
 	temp.ID = ID;
 	temp.MEDCode = MEDInputData.MEDCode;
 	temp.IsCSM = IsCSM;
@@ -208,6 +212,8 @@ void ApolloRTCCMFD::LoadState()
 			screen = g_MFDData[i].screen;
 			subscreen = g_MFDData[i].subscreen;
 			subscreenmax = g_MFDData[i].subscreenmax;
+			subsubscreen = g_MFDData[i].subsubscreen;
+			subsubscreenmax = g_MFDData[i].subsubscreenmax;
 			MEDInputData.MEDCode = g_MFDData[i].MEDCode;
 			IsCSM = g_MFDData[i].IsCSM;
 			EnableCalculation = g_MFDData[i].EnableCalculation;
@@ -884,6 +890,15 @@ void ApolloRTCCMFD::menuSetTIMultipleSolutionPage()
 	subscreen = 0;
 	subscreenmax = 1;
 	SelectPage(1);
+}
+
+void ApolloRTCCMFD::menuSetThrustCGPage()
+{
+	subscreen = 0;
+	subscreenmax = 5;
+	subsubscreen = 0;
+	subsubscreenmax = 1;
+	SelectPage(2);
 }
 
 void ApolloRTCCMFD::menuSetSPQPage()
@@ -2486,6 +2501,19 @@ void ApolloRTCCMFD::menuCycleSubscreen()
 	{
 		subscreen = 0;
 	}
+	subsubscreen = 0;
+}
+
+void ApolloRTCCMFD::menuCycleSubSubscreen()
+{
+	if (subsubscreen < subsubscreenmax)
+	{
+		subsubscreen++;
+	}
+	else
+	{
+		subsubscreen = 0;
+	}
 }
 
 void ApolloRTCCMFD::menuCalcRTETradeoff()
@@ -3937,9 +3965,19 @@ void ApolloRTCCMFD::menuREFSMMATLockerMovement()
 	menuGeneralMEDRequest("CSM/LEM REFSMMAT Locker Movement. Format: G00,Vehicle1,Matrix1,Vehicle2,Matrix2; (Codes: CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD)");
 }
 
+void ApolloRTCCMFD::menuSetMEDM10()
+{
+	menuGeneralMEDRequest("Thruster Characteristics. Format: M10, Thruster (S, A or D), No. of Entries in Table (1-40), Entry no. of this set (1-40), Weight, Thrust Level, Wt. Loss Rate, Transfer Ind (T or blank);");
+}
+
+void ApolloRTCCMFD::menuSetMEDM11()
+{
+	menuGeneralMEDRequest("CG Characteristics. Format: M11, Vehicle (C, L or A), No. of Entries in Table (1-40), Entry no. of this set (1-40), Weight, X-coord, Y-coord, Z-coord, Transfer Ind (T or blank);");
+}
+
 void ApolloRTCCMFD::menuCycleTITable()
 {
-
+	GC->rtcc->med_m72.Table = 3 - GC->rtcc->med_m72.Table;
 }
 
 void ApolloRTCCMFD::menuSetTIPlanNumber()

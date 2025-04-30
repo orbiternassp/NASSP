@@ -28938,6 +28938,110 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		SystemParameters.MDVSTP.T4IG = T4IG;
 		SystemParameters.MDVSTP.T4C = T4C;
 	}
+	//CSM and LM thruster characteristics
+	else if (med == "10")
+	{
+		//Item 1: Thruster
+		rtcc::AddTextMEDItem(opt, 1, { "S", "A", "D" });
+		//Item 2: Number of entries in table
+		rtcc::AddIntegerMEDItem(opt, 0, true, true, 1, 40);
+		//Item 3: Entry no. of this set
+		rtcc::AddIntegerMEDItem(opt, 1, true, true, 1, 40);
+		//Item 4: Weight
+		rtcc::AddDoubleMEDItem(opt, 1, true, false, 1.0 / (LBS * 1000.0), 1000.0);
+		//Item 5: Thrust Level
+		rtcc::AddDoubleMEDItem(opt, 1, true, true, 1.0 / LBF, 0.0, 28000.0);
+		//Item 6: Weight loss rate
+		rtcc::AddDoubleMEDItem(opt, 1, true, false, 1.0 / (LBS * 1000.0), 0.0);
+		//Item 7: Transfer indicator
+		rtcc::AddTextMEDItem(opt, 2, { "0", "T" }, 0);
+
+		int err = rtcc::GenericMEDProcessing(opt, data, out);
+		if (err)
+		{
+			return err;
+		}
+		RTCCSystemParameters::ThrustTable *tab;
+		if (out.Values[0].i == 0)
+		{
+			tab = &SystemParameters.MHTSTC;
+		}
+		else if (out.Values[0].i == 1)
+		{
+			tab = &SystemParameters.MHTATC;
+		}
+		else
+		{
+			tab = &SystemParameters.MHTDTC;
+		}
+		if (out.Ignored[1] == false)
+		{
+			tab->N = out.Values[1].i;
+		}
+		if (out.Values[2].i > tab->N)
+		{
+			return 2;
+		}
+		//TBD: Error checks
+		int m = out.Values[2].i - 1;
+		tab->Weight[m] = out.Values[3].d;
+		tab->Thrust[m].x = out.Values[4].d;
+		tab->Thrust[m].y = out.Values[5].d;
+	}
+	//CSM and LM CG characteristics
+	else if (med == "11")
+	{
+		//Item 1: Vehicle
+		rtcc::AddTextMEDItem(opt, 1, { "C", "L", "A" });
+		//Item 2: Number of entries in table
+		rtcc::AddIntegerMEDItem(opt, 0, true, true, 1, 40);
+		//Item 3: Entry no. of this set
+		rtcc::AddIntegerMEDItem(opt, 1, true, true, 1, 40);
+		//Item 4: Weight
+		rtcc::AddDoubleMEDItem(opt, 1, true, false, 1.0 / (LBS * 1000.0), 1000.0);
+		//Item 5: X-coordinate
+		rtcc::AddDoubleMEDItem(opt, 1, false, false, 0.0254);
+		//Item 6: Y-coordinate
+		rtcc::AddDoubleMEDItem(opt, 1, false, false, 0.0254);
+		//Item 7: Z-coordinate
+		rtcc::AddDoubleMEDItem(opt, 1, false, false, 0.0254);
+		//Item 8: Transfer indicator
+		rtcc::AddTextMEDItem(opt, 2, { "0", "T" }, 0);
+
+		int err = rtcc::GenericMEDProcessing(opt, data, out);
+		if (err)
+		{
+			return err;
+		}
+		RTCCSystemParameters::CGTable *tab;
+		if (out.Values[0].i == 0)
+		{
+			tab = &SystemParameters.MHVCCG;
+		}
+		else if (out.Values[0].i == 1)
+		{
+			tab = &SystemParameters.MHVLCG;
+		}
+		else
+		{
+			tab = &SystemParameters.MHVACG;
+		}
+		if (out.Ignored[1] == false)
+		{
+			tab->N = out.Values[1].i;
+		}
+		if (out.Values[2].i > tab->N)
+		{
+			return 2;
+		}
+		//TBD: Error checks
+		int m = out.Values[2].i - 1;
+		tab->Weight[m] = out.Values[3].d;
+		tab->CG[m].x = out.Values[4].d;
+		tab->CG[m].y = out.Values[5].d;
+		tab->CG[m].z = out.Values[6].d;
+	}
+	//
 	else if (med == "40")
 	{
 		if (data.size() < 1)
