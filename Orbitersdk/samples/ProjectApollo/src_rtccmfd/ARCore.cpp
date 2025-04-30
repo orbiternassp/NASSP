@@ -1677,7 +1677,7 @@ void ARCore::AGSStateVectorCalc(bool IsCSM)
 	sv = GC->rtcc->StateVectorCalcEphem(v);
 
 	opt.csm = IsCSM;
-	opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
+	opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[GC->rtcc->EZETVMED.AGSNavUpdREFSMMAT - 1].REFSMMAT;
 	opt.sv = sv;
 	opt.landed = v->GroundContact();
 

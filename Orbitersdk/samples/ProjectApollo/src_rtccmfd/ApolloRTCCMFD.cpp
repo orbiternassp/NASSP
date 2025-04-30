@@ -3944,7 +3944,7 @@ void ApolloRTCCMFD::menuREFSMMATLockerMovement()
 
 void ApolloRTCCMFD::menuCycleTITable()
 {
-
+	GC->rtcc->med_m72.Table = 3 - GC->rtcc->med_m72.Table;
 }
 
 void ApolloRTCCMFD::menuSetTIPlanNumber()
