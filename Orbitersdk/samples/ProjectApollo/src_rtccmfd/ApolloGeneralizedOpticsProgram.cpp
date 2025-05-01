@@ -2187,9 +2187,11 @@ void AGOP::WriteError(AGOPOutputs &out, int err)
 
 void AGOP::RightAscension_Display(char *Buff, double angle)
 {
+	//Input in degrees
 	if (angle < 0.0) angle += 360.0;
-	double angle2 = round(angle*3600.0);
-	sprintf_s(Buff, 32, "%03.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
+	//Convert to seconds of right ascension
+	double angle2 = round(angle / 360.0*24.0*3600.0);
+	sprintf_s(Buff, 32, "%02.0f:%02.0f:%02.0f", floor(angle2 / 3600.0), floor(fmod(angle2, 3600.0) / 60.0), fmod(angle2, 60.0));
 }
 
 void AGOP::Declination_Display(char *Buff, double angle)
