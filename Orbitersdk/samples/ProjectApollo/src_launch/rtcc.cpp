@@ -244,7 +244,33 @@ bool papiReadConfigFile_PTPSite(char *line, char *item, std::string &PTPSite, do
 	return false;
 }
 
-bool papiReadConfigFile_CGTable(char *line, char *item, double *WeightTable, VECTOR3 *CGTable)
+void papiSave_CGTable(FILEHANDLE scn, RTCCSystemParameters::CGTable *tab, char *item)
+{
+	char buffer[256];
+
+	for (int i = 0; i < tab->N; i++)
+	{
+		sprintf(buffer, "%d %lf %lf %lf %lf", i, tab->Weight[i] / 0.453597, tab->CG[i].x / 0.0254, tab->CG[i].y / 0.0254, tab->CG[i].z / 0.0254);
+		oapiWriteScenario_string(scn, item, buffer);
+	}
+	sprintf(buffer, "%s_N", item);
+	oapiWriteScenario_int(scn, buffer, tab->N);
+}
+
+void papiSave_ThrustTable(FILEHANDLE scn, RTCCSystemParameters::ThrustTable *tab, char *item)
+{
+	char buffer[256];
+
+	for (int i = 0; i < tab->N; i++)
+	{
+		sprintf(buffer, "%d %lf %lf %lf", i, tab->Weight[i] / 0.453597, tab->Thrust[i].x * LBF, tab->Thrust[i].y / 0.453597);
+		oapiWriteScenario_string(scn, item, buffer);
+	}
+	sprintf(buffer, "%s_N", item);
+	oapiWriteScenario_int(scn, buffer, tab->N);
+}
+
+bool papiReadConfigFile_CGTable(char *line, char *item, RTCCSystemParameters::CGTable &tab)
 {
 	char buffer[256];
 
@@ -259,10 +285,35 @@ bool papiReadConfigFile_CGTable(char *line, char *item, double *WeightTable, VEC
 			{
 				if (num >= 0 && num <= 39)
 				{
-					WeightTable[num] = W * 0.453597;
-					CGTable[num] = CG * 0.0254;
+					tab.Weight[num] = W * 0.453597;
+					tab.CG[num] = CG * 0.0254;
 				}
 
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool papiReadConfigFile_ThrustTable(char *line, char *item, RTCCSystemParameters::ThrustTable &tab)
+{
+	char buffer[256];
+
+	if (sscanf(line, "%s", buffer) == 1)
+	{
+		if (!strcmp(buffer, item))
+		{
+			int num;
+			double W, Thrust, WLR;
+			if (sscanf(line, "%s %d %lf %lf %lf", buffer, &num, &W, &Thrust, &WLR) == 5)
+			{
+				if (num >= 0 && num <= 39)
+				{
+					tab.Weight[num] = W * 0.453597;
+					tab.Thrust[num].x = Thrust / LBF;
+					tab.Thrust[num].y = WLR * 0.453597;
+				}
 				return true;
 			}
 		}
@@ -2581,11 +2632,11 @@ bool RTCC::LoadMissionConstantsFile(std::string file)
 				}
 			}
 
-			papiReadConfigFile_CGTable(Buff, "MHVCCG", SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG);
+			papiReadConfigFile_CGTable(Buff, "MHVCCG", SystemParameters.MHVCCG);
 			papiReadScenario_int(Buff, "MHVCCG_N", SystemParameters.MHVCCG.N);
-			papiReadConfigFile_CGTable(Buff, "MHVLCG", SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG);
+			papiReadConfigFile_CGTable(Buff, "MHVLCG", SystemParameters.MHVLCG);
 			papiReadScenario_int(Buff, "MHVLCG_N", SystemParameters.MHVLCG.N);
-			papiReadConfigFile_CGTable(Buff, "MHVACG", SystemParameters.MHVACG.Weight, SystemParameters.MHVACG.CG);
+			papiReadConfigFile_CGTable(Buff, "MHVACG", SystemParameters.MHVACG);
 			papiReadScenario_int(Buff, "MHVACG_N", SystemParameters.MHVACG.N);
 			papiReadScenario_int(Buff, "MGTESE", SystemParameters.MGTESE);
 			papiReadScenario_int(Buff, "MMTESE", SystemParameters.MMTESE);
@@ -6378,6 +6429,14 @@ void RTCC::SaveState(FILEHANDLE scn) {
 			papiWriteScenario_Station(scn, "RTCC_EZLASITE", i, EZLASITE.Data[i]);
 		}
 	}
+	//CG tables
+	papiSave_CGTable(scn, &SystemParameters.MHVLCG, "MHVLCG");
+	papiSave_CGTable(scn, &SystemParameters.MHVACG, "MHVACG");
+	papiSave_CGTable(scn, &SystemParameters.MHVCCG, "MHVCCG");
+	//Thrust tables
+	papiSave_ThrustTable(scn, &SystemParameters.MHTSTC, "MHTSTC");
+	papiSave_ThrustTable(scn, &SystemParameters.MHTATC, "MHTATC");
+	papiSave_ThrustTable(scn, &SystemParameters.MHTDTC, "MHTDTC");
 
 	SAVE_DOUBLE("RTCC_P30TIG", TimeofIgnition);
 	SAVE_DOUBLE("RTCC_SplLat", SplashLatitude);
@@ -6664,6 +6723,20 @@ void RTCC::LoadState(FILEHANDLE scn) {
 
 		LOAD_INT("RTCC_EZLASITE_REF", EZLASITE.REF);
 		papiReadScenario_Station(line, "RTCC_EZLASITE", EZLASITE.Data);
+
+		papiReadConfigFile_CGTable(line, "MHVCCG", SystemParameters.MHVCCG);
+		papiReadScenario_int(line, "MHVCCG_N", SystemParameters.MHVCCG.N);
+		papiReadConfigFile_CGTable(line, "MHVLCG", SystemParameters.MHVLCG);
+		papiReadScenario_int(line, "MHVLCG_N", SystemParameters.MHVLCG.N);
+		papiReadConfigFile_CGTable(line, "MHVACG", SystemParameters.MHVACG);
+		papiReadScenario_int(line, "MHVACG_N", SystemParameters.MHVACG.N);
+
+		papiReadConfigFile_ThrustTable(line, "MHTSTC", SystemParameters.MHTSTC);
+		papiReadScenario_int(line, "MHTSTC_N", SystemParameters.MHTSTC.N);
+		papiReadConfigFile_ThrustTable(line, "MHTATC", SystemParameters.MHTATC);
+		papiReadScenario_int(line, "MHTATC_N", SystemParameters.MHTATC.N);
+		papiReadConfigFile_ThrustTable(line, "MHTDTC", SystemParameters.MHTDTC);
+		papiReadScenario_int(line, "MHTDTC_N", SystemParameters.MHTDTC.N);
 
 		LOAD_DOUBLE("RTCC_P30TIG", TimeofIgnition);
 		LOAD_DOUBLE("RTCC_SplLat", SplashLatitude);
@@ -12031,7 +12104,7 @@ void RTCC::LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscen
 	while (stop == false)
 	{
 		//Get thrust from APS thrust table
-		GIMGBL(0.0, m1, RY, RZ, Thrust, WDOT, 34, 12, 0, 1, 0.0);
+		GIMGBL(0.0, m1, RY, RZ, Thrust, WDOT, RTCC_ENGINETYPE_LMAPS, 12, 0, 1, 0.0);
 		//Calculate thrust direction and time-to-go
 		asc.Guidance(R, V, m1, Thrust, t_total, U_FDP, t_go);
 		//Integrate for one step
@@ -12343,11 +12416,11 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 				//Get actual engine performance
 				if (K_stage)
 				{
-					GIMGBL(0.0, W_TA, RY, RZ, T, WDOT, 34, 12, 0, 1, 0.0); //APS
+					GIMGBL(0.0, W_TA, RY, RZ, T, WDOT, RTCC_ENGINETYPE_LMAPS, 12, 0, 1, 0.0);
 				}
 				else
 				{
-					GIMGBL(0.0, W_TA, RY, RZ, T, WDOT, 35, 12, 0, 0, 0.0); //DPS
+					GIMGBL(0.0, W_TA, RY, RZ, T, WDOT, RTCC_ENGINETYPE_LMDPS, 12, 0, 0, 0.0);
 				}
 				ascguid.Guidance(sv_D.sv.R, sv_D.sv.V, W_TA, T, t, U_FDP, t_go);
 				if (dotp(U_FDP, integ.GetCurrentTD()) < 0)
