@@ -91,7 +91,7 @@ void MCC::MissionSequence_C()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, SubStateTime > 5.0 * 60.0, 8, MST_C_DAY1STATE3);
 		break;
 	case MST_C_DAY1STATE3: // NSR Update to TPI Update
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(28 * 3600.0 + 50 * 60.0), 9, MST_C_DAY1STATE4);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(28 * 3600.0 + 50 * 60.0), 9, MST_C_DAY1STATE4);
 		break;
 	case MST_C_DAY1STATE4: // TPI Update to Final Separation Maneuver update
 		UpdateMacro(UTP_PADONLY, PT_AP7TPI, mcc_calcs.GETEval(30 * 3600.0 + 9 * 60.0), 10, MST_C_DAY1STATE5);

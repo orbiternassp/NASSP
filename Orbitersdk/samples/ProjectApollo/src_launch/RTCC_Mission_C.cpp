@@ -633,6 +633,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		AP7ManPADOpt opt;
 		VehicleDataBlock sv_A, sv_P, sv_A1, sv_P1;
 		PLAWDTOutput WeightsTable;
+		VECTOR3 dV_LVLH;
 		double GET_TIG_imp, GMT_TIG_imp, P30TIG;
 
 		AP7MNV *form = (AP7MNV *)pad;
@@ -657,28 +658,28 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		sv_A = StateVectorCalcDataBlock(calcParams.src);
 		sv_P = StateVectorCalcDataBlock(calcParams.tgt);
 
-		//Propagate to time tags
-		sv_A1 = coast(sv_A, GMT_TIG_imp - 12.0*60.0 - sv_A.sv.GMT);
-		sv_P1 = coast(sv_P, GMT_TIG_imp + 12.0*60.0 - sv_P.sv.GMT);
-
 		if (length(res.dV) < 10.0*0.3048) //10 fps
 		{
 			scrubbed = true;
+			calcParams.SVSTORE1 = ConvertEphemDatatoSV(res.sv_tig2.sv, res.sv_tig2.Weight);
 		}
 
 		if (scrubbed)
 		{
+			DeltaV_LVLH = _V(0, 0, 0);
 			sprintf(upMessage, "NCC-2 has been scrubbed.");
 		}
+
 		else
 		{
 			PMMMPTInput in;
 			char buffer1[1000];
 			char buffer2[1000];
 			char buffer3[1000];
-			VECTOR3 dV_LVLH;
 			int enginetype;
 			enginetype = mcc->mcc_calcs.SPSRCSDecision(SystemParameters.MCTST1 / WeightsTable.ConfigWeight, res.dV);
+
+			DeltaV_LVLH = dV_LVLH;
 
 			in.CONFIG = 1; //CSM
 			in.CSMWeight = WeightsTable.CSMWeight;
@@ -709,6 +710,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			opt.sv0 = sv_A.sv;
 			opt.WeightsTable = WeightsTable;
 
+			//Propagate to time tags
+			sv_A1 = coast(sv_A, GMT_TIG_imp - (12.0 * 60.0) - sv_A.sv.GMT);
+			sv_P1 = coast(sv_P, GMT_TIG_imp + (12.0 * 60.0) - sv_P.sv.GMT);
+
 			AP7ManeuverPAD(opt, *form);
 			sprintf(form->purpose, "NCC-2");
 
@@ -731,30 +736,43 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		AP7ManPADOpt opt;
 		PMMMPTInput in;
 		SPQResults res;
-		double P30TIG;
+		double GET_TIG_imp, GMT_TIG_imp, P30TIG;
+		bool NCC2scrubbed;
+		VehicleDataBlock sv_A, sv_P, sv_A1, sv_P1;
 		VECTOR3 dV_LVLH;
-		SV sv_A, sv_P;
 		PLAWDTOutput WeightsTable;
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
 
-		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
-		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
+		if (length(DeltaV_LVLH) != 0.0)
+		{
+			sv_A.sv = ConvertSVtoEphemData(calcParams.SVSTORE1);
+			NCC2scrubbed = false;
+		}
+
+		else
+		{
+			sv_A = StateVectorCalcDataBlock(calcParams.src);
+			NCC2scrubbed = true;
+		}
+
+		sv_P = StateVectorCalcDataBlock(calcParams.tgt);
+
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		AP7MNV *form = (AP7MNV *)pad;
 
 		spqopt.E = 27.45*RAD;
-		spqopt.sv_A = sv_A;
-		spqopt.sv_P = sv_P;
+		spqopt.sv_A = ConvertEphemDatatoSV(sv_A.sv);
+		spqopt.sv_P = ConvertEphemDatatoSV(sv_P.sv);
 		spqopt.t_CSI = -1;
-		spqopt.t_CDH = FindDH(sv_A, sv_P, 28.0 * 3600.0 + 1.0 * 60.0, 8.0 * 1852.0);
+		spqopt.t_CDH = FindDH(ConvertEphemDatatoSV(sv_A.sv), ConvertEphemDatatoSV(sv_P.sv), 28.0 * 3600.0 + 1.0 * 60.0, 8.0 * 1852.0);
 
 		ConcentricRendezvousProcessor(spqopt, res);
 
 		in.CONFIG = 1; //CSM
-		in.CSMWeight = sv_A.mass;
+		in.CSMWeight = sv_A.Weight;
 		in.sv_before = ConvertSVtoEphemData(res.sv_C[0]);
 		in.V_aft = res.sv_C_apo[0].V;
 		in.DETU = 15.0; //Ullage
@@ -780,12 +798,30 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		opt.navcheckGET = 27.0 * 3600.0 + 17.0 * 60.0;
 		opt.UllageDT = 15.0;
 		opt.UllageThrusterOpt = true;
-		opt.sv0 = ConvertSVtoEphemData(sv_A);
+		opt.sv0 = sv_A.sv;
 		opt.WeightsTable = WeightsTable;
 
 		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "NSR");
 		sprintf(form->remarks, "Heads down, Retrograde");
+
+		if (NCC2scrubbed)
+		{
+			//Propagate to time tags
+			sv_A1 = coast(sv_A, GMT_TIG_imp - (12.0 * 60.0) - sv_A.sv.GMT);
+			sv_P1 = coast(sv_P, GMT_TIG_imp + (12.0 * 60.0) - sv_P.sv.GMT);
+
+			AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_A1.sv);
+			AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_P1.sv);
+			CMCExternalDeltaVUpdate(buffer3, P30TIG, dV_LVLH);
+
+			sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM and S-IVB state vectors, Target load");
+			}
+		}
 	}
 	break;
 	case 10: //MISSION C TPI MANEUVER
