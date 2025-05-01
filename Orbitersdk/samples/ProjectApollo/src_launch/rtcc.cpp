@@ -25357,8 +25357,8 @@ void RTCC::PMMREDIG(bool mpt)
 	SPM.dt_10PCT = SystemParameters.MCTDD4;
 	SPM.DockingAngle = med_f80.DockingAngle - 60.0*RAD;
 	SPM.KFactor = PZMPTCSM.KFactor;
-	SPM.CMWeight = 0.0; //TBD
-	SPM.CMArea = 0.0;//TBD
+	SPM.CMWeight = SystemParameters.MCVCMW;
+	SPM.CMArea = SystemParameters.MCVCMA;
 	SPM.TDPS = 0.1; //TBD
 
 	EngineParametersTable(MED.Thruster, SPM.MainEngineThrust, SPM.MainEngineWLR, SPM.ComputerThrust);
@@ -26171,6 +26171,8 @@ void RTCC::PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SP
 	RED.PrimaryReentryMode = IMD.PrimaryReentryMode;
 	RED.lat_imp_tgt = PHIMP;
 	RED.lng_imp_tgt = LIMP;
+	RED.CMWeight = SPS.CMWeight;
+	RED.KFactor = SPS.KFactor;
 
 	//Null outputs
 	RED.RollPET = 0.0;
@@ -26210,6 +26212,8 @@ void RTCC::PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SP
 	inp.R0 = sv_r_ECT.R;
 	inp.V0 = sv_r_ECT.V;
 	inp.GMT0 = sv_r_ECT.GMT;
+	inp.CMWeight = SPS.CMWeight;
+	inp.CMArea = SPS.CMArea;
 
 	//Primary reentry mode is constant g iteration?
 	if (IMD.PrimaryReentryMode == 10 && SPS.lng_T < PI2)
@@ -27027,7 +27031,7 @@ void RTCC::EMGABMED(int type, std::string med, std::vector<std::string> data, in
 			//Item 1: Position
 			rtcc::AddIntegerMEDItem(opt, 1, true, true, 392, 400);
 			//Item 2: Right Ascension
-			rtcc::AddTimeMEDItem(opt, 1, true, true, RAD / (3600.0), 0.0, 360.0*3600.0);
+			rtcc::AddTimeMEDItem(opt, 1, true, true, PI2 / (24.0 * 3600.0), 0.0, 24.0*3600.0);
 			//Item 3: Declination
 			rtcc::AddTimeMEDItem(opt, 1, true, true, RAD / (3600.0), -90.0*3600.0, 90.0*3600.0);
 
@@ -36899,8 +36903,8 @@ void RTCC::EMDGSUPP(int err)
 
 	GOSTDisplayBuffer.data.MAT = EZJGSTTB.MAT;
 	GOSTDisplayBuffer.data.REFSMMAT = EZJGSTTB.REFSMMAT;
-	GOSTDisplayBuffer.data.Landmark_DEC = EZJGSTTB.Landmark_DEC * DEG*3600.0;
-	GOSTDisplayBuffer.data.Landmark_RA = EZJGSTTB.Landmark_RA * DEG*3600.0;
+	GOSTDisplayBuffer.data.Landmark_DEC = EZJGSTTB.Landmark_DEC * DEG*3600.0; //Converts radians to arc seconds
+	GOSTDisplayBuffer.data.Landmark_RA = EZJGSTTB.Landmark_RA / PI2 * 24.0*3600.0; //Converts radians to seconds of right ascension
 	GOSTDisplayBuffer.data.Landmark_SC = EZJGSTTB.Landmark_SC;
 	GOSTDisplayBuffer.data.Landmark_GET = EZJGSTTB.Landmark_GET;
 	GOSTDisplayBuffer.data.Landmark_LOS = EZJGSTTB.Landmark_LOS;
@@ -36909,8 +36913,8 @@ void RTCC::EMDGSUPP(int err)
 	{
 		GOSTDisplayBuffer.data.Att[i] = EZJGSTTB.Att[i] * DEG;
 		GOSTDisplayBuffer.data.BS_S[i] = EZJGSTTB.BS_S[i];
-		GOSTDisplayBuffer.data.BS_DEC[i] = EZJGSTTB.BS_DEC[i] * DEG*3600.0;
-		GOSTDisplayBuffer.data.BS_RTASC[i] = EZJGSTTB.BS_RTASC[i] * DEG*3600.0;
+		GOSTDisplayBuffer.data.BS_DEC[i] = EZJGSTTB.BS_DEC[i] * DEG*3600.0; //Converts radians to arc seconds
+		GOSTDisplayBuffer.data.BS_RTASC[i] = EZJGSTTB.BS_RTASC[i] / PI2 * 24.0*3600.0; //Converts radians to seconds of right ascension
 		GOSTDisplayBuffer.data.BS_SPA[i] = EZJGSTTB.BS_SPA[i] * DEG;
 		GOSTDisplayBuffer.data.BS_SXP[i] = EZJGSTTB.BS_SXP[i] * DEG;
 		GOSTDisplayBuffer.data.SXT_STAR[i] = EZJGSTTB.SXT_STAR[i];
@@ -37355,9 +37359,9 @@ void RTCC::EMDGLMST()
 	{
 		double dec, ra;
 		OrbMech::latlong_from_r(EZJGSTAR[EZJGSTBL.star1 - 1], dec, ra);
-		sprintf_s(Buffer, "%06.2lf", ra*DEG);
+		OrbMech::format_time_HHHMM(Buffer, ra / PI2 * 24.0*3600.0);
 		LOSTDisplayBuffer[14].assign(Buffer);
-		sprintf_s(Buffer, "%+06.2lf", dec*DEG);
+		OrbMech::format_time_HHHMM(Buffer, dec*DEG*3600.0);
 		LOSTDisplayBuffer[15].assign(Buffer);
 	}
 	else
@@ -37369,9 +37373,9 @@ void RTCC::EMDGLMST()
 	{
 		double dec, ra;
 		OrbMech::latlong_from_r(EZJGSTAR[EZJGSTBL.star2 - 1], dec, ra);
-		sprintf_s(Buffer, "%06.2lf", ra*DEG);
+		OrbMech::format_time_HHHMM(Buffer, ra / PI2 * 24.0*3600.0);
 		LOSTDisplayBuffer[16].assign(Buffer);
-		sprintf_s(Buffer, "%+06.2lf", dec*DEG);
+		OrbMech::format_time_HHHMM(Buffer, dec*DEG*3600.0);
 		LOSTDisplayBuffer[17].assign(Buffer);
 	}
 	else

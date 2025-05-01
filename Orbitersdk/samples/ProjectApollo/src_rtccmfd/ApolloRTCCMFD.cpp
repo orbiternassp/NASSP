@@ -131,7 +131,7 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	IsCSM = true;
 	EnableCalculation = false;
 	ErrorMessage = false;
-	CW = CH = x = y = dx = dy = 0;
+	CW = CH = x = y = dx = dy = WOFF = HOFF = 0;
 
 	LoadState();
 }
@@ -357,11 +357,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 	}
 }
 
-void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, std::string message, int x, int y, int xmax, int ymax)
-{
-	skp->Text(x * W / xmax, y * H / ymax, message.c_str(), message.size());
-}
-
 void ApolloRTCCMFD::Text_Double(oapi::Sketchpad *skp, int x, int y, char *format, double val)
 {
 	sprintf(Buffer, format, val);
@@ -381,12 +376,17 @@ void ApolloRTCCMFD::Text_String(oapi::Sketchpad *skp, int x, int y, std::string 
 
 void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, std::string message)
 {
-	skp->Text(CW * x, CH * y, message.c_str(), message.size());
+	skp->Text(CW * x + WOFF, CH * y + HOFF, message.c_str(), message.size());
+}
+
+void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, std::string message, int xmax, int ymax)
+{
+	skp->Text(CW * x / xmax + WOFF, CH * y / ymax + HOFF, message.c_str(), message.size());
 }
 
 void ApolloRTCCMFD::TextW(oapi::Sketchpad *skp, int x, int y, LPWSTR message)
 {
-	skp->TextW(CW * x, CH * y, message, wcslen(message));
+	skp->TextW(CW * x + WOFF, CH * y + HOFF, message, wcslen(message));
 }
 
 void ApolloRTCCMFD::Text(oapi::Sketchpad *skp, int x, int y, char *format, double val)
@@ -494,7 +494,12 @@ void ApolloRTCCMFD::Text_Longitude(oapi::Sketchpad *skp, int x, int y, double va
 void ApolloRTCCMFD::Text_Dot(oapi::Sketchpad *skp, int x, int y)
 {
 	//Writes a dot above the letter location indicated with x and y
-	skp->Text(CW * (x * 20 - 1) / 20, CH * (y * 10 - 8) / 10, ".", 1);
+	Text(skp, x * 20 - 1, y * 10 - 8, ".", 20, 10);
+}
+
+void ApolloRTCCMFD::Line(oapi::Sketchpad *skp, int x0, int y0, int x1, int y1)
+{
+	skp->Line(x0 + WOFF, y0 + HOFF, x1 + WOFF, y1 + HOFF);
 }
 
 void ApolloRTCCMFD::menuEntryUpdateUpload()
