@@ -3012,7 +3012,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(CW, 2 * H / 14, Buffer, strlen(Buffer));
 
 		OrbMech::SStoHHMMSS(G->t_LunarLiftoff, hh, mm, secs, 0.01);
-		Text(skp, 12, 10, "%+06d HRS", hh);
+		Text(skp, 12, 11, "%+06d HRS", hh);
 		Text(skp, 12, 12, "%+06d MIN TIG", mm);
 		Text(skp, 12, 13, "%+07.2f SEC", secs);
 		Text(skp, 12, 14, "%+07.1f V (HOR)", GC->rtcc->PZLTRT.InsertionHorizontalVelocity / 0.3048);
@@ -3871,7 +3871,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			GET_Display(Buffer, G->SVDesiredGET, false);
 		}
-		skp->Text(CW * 42, CH * 2, Buffer, strlen(Buffer));
+		Text(skp, 42, 2, Buffer);
 
 		for (int i = 0; i < 021; i++)
 		{
