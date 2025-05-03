@@ -640,6 +640,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
+		//Get state vectors
+		sv_A = StateVectorCalcDataBlock(calcParams.src);
+		sv_P = StateVectorCalcDataBlock(calcParams.tgt);
+
 		GET_TIG_imp = OrbMech::HHMMSSToSS(27, 30, 0);
 		GMT_TIG_imp = GMTfromGET(GET_TIG_imp);
 
@@ -653,10 +657,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		lambert.PhaseAngle = 1.32*RAD;
 
 		PMSTICN(lambert, res);
-
-		//Get state vectors
-		sv_A = StateVectorCalcDataBlock(calcParams.src);
-		sv_P = StateVectorCalcDataBlock(calcParams.tgt);
 
 		if (length(res.dV) < 10.0*0.3048) //10 fps
 		{
@@ -717,6 +717,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			AP7ManeuverPAD(opt, *form);
 			sprintf(form->purpose, "NCC-2");
 
+			if (enginetype == RTCC_ENGINETYPE_CSMSPS)
+			{
+				sprintf(form->remarks, "P40 SPS, Heads down");
+			}
+			else
+			{
+				sprintf(form->remarks, "Heads down, P41 RCS 4 jet +X thrusters");
+			}
+
 			AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_A1.sv);
 			AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_P1.sv);
 			CMCExternalDeltaVUpdate(buffer3, P30TIG, dV_LVLH);
@@ -736,7 +745,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		AP7ManPADOpt opt;
 		PMMMPTInput in;
 		SPQResults res;
-		double GET_TIG_imp, GMT_TIG_imp, P30TIG;
+		double P30TIG;
 		bool NCC2scrubbed;
 		VehicleDataBlock sv_A, sv_P, sv_A1, sv_P1;
 		VECTOR3 dV_LVLH;
@@ -748,6 +757,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		if (length(DeltaV_LVLH) != 0.0)
 		{
 			sv_A.sv = ConvertSVtoEphemData(calcParams.SVSTORE1);
+			sv_A.Weight = calcParams.SVSTORE1.mass;
 			NCC2scrubbed = false;
 		}
 
@@ -808,8 +818,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		if (NCC2scrubbed)
 		{
 			//Propagate to time tags
-			sv_A1 = coast(sv_A, GMT_TIG_imp - (12.0 * 60.0) - sv_A.sv.GMT);
-			sv_P1 = coast(sv_P, GMT_TIG_imp + (12.0 * 60.0) - sv_P.sv.GMT);
+			sv_A1 = coast(sv_A, GMT_TIG - (12.0 * 60.0) - sv_A.sv.GMT);
+			sv_P1 = coast(sv_P, GMT_TIG + (12.0 * 60.0) - sv_P.sv.GMT);
 
 			AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_A1.sv);
 			AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_P1.sv);
@@ -880,7 +890,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "SEPARATION");
-		sprintf(form->remarks, "Posigrade, Heads down, -X thrusters");
+		sprintf(form->remarks, "Posigrade, Heads down, -X thrusters  Burn will take place in front of booster");
 	}
 	break;
 	case 12: //MISSION C BLOCK DATA 4
@@ -2119,6 +2129,57 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "CSM state vector");
+		}
+	}
+	break;
+	case 66: //CSM AND TARGET STATE VECTOR UPDATE SR TIME TAGS AND CSM NAV CHECK PAD (40:10:00)
+	case 67: //CSM AND TARGET STATE VECTOR UPDATE SR TIME TAGS AND CSM NAV CHECK PAD (46:05:00)
+	case 68: //CSM AND TARGET STATE VECTOR UPDATE SR TIME TAGS AND CSM NAV CHECK PAD (52:00:00)
+	{
+		AP7NAV *form = (AP7NAV *)pad;
+
+		VehicleDataBlock sv_A, sv_P, sv_A1, sv_P1;
+		double SR_guess, GET_SR_A, GMT_SR_A, GET_SR_P, GMT_SR_P;
+		char buffer1[1000];
+		char buffer2[1000];
+		char buffer3[1000];
+
+		//Get state vectors
+		sv_A = StateVectorCalcDataBlock(calcParams.src);
+		sv_P = StateVectorCalcDataBlock(calcParams.tgt);
+		if (fcn == 66)
+		{
+			SR_guess = OrbMech::HHMMSSToSS(40, 10, 0);
+		}
+		else if (fcn == 67)
+		{
+			SR_guess = OrbMech::HHMMSSToSS(46, 05, 0);
+		}
+		else
+		{
+			SR_guess = OrbMech::HHMMSSToSS(52, 0, 0);
+		}
+
+		GET_SR_A = mcc->mcc_calcs.FindOrbitalSunrise(ConvertEphemDatatoSV(sv_A.sv), SR_guess);
+		GET_SR_P = mcc->mcc_calcs.FindOrbitalSunrise(ConvertEphemDatatoSV(sv_P.sv), SR_guess);
+
+		GMT_SR_A = GMTfromGET(GET_SR_A);
+		GMT_SR_P = GMTfromGET(GET_SR_P);
+
+		NavCheckPAD(ConvertEphemDatatoSV(sv_A.sv), *form);
+
+		//Propagate to time tags (SR)
+		sv_A1 = coast(sv_A, GMT_SR_A - sv_A.sv.GMT);
+		sv_P1 = coast(sv_P, GMT_SR_P - sv_P.sv.GMT);
+
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_A1.sv);	//time tagged to tracking sunrise
+		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_P1.sv);	//time tagged to tracking sunrise
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM and S-IVB state vectors");
 		}
 	}
 	break;
