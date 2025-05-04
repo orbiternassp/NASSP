@@ -3629,9 +3629,9 @@ void MCC::drawPad(bool writetofile){
 		sprintf(buffer, "SCT STAR COUNT");
 		sprintf(mode, form->Mode);
 
-		OrbMech::SStoHHMMSS(form->TAlign, hh3, mm3, ss3, 0.01);
-		OrbMech::SStoHHMMSS(form->GETSR, hh, mm, ss, 0.01);
-		OrbMech::SStoHHMMSS(form->GETSS_12, hh2, mm2, ss2, 0.01);
+		OrbMech::SStoHHMMSS(form->TAlign, hh, mm, ss, 0.01);
+		OrbMech::SStoHHMMSS(form->GETSR, hh2, mm2, ss2, 0.01);
+		OrbMech::SStoHHMMSS(form->GETSS_12, hh3, mm3, ss3, 0.01);
 
 		sprintf(buffer, "%s\nMode %s\nXX%03d HR GET\nXXX%02d MIN ALIGN\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN SR\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\nXX%03d HR GET\nXXX%02d MIN SS-12\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n",
 			buffer, mode, hh, mm, ss, hh2, mm2, ss2, form->AttSR.x, form->AttSR.y, form->AttSR.z, hh3, mm3, ss3, form->AttSS_12.x, form->AttSS_12.y, form->AttSS_12.z);
