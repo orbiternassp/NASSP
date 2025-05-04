@@ -2191,6 +2191,9 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 		AP7STRCNTPAD * form = (AP7STRCNTPAD *)pad;
 
+		//Get state vector
+		sv_A = StateVectorCalcDataBlock(calcParams.src);
+
 		if (fcn == 69)
 		{
 			SR_guess = OrbMech::HHMMSSToSS(53, 30, 0);
