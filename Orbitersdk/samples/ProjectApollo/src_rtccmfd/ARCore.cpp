@@ -1291,8 +1291,8 @@ void ARCore::GetStateVectorFromIU()
 		V = lvdc->DotS;
 		TAS = lvdc->TAS;
 	}
-	sv.R = tmul(GC->rtcc->GZLTRA.IU1_REFSMMAT, R);
-	sv.V = tmul(GC->rtcc->GZLTRA.IU1_REFSMMAT, V);
+	sv.R = R;
+	sv.V = V;
 	sv.GMT = TAS + GC->rtcc->GetIUClockZero();
 	sv.RBI = BODY_EARTH;
 
