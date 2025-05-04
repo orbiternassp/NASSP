@@ -155,6 +155,22 @@ double MCC_Calculations::FindOrbitalSunrise(SV sv, double t_sunrise_guess)
 	return t_sunrise_guess + ttoSunrise;
 }
 
+double MCC_Calculations::FindOrbitalSunset(SV sv, double t_sunset_guess)
+{
+	SV sv1;
+	double GET_SV, dt, ttoSunset;
+
+	OBJHANDLE hSun = oapiGetObjectByName("Sun");
+
+	GET_SV = OrbMech::GETfromMJD(sv.MJD, pRTCC->CalcGETBase());
+	dt = t_sunset_guess - GET_SV;
+
+	sv1 = pRTCC->coast(sv, dt);
+
+	ttoSunset = OrbMech::sunrise(pRTCC->SystemParameters.MAT_J2000_BRCS, sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, false, false, false);
+	return t_sunset_guess + ttoSunset;
+}
+
 double MCC_Calculations::FindOrbitalMidnight(SV sv, double t_TPI_guess)
 {
 	SV sv1;

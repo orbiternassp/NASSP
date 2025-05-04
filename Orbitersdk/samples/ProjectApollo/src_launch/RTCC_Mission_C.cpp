@@ -679,8 +679,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			int enginetype;
 			enginetype = mcc->mcc_calcs.SPSRCSDecision(SystemParameters.MCTST1 / WeightsTable.ConfigWeight, res.dV);
 
-			DeltaV_LVLH = dV_LVLH;
-
 			in.CONFIG = 1; //CSM
 			in.CSMWeight = WeightsTable.CSMWeight;
 			in.sv_before = res.sv_tig.sv;
@@ -697,6 +695,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			double GMT_TIG;
 			PoweredFlightProcessor(in, GMT_TIG, dV_LVLH);
 			P30TIG = GETfromGMT(GMT_TIG);
+			DeltaV_LVLH = dV_LVLH;
 
 			opt.TIG = P30TIG;
 			opt.dV_LVLH = dV_LVLH;
@@ -2142,7 +2141,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		double SR_guess, GET_SR_A, GMT_SR_A, GET_SR_P, GMT_SR_P;
 		char buffer1[1000];
 		char buffer2[1000];
-		char buffer3[1000];
 
 		//Get state vectors
 		sv_A = StateVectorCalcDataBlock(calcParams.src);
@@ -2181,6 +2179,52 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "CSM and S-IVB state vectors");
 		}
+	}
+	break;
+	case 69: //SCT STAR COUNT PAD (53h30m)
+	case 70: //SCT STAR COUNT PAD (77h30m)
+	case 71: //SCT STAR COUNT PAD (122h)
+	case 72: //SCT STAR COUNT PAD (147h)
+	{
+		VehicleDataBlock sv_A;
+		double SR_guess;
+
+		AP7STRCNTPAD * form = (AP7STRCNTPAD *)pad;
+
+		if (fcn == 69)
+		{
+			SR_guess = OrbMech::HHMMSSToSS(53, 30, 0);
+			sprintf(form->Mode, "A");
+			form->AttSR = _V(4.0, 92.0, 359.0);
+			form->AttSS_12 = _V(184.0, 97.0, 359.0);
+		}
+		else if (fcn == 70)
+		{
+			SR_guess = OrbMech::HHMMSSToSS(77, 30, 0);
+			sprintf(form->Mode, "B");
+			form->AttSR = _V(4.0, 92.0, 359.0);
+			form->AttSS_12 = _V(184.0, 97.0, 359.0);
+		}
+		else if (fcn == 71)
+		{
+			SR_guess = OrbMech::HHMMSSToSS(122, 0, 0);
+			sprintf(form->Mode, "C");
+			form->AttSR = _V(4.0, 92.0, 359.0);
+			form->AttSS_12 = _V(184.0, 97.0, 359.0);
+		}
+		else
+		{
+			SR_guess = OrbMech::HHMMSSToSS(147, 0, 0);
+			sprintf(form->Mode, "A");
+			form->AttSR = _V(4.0, 92.0, 359.0);
+			form->AttSS_12 = _V(184.0, 97.0, 359.0);
+		}
+
+		form->TAlign = 0.0; //TBD Compute T-Align
+		form->GETSR = mcc->mcc_calcs.FindOrbitalSunrise(ConvertEphemDatatoSV(sv_A.sv), SR_guess);
+		//form->AttSR = _V(4.0, 92.0, 359.0); //TBD compute attitude
+		form->GETSS_12 = (mcc->mcc_calcs.FindOrbitalSunset(ConvertEphemDatatoSV(sv_A.sv), SR_guess + 3600.0)) - 12.0 * 60.0;
+		//form->AttSS_12 = _V(184.0, 97.0, 359.0); //TBD compute attitude
 	}
 	break;
 	}

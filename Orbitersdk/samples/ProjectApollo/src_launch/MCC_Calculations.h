@@ -42,6 +42,7 @@ public:
 	double TerminatorRise(EphemerisDataTable2 &ephem, double gmt_estimate);
 	bool LongitudeCrossing(EphemerisDataTable2 &ephem, double lng, double gmt_estimate, double &gmt_cross);
 	double FindOrbitalSunrise(SV sv, double t_sunrise_guess);
+	double FindOrbitalSunset(SV sv, double t_sunset_guess);
 	double FindOrbitalMidnight(SV sv, double t_TPI_guess);
 	void FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS);
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS

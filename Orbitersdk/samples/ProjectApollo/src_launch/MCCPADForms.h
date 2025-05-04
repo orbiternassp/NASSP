@@ -611,6 +611,18 @@ struct AP12SEPPAD
 	double t_Separation;
 };
 
+// APOLLO 7 - SCT STAR COUNT PAD
+
+struct AP7STRCNTPAD
+{
+	char Mode[2];		// Mode
+	double GETSR;		// Time of sunrise
+	double GETSS_12;	// Time of sunset minus 12 minutes
+	VECTOR3 AttSR;		// Gimbal angles required to place SC at proper initial attitude (SR)
+	VECTOR3 AttSS_12;	// Gimbal angles required to place SC at proper initial attitude (SS-12)
+	double TAlign;		// Align Time for nominal IMU orientation - if required
+};
+
 //GENERIC STRING
 
 struct GENERICPAD

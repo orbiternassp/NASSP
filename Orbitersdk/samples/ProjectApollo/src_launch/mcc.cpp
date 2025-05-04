@@ -2053,6 +2053,17 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_V3("MCC_AP12SEPPAD_Att_Undock", form->Att_Undock);
 			SAVE_DOUBLE("MCC_AP12SEPPAD_t_Separation", form->t_Separation);
 		}
+		else if (padNumber == PT_AP7STRCNTPAD)
+		{
+		AP7STRCNTPAD * form = (AP7STRCNTPAD *)padForm;
+
+		SAVE_STRING("MCC_AP7STRCNTPAD_MODE", form->Mode);
+		SAVE_DOUBLE("MCC_AP7STRCNTPAD_GETSR", form->GETSR);
+		SAVE_DOUBLE("MCC_AP7STRCNTPAD_GETSS_12", form->GETSS_12);
+		SAVE_V3("MCC_AP7STRCNTPAD_AttSR", form->AttSR);
+		SAVE_V3("MCC_AP7STRCNTPAD_AttSS_12", form->AttSS_12);
+		SAVE_DOUBLE("MCC_AP7STRCNTPAD_TAlign", form->TAlign);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -2658,6 +2669,17 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP12SEPPAD_t_Undock", form->t_Undock);
 			LOAD_V3("MCC_AP12SEPPAD_Att_Undock", form->Att_Undock);
 			LOAD_DOUBLE("MCC_AP12SEPPAD_t_Separation", form->t_Separation);
+		}
+		else if (padNumber == PT_AP7STRCNTPAD)
+		{
+		AP7STRCNTPAD * form = (AP7STRCNTPAD *)padForm;
+
+		LOAD_STRING("MCC_AP7STRCNTPAD_MODE", form->Mode, 2);
+		LOAD_DOUBLE("MCC_AP7STRCNTPAD_GETSR", form->GETSR);
+		LOAD_DOUBLE("MCC_AP7STRCNTPAD_GETSS_12", form->GETSS_12);
+		LOAD_V3("MCC_AP7STRCNTPAD_AttSR", form->AttSR);
+		LOAD_V3("MCC_AP7STRCNTPAD_AttSS_12", form->AttSS_12);
+		LOAD_DOUBLE("MCC_AP7STRCNTPAD_TAlign", form->TAlign);
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
@@ -3596,6 +3618,27 @@ void MCC::drawPad(bool writetofile){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_AP7STRCNTPAD:
+	{
+		AP7STRCNTPAD * form = (AP7STRCNTPAD *)padForm;
+
+		int hh, mm, hh2, mm2, hh3, mm3;
+		double ss, ss2, ss3;
+		char mode[2];
+
+		sprintf(buffer, "SCT STAR COUNT");
+		sprintf(mode, form->Mode);
+
+		OrbMech::SStoHHMMSS(form->TAlign, hh3, mm3, ss3, 0.01);
+		OrbMech::SStoHHMMSS(form->GETSR, hh, mm, ss, 0.01);
+		OrbMech::SStoHHMMSS(form->GETSS_12, hh2, mm2, ss2, 0.01);
+
+		sprintf(buffer, "%s\nMode %s\nXX%03d HR GET\nXXX%02d MIN ALIGN\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN SR\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\nXX%03d HR GET\nXXX%02d MIN SS-12\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n",
+			buffer, mode, hh, mm, ss, hh2, mm2, ss2, form->AttSR.x, form->AttSR.y, form->AttSR.z, hh3, mm3, ss3, form->AttSS_12.x, form->AttSS_12.y, form->AttSS_12.z);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3749,6 +3792,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP12SEPPAD: // AP12SEPPAD
 		padForm = calloc(1, sizeof(AP12SEPPAD));
+		break;
+	case PT_AP7STRCNTPAD: // AP7STARCNTPAD
+		padForm = calloc(1, sizeof(AP7STRCNTPAD));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));
