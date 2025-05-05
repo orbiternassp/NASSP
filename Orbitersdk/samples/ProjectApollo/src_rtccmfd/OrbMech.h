@@ -459,6 +459,8 @@ namespace OrbMech {
 	//Time format HHH:MM:SS.CS
 	void format_time_HHHMMSSCS(char *buf, double time);
 	void format_time_prec(char *buf, double time);
+	//Declination format +HH:MM
+	void format_declination_HHMM(char *buf, double decl);
 }
 
 inline CELEMENTS operator+(const CELEMENTS &a, const CELEMENTS &b)
