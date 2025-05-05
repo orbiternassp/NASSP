@@ -328,6 +328,8 @@ namespace OrbMech {
 	int DoubleToBuffer(double x, double q, int m);
 	void AGCSignedValue(int &val);
 	int DoubleToDEDA(double x, double q);
+	int AEAToSigned(int val);
+	double AEAToDouble(int val, int SF);
 	double cot(double a);
 	double sec(double a);
 	void fabs_vektor(double* vektor, int n);

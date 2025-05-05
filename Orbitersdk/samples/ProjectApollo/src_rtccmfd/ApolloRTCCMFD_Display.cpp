@@ -8725,11 +8725,28 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(W / 2, CH / 2, "DEBUG", 5);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		CSMOrLMSelection(skp);
+		if (IsCSM == false)
+		{
+			if (G->DebugLMComputer) skp->Text(CW, 4 * H / 14, "LGC", 3);
+			else skp->Text(CW, 4 * H/ 14, "AGS", 3);
+		}
 		skp->Text(CW, 9 * H / 21, "Current REFSMMAT:", 17);
-		REFSMMATName(Buffer, G->REFSMMATcur);
-		skp->Text(CW, 10 * H / 21, Buffer, strlen(Buffer));
+		{
+			REFSMMATData *refsdata;
+			if (IsCSM)
+			{
+				refsdata = &GC->rtcc->EZJGMTX1.data[0];
+			}
+			else
+			{
+				refsdata = &GC->rtcc->EZJGMTX3.data[0];
+			}
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			GC->rtcc->FormatREFSMMATCode(RTCC_REFSMMAT_TYPE_CUR, refsdata->ID, Buffer);
+			skp->Text(CW, 10 * H / 21, Buffer, strlen(Buffer));
+		}
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-		skp->Text(W - CW, 5 * H / 14, "IMU Misalignment:", 16);
+		skp->Text(W - CW, 5 * H / 14, "Misalignment:", 12);
 		sprintf(Buffer, "%+.4lf°", G->DebugIMUTorquingAngles.x*DEG);
 		skp->Text(W - CW, 6 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%+.4lf°", G->DebugIMUTorquingAngles.y*DEG);
