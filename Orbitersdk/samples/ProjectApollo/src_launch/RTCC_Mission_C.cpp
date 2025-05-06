@@ -2251,14 +2251,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 		//WSMR
 		landmarkoptWSMR.lat[0] = 32.433333*RAD;
-		landmarkoptWSMR.lng[0] = 106.366667*RAD;
+		landmarkoptWSMR.lng[0] = -106.366667*RAD;
 		landmarkoptWSMR.alt[0] = 0.0*1852.0;
 
-		landmarkoptWSMR.LmkTime[0] = OrbMech::HHMMSSToSS(71, 30, 0);
-		TCA = WSMRtempPAD.T2[0];
-		GMTtimetag = GMTfromGET(TCA); // Time tag to TCA
+		landmarkoptWSMR.LmkTime[0] = OrbMech::HHMMSSToSS(71, 0, 0);
 
 		LandmarkTrackingPAD(landmarkoptWSMR, WSMRtempPAD);
+
+		TCA = WSMRtempPAD.T2[0];
+		GMTtimetag = GMTfromGET(TCA); // Time tag to TCA
 
 		if (fcn == 80)
 		{
@@ -2271,8 +2272,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			//Time tagged SV
 			sv_A1 = coast(sv_A, GMTtimetag - sv_A.sv.GMT);
 
-			OrbMech::format_time_XXHMMSS(buffer3, WSMRtempPAD.T2[0]);
-
 			AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_A1.sv);
 			AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_A1.sv);
 
@@ -2280,16 +2279,16 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector %s", buffer3);
+				sprintf(upDesc, "CSM state vector");
 			}
 		}
 		else
 		{
-			AP7WSMRPAD  * form = (AP7WSMRPAD *)pad;
+			AP7WSMRPAD  *form = (AP7WSMRPAD *)pad;
 
 			form->TAlign = WSMRtempPAD.T2[0] - (45.0 * 60.0);
-			form->GETAOS = WSMRtempPAD.T2[0];
-			form->GETRR = WSMRtempPAD.T2[0] + (4.0 * 60.0);
+			form->GETAOS = WSMRtempPAD.T2[0] - (4.0 * 60.0);
+			form->GETRR = WSMRtempPAD.T2[0];
 			form->AttAOS = _V(159.0, 55.0, 17.0);
 		}
 	}

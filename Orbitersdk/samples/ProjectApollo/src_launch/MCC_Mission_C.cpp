@@ -127,7 +127,7 @@ void MCC::MissionSequence_C()
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(67.0 * 3600.0 + 50.0 * 60.0), 15, MST_C_DAY2STATE5);
 		break;
 	case MST_C_DAY2STATE5: // WMSR SV Nav Check to WMSR Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, SubStateTime > 5.0*60.0, 80, MST_C_DAY2STATE6);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, SubStateTime > 3.0*60.0, 80, MST_C_DAY2STATE6);
 		break;
 	case MST_C_DAY2STATE6: // WMSR Update to Block Data 8
 		UpdateMacro(UTP_PADONLY, PT_AP7WSMRPAD, mcc_calcs.GETEval(68.0 * 3600.0 + 35.0 * 60.0), 81, MST_C_DAY2STATE7);

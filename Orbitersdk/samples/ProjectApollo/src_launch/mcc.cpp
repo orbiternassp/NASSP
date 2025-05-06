@@ -3670,7 +3670,7 @@ void MCC::drawPad(bool writetofile){
 		OrbMech::SStoHHMMSS(form->GETAOS, hh2, mm2, ss2, 0.01);
 		OrbMech::SStoHHMMSS(form->GETRR, hh3, mm3, ss3, 0.01);
 
-		sprintf(buffer, "%s\nXX%03d HR GET\nXXX%02d MIN ALIGN\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN AOS\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN RR\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n",
+		sprintf(buffer, "%s\nXX%03d HR GET\nXXX%02d MIN ALIGN\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN WSMR\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN RR\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n",
 			buffer, hh, mm, ss, hh2, mm2, ss2, hh3, mm3, ss3, form->AttAOS.x, form->AttAOS.y, form->AttAOS.z);
 
 		oapiAnnotationSetText(NHpad, buffer);
