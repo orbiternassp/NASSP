@@ -184,6 +184,7 @@
 #define PT_AP12LMASCPAD     35
 #define PT_AP12SEPPAD		36
 #define PT_AP7STRCNTPAD		37
+#define PT_AP7WSMRPAD		38
 #define PT_NONE				99
 #define PT_GENERIC			100
 

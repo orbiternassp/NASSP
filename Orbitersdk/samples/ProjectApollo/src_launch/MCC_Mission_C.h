@@ -60,6 +60,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY2STATE4	53
 #define MST_C_DAY2STATE5	54
 #define MST_C_DAY2STATE6	55
+#define MST_C_DAY2STATE7	56
 
 // DAY 3
 #define MST_C_DAY3STATE1	60

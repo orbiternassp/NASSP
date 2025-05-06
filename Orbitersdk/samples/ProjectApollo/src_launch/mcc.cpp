@@ -2064,6 +2064,15 @@ void MCC::SaveState(FILEHANDLE scn) {
 		SAVE_V3("MCC_AP7STRCNTPAD_AttSS_12", form->AttSS_12);
 		SAVE_DOUBLE("MCC_AP7STRCNTPAD_TAlign", form->TAlign);
 		}
+		else if (padNumber == PT_AP7WSMRPAD)
+		{
+		AP7WSMRPAD * form = (AP7WSMRPAD *)padForm;
+
+		SAVE_DOUBLE("MCC_AP7WSMRPAD_GETAOS", form->GETAOS);
+		SAVE_DOUBLE("MCC_AP7WSMRPAD_GETRR", form->GETRR);
+		SAVE_V3("MCC_AP7WSMRPAD_AttAOS", form->AttAOS);
+		SAVE_DOUBLE("MCC_AP7WSMRPAD_TAlign", form->TAlign);
+		}
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -2680,6 +2689,15 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_V3("MCC_AP7STRCNTPAD_AttSR", form->AttSR);
 		LOAD_V3("MCC_AP7STRCNTPAD_AttSS_12", form->AttSS_12);
 		LOAD_DOUBLE("MCC_AP7STRCNTPAD_TAlign", form->TAlign);
+		}
+		else if (padNumber == PT_AP7WSMRPAD)
+		{
+		AP7WSMRPAD * form = (AP7WSMRPAD *)padForm;
+
+		LOAD_DOUBLE("MCC_AP7WSMRPAD_GETAOS", form->GETAOS);
+		LOAD_DOUBLE("MCC_AP7WSMRPAD_GETRR", form->GETRR);
+		LOAD_V3("MCC_AP7WSMRPAD_AttAOS", form->AttAOS);
+		LOAD_DOUBLE("MCC_AP7WSMRPAD_TAlign", form->TAlign);
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
@@ -3639,6 +3657,25 @@ void MCC::drawPad(bool writetofile){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_AP7WSMRPAD:
+	{
+		AP7WSMRPAD * form = (AP7WSMRPAD *)padForm;
+
+		int hh, mm, hh2, mm2, hh3, mm3;
+		double ss, ss2, ss3;
+
+		sprintf(buffer, "WSMR Update");
+
+		OrbMech::SStoHHMMSS(form->TAlign, hh, mm, ss, 0.01);
+		OrbMech::SStoHHMMSS(form->GETAOS, hh2, mm2, ss2, 0.01);
+		OrbMech::SStoHHMMSS(form->GETRR, hh3, mm3, ss3, 0.01);
+
+		sprintf(buffer, "%s\nXX%03d HR GET\nXXX%02d MIN ALIGN\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN AOS\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN RR\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n",
+			buffer, hh, mm, ss, hh2, mm2, ss2, hh3, mm3, ss3, form->AttAOS.x, form->AttAOS.y, form->AttAOS.z);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3795,6 +3832,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP7STRCNTPAD: // AP7STARCNTPAD
 		padForm = calloc(1, sizeof(AP7STRCNTPAD));
+		break;
+	case PT_AP7WSMRPAD: // AP7WSMRPAD
+		padForm = calloc(1, sizeof(AP7WSMRPAD));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

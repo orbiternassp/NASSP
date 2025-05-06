@@ -623,6 +623,14 @@ struct AP7STRCNTPAD
 	double TAlign;		// Align Time for nominal IMU orientation - if required
 };
 
+// APOLLO 7 - WSMR PAD
+struct AP7WSMRPAD {
+	double GETAOS;		// Time of WSMR AOS
+	double GETRR;		// Time of RR XPDR Acquisition
+	VECTOR3 AttAOS;		// Gimbal angles required to place SC at proper RR XPDR attitude
+	double TAlign;		// Align Time for nominal IMU orientation
+};
+
 //GENERIC STRING
 
 struct GENERICPAD

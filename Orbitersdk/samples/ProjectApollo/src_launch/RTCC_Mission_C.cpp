@@ -2223,11 +2223,75 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			form->AttSS_12 = _V(184.0, 97.0, 359.0);
 		}
 
-		form->TAlign = 0.0; //TBD Compute T-Align
+		form->TAlign = mcc->mcc_calcs.FindOrbitalSunset(ConvertEphemDatatoSV(sv_A.sv), SR_guess - 3600.0);
 		form->GETSR = mcc->mcc_calcs.FindOrbitalSunrise(ConvertEphemDatatoSV(sv_A.sv), SR_guess);
 		//form->AttSR = _V(4.0, 92.0, 359.0); //TBD compute attitude
 		form->GETSS_12 = (mcc->mcc_calcs.FindOrbitalSunset(ConvertEphemDatatoSV(sv_A.sv), SR_guess + 3600.0)) - 12.0 * 60.0;
 		//form->AttSS_12 = _V(184.0, 97.0, 359.0); //TBD compute attitude
+	}
+	break;
+	case 80: //NAV CHECK, CSM STATE VECTOR UPDATE BOTH SLOTS (TIME TAG TCA)
+	case 81: //WSMR PAD
+	{
+		VehicleDataBlock sv_A, sv_A1;
+		double GMTtimetag, TCA;
+		char buffer1[1000];
+		char buffer2[1000];
+		char buffer3[1000];
+
+		AP11LMARKTRKPAD WSMRtempPAD;
+		LMARKTRKPADOpt landmarkoptWSMR;
+
+		//Get state vector
+		sv_A = StateVectorCalcDataBlock(calcParams.src);
+
+		landmarkoptWSMR.sv0 = sv_A.sv;
+		landmarkoptWSMR.entries = 1;
+		landmarkoptWSMR.Elevation = 90.0*RAD;
+
+		//WSMR
+		landmarkoptWSMR.lat[0] = 32.433333*RAD;
+		landmarkoptWSMR.lng[0] = 106.366667*RAD;
+		landmarkoptWSMR.alt[0] = 0.0*1852.0;
+
+		landmarkoptWSMR.LmkTime[0] = OrbMech::HHMMSSToSS(71, 30, 0);
+		TCA = WSMRtempPAD.T2[0];
+		GMTtimetag = GMTfromGET(TCA); // Time tag to TCA
+
+		LandmarkTrackingPAD(landmarkoptWSMR, WSMRtempPAD);
+
+		if (fcn == 80)
+		{
+			AP7NAV *form = (AP7NAV *)pad;
+
+			//Use SV for Nav Check
+			NavCheckPAD(ConvertEphemDatatoSV(sv_A.sv), *form);
+			form->NavChk[0] = OrbMech::HHMMSSToSS(71, 11, 0);
+
+			//Time tagged SV
+			sv_A1 = coast(sv_A, GMTtimetag - sv_A.sv.GMT);
+
+			OrbMech::format_time_XXHMMSS(buffer3, WSMRtempPAD.T2[0]);
+
+			AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_A1.sv);
+			AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_A1.sv);
+
+			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM state vector %s", buffer3);
+			}
+		}
+		else
+		{
+			AP7WSMRPAD  * form = (AP7WSMRPAD *)pad;
+
+			form->TAlign = WSMRtempPAD.T2[0] - (45.0 * 60.0);
+			form->GETAOS = WSMRtempPAD.T2[0];
+			form->GETRR = WSMRtempPAD.T2[0] + (4.0 * 60.0);
+			form->AttAOS = _V(159.0, 55.0, 17.0);
+		}
 	}
 	break;
 	}
