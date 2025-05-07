@@ -35520,7 +35520,7 @@ void RTCC::BMSVEC()
 
 	OELEMENTS coe;
 	double mu, r_apo, r_peri, R_E, r, v, lat, lng, gamma, azi, gmt;
-	int numvec = 0;
+	int err, numvec = 0;
 
 	EMSMISSInputTable emsmissin;
 	EphemerisData sv_comp[4];
@@ -35565,6 +35565,7 @@ void RTCC::BMSVEC()
 			//Error code 2 acceptable
 			if (outtab.ErrorCode > 2)
 			{
+				RTCCONLINEMON.IntBuffer[0] = intab.L;
 				BMGPRIME("BMSVEC", 10);
 				BZCCANOE.error = true;
 				goto RTCC_BMSVEC_1;
@@ -35606,7 +35607,9 @@ void RTCC::BMSVEC()
 	VECTOR3 U, V, W;
 
 	emsmissin.AuxTableIndicator = NULL;
-	emsmissin.CutoffIndicator = 1;
+	emsmissin.CutoffIndicator = 3;
+	emsmissin.EarthRelStopParam = 400000.0*0.3048; //EI
+	emsmissin.MoonRelStopParam = 0.0; //Impact
 	emsmissin.DensityMultOverrideIndicator = false;
 	emsmissin.DescentBurnIndicator = false;
 	emsmissin.EphemerisBuildIndicator = false;
@@ -35630,11 +35633,11 @@ void RTCC::BMSVEC()
 
 	if (med_s80.REF == BODY_EARTH)
 	{
-		csi_out = 0;
+		csi_out = 1;
 	}
 	else
 	{
-		csi_out = 2;
+		csi_out = 3;
 	}
 
 	for (int i = 0;i < numvec;i++)
@@ -35654,10 +35657,49 @@ void RTCC::BMSVEC()
 		//Propagate state vector
 		EMSMISS(&emsmissin);
 
-		//Convert to desired coordinate system
-		ELVCNV(emsmissin.NIAuxOutputTable.sv_cutoff, csi_out, sv_final[i]);
-		sv_final[i] = emsmissin.NIAuxOutputTable.sv_cutoff;
+		//Error checks
+		if (emsmissin.NIAuxOutputTable.ErrorCode)
+		{
+			if (emsmissin.NIAuxOutputTable.ErrorCode == 3)
+			{
+				//Maneuver error
+				RTCCONLINEMON.IntBuffer[0] = 1; //TBD: Does EMSMISS output the maneuver NI error code and where? 
+				RTCCONLINEMON.IntBuffer[1] = i + 1;
+				BMGPRIME("BMSVEC", 8);
+			}
+			else
+			{
+				//Other errors
+				RTCCONLINEMON.IntBuffer[0] = emsmissin.NIAuxOutputTable.ErrorCode;
+				RTCCONLINEMON.IntBuffer[1] = i + 1;
+				BMGPRIME("BMSVEC", 16);
+			}
+			BZCCANOE.error = true;
+			goto RTCC_BMSVEC_1;
+		}
+		else
+		{
+			if (emsmissin.NIAuxOutputTable.TerminationCode == 3)
+			{
+				//Termination on altitude
+				RTCCONLINEMON.IntBuffer[0] = i + 1;
+				BMGPRIME("BMSVEC", 1);
+				BZCCANOE.error = true;
+				goto RTCC_BMSVEC_1;
+			}
+		}
 
+		//Convert to desired coordinate system
+		err = ELVCNV(emsmissin.NIAuxOutputTable.sv_cutoff, csi_out, sv_final[i]);
+		if (err)
+		{
+			//Vector rotation error
+			RTCCONLINEMON.IntBuffer[0] = i + 1;
+			BMGPRIME("BMSVEC", 6);
+			BZCCANOE.error = true;
+			goto RTCC_BMSVEC_1;
+		}
+		//Calculate reference UVW vectors
 		if (i == 0)
 		{
 			U = unit(sv_final[i].R);
@@ -35672,6 +35714,11 @@ void RTCC::BMSVEC()
 		if (lng > PI)
 		{
 			lng -= PI2;
+		}
+		if (csi_out == 1)
+		{
+			//ECT longitude to geographic longitude
+			lng = OrbMech::LongitudeConversion(lng, sv_final[i].GMT, OrbMech::w_Earth, 0.0, true);
 		}
 
 		if (coe.e >= 1.0)
@@ -35976,10 +36023,28 @@ void RTCC::BMGPRIME(std::string source, int n)
 	switch (n)
 	{
 	case 1:
-		message.push_back("SPACECRAFT BELOW EI");
+		sprintf(Buffer, "SPACECRAFT BELOW EI, VECTOR %d", RTCCONLINEMON.IntBuffer[0]);
+		message.push_back(Buffer);
+		break;
+	case 6:
+		sprintf(Buffer, "VECTOR ROTATION ERROR, VECTOR %d", RTCCONLINEMON.IntBuffer[0]);
+		message.push_back(Buffer);
+		break;
+	case 8:
+		sprintf(Buffer, "BURN NI ERROR %d, VECTOR %d", RTCCONLINEMON.IntBuffer[0], RTCCONLINEMON.IntBuffer[1]);
+		message.push_back(Buffer);
 		break;
 	case 10:
-		message.push_back("INTERPOLATION ERROR");
+		sprintf(Buffer, "INTERPOLATION ERROR, VEHICLE %d", RTCCONLINEMON.IntBuffer[0]);
+		message.push_back(Buffer);
+		break;
+	case 12:
+		sprintf(Buffer, "EPHEMERIS FETCH ERROR %d, VECTOR %d", RTCCONLINEMON.IntBuffer[0], RTCCONLINEMON.IntBuffer[1]);
+		message.push_back(Buffer);
+		break;
+	case 16:
+		sprintf(Buffer, "MISC. NI ERROR %d, VECTOR %d", RTCCONLINEMON.IntBuffer[0], RTCCONLINEMON.IntBuffer[1]);
+		message.push_back(Buffer);
 		break;
 	case 24:
 		sprintf(Buffer, "ERROR NUMBER %d", RTCCONLINEMON.IntBuffer[0]);
@@ -37361,7 +37426,7 @@ void RTCC::EMDGLMST()
 		OrbMech::latlong_from_r(EZJGSTAR[EZJGSTBL.star1 - 1], dec, ra);
 		OrbMech::format_time_HHHMM(Buffer, ra / PI2 * 24.0*3600.0);
 		LOSTDisplayBuffer[14].assign(Buffer);
-		OrbMech::format_time_HHHMM(Buffer, dec*DEG*3600.0);
+		OrbMech::format_declination_HHMM(Buffer, dec*DEG*3600.0);
 		LOSTDisplayBuffer[15].assign(Buffer);
 	}
 	else
@@ -37375,7 +37440,7 @@ void RTCC::EMDGLMST()
 		OrbMech::latlong_from_r(EZJGSTAR[EZJGSTBL.star2 - 1], dec, ra);
 		OrbMech::format_time_HHHMM(Buffer, ra / PI2 * 24.0*3600.0);
 		LOSTDisplayBuffer[16].assign(Buffer);
-		OrbMech::format_time_HHHMM(Buffer, dec*DEG*3600.0);
+		OrbMech::format_declination_HHMM(Buffer, dec*DEG*3600.0);
 		LOSTDisplayBuffer[17].assign(Buffer);
 	}
 	else

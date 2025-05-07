@@ -9409,9 +9409,14 @@ void ApolloRTCCMFD::UpdateLOSTDisplay()
 	GC->rtcc->EMDGLMST();
 }
 
-void ApolloRTCCMFD::menuCalculateIMUComparison()
+void ApolloRTCCMFD::menuCycleDebugLMComputer()
 {
-	ErrorMessage = G->menuCalculateIMUComparison(IsCSM);
+	G->DebugLMComputer = !G->DebugLMComputer;
+}
+
+void ApolloRTCCMFD::menuCalculateAttitudeComparison()
+{
+	ErrorMessage = G->menuCalculateAttitudeComparison(IsCSM, G->DebugLMComputer);
 }
 
 void ApolloRTCCMFD::menuCalculateIMUParkingAngles()
