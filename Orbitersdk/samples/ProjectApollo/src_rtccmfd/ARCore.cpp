@@ -2717,13 +2717,16 @@ int ARCore::subThread()
 	{
 		SPQOpt opt;
 		SPQResults res;
-		SV sv_A, sv_P, sv_pre, sv_post;
+		VehicleDataBlock sv_A, sv_P;
+		SV sv_pre, sv_post;
 
 		if (GC->MissionPlanningActive)
 		{
-			int err;
+			std::string StaID;
 			double GMT_C, GMT_T;
+			int err;
 
+			//Vector times
 			if (GC->rtcc->med_k01.ChaserThresholdGET < 0)
 			{
 				GMT_C = GC->rtcc->RTCCPresentTimeGMT();
@@ -2741,28 +2744,20 @@ int ARCore::subThread()
 				GMT_T = GC->rtcc->GMTfromGET(GC->rtcc->med_k01.TargetThresholdGET);
 			}
 
-			EphemerisData EPHEM;
-			err = GC->rtcc->EMSFFV(GMT_C, GC->rtcc->med_k01.ChaserVehicle, EPHEM);
+			//Chaser
+			err = GC->rtcc->PMSVEC(GC->rtcc->med_k01.ChaserVehicle, GMT_C, sv_A, StaID);
 			if (err)
 			{
 				Result = DONE;
 				break;
 			}
-			sv_A.R = EPHEM.R;
-			sv_A.V = EPHEM.V;
-			sv_A.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv_A.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
-
-			err = GC->rtcc->EMSFFV(GMT_T, 4 - GC->rtcc->med_k01.ChaserVehicle, EPHEM);
+			//Target
+			err = GC->rtcc->PMSVEC(4 - GC->rtcc->med_k01.ChaserVehicle, GMT_T, sv_P, StaID);
 			if (err)
 			{
 				Result = DONE;
 				break;
 			}
-			sv_P.R = EPHEM.R;
-			sv_P.V = EPHEM.V;
-			sv_P.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv_P.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 		}
 		else
 		{
@@ -2784,8 +2779,8 @@ int ARCore::subThread()
 				tgt = GC->rtcc->pCSM;
 			}
 
-			sv_A = GC->rtcc->StateVectorCalc(chaser);
-			sv_P = GC->rtcc->StateVectorCalc(tgt);
+			sv_A = GC->rtcc->StateVectorCalcDataBlock(chaser);
+			sv_P = GC->rtcc->StateVectorCalcDataBlock(tgt);
 		}
 
 		opt.DH = GC->rtcc->GZGENCSN.SPQDeltaH;
@@ -2797,7 +2792,7 @@ int ARCore::subThread()
 
 		if (SPQMode != 1)
 		{
-			opt.t_CSI = CSItime;
+			opt.GMT_CSI = GC->rtcc->GMTfromGET(CSItime);
 			
 			if (SPQMode == 2)
 			{
@@ -2812,17 +2807,24 @@ int ARCore::subThread()
 		}
 		else
 		{
-			opt.t_CSI = -1;
+			opt.GMT_CSI = -1;
 			if (CDHtimemode == 0)
 			{
-				opt.t_CDH = CDHtime;
+				opt.GMT_CDH = GC->rtcc->GMTfromGET(CDHtime);
 			}
 			else
 			{
-				opt.t_CDH = GC->rtcc->FindDH(sv_A, sv_P, CDHtime, GC->rtcc->GZGENCSN.SPQDeltaH);
+				opt.GMT_CDH = GC->rtcc->FindDH(sv_A, sv_P, GC->rtcc->GMTfromGET(CDHtime), GC->rtcc->GZGENCSN.SPQDeltaH);
 			}
 		}
-		opt.t_TPI = GC->rtcc->GZGENCSN.TPIDefinitionValue;
+		if (GC->rtcc->GZGENCSN.TPIDefinition == 3)
+		{
+			opt.GMT_TPI = GC->rtcc->GMTfromGET(GC->rtcc->GZGENCSN.TPIDefinitionValue); //GET to GMT
+		}
+		else
+		{
+			opt.GMT_TPI = GC->rtcc->GZGENCSN.TPIDefinitionValue; //Just input the time
+		}
 		opt.I_CDH = GC->rtcc->med_k01.I_CDH;
 		opt.DU_D = GC->rtcc->med_k01.CDH_Angle;
 
@@ -2830,16 +2832,16 @@ int ARCore::subThread()
 
 		if (SPQMode != 1)
 		{
-			SPQTIG = res.t_CSI;
+			SPQTIG = GC->rtcc->GETfromGMT(res.GMT_CSI);
 		}
 		else
 		{
-			SPQTIG = res.t_CDH;
+			SPQTIG = GC->rtcc->GETfromGMT(res.GMT_CDH);
 		}
 
 		if (SPQMode != 1)
 		{
-			CDHtime = res.t_CDH;
+			CDHtime = GC->rtcc->GETfromGMT(res.GMT_CDH);
 			SPQDeltaV = res.dV_CSI;
 		}
 		else
@@ -4083,8 +4085,8 @@ int ARCore::subThread()
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv_A = sv_LM;
 		opt.sv_P = sv_CSM;
-		opt.TLAND = GC->rtcc->CZTDTGTU.GETTD;
-		opt.t_TPI = t_TPI;
+		opt.GMT_LAND = GC->rtcc->GMTfromGET(GC->rtcc->CZTDTGTU.GETTD);
+		opt.GMT_TPI = GC->rtcc->GMTfromGET(t_TPI);
 		if (opt.IsTwoSegment)
 		{
 			opt.dt_step = 20.0;
@@ -4737,7 +4739,7 @@ int ARCore::subThread()
 			in.IgnitionTimeOption = GC->rtcc->med_m70.TimeFlag;
 			in.Thruster = GC->rtcc->med_m70.Thruster;
 
-			in.sv_before = elem->SV_before[0];
+			in.sv_before = elem->SV_before[0].sv;
 			in.V_aft = elem->V_after[0];
 			if (GC->rtcc->med_m70.UllageDT < 0)
 			{

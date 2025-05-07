@@ -352,15 +352,15 @@ struct EntryResults
 
 struct SPQResults
 {
-	double t_CSI;
-	double t_CDH;
-	double t_TPI;
+	double GMT_CSI;
+	double GMT_CDH;
+	double GMT_TPI;
 	double DH;
 	VECTOR3 dV_CSI;
 	VECTOR3 dV_CDH;
-	SV sv_C[5];
-	SV sv_C_apo[5];
-	SV sv_T[5];
+	VehicleDataBlock sv_C[5];
+	VehicleDataBlock sv_C_apo[5];
+	VehicleDataBlock sv_T[5];
 	int err = 0;
 };
 
@@ -790,13 +790,14 @@ struct DKICommon
 
 struct SPQOpt //Coelliptic Sequence Processor
 {
-	SV sv_A;
-	SV sv_P;
-	//Time of CSI maneuver (<= 0 if not scheduled)
-	double t_CSI;
-	//Time of CDH maneuver
-	double t_CDH;
-	double t_TPI;				// Only for calculation type = 0
+	VehicleDataBlock sv_A;
+	VehicleDataBlock sv_P;
+	//GMT of CSI maneuver (<= 0 if not scheduled)
+	double GMT_CSI;
+	//GMT of CDH maneuver
+	double GMT_CDH;
+	//GMT of TPI maneuver
+	double GMT_TPI;				// Only for calculation type = 0
 	double DH = 15.0*1852.0;	// Only for calculation type = 1
 	double E = 26.6*RAD;
 	double WT = 130.0*RAD;
@@ -807,7 +808,7 @@ struct SPQOpt //Coelliptic Sequence Processor
 	//0 = Plane change not requested, 1 = plane change requested
 	bool N_PC = false;
 	//Plane change threshold
-	double T_BNPC = 0.0;
+	double GMT_BNPC = 0.0;
 	//Initial phase angle (0 = -180° to 180°, 1 = 0 to 180°, 2 = -180° to 0)
 	int I_Theta = 0;
 	//0 = CDH not scheduled, 1 = CDH scheduled
@@ -829,7 +830,7 @@ struct PDAPOpt //Powered Descent Abort Program
 {
 	VehicleDataBlock sv_A;
 	VehicleDataBlock sv_P;
-	double TLAND; //GET
+	double GMT_LAND;
 	MATRIX3 REFSMMAT;
 	VECTOR3 R_LS;
 	double dt_stage;
@@ -842,7 +843,7 @@ struct PDAPOpt //Powered Descent Abort Program
 	//Time from Insertion to CSI
 	double dt_CSI = 50.0*60.0;
 	//Time of TPI
-	double t_TPI;
+	double GMT_TPI;
 	//dt added to dt_CSI for generation of the second set of targeting coefficients
 	double dt_2CSI = 110.0*60.0;
 	//dt added to t_TPI for generation of the second set of targeting coefficients
@@ -2411,7 +2412,7 @@ public:
 	void EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad);
 	void LunarEntryPAD(const LunarEntryPADOpt &opt, AP11ENT &pad);
 	void PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res);
-	double FindDH(SV sv_A, SV sv_P, double TIGguess, double DH);
+	double FindDH(VehicleDataBlock sv_A, VehicleDataBlock sv_P, double GMT_guess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
@@ -2502,14 +2503,12 @@ public:
 	void PCMVMR(AEGDataBlock &CHASER, AEGDataBlock &TARGET, double DELVX, double DELVY, double DELVZ, double mu, double &Pitch, double &Yaw, int I);
 	void PCMVMR(VECTOR3 R_C, VECTOR3 V_C, VECTOR3 R_T, VECTOR3 V_T, double DELVX, double DELVY, double DELVZ, int I, VECTOR3 &V_C_apo, double &Pitch, double &Yaw);
 	//Elevation angle search subroutine
-	int PCTETR(SV sv_C, SV sv_T, double WT, double ESP, double &TESP, double &TR);
+	int PCTETR(VehicleDataBlock sv_C, VehicleDataBlock sv_T, double WT, double ESP, double &TESP, double &TR);
 	//Apogee, perigee, and offset determination
 	void PCPICK(AEGHeader header, AEGDataBlock sv_C, AEGDataBlock sv_T, double &DH, double &Phase, double &HA, double &HP);
-	void PCPICK(SV sv_C, SV sv_T, double &DH, double &Phase, double &HA, double &HP);
+	void PCPICK(VehicleDataBlock sv_C, VehicleDataBlock sv_T, double &DH, double &Phase, double &HA, double &HP);
 	//Apogee and perigee radius magnitude
 	void PCHAPE(double R1, double R2, double R3, double U1, double U2, double U3, double &RAP, double &RPE);
-	//Plane change time and velocity increments computations
-	void PMMPNE(AEGHeader Header, AEGDataBlock sv_C, AEGDataBlock sv_T, double TREF, double FNPC, int KPC, int IPC, AEGDataBlock &SAVE, double &DI1, double &DH1);
 	//DKI phase lag routine
 	void PMMPHL(DKICommon &DKI, AEGHeader aegh, AEGDataBlock sv_I, double TXX, double &TTPI, double &TTPF);
 	//DKI maneuver convergence
@@ -2544,7 +2543,6 @@ public:
 	//Time of Longitude Crossing Determination
 	void PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double DESLAM, int &K, int INDVEC);
 	//AEG Day/Night Determination
-	void PMMDAN(VehicleDataBlock sv, int IND, int &ERR, double &T1, double &T2);
 	void PMMDAN(AEGHeader Header, AEGDataBlock aeg, int IND, int &ERR, double &T1, double &T2);
 	//Checkout Monitor Display
 	void EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool feet);
@@ -2674,7 +2672,6 @@ public:
 	void PMSVCT(int QUEID, int L);
 	void PMSVCT(int QUEID, int L, StateVectorTableEntry sv0);
 	//Vector Fetch Load Module
-	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
 	int PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID);
 	//Maneuver Execution Program
 	void PMSEXE(int L, double gmt);
@@ -4314,7 +4311,7 @@ public:
 
 	struct DKIElementsBlock
 	{
-		EphemerisData SV_before[5];
+		VehicleDataBlock SV_before[5];
 		VECTOR3 V_after[5];
 	};
 

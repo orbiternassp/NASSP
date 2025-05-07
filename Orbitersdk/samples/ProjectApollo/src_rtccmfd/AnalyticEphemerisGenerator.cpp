@@ -634,3 +634,579 @@ NewPMMLAEG_V846:
 	header.ErrorInd = -1;
 	goto NewPMMLAEG_V305;
 }
+
+namespace AnalyticEphemerisGenerator
+{
+	int coast(RTCC* r, VehicleDataBlock sv0, double dt, VehicleDataBlock& sv1)
+	{
+		//TBD: Use RTCC subroutine EMMENI for now. In the future a new, slightly simplified integrator should be implemented for AEG-like integration.
+		EMMENIInputTable in;
+		bool bDrag;
+
+		//Don't process more than 4 days
+		if (abs(dt) > 4.0 * 24.0 * 3600.0)
+		{
+			return -1; //Error: The amount of time to update elements exceeds four days
+		}
+		//TBD: Also limit eccentricity?
+
+		in.AnchorVector = sv0.sv;
+		in.Area = sv0.Area;
+		in.Weight = sv0.Weight;
+		in.DensityMultiplier = sv0.KFactor;
+		in.MaxIntegTime = abs(dt);
+		if (dt >= 0.0)
+		{
+			in.IsForwardIntegration = 1.0;
+		}
+		else
+		{
+			in.IsForwardIntegration = -1.0;
+		}
+		bDrag = sv0.sv.RBI == BODY_EARTH && sv0.KFactor > 0.0;
+		if (bDrag)
+		{
+			//With drag
+			in.CutoffIndicator = 3; //Altitude
+			in.EarthRelStopParam = 50.0*1852.0; //50 NM limit
+			in.StopParamRefFrame = 0; //Only for Earth
+		}
+		else
+		{
+			//Without drag
+			in.CutoffIndicator = 1;
+		}
+		//Do the integration
+		r->EMMENI(in);
+
+		if (in.TerminationCode == 3)
+		{
+			//Terminated on altitude, error return
+			return -2;
+		}
+		//Write output
+		sv1 = sv0;
+		sv1.sv = in.sv_cutoff;
+
+		return 0;
+	}
+
+	double ArgumentOfLatitude(EphemerisData sv0)
+	{
+		//Argument of latitude from R and V
+
+		VECTOR3 K, h, n;
+		double u;
+
+		K = _V(0, 0, 1);
+		h = unit(crossp(sv0.R, sv0.V));
+		n = crossp(K, h);
+		u = acos2(dotp(unit(n), unit(sv0.R)));
+		if (sv0.R.z < 0)
+		{
+			u = PI2 - u;
+		}
+		return u;
+	}
+
+	void SecularRates(RTCC* r, EphemerisData sv0, double& l_dot, double& g_dot, double& h_dot)
+	{
+		EphemerisData sv_true;
+		double mu;
+		int err;
+		//Convert from inertial to true coordinates
+		err = r->ELVCNV(sv0, sv0.RBI == BODY_EARTH ? 1 : 3, sv_true);
+		if (err) sv_true = sv0; //TBD: Process error? Will cause failure in other places anyway
+
+		//Calculate secular rates with osculating elements. For g_dot and h_dot the mean orbital elements should be used, but the difference is small
+		mu = sv0.RBI == BODY_EARTH ? OrbMech::mu_Earth : OrbMech::mu_Moon;
+		//Calculate osculating elements
+		CELEMENTS coe = OrbMech::GIMIKC(sv_true.R, sv_true.V, mu);
+		//Calculate secular rates
+		OrbMech::BrouwerSecularRates(coe, coe, sv0.RBI, l_dot, g_dot, h_dot);
+	}
+
+	int TimeOfArrivalRoutine(RTCC* r, VehicleDataBlock sv0, int opt, double param, double DN, VehicleDataBlock& sv1)
+	{
+		//opt: 0 = time, 1 = mean anomaly, 2 = argument of latitude, 3 = maneuver line
+
+		//Time option
+		if (opt == 0)
+		{
+			//param is GMT
+			return coast(r, sv0, param - sv0.sv.GMT, sv1);
+		}
+
+		//Other options
+		CELEMENTS coe_osc;
+		double L_D, DX_L, DH, X_L, X_L_dot, ddt, l_dot, g_dot, h_dot, mu, u;
+		int LINE, COUNT, err;
+
+		if (sv0.sv.RBI == BODY_EARTH)
+		{
+			mu = OrbMech::mu_Earth;
+		}
+		else
+		{
+			mu = OrbMech::mu_Moon;
+		}
+		if (opt != 3)
+		{
+			L_D = param;
+		}
+		else
+		{
+			L_D = ArgumentOfLatitude(sv0.sv);
+		}
+		DX_L = 1.0;
+		DH = true;
+		LINE = 0;
+		COUNT = 24;
+		sv1 = sv0;
+
+		//Calculate secular rates
+		SecularRates(r, sv0.sv, l_dot, g_dot, h_dot);
+
+		do
+		{
+			//Calculate osculating elements
+			coe_osc = OrbMech::GIMIKC(sv1.sv.R, sv1.sv.V, mu);
+			u = ArgumentOfLatitude(sv1.sv);
+
+			//Mean anomaly
+			if (opt == 1)
+			{
+				X_L = coe_osc.l;
+				X_L_dot = l_dot;
+			}
+			//Argument of latitude
+			else if (opt == 2)
+			{
+				X_L = u;
+				X_L_dot = l_dot + g_dot;
+			}
+			//Maneuver line
+			else
+			{
+				X_L = u;
+				X_L_dot = l_dot + g_dot;
+				LINE = 2;
+			}
+
+			if (DH)
+			{
+				double DN_apo = DN * PI2;
+				ddt = DN_apo / l_dot;
+				DH = false;
+
+				if (LINE != 0)
+				{
+					L_D = L_D + g_dot * ddt + DN_apo;
+					while (L_D < 0) L_D += PI2;
+					while (L_D >= PI2) L_D -= PI2;
+				}
+				else
+				{
+					ddt += (L_D - X_L) / X_L_dot;
+				}
+			}
+			else
+			{
+				DX_L = L_D - X_L;
+				if (abs(DX_L) - PI >= 0)
+				{
+					if (DX_L > 0)
+					{
+						DX_L -= PI2;
+					}
+					else
+					{
+						DX_L += PI2;
+					}
+				}
+				ddt = DX_L / X_L_dot;
+				if (LINE != 0)
+				{
+					L_D = L_D + ddt * g_dot;
+				}
+			}
+
+			//Update to new time
+			if (err = coast(r, sv1, ddt, sv1))
+			{
+				//AEG error
+				return err;
+			}
+			//Decrement iteration counter
+			COUNT--;
+
+		} while (abs(DX_L) > 1e-4 && COUNT > 0);
+
+		if (COUNT == 0)
+		{
+			//Failed to converge
+			return -3;
+		}
+		return 0;
+	}
+
+	int TAUA(RTCC* r, VehicleDataBlock sv_A0, VehicleDataBlock sv_P0, VehicleDataBlock& sv_P1, double& DELH, double& TA)
+	{
+		int err;
+
+		//Update passive vehicle to time of sv_A0
+		if (err = coast(r, sv_P0, sv_A0.sv.GMT - sv_P0.sv.GMT, sv_P1)) return err;
+
+		double theta, tol, l_dot, g_dot, h_dot, dt;
+
+		tol = 0.00001;
+		DELH = TA = 0.0;
+
+		//Calculate phase angle
+		theta = OrbMech::PHSANG(sv_A0.sv.R, sv_A0.sv.V, sv_P1.sv.R);
+		//Secular rates of passive vehicle
+		SecularRates(r, sv_P1.sv, l_dot, g_dot, h_dot);
+
+		while (abs(theta) > tol)
+		{
+			//Take to time
+			dt = theta / (l_dot + g_dot);
+			if (err = coast(r, sv_P1, dt, sv_P1)) return err;
+			//Calculate phase angle
+			theta = OrbMech::PHSANG(sv_A0.sv.R, sv_A0.sv.V, sv_P1.sv.R);
+		}
+		//Calculate time lag. Positive if active vehicle is behind.
+		TA = sv_A0.sv.GMT - sv_P1.sv.GMT;
+		//Calculate DH. Positive if active vehicle is below.
+		DELH = length(sv_P1.sv.R) - length(sv_A0.sv.R);
+		return 0;
+	}
+
+	int QDRTPI(RTCC* r, VehicleDataBlock sv_P0, double DH, double E_L, VehicleDataBlock& sv_P1)
+	{
+		//QDRTPI determines the passive vehicle state vector radially above the active vehicle at TPI defined by DH and E_L
+		sv_P1 = sv_P0;
+
+		int s_F, err;
+		double c, t, e_T, e_To, to, eps1, p;
+
+		eps1 = 0.00001;
+		p = 1.0;
+
+		c = t = 0.0;
+		s_F = 0;
+
+		if (E_L > PI)
+		{
+			E_L = E_L - PI;
+		}
+
+		do
+		{
+			if (t != 0.0)
+			{
+				err = coast(r, sv_P0, t, sv_P1);
+				if (err) return err;
+			}
+
+			e_T = PI05 - E_L - asin(((length(sv_P1.sv.R) - DH) * cos(E_L) / length(sv_P0.sv.R))) - acos2(dotp(unit(sv_P0.sv.R), unit(sv_P1.sv.R))) * OrbMech::sign(dotp(crossp(sv_P1.sv.R, sv_P0.sv.R), crossp(sv_P0.sv.R, sv_P0.sv.V)));
+
+			if (abs(e_T) >= eps1)
+			{
+				OrbMech::ITER(c, s_F, e_T, p, t, e_To, to);
+				if (s_F == 1)
+				{
+					return 1;
+				}
+			}
+
+		} while (abs(e_T) >= eps1);
+		return 0;
+	}
+
+	void PMMDAN(RTCC* rtcc, VehicleDataBlock ELM, int IND, int &ERR, double &T_c, double &T_c_apo)
+	{
+		//INPUTS:
+		//ELM: Input vehicle data block
+		//IND: Number of desired predictions (1 or 2)
+		//OUTPUTS:
+		//ERR: <0 = AEG error return, 0 = no error, 1 = orbit is totally in daylight, 2 = convergence failure
+		//T_c and T_c_apo: Times of two next environment changes. A positive time indicate an upcoming environment of daylight and a negative time for darkness.
+		VehicleDataBlock sv_temp;
+		VECTOR3 R_EM, V_EM, R_ES, R_S, H, N, N_apo;
+		double r_S, mu, cos_theta, R_e, r, phi1, phi2, phi3, n, cos_phi1, sin_alpha, h, cos_eta, sin_eta, F, dt, S_T, l_dot, g_dot, h_dot;
+		int J, I_c;
+		bool daylight;
+
+		ERR = 0;
+		J = 0;
+		//Get sun vector
+		rtcc->PLEFEM(1, ELM.sv.GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
+
+		if (ELM.sv.RBI == BODY_EARTH)
+		{
+			R_S = R_ES;
+			mu = OrbMech::mu_Earth;
+			R_e = OrbMech::R_Earth;
+		}
+		else
+		{
+			R_S = R_ES - R_EM;
+			mu = OrbMech::mu_Moon;
+			R_e = rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
+		}
+
+		//Initialize
+		sv_temp = ELM;
+		SecularRates(rtcc, ELM.sv, l_dot, g_dot, h_dot);
+
+		r = length(sv_temp.sv.R);
+		r_S = length(R_ES);
+		cos_theta = dotp(sv_temp.sv.R, R_S) / r / r_S;
+		if (cos_theta >= 0)
+		{
+			//Vehicle is in daylight
+			daylight = true;
+		}
+		else if (r*sqrt(1.0 - cos_theta * cos_theta) >= R_e)
+		{
+			//Vehicle is in daylight
+			daylight = true;
+		}
+		else
+		{
+			//Vehicle is in darkness
+			daylight = false;
+		}
+		I_c = 0;
+		T_c = sv_temp.sv.GMT;
+	RTCC_PMMDAN_2_2:
+		if (I_c > 0)
+		{
+			r = length(sv_temp.sv.R);
+		}
+		H = crossp(sv_temp.sv.R, sv_temp.sv.V);
+		N = crossp(R_S, H);
+		n = length(N);
+		if (daylight)
+		{
+			n = -n;
+		}
+		N_apo = N / n;
+		cos_phi1 = dotp(sv_temp.sv.R, N_apo) / r;
+		phi1 = acos(cos_phi1);
+		sin_alpha = sqrt(1.0 - pow(R_e / r, 2));
+		h = length(H);
+		cos_eta = dotp(H, R_S) / h / r_S;
+		sin_eta = sqrt(1.0 - cos_eta * cos_eta);
+		if (sin_eta <= sin_alpha)
+		{
+			ERR = 1;
+			goto RTCC_PMMDAN_4_3;
+		}
+		phi2 = asin(sin_alpha / sin_eta);
+		F = sv_temp.sv.R.x*N_apo.y - sv_temp.sv.R.y*N_apo.x;
+		if (sv_temp.sv.RBI == BODY_MOON)
+		{
+			F = -F;
+		}
+		if (daylight)
+		{
+			if (F >= 0)
+			{
+				phi3 = phi1 + phi2;
+			}
+			else
+			{
+				if (cos_phi1 > 0)
+				{
+					phi3 = phi2 - phi1;
+				}
+				else
+				{
+					phi3 = PI2 - phi1 + phi2;
+				}
+			}
+		}
+		else
+		{
+			if (F > 0)
+			{
+				phi3 = phi1 - phi2;
+			}
+			else
+			{
+				phi3 = -phi1 - phi2;
+			}
+		}
+		dt = phi3 / (l_dot + g_dot);
+		T_c = T_c + dt;
+		if (abs(dt) > 0.00055*3600.0)
+		{
+			if (I_c >= 4)
+			{
+				ERR = 2;
+				goto RTCC_PMMDAN_4_3;
+			}
+			I_c++;
+		RTCC_PMMDAN_2_4:
+			//Update to time
+			ERR = coast(rtcc, sv_temp, T_c, sv_temp);
+			//Error?
+			if (ERR) goto RTCC_PMMDAN_4_3; //Yes
+			goto RTCC_PMMDAN_2_2; //No
+		}
+		if (daylight)
+		{
+			T_c = -T_c;
+		}
+		if (IND == 1)
+		{
+			T_c_apo = 0.0;
+			return;
+		}
+		if (J <= 0)
+		{
+			S_T = T_c;
+			daylight = !daylight;
+			if (daylight == false)
+			{
+				phi2 = -phi2;
+			}
+			phi3 = PI + 2.0*phi2;
+			dt = phi3 / (l_dot + g_dot);
+			T_c = abs(T_c) + dt;
+			J = 1;
+			I_c = 1;
+			goto RTCC_PMMDAN_2_4;
+		}
+		else
+		{
+			T_c_apo = T_c;
+			T_c = S_T;
+			return;
+		}
+
+	RTCC_PMMDAN_4_3:
+		T_c = 0.0;
+		T_c_apo = 0.0;
+		return;
+	}
+
+	void PMMTLC(RTCC* rtcc, VehicleDataBlock AEGIN, double DESLAM, VehicleDataBlock &AEGOUT, int &K)
+	{
+		//INPUTS:
+		//AEGIN: Initial vehicle data block
+		//DESLAM: Desired longitude in radians
+		//OUTPUTS:
+		//AEGOUT: Vehicle data block updated to time of the desired longitude crossing
+		//K: -1 = Unrecoverable AEG error, >0 = failure to converge, 0 = no error
+
+		CELEMENTS elem;
+		EphemerisData sv_true;
+		double i_CB, g_CB, h_CB, u_CB, Z, DELTA, lambda_V, w_CB, dlambda, DELTADOT, dt, u_CB_dot, mu_CB, l_dot, g_dot, h_dot;
+		int coord_true;
+
+		if (AEGIN.sv.RBI == BODY_EARTH)
+		{
+			w_CB = OrbMech::w_Earth;
+			mu_CB = OrbMech::mu_Earth;
+			coord_true = 1;
+			Z = 1.0;
+		}
+		else
+		{
+			w_CB = OrbMech::w_Moon;
+			mu_CB = OrbMech::mu_Moon;
+			coord_true = 3;
+			Z = 0.0;
+		}
+		K = 1;
+
+		//Move input to output
+		AEGOUT = AEGIN;
+		do
+		{
+			//Convert from inertial to true coordinates
+			if (rtcc->ELVCNV(AEGOUT.sv, coord_true, sv_true))
+			{
+				K = -1;
+				return;
+			}
+			//Calculate elements
+			elem = OrbMech::GIMIKC(sv_true.R, sv_true.V, mu_CB);
+			//Save elements
+			i_CB = elem.i;
+			g_CB = elem.g;
+			h_CB = elem.h;
+			u_CB = ArgumentOfLatitude(sv_true);
+			//Calculate secular rates
+			SecularRates(rtcc, AEGOUT.sv, l_dot, g_dot, h_dot);
+
+			DELTA = atan2(sin(u_CB)*cos(i_CB), cos(u_CB));
+			if (DELTA < 0)
+			{
+				DELTA += PI2;
+			}
+			lambda_V = h_CB + DELTA - Z * (w_CB * AEGOUT.sv.GMT);
+			lambda_V = fmod(lambda_V, PI2);
+			if (lambda_V < 0)
+			{
+				lambda_V += PI2;
+			}
+			dlambda = DESLAM - lambda_V;
+			if (K <= 1)
+			{
+				DELTADOT = l_dot + g_dot;
+				if (i_CB > PI05)
+				{
+					DELTADOT = -DELTADOT;
+					if (dlambda > 0)
+					{
+						dlambda = dlambda - PI2;
+					}
+				}
+				else
+				{
+					if (dlambda < 0)
+					{
+						dlambda = dlambda + PI2;
+					}
+				}
+			}
+			else
+			{
+				u_CB_dot = sqrt(mu_CB*elem.a*(1.0 - pow(elem.e, 2))) / pow(length(AEGOUT.sv.R), 2) + g_dot;
+				DELTADOT = cos(i_CB)*u_CB_dot / (pow(cos(u_CB), 2) + pow(sin(u_CB), 2)*pow(cos(i_CB), 2));
+				if (abs(dlambda) > PI)
+				{
+					if (dlambda > 0)
+					{
+						dlambda = dlambda - PI2;
+					}
+					else
+					{
+						dlambda = dlambda + PI2;
+					}
+				}
+			}
+			dt = dlambda / (h_dot + DELTADOT - w_CB);
+			if (abs(dt) <= 0.01)
+			{
+				K = 0;
+				return;
+			}
+			if (K > 5)
+			{
+				return;
+			}
+			K++;
+
+			if (coast(rtcc, AEGOUT, dt, AEGOUT))
+			{
+				K = -1;
+				return;
+			}
+		} while (K < 6);
+	}
+}
