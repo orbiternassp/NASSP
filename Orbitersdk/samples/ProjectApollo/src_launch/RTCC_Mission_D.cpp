@@ -303,6 +303,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 2;
 	}
 	break;
 	case 12: //BLOCK DATA 3
@@ -321,6 +322,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 3;
 	}
 	break;
 	case 13: //SPS-2 CALCULATION
@@ -528,6 +530,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 4;
 	}
 	break;
 	case 17: //BLOCK DATA 5
@@ -546,6 +549,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 5;
 	}
 	break;
 	case 18: //DOCKED DPS BURN - REFSMMAT AND SV FOR CMC
@@ -653,6 +657,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 6;
 	}
 	break;
 	case 21: //DOCKED DPS BURN - REFSMMAT AND SV FOR LGC
@@ -729,6 +734,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 7;
 	}
 	break;
 	case 25: //BLOCK DATA 8
@@ -747,6 +753,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 8;
 	}
 	break;
 	case 26: //EVA REFSMMAT
@@ -795,6 +802,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 9;
 	}
 	break;
 	case 28: //BLOCK DATA 10
@@ -813,6 +821,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 10;
 	}
 	break;
 	case 29: //CSM Rendezvous REFSMMAT Update
@@ -1134,7 +1143,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		calcParams.CDH = calcParams.CSI + OrbMech::period(sv_A.R, sv_A.V, OrbMech::mu_Earth) / 2.0;
 
 		//Get CDH TIG from LGC memory (EMEM3370 and 3371)
-		T_CDH = (mcc->lm->agc.vagc.Erasable[6][0371] + mcc->lm->agc.vagc.Erasable[6][0370] * pow((double) 2., (double) 14.)) / 100.0;
+		T_CDH = (mcc->lm->agc.vagc.Erasable[6][0371] + mcc->lm->agc.vagc.Erasable[6][0370] * pow((double)2., (double)14.)) / 100.0;
 
 		//Reasonability test
 		if (abs(T_CDH - calcParams.CDH) < 5.0*60.0)
@@ -1252,7 +1261,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_LMAPS;
-		opt.REFSMMAT= GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
+		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.RV_MCC = ConvertSVtoEphemData(sv0);
 		opt.WeightsTable = GetWeightsTable(calcParams.tgt, false, false);
 
@@ -1309,9 +1318,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7BLKOpt opt;
 
 		int n = 4;
-		double lng[] = { 144.6*RAD, 148.5*RAD, 144.6*RAD, 139.0*RAD};
+		double lng[] = { 144.6*RAD, 148.5*RAD, 144.6*RAD, 139.0*RAD };
 		double GETI[] = { OrbMech::HHMMSSToSS(104,20,28),OrbMech::HHMMSSToSS(105,54,57),OrbMech::HHMMSSToSS(107,27,50),OrbMech::HHMMSSToSS(109,0,44) };
-		std::string area[] = { "066-3A", "067-3B", "068-3A", "069-CC"};
+		std::string area[] = { "066-3A", "067-3B", "068-3A", "069-CC" };
 
 		opt.area.assign(area, area + n);
 		opt.GETI.assign(GETI, GETI + n);
@@ -1319,6 +1328,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 11;
 	}
 	break;
 	case 75: //POST JETTISON SEPARATION MANEUVER
@@ -1367,6 +1377,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 12;
 	}
 	break;
 	case 44: //BLOCK DATA 13
@@ -1376,7 +1387,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		int n = 8;
 		double lng[] = { -68.2*RAD, -33.0*RAD, -32.9*RAD, -69.0*RAD, -170.5*RAD, -170.5*RAD, -170.5*RAD, -160.0*RAD };
-		double GETI[] = { OrbMech::HHMMSSToSS(117,39,36),OrbMech::HHMMSSToSS(119,17,43),OrbMech::HHMMSSToSS(120,52,15),OrbMech::HHMMSSToSS(122,17,41), 
+		double GETI[] = { OrbMech::HHMMSSToSS(117,39,36),OrbMech::HHMMSSToSS(119,17,43),OrbMech::HHMMSSToSS(120,52,15),OrbMech::HHMMSSToSS(122,17,41),
 			OrbMech::HHMMSSToSS(125, 3, 53), OrbMech::HHMMSSToSS(126, 36, 9), OrbMech::HHMMSSToSS(128, 9, 44), OrbMech::HHMMSSToSS(129, 46, 43) };
 		std::string area[] = { "075-1A", "076-2B", "077-2B", "078-1A", "079-4A", "080-4B", "081-4A", "082-DC" };
 
@@ -1386,6 +1397,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 13;
 	}
 	break;
 	case 45: //SPS-6
@@ -1513,7 +1525,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		double GETbase, GET_AOS, GET_LOS, dt;
 
 
-		for (int i = 0;i < 4;i++)
+		for (int i = 0; i < 4; i++)
 		{
 			strcpy(form->Area[i], "N/A");
 			form->FDAIAngles[i] = _V(0, 0, 0);
@@ -1709,6 +1721,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 14;
 	}
 	break;
 	case 49: //BLOCK DATA 15
@@ -1728,6 +1741,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 15;
 	}
 	break;
 	case 50: //LANDMARK TRACKING T ALIGN
@@ -1890,9 +1904,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7BLKOpt opt;
 
 		int n = 6;
-		double lng[] = { -143.0*RAD, -161.0*RAD, -30.0*RAD, -32.0*RAD, -30.0*RAD, -59.5*RAD};
+		double lng[] = { -143.0*RAD, -161.0*RAD, -30.0*RAD, -32.0*RAD, -30.0*RAD, -59.5*RAD };
 		double GETI[] = { OrbMech::HHMMSSToSS(156, 15, 41),OrbMech::HHMMSSToSS(158, 6, 17),OrbMech::HHMMSSToSS(158, 40, 36),OrbMech::HHMMSSToSS(160, 15, 37),
-			OrbMech::HHMMSSToSS(161, 50, 48), OrbMech::HHMMSSToSS(163, 17, 18)};
+			OrbMech::HHMMSSToSS(161, 50, 48), OrbMech::HHMMSSToSS(163, 17, 18) };
 		std::string area[] = { "099-CC", "100-CC", "101-AC", "102-AC", "103-2A", "104-1B" };
 
 		opt.area.assign(area, area + n);
@@ -1901,6 +1915,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 16;
 	}
 	break;
 	case 56: //BLOCK DATA 17
@@ -1920,6 +1935,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 17;
 	}
 	break;
 	case 60: //BLOCK DATA 18
@@ -1939,6 +1955,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 18;
 	}
 	break;
 	case 61: //BLOCK DATA 19
@@ -1958,6 +1975,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 19;
 	}
 	break;
 	case 62: //S065 T ALIGN
@@ -2006,6 +2024,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 20;
 	}
 	break;
 	case 66: //BLOCK DATA 21
@@ -2014,10 +2033,10 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7BLKOpt opt;
 
 		int n = 6;
-		double lng[] = { -27.0*RAD, -33.0*RAD, -68.0*RAD, -162.4*RAD, -162.4*RAD, -164.0*RAD};
+		double lng[] = { -27.0*RAD, -33.0*RAD, -68.0*RAD, -162.4*RAD, -162.4*RAD, -164.0*RAD };
 		double GETI[] = { OrbMech::HHMMSSToSS(213, 1, 11),OrbMech::HHMMSSToSS(214, 38, 0),OrbMech::HHMMSSToSS(216, 4, 52),OrbMech::HHMMSSToSS(218, 43, 21),
-			OrbMech::HHMMSSToSS(220, 24, 20), OrbMech::HHMMSSToSS(222, 5, 10)};
-		std::string area[] = { "135-2B", "136-2B", "137-1A", "138-4A", "139-4A", "140-4B"};
+			OrbMech::HHMMSSToSS(220, 24, 20), OrbMech::HHMMSSToSS(222, 5, 10) };
+		std::string area[] = { "135-2B", "136-2B", "137-1A", "138-4A", "139-4A", "140-4B" };
 
 		opt.area.assign(area, area + n);
 		opt.GETI.assign(GETI, GETI + n);
@@ -2025,6 +2044,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 21;
 	}
 	break;
 	case 67: //S065 T ALIGN
@@ -2059,10 +2079,10 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7BLKOpt opt;
 
 		int n = 7;
-		double lng[] = { -162.0*RAD, -169.0*RAD, 145.0*RAD, -162.0*RAD, -32.0*RAD, -30.1*RAD, -30.0*RAD};
+		double lng[] = { -162.0*RAD, -169.0*RAD, 145.0*RAD, -162.0*RAD, -32.0*RAD, -30.1*RAD, -30.0*RAD };
 		double GETI[] = { OrbMech::HHMMSSToSS(223, 37, 43),OrbMech::HHMMSSToSS(225, 12, 55),OrbMech::HHMMSSToSS(226, 41, 6),OrbMech::HHMMSSToSS(228, 31, 8),
-			OrbMech::HHMMSSToSS(228, 53, 7), OrbMech::HHMMSSToSS(230, 29, 7), OrbMech::HHMMSSToSS(232, 6, 14)};
-		std::string area[] = { "141-CC", "142-CC", "143-CC", "144-CC", "145-AC", "146-AC", "147-2A"};
+			OrbMech::HHMMSSToSS(228, 53, 7), OrbMech::HHMMSSToSS(230, 29, 7), OrbMech::HHMMSSToSS(232, 6, 14) };
+		std::string area[] = { "141-CC", "142-CC", "143-CC", "144-CC", "145-AC", "146-AC", "147-2A" };
 
 		opt.area.assign(area, area + n);
 		opt.GETI.assign(GETI, GETI + n);
@@ -2070,6 +2090,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 22;
 	}
 	break;
 	case 71: //BLOCK DATA 23
@@ -2089,6 +2110,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.n = n;
 
 		AP7BlockData(&opt, *form);
+		form->Num = 23;
 	}
 	break;
 	case 72: //NOMINAL SPS DEORBIT

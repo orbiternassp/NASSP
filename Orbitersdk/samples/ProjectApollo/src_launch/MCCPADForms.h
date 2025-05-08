@@ -34,6 +34,7 @@ struct AP7BLK {
 	double GETI[8];		// TIG
 	double dVC[8];		// dV for EMS
 	char Wx[8][10];		// Weather cndx ("GOOD-FAIR-POOR")
+	int Num;			// Block data number
 };
 
 // APOLLO 7 - P27 CMC UPDATE

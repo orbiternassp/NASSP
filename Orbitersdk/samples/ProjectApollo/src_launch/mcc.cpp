@@ -1527,6 +1527,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 				SAVE_DOUBLE(tmpbuf, form->Lng[i]);
 				sprintf(tmpbuf, "MCC_AP7BLK_Wx[%d]", i);
 				SAVE_STRING(tmpbuf, form->Wx[i]);
+				SAVE_INT("MCC_AP7BLK_Num", form->Num);
 			}
 		}
 		else if (padNumber == 2)
@@ -2166,6 +2167,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 				LOAD_DOUBLE(tmpbuf, form->Lng[i]);
 				sprintf(tmpbuf, "MCC_AP7BLK_Wx[%d]", i);
 				LOAD_STRING(tmpbuf, form->Wx[i], 10);
+				LOAD_INT("MCC_AP7BLK_Num", form->Num);
 			}
 		}
 		else if (padNumber == 2)
@@ -2738,7 +2740,7 @@ void MCC::drawPad(bool writetofile){
 		{
 			AP7BLK * form = (AP7BLK *)padForm;
 			int length = 0;
-			length += sprintf(buffer + length, "BLOCK DATA");
+			length += sprintf(buffer + length, "BLOCK DATA %d", form->Num);
 
 			for (int i = 0;i < 4;i++)
 			{

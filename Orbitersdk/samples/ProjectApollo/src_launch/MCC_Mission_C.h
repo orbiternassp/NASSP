@@ -68,13 +68,13 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY3STATE3	62
 #define MST_C_DAY3STATE4	63
 #define MST_C_DAY3STATE5	64
+#define MST_C_DAY3STATE6	65
+#define MST_C_DAY3STATE7	66
 
 // DAY 4
 #define MST_C_DAY4STATE1	70
 #define MST_C_DAY4STATE2	71
 #define MST_C_DAY4STATE3	72
-#define MST_C_DAY4STATE4	73
-#define MST_C_DAY4STATE5	74
 
 // DAY 5
 #define MST_C_DAY5STATE1	80
