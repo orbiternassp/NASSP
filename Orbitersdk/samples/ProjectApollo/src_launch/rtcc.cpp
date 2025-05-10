@@ -2638,6 +2638,12 @@ bool RTCC::LoadMissionConstantsFile(std::string file)
 			papiReadScenario_int(Buff, "MHVLCG_N", SystemParameters.MHVLCG.N);
 			papiReadConfigFile_CGTable(Buff, "MHVACG", SystemParameters.MHVACG);
 			papiReadScenario_int(Buff, "MHVACG_N", SystemParameters.MHVACG.N);
+			papiReadConfigFile_ThrustTable(Buff, "MHTSTC", SystemParameters.MHTSTC);
+			papiReadScenario_int(Buff, "MHTSTC_N", SystemParameters.MHTSTC.N);
+			papiReadConfigFile_ThrustTable(Buff, "MHTATC", SystemParameters.MHTATC);
+			papiReadScenario_int(Buff, "MHTATC_N", SystemParameters.MHTATC.N);
+			papiReadConfigFile_ThrustTable(Buff, "MHTDTC", SystemParameters.MHTDTC);
+			papiReadScenario_int(Buff, "MHTDTC_N", SystemParameters.MHTDTC.N);
 			papiReadScenario_int(Buff, "MGTESE", SystemParameters.MGTESE);
 			papiReadScenario_int(Buff, "MMTESE", SystemParameters.MMTESE);
 		}
@@ -6429,10 +6435,10 @@ void RTCC::SaveState(FILEHANDLE scn) {
 			papiWriteScenario_Station(scn, "RTCC_EZLASITE", i, EZLASITE.Data[i]);
 		}
 	}
-	//CG tables
-	papiSave_CGTable(scn, &SystemParameters.MHVLCG, "MHVLCG");
-	papiSave_CGTable(scn, &SystemParameters.MHVACG, "MHVACG");
-	papiSave_CGTable(scn, &SystemParameters.MHVCCG, "MHVCCG");
+	//CG tables. TBD: Don't save these yet because there is no point to saving them until the actual CG calculations are more complex.
+	//papiSave_CGTable(scn, &SystemParameters.MHVLCG, "MHVLCG");
+	//papiSave_CGTable(scn, &SystemParameters.MHVACG, "MHVACG");
+	//papiSave_CGTable(scn, &SystemParameters.MHVCCG, "MHVCCG");
 	//Thrust tables
 	papiSave_ThrustTable(scn, &SystemParameters.MHTSTC, "MHTSTC");
 	papiSave_ThrustTable(scn, &SystemParameters.MHTATC, "MHTATC");
