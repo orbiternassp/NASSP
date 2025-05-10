@@ -92,6 +92,7 @@ MESHHANDLE hcmseatsfolded;
 MESHHANDLE hcmseatsunfolded;
 MESHHANDLE hcmCOAScdr;
 MESHHANDLE hcmCOAScdrreticle;
+MESHHANDLE hcmCueCardsArrows;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -664,6 +665,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hcmseatsunfolded, "ProjectApollo/CM-VC-SeatsUnfolded");
 	LOAD_MESH(hcmCOAScdr, "ProjectApollo/CM-COAS-CDR");
 	LOAD_MESH(hcmCOAScdrreticle, "ProjectApollo/CM-COAS-CDR_Reticle");
+	LOAD_MESH(hcmCueCardsArrows, "ProjectApollo/Helpers/CM-CueCardsArrows");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
@@ -1074,6 +1076,10 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
 
+	//Cue Cards Arrows
+	cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
+	SetVCCueCardsArrows();
+
 	//Interior
 	meshidx = AddMesh(hCMInt, &mesh_dir);
 	SetMeshVisibilityMode(meshidx, MESHVIS_EXTERNAL);
@@ -1343,6 +1349,15 @@ void Saturn::SetVCSeatsMesh() {
 	}
 }
 
+void Saturn::SetVCCueCardsArrows() {
+	bool viewArrows = checkControl.getFlashing();
+	if (viewArrows) {
+		SetMeshVisibilityMode(cmvccuecardsarrowsidx, MESHVIS_VC);
+	} else {
+		SetMeshVisibilityMode(cmvccuecardsarrowsidx, MESHVIS_NEVER);
+	}
+}
+
 void Saturn::SetCOASMesh() {
 
 	if (coascdridx == -1 || coascdrreticleidx == -1)
@@ -1593,6 +1608,10 @@ void Saturn::SetReentryMeshes() {
 	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
+
+	//Cue Cards Arrows
+	cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
+	SetVCCueCardsArrows();
 
 	//Add CM meshes. More to be added here...
 	AddCMMeshes(mesh_dir);
@@ -1877,6 +1896,10 @@ void Saturn::SetRecovery()
 	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
+
+	//Cue Cards Arrows
+	cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
+	SetVCCueCardsArrows();
 
 	if (Crewed) {
 		//old values 2.7,1.8,-1.5

@@ -397,8 +397,8 @@ const VECTOR3 P12_ROT_POS[P12_ROTCOUNT] = {
 
 // Panel 13 switches
 const VECTOR3 P13_TOGGLE_POS[P13_SWITCHCOUNT] = {
-{-0.9470, 1.1042, -0.2310}, {-0.9207, 1.0788, -0.1740}, {-0.8985, 1.0571, -0.1255}, {-0.9867, 1.0688, -0.2285}, {-0.9496, 1.0326, -0.1478},
-{-0.9381, 1.0217, -0.1230}
+{-0.939071, 1.09645, -0.213715}, {-0.912703, 1.07098, -0.156688}, {-0.890494, 1.04928, -0.108158}, {-0.978703, 1.06098, -0.211182}, {-0.94166, 1.02485, -0.130426},
+{-0.930166, 1.01388, -0.105691}
 };
 
 // Panel 15 switches
@@ -1119,19 +1119,16 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCSetAreaClickmode_Spherical(AID_VC_COAS, COASLocation + ofs, 0.05);
 
 	// DSKY_Glareshade
-	const VECTOR3 DSKY_GlareshadeLocation = { -0.293864, 0.616971, 0.33086 };
 	oapiVCRegisterArea(AID_VC_DSKY_Glareshade, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_DSKY_Glareshade, DSKY_GlareshadeLocation + ofs, 0.05);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_DSKY_Glareshade, _V(-0.325755, 0.667197,0.347642) + ofs, _V(-0.261851, 0.667065, 0.347606) + ofs, _V(-0.325773, 0.566864, 0.314132) + ofs, _V(-0.262076, 0.566747, 0.314057) + ofs);
 
 	// EMSDV_Glareshade
-	const VECTOR3 EMSDV_GlareshadeLocation = { -0.586873, 0.705286, 0.348643 };
 	oapiVCRegisterArea(AID_VC_EMSDV_Glareshade, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_EMSDV_Glareshade, EMSDV_GlareshadeLocation + ofs, 0.05);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_EMSDV_Glareshade, _V(-0.62636 , 0.710785, 0.362226) + ofs, _V(-0.547474, 0.710859, 0.362283) + ofs, _V(-0.626339, 0.693615, 0.356476) + ofs, _V(-0.547454, 0.693699, 0.356503) + ofs);
 
 	// MissionTimer_Glareshade
-	const VECTOR3 MissionTimer_GlareshadeLocation = { 0.075027, 0.824892, 0.397274 };
 	oapiVCRegisterArea(AID_VC_MissionTimer_Glareshade, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_MissionTimer_Glareshade, MissionTimer_GlareshadeLocation + ofs, 0.05);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_MissionTimer_Glareshade, _V(0.02099, 0.835527, 0.400997) + ofs, _V(0.127841, 0.835514, 0.401003) + ofs, _V(0.020993, 0.814292, 0.393903) + ofs, _V(0.127843, 0.814296, 0.393925) + ofs);
 
 	// Sextant_Eyepiece
 	const VECTOR3 Sextant_EyepieceLocation = { -0.140321, -0.591028, 0.268827 };
@@ -1156,12 +1153,11 @@ void Saturn::RegisterActiveAreas() {
 	// Ordeal Visibility
 	const VECTOR3 OrdealLocation = { -0.948518, 0.969146, -0.072308	};
 	oapiVCRegisterArea(AID_VC_Ordeal_Stowed, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Ordeal_Stowed, _V(-0.959825, 0.998349, -0.118766) + ofs, _V(-0.917711, 0.957305, -0.027033) + ofs, _V(-0.997506, 0.964799, -0.116478) + ofs, _V(-0.955392, 0.923755, -0.024745) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Ordeal_Stowed, _V(-0.951784, 0.990513, -0.101253) + ofs, _V(-0.909671, 0.949469, -0.00952) + ofs, _V(-0.989466, 0.956964, -0.098965) + ofs, _V(-0.947352, 0.915919, -0.007232) + ofs);
 
 	// Panel382Cover
-	const VECTOR3 Panel382CoverLocation = { -1.0863, 0.1907, -0.66875 };
 	oapiVCRegisterArea(AID_VC_Panel382_Cover, PANEL_REDRAW_NEVER, PANEL_MOUSE_RBDOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_Panel382_Cover, Panel382CoverLocation + ofs, 0.05);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel382_Cover, _V(-1.0863, 0.2566, -0.8203) + ofs, _V(-1.0863, 0.2566, -0.5172) + ofs, _V(-1.0863, 0.1248, -0.8203) + ofs, _V(-1.0863, 0.1248, -0.5172) + ofs);
 	
 	// Waste Disposal
 	const VECTOR3 WasteKnobLocation = { 1.0773, -0.255847, -0.165491 };
@@ -1191,7 +1187,7 @@ void Saturn::RegisterActiveAreas() {
 	// ORDEAL Rotary
 
 	oapiVCRegisterArea(AID_VC_ORDEAL_ROT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_LBPRESSED | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ORDEAL_ROT, _V(-0.887043, 1.03955, -0.090453) + ofs, _V(-0.868496, 1.02183, -0.050484) + ofs, _V(-0.922336, 1.00791, -0.088013) + ofs, _V(-0.9043, 0.990049, -0.048398) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_ORDEAL_ROT, _V(-0.87841, 1.03302, -0.073922) + ofs, _V(-0.859206, 1.01404, -0.031809) + ofs, _V(-0.915829, 0.999884, -0.071788) + ofs, _V(-0.896624, 0.980907, -0.029675) + ofs);
 
 	// Altimeter
 	oapiVCRegisterArea(AID_VC_ALTIMETER, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -2801,7 +2797,7 @@ void Saturn::InitVCAnimations() {
 	wasteDisposalAnim = -1;
 	panel382CoverAnim = -1;
 	altimeterCoverAnim = -1;
-	ordealAnim = -1;
+	ordealMeshAnim = -1;
 	DSKY_GlareshadeAnim = -1;
 	EMSDV_GlareshadeAnim = -1;
 	AccelerometerCoverAnim = -1;
@@ -3090,7 +3086,7 @@ void Saturn::DefineVCAnimations()
 
 
 	// Ordeal Animation
-	static UINT ordealMeshGrp[12] = { 
+	static UINT ordealMesh[12] = { 
 		VC_GRP_Screws_Panel13,
 		VC_GRP_Group_78_OrdealLighting,
 		VC_GRP_Group_78,
@@ -3105,34 +3101,31 @@ void Saturn::DefineVCAnimations()
 		VC_GRP_Sw_P13_06
 };
 
-	static MGROUP_ROTATE ordealMeshGrp01(0, ordealMeshGrp, 12, _V( -0.931150,  0.988850, -0.002250), _V(0.387345, -0.375881,  0.84183), (float)(45.0 * RAD));
-	static MGROUP_ROTATE ordealMeshGrp02(0, ordealMeshGrp, 12, _V( -0.931150,  0.988850, -0.002250), _V(0.746545,  0.663823, -0.04483), (float)(-25.0 * RAD));
+	static MGROUP_ROTATE ordealMesh_R01(0, ordealMesh, 12, _V( -0.931150,  0.988850, -0.002250), _V(0.766797, 0.641818, -0.00956), (float)(-35.0 * RAD));
+	static MGROUP_ROTATE ordealMesh_R02(0, ordealMesh, 12, _V( -0.931150,  0.988850, -0.002250), _V(0.64024, -0.763676,  0.083015), (float)(-87.0 * RAD));
 
-	static MGROUP_TRANSLATE ordealMeshGrp03(0, ordealMeshGrp, 12, _V(  0.031557,  -0.037579,  -0.031301));
-	static MGROUP_TRANSLATE ordealMeshGrp04(0, ordealMeshGrp, 12, _V(  0.029059,  -0.034604,  -0.028824));
-	static MGROUP_TRANSLATE ordealMeshGrp05(0, ordealMeshGrp, 12, _V( -0.050518,  -0.201660,   0.008873));
-	static MGROUP_TRANSLATE ordealMeshGrp06(0, ordealMeshGrp, 12, _V( -0.049230,  -0.221734,  -0.003313));
-	static MGROUP_TRANSLATE ordealMeshGrp07(0, ordealMeshGrp, 12, _V( -0.040632,  -0.251890,   0.048612));
-	static MGROUP_TRANSLATE ordealMeshGrp08(0, ordealMeshGrp, 12, _V( -0.016669,  -0.226370,   0.045975));
-	static MGROUP_TRANSLATE ordealMeshGrp09(0, ordealMeshGrp, 12, _V(  0.015551,  -0.181108,   0.035948));
-	static MGROUP_TRANSLATE ordealMeshGrp10(0, ordealMeshGrp, 12, _V(  0.006051,  -0.223136,   0.026523));
-	static MGROUP_TRANSLATE ordealMeshGrp11(0, ordealMeshGrp, 12, _V( -0.215483,  -0.000000,  -0.000000));
-	static MGROUP_TRANSLATE ordealMeshGrp12(0, ordealMeshGrp, 12, _V( -0.273740,  -0.000000,  -0.000000));
+	static MGROUP_TRANSLATE ordealMesh_T01(0, ordealMesh, 12, _V(  0.012060,  -0.028013,  -0.033155));
+	static MGROUP_TRANSLATE ordealMesh_T02(0, ordealMesh, 12, _V( -0.077039,   0.003031,  -0.107868));
+	static MGROUP_TRANSLATE ordealMesh_T03(0, ordealMesh, 12, _V(  0.039271,   0.080951,  -0.203302));
+	static MGROUP_TRANSLATE ordealMesh_T04(0, ordealMesh, 12, _V(  0.121482,   0.088115,  -0.137383));
+	static MGROUP_TRANSLATE ordealMesh_T05(0, ordealMesh, 12, _V(  0.050235,   0.058678,  -0.197738));
+	static MGROUP_TRANSLATE ordealMesh_T06(0, ordealMesh, 12, _V(  0.001584,   0.004693,  -0.176545));
 
-	ordealAnim = CreateAnimation(0.0);
-	AddAnimationComponent(ordealAnim, 0.08, 0.23, &ordealMeshGrp01); // Rotation
-	AddAnimationComponent(ordealAnim, 0.08, 0.31, &ordealMeshGrp02); // Rotation
+	static MGROUP_SCALE ordealMesh_S01 (0, ordealMesh, 12, _V(-0.915714, 1.02794, -0.100813), _V(0.0, 0.0, 0.0));
 
-	AddAnimationComponent(ordealAnim, 0.00,  0.10, &ordealMeshGrp03); // Translation
-	AddAnimationComponent(ordealAnim, 0.10,  0.20, &ordealMeshGrp04); // Translation
-	AddAnimationComponent(ordealAnim, 0.20,  0.30, &ordealMeshGrp05); // Translation
-	AddAnimationComponent(ordealAnim, 0.30,  0.40, &ordealMeshGrp06); // Translation
-	AddAnimationComponent(ordealAnim, 0.40,  0.50, &ordealMeshGrp07); // Translation
-	AddAnimationComponent(ordealAnim, 0.50,  0.60, &ordealMeshGrp08); // Translation
-	AddAnimationComponent(ordealAnim, 0.60,  0.70, &ordealMeshGrp09); // Translation
-	AddAnimationComponent(ordealAnim, 0.70,  0.80, &ordealMeshGrp10); // Translation
-	AddAnimationComponent(ordealAnim, 0.80,  0.90, &ordealMeshGrp11); // Translation
-	AddAnimationComponent(ordealAnim, 0.90,  1.00, &ordealMeshGrp12); // Translation
+	ordealMeshAnim = CreateAnimation(0.0);
+	AddAnimationComponent(ordealMeshAnim, 0.08, 0.30, &ordealMesh_R01); // Rotation
+	AddAnimationComponent(ordealMeshAnim, 0.50, 0.80, &ordealMesh_R02); // Rotation
+
+	AddAnimationComponent(ordealMeshAnim, 0.00,  0.17, &ordealMesh_T01); // Translation
+	AddAnimationComponent(ordealMeshAnim, 0.17,  0.33, &ordealMesh_T02); // Translation
+	AddAnimationComponent(ordealMeshAnim, 0.33,  0.50, &ordealMesh_T03); // Translation
+	AddAnimationComponent(ordealMeshAnim, 0.50,  0.67, &ordealMesh_T04); // Translation
+	AddAnimationComponent(ordealMeshAnim, 0.67,  0.83, &ordealMesh_T05); // Translation
+	AddAnimationComponent(ordealMeshAnim, 0.83,  1.00, &ordealMesh_T06); // Translation
+
+	// *** CHEATING CODE BECAUSE THE CABLE STICKS OUT OF THE STORAGE COMPARTMENT *** //
+	AddAnimationComponent(ordealMeshAnim, 0.999,  1.00, &ordealMesh_S01); // Scale it to 0
 
 	/// END TEST by JORDAN
 
@@ -5058,7 +5051,7 @@ void Saturn::DefineVCAnimations()
 	ORDEALSlewSwitch.DefineMeshGroup(VC_GRP_Sw_P13_06);
 
 	const VECTOR3	P13_ROT_AXIS = { 0.54191307344258, -0.645820796385401, -0.53781569314045 };
-	const VECTOR3 ORDEAL_RotLocation = { -0.8888, 1.0068, -0.0759 };
+	const VECTOR3 ORDEAL_RotLocation = { -0.887517, 1.00696,-0.051799 };
 
 	MainPanelVC.AddSwitch(&ORDEALAltSetRotary, AID_VC_ORDEAL_ROT);
 	ORDEALAltSetRotary.SetReference(ORDEAL_RotLocation, P13_ROT_AXIS);

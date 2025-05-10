@@ -417,6 +417,7 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 	opticscoveridx = -1;
 	seatsfoldedidx = -1;
 	seatsunfoldedidx = -1;
+	cmvccuecardsarrowsidx = -1;
 
 	if (SaturnHasCSM()) {
 
@@ -475,6 +476,10 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 		coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 		SetCOASMesh();
+
+		//Cue Cards Arrows
+		cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
+		SetVCCueCardsArrows();
 
 		//
 		// Don't Forget the Hatch

@@ -53,6 +53,7 @@ DWORD FloodLights_LMVC[] = {
 	VC_MAT_WaterControlModule_t,
 	VC_MAT_WindowsRim,
 	VC_MAT_FDAI_ball_LM_t,
+	VC_MAT_FDAI_errorneedle_t,
 	VC_MAT_LMVC_Tapemeter_t,
 	VC_MAT_MasterAlarm1,
 	VC_MAT_MasterAlarm2,

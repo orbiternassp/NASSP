@@ -1167,6 +1167,7 @@ void Saturn::initSaturn()
 	seatsunfoldedidx = -1;
 	coascdridx = -1;
 	coascdrreticleidx = -1;
+	cmvccuecardsarrowsidx = -1;
 
 	vcmesh = NULL;
 	vis = NULL;
@@ -1558,7 +1559,7 @@ void Saturn::SetAnimations(double simdt)
 	DoMeshAnimation(panel382CoverState, panel382CoverAnim, 0.5, simdt);
 	DoMeshAnimation(altimeterCoverState, altimeterCoverAnim, 2.0, simdt);
 	DoMeshAnimation(wasteDisposalState, wasteDisposalAnim, 1.0, simdt);
-	DoMeshAnimation(ordealState, ordealAnim, 3.0, simdt);
+	DoMeshAnimation(ordealState, ordealMeshAnim, 3.0, simdt);
 	DoMeshAnimation(DSKY_GlareshadeState, DSKY_GlareshadeAnim, 2.0, simdt);
 	DoMeshAnimation(EMSDV_GlareshadeState, EMSDV_GlareshadeAnim, 2.0, simdt);
 	DoMeshAnimation(AccelerometerCoverState, AccelerometerCoverAnim, 2.0, simdt);
@@ -1577,6 +1578,7 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	TRACE(buffer);
 
 	SetAnimations(simdt);
+	SetVCCueCardsArrows();
 
 	//
 	// We die horribly if you set 100x or higher acceleration during launch.

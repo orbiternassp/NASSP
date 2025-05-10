@@ -900,6 +900,10 @@ void SaturnV::SetThirdStageMesh (double offset)
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
 
+	//Cue Cards Arrows
+	cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
+	SetVCCueCardsArrows();
+
 	sidehatchidx = AddMesh (hFHC, &mesh_dir);
 	sidehatchopenidx = AddMesh (hFHO, &mesh_dir);
 	SetSideHatchMesh();

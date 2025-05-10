@@ -1238,6 +1238,8 @@ public:
 	///
 	void SetVCSeatsMesh();
 
+	void SetVCCueCardsArrows();
+
 	void SetCOASMesh();
 
 	void SetSIMBayPanelMesh();
@@ -1631,7 +1633,7 @@ protected:
 	AnimState altimeterCoverState;
 
 	/// Ordeal
-	UINT ordealAnim;
+	UINT ordealMeshAnim;
 	AnimState ordealState;
 
 	/// DSKY_Glareshade
@@ -4024,6 +4026,8 @@ protected:
 	int seatsunfoldedidx;
 	int coascdridx;
 	int coascdrreticleidx;
+	int cmvccuecardsarrowsidx;
+
 	DEVMESHHANDLE vcmesh;
 
 	double DockAngle;
@@ -4759,5 +4763,6 @@ extern MESHHANDLE hcmseatsfolded;
 extern MESHHANDLE hcmseatsunfolded;
 extern MESHHANDLE hcmCOAScdr;
 extern MESHHANDLE hcmCOAScdrreticle;
+extern MESHHANDLE hcmCueCardsArrows;
 
 #endif // _PA_SATURN_H
