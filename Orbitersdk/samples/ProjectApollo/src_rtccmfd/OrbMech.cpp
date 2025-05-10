@@ -285,6 +285,18 @@ namespace OrbMech{
 		sprintf(buf, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
 	}
 
+	void format_declination_HHMM(char *buf, double decl)
+	{
+		// Format declination to +HH:MM, input in arc seconds
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(decl), hours, minutes, seconds, 60.0);
+		if (decl < 0.0) hours = -hours;
+
+		sprintf(buf, "%+03d:%02d", hours, minutes);
+	}
+
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V)
 	{
 		R = _V(cos(decl)*cos(rtasc), cos(decl)*sin(rtasc), sin(decl))*rmag;
@@ -3423,6 +3435,20 @@ int DoubleToDEDA(double x, double q)
 	return out;
 }
 
+int AEAToSigned(int val)
+{
+	if (val >= 0400000)
+	{
+		return -(01000000 - val);
+	}
+	return val;
+}
+
+double AEAToDouble(int val, int SF)
+{
+	return pow(2, SF)*(double)(AEAToSigned(val));
+}
+
 double DecToDouble(int dec1, int dec2)
 {
 	if (dec1 > 037777)
@@ -4755,15 +4781,10 @@ void AOTStarAcquisition(VECTOR3 navstar, MATRIX3 REFSMMAT, VECTOR3 IMU, double A
 		theta = PI2 - theta;
 	}
 	YROT = PI2 + theta + AZ;
-	if (YROT >= PI2)
-	{
-		YROT -= PI2;
-	}
+	normalizeAngle(YROT);
+
 	SROT = YROT + 12.0*acos(C1);
-	if (SROT >= PI2)
-	{
-		SROT -= PI2;
-	}
+	normalizeAngle(SROT);
 }
 
 bool LMCOASCheckStar(VECTOR3 SI, MATRIX3 RMAT, VECTOR3 IMU, int Axis, double &EL, double &SPX)

@@ -197,7 +197,7 @@ public:
 	void TLIProcessorCalc();
 	void SaturnVTLITargetUplink();
 	int GetVesselParameters(bool IsCSM, int docked, int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass);
-	int menuCalculateIMUComparison(bool IsCSM);
+	int menuCalculateAttitudeComparison(bool IsCSM, bool IsAGC);
 	void menuCalculateIMUParkingAngles(agc_t* agc);
 
 	int startSubthread(int fcn, bool IsCSM = true);
@@ -384,6 +384,7 @@ public:
 	LunarTargetingProgramOutput LUNTAR_Output;
 
 	//DEBUG
+	bool DebugLMComputer; //true = LGC, false = AGS
 	VECTOR3 DebugIMUTorquingAngles;
 
 	//IMU PARKING ANGLES

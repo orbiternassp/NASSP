@@ -166,32 +166,32 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			for (int i = 0; i < GC->rtcc->TwoImpMultDispBuffer.Solutions; i++)
 			{
 				sprintf(Buffer, "%.1lf", GC->rtcc->TwoImpMultDispBuffer.data[i].DELV1);
-				skp->Text(CW * 7, CH * (12 + i), Buffer, strlen(Buffer));
+				Text(skp, 7, 12 + i, Buffer);
 				sprintf(Buffer, "%.1lf", GC->rtcc->TwoImpMultDispBuffer.data[i].YAW1);
-				skp->Text(CW * 14, CH * (12 + i), Buffer, strlen(Buffer));
+				Text(skp, 14, 12 + i, Buffer);
 				sprintf(Buffer, "%.1lf", GC->rtcc->TwoImpMultDispBuffer.data[i].PITCH1);
-				skp->Text(CW * 20, CH * (12 + i), Buffer, strlen(Buffer));
+				Text(skp, 20, 12 + i, Buffer);
 				GET_Display(Buffer, GC->rtcc->TwoImpMultDispBuffer.data[i].Time2, false);
-				skp->Text(CW * 30, CH * (12 + i), Buffer, strlen(Buffer));
+				Text(skp, 30, 12 + i, Buffer);
 				sprintf(Buffer, "%.1lf", GC->rtcc->TwoImpMultDispBuffer.data[i].DELV2);
-				skp->Text(CW * 37, CH * (12 + i), Buffer, strlen(Buffer));
+				Text(skp, 37, 12 + i, Buffer);
 				if (GC->rtcc->TwoImpMultDispBuffer.showTPI)
 				{
 					GET_Display(Buffer, GC->rtcc->TwoImpMultDispBuffer.data[i].T_TPI, false);
-					skp->Text(CW * 49, CH * (12 + i), Buffer, strlen(Buffer));
+					Text(skp, 49, 12 + i, Buffer);
 				}
 				else
 				{
 					sprintf(Buffer, "%.1lf", GC->rtcc->TwoImpMultDispBuffer.data[i].YAW2);
-					skp->Text(CW * 44, CH * (12 + i), Buffer, strlen(Buffer));
+					Text(skp, 44, 12 + i, Buffer);
 					sprintf(Buffer, "%.1lf", GC->rtcc->TwoImpMultDispBuffer.data[i].PITCH2);
-					skp->Text(CW * 50, CH * (12 + i), Buffer, strlen(Buffer));
+					Text(skp, 50, 12 + i, Buffer);
 				}
 
 				sprintf(Buffer, "%c", GC->rtcc->TwoImpMultDispBuffer.data[i].L);
-				skp->Text(CW * 52, CH * (12 + i), Buffer, strlen(Buffer));
+				Text(skp, 52, 12 + i, Buffer);
 				sprintf(Buffer, "%d", GC->rtcc->TwoImpMultDispBuffer.data[i].C);
-				skp->Text(CW * 56, CH * (12 + i), Buffer, strlen(Buffer));
+				Text(skp, 56, 12 + i, Buffer);
 			}
 		}
 		break;
@@ -2935,7 +2935,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(CW, 2 * H / 14, Buffer, strlen(Buffer));
 
 		OrbMech::SStoHHMMSS(G->t_LunarLiftoff, hh, mm, secs, 0.01);
-		Text(skp, 12, 10, "%+06d HRS", hh);
+		Text(skp, 12, 11, "%+06d HRS", hh);
 		Text(skp, 12, 12, "%+06d MIN TIG", mm);
 		Text(skp, 12, 13, "%+07.2f SEC", secs);
 		Text(skp, 12, 14, "%+07.1f V (HOR)", GC->rtcc->PZLTRT.InsertionHorizontalVelocity / 0.3048);
@@ -3794,7 +3794,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			GET_Display(Buffer, G->SVDesiredGET, false);
 		}
-		skp->Text(CW * 42, CH * 2, Buffer, strlen(Buffer));
+		Text(skp, 42, 2, Buffer);
 
 		for (int i = 0; i < 021; i++)
 		{
@@ -7633,7 +7633,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(CW, 4 * H / 14, Buffer, strlen(Buffer));
 			skp->Text(CW, 10 * H / 14, "MAX:", 4);
 			GET_Display(Buffer, GC->rtcc->med_f77.T_max, false);
-			skp->Text(CW * 5, 10 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(CW * 6, 10 * H / 14, Buffer, strlen(Buffer));
 			if (GC->rtcc->med_f77.Site != "FCUA")
 			{
 				GET_Display(Buffer, GC->rtcc->med_f75_f77.T_Z, false);
@@ -8725,11 +8725,28 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(W / 2, CH / 2, "DEBUG", 5);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		CSMOrLMSelection(skp);
+		if (IsCSM == false)
+		{
+			if (G->DebugLMComputer) skp->Text(CW, 4 * H / 14, "LGC", 3);
+			else skp->Text(CW, 4 * H/ 14, "AGS", 3);
+		}
 		skp->Text(CW, 9 * H / 21, "Current REFSMMAT:", 17);
-		REFSMMATName(Buffer, G->REFSMMATcur);
-		skp->Text(CW, 10 * H / 21, Buffer, strlen(Buffer));
+		{
+			REFSMMATData *refsdata;
+			if (IsCSM)
+			{
+				refsdata = &GC->rtcc->EZJGMTX1.data[0];
+			}
+			else
+			{
+				refsdata = &GC->rtcc->EZJGMTX3.data[0];
+			}
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			GC->rtcc->FormatREFSMMATCode(RTCC_REFSMMAT_TYPE_CUR, refsdata->ID, Buffer);
+			skp->Text(CW, 10 * H / 21, Buffer, strlen(Buffer));
+		}
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-		skp->Text(W - CW, 5 * H / 14, "IMU Misalignment:", 16);
+		skp->Text(W - CW, 5 * H / 14, "Misalignment:", 12);
 		sprintf(Buffer, "%+.4lf°", G->DebugIMUTorquingAngles.x*DEG);
 		skp->Text(W - CW, 6 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%+.4lf°", G->DebugIMUTorquingAngles.y*DEG);

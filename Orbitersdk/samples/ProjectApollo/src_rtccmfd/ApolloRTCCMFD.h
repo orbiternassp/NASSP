@@ -765,7 +765,8 @@ public:
 	void UpdateLOSTDisplay();
 	void CalculateLOSTDOKOption();
 	void menuSetDebugPage();
-	void menuCalculateIMUComparison();
+	void menuCycleDebugLMComputer();
+	void menuCalculateAttitudeComparison();
 	void menuSetIMUParkingAnglesPage();
 	void menuCalculateIMUParkingAngles();
 	void menuSLVNavigationUpdateCalc();

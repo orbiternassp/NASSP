@@ -328,6 +328,8 @@ namespace OrbMech {
 	int DoubleToBuffer(double x, double q, int m);
 	void AGCSignedValue(int &val);
 	int DoubleToDEDA(double x, double q);
+	int AEAToSigned(int val);
+	double AEAToDouble(int val, int SF);
 	double cot(double a);
 	double sec(double a);
 	void fabs_vektor(double* vektor, int n);
@@ -459,6 +461,8 @@ namespace OrbMech {
 	//Time format HHH:MM:SS.CS
 	void format_time_HHHMMSSCS(char *buf, double time);
 	void format_time_prec(char *buf, double time);
+	//Declination format +HH:MM
+	void format_declination_HHMM(char *buf, double decl);
 }
 
 inline CELEMENTS operator+(const CELEMENTS &a, const CELEMENTS &b)
