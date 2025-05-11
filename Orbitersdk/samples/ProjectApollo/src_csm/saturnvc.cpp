@@ -3111,7 +3111,7 @@ void Saturn::DefineVCAnimations()
 	static MGROUP_TRANSLATE ordealMesh_T05(0, ordealMesh, 12, _V(  0.050235,   0.058678,  -0.197738));
 	static MGROUP_TRANSLATE ordealMesh_T06(0, ordealMesh, 12, _V(  0.001584,   0.004693,  -0.176545));
 
-	static MGROUP_SCALE ordealMesh_S01 (0, ordealMesh, 12, _V(-0.915714, 1.02794, -0.100813), _V(0.0, 0.0, 0.0));
+	static MGROUP_SCALE ordealMesh_S01 (0, ordealMesh, 12, _V(-0.824427, 1.21234, -0.996724), _V(0.7, 0.7, 0.7));
 
 	ordealMeshAnim = CreateAnimation(0.0);
 	AddAnimationComponent(ordealMeshAnim, 0.08, 0.30, &ordealMesh_R01); // Rotation
@@ -3125,7 +3125,7 @@ void Saturn::DefineVCAnimations()
 	AddAnimationComponent(ordealMeshAnim, 0.83,  1.00, &ordealMesh_T06); // Translation
 
 	// *** CHEATING CODE BECAUSE THE CABLE STICKS OUT OF THE STORAGE COMPARTMENT *** //
-	AddAnimationComponent(ordealMeshAnim, 0.999,  1.00, &ordealMesh_S01); // Scale it to 0
+	AddAnimationComponent(ordealMeshAnim, 0.50,  0.80, &ordealMesh_S01); // Scale it to 70%
 
 	/// END TEST by JORDAN
 
