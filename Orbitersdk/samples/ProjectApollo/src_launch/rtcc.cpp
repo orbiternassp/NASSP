@@ -244,7 +244,33 @@ bool papiReadConfigFile_PTPSite(char *line, char *item, std::string &PTPSite, do
 	return false;
 }
 
-bool papiReadConfigFile_CGTable(char *line, char *item, double *WeightTable, VECTOR3 *CGTable)
+void papiSave_CGTable(FILEHANDLE scn, RTCCSystemParameters::CGTable *tab, char *item)
+{
+	char buffer[256];
+
+	for (int i = 0; i < tab->N; i++)
+	{
+		sprintf(buffer, "%d %lf %lf %lf %lf", i, tab->Weight[i] / 0.453597, tab->CG[i].x / 0.0254, tab->CG[i].y / 0.0254, tab->CG[i].z / 0.0254);
+		oapiWriteScenario_string(scn, item, buffer);
+	}
+	sprintf(buffer, "%s_N", item);
+	oapiWriteScenario_int(scn, buffer, tab->N);
+}
+
+void papiSave_ThrustTable(FILEHANDLE scn, RTCCSystemParameters::ThrustTable *tab, char *item)
+{
+	char buffer[256];
+
+	for (int i = 0; i < tab->N; i++)
+	{
+		sprintf(buffer, "%d %lf %lf %lf", i, tab->Weight[i] / 0.453597, tab->Thrust[i].x * LBF, tab->Thrust[i].y / 0.453597);
+		oapiWriteScenario_string(scn, item, buffer);
+	}
+	sprintf(buffer, "%s_N", item);
+	oapiWriteScenario_int(scn, buffer, tab->N);
+}
+
+bool papiReadConfigFile_CGTable(char *line, char *item, RTCCSystemParameters::CGTable &tab)
 {
 	char buffer[256];
 
@@ -259,10 +285,35 @@ bool papiReadConfigFile_CGTable(char *line, char *item, double *WeightTable, VEC
 			{
 				if (num >= 0 && num <= 39)
 				{
-					WeightTable[num] = W * 0.453597;
-					CGTable[num] = CG * 0.0254;
+					tab.Weight[num] = W * 0.453597;
+					tab.CG[num] = CG * 0.0254;
 				}
 
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+bool papiReadConfigFile_ThrustTable(char *line, char *item, RTCCSystemParameters::ThrustTable &tab)
+{
+	char buffer[256];
+
+	if (sscanf(line, "%s", buffer) == 1)
+	{
+		if (!strcmp(buffer, item))
+		{
+			int num;
+			double W, Thrust, WLR;
+			if (sscanf(line, "%s %d %lf %lf %lf", buffer, &num, &W, &Thrust, &WLR) == 5)
+			{
+				if (num >= 0 && num <= 39)
+				{
+					tab.Weight[num] = W * 0.453597;
+					tab.Thrust[num].x = Thrust / LBF;
+					tab.Thrust[num].y = WLR * 0.453597;
+				}
 				return true;
 			}
 		}
@@ -2581,12 +2632,18 @@ bool RTCC::LoadMissionConstantsFile(std::string file)
 				}
 			}
 
-			papiReadConfigFile_CGTable(Buff, "MHVCCG", SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG);
+			papiReadConfigFile_CGTable(Buff, "MHVCCG", SystemParameters.MHVCCG);
 			papiReadScenario_int(Buff, "MHVCCG_N", SystemParameters.MHVCCG.N);
-			papiReadConfigFile_CGTable(Buff, "MHVLCG", SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG);
+			papiReadConfigFile_CGTable(Buff, "MHVLCG", SystemParameters.MHVLCG);
 			papiReadScenario_int(Buff, "MHVLCG_N", SystemParameters.MHVLCG.N);
-			papiReadConfigFile_CGTable(Buff, "MHVACG", SystemParameters.MHVACG.Weight, SystemParameters.MHVACG.CG);
+			papiReadConfigFile_CGTable(Buff, "MHVACG", SystemParameters.MHVACG);
 			papiReadScenario_int(Buff, "MHVACG_N", SystemParameters.MHVACG.N);
+			papiReadConfigFile_ThrustTable(Buff, "MHTSTC", SystemParameters.MHTSTC);
+			papiReadScenario_int(Buff, "MHTSTC_N", SystemParameters.MHTSTC.N);
+			papiReadConfigFile_ThrustTable(Buff, "MHTATC", SystemParameters.MHTATC);
+			papiReadScenario_int(Buff, "MHTATC_N", SystemParameters.MHTATC.N);
+			papiReadConfigFile_ThrustTable(Buff, "MHTDTC", SystemParameters.MHTDTC);
+			papiReadScenario_int(Buff, "MHTDTC_N", SystemParameters.MHTDTC.N);
 			papiReadScenario_int(Buff, "MGTESE", SystemParameters.MGTESE);
 			papiReadScenario_int(Buff, "MMTESE", SystemParameters.MMTESE);
 		}
@@ -6378,6 +6435,14 @@ void RTCC::SaveState(FILEHANDLE scn) {
 			papiWriteScenario_Station(scn, "RTCC_EZLASITE", i, EZLASITE.Data[i]);
 		}
 	}
+	//CG tables. TBD: Don't save these yet because there is no point to saving them until the actual CG calculations are more complex.
+	//papiSave_CGTable(scn, &SystemParameters.MHVLCG, "MHVLCG");
+	//papiSave_CGTable(scn, &SystemParameters.MHVACG, "MHVACG");
+	//papiSave_CGTable(scn, &SystemParameters.MHVCCG, "MHVCCG");
+	//Thrust tables
+	papiSave_ThrustTable(scn, &SystemParameters.MHTSTC, "MHTSTC");
+	papiSave_ThrustTable(scn, &SystemParameters.MHTATC, "MHTATC");
+	papiSave_ThrustTable(scn, &SystemParameters.MHTDTC, "MHTDTC");
 
 	SAVE_DOUBLE("RTCC_P30TIG", TimeofIgnition);
 	SAVE_DOUBLE("RTCC_SplLat", SplashLatitude);
@@ -6664,6 +6729,20 @@ void RTCC::LoadState(FILEHANDLE scn) {
 
 		LOAD_INT("RTCC_EZLASITE_REF", EZLASITE.REF);
 		papiReadScenario_Station(line, "RTCC_EZLASITE", EZLASITE.Data);
+
+		papiReadConfigFile_CGTable(line, "MHVCCG", SystemParameters.MHVCCG);
+		papiReadScenario_int(line, "MHVCCG_N", SystemParameters.MHVCCG.N);
+		papiReadConfigFile_CGTable(line, "MHVLCG", SystemParameters.MHVLCG);
+		papiReadScenario_int(line, "MHVLCG_N", SystemParameters.MHVLCG.N);
+		papiReadConfigFile_CGTable(line, "MHVACG", SystemParameters.MHVACG);
+		papiReadScenario_int(line, "MHVACG_N", SystemParameters.MHVACG.N);
+
+		papiReadConfigFile_ThrustTable(line, "MHTSTC", SystemParameters.MHTSTC);
+		papiReadScenario_int(line, "MHTSTC_N", SystemParameters.MHTSTC.N);
+		papiReadConfigFile_ThrustTable(line, "MHTATC", SystemParameters.MHTATC);
+		papiReadScenario_int(line, "MHTATC_N", SystemParameters.MHTATC.N);
+		papiReadConfigFile_ThrustTable(line, "MHTDTC", SystemParameters.MHTDTC);
+		papiReadScenario_int(line, "MHTDTC_N", SystemParameters.MHTDTC.N);
 
 		LOAD_DOUBLE("RTCC_P30TIG", TimeofIgnition);
 		LOAD_DOUBLE("RTCC_SplLat", SplashLatitude);
@@ -11988,7 +12067,7 @@ void RTCC::LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscen
 	EphemerisData sv_CSM_TIG;
 	MATRIX3 Rot;
 	VECTOR3 R0, V0, R, V, U_FDP, U_M, u, R0_proj, U_R, Q;
-	double r_LS, t_go, Thrust, w_M, dt, t_total, dv, isp, m1, t_total_old, R_D, Y, CR;
+	double r_LS, t_go, Thrust, w_M, dt, t_total, dv, m1, t_total_old, R_D, Y, CR, RY, RZ, WDOT;
 	bool stop = false;
 
 	//Null ascent dv and burn time
@@ -12030,8 +12109,13 @@ void RTCC::LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscen
 
 	while (stop == false)
 	{
-		asc.Guidance(R, V, m1, t_total, U_FDP, t_go, Thrust, isp);
-		stop = integ.Integration(R, V, m1, t_total, U_FDP, t_go, Thrust, isp);
+		//Get thrust from APS thrust table
+		GIMGBL(0.0, m1, RY, RZ, Thrust, WDOT, RTCC_ENGINETYPE_LMAPS, 12, 0, 1, 0.0);
+		//Calculate thrust direction and time-to-go
+		asc.Guidance(R, V, m1, Thrust, t_total, U_FDP, t_go);
+		//Integrate for one step
+		stop = integ.Integration(R, V, m1, t_total, U_FDP, t_go, Thrust, Thrust / WDOT);
+		//Accumulate DV
 		dv += Thrust / m1 * (t_total - t_total_old);
 		t_total_old = t_total;
 	}
@@ -12216,11 +12300,10 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	MATRIX3 Rot, Q_Xx, REFSMMAT;
 	VECTOR3 U_FDP, WM, WI, W, R_LSP, U_FDP_abort;
 	double GMT_LAND, t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, t_Ins, TS, theta, r_Ins, A_Ins, H_a, t_CSI, DH_D;
-	double SLOPE, dV_Inc, dh_apo, w_M, V_H_min, t_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo, t_go_abort;
+	double SLOPE, dV_Inc, dh_apo, w_M, V_H_min, t_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo, t_go_abort, RY, RZ, WDOT;
 	int K_loop;
-	bool K_stage;
-	//false = CSI/CDH, true = Boost + CSI/CDH
-	bool K3;
+	bool K_stage; //false = staging has not happened yet, true = staging has happened
+	bool K3; //false = CSI/CDH, true = Boost + CSI/CDH
 	bool LandFlag = false;
 	bool InsertionFlag = false;
 	bool stop = false;
@@ -12333,11 +12416,19 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 					{
 						K_stage = true;
 						W_TA = opt.W_TAPS;
-						ascguid.SetThrustParams(true);
+						ascguid.SetThrustParams(W_TA, true);
 					}
 				}
-
-				ascguid.Guidance(sv_D.sv.R, sv_D.sv.V, W_TA, t, U_FDP, t_go, T, isp);
+				//Get actual engine performance
+				if (K_stage)
+				{
+					GIMGBL(0.0, W_TA, RY, RZ, T, WDOT, RTCC_ENGINETYPE_LMAPS, 12, 0, 1, 0.0);
+				}
+				else
+				{
+					GIMGBL(0.0, W_TA, RY, RZ, T, WDOT, RTCC_ENGINETYPE_LMDPS, 12, 0, 0, 0.0);
+				}
+				ascguid.Guidance(sv_D.sv.R, sv_D.sv.V, W_TA, T, t, U_FDP, t_go);
 				if (dotp(U_FDP, integ.GetCurrentTD()) < 0)
 				{
 					if (acos(dotp(integ.GetCurrentTD(), unit(sv_D.sv.R))) > 30.0*RAD)
@@ -12345,7 +12436,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 						U_FDP = unit(sv_D.sv.R);
 					}
 				}
-				InsertionFlag = integ.Integration(sv_D.sv.R, sv_D.sv.V, W_TA, t, U_FDP, t_go, T, isp);
+				InsertionFlag = integ.Integration(sv_D.sv.R, sv_D.sv.V, W_TA, t, U_FDP, t_go, T, T / WDOT);
 			} while (InsertionFlag == false);
 			t_Ins = t;
 			sv_LM_Ins = sv_D;
@@ -28930,6 +29021,110 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		SystemParameters.MDVSTP.T4IG = T4IG;
 		SystemParameters.MDVSTP.T4C = T4C;
 	}
+	//CSM and LM thruster characteristics
+	else if (med == "10")
+	{
+		//Item 1: Thruster
+		rtcc::AddTextMEDItem(opt, 1, { "S", "A", "D" });
+		//Item 2: Number of entries in table
+		rtcc::AddIntegerMEDItem(opt, 0, true, true, 1, 40);
+		//Item 3: Entry no. of this set
+		rtcc::AddIntegerMEDItem(opt, 1, true, true, 1, 40);
+		//Item 4: Weight
+		rtcc::AddDoubleMEDItem(opt, 1, true, false, 1.0 / (LBS * 1000.0), 1000.0);
+		//Item 5: Thrust Level
+		rtcc::AddDoubleMEDItem(opt, 1, true, true, 1.0 / LBF, 0.0, 28000.0);
+		//Item 6: Weight loss rate
+		rtcc::AddDoubleMEDItem(opt, 1, true, false, 1.0 / (LBS * 1000.0), 0.0);
+		//Item 7: Transfer indicator
+		rtcc::AddTextMEDItem(opt, 2, { "0", "T" }, 0);
+
+		int err = rtcc::GenericMEDProcessing(opt, data, out);
+		if (err)
+		{
+			return err;
+		}
+		RTCCSystemParameters::ThrustTable *tab;
+		if (out.Values[0].i == 0)
+		{
+			tab = &SystemParameters.MHTSTC;
+		}
+		else if (out.Values[0].i == 1)
+		{
+			tab = &SystemParameters.MHTATC;
+		}
+		else
+		{
+			tab = &SystemParameters.MHTDTC;
+		}
+		if (out.Ignored[1] == false)
+		{
+			tab->N = out.Values[1].i;
+		}
+		if (out.Values[2].i > tab->N)
+		{
+			return 2;
+		}
+		//TBD: Error checks
+		int m = out.Values[2].i - 1;
+		tab->Weight[m] = out.Values[3].d;
+		tab->Thrust[m].x = out.Values[4].d;
+		tab->Thrust[m].y = out.Values[5].d;
+	}
+	//CSM and LM CG characteristics
+	else if (med == "11")
+	{
+		//Item 1: Vehicle
+		rtcc::AddTextMEDItem(opt, 1, { "C", "L", "A" });
+		//Item 2: Number of entries in table
+		rtcc::AddIntegerMEDItem(opt, 0, true, true, 1, 40);
+		//Item 3: Entry no. of this set
+		rtcc::AddIntegerMEDItem(opt, 1, true, true, 1, 40);
+		//Item 4: Weight
+		rtcc::AddDoubleMEDItem(opt, 1, true, false, 1.0 / (LBS * 1000.0), 1000.0);
+		//Item 5: X-coordinate
+		rtcc::AddDoubleMEDItem(opt, 1, false, false, 0.0254);
+		//Item 6: Y-coordinate
+		rtcc::AddDoubleMEDItem(opt, 1, false, false, 0.0254);
+		//Item 7: Z-coordinate
+		rtcc::AddDoubleMEDItem(opt, 1, false, false, 0.0254);
+		//Item 8: Transfer indicator
+		rtcc::AddTextMEDItem(opt, 2, { "0", "T" }, 0);
+
+		int err = rtcc::GenericMEDProcessing(opt, data, out);
+		if (err)
+		{
+			return err;
+		}
+		RTCCSystemParameters::CGTable *tab;
+		if (out.Values[0].i == 0)
+		{
+			tab = &SystemParameters.MHVCCG;
+		}
+		else if (out.Values[0].i == 1)
+		{
+			tab = &SystemParameters.MHVLCG;
+		}
+		else
+		{
+			tab = &SystemParameters.MHVACG;
+		}
+		if (out.Ignored[1] == false)
+		{
+			tab->N = out.Values[1].i;
+		}
+		if (out.Values[2].i > tab->N)
+		{
+			return 2;
+		}
+		//TBD: Error checks
+		int m = out.Values[2].i - 1;
+		tab->Weight[m] = out.Values[3].d;
+		tab->CG[m].x = out.Values[4].d;
+		tab->CG[m].y = out.Values[5].d;
+		tab->CG[m].z = out.Values[6].d;
+	}
+	//
 	else if (med == "40")
 	{
 		if (data.size() < 1)

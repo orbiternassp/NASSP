@@ -2939,8 +2939,7 @@ public:
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
 	//Gimbal, Thrust and Weight Loss Rate Subroutine
-	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned &IC, int IA, int IJ, double D);
-	VECTOR3 GIMGB2(const double *WArr, const VECTOR3 *VecArr, int N, double W);
+	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned IC, int IA, int IJ, double D);
 	// MISSION PLANNING (P)
 	//LM AGS External DV Coordinate Transformation Subroutine
 	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
