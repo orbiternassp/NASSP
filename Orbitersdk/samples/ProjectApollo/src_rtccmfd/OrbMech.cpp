@@ -3411,6 +3411,20 @@ int DoubleToDEDA(double x, double q)
 	return out;
 }
 
+int AEAToSigned(int val)
+{
+	if (val >= 0400000)
+	{
+		return -(01000000 - val);
+	}
+	return val;
+}
+
+double AEAToDouble(int val, int SF)
+{
+	return pow(2, SF)*(double)(AEAToSigned(val));
+}
+
 double DecToDouble(int dec1, int dec2)
 {
 	if (dec1 > 037777)

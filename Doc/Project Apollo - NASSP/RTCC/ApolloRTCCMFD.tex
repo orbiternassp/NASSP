@@ -1612,6 +1612,8 @@ On the left side of this page appear the input parameters that are automatically
 \textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\
 \textbf{TYP:} Choose the type of vehicle configuration (CSM or LM, docked or undocked).\\
 \textbf{STA:} Choose the type of LM configuration that is currently being used, ascent or descent configuration.\\
+\textbf{CG:} Page for changing the thrust and CG tables. The CG tables are used to determine e.g. SPS trim gimbal angles. The tables are a function of weight of the vehicle. The CG tables contain the center of gravity in 3 dimensions, while the thrust tables contain thrust and weight loss rate of the selected thruster. There are default tables; alternative an initial table can be loaded in the RTCC mission constants file. Afterwards the table are being saved and loaded in scenarios. Note that presently the CG tables are not saved in scenarios!
+
 \textbf{DAT:} Choose the launch date for the mission.\\
 \textbf{TIM:} Choose the launch time for the mission. This will update the launch time of the CSM stored in the RTCC.\\
 \textbf{EPO:} Choose the AGC epoch. Usually this is a MJD at around January 1st of the yearly coordinate system defining period. This value should be automatically chose correctly for the AGC version in use.\\
@@ -1870,6 +1872,87 @@ Select the target point like in example 1. Two input values have to be tweaked m
 \end{tabbing}
 \newpage
 
+\textbf{MED Code}: M10\\
+\textbf{Purpose}: CSM and LM thrust characteristics\\
+\textbf{Example}: \texttt{M10,S,,1,20000,20673,65.62;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &Thruster Code&Total no. of entries in table&Entry no. of this set&Weight&Thrust Level&Weight Loss Rate\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FXP&FXP&FLP&FLP&FLP \\
+ \hline
+ \textbf{Input Units} &S, A, D&&&lbs&lbf&lbs\\
+ \hline
+ \textbf{Checking Option}&&1$\leq$X$\leq$40&1$\leq$X$\leq$40&X$\geq$1000&0$\leq$X$\leq$28000&\\
+ \hline
+ \textbf{Missing Item Option}&Error&Ignore&Error&Error&Error&Error\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+
+\newpage
+
+\textbf{MED Code}: M11\\
+\textbf{Purpose}: CSM and LM CG characteristics\\
+\textbf{Example}: \texttt{M11,C,,1,20000,1.0,2.0,3.0;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &Vehicle&Total no. of entries in table&Entry no. of this set&Weight&X coordinate of CG&Y coordinate of CG\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FXP&FXP&FLP&FLP&FLP \\
+ \hline
+ \textbf{Input Units} &C, L, A&&&lbs&inches&inches\\
+ \hline
+ \textbf{Checking Option}&&1$\leq$X$\leq$40&1$\leq$X$\leq$40&&&\\
+ \hline
+ \textbf{Missing Item Option}&Error&Ignore&Error&Error&Error&Error\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+\newpage
+\textbf{MED Code}: M11 (cont.)\\
+\textbf{Purpose}: \\
+\textbf{Example}: \\
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &Z coordinate of CG&&&&&\\
+ \hline
+ \textbf{Input Format} &FLP&&&&& \\
+ \hline
+ \textbf{Input Units} &inches&&&&& \\
+ \hline
+ \textbf{Checking Option}&&&&&&\\
+ \hline
+ \textbf{Missing Item Option}&Error&&&&&\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+
+\newpage
 \textbf{MED Code}: M49\\
 \textbf{Purpose}: Change fuel remaining weights\\
 \textbf{Example}: \texttt{M49,CSM,20000;}
@@ -3245,6 +3328,18 @@ MHVACG\_N&Number of entries in LM ascent stage CG table&14&\\
 \begin{tabular}{L{3cm} L{7cm} L{2.5cm} L{1.5cm}}
 \hline
 \textbf{Name} & \textbf{Description} & \textbf{Default Value} & \textbf{Unit}\\
+\hline
+MHTSTC&SPS thrust table&20500 lbf and 65.27 lbs &lbf and lbs/sec\\
+\hline
+MHTSTC\_N&Number of entries in SPS thrust table&1&\\
+\hline
+MHTATC&APS thrust table&3439 lbf and 11.31 lbs/sec&lbf and lbs/sec\\
+\hline
+MHTATC\_N&Number of entries in APS thrust table&1&\\
+\hline
+MHTDTC&DPS thrust table&9712.5 lbf and 32.27 lbs/sec&lbf and lbs/sec\\
+\hline
+MHTDTC\_N&Number of entries in DPS thrust table&1&\\
 \hline
 MGTESE&Number of tesseral and sectorial coefficients in Earth potential&0 (use 4 in Open Orbiter)&\\
 \hline

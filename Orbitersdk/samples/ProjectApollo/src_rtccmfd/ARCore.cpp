@@ -806,6 +806,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	iuUplinkResult = 0;
 
+	DebugLMComputer = true;
 	DebugIMUTorquingAngles = _V(0, 0, 0);
 
 	for (int i = 0; i < 6; i++)
@@ -6135,14 +6136,13 @@ int ARCore::GetVesselParameters(bool IsCSM, int docked, int Thruster, int &Confi
 	return 0;
 }
 
-int ARCore::menuCalculateIMUComparison(bool IsCSM)
+int ARCore::menuCalculateAttitudeComparison(bool IsCSM, bool IsAGC)
 {
 	MATRIX3 M_BRCS_SM; //BRCS to stable member, right handed
 	MATRIX3 M_NB_ECL; //Local vessel to global ecliptic
 	MATRIX3 M_SM_NB_est; //Stable member to navigation base, estimated
 	MATRIX3 M_SM_NB_act; //Stable member to navigation base, actual
 	MATRIX3 M_ECL_BRCS; //Ecliptic to BRCS
-	VECTOR3 IMUAngles;
 	VESSEL *v;
 
 	if (IsCSM)
@@ -6161,7 +6161,9 @@ int ARCore::menuCalculateIMUComparison(bool IsCSM)
 		if (utils::IsVessel(v, utils::Saturn) == false) return 2;
 
 		M_BRCS_SM = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
-		IMUAngles = ((Saturn*)v)->imu.GetTotalAttitude();
+		VECTOR3 IMUAngles = ((Saturn*)v)->imu.GetTotalAttitude();
+		//Stable member to navigation base conversion with current IMU alignment
+		M_SM_NB_est = OrbMech::CALCSMSC(IMUAngles);
 
 		//Get actual orientation (left handed)
 		v->GetRotationMatrix(M_NB_ECL);
@@ -6173,7 +6175,33 @@ int ARCore::menuCalculateIMUComparison(bool IsCSM)
 		if (utils::IsVessel(v, utils::LEM) == false) return 2;
 
 		M_BRCS_SM = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
-		IMUAngles = ((LEM*)v)->imu.GetTotalAttitude();
+		if (IsAGC)
+		{
+			//LGC
+			VECTOR3 IMUAngles = ((LEM*)v)->imu.GetTotalAttitude();
+			//Stable member to navigation base conversion with current IMU alignment
+			M_SM_NB_est = OrbMech::CALCSMSC(IMUAngles);
+		}
+		else
+		{
+			//AGS
+			ags_t *vags = &((LEM*)v)->aea.vags;
+			int vals[9];
+			vals[0] = vags->Memory[0130];
+			vals[1] = vags->Memory[0131];
+			vals[2] = vags->Memory[0132];
+			vals[3] = vags->Memory[0140];
+			vals[4] = vags->Memory[0141];
+			vals[5] = vags->Memory[0142];
+			vals[6] = vags->Memory[0134];
+			vals[7] = vags->Memory[0135];
+			vals[8] = vags->Memory[0136];
+
+			for (int i = 0; i < 9; i++)
+			{
+				M_SM_NB_est.data[i] = OrbMech::AEAToDouble(vals[i], -16);
+			}
+		}
 
 		//Get actual orientation (left handed)
 		v->GetRotationMatrix(M_NB_ECL);
@@ -6181,8 +6209,7 @@ int ARCore::menuCalculateIMUComparison(bool IsCSM)
 		M_NB_ECL = mul(MatrixRH_LH(M_NB_ECL), _M(0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0));
 	}
 
-	//Stable member to navigation base conversion with current IMU alignment
-	M_SM_NB_est = OrbMech::CALCSMSC(IMUAngles);
+	
 	//Get ecliptic to BRCS rotation matrix from RTCC system parameters
 	M_ECL_BRCS = GC->rtcc->SystemParameters.MAT_J2000_BRCS;
 	//Actual stable member to navigation base conversion
