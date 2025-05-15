@@ -8874,11 +8874,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		skp->Text(W - CW, 5 * H / 14, "IMU Angles:", 11);
-		sprintf(Buffer, "OGA: %+.2lf°", G->IMUParkingAngles.x * DEG);
+		sprintf(Buffer, "OGA: %+07.2lf°", G->IMUParkingAngles.x * DEG);
 		skp->Text(W - CW, 6 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "IGA: %+.2lf°", G->IMUParkingAngles.y * DEG);
+		sprintf(Buffer, "IGA: %+07.2lf°", G->IMUParkingAngles.y * DEG);
 		skp->Text(W - CW, 7 * H / 14, Buffer, strlen(Buffer));
-		sprintf(Buffer, "MGA: %+.2lf°", G->IMUParkingAngles.z * DEG);
+		sprintf(Buffer, "MGA: %+07.2lf°", G->IMUParkingAngles.z * DEG);
 		skp->Text(W - CW, 8 * H / 14, Buffer, strlen(Buffer));
 		break;
 	}
