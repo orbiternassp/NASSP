@@ -1722,15 +1722,15 @@ void Saturn::RegisterActiveAreas() {
 
 	// Front of floodlight
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_15, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_15, _V(0.270, 0.995, -0.331) + ofs, _V(0.350, 0.995, -0.331) + ofs, _V(0.270, 0.863, -0.26) + ofs, _V(0.350, 0.863, -0.26) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_15, _V(0.270, 0.995, -0.26) + ofs, _V(0.350, 0.995, -0.26) + ofs, _V(0.270, 0.863, -0.331) + ofs, _V(0.350, 0.863, -0.331) + ofs);
 
 	// Next to panel 229
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_16, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_16, _V(1.076, 0.125, -0.04) + ofs, _V(1.075, 0.020, -0.04) + ofs, _V(1.075, 0.02, -0.23) + ofs, _V(1.076, 0.09, -0.23) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_16, _V(1.076, 0.125, -0.04) + ofs, _V(1.075, 0.020, -0.04) + ofs, _V(1.076, 0.09, -0.23) + ofs, _V(1.075, 0.02, -0.23) + ofs);
 
 	// Above window 5
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_17, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_17, _V(0.95, 0.953, 0.08) + ofs, _V(1.02, 0.885, 0.06) + ofs, _V(1.12, 0.964, -0.144) + ofs, _V(1.026, 1.06, -0.117) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_17, _V(0.95, 0.953, 0.08) + ofs, _V(1.02, 0.885, 0.06) + ofs, _V(1.026, 1.06, -0.117) + ofs, _V(1.12, 0.964, -0.144) + ofs);
 }
 
 // --------------------------------------------------------------
