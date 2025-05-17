@@ -1350,8 +1350,7 @@ void Saturn::SetVCSeatsMesh() {
 }
 
 void Saturn::SetVCCueCardsArrows() {
-	bool viewArrows = checkControl.getFlashing();
-	if (viewArrows) {
+	if (checkControl.getFlashing() || ViewCueCardArrows) {
 		SetMeshVisibilityMode(cmvccuecardsarrowsidx, MESHVIS_VC);
 	} else {
 		SetMeshVisibilityMode(cmvccuecardsarrowsidx, MESHVIS_NEVER);

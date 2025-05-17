@@ -4030,6 +4030,8 @@ protected:
 
 	DEVMESHHANDLE vcmesh;
 
+	bool ViewCueCardArrows;
+
 	double DockAngle;
 
 	double 	Offset1st;

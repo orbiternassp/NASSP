@@ -3714,6 +3714,23 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 	if (enableVESIM) vesim.clbkConsumeBufferedKey(key, down, kstate);
 
+	// Help key for CueCard Arrows
+	if (KEYMOD_LCONTROL(kstate)) {
+		if (down) {
+			switch (key) {
+				case OAPI_KEY_H:
+					if (ViewCueCardArrows == true) {
+						ViewCueCardArrows = false;
+					}
+					else {
+						ViewCueCardArrows = true;
+					}
+					return 1;
+				}
+				return 0;
+		}
+	}
+
 	if (KEYMOD_SHIFT(kstate) && !KEYMOD_CONTROL(kstate) && !KEYMOD_ALT(kstate)){
 		// Do DSKY stuff
 		DSKYPushSwitch* dskyKeyChanged = nullptr;
