@@ -10370,15 +10370,30 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 	do
 	{
 		opt.GMT_CSI = GMT_CSI;
-		res.err = ConcentricRendezvousProcessor(opt, res);
+		ConcentricRendezvousProcessor(opt, res);
 		if (res.err)
 		{
-			//Time violation
-			if (res.err == 3)
+			switch (res.err)
 			{
+			case 3: //Time violation
 				RTCCONLINEMON.TextBuffer[0] = "TIME";
 				PMXSPT("PMMDKI", 92);
+				break;
+			case 4: //Periapsis violation
+				RTCCONLINEMON.TextBuffer[0] = "PERIAPSIS";
+				PMXSPT("PMMDKI", 92);
+				break;
+			case -2: //Reentrant
+				PMXSPT("PMMDKI", 88);
+				break;
 			}
+			//Set all plans as invalid
+			for (int i = 0; i < 7; i++)
+			{
+				PZDKIT.Block[i].PlanStatus = 0;
+			}
+			//Update display
+			PMDRET();
 			return;
 		}
 
@@ -10464,7 +10479,7 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 			TwoImpulseResuls lamres;
 
 			lam.mode = 5; //External request
-			lam.T1 = GMTfromGET(t_TPI);
+			lam.T1 = t_TPI;
 			lam.T2 = -1; //Find based on WT
 			lam.sv_C = res.sv_C[2];
 			lam.sv_T = res.sv_T[2];
@@ -10484,8 +10499,8 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 			PZDKIT.Block[0].NumMan++;
 
 			//Coast to TPF
-			res.sv_C[3] = coast(res.sv_C_apo[2], lamres.T2 - res.sv_C_apo[2].sv.GMT);
-			res.sv_T[3] = coast(res.sv_T[2], lamres.T2 - res.sv_T[2].sv.GMT);
+			res.sv_C[3] = coast(res.sv_C_apo[2], lamres.sv_tig2.GMT - res.sv_C_apo[2].sv.GMT);
+			res.sv_T[3] = coast(res.sv_T[2], lamres.sv_tig2.GMT - res.sv_T[2].sv.GMT);
 
 			//Save post TPF state vector
 			res.sv_C_apo[3] = res.sv_C[3];
@@ -10580,35 +10595,59 @@ void RTCC::PCPICK(AEGHeader header, AEGDataBlock sv_C, AEGDataBlock sv_T, double
 void RTCC::PCPICK(VehicleDataBlock sv_C, VehicleDataBlock sv_T, double &DH, double &Phase, double &HA, double &HP)
 {
 	VehicleDataBlock sv_TC;
-	double mu, RA, RP, R_E, DT, TA;
+	CELEMENTS coe;
+	double mu, J2, RA, RP, R_E, DT, TA;
 	Phase = OrbMech::PHSANG(sv_T.sv.R, sv_T.sv.V, sv_C.sv.R);
 	if (sv_C.sv.RBI == BODY_EARTH)
 	{
 		mu = OrbMech::mu_Earth;
 		R_E = OrbMech::R_Earth;
+		J2 = OrbMech::J2_Earth;
 		DT = 15.0*60.0;
 	}
 	else
 	{
 		mu = OrbMech::mu_Moon;
 		R_E = BZLAND.rad[RTCC_LMPOS_BEST];
+		J2 = OrbMech::J2_Moon;
 		DT = 20.0*60.0;
 	}
 	//Target to position match
 	AnalyticEphemerisGenerator::TAUA(this, sv_C, sv_T, sv_TC, DH, TA);
-	VehicleDataBlock sv_CC[3];
-	sv_CC[0] = sv_C;
-	sv_CC[1] = coast(sv_CC[0], DT);
-	sv_CC[2] = coast(sv_CC[1], DT);
 
-	double R[3], U[3];
-
-	for (int i = 0;i < 3;i++)
+	//Estimate apsides
+	coe = OrbMech::GIMIKC(sv_C.sv.R, sv_C.sv.V, mu);
+	if (coe.e < 0.005)
 	{
-		R[i] = length(sv_CC[i].sv.R);
-		U[i] = AnalyticEphemerisGenerator::ArgumentOfLatitude(sv_CC[i].sv);
+		//Small eccentricity, use sine wave approximation
+		VehicleDataBlock sv_CC[3];
+		sv_CC[0] = sv_C;
+		sv_CC[1] = coast(sv_CC[0], DT);
+		sv_CC[2] = coast(sv_CC[1], DT);
+
+		double R[3], U[3];
+
+		for (int i = 0; i < 3; i++)
+		{
+			R[i] = length(sv_CC[i].sv.R);
+			U[i] = AnalyticEphemerisGenerator::ArgumentOfLatitude(sv_CC[i].sv);
+		}
+		PCHAPE(R[0], R[1], R[2], U[0], U[1], U[2], RA, RP);
 	}
-	PCHAPE(R[0], R[1], R[2], U[0], U[1], U[2], RA, RP);
+	else
+	{
+		//Higher eccentricity, use PIFAAP
+		EphemerisData sv_true;
+		double f, r, u;
+
+		ELVCNV(sv_C.sv, sv_C.sv.RBI == 0 ? 1 : 3, sv_true);
+		coe = OrbMech::GIMIKC(sv_true.R, sv_true.V, mu);
+		f = OrbMech::MeanToTrueAnomaly(coe.l, coe.e);
+		r = length(sv_true.R);
+		u = f + coe.g;
+		PIFAAP(coe.a, coe.e, coe.i, f, u, r, R_E, J2, RA, RP);
+	}
+
 	HA = RA - R_E;
 	HP = RP - R_E;
 }
@@ -10678,7 +10717,7 @@ int RTCC::PCTETR(VehicleDataBlock sv_C, VehicleDataBlock sv_T, double WT, double
 	VehicleDataBlock sv_C1, sv_T1;
 	double QL, DU, mu, C1, C2, C3, C4, r_T, r_C, QLI, DT, eps_dt, L_C_dot, L_T_dot;
 	int I;
-	bool err = false;
+	int err = 0;
 
 	eps_dt = 0.1;
 	I = 1;
@@ -10694,11 +10733,8 @@ int RTCC::PCTETR(VehicleDataBlock sv_C, VehicleDataBlock sv_T, double WT, double
 	}
 	do
 	{
-		sv_T1 = coast(sv_T1, sv_C1.sv.GMT - sv_T1.sv.GMT);
-		if (err)
-		{
-			return -1;
-		}
+		err = AnalyticEphemerisGenerator::coast(this, sv_T1, sv_C1.sv.GMT - sv_T1.sv.GMT, sv_T1);
+		if (err) return err;
 		QL = OrbMech::PHSANG(sv_T1.sv.R, sv_T1.sv.V, sv_C1.sv.R);
 		if (I == 1)
 		{
@@ -10732,23 +10768,26 @@ int RTCC::PCTETR(VehicleDataBlock sv_C, VehicleDataBlock sv_T, double WT, double
 			TR = TESP + WT / L_T_dot;
 			return 0;
 		}
-		sv_C1 = coast(sv_C1, DT);
+		err = AnalyticEphemerisGenerator::coast(this, sv_C1, DT, sv_C1);
+		if (err) return err;
 		I++;
 	} while (I <= 25);
 	return -1;
 }
 
 //Module PMMSPQ
-int RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
+void RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 {
 	VehicleDataBlock sv_C_CSI, sv_T_CSI, sv_C_CDH, sv_C_TPI, sv_T_CDH, sv_C_CSI_apo, sv_T_TPI, sv_C_CDH_apo, sv_PC;
 	CELEMENTS elem;
 	MATRIX3 Q_Xx;
 	VECTOR3 R_AF, R_AFD;
-	double dv_CSI, mu, GMT_CDH, GMT_TPI, DH, p_C, c_C, e_C, e_Co, dv_CSIo, V_Cb, V_CRb, gamma_C, V_CHb, a_T, a_C, r_T_dot, r_C_dot, GMT_TPF;
-	double V_C_apo, gamma_C_apo, V_CHa, DV_H, DV_R, Pitch, Yaw, TA;
+	double dv_CSI, mu, GMT_CDH, GMT_TPI, DH, p_C, c_C, e_C, e_Co, dv_CSIo, GMT_TPF, R_E, r_peri, r_apo, r_min;
+	double DV_H, DV_R, Pitch, Yaw, TA;
 	int s_C, PCMVMR_IND;
-	bool err;
+
+	//Initialize
+	res.err = 0;
 
 	//Set up variables for the CSI iteration
 	p_C = c_C = 0.0;
@@ -10758,11 +10797,14 @@ int RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 	if (opt.sv_A.sv.RBI == BODY_EARTH)
 	{
 		mu = OrbMech::mu_Earth;
+		R_E = OrbMech::R_Earth;
 	}
 	else
 	{
 		mu = OrbMech::mu_Moon;
+		R_E = BZLAND.rad[0];
 	}
+	r_min = R_E + opt.h_min;
 
 	//Calculate the DV parallel to the target orbit if desired, and only if no plane change maneuver is scheduled
 	if (opt.N_PC == false && opt.ParallelDVInd)
@@ -10784,8 +10826,8 @@ int RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 	//CSI scheduled?
 	if (opt.GMT_CSI > 0)
 	{
-		sv_C_CSI = coast(opt.sv_A, opt.GMT_CSI - opt.sv_A.sv.GMT);
-		sv_T_CSI = coast(opt.sv_P, opt.GMT_CSI - opt.sv_P.sv.GMT);
+		if (res.err = AnalyticEphemerisGenerator::coast(this, opt.sv_A, opt.GMT_CSI - opt.sv_A.sv.GMT, sv_C_CSI)) return;
+		if (res.err = AnalyticEphemerisGenerator::coast(this, opt.sv_P, opt.GMT_CSI - opt.sv_P.sv.GMT, sv_T_CSI)) return;
 
 		//Initial guess for CSI DV from GSOP
 		VECTOR3 H1 = unit(crossp(crossp(sv_C_CSI.sv.R, sv_C_CSI.sv.V), sv_C_CSI.sv.R));
@@ -10794,13 +10836,13 @@ int RTCC::ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res)
 		//Propagate target to TPI
 		if (opt.K_CDH == 0)
 		{
-			sv_T_TPI = coast(sv_T_CSI, GMT_TPI - sv_T_CSI.sv.GMT);
+			if (res.err = AnalyticEphemerisGenerator::coast(this, sv_T_CSI, GMT_TPI - sv_T_CSI.sv.GMT, sv_T_TPI)) return;
 		}
 	}
 	else
 	{
-		sv_C_CDH = coast(opt.sv_A, opt.GMT_CDH - opt.sv_A.sv.GMT);
-		sv_T_CDH = coast(opt.sv_P, opt.GMT_CDH - opt.sv_P.sv.GMT);
+		if (res.err = AnalyticEphemerisGenerator::coast(this, opt.sv_A, opt.GMT_CDH - opt.sv_A.sv.GMT, sv_C_CDH)) return;
+		if (res.err = AnalyticEphemerisGenerator::coast(this, opt.sv_P, opt.GMT_CDH - opt.sv_P.sv.GMT, sv_T_CDH)) return;
 	}
 
 	//Here we return to the beginning of the loop
@@ -10812,7 +10854,7 @@ RTCC_PMMSPQ_A:
 		//Apply maneuver
 		PCMVMR(sv_C_CSI.sv.R, sv_C_CSI.sv.V, sv_T_CSI.sv.R, sv_T_CSI.sv.V, dv_CSI, 0.0, 0.0, PCMVMR_IND, sv_C_CSI_apo.sv.V, Pitch, Yaw);
 
-		//CDH at upcoming apsis (AEG)
+		//CDH at upcoming apsis (AEG) or angle from CSI
 		if (opt.I_CDH == 1 || opt.I_CDH == 3)
 		{
 			//true = CDH at upcoming apsis, false = CDH at angle from CSI
@@ -10859,7 +10901,7 @@ RTCC_PMMSPQ_A:
 				do
 				{
 					//Take chaser to mean anomaly
-					err = AnalyticEphemerisGenerator::TimeOfArrivalRoutine(this, sv_C_CDH, 1, l_c, DN, sv_C_CDH);
+					if (res.err = AnalyticEphemerisGenerator::TimeOfArrivalRoutine(this, sv_C_CDH, 1, l_c, DN, sv_C_CDH)) return;
 					if (opt.N_CDH > N_CK)
 					{
 						N_CK++;
@@ -10897,11 +10939,7 @@ RTCC_PMMSPQ_A:
 				double u_CSI, u_CDH, DN = 0;
 
 				//Calculate argument of latitude at CSI
-				elem = OrbMech::GIMIKC(sv_C_CSI_apo.sv.R, sv_C_CSI_apo.sv.V, mu);
-				u_CSI = OrbMech::MeanToTrueAnomaly(elem.l, elem.e) + elem.g;
-				u_CSI = fmod(u_CSI, PI2);
-				if (u_CSI < 0)
-					u_CSI += PI2;
+				u_CSI = AnalyticEphemerisGenerator::ArgumentOfLatitude(sv_C_CSI_apo.sv);
 
 				//Calculate required argument of latitude at CDH
 				u_CDH = u_CSI + DU_D;
@@ -10912,7 +10950,7 @@ RTCC_PMMSPQ_A:
 				}
 
 				//Propagate to CDH
-				err = AnalyticEphemerisGenerator::TimeOfArrivalRoutine(this, sv_C_CSI_apo, 2, u_CDH, DN, sv_C_CDH);
+				if (res.err = AnalyticEphemerisGenerator::TimeOfArrivalRoutine(this, sv_C_CSI_apo, 2, u_CDH, DN, sv_C_CDH)) return;
 				GMT_CDH = sv_C_CDH.sv.GMT;
 			}
 		}
@@ -10920,22 +10958,21 @@ RTCC_PMMSPQ_A:
 		else if (opt.I_CDH == 2)
 		{
 			GMT_CDH = opt.GMT_CDH;
-			sv_C_CDH = coast(sv_C_CSI_apo, GMT_CDH - sv_C_CSI_apo.sv.GMT);
+			if (res.err = AnalyticEphemerisGenerator::coast(this, sv_C_CSI_apo, GMT_CDH - sv_C_CSI_apo.sv.GMT, sv_C_CDH)) return;
 		}
 		//CDH at next apsis (Keplerian)
-		else
+		else if (opt.I_CDH == 4)
 		{
 			OELEMENTS coe;
-			double V_R, t_P, GMT_CSI;
+			double V_R, t_P;
 			
-			GMT_CSI = sv_C_CSI_apo.sv.GMT;
 			coe = OrbMech::coe_from_sv(sv_C_CSI_apo.sv.R, sv_C_CSI_apo.sv.V, mu);
 			t_P = OrbMech::period(sv_C_CSI_apo.sv.R, sv_C_CSI_apo.sv.V, mu);
 			V_R = dotp(sv_C_CSI_apo.sv.R, sv_C_CSI_apo.sv.V);
 
 			if ((coe.e < 0.0001) || (V_R / length(sv_C_CSI_apo.sv.R) < 7.0*0.3048))
 			{
-				GMT_CDH = GMT_CSI + t_P / 2.0*(double)opt.N_CDH;
+				GMT_CDH = sv_C_CSI_apo.sv.GMT + t_P / 2.0*(double)opt.N_CDH;
 			}
 			else
 			{
@@ -10950,15 +10987,29 @@ RTCC_PMMSPQ_A:
 					theta = PI - coe.TA;
 				}
 				OrbMech::time_theta(sv_C_CSI_apo.sv.R, sv_C_CSI_apo.sv.V, theta, mu, dt);
-				GMT_CDH = GMT_CSI + dt + t_P / 2.0*(double)(opt.N_CDH - 1);
+				GMT_CDH = sv_C_CSI_apo.sv.GMT + dt + t_P / 2.0*(double)(opt.N_CDH - 1);
 			}
-			sv_C_CDH = coast(sv_C_CSI_apo, GMT_CDH - GMT_CSI);
+			if (res.err = AnalyticEphemerisGenerator::coast(this, sv_C_CSI_apo, GMT_CDH - sv_C_CSI_apo.sv.GMT, sv_C_CDH)) return;
 		}
-		sv_T_CDH = coast(sv_T_CSI, GMT_CDH - sv_T_CSI.sv.GMT);
+		//Number of half revs since CSI
+		else
+		{
+			double l_dot, g_dot, h_dot, P;
+
+			//Calculate orbital period
+			AnalyticEphemerisGenerator::SecularRates(this, sv_C_CSI_apo.sv, l_dot, g_dot, h_dot);
+			P = PI2 / l_dot;
+			//Calculate CDH time
+			GMT_CDH = sv_C_CSI_apo.sv.GMT + P * 0.5*(double)(opt.N_CDH);
+			//Update chaser to CDH time
+			if (res.err = AnalyticEphemerisGenerator::coast(this, sv_C_CSI_apo, GMT_CDH - sv_C_CSI_apo.sv.GMT, sv_C_CDH)) return;
+		}
+		//Update target to CDH time
+		if (res.err = AnalyticEphemerisGenerator::coast(this, sv_T_CSI, GMT_CDH - sv_T_CSI.sv.GMT, sv_T_CDH)) return;
 	}
 
 	//Target to position (phase) match
-	AnalyticEphemerisGenerator::TAUA(this, sv_C_CDH, sv_T_CDH, sv_PC, DH, TA);
+	if (res.err = AnalyticEphemerisGenerator::TAUA(this, sv_C_CDH, sv_T_CDH, sv_PC, DH, TA)) return;
 
 	//For iteration on DH
 	if (opt.GMT_CSI > 0 && opt.K_CDH == 1)
@@ -10967,34 +11018,35 @@ RTCC_PMMSPQ_A:
 		if (abs(e_C) > 1.0)
 		{
 			OrbMech::ITER(c_C, s_C, e_C, p_C, dv_CSI, e_Co, dv_CSIo);
+			if (s_C)
+			{
+				//Failed to converge
+				res.err = 8;
+				return;
+			}
+			//Recycle
 			goto RTCC_PMMSPQ_A;
 		}
 	}
 
 	//CDH calculation
-	V_Cb = length(sv_C_CDH.sv.V);
-	V_CRb = dotp(sv_C_CDH.sv.R, sv_C_CDH.sv.V) / length(sv_C_CDH.sv.R);
-	gamma_C = asin(V_CRb / V_Cb);
-	V_CHb = V_Cb * cos(gamma_C);
-	a_T = 1.0 / (2.0 / length(sv_PC.sv.R) - dotp(sv_PC.sv.V, sv_PC.sv.V) / mu);
-	a_C = a_T - DH;
-	r_T_dot = dotp(sv_PC.sv.R, sv_PC.sv.V) / length(sv_PC.sv.R);
-	r_C_dot = r_T_dot * pow(a_T / a_C, 1.5);
-	//Velocity after the maneuver
-	V_C_apo = sqrt(mu*(2.0 / length(sv_C_CDH.sv.R) - 1.0 / a_C));
-	//Flight path angle after maneuver
-	gamma_C_apo = asin(r_C_dot / V_C_apo);
-	//Horizontal velocity after maneuver
-	V_CHa = V_C_apo * cos(gamma_C_apo);
-	DV_H = V_CHa - V_CHb;
-	DV_R = V_CRb - r_C_dot;
-
+	AnalyticEphemerisGenerator::PCMCEM(sv_C_CDH, sv_PC, DH, mu, DV_H, DV_R);
+	//Apply CDH burn
 	sv_C_CDH_apo = sv_C_CDH;
 	PCMVMR(sv_C_CDH.sv.R, sv_C_CDH.sv.V, sv_T_CDH.sv.R, sv_T_CDH.sv.V, DV_H, DV_R, 0.0, PCMVMR_IND, sv_C_CDH_apo.sv.V, Pitch, Yaw);
 
 	if (opt.GMT_CSI <= 0)
 	{
 		//Final CDH comps
+
+		//Periapsis check
+		OrbMech::periapo(sv_C_CDH_apo.sv.R, sv_C_CDH_apo.sv.V, mu, r_apo, r_peri);
+		if (r_peri < r_min)
+		{
+			res.err = 4;
+			return;
+		}
+
 		res.DH = DH;
 		Q_Xx = OrbMech::LVLH_Matrix(sv_C_CDH.sv.R, sv_C_CDH.sv.V);
 		res.dV_CDH = mul(Q_Xx, sv_C_CDH_apo.sv.V - sv_C_CDH.sv.V);
@@ -11004,15 +11056,14 @@ RTCC_PMMSPQ_A:
 		res.sv_C[0] = sv_C_CDH;
 		res.sv_C_apo[0] = sv_C_CDH_apo;
 		res.sv_T[0] = sv_T_CDH;
-		
-		return 0;
+		return;
 	}
 
 	//Iteration on TPI time
 	if (opt.K_CDH == 0)
 	{
 		VehicleDataBlock sv_TJ;
-		sv_C_TPI = coast(sv_C_CDH_apo, GMT_TPI - GMT_CDH);
+		if (res.err = AnalyticEphemerisGenerator::coast(this, sv_C_CDH_apo, GMT_TPI - GMT_CDH, sv_C_TPI)) return;
 		AnalyticEphemerisGenerator::QDRTPI(this, sv_T_TPI, DH, opt.E, sv_TJ);
 		R_AFD = sv_TJ.sv.R - unit(sv_TJ.sv.R)*DH;
 		R_AF = OrbMech::PROJCT(sv_TJ.sv.R, sv_TJ.sv.V, sv_C_TPI.sv.R);
@@ -11021,6 +11072,13 @@ RTCC_PMMSPQ_A:
 		if (abs(e_C) > 0.000004)
 		{
 			OrbMech::ITER(c_C, s_C, e_C, p_C, dv_CSI, e_Co, dv_CSIo);
+			if (s_C)
+			{
+				//Failed to converge
+				res.err = 8;
+				return;
+			}
+			//Recycle
 			goto RTCC_PMMSPQ_A;
 		}
 	}
@@ -11029,17 +11087,33 @@ RTCC_PMMSPQ_A:
 		//If iteration on DH was used, get TPI time now
 		if (PCTETR(sv_C_CDH_apo, sv_T_CDH, opt.WT, opt.E, GMT_TPI, GMT_TPF))
 		{
-			return 94;
+			res.err = 94;
+			return;
 		}
 	}
-
-	if (GMT_CDH - opt.GMT_CSI < 10.0*60.0)
+	//Time checks
+	if (GMT_CDH - opt.GMT_CSI < opt.dt_min)
 	{
-		return 3;
+		res.err = 3;
+		return;
 	}
-	if (GMT_TPI - GMT_CDH < 10.0*60.0)
+	if (GMT_TPI - GMT_CDH < opt.dt_min)
 	{
-		return 3;
+		res.err = 3;
+		return;
+	}
+	//Periapsis checks
+	OrbMech::periapo(sv_C_CSI_apo.sv.R, sv_C_CSI_apo.sv.V, mu, r_apo, r_peri);
+	if (r_peri < r_min)
+	{
+		res.err = 4;
+		return;
+	}
+	OrbMech::periapo(sv_C_CDH_apo.sv.R, sv_C_CDH_apo.sv.V, mu, r_apo, r_peri);
+	if (r_peri < r_min)
+	{
+		res.err = 4;
+		return;
 	}
 
 	res.GMT_CSI = opt.GMT_CSI;
@@ -11057,8 +11131,7 @@ RTCC_PMMSPQ_A:
 	res.sv_C[1] = sv_C_CDH;
 	res.sv_C_apo[1] = sv_C_CDH_apo;
 	res.sv_T[1] = sv_T_CDH;
-
-	return 0;
+	return;
 }
 
 VECTOR3 RTCC::HatchOpenThermalControl(double GMT, MATRIX3 REFSMMAT)
@@ -12780,8 +12853,11 @@ void RTCC::PMXSPT(std::string source, int n)
 	case 79:
 		message.push_back("INVALID IGNITION TIME FOR S-IVB TLI MANEUVER - MPT UNCHANGED");
 		break;
+	case 80:
+		message.push_back("INPUT UNACCEPTABLE.");
+		break;
 	case 81:
-		message.push_back("FAILED TO CONVERGE.");
+		message.push_back("FAILED TO INITIALIZE.");
 		break;
 	case 82:
 		message.push_back("REENTERED.");
@@ -12797,6 +12873,9 @@ void RTCC::PMXSPT(std::string source, int n)
 		break;
 	case 86:
 		message.push_back("TARGET PARAMETERS UNAVAILABLE FOR SPECIFIED INJECTION OPPORTUNITY - PROCESSING TERMINATED");
+		break;
+	case 88:
+		message.push_back("A REENTRANT TRAJECTORY IN COELLIPTIC SEQUENCE. NO PLAN GENERATED.");
 		break;
 	case 92:
 		message.push_back("CONSTRAINT " + RTCCONLINEMON.TextBuffer[0] + " VIOLATED IN COELLIPTIC SEQUENCE.");

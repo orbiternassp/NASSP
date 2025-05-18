@@ -285,15 +285,30 @@ plane whenever the astronaut's LOS is to the target or the horizon, deg\\
 
 \paragraph{Explanation}\mbox{} \\
 
-Coelliptic orbits are two orbits that are coplanar (identical inclination and longitude of the ascending node) and confocal (identical eccentricity and argument of periapsis). To achieve such an orbit relative to a target vessel this MFD can calculate a maneuver based on Program 33 of the AGC and the maneuver to initiate the coelliptic sequence, based on Program 32 of the AGC.\\
+The Coelliptic Sequence Program computes the incremental velocities required to meet some relative vehicle positioning at the terminal phase initiation (TPI)
+point. The maneuvers of the iterative sequence are the concentric sequence initiation maneuver (CSI) and the coelliptic maneuver (CDH), which may or may not be scheduled.\\
+
+The desired relative positioning at TPI has two options: (1) that the active vehicle have a certain elevation angle to the target, or (2) that a desired differential altitude exist is the coelliptic orbit configuration.\\
+
+The time of the CSI maneuver, if scheduled, is input. The desired CSI DV that will only be horizontal, may be computed with respect to a desired elevation
+angle at TPI or a desired DH at CDH. An option exists to vary the CSI time within limits to reach both of these constraints.\\
+
+There are five options for the computation of the CDH maneuver:
+\begin{enumerate}
+	\item Arrival at a next apsis (Integrator)
+	\item At an input time
+	\item After some desired travel angle from CSI
+	\item Arrival at a next apsis (Keplerian)
+	\item Number of half revolutions from CSI
+\end{enumerate}
 
 \paragraph{Buttons}\mbox{} \\
 
 \textbf{INI:} Go to SPQ initialization page.\\
-\textbf{VEH:} Choose which of the two vehicles is the chaser and which is the target (MPT mode only).\\
-\textbf{CHA:} Threshold time for the state vector of the chaser vehicle (MPT mode only).\\
-\textbf{TGT:} Threshold time for the state vector of the target vehicle (MPT mode only).\\
-\textbf{MOD:} Calculation mode, CSI or CDH maneuver.\\
+\textbf{VEH:} Choose which of the two vehicles is the chaser and which is the target.\\
+\textbf{CHA:} Select the chaser vessel or the threshold time for the state vector of the chaser vehicle (MPT mode only).\\
+\textbf{TGT:} Select the target vessel or the threshold time for the state vector of the target vehicle (MPT mode only).\\
+\textbf{MOD:} Calculation mode, CSI or CDH maneuver or the optimum CSI mode which iterates on the CSI time to achieve both the desired DH at CDH and the desired time at TPI.\\
 \textbf{TIM:} Switches between fixed GET and finding the delta height of the maneuver or fixed delta height and finding the time of ignition.\\
 \textbf{TIG:} The time of the maneuver in GET. If the option is used to find the CDH time based on delta height this is an initial guess.\\
 \textbf{CLC:} Calculate the burn solution.\\
@@ -303,8 +318,14 @@ Coelliptic orbits are two orbits that are coplanar (identical inclination and lo
 
 \textbf{DH:} Delta height at the CDH maneuver.\\
 \textbf{E:} Desired elevation angle at TPI.\\
+\textbf{WT:} Desired travel angle between TPI and TPF.\\
 \textbf{TPI:} Desired TPI time.\\
+\textbf{CDH:} Select the option for the CDH maneuver point.\\
+\textbf{VAL:} Select the defining value for the CDH maneuver point.\\
 \textbf{BCK:} Go back to SPQ calculation page.\\
+\paragraph{Display}\mbox{} \\
+
+See Rendezvous Evaluation Display \ref{RED} under MOCR Displays.\\
 \newpage
 
 \subsubsection{Docking Initiation Processor (DKI)}
@@ -2862,6 +2883,26 @@ PGNS VX, VY, VZ&Components of external DV vector required for targeting the onbo
 AGS EXT DV&Abort Guidance System ID for vehicle doing the external DV maneuver\\
 AGS GETI&Ground elapsed time of ignition&hr:min:sec\\
 AGS VX, VY, VZ&Components of external DV vector required for targeting the onboard AGS external DV guidance for maneuver execution&fps\\
+\end{tabular}
+\end{center}
+\newpage
+\subsection{Rendezvous Evaluation Display (MSK 0058)} \label{RED}
+\subsubsection{Function}
+The Rendezvous Evaluation Display shows the selected rendezvous plan from either the DKI or SPQ processor.
+\subsubsection{Display}
+\begin{center}
+\begin{tabular}{ L{2.8cm} L{8cm} L{3cm} }
+\underline{ITEM} & \underline{DESCRIPTION} & \underline{UNITS} \\
+ID&Row number of plan from Rendezvous Planning Table&\\
+M&Orbit number in which rendezvous is to occur&\\
+GET&Elapsed impulsive time of the maneuver&HR:MIN:SEC\\
+DT&Amount of time between each maneuver&MIN:SEC\\
+DV&Velocity increment for the maneuver&FT/SEC\\
+VEH&Maneuver vehicle code&\\
+ID&Maneuver purpose code of this maneuver&\\
+PHASE&Phase angle after the maneuver&DEG.\\
+DH&Height offset after the maneuver&N.M.\\
+HP/HA&Height of perigee and height of apogee&N.M.\\
 \end{tabular}
 \end{center}
 \newpage

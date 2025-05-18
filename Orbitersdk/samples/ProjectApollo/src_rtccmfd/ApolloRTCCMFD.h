@@ -459,7 +459,7 @@ public:
 	void menuSetSPQElevation();
 	void set_SPQElevation(double elev);
 	void menuSetSPQTerminalPhaseAngle();
-	void set_SPQTerminalPhaseAngle(double wt);
+	void menuSetSPQMinimumPeriapsisAlt();
 	void menuSetSPQTPIDefinitionValue();
 	void set_SPQTPIDefinitionValue(double get);
 	void menuCycleSPQCDHPoint();
@@ -959,6 +959,7 @@ private:
 	void AGOPDisplayOption7(oapi::Sketchpad*skp);
 	void AGOPDisplayOption8(oapi::Sketchpad*skp);
 	void AGOPDisplayOption9(oapi::Sketchpad*skp);
+	void RendezvousEvaluationDisplay(oapi::Sketchpad*skp);
 
 	void CSMOrLMSelection(oapi::Sketchpad*skp);
 	void CSMOrLMSelectionErrorMessage(oapi::Sketchpad*skp);

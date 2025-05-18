@@ -542,11 +542,11 @@ VECTOR3 RTCC::PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV
 	return DV_out;
 }
 
-void RTCC::PIFAAP(double a, double e, double i, double f, double u, double r, double &r_apo, double &r_peri)
+void RTCC::PIFAAP(double a, double e, double i, double f, double u, double r, double R_E, double J2, double &r_apo, double &r_peri)
 {
 	double a_ref, e_ref, p_ref, p, K1, K2, df, r1, r2;
 
-	a_ref = r + 1.5*OrbMech::J2_Earth * OrbMech::R_Earth*(1.0 - 3.0 / 2.0*pow(sin(i), 2) + 5.0 / 6.0*pow(sin(i), 2)*cos(2.0*u));
+	a_ref = r + 1.5*J2 * R_E*(1.0 - 3.0 / 2.0*pow(sin(i), 2) + 5.0 / 6.0*pow(sin(i), 2)*cos(2.0*u));
 	e_ref = 1.0 - r / a_ref;
 	p_ref = a_ref * (1.0 - e_ref * e_ref);
 	p = a * (1.0 - e * e);

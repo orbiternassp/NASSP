@@ -576,13 +576,10 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GC = gcin;
 
 	SPQMode = 0;
-	CSItime = 0.0;
 	CDHtime = 0.0;
-	SPQTIG = 0.0;
 	CDHtimemode = 0;
 	t_TPI = 0.0;
 
-	SPQDeltaV = _V(0, 0, 0);
 	//screen = 0;
 	REFSMMAT_LVLH_Time = 0.0;
 	REFSMMATopt = 4;
@@ -2790,10 +2787,12 @@ int ARCore::subThread()
 		opt.sv_P = sv_P;
 		opt.WT = GC->rtcc->GZGENCSN.SPQTerminalPhaseAngle;
 		opt.ChaserID = GC->rtcc->med_k01.ChaserVehicle;
+		opt.h_min = GC->rtcc->GZGENCSN.SPQMinimumPerifocus;
 
 		if (SPQMode != 1)
 		{
-			opt.GMT_CSI = GC->rtcc->GMTfromGET(CSItime);
+			opt.GMT_CSI = GC->rtcc->GMTfromGET(GC->rtcc->med_k01.t_CSI);
+			opt.GMT_CDH = GC->rtcc->GMTfromGET(GC->rtcc->med_k01.CDH_Time);
 			
 			if (SPQMode == 2)
 			{
@@ -2828,26 +2827,13 @@ int ARCore::subThread()
 		}
 		opt.I_CDH = GC->rtcc->med_k01.I_CDH;
 		opt.DU_D = GC->rtcc->med_k01.CDH_Angle;
+		opt.N_CDH = GC->rtcc->med_k01.CDH_Apsis;
 
 		GC->rtcc->PMMDKI(opt, res);
 
 		if (SPQMode != 1)
 		{
-			SPQTIG = GC->rtcc->GETfromGMT(res.GMT_CSI);
-		}
-		else
-		{
-			SPQTIG = GC->rtcc->GETfromGMT(res.GMT_CDH);
-		}
-
-		if (SPQMode != 1)
-		{
 			CDHtime = GC->rtcc->GETfromGMT(res.GMT_CDH);
-			SPQDeltaV = res.dV_CSI;
-		}
-		else
-		{
-			SPQDeltaV = res.dV_CDH;
 		}
 
 		Result = DONE;

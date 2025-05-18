@@ -116,7 +116,9 @@ namespace AnalyticEphemerisGenerator
 	//Calculate inactive vehicle position above TPI position of active vehicle
 	int QDRTPI(RTCC* r, VehicleDataBlock sv_P0, double DH, double E_L, VehicleDataBlock& sv_P1);
 	//Sunrise/Sunset routine
-	void PMMDAN(RTCC* rtcc, VehicleDataBlock ELM, int IND, int &ERR, double &T_c, double &T_c_apo);
+	int PMMDAN(RTCC* rtcc, VehicleDataBlock ELM, int IND, double &T_c, double &T_c_apo);
 	//Longitude crossing
-	void PMMTLC(RTCC* rtcc, VehicleDataBlock AEGIN, double DESLAM, VehicleDataBlock &AEGOUT, int &K);
+	int PMMTLC(RTCC* rtcc, VehicleDataBlock AEGIN, double DESLAM, VehicleDataBlock &AEGOUT);
+	//Coelliptic maneuver calculation
+	void PCMCEM(VehicleDataBlock sv_A0, VehicleDataBlock sv_PC, double DH, double mu, double& DV_H, double& DV_R);
 }

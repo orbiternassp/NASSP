@@ -641,14 +641,27 @@ namespace AnalyticEphemerisGenerator
 	{
 		//TBD: Use RTCC subroutine EMMENI for now. In the future a new, slightly simplified integrator should be implemented for AEG-like integration.
 		EMMENIInputTable in;
+		std::string modulename;
 		bool bDrag;
+
+		if (sv0.sv.RBI == 0) modulename = "PMMAEG";
+		else modulename = "PMMLAEG";
 
 		//Don't process more than 4 days
 		if (abs(dt) > 4.0 * 24.0 * 3600.0)
 		{
-			return -1; //Error: The amount of time to update elements exceeds four days
+			//Error: The amount of time to update elements exceeds four days
+			r->PMXSPT(modulename, 80);
+			return -1;
 		}
-		//TBD: Also limit eccentricity?
+		//Also limit eccentricity. TBD: And semi-major axis?
+		CELEMENTS elem = OrbMech::GIMIKC(sv0.sv.R, sv0.sv.V, sv0.sv.RBI == BODY_EARTH ? OrbMech::mu_Earth : OrbMech::mu_Moon);
+		if (elem.e > 0.85)
+		{
+			//Error: Input elements were rejected because the elements did not fall within the limits
+			r->PMXSPT(modulename, 80);
+			return -1;
+		}
 
 		in.AnchorVector = sv0.sv;
 		in.Area = sv0.Area;
@@ -681,7 +694,8 @@ namespace AnalyticEphemerisGenerator
 
 		if (in.TerminationCode == 3)
 		{
-			//Terminated on altitude, error return
+			//Error: terminated on altitude (reentered)
+			r->PMXSPT(modulename, 82);
 			return -2;
 		}
 		//Write output
@@ -852,7 +866,7 @@ namespace AnalyticEphemerisGenerator
 
 	int TAUA(RTCC* r, VehicleDataBlock sv_A0, VehicleDataBlock sv_P0, VehicleDataBlock& sv_P1, double& DELH, double& TA)
 	{
-		int err;
+		int err, n, nmax;
 
 		//Update passive vehicle to time of sv_A0
 		if (err = coast(r, sv_P0, sv_A0.sv.GMT - sv_P0.sv.GMT, sv_P1)) return err;
@@ -861,20 +875,24 @@ namespace AnalyticEphemerisGenerator
 
 		tol = 0.00001;
 		DELH = TA = 0.0;
+		n = 0;
+		nmax = 10;
 
 		//Calculate phase angle
 		theta = OrbMech::PHSANG(sv_A0.sv.R, sv_A0.sv.V, sv_P1.sv.R);
 		//Secular rates of passive vehicle
 		SecularRates(r, sv_P1.sv, l_dot, g_dot, h_dot);
 
-		while (abs(theta) > tol)
+		while (n < nmax && abs(theta) > tol)
 		{
 			//Take to time
 			dt = theta / (l_dot + g_dot);
 			if (err = coast(r, sv_P1, dt, sv_P1)) return err;
 			//Calculate phase angle
 			theta = OrbMech::PHSANG(sv_A0.sv.R, sv_A0.sv.V, sv_P1.sv.R);
+			n++;
 		}
+		if (n >= nmax) return 1;
 		//Calculate time lag. Positive if active vehicle is behind.
 		TA = sv_A0.sv.GMT - sv_P1.sv.GMT;
 		//Calculate DH. Positive if active vehicle is below.
@@ -924,7 +942,7 @@ namespace AnalyticEphemerisGenerator
 		return 0;
 	}
 
-	void PMMDAN(RTCC* rtcc, VehicleDataBlock ELM, int IND, int &ERR, double &T_c, double &T_c_apo)
+	int PMMDAN(RTCC* rtcc, VehicleDataBlock ELM, int IND, double &T_c, double &T_c_apo)
 	{
 		//INPUTS:
 		//ELM: Input vehicle data block
@@ -935,10 +953,9 @@ namespace AnalyticEphemerisGenerator
 		VehicleDataBlock sv_temp;
 		VECTOR3 R_EM, V_EM, R_ES, R_S, H, N, N_apo;
 		double r_S, mu, cos_theta, R_e, r, phi1, phi2, phi3, n, cos_phi1, sin_alpha, h, cos_eta, sin_eta, F, dt, S_T, l_dot, g_dot, h_dot;
-		int J, I_c;
+		int J, I_c, AEGERR;
 		bool daylight;
 
-		ERR = 0;
 		J = 0;
 		//Get sun vector
 		rtcc->PLEFEM(1, ELM.sv.GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
@@ -1001,15 +1018,19 @@ namespace AnalyticEphemerisGenerator
 		sin_eta = sqrt(1.0 - cos_eta * cos_eta);
 		if (sin_eta <= sin_alpha)
 		{
-			ERR = 1;
-			goto RTCC_PMMDAN_4_3;
+			//Orbit is totally in daylight
+			T_c = 0.0;
+			T_c_apo = 0.0;
+			return 1;
 		}
 		phi2 = asin(sin_alpha / sin_eta);
+		//F is the z-component of RxN_apo. This code assumes the orbit is prograde for Earth, retrograde for Moon. TBD: Should maybe be generalized to not depend on that.
 		F = sv_temp.sv.R.x*N_apo.y - sv_temp.sv.R.y*N_apo.x;
 		if (sv_temp.sv.RBI == BODY_MOON)
 		{
 			F = -F;
 		}
+		//Quadrant test
 		if (daylight)
 		{
 			if (F >= 0)
@@ -1045,15 +1066,22 @@ namespace AnalyticEphemerisGenerator
 		{
 			if (I_c >= 4)
 			{
-				ERR = 2;
-				goto RTCC_PMMDAN_4_3;
+				//Convergence failure
+				T_c = 0.0;
+				T_c_apo = 0.0;
+				return 2;
 			}
 			I_c++;
 		RTCC_PMMDAN_2_4:
 			//Update to time
-			ERR = coast(rtcc, sv_temp, T_c, sv_temp);
+			AEGERR = coast(rtcc, sv_temp, dt, sv_temp);
 			//Error?
-			if (ERR) goto RTCC_PMMDAN_4_3; //Yes
+			if (AEGERR)
+			{
+				T_c = 0.0;
+				T_c_apo = 0.0;
+				return AEGERR;
+			}
 			goto RTCC_PMMDAN_2_2; //No
 		}
 		if (daylight)
@@ -1063,7 +1091,7 @@ namespace AnalyticEphemerisGenerator
 		if (IND == 1)
 		{
 			T_c_apo = 0.0;
-			return;
+			return 0;
 		}
 		if (J <= 0)
 		{
@@ -1084,28 +1112,23 @@ namespace AnalyticEphemerisGenerator
 		{
 			T_c_apo = T_c;
 			T_c = S_T;
-			return;
 		}
-
-	RTCC_PMMDAN_4_3:
-		T_c = 0.0;
-		T_c_apo = 0.0;
-		return;
+		return 0;
 	}
 
-	void PMMTLC(RTCC* rtcc, VehicleDataBlock AEGIN, double DESLAM, VehicleDataBlock &AEGOUT, int &K)
+	int PMMTLC(RTCC* rtcc, VehicleDataBlock AEGIN, double DESLAM, VehicleDataBlock &AEGOUT)
 	{
 		//INPUTS:
 		//AEGIN: Initial vehicle data block
 		//DESLAM: Desired longitude in radians
 		//OUTPUTS:
 		//AEGOUT: Vehicle data block updated to time of the desired longitude crossing
-		//K: -1 = Unrecoverable AEG error, >0 = failure to converge, 0 = no error
+		//K (Error): -1 = Unrecoverable AEG error, >0 = failure to converge, 0 = no error
 
 		CELEMENTS elem;
 		EphemerisData sv_true;
 		double i_CB, g_CB, h_CB, u_CB, Z, DELTA, lambda_V, w_CB, dlambda, DELTADOT, dt, u_CB_dot, mu_CB, l_dot, g_dot, h_dot;
-		int coord_true;
+		int coord_true, K, AEGERR;
 
 		if (AEGIN.sv.RBI == BODY_EARTH)
 		{
@@ -1130,8 +1153,8 @@ namespace AnalyticEphemerisGenerator
 			//Convert from inertial to true coordinates
 			if (rtcc->ELVCNV(AEGOUT.sv, coord_true, sv_true))
 			{
-				K = -1;
-				return;
+				//Conversion failure
+				return -1;
 			}
 			//Calculate elements
 			elem = OrbMech::GIMIKC(sv_true.R, sv_true.V, mu_CB);
@@ -1193,20 +1216,46 @@ namespace AnalyticEphemerisGenerator
 			dt = dlambda / (h_dot + DELTADOT - w_CB);
 			if (abs(dt) <= 0.01)
 			{
-				K = 0;
-				return;
+				break;
 			}
 			if (K > 5)
 			{
-				return;
+				//Failed to converge
+				return K;
 			}
 			K++;
 
-			if (coast(rtcc, AEGOUT, dt, AEGOUT))
+			if (AEGERR = coast(rtcc, AEGOUT, dt, AEGOUT))
 			{
-				K = -1;
-				return;
+				//Unrecoverable AEG error
+				return AEGERR;
 			}
 		} while (K < 6);
+		//Converged
+		return 0;
+	}
+
+	//Coelliptic maneuver calculation
+	void PCMCEM(VehicleDataBlock sv_A0, VehicleDataBlock sv_PC, double DH, double mu, double& DV_H, double& DV_R)
+	{
+		//sv_A0 at CDH TIG, sv_PC at position match
+		double V_Cb, V_CRb, gamma_C, V_CHb, a_T, a_C, r_T_dot, r_C_dot, V_C_apo, gamma_C_apo, V_CHa;
+
+		V_Cb = length(sv_A0.sv.V);
+		V_CRb = dotp(sv_A0.sv.R, sv_A0.sv.V) / length(sv_A0.sv.R);
+		gamma_C = asin(V_CRb / V_Cb);
+		V_CHb = V_Cb * cos(gamma_C);
+		a_T = 1.0 / (2.0 / length(sv_PC.sv.R) - dotp(sv_PC.sv.V, sv_PC.sv.V) / mu);
+		a_C = a_T - DH;
+		r_T_dot = dotp(sv_PC.sv.R, sv_PC.sv.V) / length(sv_PC.sv.R);
+		r_C_dot = r_T_dot * pow(a_T / a_C, 1.5);
+		//Velocity after the maneuver
+		V_C_apo = sqrt(mu * (2.0 / length(sv_A0.sv.R) - 1.0 / a_C));
+		//Flight path angle after maneuver
+		gamma_C_apo = asin(r_C_dot / V_C_apo);
+		//Horizontal velocity after maneuver
+		V_CHa = V_C_apo * cos(gamma_C_apo);
+		DV_H = V_CHa - V_CHb;
+		DV_R = V_CRb - r_C_dot;
 	}
 }
