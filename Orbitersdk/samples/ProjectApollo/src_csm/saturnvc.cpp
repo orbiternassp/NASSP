@@ -1476,7 +1476,8 @@ void Saturn::RegisterActiveAreas() {
 			oapiVCRegisterArea(AID_VC_TW_P10_01 + i, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 			oapiVCSetAreaClickmode_Spherical(AID_VC_TW_P10_01 + i, P10_TW_POS[i] + P10_TWCLICK + ofs, TW);
 		}
-
+	}
+	if (viewpos >= SATVIEW_GNPANEL && viewpos <= SATVIEW_LOWER_CENTER) {
 		// Panel 12
 		for (i = 0; i < P12_ROTCOUNT; i++)
 		{
