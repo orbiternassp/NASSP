@@ -2505,7 +2505,7 @@ void RetrofirePlanning::RMSTTF()
 	sv_BO_ECT.RBI = BODY_EARTH;
 	pRTCC->EMMDYNEL(sv_BO_ECT, elem);
 
-	pRTCC->PIFAAP(elem.a, elem.e, elem.i, elem.TA, elem.TA + elem.AoP, length(sv_BO_ECT.R), r_apo, r_peri);
+	pRTCC->PIFAAP(elem.a, elem.e, elem.i, elem.TA, elem.TA + elem.AoP, length(sv_BO_ECT.R), OrbMech::R_Earth, OrbMech::J2_Earth, r_apo, r_peri);
 	tab->H_apo = (r_apo - OrbMech::R_Earth) / 1852.0;
 	tab->H_peri = (r_peri - OrbMech::R_Earth) / 1852.0;
 
@@ -2519,7 +2519,7 @@ void RetrofirePlanning::RMSTTF()
 		sv_BO_SEP_ECT.RBI = BODY_EARTH;
 		pRTCC->EMMDYNEL(sv_BO_SEP_ECT, elem);
 		
-		pRTCC->PIFAAP(elem.a, elem.e, elem.i, elem.TA, elem.TA + elem.AoP, length(sv_BO_SEP_ECT.R), r_apo, r_peri);
+		pRTCC->PIFAAP(elem.a, elem.e, elem.i, elem.TA, elem.TA + elem.AoP, length(sv_BO_SEP_ECT.R), OrbMech::R_Earth, OrbMech::J2_Earth, r_apo, r_peri);
 
 		tab->CSMWeightSep = burnaux_sep.WTENGON *LBS*1000.0;
 		tab->H_apo_sep = (r_apo - OrbMech::R_Earth) / 1852.0;

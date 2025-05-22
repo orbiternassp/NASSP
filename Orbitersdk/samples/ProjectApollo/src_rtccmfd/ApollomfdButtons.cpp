@@ -115,9 +115,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "CSI or CDH", 0, 'M' },
 		{ "Time Mode", 0, 'T' },
 
-		{ "Maneuver Time", 0, 'M' },
-		{ "", 0, ' ' },
-		{ "Calculate burn", 0, 'C' },
+		{ "Maneuver Time", 0, 'N' },
+		{ "Cycle page", 0, 'P' },
+		{ "Calculate solution", 0, 'C' },
 		{ "Rendezvous Display", 0, 'D'},
 		{ "Choose engine", 0, 'L' },
 		{ "Previous page", 0, 'B' },
@@ -133,9 +133,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::set_CDHtimemode);
 
 	RegisterFunction("TIG", OAPI_KEY_N, &ApolloRTCCMFD::SPQtimedialogue);
-	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("PAG", OAPI_KEY_P, &ApolloRTCCMFD::menuCycleSubscreen);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::SPQcalc);
-	RegisterFunction("DIS", OAPI_KEY_D, &ApolloRTCCMFD::menuSetRendezvousEvaluationDisplayPage);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("TRA", OAPI_KEY_L, &ApolloRTCCMFD::menuSetSPQorDKIRTransferPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetRendezvousPage);
 
@@ -2356,7 +2356,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Coelliptic DH", 0, 'D' },
 		{ "Elevation angle at TPI", 0, 'E' },
 		{ "Angle between TPI and TPF", 0, 'W' },
-		{ "", 0, ' ' },
+		{ "Minimum periapsis altitude", 0, 'L' },
 		{ "", 0, ' ' },
 		{ "TPI time", 0, 'Q' },
 
@@ -2373,7 +2373,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("DH", OAPI_KEY_D, &ApolloRTCCMFD::SPQDHdialogue);
 	RegisterFunction("E", OAPI_KEY_E, &ApolloRTCCMFD::menuSetSPQElevation);
 	RegisterFunction("WT", OAPI_KEY_W, &ApolloRTCCMFD::menuSetSPQTerminalPhaseAngle);
-	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("HMN", OAPI_KEY_L, &ApolloRTCCMFD::menuSetSPQMinimumPeriapsisAlt);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("TPI", OAPI_KEY_Q, &ApolloRTCCMFD::menuSetSPQTPIDefinitionValue);
 
