@@ -834,14 +834,16 @@ struct PDAPOpt //Powered Descent Abort Program
 {
 	VehicleDataBlock sv_A;
 	VehicleDataBlock sv_P;
+	//Minimum apogee altitude limit for the insertion orbit; reference from the landing site radius
+	double h_amin = 30.0*1852.0;
+	//Nominal time of landing
 	double GMT_LAND;
-	MATRIX3 REFSMMAT;
+	//Landing site radius
 	VECTOR3 R_LS;
-	double dt_stage;
-	//LM vehicle weight immediately after staging
-	double W_TAPS;
-	//LM weight representative of DPS fuel depletion
-	double W_TDRY;
+	//Desired altitude differential between the LM and CSM orbits at CDH
+	double DH_D = 15.0*1852.0;
+	//DT between PDI and staging time
+	double dt_stage = 0.0;
 	//DT between successive abort points
 	double dt_step;
 	//Time from Insertion to CSI
@@ -858,11 +860,14 @@ struct PDAPOpt //Powered Descent Abort Program
 	double dt_CAN = 50.0*60.0;
 	//DV of the canned maneuver
 	double dv_CAN = 10.0*0.3048;
-	//Minimum apogee altitude limit for the insertion orbit; reference from the landing site radius
-	double h_amin = 30.0*1852.0; //First segment
-	double h_2amin = 30.0*1852.0; //Second segment
 	//Flag to use the long profile in the first set of targeting coefficients
 	bool LongProfileFirst = false;
+	//Phase angle at insertion at which the rendezvous profile is switched (LongProfileFirst = true)
+	double PhaseMax = -1.2*RAD;
+	//LM vehicle weight immediately after staging
+	double W_TAPS = 10634.0*0.45359237;
+	//LM weight representative of DPS fuel depletion
+	double W_TDRY = 15455.8*0.45359237;
 };
 
 struct PDAPResults
@@ -2536,7 +2541,7 @@ public:
 	//Apsides Determination Subroutine
 	int PMMAPD(AEGHeader Header, AEGDataBlock Z, int KAOP, int KE, double *INFO, AEGDataBlock *sv_A, AEGDataBlock *sv_P);
 	bool PDIIgnitionAlgorithm(VehicleDataBlock sv, VECTOR3 R_LS, double TLAND, VehicleDataBlock &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
-	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
+	bool PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, bool cmc);
 	bool CalculateAGSKFactor(agc_t *agc, ags_t *aea, double &KFactor);
 
