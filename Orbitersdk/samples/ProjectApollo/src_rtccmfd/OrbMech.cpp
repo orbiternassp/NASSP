@@ -183,9 +183,13 @@ namespace OrbMech{
 		int minutes;
 
 		SStoMMSS(abs(time), minutes, seconds);
-		if (time < 0.0) minutes = -minutes;
 
-		sprintf(buf, "%d:%02.0lf", minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%d:%02.0lf", minutes, seconds);
 	}
 
 	void format_time_MMSSC(char *buf, double time)
@@ -195,9 +199,13 @@ namespace OrbMech{
 		int minutes;
 
 		SStoMMSS(abs(time), minutes, seconds, 0.1);
-		if (time < 0.0) minutes = -minutes;
 
-		sprintf(buf, "%d:%02.1lf", minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%d:%02.1lf", minutes, seconds);
 	}
 
 	void format_time_HHHMM(char *buf, double time)
@@ -207,9 +215,13 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds, 60.0);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "%03d:%02d", hours, minutes);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%03d:%02d", hours, minutes);
 	}
 
 	void format_time_HHMMSS(char *buf, double time)
@@ -219,9 +231,13 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "%02d:%02d:%02.0lf", hours, minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%02d:%02d:%02.0lf", hours, minutes, seconds);
 	}
 
 	void format_time_HHHMMSS(char *buf, double time)
@@ -231,9 +247,13 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "%03d:%02d:%02.0lf", hours, minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%03d:%02d:%02.0lf", hours, minutes, seconds);
 	}
 
 	void format_time_XXHMMSS(char *buf, double time)
@@ -243,9 +263,13 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "%d:%02d:%02.0lf", hours, minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%d:%02d:%02.0lf", hours, minutes, seconds);
 	}
 
 	void format_time_HHHMMSSC(char *buf, double time)
@@ -255,9 +279,13 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds, 0.1);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "%03d:%02d:%04.1lf", hours, minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%03d:%02d:%04.1lf", hours, minutes, seconds);
 	}
 
 	void format_time_HHHMMSSCS(char *buf, double time)
@@ -267,9 +295,13 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds, 0.01);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "%03d:%02d:%05.2lf", hours, minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%03d:%02d:%05.2lf", hours, minutes, seconds);
 	}
 
 	// Format precise time.
@@ -277,12 +309,15 @@ namespace OrbMech{
 	{
 		int hours, minutes;
 		double seconds;
-		int length = 0;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds, 0.01);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
 	}
 
 	void format_declination_HHMM(char *buf, double decl)
@@ -292,9 +327,17 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(decl), hours, minutes, seconds, 60.0);
-		if (decl < 0.0) hours = -hours;
 
-		sprintf(buf, "%+03d:%02d", hours, minutes);
+		int length = 0;
+		if (decl < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		else
+		{
+			length += sprintf(buf, "+");
+		}
+		sprintf(buf + length, "%02d:%02d", hours, minutes);
 	}
 
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V)
