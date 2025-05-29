@@ -1307,6 +1307,9 @@ public:
 	void SetAnimations(double);
 	void DoMeshAnimation(AnimState &, UINT &, double, double);
 
+	void UpdatePointingArrow();
+	PanelSwitchItem *nextActiveSwitch = nullptr;
+
 	//
 	// Flashlight for VC
 	//
@@ -4027,6 +4030,7 @@ protected:
 	int coascdridx;
 	int coascdrreticleidx;
 	int cmvccuecardsarrowsidx;
+	int hcmPointingArrowidx;
 
 	DEVMESHHANDLE vcmesh;
 
@@ -4766,5 +4770,6 @@ extern MESHHANDLE hcmseatsunfolded;
 extern MESHHANDLE hcmCOAScdr;
 extern MESHHANDLE hcmCOAScdrreticle;
 extern MESHHANDLE hcmCueCardsArrows;
+extern MESHHANDLE hcmPointingArrow;
 
 #endif // _PA_SATURN_H

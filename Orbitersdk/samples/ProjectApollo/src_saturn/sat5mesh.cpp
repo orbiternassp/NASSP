@@ -891,6 +891,10 @@ void SaturnV::SetThirdStageMesh (double offset)
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
+	// Pointing Arrow
+	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+	UpdatePointingArrow();
+
 	// VC
 	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);

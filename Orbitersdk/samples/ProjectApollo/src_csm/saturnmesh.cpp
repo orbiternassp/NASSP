@@ -93,6 +93,7 @@ MESHHANDLE hcmseatsunfolded;
 MESHHANDLE hcmCOAScdr;
 MESHHANDLE hcmCOAScdrreticle;
 MESHHANDLE hcmCueCardsArrows;
+MESHHANDLE hcmPointingArrow;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -666,6 +667,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hcmCOAScdr, "ProjectApollo/CM-COAS-CDR");
 	LOAD_MESH(hcmCOAScdrreticle, "ProjectApollo/CM-COAS-CDR_Reticle");
 	LOAD_MESH(hcmCueCardsArrows, "ProjectApollo/Helpers/CM-CueCardsArrows");
+	LOAD_MESH(hcmPointingArrow, "ProjectApollo/Helpers/PointingArrow");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
@@ -1067,6 +1069,10 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	fwdhatchidx = AddMesh(hFHF, &mesh_dir);
 	SetFwdHatchMesh();
 
+	// Pointing Arrow
+	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+	UpdatePointingArrow();
+
 	// VC
 	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
@@ -1350,7 +1356,8 @@ void Saturn::SetVCSeatsMesh() {
 }
 
 void Saturn::SetVCCueCardsArrows() {
-	if (checkControl.getFlashing() || ViewCueCardArrows) {
+//	if (checkControl.getFlashing() || ViewCueCardArrows) {
+	if (ViewCueCardArrows) {
 		SetMeshVisibilityMode(cmvccuecardsarrowsidx, MESHVIS_VC);
 	} else {
 		SetMeshVisibilityMode(cmvccuecardsarrowsidx, MESHVIS_NEVER);
@@ -1598,6 +1605,10 @@ void Saturn::SetReentryMeshes() {
 	//Interior
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	// Pointing Arrow
+	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+	UpdatePointingArrow();
 
 	// VC
 	UpdateVC(mesh_dir);
@@ -1886,6 +1897,10 @@ void Saturn::SetRecovery()
 
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
+
+	// Pointing Arrow
+	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+	UpdatePointingArrow();
 
 	// VC
 	UpdateVC(mesh_dir);

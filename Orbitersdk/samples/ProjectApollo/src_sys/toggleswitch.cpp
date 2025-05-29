@@ -1471,6 +1471,18 @@ void PanelSwitchesVC::ClearSwitches()
 	SwitchArea.clear();
 }
 
+PanelSwitchItem *PanelSwitchesVC::GetFlashingItem()
+{
+    for (unsigned i = 0; i < SwitchList.size(); i++)
+    {
+        if (SwitchList[i]->IsFlashing())
+        {
+            return SwitchList[i];
+        }
+    }
+    return NULL;
+}
+
 //
 // Panel of switches. This code wraps up a whole panel with multiple
 // rows of switches, and passes redraw and mouse events to the appropriate
@@ -1530,6 +1542,13 @@ bool PanelSwitches::SetFlashing(const char *n, bool flash)
 		if (p)
 		{
 			p->SetFlashing(flash);
+/*
+			if (flash) {
+				nextActiveSwitch = p;
+			}else{
+				nextActiveSwitch = nullptr;
+			}
+*/
 			return true;
 		}
 

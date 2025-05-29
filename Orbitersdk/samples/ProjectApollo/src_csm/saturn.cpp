@@ -1578,6 +1578,7 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	TRACE(buffer);
 
 	SetAnimations(simdt);
+	UpdatePointingArrow();
 	SetVCCueCardsArrows();
 
 	//

@@ -1635,6 +1635,8 @@ public:
 	void OnPostStep(double SimT, double DeltaT, double MJD);
 	void AddSwitch(PanelSwitchItem *s, int area = -1);
 	void ClearSwitches();
+	PanelSwitchItem* PanelSwitchesVC::GetFlashingItem();
+
 protected:
 	std::vector<PanelSwitchItem*>SwitchList;
 	std::vector<int> SwitchArea;

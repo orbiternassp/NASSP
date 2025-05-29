@@ -455,6 +455,7 @@ const VECTOR3 P306_TOGGLE_POS[P306_SWITCHCOUNT] = {
 };
 
 // Panel 325 Levers
+const VECTOR3	PRIMGLYHANDLE_POS = { -1.1482, 0.9682, -0.2071 };
 const VECTOR3 Cab_Press_Rel_Handle1Location = { -1.2149, 0.7847, -0.2850 };
 const VECTOR3 Cab_Press_Rel_Handle2Location = { -1.2024, 0.6799, -0.2992 };
 
@@ -1151,13 +1152,16 @@ void Saturn::RegisterActiveAreas() {
 	oapiVCSetAreaClickmode_Spherical(AID_VC_Altimeter_Cover, AltimeterLocation + ofs, 0.035);
 
 	// Ordeal Visibility
-	const VECTOR3 OrdealLocation = { -0.948518, 0.969146, -0.072308	};
+//	const VECTOR3 OrdealLocation = { -0.948518, 0.969146, -0.072308	};
 	oapiVCRegisterArea(AID_VC_Ordeal_Stowed, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Ordeal_Stowed, _V(-0.951784, 0.990513, -0.101253) + ofs, _V(-0.909671, 0.949469, -0.00952) + ofs, _V(-0.989466, 0.956964, -0.098965) + ofs, _V(-0.947352, 0.915919, -0.007232) + ofs);
 
 	// Panel382Cover
+	const VECTOR3 Panel382CoverLocation = { -1.0863, 0.1907, -0.66875 };
 	oapiVCRegisterArea(AID_VC_Panel382_Cover, PANEL_REDRAW_NEVER, PANEL_MOUSE_RBDOWN);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel382_Cover, _V(-1.0863, 0.2566, -0.8203) + ofs, _V(-1.0863, 0.2566, -0.5172) + ofs, _V(-1.0863, 0.1248, -0.8203) + ofs, _V(-1.0863, 0.1248, -0.5172) + ofs);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Panel382_Cover, Panel382CoverLocation + ofs, 0.05);
+//	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel382_Cover, _V(-1.0863, 0.2566, -0.8203) + ofs, _V(-1.0863, 0.2566, -0.5172) + ofs, _V(-1.0863, 0.1248, -0.8203) + ofs, _V(-1.0863, 0.1248, -0.5172) + ofs);
+//	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel382_Cover, _V(-1.0863, 0.2716, -0.8203) + ofs, _V(-1.0863, 0.2716, -0.5172) + ofs, _V(-1.0863, 0.2435, -0.8203) + ofs, _V(-1.0863, 0.2435, -0.5172) + ofs);
 	
 	// Waste Disposal
 	const VECTOR3 WasteKnobLocation = { 1.0773, -0.255847, -0.165491 };
@@ -3372,14 +3376,17 @@ void Saturn::DefineVCAnimations()
 	CmRcsHeDumpSwitch.DefineMeshGroup(VC_GRP_PB_P1_08, VC_GRP_SwitchCover_P1_15);
 
 	MainPanelVC.AddSwitch(&DirectUllageButton, AID_VC_PUSHB_P1_09);
+	DirectUllageButton.SetReference(P1_PUSHB_POS[8]);
 	DirectUllageButton.SetDirection(P1_3_PB_VECT);
 	DirectUllageButton.DefineMeshGroup(VC_GRP_PB_P1_09);
 
 	MainPanelVC.AddSwitch(&ThrustOnButton, AID_VC_PUSHB_P1_10);
+	ThrustOnButton.SetReference(P1_PUSHB_POS[9]);
 	ThrustOnButton.SetDirection(P1_3_PB_VECT);
 	ThrustOnButton.DefineMeshGroup(VC_GRP_PB_P1_10);
 
 	MainPanelVC.AddSwitch(&GDCAlignButton, AID_VC_PUSHB_P1_11);
+	GDCAlignButton.SetReference(P1_PUSHB_POS[10]);
 	GDCAlignButton.SetDirection(P1_3_PB_VECT);
 	GDCAlignButton.DefineMeshGroup(VC_GRP_PB_P1_11);
 
@@ -3803,83 +3810,104 @@ void Saturn::DefineVCAnimations()
 	GHAServoElecSwitch.DefineMeshGroup(VC_GRP_Sw_P2_90);
 
 	MainPanelVC.AddSwitch(&DskySwitchVerb, AID_VC_PUSHB_P2_01);
+	DskySwitchVerb.SetReference(P2_PUSHB_POS[0]);
 	DskySwitchVerb.SetDirection(P1_3_PB_VECT);
 	DskySwitchVerb.DefineMeshGroup(VC_GRP_PB_P2_01);
 
 	MainPanelVC.AddSwitch(&DskySwitchNoun, AID_VC_PUSHB_P2_02);
+	DskySwitchNoun.SetReference(P2_PUSHB_POS[1]);
 	DskySwitchNoun.SetDirection(P1_3_PB_VECT);
 	DskySwitchNoun.DefineMeshGroup(VC_GRP_PB_P2_02);
 
 	MainPanelVC.AddSwitch(&DskySwitchPlus, AID_VC_PUSHB_P2_03);
+	DskySwitchPlus.SetReference(P2_PUSHB_POS[2]);
 	DskySwitchPlus.SetDirection(P1_3_PB_VECT);
 	DskySwitchPlus.DefineMeshGroup(VC_GRP_PB_P2_03);
 
 	MainPanelVC.AddSwitch(&DskySwitchMinus, AID_VC_PUSHB_P2_04);
+	DskySwitchMinus.SetReference(P2_PUSHB_POS[3]);
 	DskySwitchMinus.SetDirection(P1_3_PB_VECT);
 	DskySwitchMinus.DefineMeshGroup(VC_GRP_PB_P2_04);
 
 	MainPanelVC.AddSwitch(&DskySwitchZero, AID_VC_PUSHB_P2_05);
+	DskySwitchZero.SetReference(P2_PUSHB_POS[4]);
 	DskySwitchZero.SetDirection(P1_3_PB_VECT);
 	DskySwitchZero.DefineMeshGroup(VC_GRP_PB_P2_05);
 
 	MainPanelVC.AddSwitch(&DskySwitchOne, AID_VC_PUSHB_P2_06);
+	DskySwitchOne.SetReference(P2_PUSHB_POS[5]);
 	DskySwitchOne.SetDirection(P1_3_PB_VECT);
 	DskySwitchOne.DefineMeshGroup(VC_GRP_PB_P2_06);
 
 	MainPanelVC.AddSwitch(&DskySwitchTwo, AID_VC_PUSHB_P2_07);
+	DskySwitchTwo.SetReference(P2_PUSHB_POS[6]);
 	DskySwitchTwo.SetDirection(P1_3_PB_VECT);
 	DskySwitchTwo.DefineMeshGroup(VC_GRP_PB_P2_07);
 
 	MainPanelVC.AddSwitch(&DskySwitchThree, AID_VC_PUSHB_P2_08);
+	DskySwitchThree.SetReference(P2_PUSHB_POS[7]);
 	DskySwitchThree.SetDirection(P1_3_PB_VECT);
 	DskySwitchThree.DefineMeshGroup(VC_GRP_PB_P2_08);
 
 	MainPanelVC.AddSwitch(&DskySwitchFour, AID_VC_PUSHB_P2_09);
+	DskySwitchFour.SetReference(P2_PUSHB_POS[8]);
 	DskySwitchFour.SetDirection(P1_3_PB_VECT);
 	DskySwitchFour.DefineMeshGroup(VC_GRP_PB_P2_09);
 
 	MainPanelVC.AddSwitch(&DskySwitchFive, AID_VC_PUSHB_P2_10);
+	DskySwitchFive.SetReference(P2_PUSHB_POS[9]);
 	DskySwitchFive.SetDirection(P1_3_PB_VECT);
 	DskySwitchFive.DefineMeshGroup(VC_GRP_PB_P2_10);
 
 	MainPanelVC.AddSwitch(&DskySwitchSix, AID_VC_PUSHB_P2_11);
+	DskySwitchSix.SetReference(P2_PUSHB_POS[10]);
 	DskySwitchSix.SetDirection(P1_3_PB_VECT);
 	DskySwitchSix.DefineMeshGroup(VC_GRP_PB_P2_11);
 
 	MainPanelVC.AddSwitch(&DskySwitchSeven, AID_VC_PUSHB_P2_12);
+	DskySwitchSeven.SetReference(P2_PUSHB_POS[11]);
 	DskySwitchSeven.SetDirection(P1_3_PB_VECT);
 	DskySwitchSeven.DefineMeshGroup(VC_GRP_PB_P2_12);
 
 	MainPanelVC.AddSwitch(&DskySwitchEight, AID_VC_PUSHB_P2_13);
+	DskySwitchEight.SetReference(P2_PUSHB_POS[12]);
 	DskySwitchEight.SetDirection(P1_3_PB_VECT);
 	DskySwitchEight.DefineMeshGroup(VC_GRP_PB_P2_13);
 
 	MainPanelVC.AddSwitch(&DskySwitchNine, AID_VC_PUSHB_P2_14);
+	DskySwitchNine.SetReference(P2_PUSHB_POS[13]);
 	DskySwitchNine.SetDirection(P1_3_PB_VECT);
 	DskySwitchNine.DefineMeshGroup(VC_GRP_PB_P2_14);
 
 	MainPanelVC.AddSwitch(&DskySwitchClear, AID_VC_PUSHB_P2_15);
+	DskySwitchClear.SetReference(P2_PUSHB_POS[14]);
 	DskySwitchClear.SetDirection(P1_3_PB_VECT);
 	DskySwitchClear.DefineMeshGroup(VC_GRP_PB_P2_15);
 
 	MainPanelVC.AddSwitch(&DskySwitchProceed, AID_VC_PUSHB_P2_16);
+	DskySwitchProceed.SetReference(P2_PUSHB_POS[15]);
 	DskySwitchProceed.SetDirection(P1_3_PB_VECT);
 	DskySwitchProceed.DefineMeshGroup(VC_GRP_PB_P2_16);
 
 	MainPanelVC.AddSwitch(&DskySwitchKeyRel, AID_VC_PUSHB_P2_17);
+	DskySwitchKeyRel.SetReference(P2_PUSHB_POS[16]);
 	DskySwitchKeyRel.SetDirection(P1_3_PB_VECT);
 	DskySwitchKeyRel.DefineMeshGroup(VC_GRP_PB_P2_17);
 
 	MainPanelVC.AddSwitch(&DskySwitchEnter, AID_VC_PUSHB_P2_18);
+	DskySwitchEnter.SetReference(P2_PUSHB_POS[17]);
 	DskySwitchEnter.SetDirection(P1_3_PB_VECT);
 	DskySwitchEnter.DefineMeshGroup(VC_GRP_PB_P2_18);
 
 	MainPanelVC.AddSwitch(&DskySwitchReset, AID_VC_PUSHB_P2_19);
+	DskySwitchReset.SetReference(P2_PUSHB_POS[18]);
 	DskySwitchReset.SetDirection(P1_3_PB_VECT);
 	DskySwitchReset.DefineMeshGroup(VC_GRP_PB_P2_19);
 
 	const VECTOR3	POSTLDGVENT_VECT = { 0.00, 0.005*cos(P1_3_TILT + (90.0 * RAD)), 0.005*sin(P1_3_TILT + (90.0 * RAD)) };
+	const VECTOR3	POSTLDGVENT_POS = { 0.183459, 0.922476, 0.408289 };
 	MainPanelVC.AddSwitch(&PostLDGVentValveLever, AID_VC_POSTLDGVENTHANDLE);
+	PostLDGVentValveLever.SetReference(POSTLDGVENT_POS);
 	PostLDGVentValveLever.SetDirection(POSTLDGVENT_VECT);
 	PostLDGVentValveLever.DefineMeshGroup(VC_GRP_PostLandingVentHandle);
 
@@ -4557,6 +4585,7 @@ void Saturn::DefineVCAnimations()
 	for (int i = 0; i < P4_CBCOUNT; i++)
 	{
 		MainPanelVC.AddSwitch(breakerspanel4[i], AID_VC_CB_P4_01 + i);
+		breakerspanel4[i]->SetReference(P4_CB_POS[i]);
 		breakerspanel4[i]->SetDirection(cb_P4_vector);
 		breakerspanel4[i]->DefineMeshGroup(VC_GRP_CB_P4_01 + i);
 	}
@@ -4879,6 +4908,7 @@ void Saturn::DefineVCAnimations()
 	for (int i = 0; i < P8_CBCOUNT; i++)
 	{
 		MainPanelVC.AddSwitch(breakerspanel8[i], AID_VC_CB_P8_01 + i);
+		breakerspanel8[i]->SetReference(P8_CB_POS[i]);
 		breakerspanel8[i]->SetDirection(cb_p8_vector);
 		breakerspanel8[i]->DefineMeshGroup(VC_GRP_CB_P8_01 + i);
 	}
@@ -5323,6 +5353,7 @@ void Saturn::DefineVCAnimations()
 	const VECTOR3	P325_HANDLE_AXIS = { 0, 1, 0 };
 
 	MainPanelVC.AddSwitch(&GlycolToRadiatorsLever, AID_VC_Prim_Gly_Handle);
+	GlycolToRadiatorsLever.SetReference(PRIMGLYHANDLE_POS);
 	GlycolToRadiatorsLever.SetDirection(PRIMGLYHANDLE_VECT);
 	GlycolToRadiatorsLever.DefineMeshGroup(VC_GRP_Prim_Gly_Handle);
 
@@ -5399,6 +5430,7 @@ void Saturn::DefineVCAnimations()
 	for (int i = 0; i < LEB_R1_CBCOUNT; i++)
 	{
 		MainPanelVC.AddSwitch(breakersleb1[i], AID_VC_CB_LEB_R1_01 + i);
+		breakersleb1[i]->SetReference(LEB_R1_CB_POS[i]);
 		breakersleb1[i]->SetDirection(cb_leb_r_vector);
 		breakersleb1[i]->DefineMeshGroup(VC_GRP_CB_LEB_Right1_01 + i);
 	}
@@ -5413,6 +5445,7 @@ void Saturn::DefineVCAnimations()
 	for (int i = 0; i < LEB_R2_CBCOUNT; i++)
 	{
 		MainPanelVC.AddSwitch(breakersleb2[i], AID_VC_CB_LEB_R2_01 + i);
+		breakersleb2[i]->SetReference(LEB_R2_CB_POS[i]);
 		breakersleb2[i]->SetDirection(cb_leb_r_vector);
 		breakersleb2[i]->DefineMeshGroup(VC_GRP_CB_LEB_Right2_01 + i);
 	}
@@ -5513,18 +5546,22 @@ void Saturn::DefineVCAnimations()
 	const VECTOR3 handle_leb_l_vector = { -0.01, 0, 0 };
 
 	MainPanelVC.AddSwitch(&SuitCircuitReturnValveLever, AID_VC_PUSHB_LEB_L_01);
+	SuitCircuitReturnValveLever.SetReference(LEB_L_PUSHB_POS[0]);
 	SuitCircuitReturnValveLever.SetDirection(handle_leb_l_vector);
 	SuitCircuitReturnValveLever.DefineMeshGroup(VC_GRP_PB_LEB_Left_01);
 
 	MainPanelVC.AddSwitch(&O2MainRegulatorASwitch, AID_VC_PUSHB_LEB_L_02);
+	O2MainRegulatorASwitch.SetReference(LEB_L_PUSHB_POS[1]);
 	O2MainRegulatorASwitch.SetDirection(handle_leb_l_vector);
 	O2MainRegulatorASwitch.DefineMeshGroup(VC_GRP_PB_LEB_Left_02);
 
 	MainPanelVC.AddSwitch(&O2MainRegulatorBSwitch, AID_VC_PUSHB_LEB_L_03);
+	O2MainRegulatorBSwitch.SetReference(LEB_L_PUSHB_POS[2]);
 	O2MainRegulatorBSwitch.SetDirection(handle_leb_l_vector);
 	O2MainRegulatorBSwitch.DefineMeshGroup(VC_GRP_PB_LEB_Left_03);
 
 	MainPanelVC.AddSwitch(&EmergencyCabinPressureTestSwitch, AID_VC_PUSHB_LEB_L_04);
+	EmergencyCabinPressureTestSwitch.SetReference(LEB_L_PUSHB_POS[3]);
 	EmergencyCabinPressureTestSwitch.SetDirection(pb_leb_l_vector);
 	EmergencyCabinPressureTestSwitch.DefineMeshGroup(VC_GRP_PB_LEB_Left_04);
 
@@ -5783,3 +5820,126 @@ void Saturn::ToggleFlashlight()
 		SetFlashlightOn(!flashlightOn);
 	}
 }
+
+void Saturn::UpdatePointingArrow()
+{
+	if (!vcmesh) return;
+	bool arrowVisible = checkControl.getFlashing();
+
+	PanelSwitchItem *nextActiveSwitch = MainPanelVC.GetFlashingItem();
+
+	if (!arrowVisible || nextActiveSwitch == nullptr) {				// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
+		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_NEVER);
+//		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_VC);		// *** VIEW THE ARROW ALWAYS DURING TESTS *** 
+		return;														// *** ALSO DO ALL THE TRANSFORMATION ***
+	}
+
+	VECTOR3 activeSwitchPos = nextActiveSwitch->GetReference();
+	VECTOR3 camPosGlobal, camOffset, camDir, globVesselPos, camPointing, ofs;	
+
+	oapiCameraGlobalPos(&camPosGlobal);					//Get camera (in global co-ords)
+	Global2Local(camPosGlobal, camOffset);				//Translate from global to local co-ordinates.
+	oapiCameraGlobalDir(&camDir);						//Get camera direction (in global co-ords)
+	GetGlobalPos(globVesselPos);						//Get global position of vessel so we can translate
+	Global2Local(globVesselPos + camDir, camPointing);	//Translate from global to local co-ordinates.
+//	normalise(camPointing);
+
+	GetMeshOffset(vcidx, ofs);
+
+	DEVMESHHANDLE hArrowMesh = GetDevMesh (vis, hcmPointingArrowidx);
+	
+	static bool first = true;
+	static VECTOR3* arrowData;
+	static int arrowVertsCnt;
+	if (first) {											// Run this once for retrieving the Arrow data
+		MESHGROUP* group = oapiMeshGroup(GetMeshTemplate(hcmPointingArrowidx), 0);
+		arrowVertsCnt = group->nVtx;
+		arrowData = new VECTOR3[arrowVertsCnt];
+		for (int i = 0; i < arrowVertsCnt; i++) {			// Make a copy of the Arrow data
+			arrowData[i].x = (double)group->Vtx[i].x;
+			arrowData[i].y = (double)group->Vtx[i].y;
+			arrowData[i].z = (double)group->Vtx[i].z;
+		}
+		first = false;
+	}
+	GROUPREQUESTSPEC vc_grp;
+	memset (&vc_grp, 0, sizeof(GROUPREQUESTSPEC));
+	if (vc_grp.Vtx) delete []vc_grp.Vtx;
+	vc_grp.nVtx = arrowVertsCnt;
+
+	if (!vc_grp.Vtx) vc_grp.Vtx = new NTVERTEX[vc_grp.nVtx];
+	if (oapiGetMeshGroup (hArrowMesh, 0, &vc_grp) != 0) { // problems
+		delete []vc_grp.Vtx;
+		vc_grp.Vtx = 0;
+	}
+	NTVERTEX *Vtx = vc_grp.Vtx;
+
+	VECTOR3 arrowCurPos = camOffset - ofs + (camPointing * 0.15);	// Move the Arrow to this Position
+
+	// Rotationsberechnung, um die Spitze auszurichten
+	VECTOR3 init_dir = {0, 0, 1};									// Richtung des Pfeils (anfangs entlang der positiven Z-Achse)
+	VECTOR3 pointing_dir = activeSwitchPos - arrowCurPos;			// Zielrichtung (Vektor vom Zielort zur Blickrichtung)
+	normalise(pointing_dir);
+	
+	VECTOR3 rot_axis = crossp(init_dir, pointing_dir);				// Rotationsachse (Kreuzprodukt der initialen und der Zielrichtung)
+	normalise(rot_axis);
+
+	double dot = dotp(init_dir, pointing_dir);						// Rotationswinkel (Winkel zwischen der initialen und der Zielrichtung)
+    double angle = std::acos(max(-1.0, min(1.0, dot)));				// Clamp to avoid NaN
+
+    MATRIX3 rotation = rotm(rot_axis, angle);
+
+	for (int i = 0; i < arrowVertsCnt; i++) {
+		VECTOR3 arrowData2 = arrowData[i] * oapiCameraAperture();	// Scale the Arrow depending on Camera FOV
+//		sprintf(oapiDebugString(), "%.3f", oapiCameraAperture()*2);
+
+		VECTOR3 final_vertex = mul(rotation, arrowData2) + arrowCurPos;	// Rotate and Translate the Arrow Vertices
+
+		vc_grp.Vtx[i].x = (float)final_vertex.x;	// Copy Vertices
+		vc_grp.Vtx[i].y = (float)final_vertex.y;
+		vc_grp.Vtx[i].z = (float)final_vertex.z;
+	}
+
+//	sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ** %.3f  %.3f  %.3f", camOffset.x, camOffset.y, camOffset.z, camPointing.x, camPointing.y, camPointing.z, vc_grp.Vtx[0].x, vc_grp.Vtx[0].y, vc_grp.Vtx[0].z);
+
+	GROUPEDITSPEC ges;
+	ges.flags = GRPEDIT_VTXCRD;
+	ges.nVtx = vc_grp.nVtx;
+	ges.Vtx  = vc_grp.Vtx;
+	ges.vIdx = 0;
+	oapiEditMeshGroup(hArrowMesh, 0, &ges);	// Move the Arrow
+
+//########################################################################
+//########################################################################
+//########################################################################
+/*
+	MESHGROUP *mg = oapiMeshGroup(vcmesh, VC_GRP_Rot_P2_02);		// get the Mesh group to be Highlighted
+	DWORD matidx = mg->MtrlIdx;										// get its original material index;
+	MATERIAL *newMat = oapiMeshMaterial(hCMVC, matidx);				// get the group material
+	DWORD newMatIdx = oapiAddMaterial(hCMVC, newMat);				// add a copy of the material at the bootm
+	mg->MtrlIdx = newMatIdx;										//set the group material to the copy just added
+
+	MATERIAL *mat = oapiMeshMaterial(hCMVC, matidx);				// Get the original material definition
+	MATERIAL *mat2 = new MATERIAL;									// Create the new material for the excahnge
+	mat2->ambient = mat->ambient;									// Set all the values of the new material exactly as the original
+	mat2->diffuse = mat->diffuse;
+	mat2->emissive = mat->emissive;
+	mat2->specular = mat->specular;
+	mat2->power = mat->power;
+
+	if (arrowVisible) {												// if Highlight
+		mat2->emissive.r = 1;										// Set the emissive color of the new material at maximum 
+		mat2->emissive.b = 1;
+		mat2->emissive.g = 1;
+	}
+
+	oapiSetMaterial(vcmesh, matidx, mat2);							// change the material to the new one. if not highlight the original will then be restored
+	delete mat2;													// cleanup
+*/
+//########################################################################
+//########################################################################
+//########################################################################
+
+	SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_VC);
+}
+
