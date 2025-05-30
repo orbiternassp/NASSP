@@ -52,6 +52,8 @@
 #include "MFDResource.h"
 #include "ProjectApolloMFD.h"
 
+#include "../src_skylab/skylab.h"
+
 #include <queue>
 
 using namespace nassp;
@@ -73,6 +75,7 @@ static struct ProjectApolloMFDData {  // global data storage
 	int prog;	
 	Saturn *progVessel;
 	LEM *gorpVessel;
+	Skylab *SLVessel;
 
 	int emem[24];
 	int connStatus;
@@ -647,6 +650,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 	lem = NULL;
 	mcc = NULL;
 	sivb = NULL;
+	sl = NULL;
 	our_vessel = NULL;
 	width = w;
 	height = h;
@@ -687,6 +691,12 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 	}
 	else if (utils::IsVessel(vessel, utils::SIVB)) {
 		sivb = (SIVB*)vessel;
+		g_Data.vessel = our_vessel = vessel;
+		Supported = true;
+	}
+	else if (utils::IsVessel(vessel, utils::Skylab)) {
+		sl = (Skylab *)vessel;
+		g_Data.SLVessel = sl;
 		g_Data.vessel = our_vessel = vessel;
 		Supported = true;
 	}
@@ -1099,7 +1109,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 		}
 	}
 
-	// Draw IMFD
+	// Draw IU Page
 	else if (screen == m_buttonPages.page.IU) {
 		skp->Text(width / 2, (int)(height * 0.3), "IU Uplink Data", 14);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
@@ -1546,6 +1556,33 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			skp->Text(width / 2, (int)(height * 0.5), "Failures not supported!", 23);
 		}
 	}
+
+	// Draw Skylab Screen
+	else if (screen == m_buttonPages.page.SL)
+	{
+		skp->Text(width / 2, (int)(height * 0.3), "Skylab Interface", 16);
+
+		if (saturn)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.1), (int)(height * 0.9), "Lighting Status:", 16);
+
+			if () //needs to look for current light status
+			{
+				skp->Text((int)(width * 0.6), (int)(height * 0.9), "Enabled", 7);
+			}
+			else
+			{
+				skp->Text((int)(width * 0.6), (int)(height * 0.9), "Disabled", 8);
+			}
+		}
+
+		else
+		{
+			skp->Text(width / 2, (int)(height * 0.4), "Skylab Not Present", 18);
+		}
+	}
+
 	return true;
 }
 
@@ -2016,6 +2053,12 @@ void ProjectApolloMFD::menuSetFailuresPage()
 void ProjectApolloMFD::menuSetDebugPage()
 {
 	screen = m_buttonPages.page.Debug;
+	m_buttonPages.SelectPage(this, screen);
+}
+
+void ProjectApolloMFD::menuSetSLPage()
+{
+	screen = m_buttonPages.page.SL;
 	m_buttonPages.SelectPage(this, screen);
 }
 
@@ -2576,6 +2619,15 @@ void ProjectApolloMFD::menuCycleFailuresSubpage()
 		}
 	}
 }
+
+void ProjectApolloMFD::menuToggleSLLighting()
+{
+	if ()
+	{
+		//needs to toggle skylab lighting
+	}
+}
+
 
 OBJHANDLE ProjectApolloMFD::AGCGravityRef(VESSEL *vessel) const
 {
