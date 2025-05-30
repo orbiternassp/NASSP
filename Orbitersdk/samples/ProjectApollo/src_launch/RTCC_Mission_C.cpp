@@ -701,14 +701,14 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SPQResults res;
 		double P30TIG;
 		VECTOR3 dV_LVLH;
-		SV sv_A, sv_P;
+		VehicleDataBlock sv_A, sv_P;
 		PLAWDTOutput WeightsTable;
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
 
-		sv_A = StateVectorCalc(calcParams.src); //State vector for uplink
-		sv_P = StateVectorCalc(calcParams.tgt); //State vector for uplink
+		sv_A = StateVectorCalcDataBlock(calcParams.src); //State vector for uplink
+		sv_P = StateVectorCalcDataBlock(calcParams.tgt); //State vector for uplink
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		AP7MNV * form = (AP7MNV *)pad;
@@ -716,15 +716,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		spqopt.E = 27.45*RAD;
 		spqopt.sv_A = sv_A;
 		spqopt.sv_P = sv_P;
-		spqopt.t_CSI = -1;
-		spqopt.t_CDH = FindDH(sv_A, sv_P, 28.0*3600.0 + 1.0*60.0, 8.0*1852.0);
+		spqopt.GMT_CSI = -1;
+		spqopt.GMT_CDH = FindDH(sv_A, sv_P, GMTfromGET(28.0*3600.0 + 1.0*60.0), 8.0*1852.0);
 
 		ConcentricRendezvousProcessor(spqopt, res);
 
 		in.CONFIG = 1; //CSM
-		in.CSMWeight = sv_A.mass;
-		in.sv_before = ConvertSVtoEphemData(res.sv_C[0]);
-		in.V_aft = res.sv_C_apo[0].V;
+		in.CSMWeight = sv_A.Weight;
+		in.sv_before = res.sv_C[0].sv;
+		in.V_aft = res.sv_C_apo[0].sv.V;
 		in.DETU = 15.0; //Ullage
 		in.UT = true; //4 jets
 		in.IgnitionTimeOption = false;
@@ -748,15 +748,15 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.navcheckGET = 27 * 60 * 60 + 17 * 60;
 		opt.UllageDT = 15.0;
 		opt.UllageThrusterOpt = true;
-		opt.sv0 = ConvertSVtoEphemData(sv_A);
+		opt.sv0 = sv_A.sv;
 		opt.WeightsTable = WeightsTable;
 
 		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "NSR");
 		sprintf(form->remarks, "heads down, retrograde");
 
-		AGCStateVectorUpdate(buffer1, sv_A, true);
-		AGCStateVectorUpdate(buffer2, sv_P, false);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_A.sv);
+		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_P.sv);
 		CMCExternalDeltaVUpdate(buffer3, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);

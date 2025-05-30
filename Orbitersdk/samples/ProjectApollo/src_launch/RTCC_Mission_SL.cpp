@@ -263,7 +263,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		calcParams.CSI = PZREDT.GET[1]; //NCC time
 		calcParams.CDH = calcParams.CSI + 37.0*60.0; //NSR time
 		calcParams.LunarLiftoff = PZREDT.PHASE[2] * RAD; //Phase angle at NSR
-		calcParams.SVSTORE1 = ConvertEphemDatatoSV(PZDKIELM.Block[0].SV_before[1], CSMMass); //State vector before NCC
+		calcParams.SVSTORE1 = ConvertEphemDatatoSV(PZDKIELM.Block[0].SV_before[1].sv, CSMMass); //State vector before NCC
 
 		manopt.TIG = calcParams.Insertion;
 		manopt.dV_LVLH = PZREDT.DVVector[0] * 0.3048;
