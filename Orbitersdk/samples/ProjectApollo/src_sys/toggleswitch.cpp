@@ -1978,12 +1978,13 @@ void GuardedPushSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
-void GuardedPushSwitch::SetReference(const VECTOR3& _dir, const VECTOR3& coverref, const VECTOR3& _coverdir)
+void GuardedPushSwitch::SetReference(const VECTOR3& _dir, const VECTOR3& coverref, const VECTOR3& ref, const VECTOR3& _coverdir)
 {
 	bHasReference = true;
 	bHasDirection = true;
 	dir = _dir;
 	coverreference = coverref;
+	reference = ref;
 	coverdir = _coverdir;
 }
 

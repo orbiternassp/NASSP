@@ -2244,7 +2244,7 @@ void LEM::DefineVCAnimations()
 	AbortSwitch.DefineMeshGroup(VC_GRP_AbortButton);
 
 	MainPanelVC.AddSwitch(&AbortStageSwitch, AID_VC_ABORTSTAGE_BUTTON);
-	AbortStageSwitch.SetReference(abortbuttonvector, _V(-0.045187, 0.468451, 1.68831), _V(1, 0, 0));
+	AbortStageSwitch.SetReference(abortbuttonvector, _V(-0.045187, 0.468451, 1.68831), _V(-0.047192, 0.437682, 1.68536), _V(1, 0, 0));
 	AbortStageSwitch.SetCoverRotationAngle(100.0*RAD);
 	AbortStageSwitch.DefineMeshGroup(VC_GRP_AbortStageButton, VC_GRP_AbortStageCover);
 	AbortStageSwitch.SetInitialAnimState(1.0);

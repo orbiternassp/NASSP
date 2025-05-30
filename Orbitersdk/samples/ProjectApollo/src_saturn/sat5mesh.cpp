@@ -893,7 +893,7 @@ void SaturnV::SetThirdStageMesh (double offset)
 
 	// Pointing Arrow
 	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
-	UpdatePointingArrow();
+//	UpdatePointingArrow();
 
 	// VC
 	UpdateVC(mesh_dir);

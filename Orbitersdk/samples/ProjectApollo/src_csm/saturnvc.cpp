@@ -3334,44 +3334,44 @@ void Saturn::DefineVCAnimations()
 	VECTOR3	SEQS_COVER_AXIS = { -0.00, -sin(P1_3_TILT + (90.0 * RAD)), cos(P1_3_TILT + (90.0 * RAD)) };
 
 	MainPanelVC.AddSwitch(&LiftoffNoAutoAbortSwitch, AID_VC_PUSHB_P1_01);
-	LiftoffNoAutoAbortSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[7], SEQS_COVER_AXIS);
+	LiftoffNoAutoAbortSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[7], P1_PUSHB_POS[0], SEQS_COVER_AXIS);
 	LiftoffNoAutoAbortSwitch.SetCoverRotationAngle(70.0*RAD);
 	LiftoffNoAutoAbortSwitch.DefineMeshGroup(VC_GRP_PB_P1_01, VC_GRP_SwitchCover_P1_08);
 
 	MainPanelVC.AddSwitch(&LesMotorFireSwitch, AID_VC_PUSHB_P1_02);
-	LesMotorFireSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[8], SEQS_COVER_AXIS);
+	LesMotorFireSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[8], P1_PUSHB_POS[1], SEQS_COVER_AXIS);
 	LesMotorFireSwitch.SetCoverRotationAngle(70.0*RAD);
 	LesMotorFireSwitch.DefineMeshGroup(VC_GRP_PB_P1_02, VC_GRP_SwitchCover_P1_09);
 
 	MainPanelVC.AddSwitch(&CanardDeploySwitch, AID_VC_PUSHB_P1_03);
-	CanardDeploySwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[9], SEQS_COVER_AXIS);
+	CanardDeploySwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[9], P1_PUSHB_POS[2], SEQS_COVER_AXIS);
 	CanardDeploySwitch.SetCoverRotationAngle(70.0*RAD);
 	CanardDeploySwitch.DefineMeshGroup(VC_GRP_PB_P1_03, VC_GRP_SwitchCover_P1_10);
 
 	MainPanelVC.AddSwitch(&CsmLvSepSwitch, AID_VC_PUSHB_P1_04);
-	CsmLvSepSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[10], SEQS_COVER_AXIS);
+	CsmLvSepSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[10], P1_PUSHB_POS[3], SEQS_COVER_AXIS);
 	CsmLvSepSwitch.SetCoverRotationAngle(70.0*RAD);
 	CsmLvSepSwitch.DefineMeshGroup(VC_GRP_PB_P1_04, VC_GRP_SwitchCover_P1_11);
 
 	SEQS_COVER_AXIS = { -0.00, sin(P1_3_TILT + (90.0 * RAD)), -cos(P1_3_TILT + (90.0 * RAD)) };
 
 	MainPanelVC.AddSwitch(&ApexCoverJettSwitch, AID_VC_PUSHB_P1_05);
-	ApexCoverJettSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[11], SEQS_COVER_AXIS);
+	ApexCoverJettSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[11], P1_PUSHB_POS[4], SEQS_COVER_AXIS);
 	ApexCoverJettSwitch.SetCoverRotationAngle(70.0*RAD);
 	ApexCoverJettSwitch.DefineMeshGroup(VC_GRP_PB_P1_05, VC_GRP_SwitchCover_P1_12);
 
 	MainPanelVC.AddSwitch(&DrogueDeploySwitch, AID_VC_PUSHB_P1_06);
-	DrogueDeploySwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[12], SEQS_COVER_AXIS);
+	DrogueDeploySwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[12], P1_PUSHB_POS[5], SEQS_COVER_AXIS);
 	DrogueDeploySwitch.SetCoverRotationAngle(70.0*RAD);
 	DrogueDeploySwitch.DefineMeshGroup(VC_GRP_PB_P1_06, VC_GRP_SwitchCover_P1_13);
 
 	MainPanelVC.AddSwitch(&MainDeploySwitch, AID_VC_PUSHB_P1_07);
-	MainDeploySwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[13], SEQS_COVER_AXIS);
+	MainDeploySwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[13], P1_PUSHB_POS[6], SEQS_COVER_AXIS);
 	MainDeploySwitch.SetCoverRotationAngle(70.0*RAD);
 	MainDeploySwitch.DefineMeshGroup(VC_GRP_PB_P1_07, VC_GRP_SwitchCover_P1_14);
 
 	MainPanelVC.AddSwitch(&CmRcsHeDumpSwitch, AID_VC_PUSHB_P1_08);
-	CmRcsHeDumpSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[14], SEQS_COVER_AXIS);
+	CmRcsHeDumpSwitch.SetReference(P1_3_PB_VECT, P1_COVERS_POS[14], P1_PUSHB_POS[7], SEQS_COVER_AXIS);
 	CmRcsHeDumpSwitch.SetCoverRotationAngle(70.0*RAD);
 	CmRcsHeDumpSwitch.DefineMeshGroup(VC_GRP_PB_P1_08, VC_GRP_SwitchCover_P1_15);
 
@@ -4660,6 +4660,7 @@ void Saturn::DefineVCAnimations()
 	for (int i = 0; i < P5_CBCOUNT; i++)
 	{
 		MainPanelVC.AddSwitch(breakerspanel5[i], AID_VC_CB_P5_01 + i);
+		breakerspanel5[i]->SetReference(P5_CB_POS[i]);
 		breakerspanel5[i]->SetDirection(cb_p5_vector);
 		breakerspanel5[i]->DefineMeshGroup(VC_GRP_CB_P5_01 + i);
 	}
@@ -5827,14 +5828,20 @@ void Saturn::UpdatePointingArrow()
 	bool arrowVisible = checkControl.getFlashing();
 
 	PanelSwitchItem *nextActiveSwitch = MainPanelVC.GetFlashingItem();
+	bool Panel382Flash = Panel382Cover.IsFlashing();
 
-	if (!arrowVisible || nextActiveSwitch == nullptr) {				// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
+	if (!arrowVisible || nextActiveSwitch == nullptr && !Panel382Flash) {	// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
 		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_NEVER);
-//		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_VC);		// *** VIEW THE ARROW ALWAYS DURING TESTS *** 
-		return;														// *** ALSO DO ALL THE TRANSFORMATION ***
+//		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_VC);				// *** VIEW THE ARROW ALWAYS DURING TESTS *** 
+		return;																// *** ALSO DO ALL THE TRANSFORMATION ***
+	}
+	VECTOR3 activeSwitchPos;
+	if (Panel382Flash) {					// Special handling for Panel 382 Cover
+		activeSwitchPos = _V(-1.0863, 0.2080, -0.6266);	
+	} else {
+		activeSwitchPos = nextActiveSwitch->GetReference();
 	}
 
-	VECTOR3 activeSwitchPos = nextActiveSwitch->GetReference();
 	VECTOR3 camPosGlobal, camOffset, camDir, globVesselPos, camPointing, ofs;	
 
 	oapiCameraGlobalPos(&camPosGlobal);					//Get camera (in global co-ords)
@@ -5939,7 +5946,6 @@ void Saturn::UpdatePointingArrow()
 //########################################################################
 //########################################################################
 //########################################################################
-
 	SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_VC);
 }
 
