@@ -46,6 +46,7 @@ void Skylab::InitSkylab() {
 	SetMeshVisibilityMode(skylabmeshID, MESHVIS_ALWAYS);
 	skylabanimations.DefineAnimations();
 
+	trackLightsActive = true;
 	AddTrackLights();
 
 	visibilitySize = 31.1; //Tuned so Skylab disappears in the CSM optics at 400nm range
@@ -328,6 +329,35 @@ void Skylab::AddTrackLights()
 		tracklights[i].tofs = 0;
 		tracklights[i].active = true;
 		AddBeacon(tracklights + i);
+	}
+}
+
+void Skylab::ToggleTrackLights() //Toggle for MFD use
+{
+	if (trackLightsActive)
+	{
+		TrackLightsOff();
+	}
+
+	else
+	{
+		TrackLightsOn();
+	}
+}
+
+void Skylab::TrackLightsOn()
+{
+	for (int i = 0; i < 2; i++)
+	{
+		tracklights[i].active = trackLightsActive = true;
+	}
+}
+
+void Skylab::TrackLightsOff()
+{
+	for (int i = 0; i < 2; i++)
+	{
+		tracklights[i].active = trackLightsActive = false;
 	}
 }
 
