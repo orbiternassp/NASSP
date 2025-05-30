@@ -1310,13 +1310,13 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.W_TAPS = 4711.0;
 		opt.W_TDRY = 6874.3;
 		opt.dt_step = 20.0;
-		opt.t_TPI = t_TPI;
+		opt.GMT_TPI = GMTfromGET(t_TPI);
 		opt.IsTwoSegment = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv_A = SVToVehicleDataBlock(ConvertSVtoEphemData(sv_INP), 1.0, sv_INP.mass, 1.0);
 		opt.sv_P = SVToVehicleDataBlock(ConvertSVtoEphemData(sv2), 1.0, sv2.mass, 1.0);
-		opt.TLAND = CZTDTGTU.GETTD;
+		opt.GMT_LAND = GMTfromGET(CZTDTGTU.GETTD);
 
 		PoweredDescentAbortProgram(opt, res);
 
@@ -2118,13 +2118,13 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.W_TAPS = 4711.0;
 		opt.W_TDRY = 6874.3;
 		opt.dt_step = 20.0;
-		opt.t_TPI = t_TPI;
+		opt.GMT_TPI = GMTfromGET(t_TPI);
 		opt.IsTwoSegment = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv_A = SVToVehicleDataBlock(ConvertSVtoEphemData(sv1), 1.0, sv1.mass, 1.0);
 		opt.sv_P = SVToVehicleDataBlock(ConvertSVtoEphemData(sv2), 1.0, sv2.mass, 1.0);
-		opt.TLAND = CZTDTGTU.GETTD;
+		opt.GMT_LAND = GMTfromGET(CZTDTGTU.GETTD);
 		//opt.dt_2CSI = 0.0;
 		//opt.dt_2TPI = 0.0;
 

@@ -389,7 +389,7 @@ bool DPSPropellantSource::IsGaugingPowered() {
 
 double DPSPropellantSource::GetOxidizerTank1BulkTempF()
 {
-	if (lem->stage < 2)
+	if (lem->stage >= 2)
 		return 20.0; //TBD: This is equal to 0V measured in the SCEA, there has to be a better system
 
 	return 70.0; //TBD: Simulate temperature
@@ -397,7 +397,7 @@ double DPSPropellantSource::GetOxidizerTank1BulkTempF()
 
 double DPSPropellantSource::GetOxidizerTank2BulkTempF()
 {
-	if (lem->stage < 2)
+	if (lem->stage >= 2)
 		return 20.0; //TBD: This is equal to 0V measured in the SCEA, there has to be a better system
 
 	return 70.0; //TBD: Simulate temperature
@@ -405,7 +405,7 @@ double DPSPropellantSource::GetOxidizerTank2BulkTempF()
 
 double DPSPropellantSource::GetFuelTank1BulkTempF()
 {
-	if (lem->stage < 2)
+	if (lem->stage >= 2)
 		return 20.0; //TBD: This is equal to 0V measured in the SCEA, there has to be a better system
 
 	return 70.0; //TBD: Simulate temperature
@@ -413,7 +413,7 @@ double DPSPropellantSource::GetFuelTank1BulkTempF()
 
 double DPSPropellantSource::GetFuelTank2BulkTempF()
 {
-	if (lem->stage < 2)
+	if (lem->stage >= 2)
 		return 20.0; //TBD: This is equal to 0V measured in the SCEA, there has to be a better system
 
 	return 70.0; //TBD: Simulate temperature

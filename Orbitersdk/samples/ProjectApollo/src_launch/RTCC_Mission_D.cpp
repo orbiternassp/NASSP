@@ -1044,29 +1044,29 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SPQOpt opt;
 		SPQResults res;
 		AP11LMManPADOpt manopt;
-		SV sv_A, sv_P;
+		VehicleDataBlock sv_A, sv_P;
 		VECTOR3 dV_LVLH;
 		double TIG, P30TIG;
 
-		sv_A = StateVectorCalc(calcParams.tgt);
-		sv_P = StateVectorCalc(calcParams.src);
+		sv_A = StateVectorCalcDataBlock(calcParams.tgt);
+		sv_P = StateVectorCalcDataBlock(calcParams.src);
 
 		TIG = calcParams.Insertion;
 
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
-		opt.t_CSI = -1;
-		opt.t_CDH = TIG;
+		opt.GMT_CSI = -1;
+		opt.GMT_CDH = GMTfromGET(TIG);
 
 		ConcentricRendezvousProcessor(opt, res);
-		PoweredFlightProcessor(sv_A, TIG, RTCC_ENGINETYPE_LMDPS, 0.0, res.dV_CDH, true, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(ConvertEphemDatatoSV(sv_A.sv, sv_A.Weight), TIG, RTCC_ENGINETYPE_LMDPS, 0.0, res.dV_CDH, true, P30TIG, dV_LVLH);
 
 		manopt.TIG = P30TIG;
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_LMDPS;
 		manopt.HeadsUp = false;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		manopt.RV_MCC = ConvertSVtoEphemData(sv_A);
+		manopt.RV_MCC = sv_A.sv;
 		manopt.WeightsTable = GetWeightsTable(calcParams.tgt, false, false);
 
 		AP11LMManeuverPAD(manopt, *form);
@@ -1081,12 +1081,12 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP10CSIPADOpt manopt;
 		SPQOpt opt;
 		SPQResults res;
-		SV sv_A, sv_P;
+		VehicleDataBlock sv_A, sv_P;
 		VECTOR3 dV_LVLH;
 		double m0;
 
-		sv_A = StateVectorCalc(calcParams.tgt);
-		sv_P = StateVectorCalc(calcParams.src);
+		sv_A = StateVectorCalcDataBlock(calcParams.tgt);
+		sv_P = StateVectorCalcDataBlock(calcParams.src);
 
 		LEM *l = (LEM*)calcParams.tgt;
 		m0 = l->GetAscentStageMass();
@@ -1095,8 +1095,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
 		opt.K_CDH = 0;
-		opt.t_CSI = calcParams.CSI;
-		opt.t_TPI = calcParams.TPI;
+		opt.GMT_CSI = GMTfromGET(calcParams.CSI);
+		opt.GMT_TPI = GMTfromGET(calcParams.TPI);
 
 		ConcentricRendezvousProcessor(opt, res);
 		dV_LVLH = res.dV_CSI;
@@ -1107,7 +1107,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_LMRCSPLUS4;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		manopt.sv0 = ConvertSVtoEphemData(sv_A);
+		manopt.sv0 = sv_A.sv;
 		manopt.WeightsTable.CC[RTCC_CONFIG_A] = true;
 		manopt.WeightsTable.ConfigWeight = manopt.WeightsTable.LMAscWeight = m0;
 		manopt.t_CSI = calcParams.CSI;
@@ -1124,14 +1124,14 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP9LMCDHPADOpt manopt;
 		SPQOpt opt;
 		SPQResults res;
-		SV sv_A, sv_P, sv_CDH;
+		VehicleDataBlock sv_A, sv_P, sv_CDH;
 		VECTOR3 dV_LVLH;
 		double T_CDH;
 
-		sv_A = StateVectorCalc(calcParams.tgt);
-		sv_P = StateVectorCalc(calcParams.src);
+		sv_A = StateVectorCalcDataBlock(calcParams.tgt);
+		sv_P = StateVectorCalcDataBlock(calcParams.src);
 
-		calcParams.CDH = calcParams.CSI + OrbMech::period(sv_A.R, sv_A.V, OrbMech::mu_Earth) / 2.0;
+		calcParams.CDH = calcParams.CSI + OrbMech::period(sv_A.sv.R, sv_A.sv.V, OrbMech::mu_Earth) / 2.0;
 
 		//Get CDH TIG from LGC memory (EMEM3370 and 3371)
 		T_CDH = (mcc->lm->agc.vagc.Erasable[6][0371] + mcc->lm->agc.vagc.Erasable[6][0370] * pow((double) 2., (double) 14.)) / 100.0;
@@ -1145,16 +1145,16 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		opt.sv_A = sv_A;
 		opt.sv_P = sv_P;
-		opt.t_CSI = -1;
-		opt.t_CDH = calcParams.CDH;
+		opt.GMT_CSI = -1;
+		opt.GMT_CDH = GMTfromGET(calcParams.CDH);
 
 		ConcentricRendezvousProcessor(opt, res);
-		sv_CDH = coast(sv_A, opt.t_CDH - OrbMech::GETfromMJD(sv_A.MJD, CalcGETBase()));
+		sv_CDH = coast(sv_A, opt.GMT_CDH - sv_A.sv.GMT);
 		dV_LVLH = res.dV_CDH;
 
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		manopt.sv_A = ConvertSVtoEphemData(sv_A);
+		manopt.sv_A = sv_A.sv;
 		manopt.TIG = calcParams.CDH;
 
 		AP9LMCDHPAD(manopt, *form);

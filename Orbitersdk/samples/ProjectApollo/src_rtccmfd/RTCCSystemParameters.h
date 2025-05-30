@@ -677,6 +677,23 @@ struct RTCCSystemParameters
 		MHVCCG.CG[19] = _V(934.701130, 3.973806, 6.541933)*0.0254;
 		MHVCCG.N = 20;
 
+		//Thrust tables
+		for (int i = 0; i < 40; i++)
+		{
+			//SPS
+			MHTSTC.Weight[i] = 0.0;
+			MHTSTC.Thrust[i] = _V(91188.544, 29.60667013, 0.0);
+			//APS
+			MHTATC.Weight[i] = 0.0;
+			MHTATC.Thrust[i] = _V(15297.43, 5.049776716, 0.0);
+			//DPS
+			MHTDTC.Weight[i] = 0.0;
+			MHTDTC.Thrust[i] = _V(9712.5 * 4.4482216152605, 14.63626597, 0.0);
+		}
+		MHTSTC.N = 1;
+		MHTATC.N = 1;
+		MHTDTC.N = 1;
+
 		MDZBLK[0] = -0.9174410e1;
 		MDZBLK[1] = -0.8217687e1;
 		MDZBLK[2] = 0.6120521e1;
@@ -1170,6 +1187,14 @@ struct RTCCSystemParameters
 		VECTOR3 CG[40];
 		int N;
 	} MHVLCG, MHVACG, MHVCCG; //LM ascent+descent, LM ascent, CSM
+
+	//Thrust tables
+	struct ThrustTable
+	{
+		double Weight[40];
+		VECTOR3 Thrust[40]; //Thrust, weight loss rate, spare
+		int N;
+	} MHTSTC, MHTATC, MHTDTC; //SPS, APS, DPS
 
 	//DPS engine gimbal plane
 	double MGVDGD = 154.0*0.0254;

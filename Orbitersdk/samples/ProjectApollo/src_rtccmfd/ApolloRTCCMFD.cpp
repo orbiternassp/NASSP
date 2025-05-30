@@ -47,6 +47,8 @@ ApolloRTCCMFD::ApolloRTCCMFD (DWORD w, DWORD h, VESSEL *vessel, UINT im)
 	screen = 0;
 	subscreen = 0;
 	subscreenmax = 0;
+	subsubscreen = 0;
+	subsubscreenmax = 0;
 
 	if (!g_SC) {
 		g_SC = new AR_GCore(vessel);                     // First time only in this Orbiter session. Init the static core.
@@ -168,6 +170,8 @@ void ApolloRTCCMFD::SaveState()
 	temp.screen = screen;
 	temp.subscreen = subscreen;
 	temp.subscreenmax = subscreenmax;
+	temp.subsubscreen = subsubscreen;
+	temp.subsubscreenmax = subsubscreenmax;
 	temp.ID = ID;
 	temp.MEDCode = MEDInputData.MEDCode;
 	temp.IsCSM = IsCSM;
@@ -208,6 +212,8 @@ void ApolloRTCCMFD::LoadState()
 			screen = g_MFDData[i].screen;
 			subscreen = g_MFDData[i].subscreen;
 			subscreenmax = g_MFDData[i].subscreenmax;
+			subsubscreen = g_MFDData[i].subsubscreen;
+			subsubscreenmax = g_MFDData[i].subsubscreenmax;
 			MEDInputData.MEDCode = g_MFDData[i].MEDCode;
 			IsCSM = g_MFDData[i].IsCSM;
 			EnableCalculation = g_MFDData[i].EnableCalculation;
@@ -250,9 +256,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	papiWriteScenario_double(scn, "REFSMMAT_LVLH_Time", G->REFSMMAT_LVLH_Time);
 	papiWriteScenario_bool(scn, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 	papiWriteScenario_double(scn, "CDHTIME", G->CDHtime);
-	papiWriteScenario_double(scn, "SPQTIG", G->SPQTIG);
 	oapiWriteScenario_int(scn, "CDHTIMEMODE", G->CDHtimemode);
-	papiWriteScenario_vec(scn, "SPQDeltaV", G->SPQDeltaV);
 
 	papiWriteScenario_double(scn, "P30TIG", G->P30TIG);
 	papiWriteScenario_vec(scn, "DV_LVLH", G->dV_LVLH);
@@ -307,9 +311,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_double(line, "REFSMMAT_LVLH_Time", G->REFSMMAT_LVLH_Time);
 		papiReadScenario_bool(line, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
 		papiReadScenario_double(line, "CDHTIME", G->CDHtime);
-		papiReadScenario_double(line, "SPQTIG", G->SPQTIG);
 		papiReadScenario_int(line, "CDHTIMEMODE", G->CDHtimemode);
-		papiReadScenario_vec(line, "SPQDeltaV", G->SPQDeltaV);
 
 		papiReadScenario_double(line, "P30TIG", G->P30TIG);
 		papiReadScenario_vec(line, "DV_LVLH", G->dV_LVLH);
@@ -891,8 +893,19 @@ void ApolloRTCCMFD::menuSetTIMultipleSolutionPage()
 	SelectPage(1);
 }
 
+void ApolloRTCCMFD::menuSetThrustCGPage()
+{
+	subscreen = 0;
+	subscreenmax = 5;
+	subsubscreen = 0;
+	subsubscreenmax = 1;
+	SelectPage(2);
+}
+
 void ApolloRTCCMFD::menuSetSPQPage()
 {
+	subscreen = 0;
+	subscreenmax = 1;
 	SelectPage(3);
 }
 
@@ -2491,6 +2504,19 @@ void ApolloRTCCMFD::menuCycleSubscreen()
 	{
 		subscreen = 0;
 	}
+	subsubscreen = 0;
+}
+
+void ApolloRTCCMFD::menuCycleSubSubscreen()
+{
+	if (subsubscreen < subsubscreenmax)
+	{
+		subsubscreen++;
+	}
+	else
+	{
+		subsubscreen = 0;
+	}
 }
 
 void ApolloRTCCMFD::menuCalcRTETradeoff()
@@ -3572,7 +3598,7 @@ void ApolloRTCCMFD::set_SPQtime(double tig)
 	}
 	else
 	{
-		this->G->CSItime = tig;
+		GC->rtcc->med_k01.t_CSI = tig;
 	}
 }
 
@@ -3940,6 +3966,16 @@ void ApolloRTCCMFD::set_REFSMMATTime(double time)
 void ApolloRTCCMFD::menuREFSMMATLockerMovement()
 {
 	menuGeneralMEDRequest("CSM/LEM REFSMMAT Locker Movement. Format: G00,Vehicle1,Matrix1,Vehicle2,Matrix2; (Codes: CUR, PCR, TLM, MED, LCV, OST, DMT, DOD, DOK, LLA, LLD)");
+}
+
+void ApolloRTCCMFD::menuSetMEDM10()
+{
+	menuGeneralMEDRequest("Thruster Characteristics. Format: M10, Thruster (S, A or D), No. of Entries in Table (1-40), Entry no. of this set (1-40), Weight, Thrust Level, Wt. Loss Rate, Transfer Ind (T or blank);");
+}
+
+void ApolloRTCCMFD::menuSetMEDM11()
+{
+	menuGeneralMEDRequest("CG Characteristics. Format: M11, Vehicle (C, L or A), No. of Entries in Table (1-40), Entry no. of this set (1-40), Weight, X-coord, Y-coord, Z-coord, Transfer Ind (T or blank);");
 }
 
 void ApolloRTCCMFD::menuCycleTITable()
@@ -7807,23 +7843,12 @@ void ApolloRTCCMFD::set_SPQElevation(double elev)
 
 void ApolloRTCCMFD::menuSetSPQTerminalPhaseAngle()
 {
-	bool SPQTerminalPhaseAngleInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Terminal phase angle in degrees:", SPQTerminalPhaseAngleInput, 0, 20, (void*)this);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.SPQTerminalPhaseAngle, "Terminal phase angle in degrees:", RAD);
 }
 
-bool SPQTerminalPhaseAngleInput(void *id, char *str, void *data)
+void ApolloRTCCMFD::menuSetSPQMinimumPeriapsisAlt()
 {
-	if (strlen(str) < 20)
-	{
-		((ApolloRTCCMFD*)data)->set_SPQTerminalPhaseAngle(atof(str));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_SPQTerminalPhaseAngle(double wt)
-{
-	this->GC->rtcc->GZGENCSN.SPQTerminalPhaseAngle = wt * RAD;
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.SPQMinimumPerifocus, "Minimum periapsis altitude in nautical miles:", 1852.0);
 }
 
 void ApolloRTCCMFD::menuSetSPQTPIDefinitionValue()
@@ -7852,7 +7877,7 @@ void ApolloRTCCMFD::set_SPQTPIDefinitionValue(double get)
 
 void ApolloRTCCMFD::menuCycleSPQCDHPoint()
 {
-	if (GC->rtcc->med_k01.I_CDH < 4)
+	if (GC->rtcc->med_k01.I_CDH < 5)
 	{
 		GC->rtcc->med_k01.I_CDH++;
 	}
@@ -7872,6 +7897,10 @@ void ApolloRTCCMFD::menuSPQCDHValue()
 	else if (GC->rtcc->med_k01.I_CDH == 2)
 	{
 		oapiOpenInputBox("GET of CDH:", SPQCDHValueInput, 0, 20, (void*)this);
+	}
+	else if(GC->rtcc->med_k01.I_CDH == 5)
+	{
+		oapiOpenInputBox("No. of half revolutions since CSI:", SPQCDHValueInput, 0, 20, (void*)this);
 	}
 	else
 	{

@@ -1060,6 +1060,27 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 		}
 	}
 
+	if (!KEYMOD_SHIFT(keystate) && !KEYMOD_CONTROL(keystate) && KEYMOD_ALT(keystate))
+	{
+		if (down) {
+			switch (key) {
+			case OAPI_KEY_O:
+				ORDEALSlewSwitch.SwitchTo(THREEPOSSWITCH_UP, true);
+				break;
+			case OAPI_KEY_L:
+				ORDEALSlewSwitch.SwitchTo(THREEPOSSWITCH_DOWN, true);
+				break;
+			}
+		} else {
+			switch (key) {
+			case OAPI_KEY_O:
+			case OAPI_KEY_L:
+				ORDEALSlewSwitch.SwitchTo(THREEPOSSWITCH_CENTER, true);
+				break;
+			}
+		}
+	}
+
 	if (down){
 		switch(key){
 			// Valid shaft positions should be:

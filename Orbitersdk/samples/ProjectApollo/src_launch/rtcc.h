@@ -352,16 +352,16 @@ struct EntryResults
 
 struct SPQResults
 {
-	double t_CSI;
-	double t_CDH;
-	double t_TPI;
+	double GMT_CSI;
+	double GMT_CDH;
+	double GMT_TPI;
 	double DH;
 	VECTOR3 dV_CSI;
 	VECTOR3 dV_CDH;
-	SV sv_C[5];
-	SV sv_C_apo[5];
-	SV sv_T[5];
-	int err = 0;
+	VehicleDataBlock sv_C[5];
+	VehicleDataBlock sv_C_apo[5];
+	VehicleDataBlock sv_T[5];
+	int err = 0; //0 = no error, <0 = AEG error, 3 = time violation, 4 = minimum periapsis violation, 8 = failed to converge, 94 = failure to obtained the input elevation
 };
 
 struct RTEMoonOpt
@@ -790,13 +790,14 @@ struct DKICommon
 
 struct SPQOpt //Coelliptic Sequence Processor
 {
-	SV sv_A;
-	SV sv_P;
-	//Time of CSI maneuver (<= 0 if not scheduled)
-	double t_CSI;
-	//Time of CDH maneuver
-	double t_CDH;
-	double t_TPI;				// Only for calculation type = 0
+	VehicleDataBlock sv_A;
+	VehicleDataBlock sv_P;
+	//GMT of CSI maneuver (<= 0 if not scheduled)
+	double GMT_CSI;
+	//GMT of CDH maneuver
+	double GMT_CDH;
+	//GMT of TPI maneuver
+	double GMT_TPI;				// Only for calculation type = 0
 	double DH = 15.0*1852.0;	// Only for calculation type = 1
 	double E = 26.6*RAD;
 	double WT = 130.0*RAD;
@@ -807,14 +808,14 @@ struct SPQOpt //Coelliptic Sequence Processor
 	//0 = Plane change not requested, 1 = plane change requested
 	bool N_PC = false;
 	//Plane change threshold
-	double T_BNPC = 0.0;
+	double GMT_BNPC = 0.0;
 	//Initial phase angle (0 = -180° to 180°, 1 = 0 to 180°, 2 = -180° to 0)
 	int I_Theta = 0;
 	//0 = CDH not scheduled, 1 = CDH scheduled
 	bool CDH = true;
-	//1 = CDH at next apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at next apsis (Keplerian)
-	int I_CDH = 3;
-	//Number of apsis since CSI (for CDH at next apsis options)
+	//1 = CDH at next apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at next apsis (Keplerian), 5 = Number of half revs
+	int I_CDH = 5;
+	//Number of apsis since CSI (for CDH at next apsis options) or number of half revs (I_CDH = 5)
 	int N_CDH = 1;
 	bool OptimumCSI = false;
 	//0 = CSI and CDH in-plane, 1 = CSI and CDH parallel to target
@@ -823,13 +824,17 @@ struct SPQOpt //Coelliptic Sequence Processor
 	double DU_D = PI;
 	//Optimum CSI range
 	double dt_CSI_Range = 15.0*60.0;
+	//Minimum periapsis altitude
+	double h_min = 0.0;
+	//Minimum time between maneuver
+	double dt_min = 10.0*60.0;
 };
 
 struct PDAPOpt //Powered Descent Abort Program
 {
 	VehicleDataBlock sv_A;
 	VehicleDataBlock sv_P;
-	double TLAND; //GET
+	double GMT_LAND;
 	MATRIX3 REFSMMAT;
 	VECTOR3 R_LS;
 	double dt_stage;
@@ -842,7 +847,7 @@ struct PDAPOpt //Powered Descent Abort Program
 	//Time from Insertion to CSI
 	double dt_CSI = 50.0*60.0;
 	//Time of TPI
-	double t_TPI;
+	double GMT_TPI;
 	//dt added to dt_CSI for generation of the second set of targeting coefficients
 	double dt_2CSI = 110.0*60.0;
 	//dt added to t_TPI for generation of the second set of targeting coefficients
@@ -2411,7 +2416,7 @@ public:
 	void EarthOrbitEntry(const EarthEntryPADOpt &opt, AP7ENT &pad);
 	void LunarEntryPAD(const LunarEntryPADOpt &opt, AP11ENT &pad);
 	void PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res);
-	double FindDH(SV sv_A, SV sv_P, double TIGguess, double DH);
+	double FindDH(VehicleDataBlock sv_A, VehicleDataBlock sv_P, double GMT_guess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
 	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
@@ -2502,21 +2507,19 @@ public:
 	void PCMVMR(AEGDataBlock &CHASER, AEGDataBlock &TARGET, double DELVX, double DELVY, double DELVZ, double mu, double &Pitch, double &Yaw, int I);
 	void PCMVMR(VECTOR3 R_C, VECTOR3 V_C, VECTOR3 R_T, VECTOR3 V_T, double DELVX, double DELVY, double DELVZ, int I, VECTOR3 &V_C_apo, double &Pitch, double &Yaw);
 	//Elevation angle search subroutine
-	int PCTETR(SV sv_C, SV sv_T, double WT, double ESP, double &TESP, double &TR);
+	int PCTETR(VehicleDataBlock sv_C, VehicleDataBlock sv_T, double WT, double ESP, double &TESP, double &TR);
 	//Apogee, perigee, and offset determination
 	void PCPICK(AEGHeader header, AEGDataBlock sv_C, AEGDataBlock sv_T, double &DH, double &Phase, double &HA, double &HP);
-	void PCPICK(SV sv_C, SV sv_T, double &DH, double &Phase, double &HA, double &HP);
+	void PCPICK(VehicleDataBlock sv_C, VehicleDataBlock sv_T, double &DH, double &Phase, double &HA, double &HP);
 	//Apogee and perigee radius magnitude
 	void PCHAPE(double R1, double R2, double R3, double U1, double U2, double U3, double &RAP, double &RPE);
-	//Plane change time and velocity increments computations
-	void PMMPNE(AEGHeader Header, AEGDataBlock sv_C, AEGDataBlock sv_T, double TREF, double FNPC, int KPC, int IPC, AEGDataBlock &SAVE, double &DI1, double &DH1);
 	//DKI phase lag routine
 	void PMMPHL(DKICommon &DKI, AEGHeader aegh, AEGDataBlock sv_I, double TXX, double &TTPI, double &TTPF);
 	//DKI maneuver convergence
 	void PMMITL(DKICommon &DKI, AEGHeader aegh, AEGDataBlock *sv, int J);
 	void PCMCEM(AEGHeader &h, AEGDataBlock &sv_M, AEGDataBlock &sv_I, double mu);
 	bool DockingInitiationProcessor(DKIOpt opt);
-	int ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
+	void ConcentricRendezvousProcessor(const SPQOpt &opt, SPQResults &res);
 	double CalculateTPITimes(SV sv0, int tpimode, double t_TPI_guess, double dt_TPI_sunrise);
 	VECTOR3 LOICrewChartUpdateProcessor(EphemerisData sv0, MATRIX3 REFSMMAT, double p_EMP, double LOI_TIG, VECTOR3 dV_LVLH_LOI, double p_T, double y_T);
 	SV coast(SV sv0, double dt);
@@ -2544,7 +2547,6 @@ public:
 	//Time of Longitude Crossing Determination
 	void PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, double DESLAM, int &K, int INDVEC);
 	//AEG Day/Night Determination
-	void PMMDAN(VehicleDataBlock sv, int IND, int &ERR, double &T1, double &T2);
 	void PMMDAN(AEGHeader Header, AEGDataBlock aeg, int IND, int &ERR, double &T1, double &T2);
 	//Checkout Monitor Display
 	void EMDCHECK(int veh, int opt, double param, double THTime, int ref, bool feet);
@@ -2674,7 +2676,6 @@ public:
 	void PMSVCT(int QUEID, int L);
 	void PMSVCT(int QUEID, int L, StateVectorTableEntry sv0);
 	//Vector Fetch Load Module
-	int PMSVEC(int L, double GMT, CELEMENTS &elem, double &KFactor, double &Area, double &Weight, std::string &StaID, int &RBI);
 	int PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID);
 	//Maneuver Execution Program
 	void PMSEXE(int L, double gmt);
@@ -2939,8 +2940,7 @@ public:
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
 	//Gimbal, Thrust and Weight Loss Rate Subroutine
-	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned &IC, int IA, int IJ, double D);
-	VECTOR3 GIMGB2(const double *WArr, const VECTOR3 *VecArr, int N, double W);
+	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned IC, int IA, int IJ, double D);
 	// MISSION PLANNING (P)
 	//LM AGS External DV Coordinate Transformation Subroutine
 	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
@@ -2971,7 +2971,7 @@ public:
 	//External DV Coordinate Transformation Subroutine
 	VECTOR3 PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV, bool i);
 	//Apogee/perigee magnitude determination
-	void PIFAAP(double a, double e, double i, double f, double u, double r, double &r_apo, double &r_peri);
+	void PIFAAP(double a, double e, double i, double f, double u, double r, double R_E, double J2, double &r_apo, double &r_peri);
 	//TBD: PIFTCH
 	//Calc. Greenwich hour angle at midnight preceeding launch
 	double PIGBHA();
@@ -3163,8 +3163,10 @@ public:
 		int ChaserVehicle = 1; //1 = CSM, 3 = LEM
 		double ChaserThresholdGET = -1.0;
 		double TargetThresholdGET = -1.0;
-		//1 = CDH at upcoming apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at upcoming apsis (Keplerian)
-		int I_CDH = 3;
+		//CSI time (GET)
+		double t_CSI = 0.0;
+		//1 = CDH at upcoming apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at upcoming apsis (Keplerian), 5 = Number of half revs
+		int I_CDH = 5;
 		//For option 1
 		int CDH_Apsis = 1;
 		//For option 2
@@ -4314,7 +4316,7 @@ public:
 
 	struct DKIElementsBlock
 	{
-		EphemerisData SV_before[5];
+		VehicleDataBlock SV_before[5];
 		VECTOR3 V_after[5];
 	};
 
