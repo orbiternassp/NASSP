@@ -1638,7 +1638,6 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	if ((oapiGetFocusObject() == GetHandle()) && (oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
 		//We have focus on this vessel, and are in the VC
 		MoveFlashlight();
-		UpdateFloodLights();
 	}
 
 	sprintf(buffer, "End time(0) %lld", time(0)); 

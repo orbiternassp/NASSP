@@ -576,13 +576,10 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GC = gcin;
 
 	SPQMode = 0;
-	CSItime = 0.0;
 	CDHtime = 0.0;
-	SPQTIG = 0.0;
 	CDHtimemode = 0;
 	t_TPI = 0.0;
 
-	SPQDeltaV = _V(0, 0, 0);
 	//screen = 0;
 	REFSMMAT_LVLH_Time = 0.0;
 	REFSMMATopt = 4;
@@ -674,6 +671,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	sxtstardtime = -30.0*60.0;
 	manpad_ullage_dt = 0.0;
 	manpad_ullage_opt = true;
+	manpad_pref_GDC_stars = 0;
 	ManPADMPT = 1;
 	ManPADMPTManeuver = 1;
 	TLIPAD_StudyAid = false;
@@ -805,6 +803,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	}
 	iuUplinkResult = 0;
 
+	DebugLMComputer = true;
 	DebugIMUTorquingAngles = _V(0, 0, 0);
 
 	for (int i = 0; i < 6; i++)
@@ -1290,8 +1289,8 @@ void ARCore::GetStateVectorFromIU()
 		V = lvdc->DotS;
 		TAS = lvdc->TAS;
 	}
-	sv.R = tmul(GC->rtcc->GZLTRA.IU1_REFSMMAT, R);
-	sv.V = tmul(GC->rtcc->GZLTRA.IU1_REFSMMAT, V);
+	sv.R = R;
+	sv.V = V;
 	sv.GMT = TAS + GC->rtcc->GetIUClockZero();
 	sv.RBI = BODY_EARTH;
 
@@ -1301,8 +1300,10 @@ void ARCore::GetStateVectorFromIU()
 void ARCore::GetStateVectorsFromAGS()
 {
 	VESSEL *v = GC->rtcc->pLM;
-
+	//LM vessel set?
 	if (v == NULL) return;
+	//Is vehicle a LM?
+	if (utils::IsVessel(v, utils::LEM) == false) return;
 
 	//0-6: pos and vel
 	int csmvecoct[6], lmvecoct[6];
@@ -1360,13 +1361,12 @@ void ARCore::GetStateVectorsFromAGS()
 
 	T_SV = (double)(timeoct[0])*2.0 + (double)(timeoct[1]) *pow(2, -16);
 
-	//Convert to RTCC coordinates
+	//Save in correct state vector format
 	EphemerisData sv_CSM, sv_LM;
-	MATRIX3 Rot = GC->rtcc->EZJGMTX3.data[RTCC_REFSMMAT_TYPE_AGS - 1].REFSMMAT;
-	sv_LM.R = tmul(Rot, R_LM);
-	sv_LM.V = tmul(Rot, V_LM);
-	sv_CSM.R = tmul(Rot, R_CSM);
-	sv_CSM.V = tmul(Rot, V_CSM);
+	sv_LM.R = R_LM;
+	sv_LM.V = V_LM;
+	sv_CSM.R = R_CSM;
+	sv_CSM.V = V_CSM;
 	sv_CSM.GMT = sv_LM.GMT = T_SV + GC->rtcc->GetAGSClockZero();
 
 	if (GC->rtcc->AGCGravityRef(v) == oapiGetObjectByName("Moon"))
@@ -1675,7 +1675,7 @@ void ARCore::AGSStateVectorCalc(bool IsCSM)
 	sv = GC->rtcc->StateVectorCalcEphem(v);
 
 	opt.csm = IsCSM;
-	opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
+	opt.REFSMMAT = GC->rtcc->EZJGMTX3.data[GC->rtcc->EZETVMED.AGSNavUpdREFSMMAT - 1].REFSMMAT;
 	opt.sv = sv;
 	opt.landed = v->GroundContact();
 
@@ -2715,13 +2715,16 @@ int ARCore::subThread()
 	{
 		SPQOpt opt;
 		SPQResults res;
-		SV sv_A, sv_P, sv_pre, sv_post;
+		VehicleDataBlock sv_A, sv_P;
+		SV sv_pre, sv_post;
 
 		if (GC->MissionPlanningActive)
 		{
-			int err;
+			std::string StaID;
 			double GMT_C, GMT_T;
+			int err;
 
+			//Vector times
 			if (GC->rtcc->med_k01.ChaserThresholdGET < 0)
 			{
 				GMT_C = GC->rtcc->RTCCPresentTimeGMT();
@@ -2739,28 +2742,20 @@ int ARCore::subThread()
 				GMT_T = GC->rtcc->GMTfromGET(GC->rtcc->med_k01.TargetThresholdGET);
 			}
 
-			EphemerisData EPHEM;
-			err = GC->rtcc->EMSFFV(GMT_C, GC->rtcc->med_k01.ChaserVehicle, EPHEM);
+			//Chaser
+			err = GC->rtcc->PMSVEC(GC->rtcc->med_k01.ChaserVehicle, GMT_C, sv_A, StaID);
 			if (err)
 			{
 				Result = DONE;
 				break;
 			}
-			sv_A.R = EPHEM.R;
-			sv_A.V = EPHEM.V;
-			sv_A.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv_A.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
-
-			err = GC->rtcc->EMSFFV(GMT_T, 4 - GC->rtcc->med_k01.ChaserVehicle, EPHEM);
+			//Target
+			err = GC->rtcc->PMSVEC(4 - GC->rtcc->med_k01.ChaserVehicle, GMT_T, sv_P, StaID);
 			if (err)
 			{
 				Result = DONE;
 				break;
 			}
-			sv_P.R = EPHEM.R;
-			sv_P.V = EPHEM.V;
-			sv_P.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv_P.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
 		}
 		else
 		{
@@ -2782,8 +2777,8 @@ int ARCore::subThread()
 				tgt = GC->rtcc->pCSM;
 			}
 
-			sv_A = GC->rtcc->StateVectorCalc(chaser);
-			sv_P = GC->rtcc->StateVectorCalc(tgt);
+			sv_A = GC->rtcc->StateVectorCalcDataBlock(chaser);
+			sv_P = GC->rtcc->StateVectorCalcDataBlock(tgt);
 		}
 
 		opt.DH = GC->rtcc->GZGENCSN.SPQDeltaH;
@@ -2792,10 +2787,12 @@ int ARCore::subThread()
 		opt.sv_P = sv_P;
 		opt.WT = GC->rtcc->GZGENCSN.SPQTerminalPhaseAngle;
 		opt.ChaserID = GC->rtcc->med_k01.ChaserVehicle;
+		opt.h_min = GC->rtcc->GZGENCSN.SPQMinimumPerifocus;
 
 		if (SPQMode != 1)
 		{
-			opt.t_CSI = CSItime;
+			opt.GMT_CSI = GC->rtcc->GMTfromGET(GC->rtcc->med_k01.t_CSI);
+			opt.GMT_CDH = GC->rtcc->GMTfromGET(GC->rtcc->med_k01.CDH_Time);
 			
 			if (SPQMode == 2)
 			{
@@ -2810,39 +2807,33 @@ int ARCore::subThread()
 		}
 		else
 		{
-			opt.t_CSI = -1;
+			opt.GMT_CSI = -1;
 			if (CDHtimemode == 0)
 			{
-				opt.t_CDH = CDHtime;
+				opt.GMT_CDH = GC->rtcc->GMTfromGET(CDHtime);
 			}
 			else
 			{
-				opt.t_CDH = GC->rtcc->FindDH(sv_A, sv_P, CDHtime, GC->rtcc->GZGENCSN.SPQDeltaH);
+				opt.GMT_CDH = GC->rtcc->FindDH(sv_A, sv_P, GC->rtcc->GMTfromGET(CDHtime), GC->rtcc->GZGENCSN.SPQDeltaH);
 			}
 		}
-		opt.t_TPI = GC->rtcc->GZGENCSN.TPIDefinitionValue;
+		if (GC->rtcc->GZGENCSN.TPIDefinition == 3)
+		{
+			opt.GMT_TPI = GC->rtcc->GMTfromGET(GC->rtcc->GZGENCSN.TPIDefinitionValue); //GET to GMT
+		}
+		else
+		{
+			opt.GMT_TPI = GC->rtcc->GZGENCSN.TPIDefinitionValue; //Just input the time
+		}
 		opt.I_CDH = GC->rtcc->med_k01.I_CDH;
 		opt.DU_D = GC->rtcc->med_k01.CDH_Angle;
+		opt.N_CDH = GC->rtcc->med_k01.CDH_Apsis;
 
 		GC->rtcc->PMMDKI(opt, res);
 
 		if (SPQMode != 1)
 		{
-			SPQTIG = res.t_CSI;
-		}
-		else
-		{
-			SPQTIG = res.t_CDH;
-		}
-
-		if (SPQMode != 1)
-		{
-			CDHtime = res.t_CDH;
-			SPQDeltaV = res.dV_CSI;
-		}
-		else
-		{
-			SPQDeltaV = res.dV_CDH;
+			CDHtime = GC->rtcc->GETfromGMT(res.GMT_CDH);
 		}
 
 		Result = DONE;
@@ -3383,6 +3374,7 @@ int ARCore::subThread()
 			opt.WeightsTable = WeightsTable;
 			opt.UllageDT = manpad_ullage_dt;
 			opt.UllageThrusterOpt = manpad_ullage_opt;
+			opt.PrefGDCStars = manpad_pref_GDC_stars;
 
 			GC->rtcc->AP11ManeuverPAD(opt, GC->manpad);
 		}
@@ -4080,8 +4072,8 @@ int ARCore::subThread()
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv_A = sv_LM;
 		opt.sv_P = sv_CSM;
-		opt.TLAND = GC->rtcc->CZTDTGTU.GETTD;
-		opt.t_TPI = t_TPI;
+		opt.GMT_LAND = GC->rtcc->GMTfromGET(GC->rtcc->CZTDTGTU.GETTD);
+		opt.GMT_TPI = GC->rtcc->GMTfromGET(t_TPI);
 		if (opt.IsTwoSegment)
 		{
 			opt.dt_step = 20.0;
@@ -4734,7 +4726,7 @@ int ARCore::subThread()
 			in.IgnitionTimeOption = GC->rtcc->med_m70.TimeFlag;
 			in.Thruster = GC->rtcc->med_m70.Thruster;
 
-			in.sv_before = elem->SV_before[0];
+			in.sv_before = elem->SV_before[0].sv;
 			in.V_aft = elem->V_after[0];
 			if (GC->rtcc->med_m70.UllageDT < 0)
 			{
@@ -5757,6 +5749,11 @@ int ARCore::subThread()
 		Result = DONE;
 	}
 	break;
+	case 61: //Vector Control PBI
+		GC->rtcc->VectorPanelSummaryBuffer.gmt = -10000000000000.0; //To update the display immediately
+		GC->rtcc->BMSVPS(0, GC->rtcc->RTCCONLINEMON.IntBuffer[0]);
+		Result = DONE;
+	break;
 	}
 
 	subThreadStatus = Result;
@@ -6125,14 +6122,13 @@ int ARCore::GetVesselParameters(bool IsCSM, int docked, int Thruster, int &Confi
 	return 0;
 }
 
-int ARCore::menuCalculateIMUComparison(bool IsCSM)
+int ARCore::menuCalculateAttitudeComparison(bool IsCSM, bool IsAGC)
 {
 	MATRIX3 M_BRCS_SM; //BRCS to stable member, right handed
 	MATRIX3 M_NB_ECL; //Local vessel to global ecliptic
 	MATRIX3 M_SM_NB_est; //Stable member to navigation base, estimated
 	MATRIX3 M_SM_NB_act; //Stable member to navigation base, actual
 	MATRIX3 M_ECL_BRCS; //Ecliptic to BRCS
-	VECTOR3 IMUAngles;
 	VESSEL *v;
 
 	if (IsCSM)
@@ -6151,7 +6147,9 @@ int ARCore::menuCalculateIMUComparison(bool IsCSM)
 		if (utils::IsVessel(v, utils::Saturn) == false) return 2;
 
 		M_BRCS_SM = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
-		IMUAngles = ((Saturn*)v)->imu.GetTotalAttitude();
+		VECTOR3 IMUAngles = ((Saturn*)v)->imu.GetTotalAttitude();
+		//Stable member to navigation base conversion with current IMU alignment
+		M_SM_NB_est = OrbMech::CALCSMSC(IMUAngles);
 
 		//Get actual orientation (left handed)
 		v->GetRotationMatrix(M_NB_ECL);
@@ -6163,7 +6161,33 @@ int ARCore::menuCalculateIMUComparison(bool IsCSM)
 		if (utils::IsVessel(v, utils::LEM) == false) return 2;
 
 		M_BRCS_SM = GC->rtcc->EZJGMTX3.data[0].REFSMMAT;
-		IMUAngles = ((LEM*)v)->imu.GetTotalAttitude();
+		if (IsAGC)
+		{
+			//LGC
+			VECTOR3 IMUAngles = ((LEM*)v)->imu.GetTotalAttitude();
+			//Stable member to navigation base conversion with current IMU alignment
+			M_SM_NB_est = OrbMech::CALCSMSC(IMUAngles);
+		}
+		else
+		{
+			//AGS
+			ags_t *vags = &((LEM*)v)->aea.vags;
+			int vals[9];
+			vals[0] = vags->Memory[0130];
+			vals[1] = vags->Memory[0131];
+			vals[2] = vags->Memory[0132];
+			vals[3] = vags->Memory[0140];
+			vals[4] = vags->Memory[0141];
+			vals[5] = vags->Memory[0142];
+			vals[6] = vags->Memory[0134];
+			vals[7] = vags->Memory[0135];
+			vals[8] = vags->Memory[0136];
+
+			for (int i = 0; i < 9; i++)
+			{
+				M_SM_NB_est.data[i] = OrbMech::AEAToDouble(vals[i], -16);
+			}
+		}
 
 		//Get actual orientation (left handed)
 		v->GetRotationMatrix(M_NB_ECL);
@@ -6171,8 +6195,7 @@ int ARCore::menuCalculateIMUComparison(bool IsCSM)
 		M_NB_ECL = mul(MatrixRH_LH(M_NB_ECL), _M(0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0));
 	}
 
-	//Stable member to navigation base conversion with current IMU alignment
-	M_SM_NB_est = OrbMech::CALCSMSC(IMUAngles);
+	
 	//Get ecliptic to BRCS rotation matrix from RTCC system parameters
 	M_ECL_BRCS = GC->rtcc->SystemParameters.MAT_J2000_BRCS;
 	//Actual stable member to navigation base conversion

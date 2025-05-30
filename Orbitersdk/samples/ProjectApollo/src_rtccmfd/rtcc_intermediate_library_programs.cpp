@@ -24,14 +24,53 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "rtcc.h"
 
 //Gimbal, Thrust, and Weight Loss Rate Subroutine
-void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned &IC, int IA, int IJ, double D)
+VECTOR3 GIMGB2(const double *WArr, const VECTOR3 *VecArr, int N, double W)
+{
+	VECTOR3 XI;
+	int I;
+	if (W <= WArr[0])
+	{
+		I = 1;
+	RTCC_GIMGB2_4:
+		XI = VecArr[I - 1];
+		goto RTCC_GIMGB2_2;
+	}
+	if (W >= WArr[N - 1])
+	{
+		goto RTCC_GIMGB2_1;
+	}
+	I = 2;
+RTCC_GIMGB2_3:
+	if (W < WArr[I - 1])
+	{
+		//Linearly interpolate
+		XI = VecArr[I - 2] + (VecArr[I - 1] - VecArr[I - 2]) / (WArr[I - 1] - WArr[I - 2])*(W - WArr[I - 2]);
+		goto RTCC_GIMGB2_2;
+	}
+	if (W == WArr[I - 1])
+	{
+		goto RTCC_GIMGB2_4;
+	}
+	if (I < N)
+	{
+		I++;
+		goto RTCC_GIMGB2_3;
+	}
+RTCC_GIMGB2_1:
+	I = N;
+	goto RTCC_GIMGB2_4;
+RTCC_GIMGB2_2:
+	return XI;
+}
+
+void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned IC, int IA, int IJ, double D)
 {
 	//INPUTS:
 	//CSMWT and LMWT, CSM and LM weights
 	//ITC: 33 = SPS, 34 = APS, 35 = DPS, 36 = J2
 	//IC: 1 = CSM, 5 = CSM + LM Ascent, 12 = LM, 13 = CSM and LM (docked)
 	//IA: -1: trim angles, thrust and weight loss rate desired outputs, 0: thrust and weight loss rate desired outputs, 1: trim angles desired outputs
-	//IJ: LM descent stage included in configuration at beginning of this maneuver (only applicable if ITC=33 and IC=2). 0 = included, 1 = not included
+	//IJ: LM descent stage included in configuration at beginning of this maneuver (only applicable if ITC=33 and IC=13). 0 = included, 1 = not included
 
 	if (ITC < 33)
 	{
@@ -159,62 +198,24 @@ RTCC_GIMGBL_LABEL_3_2:
 	{
 		return;
 	}
-	if (ITC == 34)
+	//Thrust tables
+	if (ITC == 34) //APS
 	{
-	RTCC_GIMGBL_LABEL_3_3:;
-		//GIMGB2();
+	RTCC_GIMGBL_LABEL_3_3:
+		XI = GIMGB2(SystemParameters.MHTATC.Weight, SystemParameters.MHTATC.Thrust, SystemParameters.MHTATC.N, W[1]);
 	}
-	else if (ITC < 34)
+	else if (ITC < 34) //SPS
 	{
-	RTCC_GIMGBL_LABEL_3_4:;
-		//GIMGB2();
+	RTCC_GIMGBL_LABEL_3_4:
+		XI = GIMGB2(SystemParameters.MHTSTC.Weight, SystemParameters.MHTSTC.Thrust, SystemParameters.MHTSTC.N, W[1]);
 	}
-	else
+	else //DPS
 	{
-	RTCC_GIMGBL_LABEL_3_5:;
-		//GIMGB2();
+	RTCC_GIMGBL_LABEL_3_5:
+		XI = GIMGB2(SystemParameters.MHTDTC.Weight, SystemParameters.MHTDTC.Thrust, SystemParameters.MHTDTC.N, W[1]);
 	}
-	//T = XI.x;
-	//WDOT = XI.y;
-}
-
-VECTOR3 RTCC::GIMGB2(const double *WArr, const VECTOR3 *VecArr, int N, double W)
-{
-	VECTOR3 XI;
-	int I;
-	if (W <= WArr[0])
-	{
-		I = 1;
-	RTCC_GIMGB2_4:
-		XI = VecArr[I - 1];
-		goto RTCC_GIMGB2_2;
-	}
-	if (W >= WArr[N - 1])
-	{
-		goto RTCC_GIMGB2_1;
-	}
-	I = 2;
-RTCC_GIMGB2_3:
-	if (W < WArr[I - 1])
-	{
-		//Linearly interpolate
-		XI = VecArr[I - 2] + (VecArr[I - 1] - VecArr[I - 2]) / (WArr[I - 1] - WArr[I - 2])*(W - WArr[I - 2]);
-		goto RTCC_GIMGB2_2;
-	}
-	if (W == WArr[I - 1])
-	{
-		goto RTCC_GIMGB2_4;
-	}
-	if (I < N)
-	{
-		I++;
-		goto RTCC_GIMGB2_3;
-	}
-RTCC_GIMGB2_1:
-	I = N;
-	goto RTCC_GIMGB2_4;
-RTCC_GIMGB2_2:
-	return XI;
+	T = XI.x;
+	WDOT = XI.y;
 }
 
 //LM AGS External DV Coordinate Transformation Subroutine
@@ -541,11 +542,11 @@ VECTOR3 RTCC::PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV
 	return DV_out;
 }
 
-void RTCC::PIFAAP(double a, double e, double i, double f, double u, double r, double &r_apo, double &r_peri)
+void RTCC::PIFAAP(double a, double e, double i, double f, double u, double r, double R_E, double J2, double &r_apo, double &r_peri)
 {
 	double a_ref, e_ref, p_ref, p, K1, K2, df, r1, r2;
 
-	a_ref = r + 1.5*OrbMech::J2_Earth * OrbMech::R_Earth*(1.0 - 3.0 / 2.0*pow(sin(i), 2) + 5.0 / 6.0*pow(sin(i), 2)*cos(2.0*u));
+	a_ref = r + 1.5*J2 * R_E*(1.0 - 3.0 / 2.0*pow(sin(i), 2) + 5.0 / 6.0*pow(sin(i), 2)*cos(2.0*u));
 	e_ref = 1.0 - r / a_ref;
 	p_ref = a_ref * (1.0 - e_ref * e_ref);
 	p = a * (1.0 - e * e);

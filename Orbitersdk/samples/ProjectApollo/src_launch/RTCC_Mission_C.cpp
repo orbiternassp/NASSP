@@ -775,17 +775,17 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		AP7MNV *form = (AP7MNV *)pad;
 
 		spqopt.E = 27.45*RAD;
-		spqopt.sv_A = ConvertEphemDatatoSV(sv_A.sv);
-		spqopt.sv_P = ConvertEphemDatatoSV(sv_P.sv);
-		spqopt.t_CSI = -1;
-		spqopt.t_CDH = FindDH(ConvertEphemDatatoSV(sv_A.sv), ConvertEphemDatatoSV(sv_P.sv), 28.0 * 3600.0 + 1.0 * 60.0, 8.0 * 1852.0);
+		spqopt.sv_A = sv_A;
+		spqopt.sv_P = sv_P;
+		spqopt.GMT_CSI = -1;
+		spqopt.GMT_CDH = FindDH(sv_A, sv_P, GMTfromGET(28.0*3600.0 + 1.0*60.0), 8.0*1852.0);
 
 		ConcentricRendezvousProcessor(spqopt, res);
 
 		in.CONFIG = 1; //CSM
 		in.CSMWeight = sv_A.Weight;
-		in.sv_before = ConvertSVtoEphemData(res.sv_C[0]);
-		in.V_aft = res.sv_C_apo[0].V;
+		in.sv_before = res.sv_C[0].sv;
+		in.V_aft = res.sv_C_apo[0].sv.V;
 		in.DETU = 15.0; //Ullage
 		in.UT = true; //4 jets
 		in.IgnitionTimeOption = false;

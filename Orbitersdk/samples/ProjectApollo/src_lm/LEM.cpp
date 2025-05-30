@@ -1432,7 +1432,6 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	if ((oapiGetFocusObject() == GetHandle()) && (oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
 		//We have focus on this vessel, and are in the VC
 		MoveFlashlight();
-		UpdateFloodLights();
 	}
 }
 

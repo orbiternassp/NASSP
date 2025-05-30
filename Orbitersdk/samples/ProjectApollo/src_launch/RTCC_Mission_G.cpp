@@ -224,7 +224,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv = StateVectorCalcEphem(calcParams.src);
 
-		TLIBase = floor((TimeofIgnition / 1800.0) + 0.5)*1800.0; //Round to next half hour
+		TLIBase = floor((TimeofIgnition / 60.0))*60.0; //Round down to next minute
 		TIG = TLIBase + 90.0*60.0;
 		entopt.lng = -25.0*RAD;
 
@@ -1277,13 +1277,13 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.W_TAPS = 4711.0;
 		opt.W_TDRY = 6874.3;
 		opt.dt_step = 20.0;
-		opt.t_TPI = t_TPI;
+		opt.GMT_TPI = GMTfromGET(t_TPI);
 		opt.IsTwoSegment = true;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv_A = SVToVehicleDataBlock(ConvertSVtoEphemData(sv_INP), 1.0, sv_INP.mass, 1.0);
 		opt.sv_P = SVToVehicleDataBlock(ConvertSVtoEphemData(sv2), 1.0, sv2.mass, 1.0);
-		opt.TLAND = CZTDTGTU.GETTD;
+		opt.GMT_LAND = GMTfromGET(CZTDTGTU.GETTD);
 
 		PoweredDescentAbortProgram(opt, res);
 
