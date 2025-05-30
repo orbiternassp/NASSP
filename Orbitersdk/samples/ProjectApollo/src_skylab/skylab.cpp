@@ -349,7 +349,8 @@ void Skylab::TrackLightsOn()
 {
 	for (int i = 0; i < 2; i++)
 	{
-		tracklights[i].active = trackLightsActive = true;
+		tracklights[i].active = true;
+		trackLightsActive = true;
 	}
 }
 
@@ -357,7 +358,8 @@ void Skylab::TrackLightsOff()
 {
 	for (int i = 0; i < 2; i++)
 	{
-		tracklights[i].active = trackLightsActive = false;
+		tracklights[i].active = false;
+		trackLightsActive = false;
 	}
 }
 

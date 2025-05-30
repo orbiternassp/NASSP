@@ -48,8 +48,8 @@ public:
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel);
 	void clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos);
-	void TrackLightsOn();
-	void TrackLightsOff();
+	virtual void TrackLightsOn();
+	virtual void TrackLightsOff();
 	virtual void ToggleTrackLights();
 	bool GetTrackLightStatus() { return trackLightsActive; };
 

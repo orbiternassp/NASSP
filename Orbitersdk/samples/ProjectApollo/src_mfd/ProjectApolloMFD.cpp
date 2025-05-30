@@ -1567,7 +1567,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
 			skp->Text((int)(width * 0.1), (int)(height * 0.9), "Lighting Status:", 16);
 
-			if () //needs to look for current light status
+			if (sl->GetTrackLightStatus() == true) //needs to look for current light status
 			{
 				skp->Text((int)(width * 0.6), (int)(height * 0.9), "Enabled", 7);
 			}
@@ -2622,10 +2622,7 @@ void ProjectApolloMFD::menuCycleFailuresSubpage()
 
 void ProjectApolloMFD::menuToggleSLLighting()
 {
-	if ()
-	{
-		//needs to toggle skylab lighting
-	}
+	sl->ToggleTrackLights();
 }
 
 
