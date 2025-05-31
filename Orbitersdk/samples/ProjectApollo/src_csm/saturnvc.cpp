@@ -5858,37 +5858,59 @@ void Saturn::UpdatePointingArrow()
 	
 	static bool first = true;
 	static VECTOR3* arrowData;
-	static int arrowVertsCnt;
+	static VECTOR3* circleData;
+	static int arrowVertsCnt, circleVertsCnt;
 	if (first) {											// Run this once for retrieving the Arrow data
-		MESHGROUP* group = oapiMeshGroup(GetMeshTemplate(hcmPointingArrowidx), 0);
-		arrowVertsCnt = group->nVtx;
+		MESHGROUP* arrow_group = oapiMeshGroup(GetMeshTemplate(hcmPointingArrowidx), 0);
+		arrowVertsCnt = arrow_group->nVtx;
 		arrowData = new VECTOR3[arrowVertsCnt];
 		for (int i = 0; i < arrowVertsCnt; i++) {			// Make a copy of the Arrow data
-			arrowData[i].x = (double)group->Vtx[i].x;
-			arrowData[i].y = (double)group->Vtx[i].y;
-			arrowData[i].z = (double)group->Vtx[i].z;
+			arrowData[i].x = (double)arrow_group->Vtx[i].x;
+			arrowData[i].y = (double)arrow_group->Vtx[i].y;
+			arrowData[i].z = (double)arrow_group->Vtx[i].z;
+		}
+		MESHGROUP* circle_group = oapiMeshGroup(GetMeshTemplate(hcmPointingArrowidx), 1);
+		circleVertsCnt = circle_group->nVtx;
+		circleData = new VECTOR3[circleVertsCnt];
+		for (int i = 0; i < circleVertsCnt; i++) {			// Make a copy of the Circle data
+			circleData[i].x = (double)circle_group->Vtx[i].x;
+			circleData[i].y = (double)circle_group->Vtx[i].y;
+			circleData[i].z = (double)circle_group->Vtx[i].z;
 		}
 		first = false;
 	}
-	GROUPREQUESTSPEC vc_grp;
-	memset (&vc_grp, 0, sizeof(GROUPREQUESTSPEC));
-	if (vc_grp.Vtx) delete []vc_grp.Vtx;
-	vc_grp.nVtx = arrowVertsCnt;
+	GROUPREQUESTSPEC arrow_grp;
+	memset (&arrow_grp, 0, sizeof(GROUPREQUESTSPEC));
+	if (arrow_grp.Vtx) delete []arrow_grp.Vtx;
+	arrow_grp.nVtx = arrowVertsCnt;
 
-	if (!vc_grp.Vtx) vc_grp.Vtx = new NTVERTEX[vc_grp.nVtx];
-	if (oapiGetMeshGroup (hArrowMesh, 0, &vc_grp) != 0) { // problems
-		delete []vc_grp.Vtx;
-		vc_grp.Vtx = 0;
+	if (!arrow_grp.Vtx) arrow_grp.Vtx = new NTVERTEX[arrow_grp.nVtx];
+	if (oapiGetMeshGroup (hArrowMesh, 0, &arrow_grp) != 0) { // problems
+		delete []arrow_grp.Vtx;
+		arrow_grp.Vtx = 0;
 	}
-	NTVERTEX *Vtx = vc_grp.Vtx;
+//	NTVERTEX *Vtx = arrow_grp.Vtx;
+
+	GROUPREQUESTSPEC circle_grp;
+	memset (&circle_grp, 0, sizeof(GROUPREQUESTSPEC));
+	if (circle_grp.Vtx) delete []circle_grp.Vtx;
+	circle_grp.nVtx = circleVertsCnt;
+
+	if (!circle_grp.Vtx) circle_grp.Vtx = new NTVERTEX[circle_grp.nVtx];
+	if (oapiGetMeshGroup (hArrowMesh, 1, &circle_grp) != 0) { // problems
+		delete []circle_grp.Vtx;
+		circle_grp.Vtx = 0;
+	}
+//	NTVERTEX *Vtx2 = circle_grp.Vtx;
 
 	VECTOR3 arrowCurPos = camOffset - ofs + (camPointing * 0.15);	// Move the Arrow to this Position
+	VECTOR3 circleCurPos = activeSwitchPos;							// Move the Circle to this Position
 
 	// Rotationsberechnung, um die Spitze auszurichten
-	VECTOR3 init_dir = {0, 0, 1};									// Richtung des Pfeils (anfangs entlang der positiven Z-Achse)
+	const VECTOR3 init_dir = {0, 0, 1};									// Richtung des Pfeils (anfangs entlang der positiven Z-Achse)
 	VECTOR3 pointing_dir = activeSwitchPos - arrowCurPos;			// Zielrichtung (Vektor vom Zielort zur Blickrichtung)
 	normalise(pointing_dir);
-	
+
 	VECTOR3 rot_axis = crossp(init_dir, pointing_dir);				// Rotationsachse (Kreuzprodukt der initialen und der Zielrichtung)
 	normalise(rot_axis);
 
@@ -5897,25 +5919,50 @@ void Saturn::UpdatePointingArrow()
 
     MATRIX3 rotation = rotm(rot_axis, angle);
 
+	VECTOR3 circle_dir =  (camOffset - ofs) - activeSwitchPos;							// Zielrichtung (Vektor vom Zielort zur Blickrichtung)
+	normalise(circle_dir);
+	
+	VECTOR3 rot_axis_circle = crossp(init_dir, circle_dir);				// Rotationsachse (Kreuzprodukt der initialen und der Zielrichtung)
+	normalise(rot_axis_circle);
+
+	double dot_circle = dotp(init_dir, circle_dir);						// Rotationswinkel (Winkel zwischen der initialen und der Zielrichtung)
+    double angle_circle = std::acos(max(-1.0, min(1.0, dot_circle)));				// Clamp to avoid NaN
+
+    MATRIX3 rotation_circle = rotm(rot_axis_circle, angle_circle);
+
 	for (int i = 0; i < arrowVertsCnt; i++) {
-		VECTOR3 arrowData2 = arrowData[i] * oapiCameraAperture();	// Scale the Arrow depending on Camera FOV
 //		sprintf(oapiDebugString(), "%.3f", oapiCameraAperture()*2);
+		// Rotate, Translate and Scale the Arrow(Scale depends on Camera FOV)
+		VECTOR3 final_vertex = mul(rotation, arrowData[i] * oapiCameraAperture());
+		final_vertex += arrowCurPos;
 
-		VECTOR3 final_vertex = mul(rotation, arrowData2) + arrowCurPos;	// Rotate and Translate the Arrow Vertices
-
-		vc_grp.Vtx[i].x = (float)final_vertex.x;	// Copy Vertices
-		vc_grp.Vtx[i].y = (float)final_vertex.y;
-		vc_grp.Vtx[i].z = (float)final_vertex.z;
+		arrow_grp.Vtx[i].x = (float)final_vertex.x;	// Copy Vertices
+		arrow_grp.Vtx[i].y = (float)final_vertex.y;
+		arrow_grp.Vtx[i].z = (float)final_vertex.z;
 	}
 
-//	sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ** %.3f  %.3f  %.3f", camOffset.x, camOffset.y, camOffset.z, camPointing.x, camPointing.y, camPointing.z, vc_grp.Vtx[0].x, vc_grp.Vtx[0].y, vc_grp.Vtx[0].z);
+	for (int i = 0; i < circleVertsCnt; i++) {
+		// Rotate, Translate
+		VECTOR3 final_vertex = mul(rotation_circle, circleData[i]); 
+		final_vertex += circleCurPos;
+
+		circle_grp.Vtx[i].x = (float)final_vertex.x;	// Copy Vertices
+		circle_grp.Vtx[i].y = (float)final_vertex.y;
+		circle_grp.Vtx[i].z = (float)final_vertex.z;
+	}
+
+//	sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ** %.3f  %.3f  %.3f", camOffset.x, camOffset.y, camOffset.z, camPointing.x, camPointing.y, camPointing.z, arrow_grp.Vtx[0].x, arrow_grp.Vtx[0].y, arrow_grp.Vtx[0].z);
 
 	GROUPEDITSPEC ges;
 	ges.flags = GRPEDIT_VTXCRD;
-	ges.nVtx = vc_grp.nVtx;
-	ges.Vtx  = vc_grp.Vtx;
+	ges.nVtx = arrow_grp.nVtx;
+	ges.Vtx  = arrow_grp.Vtx;
 	ges.vIdx = 0;
 	oapiEditMeshGroup(hArrowMesh, 0, &ges);	// Move the Arrow
+
+	ges.nVtx = circle_grp.nVtx;
+	ges.Vtx  = circle_grp.Vtx;
+	oapiEditMeshGroup(hArrowMesh, 1, &ges);	// Move the Circle
 
 //########################################################################
 //########################################################################
