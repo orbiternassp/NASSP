@@ -2004,18 +2004,47 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 	}
 	break;
 	case 52: //CSM STATE VECTOR UPDATE (BOTH SLOTS) AND NAV CHECK PAD
+	case 75: //CSM STATE VECTOR UPDATE (BOTH SLOTS) AND NAV CHECK PAD (92:05:00)
+	case 76: //CSM STATE VECTOR UPDATE (BOTH SLOTS) AND NAV CHECK PAD (94:15:00)
+	case 77: //CSM STATE VECTOR UPDATE (BOTH SLOTS) AND NAV CHECK PAD (102:30:00)
+	case 78: //CSM STATE VECTOR UPDATE (BOTH SLOTS) AND NAV CHECK PAD (TBD)
+	case 79: //CSM STATE VECTOR UPDATE (BOTH SLOTS) AND NAV CHECK PAD (SV GET)
 	{
-		AP7NAV *form = (AP7NAV *)pad;
-
-		SV sv;
+		VehicleDataBlock sv, sv_1;
 		char buffer1[1000];
 		char buffer2[1000];
+		double NavGET;
+		double NavGMT;
 
-		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+		AP7NAV *form = (AP7NAV *)pad;
 
-		NavCheckPAD(sv, *form);
-		AGCStateVectorUpdate(buffer1, sv, true);
-		AGCStateVectorUpdate(buffer2, sv, false);
+		sv = StateVectorCalcDataBlock(calcParams.src); //State vector for uplink
+
+		if (fcn == 75)
+		{
+			NavGET = OrbMech::HHMMSSToSS(92, 5, 0);  //Nav Check GET
+		}
+		else if (fcn == 76)
+		{
+			NavGET = OrbMech::HHMMSSToSS(94, 15, 0);  //Nav Check GET
+		}
+		else if (fcn == 77)
+		{
+			NavGET = OrbMech::HHMMSSToSS(102, 30, 0);  //Nav Check GET
+		}
+		else if (fcn == 79)
+		{
+			NavGET = (ConvertEphemDatatoSV(sv.sv).MJD - CalcGETBase())*24.0*3600.0; //Nav Check GET as SV time
+		}
+
+		NavGMT = GMTfromGET(NavGET);
+
+		sv_1 = coast(sv, NavGMT - sv_1.sv.GMT); //Time tag to Nav Check time
+
+		NavCheckPAD(ConvertEphemDatatoSV(sv_1.sv), *form, NavGET);
+
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_1.sv);
+		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_1.sv);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
@@ -2232,6 +2261,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		{
 			SR_guess = OrbMech::HHMMSSToSS(53, 30, 0);
 			sprintf(form->Mode, "A");
+			form->TAlign = mcc->mcc_calcs.FindOrbitalSunset(ConvertEphemDatatoSV(sv_A.sv), SR_guess - 3600.0);
 			form->AttSR = _V(4.0, 92.0, 359.0); //TBD compute attitude
 			form->AttSS_12 = _V(184.0, 97.0, 359.0); //TBD compute attitude
 		}
@@ -2239,6 +2269,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		{
 			SR_guess = OrbMech::HHMMSSToSS(98, 0, 0);
 			sprintf(form->Mode, "B");
+			form->TAlign = mcc->mcc_calcs.FindOrbitalSunrise(ConvertEphemDatatoSV(sv_A.sv), SR_guess);
 			form->AttSR = _V(0.0, 97.0, 0.0); //TBD compute attitude
 			form->AttSS_12 = _V(0.0, 327.0, 0.0); //TBD compute attitude
 		}
@@ -2246,6 +2277,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		{
 			SR_guess = OrbMech::HHMMSSToSS(122, 0, 0);
 			sprintf(form->Mode, "C");
+			form->TAlign = mcc->mcc_calcs.FindOrbitalSunset(ConvertEphemDatatoSV(sv_A.sv), SR_guess - 3600.0);
 			form->AttSR = _V(4.0, 92.0, 359.0); //TBD compute attitude
 			form->AttSS_12 = _V(184.0, 97.0, 359.0); //TBD compute attitude
 		}
@@ -2253,11 +2285,11 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		{
 			SR_guess = OrbMech::HHMMSSToSS(147, 0, 0);
 			sprintf(form->Mode, "A");
+			form->TAlign = mcc->mcc_calcs.FindOrbitalSunset(ConvertEphemDatatoSV(sv_A.sv), SR_guess - 3600.0);
 			form->AttSR = _V(4.0, 92.0, 359.0);
 			form->AttSS_12 = _V(184.0, 97.0, 359.0);
 		}
 
-		form->TAlign = mcc->mcc_calcs.FindOrbitalSunset(ConvertEphemDatatoSV(sv_A.sv), SR_guess - 3600.0);
 		form->GETSR = mcc->mcc_calcs.FindOrbitalSunrise(ConvertEphemDatatoSV(sv_A.sv), SR_guess);
 		form->GETSS_12 = (mcc->mcc_calcs.FindOrbitalSunset(ConvertEphemDatatoSV(sv_A.sv), SR_guess + 3600.0)) - 12.0 * 60.0;
 	}
@@ -2324,9 +2356,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		{
 			AP7NAV *form = (AP7NAV *)pad;
 
+			double NavGET = OrbMech::HHMMSSToSS(71, 11, 0); //Nav Check GET
+
 			//Use SV for Nav Check
-			NavCheckPAD(ConvertEphemDatatoSV(sv_A.sv), *form);
-			form->NavChk[0] = OrbMech::HHMMSSToSS(71, 11, 0);
+			NavCheckPAD(ConvertEphemDatatoSV(sv_A.sv), *form, NavGET);
 
 			//Time tagged SV
 			sv_A1 = coast(sv_A, GMTtimetag - sv_A.sv.GMT);
