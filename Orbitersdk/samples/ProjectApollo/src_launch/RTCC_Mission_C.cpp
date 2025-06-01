@@ -2032,6 +2032,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		{
 			NavGET = OrbMech::HHMMSSToSS(102, 30, 0);  //Nav Check GET
 		}
+		else if (fcn == 78)
+		{
+			NavGET = (ConvertEphemDatatoSV(sv.sv).MJD - CalcGETBase())*24.0*3600.0; //Nav Check GET TBD
+		}
 		else if (fcn == 79)
 		{
 			NavGET = (ConvertEphemDatatoSV(sv.sv).MJD - CalcGETBase())*24.0*3600.0; //Nav Check GET as SV time
@@ -2039,7 +2043,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 		NavGMT = GMTfromGET(NavGET);
 
-		sv_1 = coast(sv, NavGMT - sv_1.sv.GMT); //Time tag to Nav Check time
+		sv_1 = coast(sv, NavGMT - sv.sv.GMT); //Time tag to Nav Check time
 
 		NavCheckPAD(ConvertEphemDatatoSV(sv_1.sv), *form, NavGET);
 
