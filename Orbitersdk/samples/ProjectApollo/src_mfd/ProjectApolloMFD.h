@@ -118,6 +118,7 @@ public:
 	void menuClearAllFailures();
 	void menuAEAACommands();
 
+	void menuSetSLSource();
 	void menuToggleSLLighting();
 
 	OBJHANDLE AGCGravityRef(VESSEL *vessel) const;

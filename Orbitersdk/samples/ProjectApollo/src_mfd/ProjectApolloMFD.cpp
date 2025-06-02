@@ -1562,8 +1562,6 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 	{
 		skp->Text(width / 2, (int)(height * 0.3), "Skylab Interface", 16);
 
-		if (saturn)
-		{
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
 			skp->Text((int)(width * 0.1), (int)(height * 0.9), "Lighting Status:", 16);
 
@@ -1575,12 +1573,6 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			{
 				skp->Text((int)(width * 0.6), (int)(height * 0.9), "Disabled", 8);
 			}
-		}
-
-		else
-		{
-			skp->Text(width / 2, (int)(height * 0.4), "Skylab Not Present", 18);
-		}
 	}
 
 	return true;
@@ -2618,6 +2610,24 @@ void ProjectApolloMFD::menuCycleFailuresSubpage()
 			FailureSubpage = 0;
 		}
 	}
+}
+
+void ProjectApolloMFD::menuSetSLSource()
+{
+	int vesselcount;
+
+	vesselcount = oapiGetVesselCount();
+
+	if (g_Data.targetnumber < vesselcount - 1)
+	{
+		g_Data.targetnumber++;
+	}
+	else
+	{
+		g_Data.targetnumber = 0;
+	}
+
+	g_Data.uplinkVessel = oapiGetVesselInterface(oapiGetVesselByIndex(g_Data.targetnumber));
 }
 
 void ProjectApolloMFD::menuToggleSLLighting()

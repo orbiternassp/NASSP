@@ -262,7 +262,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	{ 0,0,0 },
 	{ "Toggle Lighting", 0, 'L' },
 
-	{ 0,0,0 },
+	{ "Change Source",0,'S' },
 	{ 0,0,0 },
 	{ 0,0,0 },
 	{ 0,0,0 },
@@ -279,7 +279,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("", OAPI_KEY_H, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("LTG", OAPI_KEY_L, &ProjectApolloMFD::menuToggleSLLighting);
 
-	RegisterFunction("", OAPI_KEY_I, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("SL", OAPI_KEY_I, &ProjectApolloMFD::menuSetSLSource);
 	RegisterFunction("", OAPI_KEY_Z, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Y, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_X, &ProjectApolloMFD::menuVoid);
