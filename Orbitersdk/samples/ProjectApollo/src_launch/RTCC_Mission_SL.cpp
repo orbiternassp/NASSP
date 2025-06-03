@@ -437,7 +437,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 
 		sl->GetATMDC()->CommandSystem(052016, 050002);
 
-		sl->TrackLightsOff();
+		sl->SetTrackLights(false);
 
 		sprintf(upMessage, "Skylab to Solar Inertial attitude, Lights off");
 

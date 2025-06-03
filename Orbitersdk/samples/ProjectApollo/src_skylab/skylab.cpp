@@ -332,34 +332,12 @@ void Skylab::AddTrackLights()
 	}
 }
 
-void Skylab::ToggleTrackLights() //Toggle for MFD use
-{
-	if (trackLightsActive)
-	{
-		TrackLightsOff();
-	}
-
-	else
-	{
-		TrackLightsOn();
-	}
-}
-
-void Skylab::TrackLightsOn()
+void Skylab::SetTrackLights(bool mode)
 {
 	for (int i = 0; i < 2; i++)
 	{
-		tracklights[i].active = true;
-		trackLightsActive = true;
-	}
-}
-
-void Skylab::TrackLightsOff()
-{
-	for (int i = 0; i < 2; i++)
-	{
-		tracklights[i].active = false;
-		trackLightsActive = false;
+		tracklights[i].active = mode;
+		trackLightsActive = mode;
 	}
 }
 

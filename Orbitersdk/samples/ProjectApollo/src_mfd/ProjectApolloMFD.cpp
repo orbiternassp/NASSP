@@ -2787,7 +2787,26 @@ void ProjectApolloMFD::menuSLUplinkOption()
 
 void ProjectApolloMFD::menuSendSLUplink()
 {
+	if (g_Data.uplinkVessel && utils::IsVessel(g_Data.uplinkVessel, utils::Skylab))
+	{
+		Skylab* sl = (Skylab*)g_Data.uplinkVessel;
 
+		if (g_Data.SLUplinkType == 0)
+		{
+			int mode = g_Data.SLLtgMode;
+			sl->SetTrackLights(mode);
+		}
+
+		else
+		{
+			int state = g_Data.SLAttCtrlMode;
+			sl->GetATMDC()->SetAttitudeControlMode(state);
+		}
+	}
+	else
+	{
+		return;
+	}
 }
 
 
