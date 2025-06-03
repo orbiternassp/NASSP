@@ -232,6 +232,8 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 	break;
 	case 14: //NC2 preliminary update
 		preliminary = true;
+		Skylab* sl = (Skylab*)calcParams.tgt;
+		sl->SetTrackLights(true);
 	case 15: //NC2 final update
 	{
 		AP7MNV* form = (AP7MNV*)pad;
