@@ -102,6 +102,11 @@ static struct ProjectApolloMFDData {  // global data storage
 	double iuUplinkYaw;
 	VECTOR3 iuUplinkGenManAtt;
 	int iuUplinkGenManType;
+
+	int SLAttCtrlMode;
+	int SLLtgMode;
+	int SLUplinkResult;
+
 	bool lmAlignType;	//true = same REFSMMAT; false = nominal alignments
 
 	VECTOR3 V42angles;
@@ -168,6 +173,10 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.iuUplinkYaw = 0.0;
 	g_Data.iuUplinkGenManAtt = _V(0, 0, 0);
 	g_Data.iuUplinkGenManType = 0;
+
+	g_Data.SLAttCtrlMode = 0;
+	g_Data.SLLtgMode = 0;
+	g_Data.SLUplinkResult = 0;
 }
 
 void ProjectApolloMFDopcDLLExit (HINSTANCE hDLL)
@@ -1560,11 +1569,14 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 	// Draw Skylab Screen
 	else if (screen == m_buttonPages.page.SL)
 	{
-		skp->Text(width / 2, (int)(height * 0.3), "Skylab Interface", 16);
+		if (g_Data.uplinkVessel && utils::IsVessel(g_Data.uplinkVessel, utils::Skylab))
+		{
+			skp->Text(width / 2, (int)(height * 0.3), "Skylab Interface", 16);
 
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.1), (int)(height * 0.9), "Lighting Status:", 16);
-
+			skp->Text((int)(width * 0.05), (int)(height * 0.4), "Lighting Status:", 16);
+			skp->Text((int)(width * 0.05), (int)(height * 0.5), "Attitude Control Mode:", 22);
+			/*
 			if (sl->GetTrackLightStatus() == true) //needs to look for current light status
 			{
 				skp->Text((int)(width * 0.6), (int)(height * 0.9), "Enabled", 7);
@@ -1573,8 +1585,37 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			{
 				skp->Text((int)(width * 0.6), (int)(height * 0.9), "Disabled", 8);
 			}
-	}
+			*/
 
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			if (g_Data.SLUplinkResult == 1)
+			{
+				skp->Text((int)(width * 0.7), (int)(height * 0.8), "Uplink accepted", 15);
+			}
+			else if (g_Data.SLUplinkResult == 2)
+			{
+				skp->Text((int)(width * 0.7), (int)(height * 0.8), "Uplink rejected", 16);
+			}
+		}
+		else
+		{
+			skp->SetTextColor(RGB(255, 0, 0));
+			skp->Text(width / 2, (int)(height * 0.3), "Skylab Not Selected", 19);
+			skp->SetTextColor(RGB(0, 255, 0));
+		}
+
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+		skp->SetTextColor(RGB(128, 128, 128));
+		if (g_Data.uplinkVessel)
+		{
+			oapiGetObjectName(g_Data.uplinkVessel->GetHandle(), buffer, 100);
+		}
+		else
+		{
+			sprintf(buffer, "No Target!");
+		}
+		skp->Text((int)(width * 0.95), (int)(height * 0.95), buffer, strlen(buffer));
+	}
 	return true;
 }
 
@@ -2268,7 +2309,7 @@ void ProjectApolloMFD::menuFreezeDebugLine()
 		debug_frozen = true;
 }
 
-void ProjectApolloMFD::menuSetIUSource()
+void ProjectApolloMFD::menuSetUplinkVessel()
 {
 	int vesselcount;
 
@@ -2612,27 +2653,41 @@ void ProjectApolloMFD::menuCycleFailuresSubpage()
 	}
 }
 
-void ProjectApolloMFD::menuSetSLSource()
+void ProjectApolloMFD::menuCycleAttCntrlMode()
 {
-	int vesselcount;
-
-	vesselcount = oapiGetVesselCount();
-
-	if (g_Data.targetnumber < vesselcount - 1)
 	{
-		g_Data.targetnumber++;
-	}
-	else
-	{
-		g_Data.targetnumber = 0;
-	}
+		if (g_Data.SLAttCtrlMode < 5)
+		{
+			g_Data.SLAttCtrlMode++;
+		}
+		else
+		{
+			g_Data.SLAttCtrlMode = 0;
+		}
 
-	g_Data.uplinkVessel = oapiGetVesselInterface(oapiGetVesselByIndex(g_Data.targetnumber));
+		g_Data.SLUplinkResult = 0;
+	}
 }
 
-void ProjectApolloMFD::menuToggleSLLighting()
+void ProjectApolloMFD::menuCycleSLLighting()
 {
-	sl->ToggleTrackLights();
+	{
+		if (g_Data.SLLtgMode < 1)
+		{
+			g_Data.SLLtgMode++;
+		}
+		else
+		{
+			g_Data.SLLtgMode = 0;
+		}
+
+		g_Data.SLUplinkResult = 0;
+	}
+}
+
+void ProjectApolloMFD::menuSendSLUplink()
+{
+
 }
 
 

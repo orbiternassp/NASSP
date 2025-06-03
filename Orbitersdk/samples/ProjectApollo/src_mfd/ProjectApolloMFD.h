@@ -104,7 +104,7 @@ public:
 	void menuSetSVSlot();
 	void menuClearDebugLine();
 	void menuFreezeDebugLine();
-	void menuSetIUSource();
+	void menuSetUplinkVessel();
 	void menuCycleIUUplinkType();
 	void menuSetIUUplinkInp1();
 	void menuSetIUUplinkInp2();
@@ -118,8 +118,9 @@ public:
 	void menuClearAllFailures();
 	void menuAEAACommands();
 
-	void menuSetSLSource();
-	void menuToggleSLLighting();
+	void menuCycleAttCntrlMode();
+	void menuCycleSLLighting();
+	void menuSendSLUplink();
 
 	OBJHANDLE AGCGravityRef(VESSEL *vessel) const;
 

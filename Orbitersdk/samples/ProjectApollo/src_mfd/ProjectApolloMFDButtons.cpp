@@ -130,7 +130,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("IN2", OAPI_KEY_C, &ProjectApolloMFD::menuSetIUUplinkInp2);
 	RegisterFunction("IN3", OAPI_KEY_D, &ProjectApolloMFD::menuSetIUUplinkInp3);
 	RegisterFunction("IN4", OAPI_KEY_R, &ProjectApolloMFD::menuSetIUUplinkInp4);
-	RegisterFunction("SRC", OAPI_KEY_S, &ProjectApolloMFD::menuSetIUSource);
+	RegisterFunction("SRC", OAPI_KEY_S, &ProjectApolloMFD::menuSetUplinkVessel);
 
 	RegisterFunction("TYP", OAPI_KEY_T, &ProjectApolloMFD::menuCycleIUUplinkType);
 	RegisterFunction("UPL", OAPI_KEY_U, &ProjectApolloMFD::menuIUUplink);
@@ -259,15 +259,15 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	{ 0,0,0 },
 	{ 0,0,0 },
 	{ 0,0,0 },
-	{ 0,0,0 },
-	{ "Toggle Lighting", 0, 'L' },
+	{ "Cycle Lighting", 0, 'L' },
+	{ "Cycle Attitude Control Mode", 0, 'A' },
 
+	{ "Uplink",0,'U' },
+	{ 0,0,0 },
+	{ 0,0,0 },
+	{ 0,0,0 },
+	{ 0,0,0 },
 	{ "Change Source",0,'S' },
-	{ 0,0,0 },
-	{ 0,0,0 },
-	{ 0,0,0 },
-	{ 0,0,0 },
-	{ 0,0,0 },
 	};
 
 	page.SL = RegisterPage(mnuSL, sizeof(mnuSL) / sizeof(MFDBUTTONMENU));
@@ -276,15 +276,15 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("", OAPI_KEY_D, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_G, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_H, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("LTG", OAPI_KEY_L, &ProjectApolloMFD::menuToggleSLLighting);
+	RegisterFunction("LTG", OAPI_KEY_L, &ProjectApolloMFD::menuCycleSLLighting);
+	RegisterFunction("ATT", OAPI_KEY_A, &ProjectApolloMFD::menuCycleAttCntrlMode);
 
-	RegisterFunction("SL", OAPI_KEY_I, &ProjectApolloMFD::menuSetSLSource);
-	RegisterFunction("", OAPI_KEY_Z, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("UPL", OAPI_KEY_U, &ProjectApolloMFD::menuSendSLUplink);
 	RegisterFunction("", OAPI_KEY_Y, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_X, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_W, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("SRC", OAPI_KEY_I, &ProjectApolloMFD::menuSetUplinkVessel);
 }
 
 bool ProjectApolloMFDButtons::SearchForKeysInOtherPages() const
