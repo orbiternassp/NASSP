@@ -103,6 +103,7 @@ static struct ProjectApolloMFDData {  // global data storage
 	VECTOR3 iuUplinkGenManAtt;
 	int iuUplinkGenManType;
 
+	int SLUplinkType;
 	int SLAttCtrlMode;
 	int SLLtgMode;
 	int SLUplinkResult;
@@ -174,6 +175,7 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.iuUplinkGenManAtt = _V(0, 0, 0);
 	g_Data.iuUplinkGenManType = 0;
 
+	g_Data.SLUplinkType = 0;
 	g_Data.SLAttCtrlMode = 0;
 	g_Data.SLLtgMode = 0;
 	g_Data.SLUplinkResult = 0;
@@ -1571,30 +1573,122 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 	{
 		if (g_Data.uplinkVessel && utils::IsVessel(g_Data.uplinkVessel, utils::Skylab))
 		{
-			skp->Text(width / 2, (int)(height * 0.3), "Skylab Interface", 16);
+			Skylab* sl = (Skylab*)g_Data.uplinkVessel;
 
+			skp->Text(width / 2, (int)(height * 0.3), "Skylab Interface", 16);
+			skp->Text(width / 2, (int)(height * 0.65), "Uplinks", 7);
+
+			//Status Displays
 			skp->SetTextAlign(oapi::Sketchpad::LEFT);
-			skp->Text((int)(width * 0.05), (int)(height * 0.4), "Lighting Status:", 16);
-			skp->Text((int)(width * 0.05), (int)(height * 0.5), "Attitude Control Mode:", 22);
-			/*
+			skp->Text((int)(width * 0.04), (int)(height * 0.4), "Lighting Status:", 16);
+			skp->Text((int)(width * 0.04), (int)(height * 0.5), "Attitude Control:", 17);
+
+			//Lighting Status
 			if (sl->GetTrackLightStatus() == true) //needs to look for current light status
 			{
-				skp->Text((int)(width * 0.6), (int)(height * 0.9), "Enabled", 7);
+				skp->Text((int)(width * 0.5), (int)(height * 0.4), "Enabled", 7);
 			}
 			else
 			{
-				skp->Text((int)(width * 0.6), (int)(height * 0.9), "Disabled", 8);
+				skp->Text((int)(width * 0.5), (int)(height * 0.4), "Disabled", 8);
 			}
-			*/
+			
+			//Attitude Control Status
+			if (sl->GetATMDC()->GetAttitudeControlMode() == 0) //needs to look for current attitude control mode
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.5), "Free Drift", 10);
+			}
+			else if (sl->GetATMDC()->GetAttitudeControlMode() == 1)
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.5), "Attitude Hold", 13);
+			}
+			else if (sl->GetATMDC()->GetAttitudeControlMode() == 2)
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.5), "Solar Inertial", 14);
+			}
+			else if (sl->GetATMDC()->GetAttitudeControlMode() == 3)
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.5), "Local Vertical (+)", 20);
+			}
+			else if (sl->GetATMDC()->GetAttitudeControlMode() == 4)
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.5), "Local Vertical (-)", 20);
+			}
+			else if (sl->GetATMDC()->GetAttitudeControlMode() == 5)
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.5), "Manual", 6);
+			}
 
+			//Uplink Type
+			skp->Text((int)(width * 0.04), (int)(height * 0.75), "Uplink Type:", 12);
+			if (g_Data.SLUplinkType == 0)
+			{
+				skp->Text((int)(width * 0.4), (int)(height * 0.75), "Lighting", 8);
+			}
+
+			else if (g_Data.SLUplinkType == 1)
+			{
+				skp->Text((int)(width * 0.4), (int)(height * 0.75), "Attitude Control", 16);
+			}
+
+			//Uplink Option
+			skp->Text((int)(width * 0.04), (int)(height * 0.8), "Option:", 7);
+
+			//Lighting
+			if (g_Data.SLUplinkType == 0)
+			{
+				if (g_Data.SLLtgMode == 0)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Off", 3);
+				}
+				else if (g_Data.SLLtgMode == 1)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "On", 2);
+				}
+			}
+
+			//Attitude Control
+			else if (g_Data.SLUplinkType == 1)
+			{
+				if (g_Data.SLAttCtrlMode == 0)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Free Drift", 10);
+				}
+				else if (g_Data.SLAttCtrlMode == 1)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Attitude Hold", 13);
+				}
+				else if (g_Data.SLAttCtrlMode == 2)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Solar Inertial", 14);
+				}
+				else if (g_Data.SLAttCtrlMode == 3)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Local Vertical (+)", 20);
+				}
+				else if (g_Data.SLAttCtrlMode == 4)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Local Vertical (-)", 20);
+				}
+				else if (g_Data.SLAttCtrlMode == 5)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Attitude Hold", 13);
+				}
+				else if (g_Data.SLAttCtrlMode == 6)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Manual", 6);
+				}
+			}
+
+			//Uplink Displays
 			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			if (g_Data.SLUplinkResult == 1)
 			{
-				skp->Text((int)(width * 0.7), (int)(height * 0.8), "Uplink accepted", 15);
+				skp->Text((int)(width * 0.04), (int)(height * 0.9), "Uplink accepted", 15);
 			}
 			else if (g_Data.SLUplinkResult == 2)
 			{
-				skp->Text((int)(width * 0.7), (int)(height * 0.8), "Uplink rejected", 16);
+				skp->Text((int)(width * 0.04), (int)(height * 0.9), "Uplink rejected", 16);
 			}
 		}
 		else
@@ -1603,7 +1697,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			skp->Text(width / 2, (int)(height * 0.3), "Skylab Not Selected", 19);
 			skp->SetTextColor(RGB(0, 255, 0));
 		}
-
+		// Target Selection
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		skp->SetTextColor(RGB(128, 128, 128));
 		if (g_Data.uplinkVessel)
@@ -1614,7 +1708,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 		{
 			sprintf(buffer, "No Target!");
 		}
-		skp->Text((int)(width * 0.95), (int)(height * 0.95), buffer, strlen(buffer));
+		skp->Text((int)(width * 0.95), (int)(height * 0.90), buffer, strlen(buffer));
 	}
 	return true;
 }
@@ -2653,24 +2747,21 @@ void ProjectApolloMFD::menuCycleFailuresSubpage()
 	}
 }
 
-void ProjectApolloMFD::menuCycleAttCntrlMode()
+void ProjectApolloMFD::menuSLUplinkType()
 {
+	if (g_Data.SLUplinkType < 1)
 	{
-		if (g_Data.SLAttCtrlMode < 5)
-		{
-			g_Data.SLAttCtrlMode++;
-		}
-		else
-		{
-			g_Data.SLAttCtrlMode = 0;
-		}
-
-		g_Data.SLUplinkResult = 0;
+		g_Data.SLUplinkType++;
+	}
+	else
+	{
+		g_Data.SLUplinkType = 0;
 	}
 }
 
-void ProjectApolloMFD::menuCycleSLLighting()
+void ProjectApolloMFD::menuSLUplinkOption()
 {
+	if (g_Data.SLUplinkType == 0)
 	{
 		if (g_Data.SLLtgMode < 1)
 		{
@@ -2680,8 +2771,17 @@ void ProjectApolloMFD::menuCycleSLLighting()
 		{
 			g_Data.SLLtgMode = 0;
 		}
-
-		g_Data.SLUplinkResult = 0;
+	}
+	else if (g_Data.SLUplinkType == 1)
+	{
+		if (g_Data.SLAttCtrlMode < 6)
+		{
+			g_Data.SLAttCtrlMode++;
+		}
+		else
+		{
+			g_Data.SLAttCtrlMode = 0;
+		}
 	}
 }
 

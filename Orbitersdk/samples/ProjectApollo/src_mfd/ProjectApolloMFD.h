@@ -118,8 +118,8 @@ public:
 	void menuClearAllFailures();
 	void menuAEAACommands();
 
-	void menuCycleAttCntrlMode();
-	void menuCycleSLLighting();
+	void menuSLUplinkType();
+	void menuSLUplinkOption();
 	void menuSendSLUplink();
 
 	OBJHANDLE AGCGravityRef(VESSEL *vessel) const;

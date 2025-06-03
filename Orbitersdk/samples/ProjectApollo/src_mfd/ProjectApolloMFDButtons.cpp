@@ -259,8 +259,8 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	{ 0,0,0 },
 	{ 0,0,0 },
 	{ 0,0,0 },
-	{ "Cycle Lighting", 0, 'L' },
-	{ "Cycle Attitude Control Mode", 0, 'A' },
+	{ "Select Uplink", 0, 'T' },
+	{ "Cycle Uplink Option", 0, 'O' },
 
 	{ "Uplink",0,'U' },
 	{ 0,0,0 },
@@ -276,8 +276,8 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("", OAPI_KEY_D, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_G, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("LTG", OAPI_KEY_L, &ProjectApolloMFD::menuCycleSLLighting);
-	RegisterFunction("ATT", OAPI_KEY_A, &ProjectApolloMFD::menuCycleAttCntrlMode);
+	RegisterFunction("TYP", OAPI_KEY_T, &ProjectApolloMFD::menuSLUplinkType);
+	RegisterFunction("OPT", OAPI_KEY_O, &ProjectApolloMFD::menuSLUplinkOption);
 
 	RegisterFunction("UPL", OAPI_KEY_U, &ProjectApolloMFD::menuSendSLUplink);
 	RegisterFunction("", OAPI_KEY_Y, &ProjectApolloMFD::menuVoid);
