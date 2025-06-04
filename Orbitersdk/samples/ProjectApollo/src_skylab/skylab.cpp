@@ -241,21 +241,7 @@ int Skylab::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate)
 	else { //unmodified keys
 		switch (key)
 		{
-		case OAPI_KEY_A: //Attitude control mode
-			{
-				int state = atmdc.GetAttitudeControlMode();
-	
-				if (state < 5)
-				{
-				state++;
-				}
-				else
-				{
-					state = 0;
-				}
-				atmdc.SetAttitudeControlMode(state);
-				return 1;
-			}
+
 		}
 	}
 	return 0;
