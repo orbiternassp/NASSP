@@ -232,8 +232,6 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 	break;
 	case 14: //NC2 preliminary update
 		preliminary = true;
-		Skylab* sl = (Skylab*)calcParams.tgt;
-		sl->SetTrackLights(true);
 	case 15: //NC2 final update
 	{
 		AP7MNV* form = (AP7MNV*)pad;
@@ -433,7 +431,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		sprintf(form->paddata, "Docking attitude: R %03.0f, P %03.0f, Y %03.0f", Att.x * DEG, Att.y * DEG, Att.z * DEG);
 	}
 	break;
-	case 23: //Command Skylab to Solar Inertial attitude
+	case 23: //Command Skylab to Solar Inertial attitude & turn off track lights
 	{
 		Skylab* sl = (Skylab*)calcParams.tgt;
 
@@ -450,6 +448,10 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		SV sv_CSM, sv_LM;
 		char buffer1[1000];
 		char buffer2[1000];
+
+		//Turn On Skylab track lights
+		Skylab* sl = (Skylab*)calcParams.tgt;
+		sl->SetTrackLights(true);
 
 		//State vectors
 		sv_CSM = StateVectorCalc(calcParams.src);
