@@ -632,6 +632,19 @@ struct AP7WSMRPAD {
 	double TAlign;		// Align Time for nominal IMU orientation
 };
 
+// APOLLO 7 - P23 PAD
+
+struct AP7P23PAD
+{
+	int entries;
+	double GET[2];		// Start time
+	int Ldmk[2];	    // Landmark ID
+	int Star[2];		// Star ID
+	VECTOR3 Att[2];		// Gimbal angles required to place SC at proper initial attitude for midcourse navigation
+	double Shaft[2];	// Shaft angle
+	double Trun[2];		// Trunnion angle
+};
+
 //GENERIC STRING
 
 struct GENERICPAD
