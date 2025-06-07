@@ -2770,7 +2770,7 @@ void ProjectApolloMFD::menuSLUplinkOption()
 	}
 	else if (g_Data.SLUplinkType == 1)
 	{
-		if (g_Data.SLAttCtrlMode < 6)
+		if (g_Data.SLAttCtrlMode < 5)
 		{
 			g_Data.SLAttCtrlMode++;
 		}
