@@ -1672,10 +1672,6 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 				}
 				else if (g_Data.SLAttCtrlMode == 5)
 				{
-					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Attitude Hold", 13);
-				}
-				else if (g_Data.SLAttCtrlMode == 6)
-				{
 					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Manual", 6);
 				}
 			}
