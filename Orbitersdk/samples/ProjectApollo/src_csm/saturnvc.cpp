@@ -1964,7 +1964,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		// First Darken All Lights
 		double floodRotaryValue = 0.0; //FloodRotarySwitch.GetOutput();
 
-/// Hardcode Materials with no Texture
+// Hardcoded Materials with no Texture
 		SetVCLighting(vcidx,   VC_MAT_FDAI_errorneedle, MAT_LIGHT, floodRotaryValue, 1);
 		SetVCLighting(vcidx,   VC_MAT_FDAI_Cue, MAT_LIGHT, floodRotaryValue, 1);
 
@@ -1974,7 +1974,6 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		// CMVC Ordeal Lighting Switch
 		SetVCLighting(vcidx, IntegralLights_CMVC_Ordeal, MAT_EMISSION, ordeal.LightingPower(), NUM_ELEMENTS(IntegralLights_CMVC_Ordeal));
-		// ORDEALLightingSwitch.DrawSwitchVC(id, event, surf); // ***Check this line  by JK***
 
 		// Integral Lights Panel 8
 		SetVCLighting(vcidx, IntegralLights_P8, MAT_EMISSION, IntegralRotarySwitch.GetOutput(), NUM_ELEMENTS(IntegralLights_P8));
@@ -1992,7 +1991,6 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		// Integral Lights Panel 5
 		SetVCLighting(vcidx, IntegralLights_P5, MAT_EMISSION, RightIntegralRotarySwitch.GetOutput(), NUM_ELEMENTS(IntegralLights_P5));
 
-		// Flood Lights Panel 5 *** NOT FUNCTIONALY YET ***
 //		SetVCLighting(vcidx, FloodLights_P5, MAT_LIGHT, RightFloodRotarySwitch.GetOutput(), NUM_ELEMENTS(FloodLights_P5));
 		floodLight_P5->SetIntensity(RightFloodRotarySwitch.GetOutput()*1.5);
 
@@ -2001,7 +1999,6 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		SetVCLighting(vcidx, IntegralLights_P100_NoTex, MAT_LIGHT, Panel100IntegralRotarySwitch.GetOutput(), NUM_ELEMENTS(IntegralLights_P100_NoTex));
 
 
-		//// Flood Lights Panel 100 *** NOT FUNCTIONALY YET ***
 //		SetVCLighting(vcidx, FloodLights_P100, MAT_LIGHT, Panel100FloodRotarySwitch.GetOutput(), NUM_ELEMENTS(FloodLights_P100));
 		floodLight_P100->SetIntensity(Panel100FloodRotarySwitch.GetOutput()*1.5);
 
@@ -2800,6 +2797,7 @@ void Saturn::InitVCAnimations() {
 	anim_fdaiPrate_L = anim_fdaiPrate_R = -1;
 	anim_fdaiYrate_L = anim_fdaiYrate_R = -1;
 	wasteDisposalAnim = -1;
+	wasteDisposalAnim2 = -1;
 	panel382CoverAnim = -1;
 	altimeterCoverAnim = -1;
 	ordealMeshAnim = -1;
@@ -2816,7 +2814,7 @@ void Saturn::DefineVCAnimations()
 {
 	MainPanelVC.ClearSwitches();
 
-	/// BEGINN PATH ANIMATION by JORDAN 
+	/// BEGIN PATH ANIMATION by JORDAN 
 
 	// PUTING THIS CODE AN THE END OF THE DefineVCAnimations SOLVES SOME SWITCHES FLOATING AROUND
 
@@ -2829,6 +2827,8 @@ void Saturn::DefineVCAnimations()
 	panel382CoverAnim = CreateAnimation(0.0);
 	AddAnimationComponent(panel382CoverAnim, 0, 1, &panel382CoverMesh);
 
+// WASTE DISPOSAL OLD CODE - START
+/*
 	// Waste Disposal
 	// Define animation for the Rotation Knob
 	static UINT wasteDisposal[1] = { VC_GRP_WasteDisposalDoor };
@@ -2841,6 +2841,26 @@ void Saturn::DefineVCAnimations()
 	wasteDisposalAnim = CreateAnimation(0.0);
 	AddAnimationComponent(wasteDisposalAnim, 0, 0.5, &wasteDisposalKnob);
 	AddAnimationComponent(wasteDisposalAnim, 0.5, 1, &wasteDisposalKnobAll);
+*/
+// WASTE DISPOSAL OLD CODE - END
+
+	// Waste Disposal
+	// Define animation for the Rotation Knob
+	ANIMATIONCOMPONENT_HANDLE parent;
+
+	static UINT wasteDisposalFrameGrp[1] = { VC_GRP_WasteDisposalFrame };
+	static MGROUP_ROTATE wasteDisposalFrame(0, wasteDisposalFrameGrp, 1, _V(1.07709, -0.257737, -0.098881), _V(0, -1, 0), (float)(-120.0 * RAD));
+
+	static UINT wasteDisposalDoorGrp[1] = { VC_GRP_WasteDisposalDoor };
+	wasteDisposalKnob = new MGROUP_ROTATE(0, wasteDisposalDoorGrp, 1, _V(1.0773, -0.255847, -0.165491), _V(-1, 0, 0), (float)(-60.0 * RAD));
+
+	wasteDisposalAnim = CreateAnimation(0.0);
+	parent = AddAnimationComponent(wasteDisposalAnim, 0.5, 1, &wasteDisposalFrame);
+
+	wasteDisposalAnim2 = CreateAnimation(0.0);
+	AddAnimationComponent(wasteDisposalAnim2, 0, 0.5, wasteDisposalKnob, parent);
+
+	
 
 	// Altimeter Cover
 	static UINT altimeterCover[1] = { VC_GRP_Altimeter_Cover };
@@ -5833,23 +5853,22 @@ void Saturn::UpdatePointingArrow()
 
 	if (!arrowVisible || nextActiveSwitch == nullptr && !Panel382Flash) {	// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
 		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_NEVER);
-//		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_VC);				// *** VIEW THE ARROW ALWAYS DURING TESTS *** 
-		return;																// *** ALSO DO ALL THE TRANSFORMATION ***
+		return;
 	}
 	VECTOR3 activeSwitchPos;
-	if (Panel382Flash) {					// Special handling for Panel 382 Cover
+	if (Panel382Flash) {								// Special handling for Panel 382 Cover
 		activeSwitchPos = _V(-1.0863, 0.2080, -0.6266);	
 	} else {
 		activeSwitchPos = nextActiveSwitch->GetReference();
 	}
 
-	VECTOR3 camPosGlobal, camOffset, camDir, globVesselPos, camPointing, ofs;	
+	VECTOR3 camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs;	
 
-	oapiCameraGlobalPos(&camPosGlobal);					//Get camera (in global co-ords)
-	Global2Local(camPosGlobal, camOffset);				//Translate from global to local co-ordinates.
-	oapiCameraGlobalDir(&camDir);						//Get camera direction (in global co-ords)
-	GetGlobalPos(globVesselPos);						//Get global position of vessel so we can translate
-	Global2Local(globVesselPos + camDir, camPointing);	//Translate from global to local co-ordinates.
+	oapiCameraGlobalPos(&camPosGlobal);					// Get camera (in global co-ords)
+	Global2Local(camPosGlobal, camPos);					// Translate from global to local co-ordinates.
+	oapiCameraGlobalDir(&camDir);						// Get camera direction (in global co-ords)
+	GetGlobalPos(globVesselPos);						// Get global position of vessel so we can translate
+	Global2Local(globVesselPos + camDir, camPointing);	// Translate from global to local co-ordinates.
 //	normalise(camPointing);
 
 	GetMeshOffset(vcidx, ofs);
@@ -5903,55 +5922,53 @@ void Saturn::UpdatePointingArrow()
 	}
 //	NTVERTEX *Vtx2 = circle_grp.Vtx;
 
-	VECTOR3 arrowCurPos = camOffset - ofs + (camPointing * 0.15);	// Move the Arrow to this Position
-	VECTOR3 circleCurPos = activeSwitchPos;							// Move the Circle to this Position
+	VECTOR3 arrowCurPos = camPos - ofs + (camPointing * 0.15);			// Move the Arrow to this Position
+	VECTOR3 circleCurPos = activeSwitchPos;								// Move the Circle to this Position
 
-	// Rotationsberechnung, um die Spitze auszurichten
-	const VECTOR3 init_dir = {0, 0, 1};									// Richtung des Pfeils (anfangs entlang der positiven Z-Achse)
-	VECTOR3 pointing_dir = activeSwitchPos - arrowCurPos;			// Zielrichtung (Vektor vom Zielort zur Blickrichtung)
+	// Rotation calculation to align the Arrow
+	const VECTOR3 init_dir = {0, 0, 1};									// Direction of the arrow (initially along the positive Z-axis)
+	VECTOR3 pointing_dir = activeSwitchPos - arrowCurPos;				// Target direction (vector from the target location to the viewing direction)
 	normalise(pointing_dir);
 
-	VECTOR3 rot_axis = crossp(init_dir, pointing_dir);				// Rotationsachse (Kreuzprodukt der initialen und der Zielrichtung)
+	VECTOR3 rot_axis = crossp(init_dir, pointing_dir);					// Rotation axis (cross product of the initial and target directions)
 	normalise(rot_axis);
 
-	double dot = dotp(init_dir, pointing_dir);						// Rotationswinkel (Winkel zwischen der initialen und der Zielrichtung)
-    double angle = std::acos(max(-1.0, min(1.0, dot)));				// Clamp to avoid NaN
+	double dot = dotp(init_dir, pointing_dir);							// Rotation angle (angle between the initial and target direction)
+    double angle = std::acos(max(-1.0, min(1.0, dot)));					// Clamp to avoid NaN
 
     MATRIX3 rotation = rotm(rot_axis, angle);
 
-	VECTOR3 circle_dir =  (camOffset - ofs) - activeSwitchPos;							// Zielrichtung (Vektor vom Zielort zur Blickrichtung)
+	// *** Do the same from above for the Circle ** //
+	VECTOR3 circle_dir =  (camPos - ofs) - activeSwitchPos;
 	normalise(circle_dir);
 	
-	VECTOR3 rot_axis_circle = crossp(init_dir, circle_dir);				// Rotationsachse (Kreuzprodukt der initialen und der Zielrichtung)
+	VECTOR3 rot_axis_circle = crossp(init_dir, circle_dir);
 	normalise(rot_axis_circle);
 
-	double dot_circle = dotp(init_dir, circle_dir);						// Rotationswinkel (Winkel zwischen der initialen und der Zielrichtung)
-    double angle_circle = std::acos(max(-1.0, min(1.0, dot_circle)));				// Clamp to avoid NaN
+	double dot_circle = dotp(init_dir, circle_dir);
+    double angle_circle = std::acos(max(-1.0, min(1.0, dot_circle)));
 
     MATRIX3 rotation_circle = rotm(rot_axis_circle, angle_circle);
 
 	for (int i = 0; i < arrowVertsCnt; i++) {
-//		sprintf(oapiDebugString(), "%.3f", oapiCameraAperture()*2);
 		// Rotate, Translate and Scale the Arrow(Scale depends on Camera FOV)
-		VECTOR3 final_vertex = mul(rotation, arrowData[i] * oapiCameraAperture());
-		final_vertex += arrowCurPos;
+		VECTOR3 final_vertex = mul(rotation, arrowData[i] * oapiCameraAperture()) + arrowCurPos;
 
-		arrow_grp.Vtx[i].x = (float)final_vertex.x;	// Copy Vertices
+		arrow_grp.Vtx[i].x = (float)final_vertex.x;		// Copy Transformed Arrow Vertices
 		arrow_grp.Vtx[i].y = (float)final_vertex.y;
 		arrow_grp.Vtx[i].z = (float)final_vertex.z;
 	}
 
 	for (int i = 0; i < circleVertsCnt; i++) {
-		// Rotate, Translate
-		VECTOR3 final_vertex = mul(rotation_circle, circleData[i]); 
-		final_vertex += circleCurPos;
+		// Rotate and Translate the Circle
+		VECTOR3 final_vertex = mul(rotation_circle, circleData[i]) + circleCurPos;
 
-		circle_grp.Vtx[i].x = (float)final_vertex.x;	// Copy Vertices
+		circle_grp.Vtx[i].x = (float)final_vertex.x;	// Copy Transformed Circle Vertices
 		circle_grp.Vtx[i].y = (float)final_vertex.y;
 		circle_grp.Vtx[i].z = (float)final_vertex.z;
 	}
 
-//	sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ** %.3f  %.3f  %.3f", camOffset.x, camOffset.y, camOffset.z, camPointing.x, camPointing.y, camPointing.z, arrow_grp.Vtx[0].x, arrow_grp.Vtx[0].y, arrow_grp.Vtx[0].z);
+//	sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ** %.3f  %.3f  %.3f", camPos.x, camPos.y, camPos.z, camPointing.x, camPointing.y, camPointing.z, arrow_grp.Vtx[0].x, arrow_grp.Vtx[0].y, arrow_grp.Vtx[0].z);
 
 	GROUPEDITSPEC ges;
 	ges.flags = GRPEDIT_VTXCRD;

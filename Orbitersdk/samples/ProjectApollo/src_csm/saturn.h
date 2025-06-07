@@ -1624,7 +1624,9 @@ protected:
 	/// VC animations
 
 	/// Waste Disposal
+	MGROUP_ROTATE *wasteDisposalKnob;
 	UINT wasteDisposalAnim;
+	UINT wasteDisposalAnim2;
 	AnimState wasteDisposalState;
 
 	/// Panel 382 Cover

@@ -624,6 +624,7 @@ void LEM::Init()
 	vcidx = -1;
 	windowshadesidx = -1;
 	xpointershadesidx = -1;
+	hLMPointingArrowidx = -1;
 
 	drogue = NULL;
 	probes = NULL;
@@ -1339,6 +1340,7 @@ void LEM::SetAnimations(double simdt) {
 void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 
 	SetAnimations(simdt);
+	UpdatePointingArrow();
 
 	if (CheckPanelIdInTimestep) {
 		oapiSetPanel(PanelId);

@@ -1071,7 +1071,6 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 
 	// Pointing Arrow
 	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
-//	UpdatePointingArrow();
 
 	// VC
 	UpdateVC(mesh_dir);
@@ -1608,7 +1607,6 @@ void Saturn::SetReentryMeshes() {
 
 	// Pointing Arrow
 	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
-//	UpdatePointingArrow();
 
 	// VC
 	UpdateVC(mesh_dir);
@@ -1900,7 +1898,6 @@ void Saturn::SetRecovery()
 
 	// Pointing Arrow
 	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
-//	UpdatePointingArrow();
 
 	// VC
 	UpdateVC(mesh_dir);
