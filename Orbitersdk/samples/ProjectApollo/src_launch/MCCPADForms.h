@@ -65,7 +65,7 @@ struct AP7MNV {
 	double lat;			// Latitude for N43
 	double lng;			// Longitude for N43
 	double alt;			// Altitude for N43
-	char remarks[128];	// remarks
+	char remarks[256];	// remarks
 };
 
 // APOLLO 7 - TERMINAL PHASE INITIATE
@@ -622,6 +622,9 @@ struct AP7STRCNTPAD
 	VECTOR3 AttSR;		// Gimbal angles required to place SC at proper initial attitude (SR)
 	VECTOR3 AttSS_12;	// Gimbal angles required to place SC at proper initial attitude (SS-12)
 	double TAlign;		// Align Time for nominal IMU orientation - if required
+	int type;			// 0 = SCT, 1 = SXT
+	int Star1;			// Star ID
+	int Star2;			// Star ID
 };
 
 // APOLLO 7 - WSMR PAD

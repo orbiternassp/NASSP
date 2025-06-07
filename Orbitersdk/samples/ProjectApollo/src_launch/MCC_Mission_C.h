@@ -98,6 +98,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY6STATE4	93
 #define MST_C_DAY6STATE5	94
 #define MST_C_DAY6STATE6	95
+#define MST_C_DAY6STATE7	96
+#define MST_C_DAY6STATE8	97
 
 // DAY 7
 #define MST_C_DAY7STATE1	100

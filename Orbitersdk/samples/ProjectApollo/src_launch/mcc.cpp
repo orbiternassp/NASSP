@@ -2064,6 +2064,9 @@ void MCC::SaveState(FILEHANDLE scn) {
 		SAVE_V3("MCC_AP7STRCNTPAD_AttSR", form->AttSR);
 		SAVE_V3("MCC_AP7STRCNTPAD_AttSS_12", form->AttSS_12);
 		SAVE_DOUBLE("MCC_AP7STRCNTPAD_TAlign", form->TAlign);
+		SAVE_INT("MCC_AP7STRCNTPAD_Type", form->type);
+		SAVE_INT("MCC_AP7STRCNTPAD_Star1", form->Star1);
+		SAVE_INT("MCC_AP7STRCNTPAD_Star2", form->Star2);
 		}
 		else if (padNumber == PT_AP7WSMRPAD)
 		{
@@ -2236,7 +2239,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP7MNV_NavChk", form->NavChk);
 			LOAD_DOUBLE("MCC_AP7MNV_pTrim", form->pTrim);
 			LOAD_STRING("MCC_AP7MNV_purpose", form->purpose, 64);
-			LOAD_STRING("MCC_AP7MNV_remarks", form->remarks, 128);
+			LOAD_STRING("MCC_AP7MNV_remarks", form->remarks, 256);
 			LOAD_DOUBLE("MCC_AP7MNV_Shaft", form->Shaft);
 			LOAD_INT("MCC_AP7MNV_Star", form->Star);
 			LOAD_DOUBLE("MCC_AP7MNV_Trun", form->Trun);
@@ -2714,6 +2717,9 @@ void MCC::LoadState(FILEHANDLE scn) {
 		LOAD_V3("MCC_AP7STRCNTPAD_AttSR", form->AttSR);
 		LOAD_V3("MCC_AP7STRCNTPAD_AttSS_12", form->AttSS_12);
 		LOAD_DOUBLE("MCC_AP7STRCNTPAD_TAlign", form->TAlign);
+		LOAD_INT("MCC_AP7STRCNTPAD_Type", form->type);
+		LOAD_INT("MCC_AP7STRCNTPAD_Star1", form->Star1);
+		LOAD_INT("MCC_AP7STRCNTPAD_Star2", form->Star2);
 		}
 		else if (padNumber == PT_AP7WSMRPAD)
 		{
@@ -3691,15 +3697,25 @@ void MCC::drawPad(bool writetofile){
 		double ss, ss2, ss3;
 		char mode[2];
 
-		sprintf(buffer, "SCT STAR COUNT");
-		sprintf(mode, form->Mode);
-
 		OrbMech::SStoHHMMSS(form->TAlign, hh, mm, ss, 0.01);
 		OrbMech::SStoHHMMSS(form->GETSR, hh2, mm2, ss2, 0.01);
 		OrbMech::SStoHHMMSS(form->GETSS_12, hh3, mm3, ss3, 0.01);
 
-		sprintf(buffer, "%s\nMode %s\nXX%03d HR GET\nXXX%02d MIN ALIGN\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN SR\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\nXX%03d HR GET\nXXX%02d MIN SS-12\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n",
-			buffer, mode, hh, mm, ss, hh2, mm2, ss2, form->AttSR.x, form->AttSR.y, form->AttSR.z, hh3, mm3, ss3, form->AttSS_12.x, form->AttSS_12.y, form->AttSS_12.z);
+		if (form->type == 0)
+		{
+			sprintf(buffer, "SCT STAR COUNT");
+			sprintf(mode, form->Mode);
+
+			sprintf(buffer, "%s\nMode %s\nXX%03d HR GET\nXXX%02d MIN ALIGN\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN SR\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\nXX%03d HR GET\nXXX%02d MIN SS-12\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n",
+				buffer, mode, hh, mm, ss, hh2, mm2, ss2, form->AttSR.x, form->AttSR.y, form->AttSR.z, hh3, mm3, ss3, form->AttSS_12.x, form->AttSS_12.y, form->AttSS_12.z);
+		}
+		else
+		{
+			sprintf(buffer, "SXT STAR COUNT");
+
+			sprintf(buffer, "%s\nXX%03d HR GET\nXXX%02d MIN START\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n%d STAR A\n%d STAR B\n",
+				buffer, hh, mm, ss, form->AttSR.x, form->AttSR.y, form->AttSR.z, form->Star1, form->Star2);
+		}
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -3731,23 +3747,49 @@ void MCC::drawPad(bool writetofile){
 		double ss;
 		char ldmkbuf[16];
 
-		sprintf(buffer, "Midcourse Navigation\n");
+		sprintf(buffer, "MIDCOURSE NAVIGATION\n");
 
 		for (int i = 0; i < form->entries; i++)
 		{
 			OrbMech::SStoHHMMSS(form->GET[i], hh, mm, ss, 0.01);
-			sprintf(buffer, "%sXX%03d HRS GET START\nXXX%02d MIN\n", buffer, hh, mm);
-
+			sprintf(buffer, "%sXX%03d HRS GET START\nXXX%02d MIN\nX%05.2f SEC\n", buffer, hh, mm, ss);
 			if (form->Ldmk[i] == NULL)
 			{
-				sprintf(buffer, "%sN/A LMK DATA\n", buffer);
+				sprintf(buffer, "%sXXX LMK DATA\n", buffer);
 			}
 			else
 			{
 				sprintf(buffer, "%s%d LMK DATA\n", buffer, form->Ldmk[i]);
 			}
 
-			sprintf(buffer, "%s%d STAR DATA\n%+06.1f R\n%+06.1f P\n%+06.1f Y\n%+07.2f SHAFT OPTICS\n%+07.3f TRUNNION ANGLE\n", buffer, form->Star[i], form->Att[i].x, form->Att[i].y, form->Att[i].z, form->Shaft[i], form->Trun[i]);
+			if (form->Star[i] == NULL)
+			{
+				sprintf(buffer, "%sXX STAR DATA\n", buffer);
+			}
+			else
+			{
+				sprintf(buffer, "%s%d STAR DATA\n", buffer, form->Star[i]);
+			}
+
+			sprintf(buffer, "%s%+06.1f R\n%+06.1f P\n%+06.1f Y\n", buffer, form->Att[i].x, form->Att[i].y, form->Att[i].z);
+
+			if (form->Shaft[i] == NULL)
+			{
+				sprintf(buffer, "%s+XXX.XX SHAFT OPTICS\n", buffer);
+			}
+			else
+			{
+				sprintf(buffer, "%s%+07.2f SHAFT OPTICS\n", buffer, form->Shaft[i]);
+			}
+
+			if (form->Trun[i] == NULL)
+			{
+				sprintf(buffer, "%s+XXX.XX TRUNNION ANGLE\n", buffer);
+			}
+			else
+			{
+				sprintf(buffer, "%s%+07.3f TRUNNION ANGLE\n", buffer, form->Trun[i]);
+			}
 		}
 
 		oapiAnnotationSetText(NHpad, buffer);
