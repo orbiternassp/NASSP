@@ -1312,18 +1312,17 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.dt_step = 20.0;
 		opt.GMT_TPI = GMTfromGET(t_TPI);
 		opt.IsTwoSegment = true;
-		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-		opt.sv_A = SVToVehicleDataBlock(ConvertSVtoEphemData(sv_INP), 1.0, sv_INP.mass, 1.0);
-		opt.sv_P = SVToVehicleDataBlock(ConvertSVtoEphemData(sv2), 1.0, sv2.mass, 1.0);
+		opt.sv_LM = SVToVehicleDataBlock(ConvertSVtoEphemData(sv_INP), 1.0, sv_INP.mass, 1.0);
+		opt.sv_CSM = SVToVehicleDataBlock(ConvertSVtoEphemData(sv2), 1.0, sv2.mass, 1.0);
 		opt.GMT_LAND = GMTfromGET(CZTDTGTU.GETTD);
 
 		PoweredDescentAbortProgram(opt, res);
 
 		form->KFactor = GETfromGMT(GetAGSClockZero());
-		form->DEDA224 = (int)(res.DEDA224 / 0.3048 / 100.0);
-		form->DEDA225 = (int)(res.DEDA225 / 0.3048 / 100.0);
-		form->DEDA226 = (int)(res.DEDA226 / 0.3048 / 100.0);
+		form->DEDA224 = (int)(res.J1 / 0.3048 / 100.0);
+		form->DEDA225 = (int)(res.AGS_8J / 0.3048 / 100.0);
+		form->DEDA226 = (int)(res.AGS_9J / 0.3048 / 100.0);
 		form->DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
 
 		/*
@@ -2120,10 +2119,9 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.dt_step = 20.0;
 		opt.GMT_TPI = GMTfromGET(t_TPI);
 		opt.IsTwoSegment = true;
-		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-		opt.sv_A = SVToVehicleDataBlock(ConvertSVtoEphemData(sv1), 1.0, sv1.mass, 1.0);
-		opt.sv_P = SVToVehicleDataBlock(ConvertSVtoEphemData(sv2), 1.0, sv2.mass, 1.0);
+		opt.sv_LM = SVToVehicleDataBlock(ConvertSVtoEphemData(sv1), 1.0, sv1.mass, 1.0);
+		opt.sv_CSM = SVToVehicleDataBlock(ConvertSVtoEphemData(sv2), 1.0, sv2.mass, 1.0);
 		opt.GMT_LAND = GMTfromGET(CZTDTGTU.GETTD);
 		//opt.dt_2CSI = 0.0;
 		//opt.dt_2TPI = 0.0;
@@ -2131,9 +2129,9 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		PoweredDescentAbortProgram(opt, res);
 
 		form->KFactor = GETfromGMT(GetAGSClockZero());
-		form->DEDA224 = (int)(res.DEDA224 / 0.3048 / 100.0);
-		form->DEDA225 = (int)(res.DEDA225 / 0.3048 / 100.0);
-		form->DEDA226 = (int)(res.DEDA226 / 0.3048 / 100.0);
+		form->DEDA224 = (int)(res.J1 / 0.3048 / 100.0);
+		form->DEDA225 = (int)(res.AGS_8J / 0.3048 / 100.0);
+		form->DEDA226 = (int)(res.AGS_9J / 0.3048 / 100.0);
 		form->DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
 
 		emem[0] = 16;

@@ -830,66 +830,142 @@ struct SPQOpt //Coelliptic Sequence Processor
 	double dt_min = 10.0*60.0;
 };
 
+struct CommonPDAPOpt
+{
+	//State vectors
+	VehicleDataBlock sv_CSM;
+	VehicleDataBlock sv_LM;
+	//Minimum apogee altitude limit for the insertion orbit; reference from the landing site radius, in nautical miles
+	double h_amin = 30.0;
+	//Nominal time of landing
+	double GET_LAND;
+	//Desired altitude differential between the LM and CSM orbits at CDH, in nautical miles
+	double DH_D = 15.0;
+};
+
+struct Apollo11PDAPOpt
+{
+	CommonPDAPOpt Common;
+};
+
+struct Apollo12PDAPOpt
+{
+	CommonPDAPOpt Common;
+};
+
 struct PDAPOpt //Powered Descent Abort Program
 {
-	VehicleDataBlock sv_A;
-	VehicleDataBlock sv_P;
+	//State vectors
+	VehicleDataBlock sv_CSM;
+	VehicleDataBlock sv_LM;
+
+	//0 = Apollo 11 (polynomial), 1 = Apollo 12 (PGNS has two segments, AGS only one), 2 = Apollo 13+ (PGNS and AGS with two segments)
+	int Version = 0;
+
 	//Minimum apogee altitude limit for the insertion orbit; reference from the landing site radius
 	double h_amin = 30.0*1852.0;
 	//Nominal time of landing
 	double GMT_LAND;
 	//Landing site radius
 	VECTOR3 R_LS;
+	//false = theta_LIM is a function of R_amin, true = theta_LIM is a function of phase at insertion
+	int K4 = false;
 	//Desired altitude differential between the LM and CSM orbits at CDH
 	double DH_D = 15.0*1852.0;
+	//Desired insertion altitude referenced from landing site radius
+	double h_DINS = 60000.0*0.3048;
+
+	//TPI time used to generate the first set of targeting coefficients
+	double GMT_TPI = 0.0;
+	//TPI time used to generate the second set of targeting coefficients
+	double GMT_2TPI = 0.0;
+	//DT between ullage ignition and PDI
+	double t_UL = 7.9;
+	//DT between orbit insertion and the canned maneuver
+	double dt_CAN = 50.0*60.0;
+	//value of dt_CAN used to generate the second set of targeting coefficients
+	double dt_2CAN = 50.0*60.0;
+	//DT between the canned maneuver and CSI
+	double dt_CSI = 50.0*60.0;
+	//value of dt_CSI used to generate the second set of targeting coefficients
+	double dt_2CSI = 50.0*60.0;
 	//DT between PDI and staging time
 	double dt_stage = 0.0;
 	//DT between successive abort points
 	double dt_step;
-	//Time from Insertion to CSI
-	double dt_CSI = 50.0*60.0;
-	//Time of TPI
-	double GMT_TPI;
-	//dt added to dt_CSI for generation of the second set of targeting coefficients
-	double dt_2CSI = 110.0*60.0;
-	//dt added to t_TPI for generation of the second set of targeting coefficients
-	double dt_2TPI = 7117.0;
-	//One or two segments (Apollo 11 style vs. all later missions)
-	bool IsTwoSegment = false;
-	//time between orbit insertion and the canned maneuver
-	double dt_CAN = 50.0*60.0;
-	//DV of the canned maneuver
-	double dv_CAN = 10.0*0.3048;
-	//Flag to use the long profile in the first set of targeting coefficients
-	bool LongProfileFirst = false;
-	//Phase angle at insertion at which the rendezvous profile is switched (LongProfileFirst = true)
-	double PhaseMax = -1.2*RAD;
+	//value of dt_step used to generate the second set of targeting coefficients
+	double dt_2step;
+	//LVLH components of the canned maneuver
+	VECTOR3 DV_CAN = _V(10.0*0.3048, 0, 0);
+	//value of DV_CSN used to generate the second set of targeting coefficients
+	VECTOR3 DV_2CAN = _V(10.0*0.3048, 0, 0);
+
 	//LM vehicle weight immediately after staging
 	double W_TAPS = 10634.0*0.45359237;
 	//LM weight representative of DPS fuel depletion
 	double W_TDRY = 15455.8*0.45359237;
+	//Phase angle at insertion used to determine the end of the region for which the first set of targeting coefficients are valid
+	double theta_TARG = -13.5*RAD;
+	//Maximum number of abort cases to process
+	int I_SMAX = 100;
+};
+
+struct Apollo11PDAPResults
+{
+	double ABTCOF_METRIC[8]; //M, CS
+	double ABTCOF_IMPERIAL[8]; //FT, S
+	double VHMIN_METRIC;
+	double VHMIN_IMPERIAL;
+	//For DPS and APS
+	int AGS_J7[2];
+	int AGS_J8[2];
+	int AGS_J9[2];
+	int AGS_4K10[2];
+	//Error code. 0 = no error, 1 = Ignition algorithm failure, 2 = CSI maneuver calculation failure, 3 = Failure to converge on insertion velocity
+	//4 = Insufficient data to calculate phase switch, 5 = Insufficient data for curve fit
+	int Error = 0;
+};
+
+struct Apollo12PDAPResults
+{
+
+};
+
+struct Apollo13PDAPResults
+{
+
 };
 
 struct PDAPResults
 {
-	//Apollo 11 abort coefficients
-	double ABTCOF1;
-	double ABTCOF2;
-	double ABTCOF3;
-	double ABTCOF4;
-	//Term in LM desired semi-major axis
-	double DEDA224;
-	//Lower limit on semi-major axis
-	double DEDA225;
-	//Upper limit on semi-major axis
-	double DEDA226;
-	//Factor in LM desired semi-major axis
-	double DEDA227;
+	//Engineering values
+	//Apollo 11 abort coefficients, m/sec, m/sec^2 etc.
+	double ABTCOF1 = 0.0;
+	double ABTCOF2 = 0.0;
+	double ABTCOF3 = 0.0;
+	double ABTCOF4 = 0.0;
+	
 	//Limiting phase angle
-	double Theta_LIM;
-	//Minimum apolune radius permitted in the insertion orbit
-	double R_amin;
-	double K1, K2, J1, J2;
+	double Theta_LIM = 0.0;
+	//Minimum apolune radius permitted in the insertion orbit, meters
+	double R_amin = 0.0;
+	//Minimum semi-major axis permitted in insertion orbit, meters. 8J (AGS address 225)
+	double A_min = 0.0;
+	//Maximum semi-major axis permitted in insertion orbit, meters. 9J (AGS address 226, FP6 only)
+	double A_max = 0.0;
+	//Insertion velocity associated with R_amin, m/s
+	double v_hmin = 0.0;
+	//Slope of semi-major axis in first segment, m/rad. 4K10 (AGS address 227)
+	double K1 = 0.0;
+	//Slope of semi-major axis in second segment
+	double K2 = 0.0;
+	//Term in LM desired semi-major axis. J1PARM in LGC, 7J (address 224) in AGS, meters
+	double J1 = 0.0;
+	//Retarget value of J1. J2PARM in LGC, 10J (address 226) in AGS (FP7 and later), meters
+	double J2 = 0.0;
+	//Error code. 0 = no error, 1 = Ignition algorithm failure, 2 = CSI maneuver calculation failure, 3 = Failure to converge on insertion velocity
+	//4 = Insufficient data to calculate phase switch, 5 = Insufficient data for curve fit
+	int Error = 0;
 };
 
 struct DockAlignOpt	//Docking Alignment Processor
@@ -2541,7 +2617,10 @@ public:
 	//Apsides Determination Subroutine
 	int PMMAPD(AEGHeader Header, AEGDataBlock Z, int KAOP, int KE, double *INFO, AEGDataBlock *sv_A, AEGDataBlock *sv_P);
 	bool PDIIgnitionAlgorithm(VehicleDataBlock sv, VECTOR3 R_LS, double TLAND, VehicleDataBlock &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
-	bool PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res);
+	void Apollo11PoweredDescentAbortProgram(const Apollo11PDAPOpt &opt, Apollo11PDAPResults &res);
+	void Apollo12PoweredDescentAbortProgram(const Apollo12PDAPOpt &opt, Apollo12PDAPResults &res);
+	void Apollo13PoweredDescentAbortProgram(const Apollo12PDAPOpt &opt, Apollo13PDAPResults &res);
+	void PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, bool cmc);
 	bool CalculateAGSKFactor(agc_t *agc, ags_t *aea, double &KFactor);
 

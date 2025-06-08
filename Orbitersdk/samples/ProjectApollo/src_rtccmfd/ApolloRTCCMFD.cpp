@@ -282,8 +282,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "GMPManeuverCode", G->GMPManeuverCode);
 	papiWriteScenario_double(scn, "SPSGET", G->SPSGET);
 
-	papiWriteScenario_double(scn, "t_TPI", G->t_TPI);
-
 	papiWriteScenario_double(scn, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
 	papiWriteScenario_double(scn, "LDPPGETTH2", GC->rtcc->med_k16.GETTH2);
 	papiWriteScenario_double(scn, "LDPPGETTH3", GC->rtcc->med_k16.GETTH3);
@@ -336,8 +334,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "GMPManeuverType", G->GMPManeuverType);
 		papiReadScenario_int(line, "GMPManeuverCode", G->GMPManeuverCode);
 		papiReadScenario_double(line, "SPSGET", G->SPSGET);
-
-		papiReadScenario_double(line, "t_TPI", G->t_TPI);
 
 		papiReadScenario_double(line, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
 		papiReadScenario_double(line, "LDPPGETTH2", GC->rtcc->med_k16.GETTH2);
@@ -1100,6 +1096,10 @@ void ApolloRTCCMFD::menuSetLMAscentPADPage()
 
 void ApolloRTCCMFD::menuSetPDAPPage()
 {
+	marker = 0;
+	markermax = 15;
+	subscreen = 0;
+	subscreenmax = 1;
 	SelectPage(40);
 }
 
@@ -7321,11 +7321,6 @@ void ApolloRTCCMFD::menuLDPPCalc()
 	menuSetDescPlanTablePage();
 }
 
-void ApolloRTCCMFD::set_t_TPI(double time)
-{
-	G->t_TPI = time;
-}
-
 void ApolloRTCCMFD::menuSetTPIguess()
 {
 	GenericGETInput(&G->t_TPIguess, "Choose the GET for TPI (Format: hhh:mm:ss)");
@@ -8098,35 +8093,88 @@ void ApolloRTCCMFD::menuCycleAscentPADVersion()
 	}
 }
 
+void ApolloRTCCMFD::menuSetPDAPInputs()
+{
+	switch (marker)
+	{
+	case 0:
+		GC->PDAPOptions.IsTwoSegment = !GC->PDAPOptions.IsTwoSegment;
+		break;
+	case 1:
+		if (GC->PDAPOptions.dt_stage != 0.0) GC->PDAPOptions.dt_stage = 999999.9;
+		else GC->PDAPOptions.dt_stage = 0.0;
+		break;
+	case 2:
+		if (GC->MissionPlanningActive)
+		{
+			GenericDoubleInput(&GC->PDAP_CSM_VectorTime, "Enter the CSM vector time:");
+		}
+		else
+		{
+			set_CSMVessel();
+		}
+		break;
+	case 3:
+		if (GC->MissionPlanningActive)
+		{
+			GenericDoubleInput(&GC->PDAP_LM_VectorTime, "Enter the LM vector time:");
+		}
+		else
+		{
+			set_LMVessel();
+		}
+		break;
+	case 4:
+		GenericDoubleInput(&GC->PDAPOptions.h_amin, "Minimum apolune altitude limit for the insertion orbit; referenced from the landing site radius:", 1852.0);
+		break;
+	case 5:
+		GenericDoubleInput(&GC->PDAPOptions.DH_D, "Desired altitude differential between the LM and CSM orbits at CDH:", 1852.0);
+		break;
+	case 6:
+		GenericDoubleInput(&GC->PDAPOptions.dt_CSI, "DT between orbit insertion and CSI", 60.0);
+		break;
+	case 7:
+		GenericDoubleInput(&GC->PDAPOptions.dt_CAN, "DT between orbit insertion and the canned maneuver", 60.0);
+		break;
+	case 8:
+		GenericVectorInput(&GC->PDAPOptions.DV_CAN, "DV of the canned maneuver", 0.3048);
+		break;
+	case 9:
+		GenericGETInput(&GC->PDAPOptions.GMT_TPI, "TPI time used to generate the first set of targeting coefficients:");
+		break;
+	case 10:
+		GenericDoubleInput(&GC->PDAPOptions.dt_2CSI, "Value of DTCSI used to generate the second set of targeting coefficients:", 60.0);
+		break;
+	case 11:
+		GenericDoubleInput(&GC->PDAPOptions.dt_2CAN, "Value of DTCAN used to generate the second set of targeting coefficients:", 60.0);
+		break;
+	case 12:
+		GenericVectorInput(&GC->PDAPOptions.DV_2CAN, "Value of DVCAN used to generate the second set of targeting coefficients:", 0.3048);
+		break;
+	case 13:
+		GenericGETInput(&GC->PDAPOptions.GMT_2TPI, "TPI time used to generate the second set of targeting coefficients:");
+		break;
+	case 14:
+		GenericDoubleInput(&GC->PDAPOptions.W_TDRY, "LM weight representative of DPS fuel depletion:", LBS2KG);
+		break;
+	case 15:
+		GenericDoubleInput(&GC->PDAPOptions.W_TAPS, "LM vehiclw weight immediately after staging:", LBS2KG);
+		break;
+	}
+}
+
 void ApolloRTCCMFD::menuPDAPCalc()
 {
 	G->PDAPCalc();
 }
 
-void ApolloRTCCMFD::menuCyclePDAPSegments()
-{
-	G->PDAPTwoSegment = !G->PDAPTwoSegment;
-}
-
-void ApolloRTCCMFD::menuCyclePDAPEngine()
-{
-	if (G->PDAPEngine < 1)
-	{
-		G->PDAPEngine++;
-	}
-	else
-	{
-		G->PDAPEngine = 0;
-	}
-}
-
-void ApolloRTCCMFD::menuAP11AbortCoefUplink()
+void ApolloRTCCMFD::menuPDAPUplink()
 {
 	VESSEL *v = GC->rtcc->pLM;
 
 	if (v == NULL || utils::IsVessel(v, utils::LEM) == false) return;
 
-	if (G->PDAPTwoSegment == false)
+	if (GC->PDAPOptions.IsTwoSegment == false)
 	{
 		G->AP11AbortCoefUplink();
 	}
