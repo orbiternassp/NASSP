@@ -12206,6 +12206,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	conopt.E = 26.6*RAD;
 	conopt.K_CDH = 0;
 	conopt.GMT_TPI = opt.GMT_TPI;
+	conopt.h_min = -OrbMech::R_Moon; //Disables limit
 	GMT_LAND = opt.GMT_LAND;
 
 	res.R_amin = length(opt.R_LS) + opt.h_amin;
