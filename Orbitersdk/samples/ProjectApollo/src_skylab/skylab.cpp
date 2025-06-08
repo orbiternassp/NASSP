@@ -238,12 +238,7 @@ int Skylab::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate)
 	{
 
 	}
-	else { //unmodified keys
-		switch (key)
-		{
 
-		}
-	}
 	return 0;
 }
 

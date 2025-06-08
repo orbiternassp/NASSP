@@ -1677,14 +1677,13 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			}
 
 			//Uplink Displays
-			skp->SetTextAlign(oapi::Sketchpad::CENTER);
 			if (g_Data.SLUplinkResult == 1)
 			{
 				skp->Text((int)(width * 0.04), (int)(height * 0.9), "Uplink accepted", 15);
 			}
 			else if (g_Data.SLUplinkResult == 2)
 			{
-				skp->Text((int)(width * 0.04), (int)(height * 0.9), "Uplink rejected", 16);
+				skp->Text((int)(width * 0.04), (int)(height * 0.9), "Uplink rejected", 15);
 			}
 		}
 		else
@@ -2753,6 +2752,8 @@ void ProjectApolloMFD::menuSLUplinkType()
 	{
 		g_Data.SLUplinkType = 0;
 	}
+
+	g_Data.SLUplinkResult = 0;
 }
 
 void ProjectApolloMFD::menuSLUplinkOption()
@@ -2779,6 +2780,8 @@ void ProjectApolloMFD::menuSLUplinkOption()
 			g_Data.SLAttCtrlMode = 0;
 		}
 	}
+
+	g_Data.SLUplinkResult = 0;
 }
 
 void ProjectApolloMFD::menuSendSLUplink()
@@ -2798,7 +2801,10 @@ void ProjectApolloMFD::menuSendSLUplink()
 			int state = g_Data.SLAttCtrlMode;
 			sl->GetATMDC()->SetAttitudeControlMode(state);
 		}
+
+		g_Data.SLUplinkResult = 1;
 	}
+
 	else
 	{
 		return;
