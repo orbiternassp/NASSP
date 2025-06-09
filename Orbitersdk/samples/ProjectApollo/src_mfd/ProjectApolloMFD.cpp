@@ -52,6 +52,8 @@
 #include "MFDResource.h"
 #include "ProjectApolloMFD.h"
 
+#include "../src_skylab/skylab.h"
+
 #include <queue>
 
 using namespace nassp;
@@ -73,6 +75,7 @@ static struct ProjectApolloMFDData {  // global data storage
 	int prog;	
 	Saturn *progVessel;
 	LEM *gorpVessel;
+	Skylab *SLVessel;
 
 	int emem[24];
 	int connStatus;
@@ -99,6 +102,12 @@ static struct ProjectApolloMFDData {  // global data storage
 	double iuUplinkYaw;
 	VECTOR3 iuUplinkGenManAtt;
 	int iuUplinkGenManType;
+
+	int SLUplinkType;
+	int SLAttCtrlMode;
+	int SLLtgMode;
+	int SLUplinkResult;
+
 	bool lmAlignType;	//true = same REFSMMAT; false = nominal alignments
 
 	VECTOR3 V42angles;
@@ -165,6 +174,11 @@ void ProjectApolloMFDopcDLLInit (HINSTANCE hDLL)
 	g_Data.iuUplinkYaw = 0.0;
 	g_Data.iuUplinkGenManAtt = _V(0, 0, 0);
 	g_Data.iuUplinkGenManType = 0;
+
+	g_Data.SLUplinkType = 0;
+	g_Data.SLAttCtrlMode = 0;
+	g_Data.SLLtgMode = 0;
+	g_Data.SLUplinkResult = 0;
 }
 
 void ProjectApolloMFDopcDLLExit (HINSTANCE hDLL)
@@ -647,6 +661,7 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 	lem = NULL;
 	mcc = NULL;
 	sivb = NULL;
+	sl = NULL;
 	our_vessel = NULL;
 	width = w;
 	height = h;
@@ -687,6 +702,12 @@ ProjectApolloMFD::ProjectApolloMFD (DWORD w, DWORD h, VESSEL *vessel) : MFD2 (w,
 	}
 	else if (utils::IsVessel(vessel, utils::SIVB)) {
 		sivb = (SIVB*)vessel;
+		g_Data.vessel = our_vessel = vessel;
+		Supported = true;
+	}
+	else if (utils::IsVessel(vessel, utils::Skylab)) {
+		sl = (Skylab *)vessel;
+		g_Data.SLVessel = sl;
 		g_Data.vessel = our_vessel = vessel;
 		Supported = true;
 	}
@@ -1099,7 +1120,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 		}
 	}
 
-	// Draw IMFD
+	// Draw IU Page
 	else if (screen == m_buttonPages.page.IU) {
 		skp->Text(width / 2, (int)(height * 0.3), "IU Uplink Data", 14);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
@@ -1545,6 +1566,144 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 		{
 			skp->Text(width / 2, (int)(height * 0.5), "Failures not supported!", 23);
 		}
+	}
+
+	// Draw Skylab Screen
+	else if (screen == m_buttonPages.page.SL)
+	{
+		if (g_Data.uplinkVessel && utils::IsVessel(g_Data.uplinkVessel, utils::Skylab))
+		{
+			Skylab* sl = (Skylab*)g_Data.uplinkVessel;
+
+			skp->Text(width / 2, (int)(height * 0.3), "Skylab Interface", 16);
+			skp->Text(width / 2, (int)(height * 0.65), "Uplinks", 7);
+
+			//Status Displays
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			skp->Text((int)(width * 0.04), (int)(height * 0.4), "Lighting Status:", 16);
+			skp->Text((int)(width * 0.04), (int)(height * 0.5), "Attitude Control:", 17);
+
+			//Lighting Status
+			if (sl->GetTrackLightStatus() == true) //needs to look for current light status
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.4), "Enabled", 7);
+			}
+			else
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.4), "Disabled", 8);
+			}
+			
+			//Attitude Control Status
+			if (sl->GetATMDC()->GetAttitudeControlMode() == 0) //needs to look for current attitude control mode
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.5), "Free Drift", 10);
+			}
+			else if (sl->GetATMDC()->GetAttitudeControlMode() == 1)
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.5), "Attitude Hold", 13);
+			}
+			else if (sl->GetATMDC()->GetAttitudeControlMode() == 2)
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.5), "Solar Inertial", 14);
+			}
+			else if (sl->GetATMDC()->GetAttitudeControlMode() == 3)
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.5), "Local Vertical (+)", 20);
+			}
+			else if (sl->GetATMDC()->GetAttitudeControlMode() == 4)
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.5), "Local Vertical (-)", 20);
+			}
+			else if (sl->GetATMDC()->GetAttitudeControlMode() == 5)
+			{
+				skp->Text((int)(width * 0.5), (int)(height * 0.5), "Manual", 6);
+			}
+
+			//Uplink Type
+			skp->Text((int)(width * 0.04), (int)(height * 0.75), "Uplink Type:", 12);
+			if (g_Data.SLUplinkType == 0)
+			{
+				skp->Text((int)(width * 0.4), (int)(height * 0.75), "Lighting", 8);
+			}
+
+			else if (g_Data.SLUplinkType == 1)
+			{
+				skp->Text((int)(width * 0.4), (int)(height * 0.75), "Attitude Control", 16);
+			}
+
+			//Uplink Option
+			skp->Text((int)(width * 0.04), (int)(height * 0.8), "Option:", 7);
+
+			//Lighting
+			if (g_Data.SLUplinkType == 0)
+			{
+				if (g_Data.SLLtgMode == 0)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Off", 3);
+				}
+				else if (g_Data.SLLtgMode == 1)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "On", 2);
+				}
+			}
+
+			//Attitude Control
+			else if (g_Data.SLUplinkType == 1)
+			{
+				if (g_Data.SLAttCtrlMode == 0)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Free Drift", 10);
+				}
+				else if (g_Data.SLAttCtrlMode == 1)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Attitude Hold", 13);
+				}
+				else if (g_Data.SLAttCtrlMode == 2)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Solar Inertial", 14);
+				}
+				else if (g_Data.SLAttCtrlMode == 3)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Local Vertical (+)", 20);
+				}
+				else if (g_Data.SLAttCtrlMode == 4)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Local Vertical (-)", 20);
+				}
+				else if (g_Data.SLAttCtrlMode == 5)
+				{
+					skp->Text((int)(width * 0.4), (int)(height * 0.8), "Manual", 6);
+				}
+			}
+
+			//Uplink Displays
+			if (g_Data.SLUplinkResult == 1)
+			{
+				skp->Text((int)(width * 0.04), (int)(height * 0.9), "Uplink accepted", 15);
+			}
+			else if (g_Data.SLUplinkResult == 2)
+			{
+				skp->Text((int)(width * 0.04), (int)(height * 0.9), "Uplink rejected", 15);
+			}
+		}
+		else
+		{
+			skp->SetTextColor(RGB(255, 0, 0));
+			skp->Text(width / 2, (int)(height * 0.3), "Skylab Not Selected", 19);
+			skp->SetTextColor(RGB(0, 255, 0));
+		}
+		// Target Selection
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+		skp->SetTextColor(RGB(128, 128, 128));
+		if (g_Data.uplinkVessel)
+		{
+			oapiGetObjectName(g_Data.uplinkVessel->GetHandle(), buffer, 100);
+		}
+		else
+		{
+			sprintf(buffer, "No Target!");
+		}
+		skp->Text((int)(width * 0.95), (int)(height * 0.90), buffer, strlen(buffer));
 	}
 	return true;
 }
@@ -2019,6 +2178,12 @@ void ProjectApolloMFD::menuSetDebugPage()
 	m_buttonPages.SelectPage(this, screen);
 }
 
+void ProjectApolloMFD::menuSetSLPage()
+{
+	screen = m_buttonPages.page.SL;
+	m_buttonPages.SelectPage(this, screen);
+}
+
 void ProjectApolloMFD::menuKillRot()
 {
 	g_Data.killrot ? g_Data.killrot = 0 : g_Data.killrot = 1;
@@ -2233,7 +2398,7 @@ void ProjectApolloMFD::menuFreezeDebugLine()
 		debug_frozen = true;
 }
 
-void ProjectApolloMFD::menuSetIUSource()
+void ProjectApolloMFD::menuSetUplinkVessel()
 {
 	int vesselcount;
 
@@ -2576,6 +2741,76 @@ void ProjectApolloMFD::menuCycleFailuresSubpage()
 		}
 	}
 }
+
+void ProjectApolloMFD::menuSLUplinkType()
+{
+	if (g_Data.SLUplinkType < 1)
+	{
+		g_Data.SLUplinkType++;
+	}
+	else
+	{
+		g_Data.SLUplinkType = 0;
+	}
+
+	g_Data.SLUplinkResult = 0;
+}
+
+void ProjectApolloMFD::menuSLUplinkOption()
+{
+	if (g_Data.SLUplinkType == 0)
+	{
+		if (g_Data.SLLtgMode < 1)
+		{
+			g_Data.SLLtgMode++;
+		}
+		else
+		{
+			g_Data.SLLtgMode = 0;
+		}
+	}
+	else if (g_Data.SLUplinkType == 1)
+	{
+		if (g_Data.SLAttCtrlMode < 5)
+		{
+			g_Data.SLAttCtrlMode++;
+		}
+		else
+		{
+			g_Data.SLAttCtrlMode = 0;
+		}
+	}
+
+	g_Data.SLUplinkResult = 0;
+}
+
+void ProjectApolloMFD::menuSendSLUplink()
+{
+	if (g_Data.uplinkVessel && utils::IsVessel(g_Data.uplinkVessel, utils::Skylab))
+	{
+		Skylab* sl = (Skylab*)g_Data.uplinkVessel;
+
+		if (g_Data.SLUplinkType == 0)
+		{
+			int mode = g_Data.SLLtgMode;
+			sl->SetTrackLights(mode);
+		}
+
+		else
+		{
+			int state = g_Data.SLAttCtrlMode;
+			sl->GetATMDC()->SetAttitudeControlMode(state);
+		}
+
+		g_Data.SLUplinkResult = 1;
+	}
+
+	else
+	{
+		return;
+	}
+}
+
 
 OBJHANDLE ProjectApolloMFD::AGCGravityRef(VESSEL *vessel) const
 {

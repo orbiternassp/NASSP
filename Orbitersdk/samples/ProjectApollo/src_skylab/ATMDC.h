@@ -35,7 +35,7 @@ public:
 	void Timestep();
 	bool GetThrusterDemand(int i);
 
-	void SetAttitudeControlMode(int mode);
+	virtual void SetAttitudeControlMode(int mode);
 	int GetAttitudeControlMode() { return AttitudeControlMode; }
 
 	void SaveState(FILEHANDLE scn);

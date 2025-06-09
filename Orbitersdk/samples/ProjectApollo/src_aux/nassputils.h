@@ -47,6 +47,7 @@ namespace nassp
 			Saturn,
 			LEM,
 			MCC,
+			Skylab,
 			SaturnIB_SIVB,
 			SaturnV_SIVB,
 			SIVB,
@@ -72,6 +73,9 @@ namespace nassp
 				return false;
 			case MCC:
 				if (!_stricmp(classname, "ProjectApollo\\MCC") || !_stricmp(classname, "ProjectApollo/MCC")) return true;
+				return false;
+			case Skylab:
+				if (!_stricmp(classname, "ProjectApollo\\Skylab") || !_stricmp(classname, "ProjectApollo/Skylab")) return true;
 				return false;
 			case SaturnIB_SIVB:
 				if (!_stricmp(classname, "ProjectApollo\\nsat1stg2") || !_stricmp(classname, "ProjectApollo/nsat1stg2")) return true;

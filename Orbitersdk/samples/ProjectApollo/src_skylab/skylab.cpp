@@ -46,6 +46,7 @@ void Skylab::InitSkylab() {
 	SetMeshVisibilityMode(skylabmeshID, MESHVIS_ALWAYS);
 	skylabanimations.DefineAnimations();
 
+	trackLightsActive = false;
 	AddTrackLights();
 
 	visibilitySize = 31.1; //Tuned so Skylab disappears in the CSM optics at 400nm range
@@ -237,26 +238,7 @@ int Skylab::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate)
 	{
 
 	}
-	else { //unmodified keys
-		switch (key)
-		{
-		case OAPI_KEY_A: //Attitude control mode
-			{
-				int state = atmdc.GetAttitudeControlMode();
-	
-				if (state < 5)
-				{
-				state++;
-				}
-				else
-				{
-					state = 0;
-				}
-				atmdc.SetAttitudeControlMode(state);
-				return 1;
-			}
-		}
-	}
+
 	return 0;
 }
 
@@ -326,8 +308,17 @@ void Skylab::AddTrackLights()
 		tracklights[i].period = 1.0;
 		tracklights[i].duration = 0.1;
 		tracklights[i].tofs = 0;
-		tracklights[i].active = true;
+		tracklights[i].active = false;
 		AddBeacon(tracklights + i);
+	}
+}
+
+void Skylab::SetTrackLights(bool mode)
+{
+	for (int i = 0; i < 2; i++)
+	{
+		tracklights[i].active = mode;
+		trackLightsActive = mode;
 	}
 }
 
