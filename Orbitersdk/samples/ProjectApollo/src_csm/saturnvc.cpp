@@ -1600,17 +1600,14 @@ void Saturn::RegisterActiveAreas() {
 
 	// Panel 300/301/302/303/305
 
-	oapiVCRegisterArea(AID_VC_Panel300_SuitFlowValve_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-//	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel300_SuitFlowValve_Handle, _V(-0.602577, 0.063197, -0.475125) + ofs, _V(-0.601495, 0.022062, -0.501049) + ofs, _V(-0.601968, 0.014909, -0.489717) + ofs, _V(-0.603051, 0.056044, -0.463794) + ofs);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_Panel300_SuitFlowValve_Handle, Panel300_SuitFlowValve_HandleClickPoint + ofs, 0.02);
+	oapiVCRegisterArea(AID_VC_Panel300_SuitFlowValve_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel300_SuitFlowValve_Handle, _V(-0.602096, 0.052404, 0.486644) + ofs, _V(-0.601722, 0.038177, 0.495611) + ofs, _V(-0.603092, 0.037357, 0.462809) + ofs, _V(-0.602718, 0.023130, 0.471774) + ofs);
 
-	oapiVCRegisterArea(AID_VC_Panel301_SuitFlowValve_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-//	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel301_SuitFlowValve_Handle, _V(-0.609290, 0.065070, -0.314428) + ofs, _V(-0.608207, 0.023935, -0.340351) + ofs, _V(-0.608681, 0.016782, -0.329020) + ofs, _V(-0.609764, 0.057917, -0.303097) + ofs);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_Panel301_SuitFlowValve_Handle, Panel301_SuitFlowValve_HandleClickPoint + ofs, 0.02);
+	oapiVCRegisterArea(AID_VC_Panel301_SuitFlowValve_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel301_SuitFlowValve_Handle, _V(-0.608769, 0.052776, 0.326880) + ofs, _V(-0.608395, 0.038549, 0.335846) + ofs, _V(-0.609766, 0.037730, 0.303044) + ofs, _V(-0.609391, 0.023503, 0.312010) + ofs);
 
-	oapiVCRegisterArea(AID_VC_Panel302_SuitFlowValve_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-//	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel302_SuitFlowValve_Handle, _V(-0.609316, -0.036883, -0.313805) + ofs, _V(-0.608233, -0.078017, -0.339728) + ofs, _V(-0.608707, -0.085171, -0.328396) + ofs, _V(-0.609790, -0.044036, -0.302473) + ofs);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_Panel302_SuitFlowValve_Handle, Panel302_SuitFlowValve_HandleClickPoint + ofs, 0.02);
+	oapiVCRegisterArea(AID_VC_Panel302_SuitFlowValve_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel302_SuitFlowValve_Handle, _V(-0.608832, -0.044953, 0.325392) + ofs, _V(-0.608458, -0.059180, 0.334358) + ofs, _V(-0.609828, -0.060000, 0.301556) + ofs, _V(-0.609454, -0.074227, 0.310522) + ofs);
 
 	oapiVCRegisterArea(AID_VC_Rot_Panel303, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_Rot_Panel303, Rot_Panel303Location + ofs, 0.02);
@@ -1620,9 +1617,6 @@ void Saturn::RegisterActiveAreas() {
 
 	oapiVCRegisterArea(AID_VC_Panel305_FootPrepWater_Lever01, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_Panel305_FootPrepWater_Lever01, Panel305_FootPrepWater_Lever01Location + ofs, 0.02);
-
-
-
 
 	// Panel 306
 
