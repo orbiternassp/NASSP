@@ -913,6 +913,14 @@
 #define AID_VC_Sextant_Eyepiece			3221
 #define AID_VC_Telescope_Eyepiece		3222
 
+// VC Active Areas (Panel 300/301/302/303/305)
+#define AID_VC_Panel300_SuitFlowValve_Handle	3223
+#define AID_VC_Panel301_SuitFlowValve_Handle 	3224
+#define AID_VC_Panel302_SuitFlowValve_Handle 	3225
+#define AID_VC_Rot_Panel303 					3226
+#define AID_VC_Panel305_FootPrepWater_Lever02	3227
+#define AID_VC_Panel305_FootPrepWater_Lever01	3228
+
 // VC Active Areas (Panel 2)
 #define AID_VC_PANEL_2			((id >= 4800) && (id <= 4999))
 #define AID_VC_PUSHB_P2_01      4801    // DSKY key Verb

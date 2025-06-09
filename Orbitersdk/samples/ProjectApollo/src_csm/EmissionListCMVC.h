@@ -242,7 +242,12 @@ DWORD FloodLights_P8[] = {
 
 	VC_MAT_MasterAlarm_LEB,
 
-	VC_MAT_Panel_225_226_229_Guards
+	VC_MAT_Panel_225_226_229_Guards,
+	VC_MAT_P305_FootPrepWater_Lever,
+	VC_MAT_Panels_300_305,
+	VC_MAT_Panel300_SuitFlowValves,
+	VC_MAT_Unknown
+
 };
 
 //

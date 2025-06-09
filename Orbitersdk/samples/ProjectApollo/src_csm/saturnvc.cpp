@@ -78,6 +78,7 @@ const int	P16_SWITCHCOUNT = 3;
 const int	P100_SWITCHCOUNT = 6;
 const int	P101_SWITCHCOUNT = 4;
 const int	P122_SWITCHCOUNT = 7;
+const int	P30x_SWITCHCOUNT = 6;
 const int	P306_SWITCHCOUNT = 8;
 
 // Number of push buttons
@@ -447,6 +448,19 @@ const VECTOR3 P122_PUSHB_POS[P122_PUSHBCOUNT] = {
 {0.3805, -0.6998, 0.0853}, {0.3349, -0.6997, 0.1073}, {0.3576, -0.6998, 0.1073}, {0.3805, -0.6998, 0.1073}, {0.4032, -0.6998, 0.1073},
 {0.4032, -0.6998, 0.0853}, {0.4032, -0.6998, 0.0630}, {0.4260, -0.6998, 0.0961}, {0.4260, -0.6998, 0.0739}
 };
+
+// Panel 300/301/302/303/305 Levers etc.
+const VECTOR3 Panel300_SuitFlowValve_HandleLocation =	{-0.6429,  0.0393, 0.4842};
+const VECTOR3 Panel301_SuitFlowValve_HandleLocation =	{-0.6495,  0.0409, 0.3251};
+const VECTOR3 Panel302_SuitFlowValve_HandleLocation =	{-0.6495, -0.0592, 0.3254};
+
+const VECTOR3 Panel300_SuitFlowValve_HandleClickPoint =	{-0.5950,  0.0393, 0.4822};
+const VECTOR3 Panel301_SuitFlowValve_HandleClickPoint =	{-0.6014,  0.0409, 0.3231};
+const VECTOR3 Panel302_SuitFlowValve_HandleClickPoint =	{-0.6014, -0.0592, 0.3234};
+
+const VECTOR3 Rot_Panel303Location =					{-0.6002, -0.1973, 0.3574};
+const VECTOR3 Panel305_FootPrepWater_Lever02Location =	{-0.5494, -0.3496, 0.4907};
+const VECTOR3 Panel305_FootPrepWater_Lever01Location =	{-0.5494, -0.3496, 0.4208};
 
 // Panel 306 switches
 const VECTOR3 P306_TOGGLE_POS[P306_SWITCHCOUNT] = {
@@ -1583,6 +1597,32 @@ void Saturn::RegisterActiveAreas() {
 	}
 
 	oapiVCSetAreaClickmode_Spherical(AID_VC_MASTER_ALARM3, _V(0.103894, -0.69915, 0.029394) + ofs, PUSHB);
+
+	// Panel 300/301/302/303/305
+
+	oapiVCRegisterArea(AID_VC_Panel300_SuitFlowValve_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+//	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel300_SuitFlowValve_Handle, _V(-0.602577, 0.063197, -0.475125) + ofs, _V(-0.601495, 0.022062, -0.501049) + ofs, _V(-0.601968, 0.014909, -0.489717) + ofs, _V(-0.603051, 0.056044, -0.463794) + ofs);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Panel300_SuitFlowValve_Handle, Panel300_SuitFlowValve_HandleClickPoint + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_Panel301_SuitFlowValve_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+//	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel301_SuitFlowValve_Handle, _V(-0.609290, 0.065070, -0.314428) + ofs, _V(-0.608207, 0.023935, -0.340351) + ofs, _V(-0.608681, 0.016782, -0.329020) + ofs, _V(-0.609764, 0.057917, -0.303097) + ofs);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Panel301_SuitFlowValve_Handle, Panel301_SuitFlowValve_HandleClickPoint + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_Panel302_SuitFlowValve_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+//	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_Panel302_SuitFlowValve_Handle, _V(-0.609316, -0.036883, -0.313805) + ofs, _V(-0.608233, -0.078017, -0.339728) + ofs, _V(-0.608707, -0.085171, -0.328396) + ofs, _V(-0.609790, -0.044036, -0.302473) + ofs);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Panel302_SuitFlowValve_Handle, Panel302_SuitFlowValve_HandleClickPoint + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_Rot_Panel303, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Rot_Panel303, Rot_Panel303Location + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_Panel305_FootPrepWater_Lever02, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Panel305_FootPrepWater_Lever02, Panel305_FootPrepWater_Lever02Location + ofs, 0.02);
+
+	oapiVCRegisterArea(AID_VC_Panel305_FootPrepWater_Lever01, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_Panel305_FootPrepWater_Lever01, Panel305_FootPrepWater_Lever01Location + ofs, 0.02);
+
+
+
 
 	// Panel 306
 
@@ -5334,6 +5374,41 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&Dsky2SwitchReset, AID_VC_PUSHB_P122_19);
 	Dsky2SwitchReset.SetDirection(pb_P122_vector);
 	Dsky2SwitchReset.DefineMeshGroup(VC_GRP_PB_P122_19);
+
+	// Panel 300/301/302/303/305
+	const VECTOR3	PANEL30x_VECT = { 1, 0, 0 };
+	const VECTOR3	PANEL30x_DIR = { 0.035209, 0.536965, 0.842869 };
+
+	MainPanelVC.AddSwitch(&SuitCircuitFlow300Switch, AID_VC_Panel300_SuitFlowValve_Handle);
+	SuitCircuitFlow300Switch.SetReference(Panel300_SuitFlowValve_HandleLocation, PANEL30x_DIR);
+	SuitCircuitFlow300Switch.SetDirection(PANEL30x_DIR);
+	SuitCircuitFlow300Switch.DefineMeshGroup(VC_GRP_Panel300_SuitFlowValve_Handle);
+	
+	MainPanelVC.AddSwitch(&SuitCircuitFlow301Switch, AID_VC_Panel301_SuitFlowValve_Handle);
+	SuitCircuitFlow301Switch.SetReference(Panel301_SuitFlowValve_HandleLocation, PANEL30x_DIR);
+	SuitCircuitFlow301Switch.SetDirection(PANEL30x_DIR);
+	SuitCircuitFlow301Switch.DefineMeshGroup(VC_GRP_Panel301_SuitFlowValve_Handle);
+	
+	MainPanelVC.AddSwitch(&SuitCircuitFlow302Switch, AID_VC_Panel302_SuitFlowValve_Handle);
+	SuitCircuitFlow302Switch.SetReference(Panel302_SuitFlowValve_HandleLocation, PANEL30x_DIR);
+	SuitCircuitFlow302Switch.SetDirection(PANEL30x_DIR);
+	SuitCircuitFlow302Switch.DefineMeshGroup(VC_GRP_Panel302_SuitFlowValve_Handle);
+
+	MainPanelVC.AddSwitch(&SecondaryCabinTempValve, AID_VC_Rot_Panel303);
+	SecondaryCabinTempValve.SetReference(Rot_Panel303Location, PANEL30x_VECT);
+	SecondaryCabinTempValve.DefineMeshGroup(VC_GRP_Rot_Panel303);
+
+	MainPanelVC.AddSwitch(&FoodPreparationWaterHotLever, AID_VC_Panel305_FootPrepWater_Lever01);
+	FoodPreparationWaterHotLever.SetReference(Panel305_FootPrepWater_Lever01Location);
+	FoodPreparationWaterHotLever.SetDirection(PANEL30x_VECT);
+	FoodPreparationWaterHotLever.DefineMeshGroup(VC_GRP_Panel305_FootPrepWater_Lever01);
+
+	MainPanelVC.AddSwitch(&FoodPreparationWaterColdLever, AID_VC_Panel305_FootPrepWater_Lever02);
+	FoodPreparationWaterColdLever.SetReference(Panel305_FootPrepWater_Lever02Location);
+	FoodPreparationWaterColdLever.SetDirection(PANEL30x_VECT);
+	FoodPreparationWaterColdLever.DefineMeshGroup(VC_GRP_Panel305_FootPrepWater_Lever02);
+
+
 
 	// Panel 306
 	const VECTOR3	P306_SW_AXIS = { 0, -1, 0 };
