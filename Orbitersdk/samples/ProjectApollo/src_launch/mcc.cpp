@@ -2085,21 +2085,32 @@ void MCC::SaveState(FILEHANDLE scn) {
 		SAVE_INT("MCC_AP7P23PAD_entries", form->entries);
 
 		for (int i = 0; i < form->entries; i++)
+			{
+				sprintf(tmpbuf, "MCC_AP7P23PAD_GET[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->GET[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_LDMK[%d]", i);
+				SAVE_INT(tmpbuf, form->Ldmk[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_STAR[%d]", i);
+				SAVE_INT(tmpbuf, form->Star[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_Att[%d]", i);
+				SAVE_V3(tmpbuf, form->Att[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_SHAFT[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->Shaft[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_TRUN[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->Trun[i]);
+			}
+		}
+
+		else if (padNumber == PT_AP7PTCPAD)
 		{
-			sprintf(tmpbuf, "MCC_AP7P23PAD_GET[%d]", i);
-			SAVE_DOUBLE(tmpbuf, form->GET[i]);
-			sprintf(tmpbuf, "MCC_AP7P23PAD_LDMK[%d]", i);
-			SAVE_INT(tmpbuf, form->Ldmk[i]);
-			sprintf(tmpbuf, "MCC_AP7P23PAD_STAR[%d]", i);
-			SAVE_INT(tmpbuf, form->Star[i]);
-			sprintf(tmpbuf, "MCC_AP7P23PAD_Att[%d]", i);
-			SAVE_V3(tmpbuf, form->Att[i]);
-			sprintf(tmpbuf, "MCC_AP7P23PAD_SHAFT[%d]", i);
-			SAVE_DOUBLE(tmpbuf, form->Shaft[i]);
-			sprintf(tmpbuf, "MCC_AP7P23PAD_TRUN[%d]", i);
-			SAVE_DOUBLE(tmpbuf, form->Trun[i]);
+		AP7PTCPAD * form = (AP7PTCPAD *)padForm;
+
+		SAVE_DOUBLE("MCC_AP7PTCPAD_GET", form->GET);
+		SAVE_V3("MCC_AP7PTCPAD_Att", form->Att);
+		SAVE_DOUBLE("MCC_AP7PTCPAD_TAlign", form->TAlign);
+		SAVE_INT("MCC_AP7PTCPAD_Type", form->type);
 		}
-		}
+
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -2737,20 +2748,30 @@ void MCC::LoadState(FILEHANDLE scn) {
 
 		LOAD_INT("AP7P23PAD_entries", form->entries);
 		for (int i = 0; i < form->entries; i++)
-		{
-			sprintf(tmpbuf, "MCC_AP7P23PAD_GET[%d]", i);
-			LOAD_DOUBLE(tmpbuf, form->GET[i]);
-			sprintf(tmpbuf, "MCC_AP7P23PAD_LDMK[%d]", i);
-			LOAD_INT(tmpbuf, form->Ldmk[i]);
-			sprintf(tmpbuf, "MCC_AP7P23PAD_STAR[%d]", i);
-			LOAD_INT(tmpbuf, form->Star[i]);
-			sprintf(tmpbuf, "MCC_AP7P23PAD_Att[%d]", i);
-			LOAD_V3(tmpbuf, form->Att[i]);
-			sprintf(tmpbuf, "MCC_AP7P23PAD_SHAFT[%d]", i);
-			LOAD_DOUBLE(tmpbuf, form->Shaft[i]);
-			sprintf(tmpbuf, "MCC_AP7P23PAD_TRUN[%d]", i);
-			LOAD_DOUBLE(tmpbuf, form->Trun[i]);
+			{
+				sprintf(tmpbuf, "MCC_AP7P23PAD_GET[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->GET[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_LDMK[%d]", i);
+				LOAD_INT(tmpbuf, form->Ldmk[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_STAR[%d]", i);
+				LOAD_INT(tmpbuf, form->Star[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_Att[%d]", i);
+				LOAD_V3(tmpbuf, form->Att[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_SHAFT[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->Shaft[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_TRUN[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->Trun[i]);
+			}
 		}
+
+		else if (padNumber == PT_AP7PTCPAD)
+		{
+		AP7PTCPAD * form = (AP7PTCPAD *)padForm;
+
+		LOAD_DOUBLE("MCC_AP7PTCPAD_GET", form->GET);
+		LOAD_V3("MCC_AP7PTCPAD_Att", form->Att);
+		LOAD_DOUBLE("MCC_AP7PTCPAD_TAlign", form->TAlign);
+		LOAD_INT("MCC_AP7PTCPAD_Type", form->type);
 		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
@@ -3739,7 +3760,7 @@ void MCC::drawPad(bool writetofile){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
-	case PT_AP7P23PAD:	//TBD compuute times and angles from star/ldmk inputs
+	case PT_AP7P23PAD:	//TBD compute times and angles from star/ldmk inputs
 	{
 		AP7P23PAD * form = (AP7P23PAD *)padForm;
 
@@ -3790,6 +3811,42 @@ void MCC::drawPad(bool writetofile){
 			{
 				sprintf(buffer, "%s%+07.3f TRUNNION ANGLE\n", buffer, form->Trun[i]);
 			}
+		}
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_AP7PTCPAD:
+	{
+		AP7PTCPAD * form = (AP7PTCPAD *)padForm;
+
+		int hh, mm, hh2, mm2;
+		double ss, ss2;
+
+		if (form->type == 0)
+		{
+			sprintf(buffer, "PASSIVE THERMAL CONTROL TEST\n");
+			OrbMech::SStoHHMMSS(abs(form->GET), hh, mm, ss, 60.0);
+			OrbMech::SStoHHMMSS(abs(form->TAlign), hh2, mm2, ss2, 60.0);
+
+			sprintf(buffer, "%sXX%03d HR GET\nXXX%02d MIN T0\nXX%03d HR T ALIGN\nXXX%02d MIN\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n", buffer, hh, mm, hh2, mm2, form->Att.x, form->Att.y, form->Att.z);
+		}
+		else
+		{
+			sprintf(buffer, "SPS COLD SOAK TEST\n");
+			OrbMech::SStoHHMMSS(abs(form->GET), hh, mm, ss, 60.0);
+
+			if (form->TAlign == NULL)
+			{
+				sprintf(buffer, "%s+N/A T ALIGN\n", buffer);
+			}
+			else
+			{
+				OrbMech::SStoHHMMSS(abs(form->TAlign), hh2, mm2, ss2, 60.0);
+				sprintf(buffer, "%sXX%03d HR T ALIGN\nXXX%02d MIN\n", buffer, hh2, mm2);
+			}
+
+			sprintf(buffer, "%s%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\nXX%03d HR GET\nXXX%02d MIN\n", buffer, form->Att.x, form->Att.y, form->Att.z, hh, mm);
 		}
 
 		oapiAnnotationSetText(NHpad, buffer);
@@ -3957,6 +4014,9 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP7P23PAD: // AP7P23PAD
 		padForm = calloc(1, sizeof(AP7P23PAD));
+		break;
+	case PT_AP7PTCPAD: // AP7PTCPAD
+		padForm = calloc(1, sizeof(AP7PTCPAD));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

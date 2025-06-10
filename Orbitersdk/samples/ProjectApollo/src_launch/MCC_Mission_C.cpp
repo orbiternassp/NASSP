@@ -151,24 +151,24 @@ void MCC::MissionSequence_C()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(94.0 * 3600.0 + 15.0 * 60.0), 75, MST_C_DAY3STATE6);
 		break;
 	case MST_C_DAY3STATE6: // SV Update to Block Data 11
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(96.0 * 3600.0 + 20.0 * 60.0), 76, MST_C_DAY3STATE7);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(96.0 * 3600.0 + 20.0 * 60.0), 76, MST_C_DAY4STATE1);
 		break;
-	case MST_C_DAY3STATE7: // Block Data 11 to SCT Star Count 2
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(97.0 * 3600.0), 20, MST_C_DAY3STATE8);
+	case MST_C_DAY4STATE1: // Block Data 11 to SCT Star Count 2
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(97.0 * 3600.0), 20, MST_C_DAY4STATE3);
 		break;
-	case MST_C_DAY3STATE8: // SCT Star Count 2 to SV Update
-		UpdateMacro(UTP_PADONLY, PT_AP7STRCNTPAD, mcc_calcs.GETEval(98.0 * 3600.0 + 20.0 * 60.0), 70, MST_C_DAY3STATE9);
+	case MST_C_DAY4STATE2: // SCT Star Count 2 to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP7STRCNTPAD, mcc_calcs.GETEval(98.0 * 3600.0 + 20.0 * 60.0), 70, MST_C_DAY4STATE3);
 		break;
-	case MST_C_DAY3STATE9: // SV Update to Block Data 12
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(105.0 * 3600.0 + 50.0 * 60.0), 77, MST_C_DAY4STATE1);
+	case MST_C_DAY4STATE3: // SV Update to Block Data 12
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(105.0 * 3600.0 + 50.0 * 60.0), 77, MST_C_DAY4STATE4);
 		break;
-	case MST_C_DAY4STATE1: // Block Data 12 to Block Data 13
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(116.0 * 3600.0), 21, MST_C_DAY4STATE2);
+	case MST_C_DAY4STATE4: // Block Data 12 to Block Data 13
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(116.0 * 3600.0), 21, MST_C_DAY4STATE5);
 		break;
-	case MST_C_DAY4STATE2: // Block Data 13 to SPS-4
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(117.0 * 3600.0 + 30.0 * 60.0), 22, MST_C_DAY4STATE3);
+	case MST_C_DAY4STATE5: // Block Data 13 to SPS-4
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(117.0 * 3600.0 + 30.0 * 60.0), 22, MST_C_DAY4STATE6);
 		break;
-	case MST_C_DAY4STATE3: // SPS-4 to REV 77 Landmark tracking update
+	case MST_C_DAY4STATE6: // SPS-4 to REV 77 Landmark tracking update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(121.0 * 3600.0 + 10.0 * 60.0), 23, MST_C_DAY5STATE1);
 		break;
 	case MST_C_DAY5STATE1: // REV 77 Landmark tracking update to Voice SV Update
@@ -199,66 +199,87 @@ void MCC::MissionSequence_C()
 		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, mcc_calcs.GETEval(143.0 * 3600.0 + 45.0 * 60.0), 57, MST_C_DAY5STATE10);
 		break;
 	case MST_C_DAY5STATE10: // SV Update to Block Data 16
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(144.0 * 3600.0 + 10.0 * 60.0), 79, MST_C_DAY5STATE11);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(144.0 * 3600.0 + 10.0 * 60.0), 79, MST_C_DAY6STATE1);
 		break;
-	case MST_C_DAY5STATE11: // Block Data 16 to REV 92 Landmark tracking update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(145.0 * 3600.0 + 30.0 * 60.0), 26, MST_C_DAY6STATE1);
+	case MST_C_DAY6STATE1: // Block Data 16 to REV 92 Landmark tracking update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(145.0 * 3600.0 + 30.0 * 60.0), 26, MST_C_DAY6STATE2);
 		break;
-	case MST_C_DAY6STATE1: // REV 92 Landmark tracking update to SV Update
-		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, mcc_calcs.GETEval(145.0 * 3600.0 + 45.0 * 60.0), 58, MST_C_DAY6STATE2);
+	case MST_C_DAY6STATE2: // REV 92 Landmark tracking update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, mcc_calcs.GETEval(145.0 * 3600.0 + 45.0 * 60.0), 58, MST_C_DAY6STATE3);
 		break;
-	case MST_C_DAY6STATE2: // SV Update to SXT Star Count 1
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(146.0 * 3600.0), 83, MST_C_DAY6STATE3);
+	case MST_C_DAY6STATE3: // SV Update to SXT Star Count 1
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(146.0 * 3600.0), 83, MST_C_DAY6STATE4);
 		break;
-	case MST_C_DAY6STATE3: // SXT Star Count 1 to P23 Update 2
-		UpdateMacro(UTP_PADONLY, PT_AP7STRCNTPAD, mcc_calcs.GETEval(146.0 * 3600.0 + 20.0 * 60.0), 71, MST_C_DAY6STATE4);
+	case MST_C_DAY6STATE4: // SXT Star Count 1 to P23 Update 2
+		UpdateMacro(UTP_PADONLY, PT_AP7STRCNTPAD, mcc_calcs.GETEval(146.0 * 3600.0 + 20.0 * 60.0), 71, MST_C_DAY6STATE5);
 		break;
-	case MST_C_DAY6STATE4: // P23 Update 2 to SV Update
-		UpdateMacro(UTP_PADONLY, PT_AP7P23PAD, mcc_calcs.GETEval(147.0 * 3600.0 + 20.0 * 60.0), 96, MST_C_DAY6STATE5);
+	case MST_C_DAY6STATE5: // P23 Update 2 to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP7P23PAD, mcc_calcs.GETEval(147.0 * 3600.0 + 20.0 * 60.0), 96, MST_C_DAY6STATE6);
 		break;
-	case MST_C_DAY6STATE5: // SV Update to Block Data 17
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(153.0 * 3600.0 + 50.0 * 60.0), 84, MST_C_DAY6STATE6);
+	case MST_C_DAY6STATE6: // SV Update to Block Data 17
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(153.0 * 3600.0 + 50.0 * 60.0), 84, MST_C_DAY6STATE7);
 		break;
-	case MST_C_DAY6STATE6: // Block Data 17 to SPS-5
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(161.0 * 3600.0 + 10.0 * 60.0), 27, MST_C_DAY6STATE7);
+	case MST_C_DAY6STATE7: // Block Data 17 to SPS-5
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(161.0 * 3600.0 + 10.0 * 60.0), 27, MST_C_DAY6STATE8);
 		break;
-	case MST_C_DAY6STATE7: // SPS-5 to Block Data 18
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(162.0 * 3600.0), 28, MST_C_DAY6STATE8);
+	case MST_C_DAY6STATE8: // SPS-5 to Block Data 18
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(162.0 * 3600.0), 28, MST_C_DAY6STATE9);
 		break;
-	case MST_C_DAY6STATE8: // Block Data 18 to SV Update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(169 * 3600.0), 29, MST_C_DAY7STATE1);
+	case MST_C_DAY6STATE9: // Block Data 18 to PTC Update 1
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(163.0 * 3600.0 + 40.0 * 60.0), 29, MST_C_DAY6STATE10);
 		break;
-	case MST_C_DAY7STATE1: // SV Update to Block Data 19
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(172 * 3600.0 + 42 * 60.0), 52, MST_C_DAY7STATE2);
+	case MST_C_DAY6STATE10: // PTC Update 1 to SPS Cold Soak Update
+		UpdateMacro(UTP_PADONLY, PT_AP7PTCPAD, mcc_calcs.GETEval(166.0 * 3600.0), 105, MST_C_DAY6STATE11);
 		break;
-	case MST_C_DAY7STATE2: // Block Data 19 to Block Data 20
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(180 * 3600.0 + 56 * 60.0), 30, MST_C_DAY7STATE3);
+	case MST_C_DAY6STATE11: // SPS Cold Soak Update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP7PTCPAD, mcc_calcs.GETEval(169.0 * 3600.0 + 10.0 * 60.0), 109, MST_C_DAY7STATE1);
 		break;
-	case MST_C_DAY7STATE3: // Block Data 20 to Block Data 21
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(192 * 3600.0 + 17 * 60.0), 31, MST_C_DAY8STATE1);
+	case MST_C_DAY7STATE1: // SV Update to DAP Update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(169.0 * 3600.0 + 15.0 * 60.0), 85, MST_C_DAY7STATE2);
 		break;
-	case MST_C_DAY8STATE1: // Block Data 21 to Block Data 22
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(201 * 3600.0 + 55 * 60.0), 32, MST_C_DAY8STATE2);
+	case MST_C_DAY7STATE2: // DAP Update to Block Data 19
+		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, mcc_calcs.GETEval(172.0 * 3600.0 + 40.0 * 60.0), 110, MST_C_DAY7STATE3);
 		break;
-	case MST_C_DAY8STATE2: // Block Data 22 to SPS-6
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(205 * 3600.0 + 25 * 60.0), 33, MST_C_DAY8STATE3);
+	case MST_C_DAY7STATE3: // Block Data 19 to Block Data 20
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(181.0 * 3600.0), 30, MST_C_DAY7STATE4);
 		break;
-	case MST_C_DAY8STATE3: // SPS-6 to Block Data 23
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(210 * 3600.0 + 11 * 60.0), 34, MST_C_DAY8STATE4);
+	case MST_C_DAY7STATE4: // Block Data 20 to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(191.0 * 3600.0 + 35.0 * 60.0), 31, MST_C_DAY7STATE5);
 		break;
-	case MST_C_DAY8STATE4: // Block Data 23 to rev 135 landmark tracking update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(212 * 3600.0 + 40 * 60.0), 35, MST_C_DAY8STATE5);
+	case MST_C_DAY7STATE5: // SV Update to Block Data 21
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(192.0 * 3600.0 + 15.0 * 60.0), 86, MST_C_DAY8STATE1);
 		break;
-	case MST_C_DAY8STATE5: // Rev 135 landmark tracking update to SV PAD
-		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, mcc_calcs.GETEval(213 * 3600.0), 59, MST_C_DAY8STATE6);
+	case MST_C_DAY8STATE1: // Block Data 21 to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(193.0 * 3600.0 + 40.0 * 60.0), 32, MST_C_DAY8STATE2);
 		break;
-	case MST_C_DAY8STATE6: // SV PAD to P27 PAD
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(214 * 3600.0 + 10 * 60.0), 61, MST_C_DAY8STATE7);
+	case MST_C_DAY8STATE2: // SV Update to W-Matrix Update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(202.0 * 3600.0 + 15.0 * 60.0), 87, MST_C_DAY8STATE3);
 		break;
-	case MST_C_DAY8STATE7: //P27 PAD to rev 136 landmark tracking update
-		UpdateMacro(UTP_PADONLY, PT_P27PAD, mcc_calcs.GETEval(215 * 3600.0), 36, MST_C_DAY8STATE8);
+	case MST_C_DAY8STATE3: // W-Matrix Update to Block Data 22
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 3.0 * 60.0, 61, MST_C_DAY8STATE4);
 		break;
-	case MST_C_DAY8STATE8: // Rev 136 landmark tracking update to SV PAD
+	case MST_C_DAY8STATE4: // Block Data 22 to SPS-6
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(205.0 * 3600.0 + 25.0 * 60.0), 33, MST_C_DAY8STATE5);
+		break;
+	case MST_C_DAY8STATE5: // SPS-6 to PTC Update 2
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(208.0 * 3600.0 + 35.0 * 60.0), 34, MST_C_DAY8STATE6);
+		break;
+	case MST_C_DAY8STATE6: // PTC Update 2 to Block Data 23
+		UpdateMacro(UTP_PADONLY, PT_AP7PTCPAD, mcc_calcs.GETEval(210.0 * 3600.0 + 30.0 * 60.0), 106, MST_C_DAY8STATE7);
+		break;
+	case MST_C_DAY8STATE7: // Block Data 23 to rev 135 landmark tracking update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(212 * 3600.0 + 40 * 60.0), 35, MST_C_DAY8STATE8);
+		break;
+	case MST_C_DAY8STATE8: // Rev 135 landmark tracking update to SV PAD
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, mcc_calcs.GETEval(213 * 3600.0), 59, MST_C_DAY8STATE9);
+		break;
+	case MST_C_DAY8STATE9: // SV PAD to P27 PAD
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(214 * 3600.0 + 10 * 60.0), 61, MST_C_DAY8STATE10);
+		break;
+	case MST_C_DAY8STATE10: //P27 PAD to rev 136 landmark tracking update
+		UpdateMacro(UTP_PADONLY, PT_P27PAD, mcc_calcs.GETEval(215 * 3600.0), 36, MST_C_DAY8STATE11);
+		break;
+	case MST_C_DAY8STATE11: // Rev 136 landmark tracking update to SV PAD
 		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, mcc_calcs.GETEval(216 * 3600.0), 60, MST_C_DAY9STATE1);
 		break;
 	case MST_C_DAY9STATE1: //SV PAD to SV PAD

@@ -165,7 +165,6 @@ struct STARCHKPAD
 	double TAlign[2];	// Align Time for nominal IMU orientation prior to daylight star check - if required
 };
 
-
 // APOLLO 11 - LUNAR ENTRY
 
 struct AP11ENT
@@ -555,6 +554,7 @@ struct AP11LMASCPAD
 };
 
 //APOLLO 7 MANUAL RETRO ATTITUDE ORIENTATION
+
 struct AP7RETRORIENTPAD
 {
 	double GET_Day = 0.0;
@@ -605,6 +605,7 @@ struct AP12LMASCPAD
 };
 
 //APOLLO 12 SEPARATION PAD
+
 struct AP12SEPPAD
 {
 	double t_Undock;
@@ -628,7 +629,9 @@ struct AP7STRCNTPAD
 };
 
 // APOLLO 7 - WSMR PAD
-struct AP7WSMRPAD {
+
+struct AP7WSMRPAD
+{
 	double GETAOS;		// Time of WSMR AOS
 	double GETRR;		// Time of RR XPDR Acquisition
 	VECTOR3 AttAOS;		// Gimbal angles required to place SC at proper RR XPDR attitude
@@ -646,6 +649,16 @@ struct AP7P23PAD
 	VECTOR3 Att[2];		// Gimbal angles required to place SC at proper initial attitude for midcourse navigation
 	double Shaft[2];	// Shaft angle
 	double Trun[2];		// Trunnion angle
+};
+
+// Apollo 7 - PTC/SPS COLD SOAK PAD
+
+struct AP7PTCPAD
+{
+	int type;		// 0 = PTC, 1 = SPS
+	double GET;		// T0 Time
+	VECTOR3 Att;	// Gimbal angles required
+	double TAlign;	// Align Time
 };
 
 //GENERIC STRING
