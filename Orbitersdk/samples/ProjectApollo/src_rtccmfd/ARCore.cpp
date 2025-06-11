@@ -294,7 +294,7 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	}
 	else if (mission == 9)
 	{
-		rtcc->SystemParametersFile = "Apollo 7 Constants";
+		rtcc->SystemParametersFile = "Apollo 9 Constants";
 		rtcc->LoadMissionFiles();
 		rtcc->LoadLaunchDaySpecificParameters(1969, 3, 3);
 		rtcc->GMGMED("P80,1,CSM,3,3,1969;");
