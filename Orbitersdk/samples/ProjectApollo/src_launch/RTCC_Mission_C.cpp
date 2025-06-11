@@ -1636,7 +1636,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		calcParams.SVSTORE1 = ConvertEphemDatatoSV(sv_cut);
 
 		AP11ManeuverPAD(tempopt, tempPAD);
-		sprintf(alignstars, "RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", tempPAD.GDCangles.x, tempPAD.GDCangles.y, tempPAD.GDCangles.z);
+		sprintf(alignstars, "SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", tempPAD.SetStars, tempPAD.GDCangles.x, tempPAD.GDCangles.y, tempPAD.GDCangles.z);
 
 		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "SPS-5 / PUGS");
@@ -1773,7 +1773,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 	break;
 	case 36: //MISSION C SV PAD (122:00:00)
 	case 90: //MISSION C SV PAD w/ Uplink (142:13:00)
-	case 91: //MISSION C SV PAD (216:14:00)
+	case 91: //MISSION C SV PAD (215:44:00)
+	case 92: //MISSION C SV PAD (216:14:00)
 	{
 		VehicleDataBlock sv, sv_1;
 		double NavGET, NavGMT;
@@ -1794,6 +1795,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			NavGET = OrbMech::HHMMSSToSS(142, 13, 0);  //Nav Check GET
 		}
 		else if (fcn == 91)
+		{
+			NavGET = OrbMech::HHMMSSToSS(215, 44, 0);  //Nav Check GET
+		}
+		else if (fcn == 92)
 		{
 			NavGET = OrbMech::HHMMSSToSS(216, 14, 0);  //Nav Check GET
 		}
@@ -1864,17 +1869,23 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 	{
 		AP7MNV *form = (AP7MNV *)pad;
 
+		AP11MNV  tempPAD;
+		AP11ManPADOpt tempopt;
+
 		PMMMPTInput in;
 		GMPOpt orbopt;
 		REFSMMATOpt refsopt;
 		AP7ManPADOpt manopt;
 		VECTOR3 dV_LVLH, dV_imp;
-		double P30TIG, TIG_imp;
+		double P30TIG, TIG_imp, NavGET, NavGMT;
 		MATRIX3 REFSMMAT;
-		EphemerisData sv, sv0, sv1;
+		EphemerisData sv, sv0, sv1, sv2;
 		PLAWDTOutput WeightsTable;
 		char buffer1[1000];
 		char buffer2[1000];
+		char buffer3[1000];
+		char alignstars[1000];
+
 		AEGBlock aeg;
 		AEGDataBlock sv_P;
 		double INFO[10];
@@ -1940,29 +1951,53 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
 
+		NavGET = OrbMech::HHMMSSToSS(238, 24, 0); //Nav Check GET
+
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		manopt.HeadsUp = true;
-		manopt.navcheckGET = OrbMech::HHMMSSToSS(238, 24, 0);
+		manopt.navcheckGET = NavGET;
 		manopt.REFSMMAT = REFSMMAT;
 		manopt.TIG = P30TIG;
-		manopt.sxtstardtime = 0.0;
+		manopt.sxtstardtime = 30.0;
 		manopt.UllageThrusterOpt = true;
 		manopt.UllageDT = 15.0;
 		manopt.sv0 = sv;
 		manopt.WeightsTable = WeightsTable;
 
+		tempopt.dV_LVLH = dV_LVLH;
+		tempopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+		tempopt.HeadsUp = true;
+		tempopt.REFSMMAT = REFSMMAT;
+		tempopt.TIG = P30TIG;
+		tempopt.UllageThrusterOpt = true;
+		tempopt.UllageDT = 15.0;
+		tempopt.RV_MCC = sv;
+		tempopt.WeightsTable = WeightsTable;
+		tempopt.PrefGDCStars = 1; //Navi,Polaris
+
+		NavGMT = GMTfromGET(NavGET);
+
+		//Time tagged SV
+		sv2 = coast(sv, NavGMT - sv.GMT);
+
+		AP11ManeuverPAD(tempopt, tempPAD);
+		sprintf(alignstars, "SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", tempPAD.SetStars, tempPAD.GDCangles.x, tempPAD.GDCangles.y, tempPAD.GDCangles.z);
+
 		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "SPS-7");
 
-		AGCStateVectorUpdate(buffer1, 1, 1, sv);
-		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
+		sprintf(form->remarks, "Ullage: 4 jet, 15 seconds  SCS AUTO, Out of plane south, Pitched up 70 deg  %s", alignstars);
 
-		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv2);
+		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv2);
+		CMCExternalDeltaVUpdate(buffer3, P30TIG, dV_LVLH);
+
+		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, Target load");
+			sprintf(upDesc, "CSM state vectors, Target load");
 		}
 	}
 	break;
@@ -2105,6 +2140,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 	case 85: //CSM STATE VECTOR UPDATE (BOTH SLOTS) AND NAV CHECK PAD (175:30:00)
 	case 86: //CSM STATE VECTOR UPDATE (BOTH SLOTS) AND NAV CHECK PAD (193:10:00)
 	case 87: //CSM STATE VECTOR UPDATE (BOTH SLOTS) AND NAV CHECK PAD (199:30:00)
+	case 88: //CSM STATE VECTOR UPDATE (BOTH SLOTS) AND NAV CHECK PAD (214:20:00)
+	case 89: //CSM STATE VECTOR UPDATE (BOTH SLOTS) AND NAV CHECK PAD (221:30:00)
 	{
 		VehicleDataBlock sv, sv_1;
 		char buffer1[1000];
@@ -2154,6 +2191,14 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		else if (fcn == 87)
 		{
 			NavGET = OrbMech::HHMMSSToSS(199, 30, 0);  //Nav Check GET
+		}
+		else if (fcn == 88)
+		{
+			NavGET = OrbMech::HHMMSSToSS(214, 20, 0);  //Nav Check GET
+		}
+		else if (fcn == 89)
+		{
+			NavGET = OrbMech::HHMMSSToSS(221, 30, 0);  //Nav Check GET
 		}
 		else
 		{
