@@ -1288,9 +1288,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		form->KFactor = GETfromGMT(GetAGSClockZero());
 		form->DEDA224 = (int)(res.J1 / 0.3048 / 100.0);
-		form->DEDA225 = (int)(res.R_amin / 0.3048 / 100.0);
-		form->DEDA226 = (int)(res.AGS_9J / 0.3048 / 100.0);
-		form->DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
+		form->DEDA225 = (int)(res.A_min / 0.3048 / 100.0);
+		form->DEDA226 = (int)(res.A_max / 0.3048 / 100.0);
+		form->DEDA227 = (int)(res.K1 / 0.3048 / 100.0*pow(2, 3));
 
 		/*
 		Pad-load:

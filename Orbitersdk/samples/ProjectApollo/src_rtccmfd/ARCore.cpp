@@ -144,6 +144,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	landmarkpad.Lat[0] = 0;
 	landmarkpad.Lng05[0] = 0;
 
+	PDAPVersion = 0;
 	PDAP_CSM_VectorTime = 0.0;
 	PDAP_LM_VectorTime = 0.0;
 	PDAPABTCOF[0] = 0.0;
@@ -154,17 +155,26 @@ AR_GCore::AR_GCore(VESSEL* v)
 	PDAPABTCOF[5] = 0.0;
 	PDAPABTCOF[6] = 0.0;
 	PDAPABTCOF[7] = 0.0;
-	DEDA224 = 0.0;
-	DEDA225 = 0.0;
-	DEDA226 = 0.0;
+	for (int i = 0; i < 20; i++)
+	{
+		PDAP_UplinkData[i] = 0;
+	}
+	PDAP_V_hmin = 0.0;
+	DEDA224 = 0;
+	DEDA225 = 0;
+	DEDA226 = 0;
 	DEDA227 = 0;
+	DEDA662 = 0;
+	DEDA673 = 0;
 
-	PDAP_J1 = 6.0325675e6*0.3048;
-	PDAP_K1 = -6.2726125e5*0.3048;
-	PDAP_J2 = 6.03047e6*0.3048;
-	PDAP_K2 = -3.1835146e5*0.3048;
-	PDAP_Theta_LIM = 8.384852304*RAD;
-	PDAP_R_amin = 5.8768997e6*0.3048;
+	PDAP_J1 = 0.0;
+	PDAP_K1 = 0.0;
+	PDAP_J2 = 0.0;
+	PDAP_K2 = 0.0;
+	PDAP_Theta_LIM = 0.0;
+	PDAP_R_amin = 0.0;
+	PDAP_A_min = 0.0;
+	PDAP_A_max = 0.0;
 
 	t_TPI = 0.0;
 
@@ -2183,24 +2193,13 @@ void ARCore::ErasableMemoryUpdateUplink(int blocknum)
 
 void ARCore::AP11AbortCoefUplink()
 {
-	g_Data.emem[0] = 22;
+	g_Data.emem[0] = 24;
 	g_Data.emem[1] = 2550;
-	g_Data.emem[2] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[0] * pow(100.0, -4)*pow(2, 44), 0, 1);
-	g_Data.emem[3] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[0] * pow(100.0, -4)*pow(2, 44), 0, 0);
-	g_Data.emem[4] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[1] * pow(100.0, -3)*pow(2, 27), 0, 1);
-	g_Data.emem[5] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[1] * pow(100.0, -3)*pow(2, 27), 0, 0);
-	g_Data.emem[6] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[2] * pow(100.0, -2)*pow(2, 10), 0, 1);
-	g_Data.emem[7] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[2] * pow(100.0, -2)*pow(2, 10), 0, 0);
-	g_Data.emem[8] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[3] * pow(100.0, -1), 7, 1);
-	g_Data.emem[9] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[3] * pow(100.0, -1), 7, 0);
-	g_Data.emem[10] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[4] * pow(100.0, -4)*pow(2, 44), 0, 1);
-	g_Data.emem[11] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[4] * pow(100.0, -4)*pow(2, 44), 0, 0);
-	g_Data.emem[12] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[5] * pow(100.0, -3)*pow(2, 27), 0, 1);
-	g_Data.emem[13] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[5] * pow(100.0, -3)*pow(2, 27), 0, 0);
-	g_Data.emem[14] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[6] * pow(100.0, -2)*pow(2, 10), 0, 1);
-	g_Data.emem[15] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[6] * pow(100.0, -2)*pow(2, 10), 0, 0);
-	g_Data.emem[16] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[7] * pow(100.0, -1), 7, 1);
-	g_Data.emem[17] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[7] * pow(100.0, -1), 7, 0);
+
+	for (int i = 0; i < 18; i++)
+	{
+		g_Data.emem[i + 2] = GC->PDAP_UplinkData[i];
+	}
 
 	UplinkData(false); // Go for uplink
 }
@@ -2209,18 +2208,11 @@ void ARCore::AP12AbortCoefUplink()
 {
 	g_Data.emem[0] = 16;
 	g_Data.emem[1] = GC->rtcc->SystemParameters.MCLABT;
-	g_Data.emem[2] = OrbMech::DoubleToBuffer(GC->PDAP_J1, 23, 1);
-	g_Data.emem[3] = OrbMech::DoubleToBuffer(GC->PDAP_J1, 23, 0);
-	g_Data.emem[4] = OrbMech::DoubleToBuffer(GC->PDAP_K1*PI2, 23, 1);
-	g_Data.emem[5] = OrbMech::DoubleToBuffer(GC->PDAP_K1*PI2, 23, 0);
-	g_Data.emem[6] = OrbMech::DoubleToBuffer(GC->PDAP_J2, 23, 1);
-	g_Data.emem[7] = OrbMech::DoubleToBuffer(GC->PDAP_J2, 23, 0);
-	g_Data.emem[8] = OrbMech::DoubleToBuffer(GC->PDAP_K2*PI2, 23, 1);
-	g_Data.emem[9] = OrbMech::DoubleToBuffer(GC->PDAP_K2*PI2, 23, 0);
-	g_Data.emem[10] = OrbMech::DoubleToBuffer(GC->PDAP_Theta_LIM / PI2, 0, 1);
-	g_Data.emem[11] = OrbMech::DoubleToBuffer(GC->PDAP_Theta_LIM / PI2, 0, 0);
-	g_Data.emem[12] = OrbMech::DoubleToBuffer(GC->PDAP_R_amin, 24, 1);
-	g_Data.emem[13] = OrbMech::DoubleToBuffer(GC->PDAP_R_amin, 24, 0);
+
+	for (int i = 0; i < 12; i++)
+	{
+		g_Data.emem[i + 2] = GC->PDAP_UplinkData[i];
+	}
 
 	UplinkData(false); // Go for uplink
 }
@@ -4019,8 +4011,6 @@ int ARCore::subThread()
 		PDAPResults res;
 		VehicleDataBlock sv_LM, sv_CSM;
 
-		LEM *l = (LEM *)GC->rtcc->pLM;
-
 		if (GC->MissionPlanningActive)
 		{
 			std::string StaID;
@@ -4071,55 +4061,109 @@ int ARCore::subThread()
 		//Copy over the general settings
 		opt = GC->PDAPOptions;
 		//Now the special inputs
+		opt.IsTwoSegment = (GC->PDAPVersion != 0);
 		opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
 		opt.sv_LM = sv_LM;
 		opt.sv_CSM = sv_CSM;
 		opt.GMT_LAND = GC->rtcc->GMTfromGET(GC->rtcc->CZTDTGTU.GETTD);
 		opt.GMT_TPI = GC->rtcc->GMTfromGET(GC->PDAPOptions.GMT_TPI);
 		opt.GMT_2TPI = GC->rtcc->GMTfromGET(GC->PDAPOptions.GMT_2TPI);
-		if (opt.Version != 0)
+		if (GC->PDAPVersion == 0)
 		{
-			opt.dt_step = 20.0;
+			//Set up for DPS/APS abort
+			opt.dt_stage = 999999.9;
 		}
-		else
+		//Run it twice for Apollo 11 (APS vs. DPS/APS)
+		for (int i = 0; i < 2; i++)
 		{
-			opt.dt_step = 120.0;
+			GC->rtcc->PoweredDescentAbortProgram(opt, res);
+			//Stop if there is an error
+			if (res.Error) break;
+			//Also stop if the calculation mode is not for Apollo 11
+			if (GC->PDAPVersion != 0) break;
+
+			//Apollo 11 only
+			GC->PDAPABTCOF[4 * i + 0] = res.ABTCOF1;
+			GC->PDAPABTCOF[4 * i + 1] = res.ABTCOF2;
+			GC->PDAPABTCOF[4 * i + 2] = res.ABTCOF3;
+			GC->PDAPABTCOF[4 * i + 3] = res.ABTCOF4;
+			GC->PDAP_V_hmin = res.v_hmin;
+
+			opt.dt_stage = 0.0; //APS abort
 		}
-		GC->rtcc->PoweredDescentAbortProgram(opt, res);
 		PADSolGood = (res.Error == 0);
 		if (PADSolGood)
 		{
-			if (opt.Version == 0)
+			//Save data
+			GC->PDAP_J1 = res.J1;
+			GC->PDAP_J2 = res.J2;
+			GC->PDAP_K1 = res.K1;
+			GC->PDAP_K2 = res.K2;
+			GC->PDAP_Theta_LIM = res.Theta_LIM;
+			GC->PDAP_R_amin = res.R_amin;
+			GC->PDAP_A_min = res.A_min;
+			GC->PDAP_A_max = res.A_max;
+
+			//Convert to uplink data
+			if (opt.IsTwoSegment == false)
 			{
-				if (opt.dt_stage != 0.0)
-				{
-					GC->PDAPABTCOF[0] = res.ABTCOF1;
-					GC->PDAPABTCOF[1] = res.ABTCOF2;
-					GC->PDAPABTCOF[2] = res.ABTCOF3;
-					GC->PDAPABTCOF[3] = res.ABTCOF4;
-				}
-				else
-				{
-					GC->PDAPABTCOF[4] = res.ABTCOF1;
-					GC->PDAPABTCOF[5] = res.ABTCOF2;
-					GC->PDAPABTCOF[6] = res.ABTCOF3;
-					GC->PDAPABTCOF[7] = res.ABTCOF4;
-				}
+				//Apollo 11
+				GC->PDAP_UplinkData[0] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[0] * pow(100.0, -4)*pow(2, 44), 0, 1);
+				GC->PDAP_UplinkData[1] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[0] * pow(100.0, -4)*pow(2, 44), 0, 0);
+				GC->PDAP_UplinkData[2] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[1] * pow(100.0, -3)*pow(2, 27), 0, 1);
+				GC->PDAP_UplinkData[3] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[1] * pow(100.0, -3)*pow(2, 27), 0, 0);
+				GC->PDAP_UplinkData[4] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[2] * pow(100.0, -2)*pow(2, 10), 0, 1);
+				GC->PDAP_UplinkData[5] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[2] * pow(100.0, -2)*pow(2, 10), 0, 0);
+				GC->PDAP_UplinkData[6] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[3] * pow(100.0, -1), 7, 1);
+				GC->PDAP_UplinkData[7] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[3] * pow(100.0, -1), 7, 0);
+				GC->PDAP_UplinkData[8] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[4] * pow(100.0, -4)*pow(2, 44), 0, 1);
+				GC->PDAP_UplinkData[9] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[4] * pow(100.0, -4)*pow(2, 44), 0, 0);
+				GC->PDAP_UplinkData[10] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[5] * pow(100.0, -3)*pow(2, 27), 0, 1);
+				GC->PDAP_UplinkData[11] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[5] * pow(100.0, -3)*pow(2, 27), 0, 0);
+				GC->PDAP_UplinkData[12] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[6] * pow(100.0, -2)*pow(2, 10), 0, 1);
+				GC->PDAP_UplinkData[13] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[6] * pow(100.0, -2)*pow(2, 10), 0, 0);
+				GC->PDAP_UplinkData[14] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[7] * pow(100.0, -1), 7, 1);
+				GC->PDAP_UplinkData[15] = OrbMech::DoubleToBuffer(GC->PDAPABTCOF[7] * pow(100.0, -1), 7, 0);
+				GC->PDAP_UplinkData[16] = OrbMech::DoubleToBuffer(GC->PDAP_V_hmin * pow(100.0, -1), 7, 1);
+				GC->PDAP_UplinkData[17] = OrbMech::DoubleToBuffer(GC->PDAP_V_hmin * pow(100.0, -1), 7, 0);
 			}
 			else
 			{
-				GC->PDAP_J1 = res.J1;
-				GC->PDAP_J2 = res.J2;
-				GC->PDAP_K1 = res.K1;
-				GC->PDAP_K2 = res.K2;
-				GC->PDAP_Theta_LIM = res.Theta_LIM;
-				GC->PDAP_R_amin = res.R_amin;
+				//Apollo 12+
+				GC->PDAP_UplinkData[0] = OrbMech::DoubleToBuffer(GC->PDAP_J1, 23, 1);
+				GC->PDAP_UplinkData[1] = OrbMech::DoubleToBuffer(GC->PDAP_J1, 23, 0);
+				GC->PDAP_UplinkData[2] = OrbMech::DoubleToBuffer(GC->PDAP_K1*PI2, 23, 1);
+				GC->PDAP_UplinkData[3] = OrbMech::DoubleToBuffer(GC->PDAP_K1*PI2, 23, 0);
+				GC->PDAP_UplinkData[4] = OrbMech::DoubleToBuffer(GC->PDAP_J2, 23, 1);
+				GC->PDAP_UplinkData[5] = OrbMech::DoubleToBuffer(GC->PDAP_J2, 23, 0);
+				GC->PDAP_UplinkData[6] = OrbMech::DoubleToBuffer(GC->PDAP_K2*PI2, 23, 1);
+				GC->PDAP_UplinkData[7] = OrbMech::DoubleToBuffer(GC->PDAP_K2*PI2, 23, 0);
+				GC->PDAP_UplinkData[8] = OrbMech::DoubleToBuffer(GC->PDAP_Theta_LIM / PI2, 0, 1);
+				GC->PDAP_UplinkData[9] = OrbMech::DoubleToBuffer(GC->PDAP_Theta_LIM / PI2, 0, 0);
+				GC->PDAP_UplinkData[10] = OrbMech::DoubleToBuffer(GC->PDAP_R_amin, 24, 1);
+				GC->PDAP_UplinkData[11] = OrbMech::DoubleToBuffer(GC->PDAP_R_amin, 24, 0);
 			}
 
-			GC->DEDA224 = res.J1;
-			GC->DEDA225 = res.AGS_8J;
-			GC->DEDA226 = res.AGS_9J;
-			GC->DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
+			if (GC->PDAPVersion != 2)
+			{
+				//FP6
+				GC->DEDA224 = (int)(res.J1 / 0.3048 / 100.0);
+				GC->DEDA225 = (int)(res.A_min / 0.3048 / 100.0);
+				GC->DEDA226 = (int)(res.A_max / 0.3048 / 100.0);
+				GC->DEDA227 = (int)(res.K1 / 0.3048 / 100.0*pow(2, 3));
+				GC->DEDA662 = 0;
+				GC->DEDA673 = 0;
+			}
+			else
+			{
+				//FP7+
+				GC->DEDA224 = (int)(res.J1 / 0.3048 / 100.0);
+				GC->DEDA225 = (int)(res.A_min / 0.3048 / 100.0);
+				GC->DEDA226 = (int)(res.J2 / 0.3048 / 100.0);
+				GC->DEDA227 = 0;
+				GC->DEDA662 = OrbMech::DoubleToDEDA(res.K1 / 0.3048*pow(2, -20), 14);
+				GC->DEDA673 = OrbMech::DoubleToDEDA(res.K2 / 0.3048*pow(2, -20), 14);
+			}
 		}
 
 		Result = DONE;

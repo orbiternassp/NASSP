@@ -28,150 +28,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	// Add MFD display routines here.
 	// Use the device context (hDC) for Windows GDI paint functions.
 
-	//PDAP Test
-	PDAPOpt opt;
-	PDAPResults res;
-	VehicleDataBlock sv_CSM;
-	double GMT_TPI;
-
-	double GET_LAND_SCOT = OrbMech::HHMMSSToSS(102, 47, 11);
-	double GET_LAND_SIM = 370350.794323560840;
-	double dt_bias_orbit = GET_LAND_SIM - GET_LAND_SCOT;
-	double GET_PDI1_nom = OrbMech::HHMMSSToSS(102, 35, 19);
-	double GET_PDI1_act = GET_PDI1_nom + dt_bias_orbit;
-
-	sv_CSM = GC->rtcc->StateVectorCalcDataBlock(oapiGetVesselInterface(oapiGetVesselByName("Columbia")));
-	opt.sv_CSM = sv_CSM;
-	opt.sv_LM = GC->rtcc->StateVectorCalcDataBlock(oapiGetVesselInterface(oapiGetVesselByName("Eagle")));
-	opt.IsTwoSegment = false;
-	opt.dt_CAN = 0.0;
-	opt.DV_CAN = _V(0, 0, 0);
-	GMT_TPI = GC->rtcc->GMTfromGET(105.0*3600.0 + 14.0*60.0 + 18.0) + dt_bias_orbit;
-	opt.GMT_TPI = GMT_TPI;
-	opt.GMT_LAND = GC->rtcc->GMTfromGET(GET_LAND_SIM);
-	opt.dt_CSI = 50.0*60.0;
-	opt.R_LS = OrbMech::r_from_latlong(GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST], GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST]);
-
-	//Phase angle check
-	VehicleDataBlock sv_test, sv_test2;
-	double PHASE;
-
-	AnalyticEphemerisGenerator::coast(GC->rtcc, opt.sv_LM, GC->rtcc->GMTfromGET(GET_PDI1_act) - opt.sv_LM.sv.GMT, sv_test);
-	AnalyticEphemerisGenerator::coast(GC->rtcc, opt.sv_CSM, sv_test.sv.GMT - opt.sv_CSM.sv.GMT, sv_test2);
-	PHASE = OrbMech::PHSANG(sv_test2.sv.R, sv_test2.sv.V, sv_test.sv.R)*DEG;
-
-	//Apollo 11 DPS/APS PDI-1
-	opt.dt_stage = 9999999.9;
-	opt.dt_step = 120.0;
-	oapiWriteLog("Apollo 11");
-	GC->rtcc->PoweredDescentAbortProgram(opt, res);
-	sprintf(Buffer, "PDI-1 (DPS/APS): %e %e %e %e", res.ABTCOF1, res.ABTCOF2, res.ABTCOF3, res.ABTCOF4);
-	oapiWriteLog(Buffer);
-
-	//Apollo 11 APS PDI-1
-	opt.dt_stage = 0.0;
-	GC->rtcc->PoweredDescentAbortProgram(opt, res);
-	sprintf(Buffer, "PDI-1 (APS): %e %e %e %e", res.ABTCOF1, res.ABTCOF2, res.ABTCOF3, res.ABTCOF4);
-	oapiWriteLog(Buffer);
-
-	//Apollo 11 DPS/APS PDI-2
-	//Modify phase angle
-	double time_phase_bias = 16.5/360.0*2.0*3600.0; //To shift from -7.5deg to -24deg phase angle
-	opt.sv_CSM.sv.GMT = sv_CSM.sv.GMT + time_phase_bias;
-	opt.GMT_TPI = GMT_TPI + time_phase_bias;
-
-	opt.dt_stage = 9999999.9;
-	opt.dt_step = 120.0;
-	GC->rtcc->PoweredDescentAbortProgram(opt, res);
-	sprintf(Buffer, "PDI-2 (DPS/APS): %e %e %e %e", res.ABTCOF1, res.ABTCOF2, res.ABTCOF3, res.ABTCOF4);
-	oapiWriteLog(Buffer);
-
-	//Apollo 11 APS PDI-2
-	opt.dt_stage = 0.0;
-	GC->rtcc->PoweredDescentAbortProgram(opt, res);
-	sprintf(Buffer, "PDI-2 (APS): %e %e %e %e", res.ABTCOF1, res.ABTCOF2, res.ABTCOF3, res.ABTCOF4);
-	oapiWriteLog(Buffer);
-
-	//Apollo 12 PDI-1
-	opt.sv_CSM.sv.GMT = sv_CSM.sv.GMT;
-	opt.GMT_TPI = GMT_TPI;
-
-	opt.IsTwoSegment = true;
-	opt.K4 = false; //Phase angle only
-	opt.dt_stage = 9999999.9; //Uses DPS and APS for insertion, is that right?
-	opt.dt_step = 20.0;
-	opt.dt_CAN = 0.0;
-	opt.DV_CAN = _V(0, 0, 0);
-	opt.dt_CSI = 50.0*60.0;
-	opt.dt_2CAN = 50.0*60.0;
-	opt.DV_2CAN = _V(10.0*0.3048, 0, 0);
-	opt.dt_2CSI = 110.0*60.0;
-	opt.GMT_2TPI = opt.GMT_TPI + 3600.0 + 59.0*60.0;
-	oapiWriteLog("Apollo 12");
-	GC->rtcc->PoweredDescentAbortProgram(opt, res);
-	sprintf(Buffer, "PDI-1: J1 %e FT, K1 %e FT/RAD, J2 %e FT, K2 %e FT/RAD, THETCRIT %e DEG", res.J1 / 0.3048, res.K1 / 0.3048, res.J2 / 0.3048, res.K2 / 0.3048, res.Theta_LIM*DEG);
-	oapiWriteLog(Buffer);
-	//Apollo 12 PDI-2
-
-	//Adjust phase angle
-	opt.sv_CSM.sv.GMT = sv_CSM.sv.GMT + time_phase_bias;
-	opt.GMT_TPI = GMT_TPI + time_phase_bias;
-
-	GC->rtcc->PoweredDescentAbortProgram(opt, res);
-	sprintf(Buffer, "PDI-2: J1 %e FT, K1 %e FT/RAD, J2 %e FT, K2 %e FT/RAD, THETCRIT %e DEG", res.J1 / 0.3048, res.K1 / 0.3048, res.J2 / 0.3048, res.K2 / 0.3048, res.Theta_LIM*DEG);
-	oapiWriteLog(Buffer);
-
-	//Apollo 13 PDI-1
-	time_phase_bias = 13.5 / 360.0*2.0*3600.0; //To shift from -7.5deg to -21 deg phase angle
-	opt.sv_CSM.sv.GMT = sv_CSM.sv.GMT + time_phase_bias;
-	opt.GMT_2TPI = GMT_TPI + time_phase_bias;
-
-	opt.K4 = true;
-	opt.GMT_TPI = opt.GMT_2TPI + 3600.0 + 59.0*60.0;
-	opt.dt_CAN = 60.0*60.0;
-	opt.DV_CAN = _V(10.0*0.3048, 0, 0);
-	opt.dt_CSI = 120.0*60.0;
-	opt.dt_2CAN = 0.0;
-	opt.DV_2CAN = _V(0.0, 0, 0);
-	opt.dt_2CSI = 55.0*60.0;
-	oapiWriteLog("Apollo 13");
-	GC->rtcc->PoweredDescentAbortProgram(opt, res);
-	sprintf(Buffer, "PDI-1: J1 %e FT, K1 %e FT/RAD, J2 %e FT, K2 %e FT/RAD, THETCRIT %e DEG", res.J1 / 0.3048, res.K1 / 0.3048, res.J2 / 0.3048, res.K2 / 0.3048, res.Theta_LIM*DEG);
-	oapiWriteLog(Buffer);
-
-	//Apollo 13 PDI-2
-	time_phase_bias = 28.5 / 360.0*2.0*3600.0; //To shift from -7.5deg to -36 deg phase angle
-	opt.sv_CSM.sv.GMT = sv_CSM.sv.GMT + time_phase_bias;
-	opt.GMT_2TPI = GMT_TPI + time_phase_bias;
-
-	opt.K4 = true;
-	opt.GMT_TPI = opt.GMT_2TPI + 3600.0 + 59.0*60.0;
-
-	GC->rtcc->PoweredDescentAbortProgram(opt, res);
-	sprintf(Buffer, "PDI-2: J1 %e FT, K1 %e FT/RAD, J2 %e FT, K2 %e FT/RAD, THETCRIT %e DEG", res.J1 / 0.3048, res.K1 / 0.3048, res.J2 / 0.3048, res.K2 / 0.3048, res.Theta_LIM*DEG);
-	oapiWriteLog(Buffer);
-
-	//Apollo 16 PDI-1
-	time_phase_bias = 4.5 / 360.0*2.0*3600.0; //To shift from -7.5deg to -12 deg phase angle
-	opt.sv_CSM.sv.GMT = sv_CSM.sv.GMT + time_phase_bias;
-	opt.GMT_TPI = GMT_TPI + time_phase_bias;
-
-	opt.K4 = false;
-	opt.dt_CAN = 0.0;
-	opt.DV_CAN = _V(0.0, 0, 0);
-	opt.dt_CSI = 55.0*60.0;
-
-	opt.dt_2CAN = 50.0*60.0;
-	opt.DV_2CAN = _V(10.0*0.3048, 0, 0);
-	opt.dt_2CSI = 110.0*60.0;
-	opt.GMT_2TPI = opt.GMT_TPI + 3600.0 + 59.0*60.0;
-
-	oapiWriteLog("Apollo 16");
-	GC->rtcc->PoweredDescentAbortProgram(opt, res);
-	sprintf(Buffer, "PDI-1: J1 %e FT, K1 %e FT/RAD, J2 %e FT, K2 %e FT/RAD, THETCRIT %e DEG", res.J1 / 0.3048, res.K1 / 0.3048, res.J2 / 0.3048, res.K2 / 0.3048, res.Theta_LIM*DEG);
-	oapiWriteLog(Buffer);
-
-	//New
 	switch (screen)
 	{
 	case 0:
@@ -3171,7 +3027,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		break;
 	case 40:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
-		skp->Text(W / 2, CH / 2, "Descent Abort", 13);
+		skp->Text(W / 2, CH / 2, "Powered Descent Abort Program", 29);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
 		if (subscreen == 0)
@@ -3179,13 +3035,17 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			x = 1;  y = 3; dx = 8;
 			Text(skp, x, marker + y, "*");
 			x++;
-			Text(skp, x, y, "SEG:");
-			if (GC->PDAPOptions.IsTwoSegment) Text(skp, x + dx, y, "Apollo 12+");
-			else Text(skp, x + dx, y, "Apollo 11");
+			Text(skp, x, y, "MIS:");
+			if (GC->PDAPVersion == 0) Text(skp, x + dx, y, "Apollo 11");
+			else if (GC->PDAPVersion == 1) Text(skp, x + dx, y, "Apollo 12");
+			else Text(skp, x + dx, y, "Apollo 13+");
 			y++;
-			Text(skp, x, y, "ENG:");
-			if (GC->PDAPOptions.dt_stage != 0.0) Text(skp, x + dx, y, "DPS/APS");
-			else Text(skp, x + dx, y, "APS");
+			if (GC->PDAPVersion != 0)
+			{
+				Text(skp, x, y, "ENG:");
+				if (GC->PDAPOptions.dt_stage != 0.0) Text(skp, x + dx, y, "DPS/APS");
+				else Text(skp, x + dx, y, "APS");
+			}
 			y++;
 			if (GC->MissionPlanningActive)
 			{
@@ -3215,9 +3075,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, x, y, "DH:");
 			Text(skp, x + dx, y, "%.1lf NM", GC->PDAPOptions.DH_D / 1852.0);
 			y++;
-			Text(skp, x, y, "DTCSI:");
-			Text(skp, x + dx, y, "%.1lf min", GC->PDAPOptions.dt_CSI / 60.0);
-			y++;
 			Text(skp, x, y, "DTCAN:");
 			Text(skp, x + dx, y, "%.1lf min", GC->PDAPOptions.dt_CAN / 60.0);
 			y++;
@@ -3225,20 +3082,23 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf(Buffer, "%+.1lf %+.1lf %+.1lf", GC->PDAPOptions.DV_CAN.x / 0.3048, GC->PDAPOptions.DV_CAN.y / 0.3048, GC->PDAPOptions.DV_CAN.z / 0.3048);
 			Text(skp, x + dx, y, Buffer);
 			y++;
+			Text(skp, x, y, "DTCSI:");
+			Text(skp, x + dx, y, "%.1lf min", GC->PDAPOptions.dt_CSI / 60.0);
+			y++;
 			Text(skp, x, y, "TTPI:");
 			Text_GET_HHHMMSSCS(skp, x + dx, y, GC->PDAPOptions.GMT_TPI);
 			y++;
-			if (GC->PDAPOptions.IsTwoSegment)
+			if (GC->PDAPVersion != 0)
 			{
-				Text(skp, x, y, "DT2CSI:");
-				Text(skp, x + dx, y, "%.1lf min", GC->PDAPOptions.dt_2CSI / 60.0);
-				y++;
 				Text(skp, x, y, "DT2CAN:");
 				Text(skp, x + dx, y, "%.1lf min", GC->PDAPOptions.dt_2CAN / 60.0);
 				y++;
 				Text(skp, x, y, "DV2CAN:");
 				sprintf(Buffer, "%+.1lf %+.1lf %+.1lf", GC->PDAPOptions.DV_2CAN.x / 0.3048, GC->PDAPOptions.DV_2CAN.y / 0.3048, GC->PDAPOptions.DV_2CAN.z / 0.3048);
 				Text(skp, x + dx, y, Buffer);
+				y++;
+				Text(skp, x, y, "DT2CSI:");
+				Text(skp, x + dx, y, "%.1lf min", GC->PDAPOptions.dt_2CSI / 60.0);
 				y++;
 				Text(skp, x, y, "T2TPI:");
 				Text_GET_HHHMMSSCS(skp, x + dx, y, GC->PDAPOptions.GMT_2TPI);
@@ -3251,66 +3111,136 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, x, y, "WTAPS:");
 			Text(skp, x + dx, y, "%.1lf lbs", GC->PDAPOptions.W_TAPS / LBS2KG);
 			y++;
+
+			skp->Text(W - CW * 15, CH * 19, "Landing Site:", 13);
+			sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
+			skp->Text(W - CW * 15, CH * 20, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
+			skp->Text(W - CW * 15, CH * 21, Buffer, strlen(Buffer));
+			sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
+			skp->Text(W - CW * 15, CH * 22, Buffer, strlen(Buffer));
+			skp->Text(W - CW * 15, CH * 23, "TLAND:", 6);
+			GET_Display(Buffer, GC->rtcc->CZTDTGTU.GETTD);
+			skp->Text(W - CW * 15, CH * 24, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			Text(skp, 7, 10, "PGNS Coefficients:");
-			if (GC->PDAPOptions.IsTwoSegment == false)
+			skp->SetFont(font_menu2);
+			GetCharSize(skp, CW, CH);
+			Text(skp, 17, 3, "PGNS COMMAND LOAD");
+			if (GC->PDAPVersion == 0)
 			{
-				Text(skp, 7, 11, "%e", GC->PDAPABTCOF[0] / 0.3048);
-				Text(skp, 7, 12, "%e", GC->PDAPABTCOF[1] / 0.3048);
-				Text(skp, 7, 13, "%e", GC->PDAPABTCOF[2] / 0.3048);
-				Text(skp, 7, 14, "%e", GC->PDAPABTCOF[3] / 0.3048);
-				Text(skp, 7, 15, "%e", GC->PDAPABTCOF[4] / 0.3048);
-				Text(skp, 7, 16, "%e", GC->PDAPABTCOF[5] / 0.3048);
-				Text(skp, 7, 17, "%e", GC->PDAPABTCOF[6] / 0.3048);
-				Text(skp, 7, 18, "%e", GC->PDAPABTCOF[7] / 0.3048);
+				//Apollo 11
+				Text(skp, 7, 5, "OCT1  OCT2  DIG. (M, CS)  DIG. (FT, S)");
+				Text(skp, 1, 6, "DPS4");
+				Text(skp, 1, 7, "DPS3");
+				Text(skp, 1, 8, "DPS2");
+				Text(skp, 1, 9, "DPS1");
+				Text(skp, 1, 10, "APS4");
+				Text(skp, 1, 11, "APS3");
+				Text(skp, 1, 12, "APS2");
+				Text(skp, 1, 13, "APS1");
+				Text(skp, 1, 14, "VHMIN");
+
+				for (int i = 0; i < 9; i++)
+				{
+					for (int j = 0; j < 2; j++)
+					{
+						Text(skp, 7 + j * 6, 6 + i, "%05d", GC->PDAP_UplinkData[i * 2 + j]);
+					}
+				}
+
+				Text(skp, 19, 6, "%+e", GC->PDAPABTCOF[0] * pow(0.01, 4));
+				Text(skp, 19, 7, "%+e", GC->PDAPABTCOF[1] * pow(0.01, 3));
+				Text(skp, 19, 8, "%+e", GC->PDAPABTCOF[2] * pow(0.01, 2));
+				Text(skp, 19, 9, "%+e", GC->PDAPABTCOF[3] * pow(0.01, 1));
+				Text(skp, 19, 10, "%+e", GC->PDAPABTCOF[4] * pow(0.01, 4));
+				Text(skp, 19, 11, "%+e", GC->PDAPABTCOF[5] * pow(0.01, 3));
+				Text(skp, 19, 12, "%+e", GC->PDAPABTCOF[6] * pow(0.01, 2));
+				Text(skp, 19, 13, "%+e", GC->PDAPABTCOF[7] * pow(0.01, 1));
+				Text(skp, 19, 14, "%+e", GC->PDAP_V_hmin * pow(0.01, 1));
+
+				Text(skp, 33, 6, "%+e", GC->PDAPABTCOF[0] / 0.3048);
+				Text(skp, 33, 7, "%+e", GC->PDAPABTCOF[1] / 0.3048);
+				Text(skp, 33, 8, "%+e", GC->PDAPABTCOF[2] / 0.3048);
+				Text(skp, 33, 9, "%+e", GC->PDAPABTCOF[3] / 0.3048);
+				Text(skp, 33, 10, "%+e", GC->PDAPABTCOF[4] / 0.3048);
+				Text(skp, 33, 11, "%+e", GC->PDAPABTCOF[5] / 0.3048);
+				Text(skp, 33, 12, "%+e", GC->PDAPABTCOF[6] / 0.3048);
+				Text(skp, 33, 13, "%+e", GC->PDAPABTCOF[7] / 0.3048);
+				Text(skp, 33, 14, "%+e", GC->PDAP_V_hmin / 0.3048);
 			}
 			else
 			{
-				Text(skp, 7, 11, "J1");
-				Text(skp, 12, 11, "%.4f NM", GC->PDAP_J1 / 1852.0);
-				Text(skp, 7, 12, "K1", 2);
-				Text(skp, 12, 12, "%.4f NM/DEG", GC->PDAP_K1 / 1852.0 / DEG);
-				Text(skp, 7, 13, "J2", 2);
-				Text(skp, 12, 13, "%.4f NM", GC->PDAP_J2 / 1852.0);
-				Text(skp, 7, 14, "K2", 2);
-				Text(skp, 12, 14, "%.4f NM/DEG", GC->PDAP_K2 / 1852.0 / DEG);
-				Text(skp, 7, 15, "THET", 4);
-				Text(skp, 12, 15, "%.4f°", GC->PDAP_Theta_LIM*DEG);
-				Text(skp, 7, 16, "RMIN", 4);
-				Text(skp, 12, 16, "%.4f NM", GC->PDAP_R_amin / 1852.0);
+				Text(skp, 10, 5, "OCT1  OCT2  DIG");
+				Text(skp, 1, 6, "J1");
+				Text(skp, 1, 7, "K1");
+				Text(skp, 1, 8, "J2");
+				Text(skp, 1, 9, "K2");
+				Text(skp, 1, 10, "THET");
+				Text(skp, 1, 11, "RMIN");
+
+				for (int i = 0; i < 6; i++)
+				{
+					for (int j = 0; j < 2; j++)
+					{
+						Text(skp, 7 + j * 6, 6 + i, "%05d", GC->PDAP_UplinkData[i * 2 + j]);
+					}
+				}
+
+				Text(skp, 22, 6, "%.4f NM", GC->PDAP_J1 / 1852.0);
+				Text(skp, 22, 7, "%.4f NM/DEG", GC->PDAP_K1 / 1852.0 / DEG);
+				Text(skp, 22, 8, "%.4f NM", GC->PDAP_J2 / 1852.0);
+				Text(skp, 22, 9, "%.4f NM/DEG", GC->PDAP_K2 / 1852.0 / DEG);
+				Text(skp, 22, 10, "%.4f°", GC->PDAP_Theta_LIM*DEG);
+				Text(skp, 22, 11, "%.4f NM", GC->PDAP_R_amin / 1852.0);
 			}
-			Text(skp, 7, 20, "AGS Coefficients:");
-			Text(skp, 7, 21, "224", 3);
-			Text(skp, 12, 21, "%+06.0f", GC->DEDA224 / 0.3048 / 100.0);
-			Text(skp, 7, 22, "225", 3);
-			Text(skp, 12, 22, "%+06.0f", GC->DEDA225 / 0.3048 / 100.0);
-			Text(skp, 7, 23, "226", 3);
-			Text(skp, 12, 23, "%+06.0f", GC->DEDA226 / 0.3048 / 100.0);
-			Text(skp, 7, 24, "227", 3);
-			Text(skp, 12, 24, "%+06d", GC->DEDA227);
-		}
+			Text(skp, 18, 16, "AGS COMMAND LOAD");
+			Text(skp, 1, 18, "J7");
+			Text(skp, 7, 18, "224", 3);
+			Text(skp, 12, 18, "%+06d", GC->DEDA224);
+			Text(skp, 22, 18, "%.4f NM", GC->PDAP_J1 / 1852.0);
+			Text(skp, 1, 19, "J8");
+			Text(skp, 7, 19, "225", 3);
+			Text(skp, 12, 19, "%+06d", GC->DEDA225);
+			Text(skp, 22, 19, "%.4f NM", GC->PDAP_A_min / 1852.0);
+			Text(skp, 7, 20, "226", 3);
+			Text(skp, 12, 20, "%+06d", GC->DEDA226);
+			if (GC->PDAPVersion != 2)
+			{
+				//FP6
+				Text(skp, 1, 20, "J9");
+				Text(skp, 22, 20, "%.4f NM", GC->PDAP_A_max / 1852.0);
+				Text(skp, 1, 21, "K410");
+				Text(skp, 7, 21, "227", 3);
+				Text(skp, 12, 21, "%+06d", GC->DEDA227);
+				Text(skp, 22, 21, "%.4f NM/DEG", GC->PDAP_K1 / 1852.0 / DEG);
 
-		skp->Text(W - CW * 15, CH * 19, "Landing Site:", 13);
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lat[RTCC_LMPOS_BEST] * DEG);
-		skp->Text(W - CW * 15, CH * 20, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.3f°", GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST] * DEG);
-		skp->Text(W - CW * 15, CH * 21, Buffer, strlen(Buffer));
-		sprintf(Buffer, "%.2f NM", GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0);
-		skp->Text(W - CW * 15, CH * 22, Buffer, strlen(Buffer));
-		skp->Text(W - CW * 15, CH * 23, "TLAND:", 6);
-		GET_Display(Buffer, GC->rtcc->CZTDTGTU.GETTD);
-		skp->Text(W - CW * 15, CH * 24, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				//FP7+
+				Text(skp, 1, 20, "J10");
+				Text(skp, 22, 20, "%.4f NM", GC->PDAP_J2 / 1852.0);
+				Text(skp, 1, 21, "K410");
+				Text(skp, 7, 21, "662", 3);
+				Text(skp, 12, 21, "%+06d", GC->DEDA662);
+				Text(skp, 22, 21, "%.4f NM/DEG", GC->PDAP_K1 / 1852.0 / DEG);
+				Text(skp, 1, 22, "J11");
+				Text(skp, 7, 22, "673", 3);
+				Text(skp, 12, 22, "%+06d", GC->DEDA673);
+				Text(skp, 22, 22, "%.4f NM/DEG", GC->PDAP_K2 / 1852.0 / DEG);
+			}
 
-		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-		if (IsBusy(G->subThreadStatus))
-		{
-			skp->Text(W - CW * 15, 3 * H / 14, "Calculating...", 14);
-		}
-		else if (!G->PADSolGood)
-		{
-			skp->Text(W - CW * 15, 3 * H / 14, "Calculation failed!", 19);
+			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+			if (IsBusy(G->subThreadStatus))
+			{
+				skp->Text(W - CW * 15, CH * 31, "Calculating...", 14);
+			}
+			else if (!G->PADSolGood)
+			{
+				skp->Text(W - CW * 15, CH * 31, "Calculation failed!", 19);
+			}
 		}
 		break;
 	case 41:

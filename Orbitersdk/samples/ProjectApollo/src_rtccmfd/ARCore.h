@@ -93,11 +93,12 @@ public:
 
 	//POWERED DESCENT ABORT PROGRAM
 	PDAPOpt PDAPOptions;
+	int PDAPVersion; //0 = Apollo 11, 1 = Apollo 12, 2 = Apollo 13+
 	double PDAP_CSM_VectorTime, PDAP_LM_VectorTime;
 	double PDAPABTCOF[8];	//Luminary099 abort coefficients
-	double DEDA224, DEDA225, DEDA226;
-	int DEDA227;
-	double PDAP_J1, PDAP_K1, PDAP_J2, PDAP_K2, PDAP_Theta_LIM, PDAP_R_amin;
+	int PDAP_UplinkData[18];
+	int DEDA224, DEDA225, DEDA226, DEDA227, DEDA662, DEDA673;
+	double PDAP_J1, PDAP_K1, PDAP_J2, PDAP_K2, PDAP_Theta_LIM, PDAP_R_amin, PDAP_V_hmin, PDAP_A_min, PDAP_A_max;
 
 	//GENERAL PARAMETERS
 	double t_TPI;				// Generally used TPI time

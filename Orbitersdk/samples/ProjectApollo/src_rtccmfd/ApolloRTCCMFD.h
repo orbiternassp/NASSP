@@ -488,6 +488,7 @@ public:
 	void menuCycleAscentPADVersion();
 	void menuSetPDAPPage();
 	void menuSetPDAPInputs();
+	bool set_PDAPInputs(int sel, char *str);
 	void menuPDAPCalc();
 	void menuPDAPUplink();
 	void menuSetFIDOOrbitDigitalsCSMPage();

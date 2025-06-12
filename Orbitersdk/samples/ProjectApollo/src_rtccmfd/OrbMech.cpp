@@ -3155,66 +3155,6 @@ double LinearInterpolation(double x0, double y0, double x1, double y1, double x)
 	return y0 + (x - x0)*(y1 - y0) / (x1 - x0);
 }
 
-void CubicInterpolation(double *x, double *y, double *a)
-{
-	double **V = NULL;
-	double **A = NULL;
-	int *P = NULL;
-	std::vector<double> sol;
-	double Tol;
-	V = new double*[4];
-	A = new double*[4];
-	P = new int[5];
-	sol.assign(4, 0);
-	for (int i = 0;i < 4;i++)
-	{
-		V[i] = new double[4];
-		A[i] = new double[4];
-		for (int j = 0;j < 4;j++)
-		{
-			V[i][j] = 0.0;
-			A[i][j] = 0.0;
-		}
-	}
-
-	Tol = 0.0000000001;
-	VandermondeMatrix(x, 3, V);
-
-	for (int i = 0;i < 4;i++)
-	{
-		for (int j = 0;j < 4;j++)
-		{
-			A[i][j] = V[i][j];
-		}
-	}
-
-	LUPDecompose(A, 4, Tol, P);
-	LUPSolve(A, P, y, 4, sol);
-
-	for (int i = 0;i < 4;i++)
-	{
-		a[i] = sol[i];
-	}
-
-	delete[] A;
-	delete[] V;
-	delete[] P;
-}
-
-//x = N+1 data points
-//N = order of polynomial
-//V = (N+1)*(N+1) Vandermonde matrix
-void VandermondeMatrix(double *x, int N, double **V)
-{
-	for (int i = 0;i < N + 1;i++)
-	{
-		for (int j = 0;j < N + 1;j++)
-		{
-			V[i][j] = pow(x[i], N - j);
-		}
-	}
-}
-
 int LUPDecompose(double **A, int N, double Tol, int *P)
 {
 
@@ -3324,6 +3264,66 @@ void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, double &
 
 	delete[] xx;
 	delete[] yy;
+}
+
+void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, int M, std::vector<double> &b)
+{
+	//INPUTS:
+	//x: Observed values of the independent variable
+	//y: Observed values of the dependent variable
+	//M: Order of the regression (2 = linear)
+	//OUTPUTS:
+	//b: Solution vector
+
+	int N;
+	
+	N = (int)x.size();
+	b.resize(M);
+
+	//Generate information matrix (M x M)
+	//allocate the array
+	double** ATA = new double*[M];
+	for (int i = 0; i < M; i++)
+		ATA[i] = new double[M];
+
+	int i, j, k;
+	for (i = 0; i < M; i++)
+	{
+		for (j = 0; j < M; j++)
+		{
+			ATA[i][j] = 0.0;
+			for (k = 0; k < N; k++)
+			{
+				ATA[i][j] = ATA[i][j] + pow(x[k], i + j);
+			}
+		}
+	}
+	//Generate the observation matrix (M x 1)
+	double* ATb = new double[M];
+	for (i = 0; i < M; i++)
+	{
+		ATb[i] = 0.0;
+		for (j = 0; j < N; j++)
+		{
+			ATb[i] = ATb[i] + y[j] * pow(x[j], i);
+		}
+	}
+
+	//Solve equations
+	int *PP = new int[M + 1];
+
+	if (OrbMech::LUPDecompose(ATA, M, 0.0, PP) == 0)
+	{
+		//return true;
+	}
+	OrbMech::LUPSolve(ATA, PP, ATb, M, b);
+	delete[] PP;
+
+	//deallocate the arrays
+	for (int i = 0; i < M; i++)
+		delete[] ATA[i];
+	delete[] ATA;
+	delete[] ATb;
 }
 
 double Sum(double *x, int N)

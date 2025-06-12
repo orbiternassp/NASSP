@@ -416,12 +416,13 @@ namespace OrbMech {
 	double fraction_pq(double x);
 	double fraction_xi(double x);
 	double LinearInterpolation(double x0, double y0, double x1, double y1, double x);
-	void CubicInterpolation(double *x, double *y, double *a);
-	void VandermondeMatrix(double *x, int N, double **V);
 	int LUPDecompose(double **A, int N, double Tol, int *P);
 	void LUPSolve(double **A, int *P, double *b, int N, std::vector<double> &x);
 	void LUPInvert(double **A, int *P, int N, double **IA);
+	//Linear function only
 	void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, double &b1, double &b2);
+	//General polynomial
+	void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, int M, std::vector<double> &b);
 	double Sum(double *x, int N);
 	double SumProd(double *x, double *y, int N);
 	double SumQuad(double *x, int N);

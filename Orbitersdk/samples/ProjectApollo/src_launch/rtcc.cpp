@@ -12169,65 +12169,6 @@ bool RTCC::PDIIgnitionAlgorithm(VehicleDataBlock sv, VECTOR3 R_LS, double TLAND,
 	return true;
 }
 
-void RTCC::Apollo11PoweredDescentAbortProgram(const Apollo11PDAPOpt &opt, Apollo11PDAPResults &res)
-{
-	PDAPOpt opt2;
-	PDAPResults res2;
-	double ABTCOF[8];
-	int i, j;
-
-	opt2.sv_CSM = opt.Common.sv_CSM;
-	opt2.sv_LM = opt.Common.sv_LM;
-	opt2.Version = 0; //Apollo 11 PDAP version
-	opt2.h_amin = opt.Common.h_amin*1852.0;
-	opt2.GMT_LAND = GMTfromGET(opt.Common.GET_LAND);
-	opt2.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-	opt2.DH_D = opt.Common.DH_D*1852.0;
-	opt2.dt_stage = 9999999.9; //DPS/APS abort
-
-	//Run it twice. once for P70 (DPS and APS), once for P71 (APS only)
-	for (i = 0; i < 2; i++)
-	{
-		PoweredDescentAbortProgram(opt2, res2);
-		if (res2.Error)
-		{
-			res.Error = res2.Error;
-			return;
-		}
-		//Save data
-		ABTCOF[i * 4 + 0] = res2.ABTCOF1;
-		ABTCOF[i * 4 + 1] = res2.ABTCOF2;
-		ABTCOF[i * 4 + 2] = res2.ABTCOF3;
-		ABTCOF[i * 4 + 3] = res2.ABTCOF4;
-		res.AGS_J7[i] = (int)(res2.J1 / 0.3048 / 100.0);
-		res.AGS_J8[i] = (int)(res2.A_min / 0.3048 / 100.0);
-		res.AGS_J9[i] = (int)(res2.A_max / 0.3048 / 100.0);
-		res.AGS_4K10[i] = OrbMech::DoubleToDEDA(res2.K1 / 0.3048*pow(2, -20), 14);
-
-		//Switch to staging at abort (APS only abort)
-		opt2.dt_stage = 0.0;
-	}
-
-	//Format Apollo 11 specific outputs
-	for (i = 0; i < 2; i++)
-	{
-		for (j = 0; j < 4; j++)
-		{
-			res.ABTCOF_METRIC[i * 4 + j] = ABTCOF[i * 4 + j] * pow(0.01, j);
-			res.ABTCOF_IMPERIAL[i * 4 + j] = ABTCOF[i * 4 + j] * 0.3048;
-		}
-	}
-	
-}
-
-void RTCC::Apollo12PoweredDescentAbortProgram(const Apollo12PDAPOpt &opt, Apollo12PDAPResults &res)
-{
-}
-
-void RTCC::Apollo13PoweredDescentAbortProgram(const Apollo12PDAPOpt &opt, Apollo13PDAPResults &res)
-{
-}
-
 //Based on NTRS 19740072723
 void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 {
@@ -12239,8 +12180,8 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 	VehicleDataBlock sv_I_guess, sv_IG, sv_D, sv_CSM_Ins, sv_LM_Ins, sv_Abort, sv_CAN, sv_CAN_apo, sv_CSM_Abort;
 	MATRIX3 Rot, Q_Xx, REFSMMAT;
 	VECTOR3 U_FDP, WI, W, R_LSP, U_FDP_abort, DV_CAN;
-	double t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, GMT_Ins, theta, r_Ins, A_Ins, GMT_CSI;
-	double SLOPE, dV_Inc, dh_apo, w_M, GMT_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo, t_go_abort, RY, RZ, WDOT;
+	double r_LS, t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, GMT_Ins, theta, r_Ins, A_Ins, GMT_CSI;
+	double SLOPE, dV_Inc, dh_apo, w_M, GMT_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo, t_go_abort, RY, RZ, WDOT, dt_step;
 	int K_loop, I_SMAX;
 	bool K_stage; //false = staging has not happened yet, true = staging has happened
 	bool K3; //falg that indicates which set of J,K is being determined; false indidcates that the first set is being determined
@@ -12253,6 +12194,7 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 	std::vector<double> Phase_Table;
 	std::vector<double> A_ins_Table;
 	int i = 0;
+	char Buffer[128];
 
 	//Program constants
 	w_M = 2.66169948e-6;
@@ -12263,6 +12205,9 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 	conopt.K_CDH = 0;
 	conopt.h_min = -OrbMech::R_Moon;
 
+	//Calculation constants
+	r_LS = length(opt.R_LS);
+
 	//Set initial values
 	dt_CAN = opt.dt_CAN;
 	dt_abort = opt.dt_step;
@@ -12271,6 +12216,7 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 	K3 = false;
 	DV_CAN = opt.DV_CAN;
 	I_SMAX = opt.I_SMAX;
+	dt_step = opt.dt_step;
 
 	sv_I_guess = coast(opt.sv_LM, opt.GMT_LAND - opt.sv_LM.sv.GMT);
 	if (!PDIIgnitionAlgorithm(sv_I_guess, opt.R_LS, opt.GMT_LAND, sv_IG, t_go, CR, U_FDP, REFSMMAT))
@@ -12294,10 +12240,10 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 	U_FDP_abort = tmul(REFSMMAT, unit(U_FDP));
 
 	//Calculate constant outputs
-	res.A_min = (length(R_LSP)*2.0 + opt.h_DINS + opt.h_amin) / 2.0;
+	res.A_min = (r_LS*2.0 + opt.h_DINS + opt.h_amin) / 2.0;
 	res.A_max = 7031200.0*0.3048; //TBD: How is this determined?
-	res.R_amin = length(opt.R_LS) + opt.h_amin;
-	r_Ins = length(R_LSP) + opt.h_DINS;
+	res.R_amin = r_LS + opt.h_amin;
+	r_Ins = r_LS + opt.h_DINS;
 	A_Ins = (r_Ins + res.R_amin) / 2.0;
 	res.v_hmin = sqrt(OrbMech::mu_Moon*(2.0 / r_Ins - 1.0 / A_Ins));
 
@@ -12349,7 +12295,7 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 		{
 			//Initialize ascent
 			sv_D = sv_Abort;
-			ascguid.Init(opt.sv_CSM.sv.R, opt.sv_CSM.sv.V, W_TD, length(opt.R_LS), Z_D_dot, R_D_dot, false);
+			ascguid.Init(opt.sv_CSM.sv.R, opt.sv_CSM.sv.V, W_TD, r_LS, Z_D_dot, R_D_dot, false);
 			t = t_D;
 			t_go = dt_abort;
 			W_TA = W_TD;
@@ -12448,7 +12394,10 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 			return;
 		}
 
-		if (opt.Version == 0)
+		sprintf(Buffer, "DT %lf VH %lf Alt %lf", dt_abort, Z_D_dot / 0.3048, (r_Ins - r_LS) / 0.3048);
+		oapiWriteLog(Buffer);
+
+		if (opt.IsTwoSegment == false)
 		{
 			//Apollo 11 only
 			t_Abort_Table.push_back(dt_abort);
@@ -12456,15 +12405,9 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 			Phase_Table.push_back(theta);
 			A_ins_Table.push_back(A_Ins);
 			theta_apo = theta_D;
-			dt_abort += opt.dt_step;
+			dt_abort += dt_step;
 
-			if (R_a < res.R_amin)
-			{
-				//Get limiting velocity by interpolation
-			}
-
-				R_a_apo = R_a;
-
+			//Limit horizontal velocity
 			if (Z_D_dot <= res.v_hmin)
 			{
 				stop = true;
@@ -12506,8 +12449,7 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 						res.Theta_LIM = theta_apo + (theta_D - theta_apo) / (R_a - R_a_apo)*(res.R_amin - R_a_apo);
 					}
 
-					char Buffer[128];
-					sprintf(Buffer, "Theta_LIM %lf DEG", res.Theta_LIM*DEG);
+					sprintf(Buffer, "Theta_LIM %lf", res.Theta_LIM*DEG);
 					oapiWriteLog(Buffer);
 
 					K_loop = 0;
@@ -12515,6 +12457,7 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 					dt_CSI = opt.dt_2CSI;
 					dt_CAN = opt.dt_2CAN;
 					DV_CAN = opt.DV_2CAN;
+					dt_step = opt.dt_2step;
 					I_SMAX = (int)Phase_Table.size();
 					skip = true;
 				}
@@ -12531,15 +12474,11 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 			}
 			if (skip == false)
 			{
-				char Buffer[128];
-				sprintf(Buffer, "dt_abort %lf s Z_D_dot %lf ft/s theta %lf DEG", dt_abort, Z_D_dot/0.3048, theta*DEG);
-				oapiWriteLog(Buffer);
-
 				Phase_Table.push_back(theta);
 				A_ins_Table.push_back(A_Ins);
 				theta_apo = theta_D;
 				R_a_apo = R_a;
-				dt_abort += opt.dt_step;
+				dt_abort += dt_step;
 			}
 			if (Phase_Table.size() >= (unsigned)I_SMAX)
 			{
@@ -12573,25 +12512,38 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 	} while (stop == false);
 
 	//If we use the two segment logic, then everything has already been calculated
-	if (opt.Version != 0) return;
+	if (opt.IsTwoSegment) return;
 
-	//Apollo 11: First 4 solutions from T vs. V_H table for cubic function
+	//Apollo 11: Required at least 4 solutions for the polynomial
 	if (dV_Abort_Table.size() < 4)
 	{
 		res.Error = 5; //Insufficient data for curve fit
 		return;
 	}
 
-	double t_Abort[4] = { t_Abort_Table[0], t_Abort_Table[1] , t_Abort_Table[2] , t_Abort_Table[3] };
-	double dV_Abort[4] = { dV_Abort_Table[0], dV_Abort_Table[1] , dV_Abort_Table[2] , dV_Abort_Table[3] };
-	double coeff[4];
-	OrbMech::CubicInterpolation(t_Abort, dV_Abort, coeff);
+	//Convert arrays to units of Earth radii and hours because it prevents running into numerical issues
+	std::vector<double> t_Abort_Table2, dV_Abort_Table2, coeff;
 
-	res.ABTCOF1 = coeff[0];
-	res.ABTCOF2 = coeff[1];
-	res.ABTCOF3 = coeff[2];
-	res.ABTCOF4 = coeff[3];
+	for (unsigned i = 0; i < t_Abort_Table.size(); i++)
+	{
+		t_Abort_Table2.push_back(t_Abort_Table[i] / 3600.0);
+		dV_Abort_Table2.push_back(dV_Abort_Table[i] * 3600.0 / 6378165.0);
+	}
+	//Linear least squares
+	OrbMech::LinearLeastSquares(t_Abort_Table2, dV_Abort_Table2, 4, coeff);
 
+	//Change back scaling
+	for (unsigned i = 0; i < coeff.size(); i++)
+	{
+		coeff[i] *= 6378165.0*pow(1.0 / 3600.0, i + 1);
+	}
+
+	res.ABTCOF1 = coeff[3];
+	res.ABTCOF2 = coeff[2];
+	res.ABTCOF3 = coeff[1];
+	res.ABTCOF4 = coeff[0];
+
+	//Least squares for AGS constants
 	OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.K1, res.J1);
 	return;
 }
@@ -16343,7 +16295,7 @@ int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 
 	aux.DV_cTO = 0.0;
 	aux.DV_TO = 0.0;
 	aux.DV_U = 0.0;
-	aux.MainFuelUsed = asc_out.m1 - in.m0;
+	aux.MainFuelUsed = in.m0 - asc_out.m1;
 	aux.P_G = 0.0;
 	aux.RCSFuelUsed = 0.0;
 	aux.CSI = 2;

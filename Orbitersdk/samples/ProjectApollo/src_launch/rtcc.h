@@ -830,38 +830,14 @@ struct SPQOpt //Coelliptic Sequence Processor
 	double dt_min = 10.0*60.0;
 };
 
-struct CommonPDAPOpt
-{
-	//State vectors
-	VehicleDataBlock sv_CSM;
-	VehicleDataBlock sv_LM;
-	//Minimum apogee altitude limit for the insertion orbit; reference from the landing site radius, in nautical miles
-	double h_amin = 30.0;
-	//Nominal time of landing
-	double GET_LAND;
-	//Desired altitude differential between the LM and CSM orbits at CDH, in nautical miles
-	double DH_D = 15.0;
-};
-
-struct Apollo11PDAPOpt
-{
-	CommonPDAPOpt Common;
-};
-
-struct Apollo12PDAPOpt
-{
-	CommonPDAPOpt Common;
-};
-
 struct PDAPOpt //Powered Descent Abort Program
 {
 	//State vectors
 	VehicleDataBlock sv_CSM;
 	VehicleDataBlock sv_LM;
 
-	//0 = Apollo 11 (polynomial), 1 = Apollo 12 (PGNS has two segments, AGS only one), 2 = Apollo 13+ (PGNS and AGS with two segments)
-	int Version = 0;
-
+	//One or two segments (Apollo 11 style vs. all later missions)
+	bool IsTwoSegment = false;
 	//Minimum apogee altitude limit for the insertion orbit; reference from the landing site radius
 	double h_amin = 30.0*1852.0;
 	//Nominal time of landing
@@ -892,9 +868,9 @@ struct PDAPOpt //Powered Descent Abort Program
 	//DT between PDI and staging time
 	double dt_stage = 0.0;
 	//DT between successive abort points
-	double dt_step;
+	double dt_step = 20.0;
 	//value of dt_step used to generate the second set of targeting coefficients
-	double dt_2step;
+	double dt_2step = 20.0;
 	//LVLH components of the canned maneuver
 	VECTOR3 DV_CAN = _V(10.0*0.3048, 0, 0);
 	//value of DV_CSN used to generate the second set of targeting coefficients
@@ -908,32 +884,6 @@ struct PDAPOpt //Powered Descent Abort Program
 	double theta_TARG = -13.5*RAD;
 	//Maximum number of abort cases to process
 	int I_SMAX = 100;
-};
-
-struct Apollo11PDAPResults
-{
-	double ABTCOF_METRIC[8]; //M, CS
-	double ABTCOF_IMPERIAL[8]; //FT, S
-	double VHMIN_METRIC;
-	double VHMIN_IMPERIAL;
-	//For DPS and APS
-	int AGS_J7[2];
-	int AGS_J8[2];
-	int AGS_J9[2];
-	int AGS_4K10[2];
-	//Error code. 0 = no error, 1 = Ignition algorithm failure, 2 = CSI maneuver calculation failure, 3 = Failure to converge on insertion velocity
-	//4 = Insufficient data to calculate phase switch, 5 = Insufficient data for curve fit
-	int Error = 0;
-};
-
-struct Apollo12PDAPResults
-{
-
-};
-
-struct Apollo13PDAPResults
-{
-
 };
 
 struct PDAPResults
@@ -955,9 +905,9 @@ struct PDAPResults
 	double A_max = 0.0;
 	//Insertion velocity associated with R_amin, m/s
 	double v_hmin = 0.0;
-	//Slope of semi-major axis in first segment, m/rad. 4K10 (AGS address 227)
+	//Slope of semi-major axis in first segment, m/rad. 4K10 (AGS address 227 in FP6, address 662 in FP7+)
 	double K1 = 0.0;
-	//Slope of semi-major axis in second segment
+	//Slope of semi-major axis in second segment. 11J (AGS address 673)
 	double K2 = 0.0;
 	//Term in LM desired semi-major axis. J1PARM in LGC, 7J (address 224) in AGS, meters
 	double J1 = 0.0;
@@ -2617,9 +2567,6 @@ public:
 	//Apsides Determination Subroutine
 	int PMMAPD(AEGHeader Header, AEGDataBlock Z, int KAOP, int KE, double *INFO, AEGDataBlock *sv_A, AEGDataBlock *sv_P);
 	bool PDIIgnitionAlgorithm(VehicleDataBlock sv, VECTOR3 R_LS, double TLAND, VehicleDataBlock &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
-	void Apollo11PoweredDescentAbortProgram(const Apollo11PDAPOpt &opt, Apollo11PDAPResults &res);
-	void Apollo12PoweredDescentAbortProgram(const Apollo12PDAPOpt &opt, Apollo12PDAPResults &res);
-	void Apollo13PoweredDescentAbortProgram(const Apollo12PDAPOpt &opt, Apollo13PDAPResults &res);
 	void PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, bool cmc);
 	bool CalculateAGSKFactor(agc_t *agc, ags_t *aea, double &KFactor);
