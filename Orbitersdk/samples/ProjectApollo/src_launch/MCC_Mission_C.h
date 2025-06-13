@@ -138,7 +138,6 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY10STATE3	162
 #define MST_C_DAY10STATE4	163
 #define MST_C_DAY10STATE5	164
-#define MST_C_DAY10STATE6	165
 
 // SPECIAL
 #define MST_C_ABORT			175
