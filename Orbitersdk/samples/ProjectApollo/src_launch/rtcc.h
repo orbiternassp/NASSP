@@ -2307,6 +2307,7 @@ struct RTEDigitalSolutionTable
 	bool HeadsUpDownIndicator = false;
 	int ConfigurationChangeIndicator = 0;
 	int EndConfiguration = 0;
+	double DockingAngle = 0.0;
 };
 
 struct ELVCTRInputTable
@@ -2497,6 +2498,8 @@ public:
 		EphemerisData sv_Ins;
 		//LM mass at insertion
 		double m1;
+		//Error codes. 0 = no error, 2 = weight is below minimum allowed
+		int ErrorCode;
 	};
 
 	void LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscentProcessorOutputs &out);

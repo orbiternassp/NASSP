@@ -408,6 +408,8 @@ struct RTCCSystemParameters
 		MCVTB2 = 1.0;
 		MCVDTM = 2.0;
 		MCCRAM = 0.5;
+		MCVCWT = 19246.4*0.45359237;
+		MCVLWT = 3828.0*0.45359237;
 
 		MCTCT1 = 196.6 * 4.4482216152605;
 		MCTCT2 = 393.2 * 4.4482216152605;
@@ -1008,6 +1010,10 @@ struct RTCCSystemParameters
 	double MCVDTM;
 	//Converts RHO*AREA/MASS to .5 RHO*AREA/MASS in Er. (eventually in Er at least...)
 	double MCCRAM;
+	//CSM limiting weight for fuel exhaustion test (0.8 of dry weight)
+	double MCVCWT;
+	//LM limiting weight for fuel exhaustion test
+	double MCVLWT;
 
 	//Thrust of CSM RCS+X (2 quads)
 	double MCTCT1;
