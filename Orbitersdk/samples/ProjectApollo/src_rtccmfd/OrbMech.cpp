@@ -3395,11 +3395,12 @@ int DoubleToBuffer(double x, double q, int m)
 
 int DoubleToDEDA(double x, double q)
 {
+	//TBD: THIS FUNCTION IS BAD, REPLACE!
 	int c = 0, out = 0, f = 1;
 
 	x = x * (268435456.0 / pow(2.0, fabs(q)));
 
-	c = 0x3FFF & ((int)fabs(x));
+	c = 0x7FFF & ((int)fabs(x)); //TBD: CHECK THIS
 
 	if (x<0.0) c = 0x7FFF & (~c) + 1; // Polarity change
 
@@ -3423,6 +3424,54 @@ int AEAToSigned(int val)
 double AEAToDouble(int val, int SF)
 {
 	return pow(2, SF)*(double)(AEAToSigned(val));
+}
+
+int AEAToDEDA(int val)
+{
+	//Input is value in AEA format. Output is signed DEDA value with reduced precision
+	int val2;
+	if (val >= 0400000)
+		val2 = -((val - 0400000) >> 2);
+	else
+		val2 = val >> 2;
+	return val2;
+}
+
+int DoubleToAEA(double x, int q)
+{
+	//Conversion of scaled double value to AEA memory format
+	int val, val2;
+
+	val = static_cast<int>(round(x * pow(2, 17 - q)));
+	if (val < 0)
+		val2 = 01000000 - abs(val);
+	else
+		val2 = val;
+	return val2;
+}
+
+int DoubleToDEDA2(double x, int q)
+{
+	//Conversion of scaled double value to DEDA (octal) format
+	int val, val2;
+
+	val = DoubleToAEA(x, q);
+	val2 = AEAToDEDA(val);
+	return DecimalToOctal(val2);
+}
+
+int DecimalToOctal(int x)
+{
+	int c, out = 0, f = 1;
+
+	c = abs(x);
+
+	while (c != 0) {
+		out += (c & 7) * f;
+		f *= 10;	c = c >> 3;
+	}
+	if (x < 0.0) out = -out;
+	return out;
 }
 
 double DecToDouble(int dec1, int dec2)

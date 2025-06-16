@@ -329,6 +329,11 @@ namespace OrbMech {
 	int DoubleToDEDA(double x, double q);
 	int AEAToSigned(int val);
 	double AEAToDouble(int val, int SF);
+	int AEAToDEDA(int val);
+	int DoubleToAEA(double x, int q);
+	int DoubleToDEDA2(double x, int q);
+	int DecimalToOctal(int x);
+
 	double cot(double a);
 	double sec(double a);
 	void fabs_vektor(double* vektor, int n);

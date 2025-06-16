@@ -164,6 +164,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	DEDA225 = 0;
 	DEDA226 = 0;
 	DEDA227 = 0;
+	DEDA305 = 0;
 	DEDA662 = 0;
 	DEDA673 = 0;
 
@@ -4151,6 +4152,7 @@ int ARCore::subThread()
 				GC->DEDA225 = (int)(res.A_min / 0.3048 / 100.0);
 				GC->DEDA226 = (int)(res.A_max / 0.3048 / 100.0);
 				GC->DEDA227 = (int)(res.K1 / 0.3048 / 100.0*pow(2, 3));
+				GC->DEDA305 = 0;
 				GC->DEDA662 = 0;
 				GC->DEDA673 = 0;
 			}
@@ -4158,11 +4160,12 @@ int ARCore::subThread()
 			{
 				//FP7+
 				GC->DEDA224 = (int)(res.J1 / 0.3048 / 100.0);
-				GC->DEDA225 = (int)(res.A_min / 0.3048 / 100.0);
+				GC->DEDA225 = (int)(res.A_min / 0.3048 / 100.0 / 2.0); //One half of SMA
 				GC->DEDA226 = (int)(res.J2 / 0.3048 / 100.0);
 				GC->DEDA227 = 0;
-				GC->DEDA662 = OrbMech::DoubleToDEDA(res.K1 / 0.3048*pow(2, -20), 14);
-				GC->DEDA673 = OrbMech::DoubleToDEDA(res.K2 / 0.3048*pow(2, -20), 14);
+				GC->DEDA305 = (int)(GC->PDAP_Theta_LIM*DEG*100.0);
+				GC->DEDA662 = OrbMech::DoubleToDEDA2(res.K1 / 0.3048, 20);
+				GC->DEDA673 = OrbMech::DoubleToDEDA2(res.K2 / 0.3048, 20);
 			}
 		}
 

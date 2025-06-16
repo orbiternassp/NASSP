@@ -12189,6 +12189,7 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 	bool InsertionFlag = false;
 	bool stop = false;
 	bool skip;
+	bool ROTFLAG; //true = impose initial rotation through positive radius vector, false = shortest rotation
 	std::vector<double> t_Abort_Table;
 	std::vector<double> dV_Abort_Table;
 	std::vector<double> Phase_Table;
@@ -12296,6 +12297,7 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 			//Initialize ascent
 			sv_D = sv_Abort;
 			ascguid.Init(opt.sv_CSM.sv.R, opt.sv_CSM.sv.V, W_TD, r_LS, Z_D_dot, R_D_dot, false);
+			ROTFLAG = true;
 			t = t_D;
 			t_go = dt_abort;
 			W_TA = W_TD;
@@ -12327,11 +12329,17 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 					GIMGBL(0.0, W_TA, RY, RZ, T, WDOT, RTCC_ENGINETYPE_LMDPS, 12, 0, 0, 0.0);
 				}
 				ascguid.Guidance(sv_D.sv.R, sv_D.sv.V, W_TA, T, t, U_FDP, t_go);
-				if (dotp(U_FDP, integ.GetCurrentTD()) < 0)
+				//Initial rotation logic
+				if (ROTFLAG)
 				{
-					if (acos(dotp(integ.GetCurrentTD(), unit(sv_D.sv.R))) > 30.0*RAD)
+					//Current thrust direction not within 90 degrees of desired and not within 30 degrees of radius vector
+					if (dotp(U_FDP, integ.GetCurrentTD()) < 0 && acos(dotp(integ.GetCurrentTD(), unit(sv_D.sv.R))) > 30.0*RAD)
 					{
 						U_FDP = unit(sv_D.sv.R);
+					}
+					else
+					{
+						ROTFLAG = false;
 					}
 				}
 				InsertionFlag = integ.Integration(sv_D.sv.R, sv_D.sv.V, W_TA, t, U_FDP, t_go, T, T / WDOT);

@@ -1097,7 +1097,7 @@ void ApolloRTCCMFD::menuSetLMAscentPADPage()
 void ApolloRTCCMFD::menuSetPDAPPage()
 {
 	marker = 0;
-	markermax = 15;
+	markermax = 17;
 	subscreen = 0;
 	subscreenmax = 1;
 	SelectPage(40);
@@ -8135,40 +8135,46 @@ void ApolloRTCCMFD::menuSetPDAPInputs()
 		GenericDoubleInput(&GC->PDAPOptions.DH_D, "Desired altitude differential between the LM and CSM orbits at CDH:", 1852.0);
 		break;
 	case 6:
-		GenericDoubleInput(&GC->PDAPOptions.dt_CAN, "DT between orbit insertion and the canned maneuver:", 60.0);
+		GC->PDAPOptions.K4 = !GC->PDAPOptions.K4;
 		break;
 	case 7:
-		GenericVectorInput(&GC->PDAPOptions.DV_CAN, "DV of the canned maneuver:", 0.3048);
+		GenericDoubleInput(&GC->PDAPOptions.theta_TARG, "Phase angle at insertion used to determine the end of the first segment:", RAD);
 		break;
 	case 8:
-		GenericDoubleInput(&GC->PDAPOptions.dt_CSI, "DT between the canned maneuver and CSI:", 60.0);
+		GenericDoubleInput(&GC->PDAPOptions.dt_CAN, "DT between orbit insertion and the canned maneuver:", 60.0);
 		break;
 	case 9:
-		GenericGETInput(&GC->PDAPOptions.GMT_TPI, "TPI time used to generate the first set of targeting coefficients:");
+		GenericVectorInput(&GC->PDAPOptions.DV_CAN, "DV of the canned maneuver:", 0.3048);
 		break;
 	case 10:
-		GenericDoubleInput(&GC->PDAPOptions.dt_2CAN, "Value of DTCAN used to generate the second set of targeting coefficients:", 60.0);
+		GenericDoubleInput(&GC->PDAPOptions.dt_CSI, "DT between the canned maneuver and CSI:", 60.0);
 		break;
 	case 11:
-		GenericVectorInput(&GC->PDAPOptions.DV_2CAN, "Value of DVCAN used to generate the second set of targeting coefficients:", 0.3048);
+		GenericGETInput(&GC->PDAPOptions.GMT_TPI, "TPI time used to generate the first set of targeting coefficients:");
 		break;
 	case 12:
-		GenericDoubleInput(&GC->PDAPOptions.dt_2CSI, "Value of DTCSI used to generate the second set of targeting coefficients:", 60.0);
+		GenericDoubleInput(&GC->PDAPOptions.dt_2CAN, "Value of DTCAN used to generate the second set of targeting coefficients:", 60.0);
 		break;
 	case 13:
-		GenericGETInput(&GC->PDAPOptions.GMT_2TPI, "TPI time used to generate the second set of targeting coefficients:");
+		GenericVectorInput(&GC->PDAPOptions.DV_2CAN, "Value of DVCAN used to generate the second set of targeting coefficients:", 0.3048);
 		break;
 	case 14:
-
-		bool PDAP_WTDRY_Input(void* id, char *str, void *data);
-		oapiOpenInputBox("LM weight representative of DPS fuel depletion (leave blank to auto detect):", PDAP_WTDRY_Input, 0, 20, (void*)this);
-
-		//GenericDoubleInput(&GC->PDAPOptions.W_TDRY, "LM weight representative of DPS fuel depletion (leave blank to auto detect):", LBS2KG);
+		GenericDoubleInput(&GC->PDAPOptions.dt_2CSI, "Value of DTCSI used to generate the second set of targeting coefficients:", 60.0);
 		break;
 	case 15:
+		GenericGETInput(&GC->PDAPOptions.GMT_2TPI, "TPI time used to generate the second set of targeting coefficients:");
+		break;
+	case 16:
+	{
+		bool PDAP_WTDRY_Input(void* id, char *str, void *data);
+		oapiOpenInputBox("LM weight representative of DPS fuel depletion (leave blank to auto detect):", PDAP_WTDRY_Input, 0, 20, (void*)this);
+	}
+		break;
+	case 17:
+	{
 		bool PDAP_WTAPS_Input(void* id, char *str, void *data);
 		oapiOpenInputBox("LM vehicle weight immediately after staging (leave blank to auto detect):", PDAP_WTAPS_Input, 0, 20, (void*)this);
-		//GenericDoubleInput(&GC->PDAPOptions.W_TAPS, "LM vehicle weight immediately after staging (leave blank to auto detect):", LBS2KG);
+	}
 		break;
 	}
 }

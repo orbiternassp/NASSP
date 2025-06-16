@@ -3054,8 +3054,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			else
 			{
-				PrintCSMVessel(Buffer);
-				Text(skp, x, y, Buffer);
+				Text(skp, x, y, "CSM:");
+				PrintCSMVessel(Buffer, false);
+				Text(skp, x + dx, y, Buffer);
 			}
 			y++;
 			if (GC->MissionPlanningActive)
@@ -3065,8 +3066,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			else
 			{
-				PrintLMVessel(Buffer);
-				Text(skp, x, y, Buffer);
+				Text(skp, x, y, "LM:");
+				PrintLMVessel(Buffer, false);
+				Text(skp, x + dx, y, Buffer);
 			}
 			y++;
 			Text(skp, x, y, "HAMIN:");
@@ -3075,6 +3077,20 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, x, y, "DH:");
 			Text(skp, x + dx, y, "%.1lf NM", GC->PDAPOptions.DH_D / 1852.0);
 			y++;
+			if (GC->PDAPVersion != 0)
+			{
+				Text(skp, x, y, "K4:");
+				if (GC->PDAPOptions.K4) Text(skp, x + dx, y, "First segment phase angle limit");
+				else Text(skp, x + dx, y, "First segment apolune limit");
+				y++;
+				if (GC->PDAPOptions.K4)
+				{
+					Text(skp, x, y, "PHA:");
+					Text(skp, x + dx, y, "%.2lf deg", GC->PDAPOptions.theta_TARG*DEG);
+				}
+				y++;
+			}
+			else y += 2;
 			Text(skp, x, y, "DTCAN:");
 			Text(skp, x + dx, y, "%.1lf min", GC->PDAPOptions.dt_CAN / 60.0);
 			y++;
@@ -3172,7 +3188,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			else
 			{
-				Text(skp, 10, 5, "OCT1  OCT2  DIG");
+				Text(skp, 7, 5, "OCT1  OCT2     DIG");
 				Text(skp, 1, 6, "J1");
 				Text(skp, 1, 7, "K1");
 				Text(skp, 1, 8, "J2");
@@ -3192,7 +3208,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				Text(skp, 22, 7, "%.4f NM/DEG", GC->PDAP_K1 / 1852.0 / DEG);
 				Text(skp, 22, 8, "%.4f NM", GC->PDAP_J2 / 1852.0);
 				Text(skp, 22, 9, "%.4f NM/DEG", GC->PDAP_K2 / 1852.0 / DEG);
-				Text(skp, 22, 10, "%.4f°", GC->PDAP_Theta_LIM*DEG);
+				Text(skp, 22, 10, "%.4f DEG", GC->PDAP_Theta_LIM*DEG);
 				Text(skp, 22, 11, "%.4f NM", GC->PDAP_R_amin / 1852.0);
 			}
 			Text(skp, 18, 16, "AGS COMMAND LOAD");
@@ -3215,21 +3231,24 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				Text(skp, 7, 21, "227", 3);
 				Text(skp, 12, 21, "%+06d", GC->DEDA227);
 				Text(skp, 22, 21, "%.4f NM/DEG", GC->PDAP_K1 / 1852.0 / DEG);
-
 			}
 			else
 			{
 				//FP7+
 				Text(skp, 1, 20, "J10");
 				Text(skp, 22, 20, "%.4f NM", GC->PDAP_J2 / 1852.0);
-				Text(skp, 1, 21, "K410");
-				Text(skp, 7, 21, "662", 3);
-				Text(skp, 12, 21, "%+06d", GC->DEDA662);
-				Text(skp, 22, 21, "%.4f NM/DEG", GC->PDAP_K1 / 1852.0 / DEG);
-				Text(skp, 1, 22, "J11");
-				Text(skp, 7, 22, "673", 3);
-				Text(skp, 12, 22, "%+06d", GC->DEDA673);
-				Text(skp, 22, 22, "%.4f NM/DEG", GC->PDAP_K2 / 1852.0 / DEG);
+				Text(skp, 1, 21, "J12");
+				Text(skp, 7, 21, "305", 3);
+				Text(skp, 12, 21, "%+06d", GC->DEDA305);
+				Text(skp, 22, 21, "%.4f DEG", GC->PDAP_Theta_LIM*DEG);
+				Text(skp, 1, 22, "K410");
+				Text(skp, 7, 22, "662", 3);
+				Text(skp, 12, 22, "%+06d", GC->DEDA662);
+				Text(skp, 22, 22, "%.4f NM/DEG", GC->PDAP_K1 / 1852.0 / DEG);
+				Text(skp, 1, 23, "J11");
+				Text(skp, 7, 23, "673", 3);
+				Text(skp, 12, 23, "%+06d", GC->DEDA673);
+				Text(skp, 22, 23, "%.4f NM/DEG", GC->PDAP_K2 / 1852.0 / DEG);
 			}
 
 			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
