@@ -3212,7 +3212,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				Text(skp, 22, 11, "%.4f NM", GC->PDAP_R_amin / 1852.0);
 			}
 			Text(skp, 18, 16, "AGS COMMAND LOAD");
-			Text(skp, 7, 5, "ADD   DEDA     DIG");
+			Text(skp, 7, 18, "ADD   DEDA     DIG");
 			Text(skp, 1, 19, "J7");
 			Text(skp, 7, 19, "224", 3);
 			Text(skp, 12, 19, "%+06d", GC->DEDA224);
@@ -3252,10 +3252,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				Text(skp, 22, 24, "%.4f NM/DEG", GC->PDAP_K2 / 1852.0 / DEG);
 			}
 
-			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 			if (IsBusy(G->subThreadStatus))
 			{
-				skp->Text(W - CW * 15, CH * 31, "Calculating...", 14);
+				skp->Text(CW, CH * 31, "Calculating...", 14);
 			}
 			else if (GC->PDAP_ErrorCode)
 			{
