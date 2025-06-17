@@ -3393,25 +3393,6 @@ int DoubleToBuffer(double x, double q, int m)
 	return out;
 }
 
-int DoubleToDEDA(double x, double q)
-{
-	//TBD: THIS FUNCTION IS BAD, REPLACE!
-	int c = 0, out = 0, f = 1;
-
-	x = x * (268435456.0 / pow(2.0, fabs(q)));
-
-	c = 0x7FFF & ((int)fabs(x)); //TBD: CHECK THIS
-
-	if (x<0.0) c = 0x7FFF & (~c) + 1; // Polarity change
-
-	while (c != 0) {
-		out += (c & 7) * f;
-		f *= 10;	c = c >> 3;
-	}
-	if (x < 0.0) out = -out;
-	return out;
-}
-
 int AEAToSigned(int val)
 {
 	if (val >= 0400000)
@@ -3450,7 +3431,7 @@ int DoubleToAEA(double x, int q)
 	return val2;
 }
 
-int DoubleToDEDA2(double x, int q)
+int DoubleToDEDA(double x, int q)
 {
 	//Conversion of scaled double value to DEDA (octal) format
 	int val, val2;

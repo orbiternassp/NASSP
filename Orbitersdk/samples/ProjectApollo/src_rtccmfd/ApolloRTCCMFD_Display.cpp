@@ -3212,43 +3212,44 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				Text(skp, 22, 11, "%.4f NM", GC->PDAP_R_amin / 1852.0);
 			}
 			Text(skp, 18, 16, "AGS COMMAND LOAD");
-			Text(skp, 1, 18, "J7");
-			Text(skp, 7, 18, "224", 3);
-			Text(skp, 12, 18, "%+06d", GC->DEDA224);
-			Text(skp, 22, 18, "%.4f NM", GC->PDAP_J1 / 1852.0);
-			Text(skp, 1, 19, "J8");
-			Text(skp, 7, 19, "225", 3);
-			Text(skp, 12, 19, "%+06d", GC->DEDA225);
-			Text(skp, 22, 19, "%.4f NM", GC->PDAP_A_min / 1852.0);
-			Text(skp, 7, 20, "226", 3);
-			Text(skp, 12, 20, "%+06d", GC->DEDA226);
+			Text(skp, 7, 5, "ADD   DEDA     DIG");
+			Text(skp, 1, 19, "J7");
+			Text(skp, 7, 19, "224", 3);
+			Text(skp, 12, 19, "%+06d", GC->DEDA224);
+			Text(skp, 22, 19, "%.4f NM", GC->PDAP_J1 / 1852.0);
+			Text(skp, 1, 20, "J8");
+			Text(skp, 7, 20, "225", 3);
+			Text(skp, 12, 20, "%+06d", GC->DEDA225);
+			Text(skp, 22, 20, "%.4f NM", GC->PDAP_A_min / 1852.0);
+			Text(skp, 7, 21, "226", 3);
+			Text(skp, 12, 21, "%+06d", GC->DEDA226);
 			if (GC->PDAPVersion != 2)
 			{
 				//FP6
-				Text(skp, 1, 20, "J9");
-				Text(skp, 22, 20, "%.4f NM", GC->PDAP_A_max / 1852.0);
-				Text(skp, 1, 21, "K410");
-				Text(skp, 7, 21, "227", 3);
-				Text(skp, 12, 21, "%+06d", GC->DEDA227);
-				Text(skp, 22, 21, "%.4f NM/DEG", GC->PDAP_K1 / 1852.0 / DEG);
+				Text(skp, 1, 21, "J9");
+				Text(skp, 22, 21, "%.4f NM", GC->PDAP_A_max / 1852.0);
+				Text(skp, 1, 22, "K410");
+				Text(skp, 7, 22, "227", 3);
+				Text(skp, 12, 22, "%+06d", GC->DEDA227);
+				Text(skp, 22, 22, "%.4f NM/DEG", GC->PDAP_K1 / 1852.0 / DEG);
 			}
 			else
 			{
 				//FP7+
-				Text(skp, 1, 20, "J10");
-				Text(skp, 22, 20, "%.4f NM", GC->PDAP_J2 / 1852.0);
-				Text(skp, 1, 21, "J12");
-				Text(skp, 7, 21, "305", 3);
-				Text(skp, 12, 21, "%+06d", GC->DEDA305);
-				Text(skp, 22, 21, "%.4f DEG", GC->PDAP_Theta_LIM*DEG);
-				Text(skp, 1, 22, "K410");
-				Text(skp, 7, 22, "662", 3);
-				Text(skp, 12, 22, "%+06d", GC->DEDA662);
-				Text(skp, 22, 22, "%.4f NM/DEG", GC->PDAP_K1 / 1852.0 / DEG);
-				Text(skp, 1, 23, "J11");
-				Text(skp, 7, 23, "673", 3);
-				Text(skp, 12, 23, "%+06d", GC->DEDA673);
-				Text(skp, 22, 23, "%.4f NM/DEG", GC->PDAP_K2 / 1852.0 / DEG);
+				Text(skp, 1, 21, "J10");
+				Text(skp, 22, 21, "%.4f NM", GC->PDAP_J2 / 1852.0);
+				Text(skp, 1, 22, "J12");
+				Text(skp, 7, 22, "305", 3);
+				Text(skp, 12, 22, "%+06d", GC->DEDA305);
+				Text(skp, 22, 22, "%.4f DEG", GC->PDAP_Theta_LIM*DEG);
+				Text(skp, 1, 23, "K410");
+				Text(skp, 7, 23, "662", 3);
+				Text(skp, 12, 23, "%+06d", GC->DEDA662);
+				Text(skp, 22, 23, "%.4f NM/DEG", GC->PDAP_K1 / 1852.0 / DEG);
+				Text(skp, 1, 24, "J11");
+				Text(skp, 7, 24, "673", 3);
+				Text(skp, 12, 24, "%+06d", GC->DEDA673);
+				Text(skp, 22, 24, "%.4f NM/DEG", GC->PDAP_K2 / 1852.0 / DEG);
 			}
 
 			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
@@ -3256,9 +3257,30 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			{
 				skp->Text(W - CW * 15, CH * 31, "Calculating...", 14);
 			}
-			else if (!G->PADSolGood)
+			else if (GC->PDAP_ErrorCode)
 			{
-				skp->Text(W - CW * 15, CH * 31, "Calculation failed!", 19);
+				switch (GC->PDAP_ErrorCode)
+				{
+				case 1:
+					sprintf(Buffer, "Ignition algorithm failure");
+					break;
+				case 2:
+					sprintf(Buffer, "CSI calculation failure");
+					break;
+				case 3:
+					sprintf(Buffer, "Failure to converge on insertion velocity");
+					break;
+				case 4:
+					sprintf(Buffer, "Insufficient data to calculate phase switch");
+					break;
+				case 5:
+					sprintf(Buffer, "Insufficient data for curve fit");
+					break;
+				default:
+					sprintf(Buffer, "");
+					break;
+				}
+				skp->Text(CW, CH * 31, Buffer, strlen(Buffer));
 			}
 		}
 		break;

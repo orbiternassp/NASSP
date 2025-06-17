@@ -176,6 +176,7 @@ AR_GCore::AR_GCore(VESSEL* v)
 	PDAP_R_amin = 0.0;
 	PDAP_A_min = 0.0;
 	PDAP_A_max = 0.0;
+	PDAP_ErrorCode = 0;
 
 	t_TPI = 0.0;
 
@@ -4092,8 +4093,8 @@ int ARCore::subThread()
 
 			opt.dt_stage = 0.0; //APS abort
 		}
-		PADSolGood = (res.Error == 0);
-		if (PADSolGood)
+		GC->PDAP_ErrorCode = res.Error;
+		if (GC->PDAP_ErrorCode == 0)
 		{
 			//Save data
 			GC->PDAP_J1 = res.J1;
@@ -4164,8 +4165,8 @@ int ARCore::subThread()
 				GC->DEDA226 = (int)(res.J2 / 0.3048 / 100.0);
 				GC->DEDA227 = 0;
 				GC->DEDA305 = (int)(GC->PDAP_Theta_LIM*DEG*100.0);
-				GC->DEDA662 = OrbMech::DoubleToDEDA2(res.K1 / 0.3048, 20);
-				GC->DEDA673 = OrbMech::DoubleToDEDA2(res.K2 / 0.3048, 20);
+				GC->DEDA662 = OrbMech::DoubleToDEDA(res.K1 / 0.3048, 20);
+				GC->DEDA673 = OrbMech::DoubleToDEDA(res.K2 / 0.3048, 20);
 			}
 		}
 

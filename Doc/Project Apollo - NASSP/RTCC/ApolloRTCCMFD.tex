@@ -1628,9 +1628,9 @@ One other thing to note is that later Apollo missions performed DOI with the CSM
 	\hline
   \textbf{ENG}&-&DPS/APS&DPS/APS&DPS/APS&DPS/APS\\
 	\hline
-	\textbf{K4}&-&HAMIN&PHA&HAMIN&PHA\\
+	\textbf{K4}&-&HAMIN&PHA&PHA&PHA\\
 	\hline
-	\textbf{PHA}&-&-&-13.5&-&-13.5\\
+	\textbf{PHA}&-&-&-13.5&16.0&-13.5\\
   \hline
 	\textbf{DTCAN}&0&0&60&0&60\\
 	\hline
@@ -1638,7 +1638,7 @@ One other thing to note is that later Apollo missions performed DOI with the CSM
   \hline
 	\textbf{DTCSI}&50&50&120&55&120\\
 	\hline
-	\textbf{TTPI}&PDI+2:40&PDI+2:40&PDI+4:50&TBD&TBD\\
+	\textbf{TTPI}&PDI+2:40&PDI+2:40&PDI+4:50&PDI+2:50&PDI+4:50\\
 	\hline
   \textbf{DT2CAN}&-&50&0&50&0\\
 	\hline
@@ -1646,17 +1646,36 @@ One other thing to note is that later Apollo missions performed DOI with the CSM
   \hline
 	\textbf{DT2CSI}&-&110&55&110&55\\
 	\hline
-	\textbf{T2TPI}&-&PDI+4:40&PDI+2:50&TBD&TBD\\
+	\textbf{T2TPI}&-&PDI+4:40&PDI+2:50&PDI+4:50&PDI+2:50\\
 	\hline
 \end{tabular}
 \newpage
 \subsubsection{Display}
-\paragraph{Apollo 11}\mbox{} \\
-\paragraph{Apollo 12}\mbox{} \\
-\paragraph{Apollo 13+}\mbox{} \\
+\paragraph{Apollo 11 PGNS}\mbox{} \\
+\textbf{DPS4-1} P70 polynomial. Horizontal insertion velocity as a function of abort initiation time since PDI.\\
+\textbf{APS4-1} P71 polynomial. Horizontal insertion velocity as a function of abort initiation time since PDI.\\
+\textbf{VHMIN} Minimum horizontal insertion velocity.
+\paragraph{Apollo 12+ PGNS}\mbox{} \\
+\textbf{J1} Constant value in first segment calculation of insertion semi-major axis.\\
+\textbf{K1} Slope value in first segment calculation of insertion semi-major axis.\\
+\textbf{J2} Constant value in second segment calculation of insertion semi-major axis.\\
+\textbf{K2} Slope value in second segment calculation of insertion semi-major axis.\\
+\textbf{THET} Limiting phase angle at abort initiation for the segment switch.\\
+\textbf{VHMIN} Minimum horizontal insertion velocity.
+\paragraph{Apollo 11-12 AGS}\mbox{} \\
+\textbf{J7} Constant value in calculation of insertion semi-major axis. DEDA address 224.\\
+\textbf{J8} Minimum insertion semi-major axis. DEDA address 225.\\
+\textbf{J9} Maximum insertion semi-major axis. DEDA address 226.\\
+\textbf{K410} Slope value in calculation of insertion semi-major axis. DEDA address 227.
+\paragraph{Apollo 13+ AGS}\mbox{} \\
+\textbf{J7} Constant value in first segment calculation of insertion semi-major axis. DEDA address 224.\\
+\textbf{J8} Minimum insertion semi-major axis. DEDA address 225.\\
+\textbf{J10} Constant value in second segment calculation of insertion semi-major axis. DEDA address 226.\\
+\textbf{J12} Limiting phase angle at abort initiation for the segment switch. DEDA address 305.\\
+\textbf{K410} Slope value in first segment calculation of insertion semi-major axis. DEDA address 662.\\
+\textbf{J11} Slope value in first segment calculation of insertion semi-major axis. DEDA address 673.\\
 \newpage
 \section{Uplinks}
-
 
 \subsection{State Vector}
 

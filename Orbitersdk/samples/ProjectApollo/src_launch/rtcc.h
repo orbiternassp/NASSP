@@ -858,13 +858,13 @@ struct PDAPOpt //Powered Descent Abort Program
 	//DT between ullage ignition and PDI
 	double t_UL = 7.9;
 	//DT between orbit insertion and the canned maneuver
-	double dt_CAN = 50.0*60.0;
+	double dt_CAN = 0.0;
 	//value of dt_CAN used to generate the second set of targeting coefficients
 	double dt_2CAN = 50.0*60.0;
 	//DT between the canned maneuver and CSI
 	double dt_CSI = 50.0*60.0;
 	//value of dt_CSI used to generate the second set of targeting coefficients
-	double dt_2CSI = 50.0*60.0;
+	double dt_2CSI = 110.0*60.0;
 	//DT between PDI and staging time
 	double dt_stage = 0.0;
 	//DT between successive abort points
@@ -872,7 +872,7 @@ struct PDAPOpt //Powered Descent Abort Program
 	//value of dt_step used to generate the second set of targeting coefficients
 	double dt_2step = 20.0;
 	//LVLH components of the canned maneuver
-	VECTOR3 DV_CAN = _V(10.0*0.3048, 0, 0);
+	VECTOR3 DV_CAN = _V(0, 0, 0);
 	//value of DV_CSN used to generate the second set of targeting coefficients
 	VECTOR3 DV_2CAN = _V(10.0*0.3048, 0, 0);
 

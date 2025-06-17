@@ -5582,8 +5582,8 @@ void RTCC::LunarAscentPAD(const ASCPADOpt &opt, AP11LMASCPAD &pad)
 	pad.DEDA225_226 = SMa / 0.3048 / 100.0;
 	pad.DEDA231 = length(opt.R_LS) / 0.3048 / 100.0;
 	sprintf(pad.remarks, "");
-	pad.DEDA047 = OrbMech::DoubleToDEDA(sin_DL, 14);
-	pad.DEDA053 = OrbMech::DoubleToDEDA(cos_DL, 14);
+	pad.DEDA047 = OrbMech::DoubleToDEDA(sin_DL, 1);
+	pad.DEDA053 = OrbMech::DoubleToDEDA(cos_DL, 1);
 }
 
 void RTCC::CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH)
@@ -12195,7 +12195,7 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 	std::vector<double> Phase_Table;
 	std::vector<double> A_ins_Table;
 	int i = 0;
-	char Buffer[128];
+	//char Buffer[128];
 
 	//Program constants
 	w_M = 2.66169948e-6;
@@ -12402,8 +12402,8 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 			return;
 		}
 
-		sprintf(Buffer, "DT %lf VH %lf Alt %lf", dt_abort, Z_D_dot / 0.3048, (r_Ins - r_LS) / 0.3048);
-		oapiWriteLog(Buffer);
+		//sprintf(Buffer, "DT %lf VH %lf Alt %lf", dt_abort, Z_D_dot / 0.3048, (r_Ins - r_LS) / 0.3048);
+		//oapiWriteLog(Buffer);
 
 		if (opt.IsTwoSegment == false)
 		{
@@ -12457,8 +12457,8 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 						res.Theta_LIM = theta_apo + (theta_D - theta_apo) / (R_a - R_a_apo)*(res.R_amin - R_a_apo);
 					}
 
-					sprintf(Buffer, "Theta_LIM %lf", res.Theta_LIM*DEG);
-					oapiWriteLog(Buffer);
+					//sprintf(Buffer, "Theta_LIM %lf", res.Theta_LIM*DEG);
+					//oapiWriteLog(Buffer);
 
 					K_loop = 0;
 					conopt.GMT_TPI = opt.GMT_2TPI;
