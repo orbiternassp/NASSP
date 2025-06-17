@@ -34,6 +34,7 @@ atmdc(this),
 skylabanimations(this)
 {
 	csm = NULL;
+	trackLightsActive = false;
 }
 
 Skylab::~Skylab() {
@@ -46,7 +47,6 @@ void Skylab::InitSkylab() {
 	SetMeshVisibilityMode(skylabmeshID, MESHVIS_ALWAYS);
 	skylabanimations.DefineAnimations();
 
-	trackLightsActive = false;
 	AddTrackLights();
 
 	visibilitySize = 31.1; //Tuned so Skylab disappears in the CSM optics at 400nm range
@@ -128,6 +128,8 @@ void Skylab::clbkSaveState(FILEHANDLE scn)
 
 	if (csm) oapiWriteScenario_string(scn, "ONAME", csm->GetName());
 
+	oapiWriteScenario_int(scn, "TRACKLIGHTS", trackLightsActive);
+
 	atmdc.SaveState(scn);
 }
 
@@ -144,6 +146,10 @@ void Skylab::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 
 			OBJHANDLE hVessel = oapiGetVesselByName(temp);
 			if (hVessel != NULL) csm = oapiGetVesselInterface(hVessel);
+		}
+		if (!strnicmp(line, "TRACKLIGHTS", 11))
+		{
+			sscanf(line + 12, "%i", &trackLightsActive);
 		}
 		else if (!strnicmp(line, ATMDC_START_STRING, sizeof(ATMDC_START_STRING)))
 		{
@@ -308,7 +314,7 @@ void Skylab::AddTrackLights()
 		tracklights[i].period = 1.0;
 		tracklights[i].duration = 0.1;
 		tracklights[i].tofs = 0;
-		tracklights[i].active = false;
+		tracklights[i].active = trackLightsActive;
 		AddBeacon(tracklights + i);
 	}
 }
