@@ -1251,7 +1251,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11AGSACT *form = (AP11AGSACT*)pad;
 
-		SV sv1, sv2, sv_INP;
+		VehicleDataBlock sv_CSM, sv_LM, sv_LM_post_DOI;
 		double t_sunrise, t_TPI, KFactor;
 
 		PDAPOpt opt;
@@ -1259,13 +1259,13 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		LEM *l = (LEM *)calcParams.tgt;
 
-		sv1 = StateVectorCalc(calcParams.tgt);
-		sv2 = StateVectorCalc(calcParams.src);
+		sv_CSM = StateVectorCalcDataBlock(calcParams.src);
+		sv_LM = StateVectorCalcDataBlock(calcParams.tgt);
 
-		sv_INP = ExecuteManeuver(sv1, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
+		sv_LM_post_DOI = ExecuteManeuver(sv_LM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
 
 		t_sunrise = calcParams.PDI + 3.0*3600.0;
-		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(sv2, t_sunrise) - 23.0*60.0;
+		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(ConvertEphemDatatoSV(sv_CSM.sv, sv_CSM.Weight), t_sunrise) - 23.0*60.0;
 
 		bool res_k = CalculateAGSKFactor(&l->agc.vagc, &l->aea.vags, KFactor);
 		if (res_k)
@@ -1274,15 +1274,18 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		opt.dt_stage = 999999.9;
-		opt.W_TAPS = 4711.0;
-		opt.W_TDRY = 6874.3;
+		opt.W_TAPS = l->GetAscentStageMass(); //4711.0;
+		opt.W_TDRY = l->GetMass() - l->GetPropellantMass(l->GetPropellantHandleByIndex(0)); //6874.3;
 		opt.dt_step = 20.0;
 		opt.GMT_TPI = GMTfromGET(t_TPI);
-		opt.IsTwoSegment = true;
+		opt.IsTwoSegment = false;
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-		opt.sv_LM = SVToVehicleDataBlock(ConvertSVtoEphemData(sv_INP), 1.0, sv_INP.mass, 1.0);
-		opt.sv_CSM = SVToVehicleDataBlock(ConvertSVtoEphemData(sv2), 1.0, sv2.mass, 1.0);
+		opt.sv_LM = sv_LM_post_DOI;
+		opt.sv_CSM = sv_CSM;
 		opt.GMT_LAND = GMTfromGET(CZTDTGTU.GETTD);
+		opt.dt_CAN = 0.0;
+		opt.DV_CAN = _V(0, 0, 0);
+		opt.dt_CSI = 50.0*60.0;
 
 		PoweredDescentAbortProgram(opt, res);
 
@@ -1291,14 +1294,6 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->DEDA225 = (int)(res.A_min / 0.3048 / 100.0);
 		form->DEDA226 = (int)(res.A_max / 0.3048 / 100.0);
 		form->DEDA227 = (int)(res.K1 / 0.3048 / 100.0*pow(2, 3));
-
-		/*
-		Pad-load:
-		form->DEDA224 = 60267;
-		form->DEDA225 = 58148;
-		form->DEDA226 = 70312;
-		form->DEDA227 = -50031;
-		*/
 	}
 	break;
 	case 37: //SEPARATION MANEUVER
