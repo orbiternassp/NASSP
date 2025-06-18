@@ -6913,6 +6913,22 @@ SV RTCC::ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedM
 	return ExecuteManeuver(sv, P30TIG, dV_LVLH, attachedMass, Thruster, Q_Xx, V_G);
 }
 
+VehicleDataBlock RTCC::ExecuteManeuver(VehicleDataBlock sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster)
+{
+	VehicleDataBlock sv3;
+	SV sv1, sv2;
+	MATRIX3 Q_Xx;
+	VECTOR3 V_G;
+
+	sv1 = ConvertEphemDatatoSV(sv.sv, sv.Weight);
+	sv2 = ExecuteManeuver(sv1, P30TIG, dV_LVLH, attachedMass, Thruster, Q_Xx, V_G);
+	sv3 = sv;
+	sv3.sv = ConvertSVtoEphemData(sv2);
+	sv3.Weight = sv2.mass;
+
+	return sv3;
+}
+
 SV RTCC::ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster, MATRIX3 &Q_Xx, VECTOR3 &V_G)
 {
 	//INPUT:
@@ -12182,7 +12198,7 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 	VECTOR3 U_FDP, WI, W, R_LSP, U_FDP_abort, DV_CAN;
 	double r_LS, t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, GMT_Ins, theta, r_Ins, A_Ins, GMT_CSI;
 	double SLOPE, dV_Inc, dh_apo, w_M, GMT_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo, t_go_abort, RY, RZ, WDOT, dt_step;
-	int K_loop, I_SMAX;
+	int K_loop, I_SMAX, K_loop_max;
 	bool K_stage; //false = staging has not happened yet, true = staging has happened
 	bool K3; //falg that indicates which set of J,K is being determined; false indidcates that the first set is being determined
 	bool LandFlag = false;
@@ -12205,6 +12221,7 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 	conopt.E = 26.6*RAD;
 	conopt.K_CDH = 0;
 	conopt.h_min = -OrbMech::R_Moon;
+	K_loop_max = 10;
 
 	//Calculation constants
 	r_LS = length(opt.R_LS);
@@ -12297,6 +12314,7 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 			//Initialize ascent
 			sv_D = sv_Abort;
 			ascguid.Init(opt.sv_CSM.sv.R, opt.sv_CSM.sv.V, W_TD, r_LS, Z_D_dot, R_D_dot, false);
+			integ.Init(U_FDP_abort);
 			ROTFLAG = true;
 			t = t_D;
 			t_go = dt_abort;
@@ -12394,9 +12412,9 @@ void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 			Z_D_dot += dV_Inc;
 			dh_apo = conres.DH;
 
-		} while (abs(dV_Inc) > 0.1*0.3048 && K_loop < 10);
+		} while (abs(dV_Inc) > 0.1*0.3048 && K_loop < K_loop_max);
 		//Check on exceeding K_loop max
-		if (K_loop >= 10)
+		if (K_loop >= K_loop_max)
 		{
 			res.Error = 3; //Failure to converge on insertion velocity
 			return;
