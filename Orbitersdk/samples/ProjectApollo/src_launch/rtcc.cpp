@@ -12003,6 +12003,7 @@ void RTCC::LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscen
 	m1 = in.m0;
 	t_total_old = t_total;
 	integ.Init(unit(R));
+	out.ErrorCode = 0;
 
 	while (stop == false)
 	{
@@ -12015,6 +12016,11 @@ void RTCC::LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscen
 		//Accumulate DV
 		dv += Thrust / m1 * (t_total - t_total_old);
 		t_total_old = t_total;
+		if (m1 < SystemParameters.MCVLWT)
+		{
+			out.ErrorCode = 2;
+			break;
+		}
 	}
 
 	//Calculate output parameters
@@ -16365,7 +16371,7 @@ int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 
 		E->Header.TR = E->table.back().GMT;
 	}
 
-	return 0;
+	return asc_out.ErrorCode;
 }
 
 int RTCC::PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E)
@@ -17029,6 +17035,11 @@ void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGM
 	{
 		EMSMISS(&InTable);
 
+		if (InTable.NIAuxOutputTable.ErrorCode)
+		{
+			//TBD: Handle errors
+		}
+
 		if (QUEID == 2)
 		{
 			//Store ephemeris
@@ -17232,8 +17243,17 @@ void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGM
 		//Write headers
 		table->EPHEM.Header.NumVec = table->EPHEM.table.size();
 		table->EPHEM.Header.Offset = 0;
-		table->EPHEM.Header.TL = table->EPHEM.table.front().GMT;
-		table->EPHEM.Header.TR = table->EPHEM.table.back().GMT;
+
+		if (table->EPHEM.table.size() == 0U)
+		{
+			table->EPHEM.Header.TL = 0.0;
+			table->EPHEM.Header.TR = 0.0;
+		}
+		else
+		{
+			table->EPHEM.Header.TL = table->EPHEM.table.front().GMT;
+			table->EPHEM.Header.TR = table->EPHEM.table.back().GMT;
+		}
 		table->MANTIMES.TUP = table->EPHEM.Header.TUP;
 
 		if (L == RTCC_MPT_CSM)
@@ -21444,6 +21464,7 @@ int RTCC::PMMXFR(int id, void *data)
 				}
 				inp->ConfigurationChangeIndicator = rtetab->ConfigurationChangeIndicator;
 				inp->EndConfiguration = rtetab->EndConfiguration;
+				inp->DockingAngle = rtetab->DockingAngle;
 				
 				BurnParm75 = rtetab->DV_XDV.x;
 				BurnParm76 = rtetab->DV_XDV.y;

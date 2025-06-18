@@ -1136,7 +1136,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "NSR maneuver point", 0, 'D' },
 		{ "TPI maneuver point", 0, 'P' },
 
-		{ "Go to displayr", 0, 'C' },
+		{ "Go to display", 0, 'C' },
 		{ "Addition M-lines", 0, 'V' },
 		{ "NH placement", 0, 'R' },
 		{ "NPC maneuver point", 0, 'N' },
@@ -2994,7 +2994,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetRendezvousPage);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetRendezvousPlanningDisplayPage);
 
 
 	static const MFDBUTTONMENU mnu88[] =
