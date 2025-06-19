@@ -4654,8 +4654,8 @@ int ARCore::subThread()
 			in.IgnitionTimeOption = GC->rtcc->med_m72.TimeFlag;
 			in.Thruster = GC->rtcc->med_m72.Thruster;
 
-			in.sv_before = res.sv_tig;
-			in.V_aft = res.sv_tig.V + res.dV;
+			in.sv_before = res.sv_tig.sv;
+			in.V_aft = res.sv_tig.sv.V + res.dV;
 			in.DETU = GC->rtcc->med_m72.UllageDT;
 			in.UT = GC->rtcc->med_m72.UllageQuads;
 			in.DT_10PCT = GC->rtcc->med_m72.TenPercentDT;

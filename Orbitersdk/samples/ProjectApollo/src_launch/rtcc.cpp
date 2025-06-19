@@ -10499,8 +10499,8 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 			PZDKIT.Block[0].NumMan++;
 
 			//Coast to TPF
-			res.sv_C[3] = coast(res.sv_C_apo[2], lamres.sv_tig2.GMT - res.sv_C_apo[2].sv.GMT);
-			res.sv_T[3] = coast(res.sv_T[2], lamres.sv_tig2.GMT - res.sv_T[2].sv.GMT);
+			res.sv_C[3] = coast(res.sv_C_apo[2], lamres.sv_tig2.sv.GMT - res.sv_C_apo[2].sv.GMT);
+			res.sv_T[3] = coast(res.sv_T[2], lamres.sv_tig2.sv.GMT - res.sv_T[2].sv.GMT);
 
 			//Save post TPF state vector
 			res.sv_C_apo[3] = res.sv_C[3];
