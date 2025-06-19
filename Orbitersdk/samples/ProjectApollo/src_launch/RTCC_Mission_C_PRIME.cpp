@@ -1822,7 +1822,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 		else
 		{
-			if (fcn == 203 || fcn == 206)
+			if (fcn == 206)
 			{
 				REFSMMATOpt refsopt;
 				refsopt.REFSMMATopt = 3;

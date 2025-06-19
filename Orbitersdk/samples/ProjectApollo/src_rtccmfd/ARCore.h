@@ -197,7 +197,7 @@ public:
 	void TLIProcessorCalc();
 	void SaturnVTLITargetUplink();
 	int GetVesselParameters(bool IsCSM, int docked, int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass);
-	int menuCalculateIMUComparison(bool IsCSM);
+	int menuCalculateAttitudeComparison(bool IsCSM, bool IsAGC);
 	void menuCalculateIMUParkingAngles(agc_t* agc);
 
 	int startSubthread(int fcn, bool IsCSM = true);
@@ -228,11 +228,8 @@ public:
 
 	//CONCENTRIC RENDEZVOUS PAGE
 	int SPQMode;	//0 = CSI on time, 1 = CDH, 2 = optimum CSI
-	double CSItime;	//Time of the CSI maneuver
 	double CDHtime;	//Time of the CDH maneuver
-	double SPQTIG;	//Time of ignition for concentric rendezvous maneuver
 	int CDHtimemode; //CSI: 0 = fixed TIG at TPI, 1 = fixed DH at CDH. CDH: 0=Fixed, 1 = Find GETI
-	VECTOR3 SPQDeltaV;
 
 	//ORBIT ADJUSTMENT PAGE
 	int GMPManeuverCode; //Maneuver code
@@ -301,6 +298,7 @@ public:
 	double sxtstardtime;
 	double manpad_ullage_dt;
 	bool manpad_ullage_opt; //true = 4 jets, false = 2 jets
+	int manpad_pref_GDC_stars; // Preferred star set for the GDC backup alignment. 0 = Deneb, Vega, 1 = Navi, Polaris, 2 = Acrux, Atria, 3 = Sirius, Rigel
 	int ManPADMPT; //1 = CSM, 3 = LEM
 	int ManPADMPTManeuver; //1-15
 	bool TLIPAD_StudyAid; //False = nominal TLI, true = study aid
@@ -383,6 +381,7 @@ public:
 	LunarTargetingProgramOutput LUNTAR_Output;
 
 	//DEBUG
+	bool DebugLMComputer; //true = LGC, false = AGS
 	VECTOR3 DebugIMUTorquingAngles;
 
 	//IMU PARKING ANGLES

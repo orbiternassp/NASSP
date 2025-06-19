@@ -1638,7 +1638,6 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	if ((oapiGetFocusObject() == GetHandle()) && (oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
 		//We have focus on this vessel, and are in the VC
 		MoveFlashlight();
-		UpdateFloodLights();
 	}
 
 	sprintf(buffer, "End time(0) %lld", time(0)); 
@@ -3849,6 +3848,22 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 					bRecovery = true;
 				}
 				return 1;
+			case OAPI_KEY_O:
+				if (ordealState.Closed()) {
+					ORDEALSlewSwitch.SwitchTo(THREEPOSSWITCH_UP, true);
+				}
+				return 1;
+			case OAPI_KEY_L:
+				if (ordealState.Closed()) {
+					ORDEALSlewSwitch.SwitchTo(THREEPOSSWITCH_DOWN, true);
+				}
+				return 1;
+			}
+		} else {
+			switch (key) {
+			case OAPI_KEY_O:
+			case OAPI_KEY_L:
+				ORDEALSlewSwitch.SwitchTo(THREEPOSSWITCH_CENTER, true);
 			}
 		}
 		return 0;

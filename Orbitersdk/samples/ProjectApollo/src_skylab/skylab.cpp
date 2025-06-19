@@ -34,6 +34,7 @@ atmdc(this),
 skylabanimations(this)
 {
 	csm = NULL;
+	trackLightsActive = false;
 }
 
 Skylab::~Skylab() {
@@ -127,6 +128,8 @@ void Skylab::clbkSaveState(FILEHANDLE scn)
 
 	if (csm) oapiWriteScenario_string(scn, "ONAME", csm->GetName());
 
+	oapiWriteScenario_int(scn, "TRACKLIGHTS", trackLightsActive);
+
 	atmdc.SaveState(scn);
 }
 
@@ -143,6 +146,10 @@ void Skylab::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 
 			OBJHANDLE hVessel = oapiGetVesselByName(temp);
 			if (hVessel != NULL) csm = oapiGetVesselInterface(hVessel);
+		}
+		if (!strnicmp(line, "TRACKLIGHTS", 11))
+		{
+			sscanf(line + 12, "%i", &trackLightsActive);
 		}
 		else if (!strnicmp(line, ATMDC_START_STRING, sizeof(ATMDC_START_STRING)))
 		{
@@ -237,26 +244,7 @@ int Skylab::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate)
 	{
 
 	}
-	else { //unmodified keys
-		switch (key)
-		{
-		case OAPI_KEY_A: //Attitude control mode
-			{
-				int state = atmdc.GetAttitudeControlMode();
-	
-				if (state < 5)
-				{
-				state++;
-				}
-				else
-				{
-					state = 0;
-				}
-				atmdc.SetAttitudeControlMode(state);
-				return 1;
-			}
-		}
-	}
+
 	return 0;
 }
 
@@ -326,8 +314,17 @@ void Skylab::AddTrackLights()
 		tracklights[i].period = 1.0;
 		tracklights[i].duration = 0.1;
 		tracklights[i].tofs = 0;
-		tracklights[i].active = true;
+		tracklights[i].active = trackLightsActive;
 		AddBeacon(tracklights + i);
+	}
+}
+
+void Skylab::SetTrackLights(bool mode)
+{
+	for (int i = 0; i < 2; i++)
+	{
+		tracklights[i].active = mode;
+		trackLightsActive = mode;
 	}
 }
 

@@ -1834,7 +1834,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		in.IgnitionTimeOption = false;
 		in.Thruster = RTCC_ENGINETYPE_LMDPS;
 
-		in.sv_before = PZDKIELM.Block[0].SV_before[0];
+		in.sv_before = PZDKIELM.Block[0].SV_before[0].sv;
 		in.V_aft = PZDKIELM.Block[0].V_after[0];
 		in.DETU = 8.0;
 		in.UT = true;
@@ -1908,15 +1908,17 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		coeopt.DH = -15.0*1852.0;
 		coeopt.E = 208.3*RAD;
-		coeopt.sv_A = sv_Ins;
-		coeopt.sv_P = sv_LM;
+		coeopt.sv_A.sv = ConvertSVtoEphemData(sv_CSM);
+		coeopt.sv_A.Weight = sv_CSM.mass;
+		coeopt.sv_P.sv = ConvertSVtoEphemData(sv_LM);
+		coeopt.sv_P.Weight = sv_LM.mass;
 		coeopt.K_CDH = 1;
-		coeopt.t_CSI = calcParams.CSI;
+		coeopt.GMT_CSI = GMTfromGET(calcParams.CSI);
 
 		ConcentricRendezvousProcessor(coeopt, coeres);
 
 		OrbMech::format_time_HHMMSS(GETbuffer, calcParams.CSI);
-		OrbMech::format_time_HHMMSS(GETbuffer2, coeres.t_TPI);
+		OrbMech::format_time_HHMMSS(GETbuffer2, GETfromGMT(coeres.GMT_TPI));
 		sprintf(form->remarks, "CSI: %s, TPI: %s, N equals 1", GETbuffer, GETbuffer2);
 
 		if (preliminary == false)
@@ -1998,25 +2000,23 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP10CSIPADOpt manopt;
 		SPQOpt opt;
 		SPQResults res;
-		SV sv_CSM, sv_LM;
+		VehicleDataBlock sv_CSM, sv_LM;
 		VECTOR3 dV_LVLH;
-		double GETbase;
 		PLAWDTOutput WeightsTable;
 
 		AP10CSI * form = (AP10CSI *)pad;
 
-		sv_CSM = StateVectorCalc(calcParams.src);
-		sv_LM = StateVectorCalc(calcParams.tgt);
+		sv_CSM = StateVectorCalcDataBlock(calcParams.src);
+		sv_LM = StateVectorCalcDataBlock(calcParams.tgt);
 		WeightsTable = GetWeightsTable(calcParams.tgt, false, false);
-		GETbase = CalcGETBase();
 
 		opt.DH = 15.0*1852.0;
 		opt.E = 26.6*RAD;
 		opt.sv_A = sv_LM;
 		opt.sv_P = sv_CSM;
 		opt.K_CDH = 0;
-		opt.t_CSI = calcParams.CSI;
-		opt.t_TPI = calcParams.TPI;
+		opt.GMT_CSI = GMTfromGET(calcParams.CSI);
+		opt.GMT_TPI = GMTfromGET(calcParams.TPI);
 
 		ConcentricRendezvousProcessor(opt, res);
 		dV_LVLH = res.dV_CSI;
@@ -2027,7 +2027,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.dV_LVLH = dV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_LMAPS;
 		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		manopt.sv0 = ConvertSVtoEphemData(sv_LM);
+		manopt.sv0 = sv_LM.sv;
 		manopt.WeightsTable = WeightsTable;
 		manopt.t_CSI = calcParams.CSI;
 		manopt.t_TPI = calcParams.TPI;

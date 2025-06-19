@@ -104,6 +104,7 @@ typedef struct {
 	int crewStatus;
 	int cdrStatus;	//0 = cabin, 1 = suit, 2 = EVA, 3 = PLSS
 	int lmpStatus;
+	double UCTAStatus;
 } LEMECSStatus;
 
 // Systems things
@@ -684,7 +685,6 @@ public:
 	bool flashlightOn;
 
 	// Floodlight LM Pilot
-	void UpdateFloodLights();
 	PointLight* floodLight_Left;
 
 	// Floodlight LM Commander

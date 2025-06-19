@@ -38,6 +38,7 @@ LunarTargetingProgramInput::LunarTargetingProgramInput()
 	lat_tgt = 0.0;
 	lng_tgt = 0.0;
 	TB8 = 0.0;
+	gmt_imp_tgt = 0.0;
 }
 
 LunarTargetingProgram::LunarTargetingProgram(RTCC *r) : RTCCModule(r)

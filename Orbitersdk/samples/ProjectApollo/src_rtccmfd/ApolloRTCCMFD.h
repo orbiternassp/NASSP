@@ -60,6 +60,8 @@ struct RTCCMFDData
 	int screen = 0;
 	int subscreen = 0;
 	int subscreenmax = 0;
+	int subsubscreen = 0;
+	int subsubscreenmax = 0;
 	int marker = 0;
 	int markermax = 0;
 	UINT ID = 0;
@@ -81,12 +83,12 @@ public:
 	void ReadStatus(FILEHANDLE scn);
 	void RecallStatus(void);
 
-	void Text(oapi::Sketchpad *skp, std::string message, int x, int y, int xmax = 1024, int ymax = 1024);
 	void Text_Double(oapi::Sketchpad *skp, int x, int y, char *format, double val);
 	void Text_Int(oapi::Sketchpad *skp, int x, int y, char *format, int val);
 	void Text_String(oapi::Sketchpad *skp, int x, int y, std::string message);
 	//Functions using CW and CH
 	void Text(oapi::Sketchpad *skp, int x, int y, std::string message);
+	void Text(oapi::Sketchpad *skp, int x, int y, std::string message, int xmax, int ymax);
 	void TextW(oapi::Sketchpad *skp, int x, int y, LPWSTR message);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, double val);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, int val);
@@ -103,6 +105,7 @@ public:
 	void Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
 	void Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
 	void Text_Dot(oapi::Sketchpad *skp, int x, int y);
+	void Line(oapi::Sketchpad *skp, int x0, int y0, int x1, int y1);
 
 	void SelectPage(int page);
 
@@ -154,6 +157,8 @@ public:
 	void menuREFSMMATLockerMovement();
 	void cycleREFSMMATHeadsUp();
 	void calcREFSMMAT();
+	void menuSetMEDM10();
+	void menuSetMEDM11();
 	void GMPInput1Dialogue();
 	void set_GMPInput1(double val);
 	void GMPInput2Dialogue();
@@ -254,7 +259,7 @@ public:
 	void menuManPADUllage();
 	void menuManPADTIG();
 	void menusextantstartime();
-	void set_sextantstartime(double time);
+	void menuCyclePreferredGDCStarSet();
 	void menuManPADDV();
 	void set_P30DV(VECTOR3 dv);
 	void menuREFSMMATAtt();
@@ -454,7 +459,7 @@ public:
 	void menuSetSPQElevation();
 	void set_SPQElevation(double elev);
 	void menuSetSPQTerminalPhaseAngle();
-	void set_SPQTerminalPhaseAngle(double wt);
+	void menuSetSPQMinimumPeriapsisAlt();
 	void menuSetSPQTPIDefinitionValue();
 	void set_SPQTPIDefinitionValue(double get);
 	void menuCycleSPQCDHPoint();
@@ -670,6 +675,7 @@ public:
 	void menuSetFIDOLaunchAnalogNo2Page();
 	void menuSetRTETradeoffDisplayPage();
 	void menuCycleSubscreen();
+	void menuCycleSubSubscreen();
 	void menuCalcRTETradeoff();
 	void menuSetRTETradeoffSite();
 	void menuSetRTETradeoffRemoteEarthPage();
@@ -764,7 +770,8 @@ public:
 	void UpdateLOSTDisplay();
 	void CalculateLOSTDOKOption();
 	void menuSetDebugPage();
-	void menuCalculateIMUComparison();
+	void menuCycleDebugLMComputer();
+	void menuCalculateAttitudeComparison();
 	void menuSetIMUParkingAnglesPage();
 	void menuCalculateIMUParkingAngles();
 	void menuSLVNavigationUpdateCalc();
@@ -870,6 +877,7 @@ public:
 	void CycleCSMOrLMSelection();
 	void CycleEnableCalculation();
 	void CycleREFSMMATType(int &type, bool csm);
+	void menuSetThrustCGPage();
 
 	void SetMEDInputPageM75();
 	void SetMEDInputPageP13();
@@ -912,10 +920,14 @@ protected:
 
 	int CW; //Character width
 	int CH; //Character height
+	int WOFF; //Offset from left to have the display be centered
+	int HOFF; //Offset from top to have the display be centered
 	int x, y, dx, dy; //Display spacing helper variables
 	int screen;
 	int subscreen;
 	int subscreenmax;
+	int subsubscreen;
+	int subsubscreenmax;
 	int marker;
 	int markermax;
 	int status; //Page dependent status, reset to 0 when new page is entered
@@ -947,6 +959,7 @@ private:
 	void AGOPDisplayOption7(oapi::Sketchpad*skp);
 	void AGOPDisplayOption8(oapi::Sketchpad*skp);
 	void AGOPDisplayOption9(oapi::Sketchpad*skp);
+	void RendezvousEvaluationDisplay(oapi::Sketchpad*skp);
 
 	void CSMOrLMSelection(oapi::Sketchpad*skp);
 	void CSMOrLMSelectionErrorMessage(oapi::Sketchpad*skp);
@@ -957,6 +970,8 @@ private:
 	void PrintUllage(char *Buffer, int Thruster, bool Use4Jets, double Duration);
 	void GetCharSize(oapi::Sketchpad*skp, int &CW, int &CH);
 	void SetMOCRFont(oapi::Sketchpad*skp, int size, bool dynamic);
+	void SetMOCRDisplayCentered(int size);
+	void ResetMOCRDisplayCentered();
 };
 
 #endif // !__ApolloRTCCMFD_H

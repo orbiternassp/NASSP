@@ -436,6 +436,9 @@ void Saturn::SystemsInit() {
 	SetPipeMaxFlow("HYDRAULIC:WASTEH2OVENTPIPE", 150./ LBH);
 	SetPipeMaxFlow("HYDRAULIC:WASTEH2OINLETVENTPIPE", 100./ LBH);
 
+	SetPipeMaxFlow("HYDRAULIC:OVBDDUMPPIPE", 50./ LBH);
+	SetPipeMaxFlow("HYDRAULIC:HATCHDUMPPIPE", 50./ LBH);
+
 	CrewStatus.Init(this);
 
 	//
@@ -681,12 +684,15 @@ void Saturn::SystemsInit() {
 	SideHatch.Init(this, &HatchGearBoxSelector, &HatchActuatorHandleSelector, &HatchActuatorHandleSelectorOpen, &HatchVentValveRotary);
 	ForwardHatch.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"), &PressEqualValve);
 
-	WaterController.Init(this, (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK"),
-		                 (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK"),
-		                 (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OINLET"),
-						 (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLET"),
-						 (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OVENTPIPE"),
-						 (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLETVENTPIPE"));
+	WaterController.Init(this, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK"),
+							(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK"),
+							(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OINLET"),
+							(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLET"),
+							(h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OVENTPIPE"),
+							(h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLETVENTPIPE"),
+							(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK"),
+							(h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:OVBDDUMPPIPE"),
+							(h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:HATCHDUMPPIPE"));
 	
 	GlycolCoolingController.Init(this);
 	LMTunnelVent.Init((h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNEL:OUT2"),
@@ -1263,7 +1269,15 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *WasteH2OTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:TEMP");
 	double *WasteH2OPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:PRESS");
 
-	sprintf(oapiDebugString(), "Mass: %lf VapMass: %.5f Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *PotH2OMass, *PotH2OVapMass, KelvinToFahrenheit(*PotH2OTemp), *PotH2OPress *PSI, *DrinkPipeFlow, *DrinkPipeFlowmax, *PotH2OLeakVlv, *NumCrew);
+	double *UrineMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK:MASS");
+	double *UrineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK:TEMP");
+	double *UrinePress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK:PRESS");
+	double *OVBDPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:OVBDDUMPPIPE:FLOW");
+	double *OVBDPipeFlowmax = (double *)Panelsdk.GetPointerByString("HYDRAULIC:OVBDDUMPPIPE:FLOWMAX");
+	int *OVBDvlv = (int *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK:OUT:ISOPEN");
+
+	//sprintf(oapiDebugString(), "Mass: %lf VapMass: %.5f Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *PotH2OMass, *PotH2OVapMass, KelvinToFahrenheit(*PotH2OTemp), *PotH2OPress *PSI, *DrinkPipeFlow, *DrinkPipeFlowmax, *PotH2OLeakVlv, *NumCrew);
+	//sprintf(oapiDebugString(), "Mass: %lf Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *UrineMass, KelvinToFahrenheit(*UrineTemp), *UrinePress *PSI, *OVBDPipeFlow, *OVBDPipeFlowmax, *OVBDvlv, *NumCrew);
 	*/
 
 //GSE Oxygen Purge Debug Lines	
@@ -3665,6 +3679,8 @@ void Saturn::GetECSStatus(ECSStatus &ecs)
 		ecs.SecECSTestHeating += SecECSTestHeater->max_boiler_power;
 
 	ecs.CSMO2HoseConnected = GetCSMO2Hose()->out != NULL;
+
+	ecs.UCTAStatus = WaterController.GetCMUCDPct();
 }
 
 void Saturn::SetCrewNumber(int number) {

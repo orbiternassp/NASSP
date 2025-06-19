@@ -285,15 +285,30 @@ plane whenever the astronaut's LOS is to the target or the horizon, deg\\
 
 \paragraph{Explanation}\mbox{} \\
 
-Coelliptic orbits are two orbits that are coplanar (identical inclination and longitude of the ascending node) and confocal (identical eccentricity and argument of periapsis). To achieve such an orbit relative to a target vessel this MFD can calculate a maneuver based on Program 33 of the AGC and the maneuver to initiate the coelliptic sequence, based on Program 32 of the AGC.\\
+The Coelliptic Sequence Program computes the incremental velocities required to meet some relative vehicle positioning at the terminal phase initiation (TPI)
+point. The maneuvers of the iterative sequence are the concentric sequence initiation maneuver (CSI) and the coelliptic maneuver (CDH), which may or may not be scheduled.\\
+
+The desired relative positioning at TPI has two options: (1) that the active vehicle have a certain elevation angle to the target, or (2) that a desired differential altitude exist is the coelliptic orbit configuration.\\
+
+The time of the CSI maneuver, if scheduled, is input. The desired CSI DV that will only be horizontal, may be computed with respect to a desired elevation
+angle at TPI or a desired DH at CDH. An option exists to vary the CSI time within limits to reach both of these constraints.\\
+
+There are five options for the computation of the CDH maneuver:
+\begin{enumerate}
+	\item Arrival at a next apsis (Integrator)
+	\item At an input time
+	\item After some desired travel angle from CSI
+	\item Arrival at a next apsis (Keplerian)
+	\item Number of half revolutions from CSI
+\end{enumerate}
 
 \paragraph{Buttons}\mbox{} \\
 
 \textbf{INI:} Go to SPQ initialization page.\\
-\textbf{VEH:} Choose which of the two vehicles is the chaser and which is the target (MPT mode only).\\
-\textbf{CHA:} Threshold time for the state vector of the chaser vehicle (MPT mode only).\\
-\textbf{TGT:} Threshold time for the state vector of the target vehicle (MPT mode only).\\
-\textbf{MOD:} Calculation mode, CSI or CDH maneuver.\\
+\textbf{VEH:} Choose which of the two vehicles is the chaser and which is the target.\\
+\textbf{CHA:} Select the chaser vessel or the threshold time for the state vector of the chaser vehicle (MPT mode only).\\
+\textbf{TGT:} Select the target vessel or the threshold time for the state vector of the target vehicle (MPT mode only).\\
+\textbf{MOD:} Calculation mode, CSI or CDH maneuver or the optimum CSI mode which iterates on the CSI time to achieve both the desired DH at CDH and the desired time at TPI.\\
 \textbf{TIM:} Switches between fixed GET and finding the delta height of the maneuver or fixed delta height and finding the time of ignition.\\
 \textbf{TIG:} The time of the maneuver in GET. If the option is used to find the CDH time based on delta height this is an initial guess.\\
 \textbf{CLC:} Calculate the burn solution.\\
@@ -303,8 +318,14 @@ Coelliptic orbits are two orbits that are coplanar (identical inclination and lo
 
 \textbf{DH:} Delta height at the CDH maneuver.\\
 \textbf{E:} Desired elevation angle at TPI.\\
+\textbf{WT:} Desired travel angle between TPI and TPF.\\
 \textbf{TPI:} Desired TPI time.\\
+\textbf{CDH:} Select the option for the CDH maneuver point.\\
+\textbf{VAL:} Select the defining value for the CDH maneuver point.\\
 \textbf{BCK:} Go back to SPQ calculation page.\\
+\paragraph{Display}\mbox{} \\
+
+See Rendezvous Evaluation Display \ref{RED} under MOCR Displays.\\
 \newpage
 
 \subsubsection{Docking Initiation Processor (DKI)}
@@ -1394,16 +1415,18 @@ The Maneuver Pre-Advisory Data (PAD) contains all necessary numbers to safely co
 
 \subsubsection{Buttons}
 
-\textbf{VEH:}The vehicle configuration is only displayed here and chosen on the configuration page.\\
-\textbf{ENG:} Choose between the Service Propulsion System (SPS) and the Reaction Control System (RCS) for the maneuver.\\
+\textbf{VEH:} Cycle between using the docked (CSM/LM) or undocked vehicle configuration for the maneuver.\\
+\textbf{ENG:} Cycle between the available thrusters for the maneuver.\\
 \textbf{HEA:} Choose between conducting the maneuver in a heads-up or a heads-down orientation.\\
+\textbf{ULL:} Choose the ullage thrusters (2 or 4) and ullage duration for the maneuver.\\
 \textbf{TIG:} If you want to display a Maneuver PAD for a maneuver not calculated with the Apollo RTCC MFD you can manually enter the desired Time of Ignition and Delta V.\\
 \textbf{DV:} See above.\\
-\textbf{CLC:} Calculate the missing numbers on the Maneuver PAD.\\
-\textbf{OPT:} Switch between the Maneuver PAD, the Apollo 7 TPI PAD and the TLI PAD.\\
-\textbf{REQ:} Request a maneuver solution calculated with LTMFD or IMFD.\\
+\textbf{CLC:} Calculate the Maneuver PAD.\\
+\textbf{OPT:} Switch between the CSM and LM Maneuver PADs, the Apollo 7 TPI PAD, the TLI PAD and the PDI PAD.\\
+\textbf{STA:} Choose the time before the maneuver for which the sextant star check, boresight star check and backup GDC alignment are calculated.\\
+\textbf{GDC:} Choose the preferred star set for the backup GDC alignment. There are four sets of stars that can be used for the alignment. The Maneuver PAD logic will usually first try Deneb and Vega and perform an occultation check and a yaw angle check (75 deg max.). If this set is not available it will attempt to use the next one. With this button the preferred set, which will be checked first, can be selected. If it is not available the PAD would still show a different set that is available. The time for which the checks are performed is the same time as selected for the sextant and boresight star check.\\
 \textbf{BCK:} Go back to the main menu.\\
-
+\newpage
 \subsection{Entry PAD}
 
 \subsubsection{Explanation}
@@ -1610,8 +1633,8 @@ On the left side of this page appear the input parameters that are automatically
 \textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\
 \textbf{TYP:} Choose the type of vehicle configuration (CSM or LM, docked or undocked).\\
 \textbf{STA:} Choose the type of LM configuration that is currently being used, ascent or descent configuration.\\
-\textbf{SXT:} Change the time of the sextant star check, which is part of the procedure for a normal maneuver. During Earth orbit missions the Earth often blocks the sextant from viewing many stars, so adjusting the time of the check before the maneuver allows the MFD to find a suitable star.\\
-\textbf{UPL:} Inhibit or enable uplinks during times of no available ground stations. Currently all ground stations being used for Apollo 7 are implemented.\\
+\textbf{CG:} Page for changing the thrust and CG tables. The CG tables are used to determine e.g. SPS trim gimbal angles. The tables are a function of weight of the vehicle. The CG tables contain the center of gravity in 3 dimensions, while the thrust tables contain thrust and weight loss rate of the selected thruster. There are default tables; alternative an initial table can be loaded in the RTCC mission constants file. Afterwards the table are being saved and loaded in scenarios. Note that presently the CG tables are not saved in scenarios!
+
 \textbf{DAT:} Choose the launch date for the mission.\\
 \textbf{TIM:} Choose the launch time for the mission. This will update the launch time of the CSM stored in the RTCC.\\
 \textbf{EPO:} Choose the AGC epoch. Usually this is a MJD at around January 1st of the yearly coordinate system defining period. This value should be automatically chose correctly for the AGC version in use.\\
@@ -1870,6 +1893,87 @@ Select the target point like in example 1. Two input values have to be tweaked m
 \end{tabbing}
 \newpage
 
+\textbf{MED Code}: M10\\
+\textbf{Purpose}: CSM and LM thrust characteristics\\
+\textbf{Example}: \texttt{M10,S,,1,20000,20673,65.62;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &Thruster Code&Total no. of entries in table&Entry no. of this set&Weight&Thrust Level&Weight Loss Rate\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FXP&FXP&FLP&FLP&FLP \\
+ \hline
+ \textbf{Input Units} &S, A, D&&&lbs&lbf&lbs\\
+ \hline
+ \textbf{Checking Option}&&1$\leq$X$\leq$40&1$\leq$X$\leq$40&X$\geq$1000&0$\leq$X$\leq$28000&\\
+ \hline
+ \textbf{Missing Item Option}&Error&Ignore&Error&Error&Error&Error\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+
+\newpage
+
+\textbf{MED Code}: M11\\
+\textbf{Purpose}: CSM and LM CG characteristics\\
+\textbf{Example}: \texttt{M11,C,,1,20000,1.0,2.0,3.0;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &Vehicle&Total no. of entries in table&Entry no. of this set&Weight&X coordinate of CG&Y coordinate of CG\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FXP&FXP&FLP&FLP&FLP \\
+ \hline
+ \textbf{Input Units} &C, L, A&&&lbs&inches&inches\\
+ \hline
+ \textbf{Checking Option}&&1$\leq$X$\leq$40&1$\leq$X$\leq$40&&&\\
+ \hline
+ \textbf{Missing Item Option}&Error&Ignore&Error&Error&Error&Error\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+\newpage
+\textbf{MED Code}: M11 (cont.)\\
+\textbf{Purpose}: \\
+\textbf{Example}: \\
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &Z coordinate of CG&&&&&\\
+ \hline
+ \textbf{Input Format} &FLP&&&&& \\
+ \hline
+ \textbf{Input Units} &inches&&&&& \\
+ \hline
+ \textbf{Checking Option}&&&&&&\\
+ \hline
+ \textbf{Missing Item Option}&Error&&&&&\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+
+\newpage
 \textbf{MED Code}: M49\\
 \textbf{Purpose}: Change fuel remaining weights\\
 \textbf{Example}: \texttt{M49,CSM,20000;}
@@ -2782,6 +2886,26 @@ AGS VX, VY, VZ&Components of external DV vector required for targeting the onboa
 \end{tabular}
 \end{center}
 \newpage
+\subsection{Rendezvous Evaluation Display (MSK 0058)} \label{RED}
+\subsubsection{Function}
+The Rendezvous Evaluation Display shows the selected rendezvous plan from either the DKI or SPQ processor.
+\subsubsection{Display}
+\begin{center}
+\begin{tabular}{ L{2.8cm} L{8cm} L{3cm} }
+\underline{ITEM} & \underline{DESCRIPTION} & \underline{UNITS} \\
+ID&Row number of plan from Rendezvous Planning Table&\\
+M&Orbit number in which rendezvous is to occur&\\
+GET&Elapsed impulsive time of the maneuver&HR:MIN:SEC\\
+DT&Amount of time between each maneuver&MIN:SEC\\
+DV&Velocity increment for the maneuver&FT/SEC\\
+VEH&Maneuver vehicle code&\\
+ID&Maneuver purpose code of this maneuver&\\
+PHASE&Phase angle after the maneuver&DEG.\\
+DH&Height offset after the maneuver&N.M.\\
+HP/HA&Height of perigee and height of apogee&N.M.\\
+\end{tabular}
+\end{center}
+\newpage
 \subsection{Space Digitals (MSK 0082)}
 
 \subsubsection{Function}
@@ -3105,7 +3229,30 @@ Differential Correction (DC) is the state vector derived from long period ground
 The last panel shows the last executed maneuver in the mission plan table of the vehicle. The displayed times are ullage on and end of the thrust tailoff period after cutoff.\\
 
 To cause an ephemeris update the TUP button on each side can be pressed and then a vector from the usable vector table is chosen to do the update.\\
+\subsubsection{Errors}
+If any function of the VPS does not work as expected, an error might have occurred. An associated error message will have been written to the on-line monitor display (MSK 1629). Here follows a list of possible error messages:\\
 
+\begin{tabular}{p{3cm} p{10cm}}
+\underline{Code}&\underline{Error Description}\\
+1&An unrecognizable queue ID was detected.\\
+2&Not used.\\
+3&Not used.\\
+4&The PBI request made was not a valid request (missing information, two sources indicated, etc.).\\
+5&Request to move vector to Usable Slot cannot be honored because there is no vector in the corresponding Evaluation Slot.\\
+6&Request to move vector to ephemeris update cannot be honored because there is no vector in the corresponding Usable Slot.\\
+7&Not used.\\
+8&Test of PBI message header failed; improper message was routed to module.\\
+9&Unidentifiable vector ID in the S84 MED.\\
+10&Vector to be moved to ephemeris update could not be transformed to ECI coordinates.\\
+11&Telemetry vector requested by PBI cannot be furnished this mission.\\
+12&Not used.\\
+13&Not used.\\
+14&The matrix to rotate the telemetry vector requested is not available.\\
+15&Request is for a telemetry vector that is not available in the collection slot for this type vector.\\
+16&Invalid vehicle code from high-speed processor.\\
+17&Invalid vector source code from high-speed processor.\\
+18&Vector with lunar landing site indicator set cannot be routed to CSM ephemeris update.\\
+\end{tabular}
 \newpage
 \section{Config Files}
 
@@ -3222,6 +3369,18 @@ MHVACG\_N&Number of entries in LM ascent stage CG table&14&\\
 \begin{tabular}{L{3cm} L{7cm} L{2.5cm} L{1.5cm}}
 \hline
 \textbf{Name} & \textbf{Description} & \textbf{Default Value} & \textbf{Unit}\\
+\hline
+MHTSTC&SPS thrust table&20500 lbf and 65.27 lbs &lbf and lbs/sec\\
+\hline
+MHTSTC\_N&Number of entries in SPS thrust table&1&\\
+\hline
+MHTATC&APS thrust table&3439 lbf and 11.31 lbs/sec&lbf and lbs/sec\\
+\hline
+MHTATC\_N&Number of entries in APS thrust table&1&\\
+\hline
+MHTDTC&DPS thrust table&9712.5 lbf and 32.27 lbs/sec&lbf and lbs/sec\\
+\hline
+MHTDTC\_N&Number of entries in DPS thrust table&1&\\
 \hline
 MGTESE&Number of tesseral and sectorial coefficients in Earth potential&0 (use 4 in Open Orbiter)&\\
 \hline

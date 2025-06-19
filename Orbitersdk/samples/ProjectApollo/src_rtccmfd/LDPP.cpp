@@ -1469,7 +1469,7 @@ void LDPP::CNODE(EphemerisData sv_A, EphemerisData sv_P, double &t_m, VECTOR3 &d
 		{
 			return;
 		}
-		sv_P = PositionMatch(sv_P, sv_A, mu);
+		sv_P = PositionMatch(sv_A, sv_P, mu);
 		GMT_CN = sv_A.GMT;
 	} while (ICT <= 3);
 
@@ -1529,38 +1529,24 @@ EphemerisData LDPP::coast(EphemerisData sv1, double dt, bool Integrated) const
 
 EphemerisData LDPP::PMMLAEG(EphemerisData sv0, int opt, double param, bool &error, double DN) const
 {
-	SV sv1, sv2;
-	EphemerisData sv3;
-	double GMTBase;
-
-	GMTBase = pRTCC->GetGMTBase();
-
-	sv1 = pRTCC->ConvertEphemDatatoSV(sv0);
-
-	//For time option, convert GMT to MJD
-	if (opt == 0)
-	{
-		param = OrbMech::MJDfromGET(param, pRTCC->GetGMTBase());
-	}
-
-	sv2 = OrbMech::PMMLAEG(pRTCC->SystemParameters.AGCEpoch, sv1, opt, param, error, DN);
-
-	sv3 = pRTCC->ConvertSVtoEphemData(sv2);
-
-	return sv3;
+	VehicleDataBlock sv1, sv2;
+	
+	sv1.sv = sv0;
+	error = AnalyticEphemerisGenerator::TimeOfArrivalRoutine(pRTCC, sv1, opt, param, DN, sv2);
+	return sv2.sv;
 }
 
 EphemerisData LDPP::PositionMatch(EphemerisData sv_A, EphemerisData sv_P, double mu) const
 {
-	//Wrapper to call PositionMatch with EphemerisData instead of SV
-	SV sv_A1, sv_P1, sv_P2;
+	//Wrapper to call PositionMatch with EphemerisData
+	VehicleDataBlock sv_A1, sv_P1, sv_P2;
+	double DELH, TA;
 
-	sv_A1 = pRTCC->ConvertEphemDatatoSV(sv_A);
-	sv_P1 = pRTCC->ConvertEphemDatatoSV(sv_P);
+	sv_A1.sv = sv_A;
+	sv_P1.sv = sv_P;
 
-	sv_P2 = OrbMech::PositionMatch(pRTCC->SystemParameters.AGCEpoch, sv_A1, sv_P1, mu);
-
-	return pRTCC->ConvertSVtoEphemData(sv_P2);
+	AnalyticEphemerisGenerator::TAUA(pRTCC, sv_A1, sv_P1, sv_P2, DELH, TA);
+	return sv_P2.sv;
 }
 
 double LDPP::P29TimeOfLongitude(VECTOR3 R0, VECTOR3 V0, double GMT, double phi_d) const
