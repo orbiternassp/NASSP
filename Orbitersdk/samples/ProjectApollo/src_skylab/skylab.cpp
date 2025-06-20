@@ -128,7 +128,7 @@ void Skylab::clbkSaveState(FILEHANDLE scn)
 
 	if (csm) oapiWriteScenario_string(scn, "ONAME", csm->GetName());
 
-	oapiWriteScenario_int(scn, "TRACKLIGHTS", trackLightsActive);
+	papiWriteScenario_bool(scn, "TRACKLIGHTS", trackLightsActive);
 
 	atmdc.SaveState(scn);
 }
@@ -139,6 +139,8 @@ void Skylab::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 
 	while (oapiReadScenario_nextline(scn, line))
 	{
+		papiReadScenario_bool(line, "TRACKLIGHTS", trackLightsActive);
+
 		if (!strnicmp(line, "ONAME", 5))
 		{
 			char temp[64];
@@ -146,10 +148,6 @@ void Skylab::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 
 			OBJHANDLE hVessel = oapiGetVesselByName(temp);
 			if (hVessel != NULL) csm = oapiGetVesselInterface(hVessel);
-		}
-		if (!strnicmp(line, "TRACKLIGHTS", 11))
-		{
-			sscanf(line + 12, "%i", &trackLightsActive);
 		}
 		else if (!strnicmp(line, ATMDC_START_STRING, sizeof(ATMDC_START_STRING)))
 		{
