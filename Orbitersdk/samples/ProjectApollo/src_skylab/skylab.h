@@ -32,6 +32,7 @@
 #include "SkylabConnector.h"
 #include "nasspdefs.h"
 #include "ATMDC.h"
+#include "papi.h"
 
 
 class Skylab: public ProjectApolloConnectorVessel{

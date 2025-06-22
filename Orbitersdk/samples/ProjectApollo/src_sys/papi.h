@@ -23,6 +23,8 @@
   **************************************************************************/
 
 #pragma warning(disable : 4996 ) 
+#if !defined(_PAPI_H)
+#define _PAPI_H
 
 
 // All inline functions and const variables should be static, see
@@ -337,3 +339,5 @@ static inline bool papiReadScenario_mat(char *line, char *item, MATRIX3 &v) {
 	}
 	return false;
 }
+
+#endif
