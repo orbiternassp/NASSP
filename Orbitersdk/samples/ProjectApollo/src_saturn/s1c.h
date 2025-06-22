@@ -110,29 +110,6 @@ enum S1cState
 	S1C_STATE_WAITING					///< S1c is idle after motor burnout.
 };
 
-class S1C;
-
-class SICConnector : public Connector
-{
-public:
-	SICConnector();
-	~SICConnector();
-
-	void SetSIC(S1C* sat) { OurVessel = sat; };
-
-protected:
-	S1C* OurVessel;
-};
-
-class SICtoSIIConnector : public SICConnector
-{
-public:
-	SICtoSIIConnector();
-	~SICtoSIIConnector();
-
-	bool ReceiveMessage(Connector* from, ConnectorMessage& m);
-};
-
 ///
 /// This code simulates the S1c stage. Basically it simulates thrust decay if there is any fuel left,
 /// fires any retro rockets to push it away from the Saturn and then sits around waiting to be deleted.
@@ -248,8 +225,7 @@ protected:
 	//Move us into the SICSystems class eventually
 	PanelSDK Panelsdk;
 	SICSystems* sicSystems;
-	Pyro* SICSIISepPyros;
-	SICtoSIIConnector sibSIVBConnector;
+	Pyro SICSIISepPyros;
 	//***********************\\\
 
 	Sound LaunchS, SShutS;
