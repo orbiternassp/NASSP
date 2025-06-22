@@ -914,6 +914,7 @@ private:								// Saturn LV
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
 	friend class ARCore;
+	friend class MCC_Calculations;
 };
 
 /* ********************
@@ -1288,6 +1289,7 @@ private:
 	};
 
 	friend class ARCore;
+	friend class MCC_Calculations;
 };
 
 #define LVDC_START_STRING "LVDC_BEGIN"

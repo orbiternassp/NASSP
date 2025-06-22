@@ -197,7 +197,7 @@ public:
 	void TLIProcessorCalc();
 	void SaturnVTLITargetUplink();
 	int GetVesselParameters(bool IsCSM, int docked, int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass);
-	int menuCalculateIMUComparison(bool IsCSM);
+	int menuCalculateAttitudeComparison(bool IsCSM, bool IsAGC);
 	void menuCalculateIMUParkingAngles(agc_t* agc);
 
 	int startSubthread(int fcn, bool IsCSM = true);
@@ -228,11 +228,8 @@ public:
 
 	//CONCENTRIC RENDEZVOUS PAGE
 	int SPQMode;	//0 = CSI on time, 1 = CDH, 2 = optimum CSI
-	double CSItime;	//Time of the CSI maneuver
 	double CDHtime;	//Time of the CDH maneuver
-	double SPQTIG;	//Time of ignition for concentric rendezvous maneuver
 	int CDHtimemode; //CSI: 0 = fixed TIG at TPI, 1 = fixed DH at CDH. CDH: 0=Fixed, 1 = Find GETI
-	VECTOR3 SPQDeltaV;
 
 	//ORBIT ADJUSTMENT PAGE
 	int GMPManeuverCode; //Maneuver code
@@ -384,6 +381,7 @@ public:
 	LunarTargetingProgramOutput LUNTAR_Output;
 
 	//DEBUG
+	bool DebugLMComputer; //true = LGC, false = AGS
 	VECTOR3 DebugIMUTorquingAngles;
 
 	//IMU PARKING ANGLES

@@ -32,6 +32,7 @@ class LEM;
 class Crawler;
 class MCC;
 class SIVB;
+class Skylab;
 
 ///
 /// \ingroup MFD
@@ -79,6 +80,7 @@ public:
 	void menuSetLGCPage();
 	void menuSetDebugPage();
 	void menuSetFailuresPage();
+	void menuSetSLPage();
 
 	void menuKillRot();
 	void menuSaveEMSScroll();
@@ -102,7 +104,7 @@ public:
 	void menuSetSVSlot();
 	void menuClearDebugLine();
 	void menuFreezeDebugLine();
-	void menuSetIUSource();
+	void menuSetUplinkVessel();
 	void menuCycleIUUplinkType();
 	void menuSetIUUplinkInp1();
 	void menuSetIUUplinkInp2();
@@ -115,6 +117,10 @@ public:
 	void menuSetRandomFailures();
 	void menuClearAllFailures();
 	void menuAEAACommands();
+
+	void menuSLUplinkType();
+	void menuSLUplinkOption();
+	void menuSendSLUplink();
 
 	OBJHANDLE AGCGravityRef(VESSEL *vessel) const;
 
@@ -138,6 +144,7 @@ protected:
 	LEM *lem;
 	SIVB *sivb;
 	MCC *mcc;
+	Skylab *sl;
 	int screen;
 	bool debug_frozen;
 	bool isSaturnV;

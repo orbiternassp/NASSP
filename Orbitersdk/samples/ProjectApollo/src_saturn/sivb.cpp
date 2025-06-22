@@ -653,7 +653,8 @@ void SIVB::SetS4b()
 		sivbsys->CreateParticleEffects(1400.0*0.0254); //CG location
 	}
 
-	if (PanelsHinged && SLAHasBeacons) {
+	if ((PanelsHinged || PanelsOpened) && SLAHasBeacons && MissionTime > (23.5 * 3600.0))
+	{
 		ActivateStrobes();
 	}
 }

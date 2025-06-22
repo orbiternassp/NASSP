@@ -44,7 +44,7 @@ static PARTICLESTREAMSPEC lh2_npv_venting_spec = {
 	3.0,	// growthrate
 	0.5,    // atmslowdown
 	PARTICLESTREAMSPEC::DIFFUSE,
-	PARTICLESTREAMSPEC::LVL_PLIN, 0.0, 1.0,
+	PARTICLESTREAMSPEC::LVL_LIN, 0.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
@@ -58,7 +58,7 @@ static PARTICLESTREAMSPEC lh2_cvs_venting_spec = {
 	1.0,	// growthrate
 	0.5,    // atmslowdown
 	PARTICLESTREAMSPEC::DIFFUSE,
-	PARTICLESTREAMSPEC::LVL_PLIN, 0.0, 1.0,
+	PARTICLESTREAMSPEC::LVL_LIN, 0.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
@@ -72,7 +72,7 @@ static PARTICLESTREAMSPEC lox_npv_venting_spec = {
 	3.0,	// growthrate
 	0.5,    // atmslowdown
 	PARTICLESTREAMSPEC::DIFFUSE,
-	PARTICLESTREAMSPEC::LVL_PLIN, 0.0, 1.0,
+	PARTICLESTREAMSPEC::LVL_LIN, 0.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
@@ -86,7 +86,7 @@ static PARTICLESTREAMSPEC lox_dump_venting_spec = {
 	0.15,	// growthrate
 	0.5,    // atmslowdown 
 	PARTICLESTREAMSPEC::DIFFUSE,
-	PARTICLESTREAMSPEC::LVL_FLAT, 0.6, 0.6,
+	PARTICLESTREAMSPEC::LVL_LIN, 0.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
@@ -646,6 +646,7 @@ BaseSIVBSystems::BaseSIVBSystems() :
 	InflightCalibrateModeOn = false;
 	FuelInjTempOKBypass = false;
 	LH2TankContinuousVentReliefOverrideSOVOpenOn = false;
+	TelemetryCalibrateOn = false;
 	BurnerLOXShutdownValveOpenOn = false;
 	BurnerLOXShutdownValveCloseOn = false;
 	BurnerLH2PropellantValveOpenOn = false;

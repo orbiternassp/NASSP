@@ -413,7 +413,7 @@ void TwoImpulseProcessor::MultipleSolution()
 					{
 						//Compute next environment change following frozen maneuver of first plan
 						VehicleDataBlock sv_temp = opt.RequestIndicator == 2 ? sv_C2_apo : sv_C1_apo;
-						pRTCC->PMMDAN(sv_temp, 1, PMMDAN_ERR, T_c, T_c_apo);
+						PMMDAN_ERR = AnalyticEphemerisGenerator::PMMDAN(pRTCC, sv_temp, 1, T_c, T_c_apo);
 						if (PMMDAN_ERR)
 						{
 							DT_Light = 0.0;
@@ -428,7 +428,7 @@ void TwoImpulseProcessor::MultipleSolution()
 						}
 					}
 					//Compute next environment change following variable maneuver of this plan
-					pRTCC->PMMDAN(opt.RequestIndicator == 2 ? sv_C1_apo : sv_C2_apo, 1, PMMDAN_ERR, T_c, T_c_apo);
+					PMMDAN_ERR = AnalyticEphemerisGenerator::PMMDAN(pRTCC, opt.RequestIndicator == 2 ? sv_C1_apo : sv_C2_apo, 1, T_c, T_c_apo);
 					if (PMMDAN_ERR)
 					{
 						//With error just set it to false
@@ -643,8 +643,8 @@ void TwoImpulseProcessor::SingleSolutionTransferPlan()
 		//Compute impulsive pitch, yaw and VX, VY, VZ components for 2nd maneuver
 		PMSTICN_PY(sv_C2_apo.sv.R, sv_C2_apo.sv.V, sv_C2.sv.R, sv_C2.sv.V, PITCH2, YAW2, DV_LVLH2);
 		//Compute next environment change following each maneuver
-		pRTCC->PMMDAN(sv_C1_apo, 1, PMMDAN_ERR, T_c1, T_c_apo);
-		pRTCC->PMMDAN(sv_C2_apo, 1, PMMDAN_ERR, T_c2, T_c_apo);
+		PMMDAN_ERR = AnalyticEphemerisGenerator::PMMDAN(pRTCC, sv_C1_apo, 1, T_c1, T_c_apo);
+		PMMDAN_ERR = AnalyticEphemerisGenerator::PMMDAN(pRTCC, sv_C2_apo, 1, T_c2, T_c_apo);
 		//Put data in table
 		pRTCC->PZTIPSS.LMSTAID = LMSTAID;
 		pRTCC->PZTIPSS.CSMSTAID = CSMSTAID;
@@ -934,10 +934,10 @@ void TwoImpulseProcessor::ExternalRequest(TwoImpulseResuls &res)
 	else
 	{
 		//Pass solution back
-		res.sv_tig = sv_C1.sv;
-		res.sv_tig_apo = sv_C1_apo.sv;
-		res.sv_tig2 = sv_C2.sv;
-		res.sv_tig2_apo = sv_C2_apo.sv;
+		res.sv_tig = sv_C1;
+		res.sv_tig_apo = sv_C1_apo;
+		res.sv_tig2 = sv_C2;
+		res.sv_tig2_apo = sv_C2_apo;
 		res.dV = sv_C1_apo.sv.V - sv_C1.sv.V;
 		res.dV2 = sv_C2_apo.sv.V - sv_C2.sv.V;
 		res.dV_LVLH = mul(OrbMech::LVLH_Matrix(sv_C1.sv.R, sv_C1.sv.V), res.dV);

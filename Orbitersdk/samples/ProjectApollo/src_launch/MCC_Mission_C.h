@@ -37,6 +37,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY0STATE7	17
 #define MST_C_DAY0STATE8	18
 #define MST_C_DAY0STATE9	19
+#define MST_C_DAY0STATE10	20
+#define MST_C_DAY0STATE11	21
+#define MST_C_DAY0STATE12	22
 
 // DAY 1
 #define MST_C_DAY1STATE1	30
@@ -48,6 +51,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY1STATE7	36
 #define MST_C_DAY1STATE8	37
 #define MST_C_DAY1STATE9	38
+#define MST_C_DAY1STATE10	39
 
 // DAY 2
 #define MST_C_DAY2STATE1	50
@@ -55,6 +59,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY2STATE3	52
 #define MST_C_DAY2STATE4	53
 #define MST_C_DAY2STATE5	54
+#define MST_C_DAY2STATE6	55
+#define MST_C_DAY2STATE7	56
 
 // DAY 3
 #define MST_C_DAY3STATE1	60
@@ -62,6 +68,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY3STATE3	62
 #define MST_C_DAY3STATE4	63
 #define MST_C_DAY3STATE5	64
+#define MST_C_DAY3STATE6	65
+#define MST_C_DAY3STATE7	66
+#define MST_C_DAY3STATE8	67
+#define MST_C_DAY3STATE9	68
 
 // DAY 4
 #define MST_C_DAY4STATE1	70
@@ -69,6 +79,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY4STATE3	72
 #define MST_C_DAY4STATE4	73
 #define MST_C_DAY4STATE5	74
+#define MST_C_DAY4STATE6	75
 
 // DAY 5
 #define MST_C_DAY5STATE1	80
@@ -83,42 +94,50 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_C_DAY5STATE10	89
 
 // DAY 6
-#define MST_C_DAY6STATE1	90
-#define MST_C_DAY6STATE2	91
-#define MST_C_DAY6STATE3	92
-#define MST_C_DAY6STATE4	93
-#define MST_C_DAY6STATE5	94
-#define MST_C_DAY6STATE6	95
+#define MST_C_DAY6STATE1	100
+#define MST_C_DAY6STATE2	101
+#define MST_C_DAY6STATE3	102
+#define MST_C_DAY6STATE4	103
+#define MST_C_DAY6STATE5	104
+#define MST_C_DAY6STATE6	105
+#define MST_C_DAY6STATE7	106
+#define MST_C_DAY6STATE8	107
+#define MST_C_DAY6STATE9	108
+#define MST_C_DAY6STATE10	109
+#define MST_C_DAY6STATE11	110
 
 // DAY 7
-#define MST_C_DAY7STATE1	100
-#define MST_C_DAY7STATE2	101
-#define MST_C_DAY7STATE3	102
+#define MST_C_DAY7STATE1	120
+#define MST_C_DAY7STATE2	121
+#define MST_C_DAY7STATE3	122
+#define MST_C_DAY7STATE4	123
+#define MST_C_DAY7STATE5	124
 
 // DAY 8
-#define MST_C_DAY8STATE1	110
-#define MST_C_DAY8STATE2	111
-#define MST_C_DAY8STATE3	112
-#define MST_C_DAY8STATE4	113
-#define MST_C_DAY8STATE5	114
-#define MST_C_DAY8STATE6	115
-#define MST_C_DAY8STATE7	116
-#define MST_C_DAY8STATE8	117
+#define MST_C_DAY8STATE1	130
+#define MST_C_DAY8STATE2	131
+#define MST_C_DAY8STATE3	132
+#define MST_C_DAY8STATE4	133
+#define MST_C_DAY8STATE5	134
+#define MST_C_DAY8STATE6	135
+#define MST_C_DAY8STATE7	136
+#define MST_C_DAY8STATE8	137
+#define MST_C_DAY8STATE9	138
+#define MST_C_DAY8STATE10	139
+#define MST_C_DAY8STATE11	140
 
 // DAY 9
-#define MST_C_DAY9STATE1	120
-#define MST_C_DAY9STATE2	121
-#define MST_C_DAY9STATE3	122
-#define MST_C_DAY9STATE4	123
-#define MST_C_DAY9STATE5	124
+#define MST_C_DAY9STATE1	150
+#define MST_C_DAY9STATE2	151
+#define MST_C_DAY9STATE3	152
+#define MST_C_DAY9STATE4	153
 
 // DAY 10
-#define MST_C_DAY10STATE1	130
-#define MST_C_DAY10STATE2	131
-#define MST_C_DAY10STATE3	132
-#define MST_C_DAY10STATE4	133
-#define MST_C_DAY10STATE5	134
-#define MST_C_DAY10STATE6	135
+#define MST_C_DAY10STATE1	160
+#define MST_C_DAY10STATE2	161
+#define MST_C_DAY10STATE3	162
+#define MST_C_DAY10STATE4	163
+#define MST_C_DAY10STATE5	164
 
 // SPECIAL
 #define MST_C_ABORT			175

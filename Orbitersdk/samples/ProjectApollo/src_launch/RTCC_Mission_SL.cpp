@@ -32,7 +32,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "rtcc.h"
 #include "../src_skylab/skylab.h"
 
-bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDesc, char * upMessage)
+bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc, char* upMessage)
 {
 	char uplinkdata[1024 * 3];
 	char Buff[128];
@@ -50,7 +50,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		double iptr, gmt, ss;
 		int hh, mm;
-		gmt = modf(oapiGetSimMJD(), &iptr)*24.0*3600.0 + 4.0*3600.0; //TBD: Not sure this is good
+		gmt = modf(oapiGetSimMJD(), &iptr) * 24.0 * 3600.0 + 4.0 * 3600.0; //TBD: Not sure this is good
 
 		OrbMech::SStoHHMMSS(gmt, hh, mm, ss, 0.01);
 
@@ -68,7 +68,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		sprintf(upMessage, "TBD: PRELAUNCH PAD");
 
 		EphemerisData sv_SWS = StateVectorCalcEphem(calcParams.tgt);
-		EphemerisData sv_SWS_upl = coast(sv_SWS, GMTfromGET(20.0*60.0) - sv_SWS.GMT);
+		EphemerisData sv_SWS_upl = coast(sv_SWS, GMTfromGET(20.0 * 60.0) - sv_SWS.GMT);
 
 		AGCStateVectorUpdate(uplinkdata, 1, RTCC_MPT_LM, sv_SWS_upl);
 
@@ -83,25 +83,25 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 	{
 		//P10 MED: Enter actual liftoff time
 		double tephem_scal;
-		Saturn *cm = (Saturn *)calcParams.src;
+		Saturn* cm = (Saturn*)calcParams.src;
 
 		//Get TEPHEM
 		tephem_scal = GetTEPHEMFromAGC(&cm->agc.vagc, true);
 		double LaunchMJD = (tephem_scal / 8640000.) + SystemParameters.TEPHEM0;
-		LaunchMJD = (LaunchMJD - SystemParameters.GMTBASE)*24.0;
+		LaunchMJD = (LaunchMJD - SystemParameters.GMTBASE) * 24.0;
 
 		int hh, mm;
 		double ss;
 
-		OrbMech::SStoHHMMSS(LaunchMJD*3600.0, hh, mm, ss, 0.01);
+		OrbMech::SStoHHMMSS(LaunchMJD * 3600.0, hh, mm, ss, 0.01);
 
 		sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hh, mm, ss);
 		GMGMED(Buff);
 
 		//P12: CSM GRR and Azimuth
-		Saturn1b *Sat1b = (Saturn1b*)cm;
-		LVDC1B *lvdc = (LVDC1B*)Sat1b->iu->GetLVDC();
-		double Azi = lvdc->Azimuth*DEG;
+		Saturn1b* Sat1b = (Saturn1b*)cm;
+		LVDC1B* lvdc = (LVDC1B*)Sat1b->iu->GetLVDC();
+		double Azi = lvdc->Azimuth * DEG;
 		double T_GRR = lvdc->T_GRR;
 
 		sprintf_s(Buff, "P12,CSM,%d:%d:%.2lf,%.2lf;", hh, mm, ss, Azi);
@@ -133,18 +133,18 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.MV = 1; //CSM maneuvers
 
 		opt.I4 = true;
-		opt.DHNCC = 20.0*1852.0;
-		opt.DHSR = 10.0*1852.0;
+		opt.DHNCC = 20.0 * 1852.0;
+		opt.DHSR = 10.0 * 1852.0;
 		opt.MI = 5.0; //M = 5 rendezvous
 		opt.NH = opt.MI - 1.5;
 		opt.NC1 = 2.0;
 		opt.NCC = opt.MI - 1.0;
-		opt.dt_NCC_NSR = 37.0*60.0;
+		opt.dt_NCC_NSR = 37.0 * 60.0;
 		opt.NPC = -1.0;
 		opt.IPUTNA = 2; //Maneuver line at apogee
 		opt.PUTNA = 1.0;
-		opt.WT = 130.0*RAD;
-		opt.Elev = 27.0*RAD;
+		opt.WT = 130.0 * RAD;
+		opt.Elev = 27.0 * RAD;
 		opt.K46 = 4; //TPI at X minutes into light
 		opt.TIMLIT = -23.0;
 
@@ -167,7 +167,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		preliminary = true;
 	case 13: //NC1 final update
 	{
-		AP7MNV * form = (AP7MNV *)pad;
+		AP7MNV* form = (AP7MNV*)pad;
 		AP7ManPADOpt manopt;
 		DKIOpt opt;
 
@@ -176,19 +176,19 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.MV = 1; //CSM maneuvers
 
 		opt.I4 = true;
-		opt.DHNCC = 20.0*1852.0;
-		opt.DHSR = 10.0*1852.0;
+		opt.DHNCC = 20.0 * 1852.0;
+		opt.DHSR = 10.0 * 1852.0;
 		opt.MI = 5.0; //M = 5 rendezvous
 		opt.NH = opt.MI - 1.5;
 		opt.NC1 = 2.0;
 		opt.NCC = opt.MI - 1.0;
-		opt.dt_NCC_NSR = 37.0*60.0;
+		opt.dt_NCC_NSR = 37.0 * 60.0;
 		opt.NPC = -1.0;
 		opt.IPUTNA = 1; //Maneuver line at input time
 		opt.PUTNA = 2.0;
 		opt.PUTTNA = GMTfromGET(calcParams.Phasing);
-		opt.WT = 130.0*RAD;
-		opt.Elev = 27.0*RAD;
+		opt.WT = 130.0 * RAD;
+		opt.Elev = 27.0 * RAD;
 		opt.K46 = 1; //Input TPI time
 		opt.TTPI = GMTfromGET(calcParams.TPI);
 
@@ -234,7 +234,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		preliminary = true;
 	case 15: //NC2 final update
 	{
-		AP7MNV * form = (AP7MNV *)pad;
+		AP7MNV* form = (AP7MNV*)pad;
 		AP7ManPADOpt manopt;
 		DKIOpt opt;
 		double CSMMass;
@@ -244,7 +244,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.sv_LM = StateVectorCalcEphem(calcParams.tgt);
 		opt.MV = 1; //CSM maneuvers
 
-		opt.DHSR = 10.0*1852.0;
+		opt.DHSR = 10.0 * 1852.0;
 		opt.MI = 5.0; //M = 5 rendezvous
 		opt.NC1 = opt.MI - 1.5; //NC2 maneuver becomes NC1
 		opt.NH = opt.NC1 + 0.5; //NCC maneuver becomes NH
@@ -253,17 +253,17 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.IPUTNA = 1; //Maneuver line at input time
 		opt.PUTNA = opt.NC1; //NC2
 		opt.PUTTNA = GMTfromGET(calcParams.Insertion);
-		opt.WT = 130.0*RAD;
-		opt.Elev = 27.0*RAD;
+		opt.WT = 130.0 * RAD;
+		opt.Elev = 27.0 * RAD;
 		opt.K46 = 1; //Input TPI time
 		opt.TTPI = GMTfromGET(calcParams.TPI);
 
 		DockingInitiationProcessor(opt);
 
 		calcParams.CSI = PZREDT.GET[1]; //NCC time
-		calcParams.CDH = calcParams.CSI + 37.0*60.0; //NSR time
+		calcParams.CDH = calcParams.CSI + 37.0 * 60.0; //NSR time
 		calcParams.LunarLiftoff = PZREDT.PHASE[2] * RAD; //Phase angle at NSR
-		calcParams.SVSTORE1 = ConvertEphemDatatoSV(PZDKIELM.Block[0].SV_before[1], CSMMass); //State vector before NCC
+		calcParams.SVSTORE1 = ConvertEphemDatatoSV(PZDKIELM.Block[0].SV_before[1].sv, CSMMass); //State vector before NCC
 
 		manopt.TIG = calcParams.Insertion;
 		manopt.dV_LVLH = PZREDT.DVVector[0] * 0.3048;
@@ -277,28 +277,34 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		manopt.sv0 = opt.sv_CSM;
 		manopt.WeightsTable.CC[RTCC_CONFIG_C] = true;
 		manopt.WeightsTable.ConfigWeight = manopt.WeightsTable.CSMWeight = CSMMass;
+		char Buff1[64];
+		OrbMech::format_time_HHHMMSSCS(Buff1, calcParams.TPI);
 
 		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "NC2");
+		if (preliminary)
+		{
+			sprintf(form->remarks, "TPI: %s", Buff1);
+		}
 	}
 	break;
 	case 16: //NCC preliminary update
 		preliminary = true;
 	case 17: //NCC final update
 	{
-		AP7MNV * form = (AP7MNV *)pad;
+		AP7MNV* form = (AP7MNV*)pad;
 		AP7ManPADOpt manopt;
 		TwoImpulseOpt opt;
 		TwoImpulseResuls res;
 		double CSMMass;
 
-		opt.mode = 5; 
+		opt.mode = 5;
 		opt.T1 = GMTfromGET(calcParams.CSI);
 		opt.T2 = GMTfromGET(calcParams.CDH);
 
 		if (preliminary)
 		{
-			opt.sv_C = SVToVehicleDataBlock(ConvertSVtoEphemData(calcParams.SVSTORE1), 129.4*pow(0.3048, 2), calcParams.SVSTORE1.mass, 1.0);
+			opt.sv_C = SVToVehicleDataBlock(ConvertSVtoEphemData(calcParams.SVSTORE1), 129.4 * pow(0.3048, 2), calcParams.SVSTORE1.mass, 1.0);
 			CSMMass = calcParams.SVSTORE1.mass;
 		}
 		else
@@ -308,7 +314,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 
 		opt.sv_T = StateVectorCalcDataBlock(calcParams.tgt);
-		opt.DH = 10.0*1852.0;
+		opt.DH = 10.0 * 1852.0;
 		opt.PhaseAngle = calcParams.LunarLiftoff; //Angle was stored here
 
 		PMSTICN(opt, res);
@@ -319,8 +325,8 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		if (preliminary == false)
 		{
 			//State vector after NCC
-			EphemerisData sv_NCC = res.sv_tig;
-			sv_NCC.V = res.sv_tig.V + res.dV;
+			EphemerisData sv_NCC = res.sv_tig.sv;
+			sv_NCC.V = res.sv_tig.sv.V + res.dV;
 
 			calcParams.SVSTORE1 = ConvertEphemDatatoSV(sv_NCC, CSMMass);
 		}
@@ -346,7 +352,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		preliminary = true;
 	case 19: //NSR final update
 	{
-		AP7MNV * form = (AP7MNV *)pad;
+		AP7MNV* form = (AP7MNV*)pad;
 		AP7ManPADOpt manopt;
 
 		manopt.TIG = calcParams.CDH;
@@ -370,7 +376,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		preliminary = true;
 	case 21: //TPI final update
 	{
-		AP7MNV * form = (AP7MNV *)pad;
+		AP7MNV* form = (AP7MNV*)pad;
 		AP7ManPADOpt manopt;
 		TwoImpulseOpt opt;
 		TwoImpulseResuls res;
@@ -381,8 +387,8 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.sv_C = StateVectorCalcDataBlock(calcParams.src);
 		opt.sv_T = StateVectorCalcDataBlock(calcParams.tgt);
 		opt.DH = opt.PhaseAngle = 0.0;
-		opt.Elev = 27.0*RAD;
-		opt.WT = 130.0*RAD;
+		opt.Elev = 27.0 * RAD;
+		opt.WT = 130.0 * RAD;
 
 		PMSTICN(opt, res);
 
@@ -406,7 +412,7 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 	break;
 	case 22: //Docking Attitude PAD
 	{
-		GENERICPAD * form = (GENERICPAD *)pad;
+		GENERICPAD* form = (GENERICPAD*)pad;
 
 		EphemerisData sv, sv2;
 		MATRIX3 REFSMMAT;
@@ -422,16 +428,44 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID &pad, char * upString, char * upDes
 		REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		Att = SkylabDockingAttitude(sv2, REFSMMAT);
 
-		sprintf(form->paddata, "Docking attitude: R %03.0f, P %03.0f, Y %03.0f", Att.x*DEG, Att.y*DEG, Att.z*DEG);
+		sprintf(form->paddata, "Docking attitude: R %03.0f, P %03.0f, Y %03.0f", Att.x * DEG, Att.y * DEG, Att.z * DEG);
 	}
 	break;
-	case 23: //Command Skylab to Solar Inertial attitude
+	case 23: //Command Skylab to Solar Inertial attitude & turn off track lights
 	{
 		Skylab* sl = (Skylab*)calcParams.tgt;
 
 		sl->GetATMDC()->CommandSystem(052016, 050002);
 
-		sprintf(upMessage, "Skylab to Solar Inertial attitude");
+		sl->SetTrackLights(false);
+
+		sprintf(upMessage, "Skylab to Solar Inertial attitude, Lights off");
+
+	}
+	break;
+	case 24: //Pre-NC2 SV update
+	{
+		SV sv_CSM, sv_LM;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		//Turn On Skylab track lights
+		Skylab* sl = (Skylab*)calcParams.tgt;
+		sl->SetTrackLights(true);
+
+		//State vectors
+		sv_CSM = StateVectorCalc(calcParams.src);
+		sv_LM = StateVectorCalc(calcParams.tgt);
+
+		AGCStateVectorUpdate(buffer1, sv_CSM, true);
+		AGCStateVectorUpdate(buffer2, sv_LM, false);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "CSM and Skylab state vectors");
+		}
 	}
 	break;
 	}
