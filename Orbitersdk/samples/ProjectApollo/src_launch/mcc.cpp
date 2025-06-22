@@ -3766,7 +3766,6 @@ void MCC::drawPad(bool writetofile){
 
 		int hh, mm;
 		double ss;
-		char ldmkbuf[16];
 
 		sprintf(buffer, "MIDCOURSE NAVIGATION\n");
 
