@@ -2543,7 +2543,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		double GMTtimetag, TCA, AOS, NavGET;
 		char buffer1[1000];
 		char buffer2[1000];
-		char buffer3[1000];
 
 		AP11LMARKTRKPAD WSMRtempPAD;
 		LMARKTRKPADOpt landmarkoptWSMR;
