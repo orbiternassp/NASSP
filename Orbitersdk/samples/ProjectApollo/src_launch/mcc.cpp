@@ -3132,8 +3132,8 @@ void MCC::drawPad(bool writetofile){
 		double ss, ss2;
 
 		sprintf(buffer, "CSM STAR CHECK UPDATE");
-		OrbMech::SStoHHMMSS(form->GET[0], hh, mm, ss, 0.01);
-		OrbMech::SStoHHMMSS(form->TAlign[0], hh2, mm2, ss2, 0.01);
+		OrbMech::SStoHHMMSS(form->GET[0], hh, mm, ss, 1.0);
+		OrbMech::SStoHHMMSS(form->TAlign[0], hh2, mm2, ss2, 1.0);
 
 		sprintf(buffer, "%s\nXX%03d HR GET\nXXX%02d MIN SR\nX%05.2f SEC\n%+06.1f R FDAI\n%+06.1f P\n%+06.1f Y\nXX%03d HR T ALIGN\nXXX%02d MIN\nX%05.2f SEC\n", buffer, hh, mm, ss, form->Att[0].x, form->Att[0].y, form->Att[0].z, hh2, mm2, ss2);
 

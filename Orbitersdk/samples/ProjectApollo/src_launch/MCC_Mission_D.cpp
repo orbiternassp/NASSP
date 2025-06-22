@@ -41,10 +41,10 @@ void MCC::MissionSequence_D()
 	switch (MissionState)
 	{
 	case MST_D_INSERTION:	//SV Update to Separation
-		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(3.0 * 60.0 * 60.0 + 15.0 * 60.0), 7, MST_D_DAY1SVUPDATE);
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(3.0 * 3600.0 + 15.0 * 60.0), 7, MST_D_DAY1SVUPDATE);
 		break;
 	case MST_D_DAY1SVUPDATE:
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(4 * 60 * 60 + 6 * 60), 2, MST_D_SEPARATION);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(4.0 * 3600.0 + 6.0 * 60.0), 2, MST_D_SEPARATION);
 		break;
 	case MST_D_SEPARATION:	//Separation to SPS-1
 
@@ -57,7 +57,7 @@ void MCC::MissionSequence_D()
 			break;
 		case 1:
 
-			if (SubStateTime > 5.0*60.0 && mcc_calcs.GETEval(4 * 60 * 60 + 25 * 60))
+			if (SubStateTime > 5.0*60.0 && mcc_calcs.GETEval(4.0 * 3600.0 + 25.0 * 60.0))
 			{
 				if (sivb == NULL)
 				{
@@ -67,7 +67,7 @@ void MCC::MissionSequence_D()
 					if (hLV != NULL)
 					{
 						v = oapiGetVesselInterface(hLV);
-						
+
 						if (utils::IsVessel(v, utils::SaturnV_SIVB)) {
 							sivb = (SIVB *)v;
 						}
@@ -81,7 +81,7 @@ void MCC::MissionSequence_D()
 
 			break;
 		case 2:
-			if (SubStateTime > 5.0*60.0)
+			if (SubStateTime > 5.0 * 60.0)
 			{
 				sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_RESTART_MANEUVER_ENABLE, NULL);
 
@@ -89,7 +89,7 @@ void MCC::MissionSequence_D()
 			}
 			break;
 		case 3:
-			if (mcc_calcs.GETEval(4 * 60 * 60 + 50 * 60))
+			if (mcc_calcs.GETEval(4.0 * 3600.0 + 50.0 * 60.0))
 			{
 				SlowIfDesired();
 				setState(MST_D_DAY1STATE1);
@@ -98,28 +98,28 @@ void MCC::MissionSequence_D()
 		}
 		break;
 	case MST_D_DAY1STATE1:	//SPS-1 to Daylight Star Check
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(6 * 60 * 60 + 15 * 60), 10, MST_D_DAY1STATE2);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(6.0 * 3600.0 + 15.0 * 60.0), 10, MST_D_DAY1STATE2);
 		break;
 	case MST_D_DAY1STATE2: //Daylight Star Check to SV Update
-		UpdateMacro(UTP_PADONLY, PT_STARCHKPAD, mcc_calcs.GETEval(7 * 60 * 60 + 20 * 60), 9, MST_D_DAY1STATE3);
+		UpdateMacro(UTP_PADONLY, PT_STARCHKPAD, mcc_calcs.GETEval(7.0 * 3600 + 20.0 * 60.0), 9, MST_D_DAY1STATE3);
 		break;
 	case MST_D_DAY1STATE3: //SV Update to Block Data 2
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(8 * 60 * 60 + 27 * 60), 2, MST_D_DAY1STATE4);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(8.0 * 3600 + 30.0 * 60.0), 2, MST_D_DAY1STATE4);
 		break;
 	case MST_D_DAY1STATE4: //Block Data 2 to Block Data 3
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(19 * 60 * 60 + 15 * 60), 11, MST_D_DAY2STATE1);
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(19.0 * 3600.0 + 15.0 * 60.0), 11, MST_D_DAY2STATE1);
 		break;
 	case MST_D_DAY2STATE1: //Block Data 3 to SPS-2 Calculation
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(20 * 60 * 60 + 37 * 60), 12, MST_D_DAY2STATE2);
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(20.0 * 3600.0 + 37.0 * 60.0), 12, MST_D_DAY2STATE2);
 		break;
 	case MST_D_DAY2STATE2: //SPS-2 Calculation to SPS-2 Update
 		UpdateMacro(UTP_NONE, PT_NONE, true, 13, MST_D_DAY2STATE3);
 		break;
 	case MST_D_DAY2STATE3: //SPS-2 Update to SPS-3 Calculation
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(22 * 60 * 60 + 25 * 60), 100, MST_D_DAY2STATE4);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(22.0 * 3600.0 + 25.0 * 60.0), 100, MST_D_DAY2STATE4);
 		break;
 	case MST_D_DAY2STATE4: //SPS-3 Calculation to SPS-3 Update
-		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(23 * 60 * 60 + 55 * 60), 14, MST_D_DAY2STATE5);
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(23.0 * 3600.0 + 55.0 * 60.0), 14, MST_D_DAY2STATE5);
 		break;
 	case MST_D_DAY2STATE5: //SPS-3 Update to SPS-4 Calculation
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(25 * 60 * 60 + 30 * 60), 101, MST_D_DAY2STATE6);
