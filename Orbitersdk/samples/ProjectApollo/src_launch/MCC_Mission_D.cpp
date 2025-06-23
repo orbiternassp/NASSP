@@ -122,22 +122,22 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(23.0 * 3600.0 + 55.0 * 60.0), 14, MST_D_DAY2STATE5);
 		break;
 	case MST_D_DAY2STATE5: //SPS-3 Update to SPS-4 Calculation
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(25 * 60 * 60 + 30 * 60), 101, MST_D_DAY2STATE6);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(25.0 * 3600.0 + 30.0 * 60.0), 101, MST_D_DAY2STATE6);
 		break;
 	case MST_D_DAY2STATE6: //SPS-4 Calculation to SPS-4 Update
-		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(26 * 60 * 60 + 50 * 60), 15, MST_D_DAY2STATE7);
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(26.0 * 3600.0 + 50.0 * 60.0), 15, MST_D_DAY2STATE7);
 		break;
 	case MST_D_DAY2STATE7: //SPS-4 to SV Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(28 * 60 * 60 + 50 * 60), 102, MST_D_DAY2STATE8);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(28 * 3600.0 + 50.0 * 60.0), 102, MST_D_DAY2STATE8);
 		break;
 	case MST_D_DAY2STATE8: //SV Update to Block Data 4
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(28 * 60 * 60 + 55 * 60), 2, MST_D_DAY2STATE9);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(28.0 * 3600.0 + 55.0 * 60.0), 2, MST_D_DAY2STATE9);
 		break;
 	case MST_D_DAY2STATE9: //Block Data 4 to Block Data 5
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(40 * 60 * 60 + 10 * 60), 16, MST_D_DAY3STATE1);
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(40.0 * 3600.0 + 10.0 * 60.0), 16, MST_D_DAY3STATE1);
 		break;
 	case MST_D_DAY3STATE1: //Block Data 5 to CMC Docked DPS Burn Update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(41 * 60 * 60 + 10 * 60), 17, MST_D_DAY3STATE2);
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(41.0 * 3600.0 + 10.0 * 60.0), 17, MST_D_DAY3STATE2);
 		break;
 	case MST_D_DAY3STATE2: //CMC Docked DPS Burn Update to LM AOT STAR OBS PAD
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 18, MST_D_DAY3STATE3);

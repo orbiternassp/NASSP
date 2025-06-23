@@ -286,7 +286,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "SPS-1");
-		sprintf(form->remarks, "Gimbal angles using launch REFSMMAT");
+		sprintf(form->remarks, "No ullage  Gimbal angles using launch REFSMMAT");
 
 		AGCStateVectorUpdate(buffer1, 1, 1, sv1, true);
 		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
@@ -413,7 +413,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		in.LMWeight = WeightsTable.LMAscWeight + WeightsTable.LMDscWeight;
 		in.sv_before = PZGPMELM.SV_before;
 		in.V_aft = PZGPMELM.V_after;
-		in.UT = false; //2 jets
+		in.UT = true; //4 jets
 		in.IgnitionTimeOption = false;
 		in.IterationFlag = true;
 		in.Thruster = RTCC_ENGINETYPE_CSMSPS;
@@ -436,10 +436,15 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		//Store
 		EMGSTSTM(RTCC_MPT_CSM, REFSMMAT, RTCC_REFSMMAT_TYPE_CUR, GMTfromGET(TimeofIgnition));
 
-		if (fcn == 14 || fcn == 15)
+		if (fcn == 14)
 		{
 			VECTOR3 GimbalAngles = OrbMech::GimbalAngleConversion(CurrentREFSMMAT, _V(0, 0, 0), REFSMMAT, true);
-			sprintf(form->paddata, "Attitude for next burn: %03.0lf %03.0lf %03.0lf", OrbMech::imulimit(GimbalAngles.x*DEG), OrbMech::imulimit(GimbalAngles.y*DEG), OrbMech::imulimit(GimbalAngles.z*DEG));
+			sprintf(form->paddata, "Gimbal angles for SPS-3:  Roll: %03.0lf Pitch: %03.0lf Yaw: %03.0lf", OrbMech::imulimit(GimbalAngles.x*DEG), OrbMech::imulimit(GimbalAngles.y*DEG), OrbMech::imulimit(GimbalAngles.z*DEG));
+		}
+		if (fcn == 15)
+		{
+			VECTOR3 GimbalAngles = OrbMech::GimbalAngleConversion(CurrentREFSMMAT, _V(0, 0, 0), REFSMMAT, true);
+			sprintf(form->paddata, "Gimbal angles for SPS-4:  Roll: %03.0lf Pitch: %03.0lf Yaw: %03.0lf", OrbMech::imulimit(GimbalAngles.x*DEG), OrbMech::imulimit(GimbalAngles.y*DEG), OrbMech::imulimit(GimbalAngles.z*DEG));
 		}
 	}
 	break;
@@ -480,7 +485,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else if (fcn == 101)
 		{
 			opt.UllageDT = 0.0;
-			opt.sxtstardtime = -30.0*60.0;
+			opt.sxtstardtime = -40.0*60.0;
 		}
 		else if (fcn == 102)
 		{
@@ -490,7 +495,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else
 		{
 			opt.UllageDT = 18.0;
-			opt.sxtstardtime = -50.0*60.0;
+			opt.sxtstardtime = -40.0*60.0;
 		}
 
 		AP7ManeuverPAD(opt, *form);
@@ -498,12 +503,14 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (fcn == 100)
 		{
 			sprintf(form->purpose, "SPS-2");
+			sprintf(form->remarks, "No ullage");
 			//Bias pitch trim gimbal angle by 0.5° to induce transient at ignition. Gets mentioned in pre-mission documents, but wasn't actually done during the mission?!
 			form->pTrim += 0.5;
 		}
 		else if (fcn == 101)
 		{
 			sprintf(form->purpose, "SPS-3");
+			sprintf(form->remarks, "No ullage");
 		}
 		else if (fcn == 102)
 		{
