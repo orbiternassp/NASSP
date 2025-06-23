@@ -4280,15 +4280,29 @@ EphemerisData RTCC::StateVectorCalcEphem(VESSEL *vessel)
 	return sv;
 }
 
-VehicleDataBlock RTCC::StateVectorCalcDataBlock(VESSEL *vessel)
+VehicleDataBlock RTCC::StateVectorCalcDataBlock(VESSEL *vessel, double Area, double KFactor)
 {
 	VehicleDataBlock sv;
 
 	sv.sv = StateVectorCalcEphem(vessel);
 	sv.Weight = vessel->GetMass();
-	sv.Area = 129.4*pow(0.3048, 2); //CSM default
-	sv.KFactor = 1.0;
 
+	if (Area < 0.0)
+	{
+		sv.Area = 129.4*pow(0.3048, 2); //CSM default
+	}
+	else
+	{
+		sv.Area = Area;
+	}
+	if (KFactor < 0.0)
+	{
+		sv.KFactor = 1.0; //Default to 1.0
+	}
+	else
+	{
+		sv.KFactor = KFactor;
+	}
 	return sv;
 }
 
@@ -6157,28 +6171,24 @@ void RTCC::AGSStateVectorPAD(const AGSSVOpt &opt, AP11AGSSVPAD &pad)
 	}
 }
 
-void RTCC::NavCheckPAD(SV sv, AP7NAV &pad, double GET)
+void RTCC::NavCheckPAD(VehicleDataBlock sv, AP7NAV &pad, double GET)
 {
-	SV sv1;
-	EphemerisData sv2;
-	double GETbase, lat, lng, alt, navcheckdt;
-
-	GETbase = CalcGETBase();
+	VehicleDataBlock sv1;
+	double lat, lng, alt, navcheckdt;
 	
 	if (GET == 0.0)
 	{
 		navcheckdt = 30 * 60;
-		pad.NavChk[0] = (sv.MJD - GETbase)*24.0*3600.0 + navcheckdt;
+		pad.NavChk[0] = GETfromGMT(sv.sv.GMT) + navcheckdt;
 	}
 	else
 	{
-		navcheckdt = GET - (sv.MJD - GETbase)*24.0*3600.0;
+		navcheckdt = GMTfromGET(GET) - sv.sv.GMT;
 		pad.NavChk[0] = GET;
 	}
 
 	sv1 = coast(sv, navcheckdt);
-	sv2 = ConvertSVtoEphemData(sv1);
-	navcheck(sv2.R, sv2.GMT, sv2.RBI, lat, lng, alt);
+	navcheck(sv1.sv.R, sv1.sv.GMT, sv1.sv.RBI, lat, lng, alt);
 
 	pad.alt[0] = alt / 1852.0;
 	pad.lat[0] = lat*DEG;

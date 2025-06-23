@@ -1547,7 +1547,7 @@ void ARCore::GetStateVectorFromAGC(bool csm, bool cmc)
 
 void ARCore::NavCheckPAD(bool IsCSM)
 {
-	SV sv;
+	VehicleDataBlock sv;
 
 	VESSEL *v;
 
@@ -1562,7 +1562,7 @@ void ARCore::NavCheckPAD(bool IsCSM)
 
 	if (v == NULL) return;
 
-	sv = GC->rtcc->StateVectorCalc(v);
+	sv = GC->rtcc->StateVectorCalcDataBlock(v);
 
 	GC->rtcc->NavCheckPAD(sv, navcheckpad, navcheckpad.NavChk[0]);
 }
