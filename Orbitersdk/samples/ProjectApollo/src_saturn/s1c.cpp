@@ -26,14 +26,14 @@
 
 #include "s1c.h"
 
-S1C::S1C (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel)
+S1C::S1C (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
+SICSIISepPyros("SICSIISepPyros", Panelsdk)
 {
 	InitS1c();
 }
 
 S1C::~S1C()
 {
-	delete(SICSIISepPyros);
 	delete(sicSystems);
 }
 
@@ -420,8 +420,8 @@ void S1C::clbkSetClassCaps (FILEHANDLE cfg)
 	SetupTouchdownPoints();
 	hDockSII = CreateDock(_V(0.0, 0.0, 20.169), _V(0, 0, 1), _V(0, 1, 0));
 
-	SICSIISepPyros = new Pyro("SICSIISepPyros", Panelsdk);
-	sicSystems = new SICSystems(this, th_main, ph_main, Pyro(*SICSIISepPyros), LaunchS, SShutS, CurrentThrust);
+	sicSystems = new SICSystems(this, th_main, ph_main, SICSIISepPyros, LaunchS, SShutS, CurrentThrust);
+	RegisterConnector(0, sicSystems->GetSICToSIIConnector(), true);
 }
 
 void S1C::LoadMeshes(bool lowres)
@@ -441,8 +441,15 @@ void S1C::LoadMeshes(bool lowres)
 }
 
 void S1C::clbkDockEvent(int dock, OBJHANDLE connected)
-
 {
+	if (connected)
+	{
+		DockConnectors(dock);
+	}
+	else
+	{
+		UndockConnectors(dock);
+	}
 }
 
 bool S1C::clbkLoadGenericCockpit ()
@@ -580,25 +587,4 @@ DLLCLBK void ovcExit (VESSEL *vessel)
 {
 	if (vessel) 
 		delete (S1C *)vessel;
-}
-
-SICConnector::SICConnector()
-{
-}
-
-SICConnector::~SICConnector()
-{
-}
-
-SICtoSIIConnector::SICtoSIIConnector()
-{
-}
-
-SICtoSIIConnector::~SICtoSIIConnector()
-{
-}
-
-bool SICtoSIIConnector::ReceiveMessage(Connector* from, ConnectorMessage& m)
-{
-	return false;
 }

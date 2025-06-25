@@ -276,8 +276,14 @@ public:
 	{
 		int port;
 		Connector *c;
+		///
+		/// True if the connector is not a class member but is only managed by ProjectApolloConnectorVessel. These connectors
+		/// are not disconnected in the ProjectApolloConnectorVessel destructor because they might already be deleted. The class
+		/// that owns the connector has to take care of disconnecting it its destructor.
+		///
+		bool IsManagedConnector;
 
-		ConnectorDefinition() { port = 0; c = 0; };
+		ConnectorDefinition() { port = 0; c = 0; IsManagedConnector = false; };
 	};
 
 	///
@@ -326,9 +332,10 @@ protected:
 	/// \brief Register a connector for use by other vessels.
 	/// \param port Docking port number.
 	/// \param c Pointer to a connector.
+	/// \param isManaged Connector is not a vessel class member and will not be disconnected in the destructor.
 	/// \return True if registered, false if not (e.g. too many registered already).
 	///
-	bool RegisterConnector(int port, Connector *c);
+	bool RegisterConnector(int port, Connector *c, bool isManaged = false);
 
 #define PACV_N_VALIDATION	0x5a715a75
 
