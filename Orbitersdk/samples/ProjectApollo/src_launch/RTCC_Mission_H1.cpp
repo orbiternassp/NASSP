@@ -1282,7 +1282,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	{
 		AP11AGSACT *form = (AP11AGSACT*)pad;
 
-		SV sv1, sv2, sv_INP;
+		VehicleDataBlock sv_CSM, sv_LM, sv_LM_post_DOI;
 		double t_sunrise, t_TPI, KFactor;
 		int emem[14];
 		char buffer1[1000];
@@ -1292,13 +1292,13 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		LEM *l = (LEM*)calcParams.tgt;
 
-		sv1 = StateVectorCalc(calcParams.tgt);
-		sv2 = StateVectorCalc(calcParams.src);
+		sv_CSM = StateVectorCalcDataBlock(calcParams.src);
+		sv_LM = StateVectorCalcDataBlock(calcParams.tgt);
 
-		sv_INP = ExecuteManeuver(sv1, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
+		sv_LM_post_DOI = ExecuteManeuver(sv_LM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
 
 		t_sunrise = calcParams.PDI + 3.0*3600.0;
-		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(sv2, t_sunrise) - 23.0*60.0;
+		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(ConvertEphemDatatoSV(sv_CSM.sv, sv_CSM.Weight), t_sunrise) - 23.0*60.0;
 
 		bool res_k = CalculateAGSKFactor(&l->agc.vagc, &l->aea.vags, KFactor);
 		if (res_k)
@@ -1307,32 +1307,29 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		}
 
 		opt.dt_stage = 999999.9;
-		opt.W_TAPS = 4711.0;
-		opt.W_TDRY = 6874.3;
-		opt.dt_step = 20.0;
-		opt.GMT_TPI = GMTfromGET(t_TPI);
+		opt.W_TAPS = l->GetAscentStageMass(); //4711.0;
+		opt.W_TDRY = l->GetMass() - l->GetPropellantMass(l->GetPropellantHandleByIndex(0)); //6874.3;
 		opt.IsTwoSegment = true;
-		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-		opt.sv_A = SVToVehicleDataBlock(ConvertSVtoEphemData(sv_INP), 1.0, sv_INP.mass, 1.0);
-		opt.sv_P = SVToVehicleDataBlock(ConvertSVtoEphemData(sv2), 1.0, sv2.mass, 1.0);
+		opt.sv_LM = sv_LM_post_DOI;
+		opt.sv_CSM = sv_CSM;
 		opt.GMT_LAND = GMTfromGET(CZTDTGTU.GETTD);
+		opt.dt_CAN = 0.0;
+		opt.DV_CAN = _V(0, 0, 0);
+		opt.dt_CSI = 50.0*60.0;
+		opt.GMT_TPI = GMTfromGET(t_TPI);
+		opt.dt_2CAN = 50.0*60.0;
+		opt.DV_2CAN = _V(10.0, 0, 0)*0.3048;
+		opt.dt_2CSI = 110.0*60.0;
+		opt.GMT_2TPI = opt.GMT_TPI + OrbMech::HHMMSSToSS(1, 59, 0); //TBD: Use FindOrbitalSunrise
 
 		PoweredDescentAbortProgram(opt, res);
 
 		form->KFactor = GETfromGMT(GetAGSClockZero());
-		form->DEDA224 = (int)(res.DEDA224 / 0.3048 / 100.0);
-		form->DEDA225 = (int)(res.DEDA225 / 0.3048 / 100.0);
-		form->DEDA226 = (int)(res.DEDA226 / 0.3048 / 100.0);
-		form->DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
-
-		/*
-		Pad-load:
-		form->DEDA224 = 60326;
-		form->DEDA225 = 58158;
-		form->DEDA226 = 70312;
-		form->DEDA227 = -50181;
-		*/
+		form->DEDA224 = (int)(res.J1 / 0.3048 / 100.0);
+		form->DEDA225 = (int)(res.A_min / 0.3048 / 100.0);
+		form->DEDA226 = (int)(res.A_max / 0.3048 / 100.0);
+		form->DEDA227 = (int)(res.K1 / 0.3048 / 100.0*pow(2, 3));
 
 		emem[0] = 16;
 		emem[1] = 2550;
@@ -2078,8 +2075,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	case 170: //PDI2 PAD
 	{
 		//Recalculate PDI and landing times
-		SV sv1, sv2;
-		double GETbase, GET_SV1, t_sunrise, t_TPI;
+		VehicleDataBlock sv_CSM, sv_LM;
+		double GET_SV1, t_sunrise, t_TPI;
 		int emem[14];
 		char buffer1[1000];
 		char TLANDbuffer[64];
@@ -2089,52 +2086,54 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		AP11AGSACT *form = (AP11AGSACT*)pad;
 
-		sv1 = StateVectorCalc(calcParams.tgt);
-		sv2 = StateVectorCalc(calcParams.src);
-		GETbase = CalcGETBase();
+		LEM *l = (LEM*)calcParams.tgt;
 
-		GET_SV1 = OrbMech::GETfromMJD(sv1.MJD, GETbase);
+		sv_CSM = StateVectorCalcDataBlock(calcParams.src);
+		sv_LM = StateVectorCalcDataBlock(calcParams.tgt);
 
-		calcParams.SEP = calcParams.PDI + 25 * 60.0;
+		GET_SV1 = GETfromGMT(sv_LM.sv.GMT);
+		calcParams.SEP = calcParams.PDI + 25.0 * 60.0;
 
 		//MED K17
 		GZGENCSN.LDPPPoweredDescentSimFlag = false;
 		GZGENCSN.LDPPDwellOrbits = 0;
 		//MED K16
-		med_k16.Mode = 4;
-		med_k16.Sequence = 1;
+		med_k16.Mode = 6; //Powered Descent only
 		med_k16.GETTH1 = med_k16.GETTH2 = med_k16.GETTH3 = med_k16.GETTH4 = GET_SV1 + 0.5*3600.0;
 
-		LunarDescentPlanningProcessor(ConvertSVtoEphemData(sv1), 0.0);
+		LunarDescentPlanningProcessor(sv_LM.sv, sv_LM.Weight);
 
 		calcParams.PDI = PZLDPDIS.PD_GETIG;
 		CZTDTGTU.GETTD = PZLDPDIS.PD_GETTD;
 
 		//Update abort constants
 		t_sunrise = calcParams.PDI + 3.0*3600.0;
-		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(sv2, t_sunrise) - 23.0*60.0;
+		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(ConvertEphemDatatoSV(sv_CSM.sv, sv_CSM.Weight), t_sunrise) - 23.0*60.0;
 
 		opt.dt_stage = 999999.9;
-		opt.W_TAPS = 4711.0;
-		opt.W_TDRY = 6874.3;
-		opt.dt_step = 20.0;
-		opt.GMT_TPI = GMTfromGET(t_TPI);
+		opt.W_TAPS = l->GetAscentStageMass();
+		opt.W_TDRY = l->GetMass() - l->GetPropellantMass(l->GetPropellantHandleByIndex(0));
 		opt.IsTwoSegment = true;
-		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-		opt.sv_A = SVToVehicleDataBlock(ConvertSVtoEphemData(sv1), 1.0, sv1.mass, 1.0);
-		opt.sv_P = SVToVehicleDataBlock(ConvertSVtoEphemData(sv2), 1.0, sv2.mass, 1.0);
+		opt.sv_LM = sv_LM;
+		opt.sv_CSM = sv_CSM;
 		opt.GMT_LAND = GMTfromGET(CZTDTGTU.GETTD);
-		//opt.dt_2CSI = 0.0;
-		//opt.dt_2TPI = 0.0;
+		opt.dt_CAN = 0.0;
+		opt.DV_CAN = _V(0, 0, 0);
+		opt.dt_CSI = 50.0*60.0;
+		opt.GMT_TPI = GMTfromGET(t_TPI);
+		opt.dt_2CAN = 50.0*60.0;
+		opt.DV_2CAN = _V(10.0, 0, 0)*0.3048;
+		opt.dt_2CSI = 110.0*60.0;
+		opt.GMT_2TPI = opt.GMT_TPI + OrbMech::HHMMSSToSS(1, 59, 0); //TBD: Use FindOrbitalSunrise
 
 		PoweredDescentAbortProgram(opt, res);
 
 		form->KFactor = GETfromGMT(GetAGSClockZero());
-		form->DEDA224 = (int)(res.DEDA224 / 0.3048 / 100.0);
-		form->DEDA225 = (int)(res.DEDA225 / 0.3048 / 100.0);
-		form->DEDA226 = (int)(res.DEDA226 / 0.3048 / 100.0);
-		form->DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
+		form->DEDA224 = (int)(res.J1 / 0.3048 / 100.0);
+		form->DEDA225 = (int)(res.A_min / 0.3048 / 100.0);
+		form->DEDA226 = (int)(res.A_max / 0.3048 / 100.0);
+		form->DEDA227 = (int)(res.K1 / 0.3048 / 100.0*pow(2, 3));
 
 		emem[0] = 16;
 		emem[1] = 2550;

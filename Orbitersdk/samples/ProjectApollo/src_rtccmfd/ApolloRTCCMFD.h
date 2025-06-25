@@ -401,7 +401,6 @@ public:
 	void menuSetLDPPSequence();
 	void menuTLANDUplinkCalc();
 	void menuTLANDUpload();
-	void set_t_TPI(double time);
 	void menuSetDescPlanInitPage();
 	void menuCycleLLWPChaserOption();
 	void menuSetLiftoffguess();
@@ -488,10 +487,10 @@ public:
 	void menuAscentPADCalc();
 	void menuCycleAscentPADVersion();
 	void menuSetPDAPPage();
+	void menuSetPDAPInputs();
+	bool set_PDAPInputs(int sel, char *str);
 	void menuPDAPCalc();
-	void menuCyclePDAPSegments();
-	void menuCyclePDAPEngine();
-	void menuAP11AbortCoefUplink();
+	void menuPDAPUplink();
 	void menuSetFIDOOrbitDigitalsCSMPage();
 	void menuSetFIDOOrbitDigitalsLMPage();
 	void menuSetFIDOOrbitDigitalsGETL();

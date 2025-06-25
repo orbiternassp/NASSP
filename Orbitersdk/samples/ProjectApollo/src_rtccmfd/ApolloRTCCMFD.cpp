@@ -282,8 +282,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "GMPManeuverCode", G->GMPManeuverCode);
 	papiWriteScenario_double(scn, "SPSGET", G->SPSGET);
 
-	papiWriteScenario_double(scn, "t_TPI", G->t_TPI);
-
 	papiWriteScenario_double(scn, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
 	papiWriteScenario_double(scn, "LDPPGETTH2", GC->rtcc->med_k16.GETTH2);
 	papiWriteScenario_double(scn, "LDPPGETTH3", GC->rtcc->med_k16.GETTH3);
@@ -336,8 +334,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "GMPManeuverType", G->GMPManeuverType);
 		papiReadScenario_int(line, "GMPManeuverCode", G->GMPManeuverCode);
 		papiReadScenario_double(line, "SPSGET", G->SPSGET);
-
-		papiReadScenario_double(line, "t_TPI", G->t_TPI);
 
 		papiReadScenario_double(line, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
 		papiReadScenario_double(line, "LDPPGETTH2", GC->rtcc->med_k16.GETTH2);
@@ -1100,6 +1096,10 @@ void ApolloRTCCMFD::menuSetLMAscentPADPage()
 
 void ApolloRTCCMFD::menuSetPDAPPage()
 {
+	marker = 0;
+	markermax = 17;
+	subscreen = 0;
+	subscreenmax = 1;
 	SelectPage(40);
 }
 
@@ -7321,11 +7321,6 @@ void ApolloRTCCMFD::menuLDPPCalc()
 	menuSetDescPlanTablePage();
 }
 
-void ApolloRTCCMFD::set_t_TPI(double time)
-{
-	G->t_TPI = time;
-}
-
 void ApolloRTCCMFD::menuSetTPIguess()
 {
 	GenericGETInput(&G->t_TPIguess, "Choose the GET for TPI (Format: hhh:mm:ss)");
@@ -8098,35 +8093,162 @@ void ApolloRTCCMFD::menuCycleAscentPADVersion()
 	}
 }
 
+void ApolloRTCCMFD::menuSetPDAPInputs()
+{
+	switch (marker)
+	{
+	case 0:
+		if (GC->PDAPVersion < 2) GC->PDAPVersion++;
+		else GC->PDAPVersion = 0;
+		break;
+	case 1:
+		if (GC->PDAPVersion != 0)
+		{
+			if (GC->PDAPOptions.dt_stage != 0.0) GC->PDAPOptions.dt_stage = 0.0;
+			else GC->PDAPOptions.dt_stage = 999999.9;
+		}
+		break;
+	case 2:
+		if (GC->MissionPlanningActive)
+		{
+			GenericGETInput(&GC->PDAP_CSM_VectorTime, "Enter the CSM vector time:");
+		}
+		else
+		{
+			set_CSMVessel();
+		}
+		break;
+	case 3:
+		if (GC->MissionPlanningActive)
+		{
+			GenericGETInput(&GC->PDAP_LM_VectorTime, "Enter the LM vector time:");
+		}
+		else
+		{
+			set_LMVessel();
+		}
+		break;
+	case 4:
+		GenericDoubleInput(&GC->PDAPOptions.h_amin, "Minimum apolune altitude limit for the insertion orbit; referenced from the landing site radius:", 1852.0);
+		break;
+	case 5:
+		GenericDoubleInput(&GC->PDAPOptions.DH_D, "Desired altitude differential between the LM and CSM orbits at CDH:", 1852.0);
+		break;
+	case 6:
+		GC->PDAPOptions.K4 = !GC->PDAPOptions.K4;
+		break;
+	case 7:
+		GenericDoubleInput(&GC->PDAPOptions.theta_TARG, "Phase angle at insertion used to determine the end of the first segment:", RAD);
+		break;
+	case 8:
+		GenericDoubleInput(&GC->PDAPOptions.dt_CAN, "DT between orbit insertion and the canned maneuver:", 60.0);
+		break;
+	case 9:
+		GenericVectorInput(&GC->PDAPOptions.DV_CAN, "DV of the canned maneuver:", 0.3048);
+		break;
+	case 10:
+		GenericDoubleInput(&GC->PDAPOptions.dt_CSI, "DT between the canned maneuver and CSI:", 60.0);
+		break;
+	case 11:
+		GenericGETInput(&GC->PDAPOptions.GMT_TPI, "TPI time used to generate the first set of targeting coefficients:");
+		break;
+	case 12:
+		GenericDoubleInput(&GC->PDAPOptions.dt_2CAN, "Value of DTCAN used to generate the second set of targeting coefficients:", 60.0);
+		break;
+	case 13:
+		GenericVectorInput(&GC->PDAPOptions.DV_2CAN, "Value of DVCAN used to generate the second set of targeting coefficients:", 0.3048);
+		break;
+	case 14:
+		GenericDoubleInput(&GC->PDAPOptions.dt_2CSI, "Value of DTCSI used to generate the second set of targeting coefficients:", 60.0);
+		break;
+	case 15:
+		GenericGETInput(&GC->PDAPOptions.GMT_2TPI, "TPI time used to generate the second set of targeting coefficients:");
+		break;
+	case 16:
+	{
+		bool PDAP_WTDRY_Input(void* id, char *str, void *data);
+		oapiOpenInputBox("LM weight representative of DPS fuel depletion (leave blank to auto detect):", PDAP_WTDRY_Input, 0, 20, (void*)this);
+	}
+		break;
+	case 17:
+	{
+		bool PDAP_WTAPS_Input(void* id, char *str, void *data);
+		oapiOpenInputBox("LM vehicle weight immediately after staging (leave blank to auto detect):", PDAP_WTAPS_Input, 0, 20, (void*)this);
+	}
+		break;
+	}
+}
+
+bool PDAP_WTDRY_Input(void* id, char *str, void *data)
+{
+	return ((ApolloRTCCMFD*)data)->set_PDAPInputs(0, str);
+}
+
+bool PDAP_WTAPS_Input(void* id, char *str, void *data)
+{
+	return ((ApolloRTCCMFD*)data)->set_PDAPInputs(1, str);
+}
+
+bool ApolloRTCCMFD::set_PDAPInputs(int sel, char *str)
+{
+	//Is input string zero?
+	if (strcmp(str, "") == 0)
+	{
+		//Yes, auto detect
+		//Make sure we have a LM selected
+		VESSEL *v = GC->rtcc->pLM;
+		if (v == NULL || utils::IsVessel(v, utils::LEM) == false) return false;
+
+		LEM *l = (LEM*)v;
+
+		//Make sure we have a full LM
+		if (l->GetStage() == 2) return false;
+
+		switch (sel)
+		{
+		case 0: //WTDRY
+			GC->PDAPOptions.W_TDRY = l->GetMass() - l->GetPropellantMass(l->GetPropellantHandleByIndex(0));
+			break;
+		case 1: //WTAPS
+			GC->PDAPOptions.W_TAPS = l->GetAscentStageMass();
+			break;
+		}
+		return true;
+	}
+	else
+	{
+		//No, use input
+
+		double val;
+		if (sscanf(str, "%lf", &val) == 1)
+		{
+			val *= LBS2KG;
+			if (sel == 0)
+			{
+				GC->PDAPOptions.W_TDRY = val;
+			}
+			else
+			{
+				GC->PDAPOptions.W_TAPS = val;
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
 void ApolloRTCCMFD::menuPDAPCalc()
 {
 	G->PDAPCalc();
 }
 
-void ApolloRTCCMFD::menuCyclePDAPSegments()
-{
-	G->PDAPTwoSegment = !G->PDAPTwoSegment;
-}
-
-void ApolloRTCCMFD::menuCyclePDAPEngine()
-{
-	if (G->PDAPEngine < 1)
-	{
-		G->PDAPEngine++;
-	}
-	else
-	{
-		G->PDAPEngine = 0;
-	}
-}
-
-void ApolloRTCCMFD::menuAP11AbortCoefUplink()
+void ApolloRTCCMFD::menuPDAPUplink()
 {
 	VESSEL *v = GC->rtcc->pLM;
 
 	if (v == NULL || utils::IsVessel(v, utils::LEM) == false) return;
 
-	if (G->PDAPTwoSegment == false)
+	if (GC->PDAPVersion == 0)
 	{
 		G->AP11AbortCoefUplink();
 	}

@@ -23,6 +23,7 @@
  **************************************************************************/
 #define ORBITER_MODULE
 #include "skylab.h"
+#include "papi.h"
 
 const double TACS_PROPELLANT_MASS = 646.8227; //1426 lbm
 const double TACS_MAX_THRUST = 100.0*4.4482216152605; //100 lbf

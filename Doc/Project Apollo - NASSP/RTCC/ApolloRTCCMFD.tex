@@ -1585,8 +1585,97 @@ The uplink to the IU for the impact targeting can currently not be done in the R
 \end{itemize}
 
 \newpage
-\section{Uplinks}
+\subsection{Powered Descent Abort Program}
+\subsubsection{Explanation}
+The Powered Descent Abort Program (PDAP) calculates the parameters used by the PGNS and AGS during an abort from powered descent, to guide the LM to a trajectory that will lead to rendezvous with the CSM using the normal coelliptic rendezvous sequence. For the nominal PDI attempt (PDI-1) these parameters have already been loaded in the LGC and AEA during prelaunch and were rarely updated during the mission. If a second PDI attempt (PDI-2) has to be performed an update of the descent abort constants is required for a good rendezvous with the CSM.\\
 
+The onboard computer calculations using the abort constants generate a horizontal velocity to be achieved by orbit insertion after the abort. The scheme to calculate this velocity, and the parameters used in its calculation, differed from mission to mission.\\
+
+In the Apollo 11 PGNS the calculation involves a polynomial of the horizontal velocity as a function of time of abort initiation. Due to differing performance between APS and DPS two polynomials are used. One set for the case that the abort is initiated using the DPS engine (P70), the other set for the case the abort is initiated with the ascent stage directly (P71).\\
+
+In the Apollo 11 AGS (using the Flight Program 6 software) the horizontal velocity is calculated from the desired insertion semi-major axis, which is a linear function of phase angle to the CSM. This eliminates most differences between APS only vs. DPS+APS aborts so only one set of parameters has to be loaded.\\
+
+The Apollo 12 PGNS software switched to using the AGS calculation scheme with one important addition. A late powered descent abort would require a very low insertion orbit. Because typically a lower limit for the apolune altitude of 30 NM was enforced the rendezvous profile for a late abort would require an additional maneuver. The updated PGNS software instead added a second phase of descent aborts that would achieve rendezvous with the CSM one orbit later with a slightly different rendezvous profile. So the set of abort constants now consisted of the two parameters for a linear function, then a limiting phase angle at which the guidance switches to the second abort segment, and lastly the two parameters for the second linear function.\\
+
+The AGS software also switched to using this two segment scheme, but the next version of the AGS software was not ready until Apollo 13. This is the reason why the PDAP in the RTCC MFD has three versions selectable by mission number, with Apollo 12 flying a PGNS software that has two segments, but an AGS software (using the same general calculation scheme) only having one segment. A late powered descent abort using the AGS would have required some special procedures.\\
+
+One other thing to note is that later Apollo missions performed DOI with the CSM and the CSM also performed a circularization maneuver before PDI. These maneuvers change the relative trajectory between CSM and LM. In some cases the first powered descent abort segment now actually had the rendezvous with the CSM one orbit later than the second segment, which is the reverse order from Apollo 12. A table with suggested inputs for all the abort variants used on the Apollo missions is provided to clarify the differences between missions.\\
+\subsubsection{Inputs}
+\textbf{MIS:} Selection for the PGNS and AGS software versions. The three options are Apollo 11, 12 and 13+.\\
+\textbf{ENG:} Selelect the engine for the abort. Either the abort is started immediately using the ascent stage (APS engine) or the abort is started using the DPS, with staging potentially happening later when the DPS runs out of propellant (see WTDRY below). For the Apollo 11 PGNS both cases are run automatically.\\
+\textbf{CSM:} Select the CSM vehicle name or the CSM vector if the Mission Plan Table feature is enabled.\\
+\textbf{LM:} Select the LM vehicle name or the LM vector if the Mission Plan Table feature is enabled. The weight of this vehicle (or at the selected time) will be used as the initial weight at PDI.\\
+\textbf{HAMIN:} Select the minimum apolune altitude in nautical miles. This altitude is used as the segment switch or end of calculations for the descent aborts.\\
+\textbf{DH:} Select the delta height at the CDH maneuver during the coelliptic rendezvous that follows the descent abort.\\
+\textbf{K4:} Some of the later Apollo missions start powered descent at a fairly high phase angle (read distance) to the CSM. Some aborts on these trajectories would not run into the apolune limit (HAMIN) but would have the first onboard calculated rendezvous maneuver (CSI) at such a high range from the CSM that very little onboard navigation (Rendezvous Radar or VHF ranging) could be done before the maneuver has to be performed. For these cases an alternative segment switch point has been implemented. This flag switches between either using the apolune altitude HAMIN as the segment switch point or a phase angle at abort (PHA input) that represents a limit on the range to the CSM. Using the phase angle option the first segment of an abort would have the TPI maneuver one orbit later so that the CSI maneuver also happens later and closer to the CSM. Once the CSM is closer to the LM at abort initiation the rendezvous profile with TPI happening one orbit earlier is then possible. The second segment of a descent abort always ends at the apolune limit HAMIN.\\
+\textbf{PHA:} The limiting phase angle at abort initiation that is used to limit the range to the CSM at the first onboard calculated maneuver (CSI). See K4 for a detailed explanation.\\
+\textbf{DTCAN:} Delta time between orbit insertion and the canned maneuver. The canned maneuver is a maneuver with a fixed Delta V that is included in some rendezvous profiles. It is usually called the boost maneuver in the flight data files.\\
+\textbf{DVCAN:} LVLH components of the canned maneuver.\\
+\textbf{DTCSI:} Delta time between the canned maneuver and CSI.\\
+\textbf{TTPI:} TPI time used to generate the first set of targeting coefficients. This time can be calculated with the TPI times page using the 16 minutes before sunrise option.\\
+\textbf{DT2CAN:} Value of DTCAN used to generate the second set of targeting coefficients.\\
+\textbf{DV2CAN:} Value of DVCAN used to generate the second set of targeting coefficients.\\
+\textbf{DT2CSI:} Value of DTCSI used to generate the second set of targeting coefficients.\\
+\textbf{T2TPI:} Value of TTPI used to generate the second set of targeting coefficients.\\
+\textbf{WTDRY:} LM weight representative of DPS fuel depletion. Leave the input blank to automatically calculate this value (present LM weight minus DPS propellant).\\
+\textbf{WTAPS:} LM weight immediately after staging. Leave the input blank to automatically calculate this value (present LM ascent stage weight).\\
+\subsubsection{Suggested Inputs}
+\begin{tabular}{|m{2.0cm}|m{1.85cm}|m{1.85cm}|m{1.85cm}|m{1.85cm}|m{1.85cm}|}
+  \hline
+  \textbf{Input}&\textbf{Apollo 11 PDI-1/2}&\textbf{Apollo 12 PDI-1/2}&\textbf{A13-15 PDI-1/2}&\textbf{A16/17 PDI-1}&\textbf{A16/17 PDI-2}\\
+	\hline
+  \textbf{MIS}&11&12&13+&13+&13+\\
+	\hline
+  \textbf{ENG}&-&DPS/APS&DPS/APS&DPS/APS&DPS/APS\\
+	\hline
+	\textbf{K4}&-&HAMIN&PHA&PHA&PHA\\
+	\hline
+	\textbf{PHA}&-&-&-13.5&16.0&-13.5\\
+  \hline
+	\textbf{DTCAN}&0&0&60&0&60\\
+	\hline
+	\textbf{DVCAN}&0 0 0&0 0 0&10 0 0&0 0 0&10 0 0\\
+  \hline
+	\textbf{DTCSI}&50&50&120&55&120\\
+	\hline
+	\textbf{TTPI}&PDI+2:40&PDI+2:40&PDI+4:50&PDI+2:50&PDI+4:50\\
+	\hline
+  \textbf{DT2CAN}&-&50&0&50&0\\
+	\hline
+  \textbf{DV2CAN}&-&10 0 0&0 0 0&10 0 0&0 0 0\\
+  \hline
+	\textbf{DT2CSI}&-&110&55&110&55\\
+	\hline
+	\textbf{T2TPI}&-&PDI+4:40&PDI+2:50&PDI+4:50&PDI+2:50\\
+	\hline
+\end{tabular}
+\newpage
+\subsubsection{Display}
+\paragraph{Apollo 11 PGNS}\mbox{} \\
+\textbf{DPS4-1} P70 polynomial. Horizontal insertion velocity as a function of abort initiation time since PDI.\\
+\textbf{APS4-1} P71 polynomial. Horizontal insertion velocity as a function of abort initiation time since PDI.\\
+\textbf{VHMIN} Minimum horizontal insertion velocity.
+\paragraph{Apollo 12+ PGNS}\mbox{} \\
+\textbf{J1} Constant value in first segment calculation of insertion semi-major axis.\\
+\textbf{K1} Slope value in first segment calculation of insertion semi-major axis.\\
+\textbf{J2} Constant value in second segment calculation of insertion semi-major axis.\\
+\textbf{K2} Slope value in second segment calculation of insertion semi-major axis.\\
+\textbf{THET} Limiting phase angle at abort initiation for the segment switch.\\
+\textbf{VHMIN} Minimum horizontal insertion velocity.
+\paragraph{Apollo 11-12 AGS}\mbox{} \\
+\textbf{J7} Constant value in calculation of insertion semi-major axis. DEDA address 224.\\
+\textbf{J8} Minimum insertion semi-major axis. DEDA address 225.\\
+\textbf{J9} Maximum insertion semi-major axis. DEDA address 226.\\
+\textbf{K410} Slope value in calculation of insertion semi-major axis. DEDA address 227.
+\paragraph{Apollo 13+ AGS}\mbox{} \\
+\textbf{J7} Constant value in first segment calculation of insertion semi-major axis. DEDA address 224.\\
+\textbf{J8} Minimum insertion semi-major axis. DEDA address 225.\\
+\textbf{J10} Constant value in second segment calculation of insertion semi-major axis. DEDA address 226.\\
+\textbf{J12} Limiting phase angle at abort initiation for the segment switch. DEDA address 305.\\
+\textbf{K410} Slope value in first segment calculation of insertion semi-major axis. DEDA address 662.\\
+\textbf{J11} Slope value in first segment calculation of insertion semi-major axis. DEDA address 673.\\
+\newpage
+\section{Uplinks}
 
 \subsection{State Vector}
 
