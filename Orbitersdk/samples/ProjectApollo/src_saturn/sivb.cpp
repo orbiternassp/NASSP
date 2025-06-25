@@ -621,7 +621,7 @@ void SIVB::SetS4b()
 
 	//Docking port for the connection to the lower stage (S-IB or S-II)
 	CreateSISIVBInterface();
-	RegisterConnector(i, sivbsys->GetSIVBSIXConnector());
+	RegisterConnector(i, sivbsys->GetSIVBSIXConnector(), true);
 	//Docking port for the connection to the stage attached to the front of the SLA (usually CSM, also Apollo 5 nosecap)
 	hDockCSM = CreateDock(_V(0.0, 0, 14.8), _V(0, 0, 1), _V(1, 0, 0));
 
