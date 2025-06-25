@@ -91,6 +91,18 @@ public:
 	MATRIX3 AGOP_REFSMMAT;
 	int AGOP_REFSMMAT_Vehicle;
 
+	//POWERED DESCENT ABORT PROGRAM
+	PDAPOpt PDAPOptions;
+	int PDAPVersion; //0 = Apollo 11, 1 = Apollo 12, 2 = Apollo 13+
+	double PDAP_CSM_VectorTime, PDAP_LM_VectorTime;
+	double PDAPABTCOF[8];	//Luminary099 abort coefficients
+	int PDAP_UplinkData[18];
+	int DEDA224, DEDA225, DEDA226, DEDA227, DEDA305, DEDA662, DEDA673, PDAP_ErrorCode;
+	double PDAP_J1, PDAP_K1, PDAP_J2, PDAP_K2, PDAP_Theta_LIM, PDAP_R_amin, PDAP_V_hmin, PDAP_A_min, PDAP_A_max;
+
+	//GENERAL PARAMETERS
+	double t_TPI;				// Generally used TPI time
+
 	//MOCR DISPLAY
 	void DFLBackgroundSlide(oapi::Sketchpad *skp, DWORD W, DWORD H, unsigned display);
 
@@ -218,7 +230,6 @@ public:
 	bool lemdescentstage;		//0 = ascent stage, 1 = descent stage
 	bool PADSolGood;
 	int manpadenginetype;
-	double t_TPI;				// Generally used TPI time
 	int mptinitmode;			//0 = MED M49, 1 = MED M50, 2 = MED M51, 3 = MED M55
 
 	//DOCKING INITIATION
@@ -328,14 +339,6 @@ public:
 	double t_LunarLiftoff;
 	int AscentPADVersion; //0 = Apollo 11-13, 1 = Apollo 14-17
 	double LAP_Phase, LAP_CR;
-
-	//Powered Descent Abort Program
-	int PDAPEngine;	//0 = DPS/APS, 1 = APS
-	bool PDAPTwoSegment;	//false = One Segment (Luminary099, FP6), true = Two Segment (Luminary116 and later, FP7 and later)
-	double PDAPABTCOF[8];	//Luminary099 abort coefficients
-	double DEDA224, DEDA225, DEDA226;
-	int DEDA227;
-	double PDAP_J1, PDAP_K1, PDAP_J2, PDAP_K2, PDAP_Theta_LIM, PDAP_R_amin;
 
 	//Erasable Memory Programs
 	std::string EMPFile;

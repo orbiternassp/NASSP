@@ -23,6 +23,7 @@
  **************************************************************************/
 #define ORBITER_MODULE
 #include "skylab.h"
+#include "papi.h"
 
 const double TACS_PROPELLANT_MASS = 646.8227; //1426 lbm
 const double TACS_MAX_THRUST = 100.0*4.4482216152605; //100 lbf
@@ -34,6 +35,7 @@ atmdc(this),
 skylabanimations(this)
 {
 	csm = NULL;
+	trackLightsActive = false;
 }
 
 Skylab::~Skylab() {
@@ -46,7 +48,6 @@ void Skylab::InitSkylab() {
 	SetMeshVisibilityMode(skylabmeshID, MESHVIS_ALWAYS);
 	skylabanimations.DefineAnimations();
 
-	trackLightsActive = false;
 	AddTrackLights();
 
 	visibilitySize = 31.1; //Tuned so Skylab disappears in the CSM optics at 400nm range
@@ -128,6 +129,8 @@ void Skylab::clbkSaveState(FILEHANDLE scn)
 
 	if (csm) oapiWriteScenario_string(scn, "ONAME", csm->GetName());
 
+	papiWriteScenario_bool(scn, "TRACKLIGHTS", trackLightsActive);
+
 	atmdc.SaveState(scn);
 }
 
@@ -137,6 +140,8 @@ void Skylab::clbkLoadStateEx(FILEHANDLE scn, void *vstatus)
 
 	while (oapiReadScenario_nextline(scn, line))
 	{
+		papiReadScenario_bool(line, "TRACKLIGHTS", trackLightsActive);
+
 		if (!strnicmp(line, "ONAME", 5))
 		{
 			char temp[64];
@@ -308,7 +313,7 @@ void Skylab::AddTrackLights()
 		tracklights[i].period = 1.0;
 		tracklights[i].duration = 0.1;
 		tracklights[i].tofs = 0;
-		tracklights[i].active = false;
+		tracklights[i].active = trackLightsActive;
 		AddBeacon(tracklights + i);
 	}
 }

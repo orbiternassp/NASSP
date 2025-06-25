@@ -5582,8 +5582,8 @@ void RTCC::LunarAscentPAD(const ASCPADOpt &opt, AP11LMASCPAD &pad)
 	pad.DEDA225_226 = SMa / 0.3048 / 100.0;
 	pad.DEDA231 = length(opt.R_LS) / 0.3048 / 100.0;
 	sprintf(pad.remarks, "");
-	pad.DEDA047 = OrbMech::DoubleToDEDA(sin_DL, 14);
-	pad.DEDA053 = OrbMech::DoubleToDEDA(cos_DL, 14);
+	pad.DEDA047 = OrbMech::DoubleToDEDA(sin_DL, 1);
+	pad.DEDA053 = OrbMech::DoubleToDEDA(cos_DL, 1);
 }
 
 void RTCC::CMCExternalDeltaVUpdate(char *str, double P30TIG, VECTOR3 dV_LVLH)
@@ -6911,6 +6911,22 @@ SV RTCC::ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedM
 	VECTOR3 V_G;
 
 	return ExecuteManeuver(sv, P30TIG, dV_LVLH, attachedMass, Thruster, Q_Xx, V_G);
+}
+
+VehicleDataBlock RTCC::ExecuteManeuver(VehicleDataBlock sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster)
+{
+	VehicleDataBlock sv3;
+	SV sv1, sv2;
+	MATRIX3 Q_Xx;
+	VECTOR3 V_G;
+
+	sv1 = ConvertEphemDatatoSV(sv.sv, sv.Weight);
+	sv2 = ExecuteManeuver(sv1, P30TIG, dV_LVLH, attachedMass, Thruster, Q_Xx, V_G);
+	sv3 = sv;
+	sv3.sv = ConvertSVtoEphemData(sv2);
+	sv3.Weight = sv2.mass;
+
+	return sv3;
 }
 
 SV RTCC::ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster, MATRIX3 &Q_Xx, VECTOR3 &V_G)
@@ -10499,8 +10515,8 @@ void RTCC::PMMDKI(SPQOpt &opt, SPQResults &res)
 			PZDKIT.Block[0].NumMan++;
 
 			//Coast to TPF
-			res.sv_C[3] = coast(res.sv_C_apo[2], lamres.sv_tig2.GMT - res.sv_C_apo[2].sv.GMT);
-			res.sv_T[3] = coast(res.sv_T[2], lamres.sv_tig2.GMT - res.sv_T[2].sv.GMT);
+			res.sv_C[3] = coast(res.sv_C_apo[2], lamres.sv_tig2.sv.GMT - res.sv_C_apo[2].sv.GMT);
+			res.sv_T[3] = coast(res.sv_T[2], lamres.sv_tig2.sv.GMT - res.sv_T[2].sv.GMT);
 
 			//Save post TPF state vector
 			res.sv_C_apo[3] = res.sv_C[3];
@@ -11987,6 +12003,7 @@ void RTCC::LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscen
 	m1 = in.m0;
 	t_total_old = t_total;
 	integ.Init(unit(R));
+	out.ErrorCode = 0;
 
 	while (stop == false)
 	{
@@ -11999,6 +12016,11 @@ void RTCC::LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscen
 		//Accumulate DV
 		dv += Thrust / m1 * (t_total - t_total_old);
 		t_total_old = t_total;
+		if (m1 < SystemParameters.MCVLWT)
+		{
+			out.ErrorCode = 2;
+			break;
+		}
 	}
 
 	//Calculate output parameters
@@ -12170,7 +12192,7 @@ bool RTCC::PDIIgnitionAlgorithm(VehicleDataBlock sv, VECTOR3 R_LS, double TLAND,
 }
 
 //Based on NTRS 19740072723
-bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
+void RTCC::PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res)
 {
 	SPQOpt conopt;
 	SPQResults conres;
@@ -12179,43 +12201,52 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 	AscDescIntegrator integ;
 	VehicleDataBlock sv_I_guess, sv_IG, sv_D, sv_CSM_Ins, sv_LM_Ins, sv_Abort, sv_CAN, sv_CAN_apo, sv_CSM_Abort;
 	MATRIX3 Rot, Q_Xx, REFSMMAT;
-	VECTOR3 U_FDP, WM, WI, W, R_LSP, U_FDP_abort;
-	double GMT_LAND, t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, GMT_Ins, TS, theta, r_Ins, A_Ins, H_a, GMT_CSI, DH_D;
-	double SLOPE, dV_Inc, dh_apo, w_M, V_H_min, GMT_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo, t_go_abort, RY, RZ, WDOT;
-	int K_loop;
+	VECTOR3 U_FDP, WI, W, R_LSP, U_FDP_abort, DV_CAN;
+	double r_LS, t_go, CR, t_PDI, t_D, t_UL, t_stage, W_TD, T_DPS, dt_abort, Z_D_dot, R_D_dot, W_TA, t, T, isp, GMT_Ins, theta, r_Ins, A_Ins, GMT_CSI;
+	double SLOPE, dV_Inc, dh_apo, w_M, GMT_CAN, dt_CSI, R_a, R_a_apo, dt_CAN, theta_D, theta_apo, t_go_abort, RY, RZ, WDOT, dt_step;
+	int K_loop, I_SMAX, K_loop_max;
 	bool K_stage; //false = staging has not happened yet, true = staging has happened
-	bool K3; //false = CSI/CDH, true = Boost + CSI/CDH
+	bool K3; //falg that indicates which set of J,K is being determined; false indidcates that the first set is being determined
 	bool LandFlag = false;
 	bool InsertionFlag = false;
 	bool stop = false;
+	bool skip;
+	bool ROTFLAG; //true = impose initial rotation through positive radius vector, false = shortest rotation
 	std::vector<double> t_Abort_Table;
 	std::vector<double> dV_Abort_Table;
 	std::vector<double> Phase_Table;
 	std::vector<double> A_ins_Table;
 	int i = 0;
+	//char Buffer[128];
 
-	K3 = false;
+	//Program constants
 	w_M = 2.66169948e-6;
 	t_UL = 7.9;
 	Z_D_dot = 5650.0*0.3048;
 	R_D_dot = 19.5*0.3048;
-	DH_D = 15.0*1852.0;
-	V_H_min = 5515.0*0.3048;
-	dt_CSI = opt.dt_CSI;
-	dt_CAN = opt.dt_CAN;
 	conopt.E = 26.6*RAD;
 	conopt.K_CDH = 0;
-	conopt.GMT_TPI = opt.GMT_TPI;
-	conopt.h_min = -OrbMech::R_Moon; //Disables limit
-	GMT_LAND = opt.GMT_LAND;
+	conopt.h_min = -OrbMech::R_Moon;
+	K_loop_max = 10;
 
-	res.R_amin = length(opt.R_LS) + opt.h_amin;
+	//Calculation constants
+	r_LS = length(opt.R_LS);
 
+	//Set initial values
+	dt_CAN = opt.dt_CAN;
 	dt_abort = opt.dt_step;
-	sv_I_guess = coast(opt.sv_A, GMT_LAND - opt.sv_A.sv.GMT);
-	if (!PDIIgnitionAlgorithm(sv_I_guess, opt.R_LS, GMT_LAND, sv_IG, t_go, CR, U_FDP, REFSMMAT))
+	dt_CSI = opt.dt_CSI;
+	conopt.GMT_TPI = opt.GMT_TPI;
+	K3 = false;
+	DV_CAN = opt.DV_CAN;
+	I_SMAX = opt.I_SMAX;
+	dt_step = opt.dt_step;
+
+	sv_I_guess = coast(opt.sv_LM, opt.GMT_LAND - opt.sv_LM.sv.GMT);
+	if (!PDIIgnitionAlgorithm(sv_I_guess, opt.R_LS, opt.GMT_LAND, sv_IG, t_go, CR, U_FDP, REFSMMAT))
 	{
-		return false;
+		res.Error = 1; //Ignition algorithm failure
+		return;
 	}
 	t_go = -t_go;
 	t_go_abort = t_go;
@@ -12226,17 +12257,24 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 
 	ELVCNV(sv_IG.sv.GMT, RTCC_COORDINATES_MCT, RTCC_COORDINATES_MCI, Rot);
 	WI = mul(Rot, _V(0, 0, 1));
-	W = mul(opt.REFSMMAT, WI)*w_M;
-	R_LSP = mul(opt.REFSMMAT, mul(Rot, opt.R_LS));
-	descguid.Init(sv_IG.sv.R, sv_IG.sv.V, opt.sv_A.Weight, t_PDI, opt.REFSMMAT, R_LSP, t_PDI, W, t_go, &RTCCDescentTargets);
-	W_TD = opt.sv_A.Weight;
-	U_FDP_abort = tmul(opt.REFSMMAT, unit(U_FDP));
+	W = mul(REFSMMAT, WI)*w_M;
+	R_LSP = mul(REFSMMAT, mul(Rot, opt.R_LS));
+	descguid.Init(sv_IG.sv.R, sv_IG.sv.V, opt.sv_LM.Weight, t_PDI, REFSMMAT, R_LSP, t_PDI, W, t_go, &RTCCDescentTargets);
+	W_TD = opt.sv_LM.Weight;
+	U_FDP_abort = tmul(REFSMMAT, unit(U_FDP));
 
-	res.DEDA225 = (length(R_LSP) + 60000.0*0.3048 + length(R_LSP) + opt.h_amin) / 2.0;
-	res.DEDA226 = 7031200.0*0.3048;
+	//Calculate constant outputs
+	res.A_min = (r_LS*2.0 + opt.h_DINS + opt.h_amin) / 2.0;
+	res.A_max = 7031200.0*0.3048; //TBD: How is this determined?
+	res.R_amin = r_LS + opt.h_amin;
+	r_Ins = r_LS + opt.h_DINS;
+	A_Ins = (r_Ins + res.R_amin) / 2.0;
+	res.v_hmin = sqrt(OrbMech::mu_Moon*(2.0 / r_Ins - 1.0 / A_Ins));
 
+	//Outer, powered descent loop
 	do
 	{
+		//Initialize descent
 		stop = false;
 
 		integ.Init(U_FDP_abort);
@@ -12245,6 +12283,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 		K_loop = 0;
 		SLOPE = 2.0 / 1852.0*0.3048;
 
+		//Simulate descent until abort time
 		do
 		{
 			if (LandFlag)
@@ -12266,20 +12305,23 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 			}
 		} while (t_D <= t_PDI + dt_abort);
 
-		T = 43192.23;
+		T = 43192.23; //TBD: IS this required?
+		//Save state vector, U_T etc. so that descent can be entered at the current departure point
 		sv_Abort = sv_D;
 		U_FDP_abort = U_FDP;
 		t_go_abort = t_go;
+		//Propagate CSM vector to t_D and calculate phase angle (theta_D)
+		sv_CSM_Abort = coast(opt.sv_CSM, t_D - opt.sv_CSM.sv.GMT);
+		theta_D = OrbMech::PHSANG(sv_CSM_Abort.sv.R, sv_CSM_Abort.sv.V, sv_Abort.sv.R);
 
-		sv_CSM_Abort = coast(opt.sv_P, t_D - opt.sv_P.sv.GMT);
-		WM = unit(crossp(sv_CSM_Abort.sv.V, sv_CSM_Abort.sv.R));
-		TS = dotp(crossp(unit(sv_CSM_Abort.sv.R), unit(sv_Abort.sv.R)), WM);
-		theta_D = OrbMech::sign(TS)*acos(dotp(unit(sv_CSM_Abort.sv.R), unit(sv_Abort.sv.R)));
-
+		//Inner, powered ascent loop
 		do
 		{
+			//Initialize ascent
 			sv_D = sv_Abort;
-			ascguid.Init(opt.sv_P.sv.R, opt.sv_P.sv.V, W_TD, length(opt.R_LS), Z_D_dot, R_D_dot, false);
+			ascguid.Init(opt.sv_CSM.sv.R, opt.sv_CSM.sv.V, W_TD, r_LS, Z_D_dot, R_D_dot, false);
+			integ.Init(U_FDP_abort);
+			ROTFLAG = true;
 			t = t_D;
 			t_go = dt_abort;
 			W_TA = W_TD;
@@ -12289,7 +12331,7 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 			}
 			ascguid.SetTGO(t_go);
 			K_stage = false;
-
+			//Simulate powered ascent and potentially staging
 			do
 			{
 				if (K_stage == false)
@@ -12311,15 +12353,22 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 					GIMGBL(0.0, W_TA, RY, RZ, T, WDOT, RTCC_ENGINETYPE_LMDPS, 12, 0, 0, 0.0);
 				}
 				ascguid.Guidance(sv_D.sv.R, sv_D.sv.V, W_TA, T, t, U_FDP, t_go);
-				if (dotp(U_FDP, integ.GetCurrentTD()) < 0)
+				//Initial rotation logic
+				if (ROTFLAG)
 				{
-					if (acos(dotp(integ.GetCurrentTD(), unit(sv_D.sv.R))) > 30.0*RAD)
+					//Current thrust direction not within 90 degrees of desired and not within 30 degrees of radius vector
+					if (dotp(U_FDP, integ.GetCurrentTD()) < 0 && acos(dotp(integ.GetCurrentTD(), unit(sv_D.sv.R))) > 30.0*RAD)
 					{
 						U_FDP = unit(sv_D.sv.R);
+					}
+					else
+					{
+						ROTFLAG = false;
 					}
 				}
 				InsertionFlag = integ.Integration(sv_D.sv.R, sv_D.sv.V, W_TA, t, U_FDP, t_go, T, T / WDOT);
 			} while (InsertionFlag == false);
+			//Save LM insertion state vector
 			GMT_Ins = t;
 			sv_LM_Ins = sv_D;
 			sv_LM_Ins.Weight = W_TA;
@@ -12328,132 +12377,207 @@ bool RTCC::PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res)
 			//Overwrite actual insertion velocity with desired one; gives more consistent results
 			Q_Xx = OrbMech::LVLH_Matrix(sv_LM_Ins.sv.R, sv_LM_Ins.sv.V);
 			sv_LM_Ins.sv.V = tmul(Q_Xx, _V(Z_D_dot, 0, -R_D_dot));
-
-			sv_CSM_Ins = coast(opt.sv_P, GMT_Ins - opt.sv_P.sv.GMT);
-			WM = unit(crossp(sv_CSM_Ins.sv.V, sv_CSM_Ins.sv.R));
-			TS = dotp(crossp(unit(sv_CSM_Ins.sv.R), unit(sv_LM_Ins.sv.R)), WM);
-			theta = OrbMech::sign(TS)*acos(dotp(unit(sv_CSM_Ins.sv.R), unit(sv_LM_Ins.sv.R)));
-			
+			//Propgate CSM vector to time of insertion and calculate phase angle (theta)
+			sv_CSM_Ins = coast(opt.sv_CSM, GMT_Ins - opt.sv_CSM.sv.GMT);
+			theta = OrbMech::PHSANG(sv_CSM_Ins.sv.R, sv_CSM_Ins.sv.V, sv_LM_Ins.sv.R);
+			//Calculate orbital elements of insertion
 			r_Ins = length(sv_D.sv.R);
 			A_Ins = OrbMech::mu_Moon * r_Ins / (2.0*OrbMech::mu_Moon - r_Ins * Z_D_dot*Z_D_dot);
-			H_a = 2.0*A_Ins - r_Ins - length(opt.R_LS);
 			R_a = 2.0*A_Ins - r_Ins;
-			GMT_CSI = GMT_Ins + dt_CSI;
 
-			if (opt.LongProfileFirst)
-			{
-				if (K3 == false)
-				{
-					GMT_CAN = GMT_Ins + dt_CAN;
-					sv_CAN = coast(sv_LM_Ins, GMT_CAN - GMT_Ins);
-					sv_CAN_apo = sv_CAN;
-					sv_CAN_apo.sv.V += tmul(OrbMech::LVLH_Matrix(sv_CAN.sv.R, sv_CAN.sv.V), _V(opt.dv_CAN, 0.0, 0.0));
-					conopt.sv_A = sv_CAN_apo;
-				}
-				else
-				{
-					conopt.sv_A = sv_LM_Ins;
-				}
-			}
-			else
-			{
-				if (K3 == false || dt_CAN <= 0.0 || opt.dv_CAN <= 0.0)
-				{
-					conopt.sv_A = sv_LM_Ins;
-				}
-				else
-				{
-					GMT_CAN = GMT_Ins + dt_CAN;
-					sv_CAN = coast(sv_LM_Ins, GMT_CAN - GMT_Ins);
-					sv_CAN_apo = sv_CAN;
-					sv_CAN_apo.sv.V += tmul(OrbMech::LVLH_Matrix(sv_CAN.sv.R, sv_CAN.sv.V), _V(opt.dv_CAN, 0.0, 0.0));
-					conopt.sv_A = sv_CAN_apo;
-				}
-			}
-
+			//Determine time of boost
+			GMT_CAN = GMT_Ins + dt_CAN;
+			//Propagate LM state to GMT_CAN
+			sv_CAN = coast(sv_LM_Ins, GMT_CAN - GMT_Ins);
+			//Add DV_CAN to the LM state vector
+			sv_CAN_apo = sv_CAN;
+			sv_CAN_apo.sv.V += tmul(OrbMech::LVLH_Matrix(sv_CAN.sv.R, sv_CAN.sv.V), DV_CAN);
+			//Calculate the time of CSI
+			GMT_CSI = GMT_CAN + dt_CSI;
+			//Propagate LM state vector to CSI time. TBD: Not required, just set as SPQ input
+			conopt.sv_A = sv_CAN_apo;
+			//Calculate rendezvous maneuvers
 			conopt.sv_P = sv_CSM_Ins;
 			conopt.GMT_CSI = GMT_CSI;
-
+			//Perform the rendezvous sequence to determine DH at CDH
 			ConcentricRendezvousProcessor(conopt, conres);
+			//Error checks
+			if (conres.err)
+			{
+				res.Error = 2; //SPQ failure
+				return;
+			}
+			//Increment iteration counter
 			K_loop++;
 			if (K_loop > 1)
 			{
 				SLOPE = dV_Inc / (conres.DH - dh_apo);
 			}
-
-			dV_Inc = SLOPE * (DH_D - conres.DH);
+			//Update insertion velocity
+			dV_Inc = SLOPE * (opt.DH_D - conres.DH);
 			Z_D_dot += dV_Inc;
 			dh_apo = conres.DH;
 
-		} while (abs(dV_Inc) > 0.1*0.3048 && K_loop < 10);
-
-		if (opt.IsTwoSegment && R_a < res.R_amin)
+		} while (abs(dV_Inc) > 0.1*0.3048 && K_loop < K_loop_max);
+		//Check on exceeding K_loop max
+		if (K_loop >= K_loop_max)
 		{
-			if (K3 == false)
-			{
-				K_loop = 0;
-				dt_CSI += opt.dt_2CSI;
-				conopt.GMT_TPI += opt.dt_2TPI;
-				res.Theta_LIM = theta_apo + (theta_D - theta_apo) / (R_a - R_a_apo)*(res.R_amin - R_a_apo);
-				res.R_amin = length(opt.R_LS) + opt.h_2amin;
-				if (dt_CAN >= dt_CSI)
-				{
-					dt_CAN = 0.0;
-				}
-
-				OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.K1, res.J1);
-				res.DEDA227 = res.K1;
-				res.DEDA224 = res.J1;
-				Phase_Table.clear();
-				A_ins_Table.clear();
-				K3 = true;
-			}
-			else
-			{
-				OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.K2, res.J2);
-				stop = true;
-			}
+			res.Error = 3; //Failure to converge on insertion velocity
+			return;
 		}
-		else
+
+		//sprintf(Buffer, "DT %lf VH %lf Alt %lf", dt_abort, Z_D_dot / 0.3048, (r_Ins - r_LS) / 0.3048);
+		//oapiWriteLog(Buffer);
+
+		if (opt.IsTwoSegment == false)
 		{
+			//Apollo 11 only
 			t_Abort_Table.push_back(dt_abort);
 			dV_Abort_Table.push_back(Z_D_dot);
 			Phase_Table.push_back(theta);
 			A_ins_Table.push_back(A_Ins);
 			theta_apo = theta_D;
-			dt_abort += opt.dt_step;
-			R_a_apo = R_a;
-		}
+			dt_abort += dt_step;
 
-		if (!opt.IsTwoSegment && Z_D_dot <= V_H_min)
+			//Limit horizontal velocity
+			if (Z_D_dot <= res.v_hmin)
+			{
+				stop = true;
+			}
+		}
+		else
 		{
-			stop = true;
-		}
+			//Apollo 12+
+			//Termination logic
+			skip = false;
+			//First set?
+			if (K3 == false)
+			{
+				//Yes
+				//Minimum apolune altitude?
+				if ((opt.K4 == false || (opt.K4 && theta < opt.theta_TARG)) && R_a >= res.R_amin)
+				{
+					//Do not terminate calculations, nothing to do
+				}
+				else
+				{
+					//Ran into a limit
+					//Error check
+					if (Phase_Table.size() == 0U)
+					{
+						//Insufficient data to calculate phase switch
+						res.Error = 4;
+						return;
+					}
+					//Minimum apolune altitude or phase angle?
+					if (opt.K4)
+					{
+						//Phase angle
+						res.Theta_LIM = theta_apo + (theta_D - theta_apo) / (theta - Phase_Table.back())*(opt.theta_TARG - Phase_Table.back());
+					}
+					else
+					{
+						//Minimum apolune altitude
+						res.Theta_LIM = theta_apo + (theta_D - theta_apo) / (R_a - R_a_apo)*(res.R_amin - R_a_apo);
+					}
 
+					//sprintf(Buffer, "Theta_LIM %lf", res.Theta_LIM*DEG);
+					//oapiWriteLog(Buffer);
+
+					K_loop = 0;
+					conopt.GMT_TPI = opt.GMT_2TPI;
+					dt_CSI = opt.dt_2CSI;
+					dt_CAN = opt.dt_2CAN;
+					DV_CAN = opt.DV_2CAN;
+					dt_step = opt.dt_2step;
+					I_SMAX = (int)Phase_Table.size();
+					skip = true;
+				}
+			}
+			else
+			{
+				//Second set
+				if (R_a < res.R_amin)
+				{
+					//Ran into limit
+					I_SMAX = (int)Phase_Table.size();
+					skip = true;
+				}
+			}
+			if (skip == false)
+			{
+				Phase_Table.push_back(theta);
+				A_ins_Table.push_back(A_Ins);
+				theta_apo = theta_D;
+				R_a_apo = R_a;
+				dt_abort += dt_step;
+			}
+			if (Phase_Table.size() >= (unsigned)I_SMAX)
+			{
+				//Table full
+				double J, K;
+				if (Phase_Table.size() < 2U)
+				{
+					res.Error = 5; //Insufficient data for curve fit
+					return;
+				}
+				OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, K, J);
+				if (K3 == false)
+				{
+					//First time through
+					I_SMAX = opt.I_SMAX;
+					K3 = true;
+					res.J1 = J;
+					res.K1 = K;
+					Phase_Table.clear();
+					A_ins_Table.clear();
+					//TBD: This should go to ascent init, instead if will do one descent step
+				}
+				else
+				{
+					res.J2 = J;
+					res.K2 = K;
+					stop = true;
+				}
+			}
+		}
 	} while (stop == false);
 
 	//If we use the two segment logic, then everything has already been calculated
-	if (opt.IsTwoSegment) return true;
+	if (opt.IsTwoSegment) return;
 
-	//Apollo 11: First 4 solutions from T vs. V_H table for cubic function
+	//Apollo 11: Required at least 4 solutions for the polynomial
 	if (dV_Abort_Table.size() < 4)
 	{
-		return false;
+		res.Error = 5; //Insufficient data for curve fit
+		return;
 	}
 
-	double t_Abort[4] = { t_Abort_Table[0], t_Abort_Table[1] , t_Abort_Table[2] , t_Abort_Table[3] };
-	double dV_Abort[4] = { dV_Abort_Table[0], dV_Abort_Table[1] , dV_Abort_Table[2] , dV_Abort_Table[3] };
-	double coeff[4];
-	OrbMech::CubicInterpolation(t_Abort, dV_Abort, coeff);
+	//Convert arrays to units of Earth radii and hours because it prevents running into numerical issues
+	std::vector<double> t_Abort_Table2, dV_Abort_Table2, coeff;
 
-	res.ABTCOF1 = coeff[0];
-	res.ABTCOF2 = coeff[1];
-	res.ABTCOF3 = coeff[2];
-	res.ABTCOF4 = coeff[3];
+	for (unsigned i = 0; i < t_Abort_Table.size(); i++)
+	{
+		t_Abort_Table2.push_back(t_Abort_Table[i] / 3600.0);
+		dV_Abort_Table2.push_back(dV_Abort_Table[i] * 3600.0 / 6378165.0);
+	}
+	//Linear least squares
+	OrbMech::LinearLeastSquares(t_Abort_Table2, dV_Abort_Table2, 4, coeff);
 
-	OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.DEDA227, res.DEDA224);
+	//Change back scaling
+	for (unsigned i = 0; i < coeff.size(); i++)
+	{
+		coeff[i] *= 6378165.0*pow(1.0 / 3600.0, i + 1);
+	}
 
-	return true;
+	res.ABTCOF1 = coeff[3];
+	res.ABTCOF2 = coeff[2];
+	res.ABTCOF3 = coeff[1];
+	res.ABTCOF4 = coeff[0];
+
+	//Least squares for AGS constants
+	OrbMech::LinearLeastSquares(Phase_Table, A_ins_Table, res.K1, res.J1);
+	return;
 }
 
 bool RTCC::LunarLiftoffTimePredictionDT(const LLTPOpt &opt, LunarLaunchTargetingTable &res)
@@ -16203,7 +16327,7 @@ int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 
 	aux.DV_cTO = 0.0;
 	aux.DV_TO = 0.0;
 	aux.DV_U = 0.0;
-	aux.MainFuelUsed = asc_out.m1 - in.m0;
+	aux.MainFuelUsed = in.m0 - asc_out.m1;
 	aux.P_G = 0.0;
 	aux.RCSFuelUsed = 0.0;
 	aux.CSI = 2;
@@ -16247,7 +16371,7 @@ int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 
 		E->Header.TR = E->table.back().GMT;
 	}
 
-	return 0;
+	return asc_out.ErrorCode;
 }
 
 int RTCC::PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E)
@@ -16911,6 +17035,11 @@ void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGM
 	{
 		EMSMISS(&InTable);
 
+		if (InTable.NIAuxOutputTable.ErrorCode)
+		{
+			//TBD: Handle errors
+		}
+
 		if (QUEID == 2)
 		{
 			//Store ephemeris
@@ -17114,8 +17243,17 @@ void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGM
 		//Write headers
 		table->EPHEM.Header.NumVec = table->EPHEM.table.size();
 		table->EPHEM.Header.Offset = 0;
-		table->EPHEM.Header.TL = table->EPHEM.table.front().GMT;
-		table->EPHEM.Header.TR = table->EPHEM.table.back().GMT;
+
+		if (table->EPHEM.table.size() == 0U)
+		{
+			table->EPHEM.Header.TL = 0.0;
+			table->EPHEM.Header.TR = 0.0;
+		}
+		else
+		{
+			table->EPHEM.Header.TL = table->EPHEM.table.front().GMT;
+			table->EPHEM.Header.TR = table->EPHEM.table.back().GMT;
+		}
 		table->MANTIMES.TUP = table->EPHEM.Header.TUP;
 
 		if (L == RTCC_MPT_CSM)
@@ -21326,6 +21464,7 @@ int RTCC::PMMXFR(int id, void *data)
 				}
 				inp->ConfigurationChangeIndicator = rtetab->ConfigurationChangeIndicator;
 				inp->EndConfiguration = rtetab->EndConfiguration;
+				inp->DockingAngle = rtetab->DockingAngle;
 				
 				BurnParm75 = rtetab->DV_XDV.x;
 				BurnParm76 = rtetab->DV_XDV.y;

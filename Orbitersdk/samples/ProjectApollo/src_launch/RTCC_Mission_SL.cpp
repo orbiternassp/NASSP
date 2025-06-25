@@ -325,8 +325,8 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		if (preliminary == false)
 		{
 			//State vector after NCC
-			EphemerisData sv_NCC = res.sv_tig;
-			sv_NCC.V = res.sv_tig.V + res.dV;
+			EphemerisData sv_NCC = res.sv_tig.sv;
+			sv_NCC.V = res.sv_tig.sv.V + res.dV;
 
 			calcParams.SVSTORE1 = ConvertEphemDatatoSV(sv_NCC, CSMMass);
 		}

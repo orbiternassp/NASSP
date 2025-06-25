@@ -832,59 +832,90 @@ struct SPQOpt //Coelliptic Sequence Processor
 
 struct PDAPOpt //Powered Descent Abort Program
 {
-	VehicleDataBlock sv_A;
-	VehicleDataBlock sv_P;
-	double GMT_LAND;
-	MATRIX3 REFSMMAT;
-	VECTOR3 R_LS;
-	double dt_stage;
-	//LM vehicle weight immediately after staging
-	double W_TAPS;
-	//LM weight representative of DPS fuel depletion
-	double W_TDRY;
-	//DT between successive abort points
-	double dt_step;
-	//Time from Insertion to CSI
-	double dt_CSI = 50.0*60.0;
-	//Time of TPI
-	double GMT_TPI;
-	//dt added to dt_CSI for generation of the second set of targeting coefficients
-	double dt_2CSI = 110.0*60.0;
-	//dt added to t_TPI for generation of the second set of targeting coefficients
-	double dt_2TPI = 7117.0;
+	//State vectors
+	VehicleDataBlock sv_CSM;
+	VehicleDataBlock sv_LM;
+
 	//One or two segments (Apollo 11 style vs. all later missions)
 	bool IsTwoSegment = false;
-	//time between orbit insertion and the canned maneuver
-	double dt_CAN = 50.0*60.0;
-	//DV of the canned maneuver
-	double dv_CAN = 10.0*0.3048;
 	//Minimum apogee altitude limit for the insertion orbit; reference from the landing site radius
-	double h_amin = 30.0*1852.0; //First segment
-	double h_2amin = 30.0*1852.0; //Second segment
-	//Flag to use the long profile in the first set of targeting coefficients
-	bool LongProfileFirst = false;
+	double h_amin = 30.0*1852.0;
+	//Nominal time of landing
+	double GMT_LAND;
+	//Landing site radius
+	VECTOR3 R_LS;
+	//false = theta_LIM is a function of R_amin, true = theta_LIM is a function of phase at insertion
+	int K4 = false;
+	//Desired altitude differential between the LM and CSM orbits at CDH
+	double DH_D = 15.0*1852.0;
+	//Desired insertion altitude referenced from landing site radius
+	double h_DINS = 60000.0*0.3048;
+
+	//TPI time used to generate the first set of targeting coefficients
+	double GMT_TPI = 0.0;
+	//TPI time used to generate the second set of targeting coefficients
+	double GMT_2TPI = 0.0;
+	//DT between ullage ignition and PDI
+	double t_UL = 7.9;
+	//DT between orbit insertion and the canned maneuver
+	double dt_CAN = 0.0;
+	//value of dt_CAN used to generate the second set of targeting coefficients
+	double dt_2CAN = 50.0*60.0;
+	//DT between the canned maneuver and CSI
+	double dt_CSI = 50.0*60.0;
+	//value of dt_CSI used to generate the second set of targeting coefficients
+	double dt_2CSI = 110.0*60.0;
+	//DT between PDI and staging time
+	double dt_stage = 0.0;
+	//DT between successive abort points
+	double dt_step = 20.0;
+	//value of dt_step used to generate the second set of targeting coefficients
+	double dt_2step = 20.0;
+	//LVLH components of the canned maneuver
+	VECTOR3 DV_CAN = _V(0, 0, 0);
+	//value of DV_CSN used to generate the second set of targeting coefficients
+	VECTOR3 DV_2CAN = _V(10.0*0.3048, 0, 0);
+
+	//LM vehicle weight immediately after staging
+	double W_TAPS = 10634.0*0.45359237;
+	//LM weight representative of DPS fuel depletion
+	double W_TDRY = 15455.8*0.45359237;
+	//Phase angle at insertion used to determine the end of the region for which the first set of targeting coefficients are valid
+	double theta_TARG = -13.5*RAD;
+	//Maximum number of abort cases to process
+	int I_SMAX = 100;
 };
 
 struct PDAPResults
 {
-	//Apollo 11 abort coefficients
-	double ABTCOF1;
-	double ABTCOF2;
-	double ABTCOF3;
-	double ABTCOF4;
-	//Term in LM desired semi-major axis
-	double DEDA224;
-	//Lower limit on semi-major axis
-	double DEDA225;
-	//Upper limit on semi-major axis
-	double DEDA226;
-	//Factor in LM desired semi-major axis
-	double DEDA227;
+	//Engineering values
+	//Apollo 11 abort coefficients, m/sec, m/sec^2 etc.
+	double ABTCOF1 = 0.0;
+	double ABTCOF2 = 0.0;
+	double ABTCOF3 = 0.0;
+	double ABTCOF4 = 0.0;
+	
 	//Limiting phase angle
-	double Theta_LIM;
-	//Minimum apolune radius permitted in the insertion orbit
-	double R_amin;
-	double K1, K2, J1, J2;
+	double Theta_LIM = 0.0;
+	//Minimum apolune radius permitted in the insertion orbit, meters
+	double R_amin = 0.0;
+	//Minimum semi-major axis permitted in insertion orbit, meters. 8J (AGS address 225)
+	double A_min = 0.0;
+	//Maximum semi-major axis permitted in insertion orbit, meters. 9J (AGS address 226, FP6 only)
+	double A_max = 0.0;
+	//Insertion velocity associated with R_amin, m/s
+	double v_hmin = 0.0;
+	//Slope of semi-major axis in first segment, m/rad. 4K10 (AGS address 227 in FP6, address 662 in FP7+)
+	double K1 = 0.0;
+	//Slope of semi-major axis in second segment. 11J (AGS address 673)
+	double K2 = 0.0;
+	//Term in LM desired semi-major axis. J1PARM in LGC, 7J (address 224) in AGS, meters
+	double J1 = 0.0;
+	//Retarget value of J1. J2PARM in LGC, 10J (address 226) in AGS (FP7 and later), meters
+	double J2 = 0.0;
+	//Error code. 0 = no error, 1 = Ignition algorithm failure, 2 = CSI maneuver calculation failure, 3 = Failure to converge on insertion velocity
+	//4 = Insufficient data to calculate phase switch, 5 = Insufficient data for curve fit
+	int Error = 0;
 };
 
 struct DockAlignOpt	//Docking Alignment Processor
@@ -2307,6 +2338,7 @@ struct RTEDigitalSolutionTable
 	bool HeadsUpDownIndicator = false;
 	int ConfigurationChangeIndicator = 0;
 	int EndConfiguration = 0;
+	double DockingAngle = 0.0;
 };
 
 struct ELVCTRInputTable
@@ -2457,6 +2489,7 @@ public:
 	VehicleDataBlock StateVectorCalcDataBlock(VESSEL *vessel);
 	void ExecuteManeuver(EphemerisData sv, PLAWDTOutput WeightsTable_before, double P30TIG, VECTOR3 dV_LVLH, int Thruster, EphemerisData &sv_after, PLAWDTOutput &WeightsTable_after);
 	SV ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
+	VehicleDataBlock ExecuteManeuver(VehicleDataBlock sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
 	SV ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster, MATRIX3 &Q_Xx, VECTOR3 &V_G);
 	void PMMENS(VECTOR3 R, VECTOR3 V, double dt_pf, double y_s, double theta_PF, double h_bo, double V_H, double V_R, double GMT_LO, VECTOR3 R_LS, VECTOR3 &R_BO, VECTOR3 &V_BO, double &GMT_BO);
 	void PMMLTR(AEGBlock sv_CSM, double T_LO, double V_H, double V_R, double h_BO, double t_PF, double P_FA, double Y_S, double r_LS, double lat_LS, double lng_LS, double &deltaw0, double &DR, double &deltaw, double &Yd, double &AZP);
@@ -2497,6 +2530,8 @@ public:
 		EphemerisData sv_Ins;
 		//LM mass at insertion
 		double m1;
+		//Error codes. 0 = no error, 2 = weight is below minimum allowed
+		int ErrorCode;
 	};
 
 	void LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscentProcessorOutputs &out);
@@ -2536,7 +2571,7 @@ public:
 	//Apsides Determination Subroutine
 	int PMMAPD(AEGHeader Header, AEGDataBlock Z, int KAOP, int KE, double *INFO, AEGDataBlock *sv_A, AEGDataBlock *sv_P);
 	bool PDIIgnitionAlgorithm(VehicleDataBlock sv, VECTOR3 R_LS, double TLAND, VehicleDataBlock &sv_IG, double &t_go, double &CR, VECTOR3 &U_IG, MATRIX3 &REFSMMAT);
-	bool PoweredDescentAbortProgram(PDAPOpt opt, PDAPResults &res);
+	void PoweredDescentAbortProgram(const PDAPOpt &opt, PDAPResults &res);
 	MATRIX3 GetREFSMMATfromAGC(agc_t *agc, bool cmc);
 	bool CalculateAGSKFactor(agc_t *agc, ags_t *aea, double &KFactor);
 

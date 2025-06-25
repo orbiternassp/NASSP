@@ -3198,66 +3198,6 @@ double LinearInterpolation(double x0, double y0, double x1, double y1, double x)
 	return y0 + (x - x0)*(y1 - y0) / (x1 - x0);
 }
 
-void CubicInterpolation(double *x, double *y, double *a)
-{
-	double **V = NULL;
-	double **A = NULL;
-	int *P = NULL;
-	std::vector<double> sol;
-	double Tol;
-	V = new double*[4];
-	A = new double*[4];
-	P = new int[5];
-	sol.assign(4, 0);
-	for (int i = 0;i < 4;i++)
-	{
-		V[i] = new double[4];
-		A[i] = new double[4];
-		for (int j = 0;j < 4;j++)
-		{
-			V[i][j] = 0.0;
-			A[i][j] = 0.0;
-		}
-	}
-
-	Tol = 0.0000000001;
-	VandermondeMatrix(x, 3, V);
-
-	for (int i = 0;i < 4;i++)
-	{
-		for (int j = 0;j < 4;j++)
-		{
-			A[i][j] = V[i][j];
-		}
-	}
-
-	LUPDecompose(A, 4, Tol, P);
-	LUPSolve(A, P, y, 4, sol);
-
-	for (int i = 0;i < 4;i++)
-	{
-		a[i] = sol[i];
-	}
-
-	delete[] A;
-	delete[] V;
-	delete[] P;
-}
-
-//x = N+1 data points
-//N = order of polynomial
-//V = (N+1)*(N+1) Vandermonde matrix
-void VandermondeMatrix(double *x, int N, double **V)
-{
-	for (int i = 0;i < N + 1;i++)
-	{
-		for (int j = 0;j < N + 1;j++)
-		{
-			V[i][j] = pow(x[i], N - j);
-		}
-	}
-}
-
 int LUPDecompose(double **A, int N, double Tol, int *P)
 {
 
@@ -3369,6 +3309,66 @@ void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, double &
 	delete[] yy;
 }
 
+void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, int M, std::vector<double> &b)
+{
+	//INPUTS:
+	//x: Observed values of the independent variable
+	//y: Observed values of the dependent variable
+	//M: Order of the regression (2 = linear)
+	//OUTPUTS:
+	//b: Solution vector
+
+	int N;
+	
+	N = (int)x.size();
+	b.resize(M);
+
+	//Generate information matrix (M x M)
+	//allocate the array
+	double** ATA = new double*[M];
+	for (int i = 0; i < M; i++)
+		ATA[i] = new double[M];
+
+	int i, j, k;
+	for (i = 0; i < M; i++)
+	{
+		for (j = 0; j < M; j++)
+		{
+			ATA[i][j] = 0.0;
+			for (k = 0; k < N; k++)
+			{
+				ATA[i][j] = ATA[i][j] + pow(x[k], i + j);
+			}
+		}
+	}
+	//Generate the observation matrix (M x 1)
+	double* ATb = new double[M];
+	for (i = 0; i < M; i++)
+	{
+		ATb[i] = 0.0;
+		for (j = 0; j < N; j++)
+		{
+			ATb[i] = ATb[i] + y[j] * pow(x[j], i);
+		}
+	}
+
+	//Solve equations
+	int *PP = new int[M + 1];
+
+	if (OrbMech::LUPDecompose(ATA, M, 0.0, PP) == 0)
+	{
+		//return true;
+	}
+	OrbMech::LUPSolve(ATA, PP, ATb, M, b);
+	delete[] PP;
+
+	//deallocate the arrays
+	for (int i = 0; i < M; i++)
+		delete[] ATA[i];
+	delete[] ATA;
+	delete[] ATb;
+}
+
 double Sum(double *x, int N)
 {
 	double a = 0.0;
@@ -3436,24 +3436,6 @@ int DoubleToBuffer(double x, double q, int m)
 	return out;
 }
 
-int DoubleToDEDA(double x, double q)
-{
-	int c = 0, out = 0, f = 1;
-
-	x = x * (268435456.0 / pow(2.0, fabs(q)));
-
-	c = 0x3FFF & ((int)fabs(x));
-
-	if (x<0.0) c = 0x7FFF & (~c) + 1; // Polarity change
-
-	while (c != 0) {
-		out += (c & 7) * f;
-		f *= 10;	c = c >> 3;
-	}
-	if (x < 0.0) out = -out;
-	return out;
-}
-
 int AEAToSigned(int val)
 {
 	if (val >= 0400000)
@@ -3466,6 +3448,54 @@ int AEAToSigned(int val)
 double AEAToDouble(int val, int SF)
 {
 	return pow(2, SF)*(double)(AEAToSigned(val));
+}
+
+int AEAToDEDA(int val)
+{
+	//Input is value in AEA format. Output is signed DEDA value with reduced precision
+	int val2;
+	if (val >= 0400000)
+		val2 = -((val - 0400000) >> 2);
+	else
+		val2 = val >> 2;
+	return val2;
+}
+
+int DoubleToAEA(double x, int q)
+{
+	//Conversion of scaled double value to AEA memory format
+	int val, val2;
+
+	val = static_cast<int>(round(x * pow(2, 17 - q)));
+	if (val < 0)
+		val2 = 01000000 - abs(val);
+	else
+		val2 = val;
+	return val2;
+}
+
+int DoubleToDEDA(double x, int q)
+{
+	//Conversion of scaled double value to DEDA (octal) format
+	int val, val2;
+
+	val = DoubleToAEA(x, q);
+	val2 = AEAToDEDA(val);
+	return DecimalToOctal(val2);
+}
+
+int DecimalToOctal(int x)
+{
+	int c, out = 0, f = 1;
+
+	c = abs(x);
+
+	while (c != 0) {
+		out += (c & 7) * f;
+		f *= 10;	c = c >> 3;
+	}
+	if (x < 0.0) out = -out;
+	return out;
 }
 
 double DecToDouble(int dec1, int dec2)

@@ -1469,7 +1469,7 @@ void LDPP::CNODE(EphemerisData sv_A, EphemerisData sv_P, double &t_m, VECTOR3 &d
 		{
 			return;
 		}
-		sv_P = PositionMatch(sv_P, sv_A, mu);
+		sv_P = PositionMatch(sv_A, sv_P, mu);
 		GMT_CN = sv_A.GMT;
 	} while (ICT <= 3);
 
