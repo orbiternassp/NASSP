@@ -52,6 +52,11 @@ LEM_RR::LEM_RR()
 	rr_proc[1] = 0.0;
 	rr_proc_last[0] = 0.0;
 	rr_proc_last[1] = 0.0;
+
+	ratetest = -152.4; // 500 feet per second in meters per second
+	rangetest = 362066; // 195.5 nautical miles in meters
+	rdrxmtr = 3.7; // Transmitter power
+
 }
 
 LEM_RR::~LEM_RR()
@@ -109,7 +114,7 @@ void LEM_RR::Init(LEM *s, e_object *dc_src, e_object *ac_src, h_Radiator *ant, B
 	RangeLockTimer = 0.0;
 	tstime = 0.0;
 
-	for (int i = 0;i < 4;i++)
+	for (int i = 0; i < 4; i++)
 	{
 		SignalStrengthQuadrant[i] = 0.0;
 		U_RRL[i] = _V(0.0, 0.0, 0.0);
@@ -183,7 +188,7 @@ double LEM_RR::GetTransmitterPower()
 		return 0;
 	}
 
-	return 3.7;
+	return rdrxmtr;
 }
 
 
@@ -216,7 +221,7 @@ double LEM_RR::dBm2SignalStrength(double RecvdRRPower_dBm)
 			SignalStrengthRCVD = 0;
 		}
 	}
-	
+
 	return SignalStrengthRCVD;
 }
 
@@ -314,11 +319,10 @@ void LEM_RR::Timestep(double simdt) {
 		//double trunnionTarget = 0, shaftTarget = 0;
 		// TEST MODE:
 		// NO TRACK light on
-		// Range Rate to -500 FPS,
 		// Shaft/Trunnion varies between +/- 5 degrees (at 0.015 d/s)
-		// After 12 seconds, Range to 195.5nm and NO TRACK light out
-		internalrangerate = -152.4;
-		internalrange = 362066; // 195.5 nautical miles in meters
+		// After 12 seconds,NO TRACK light out
+		internalrangerate = ratetest;
+		internalrange = rangetest;
 
 		//Square wave
 		tstime += simdt;
@@ -363,11 +367,11 @@ void LEM_RR::Timestep(double simdt) {
 
 		double RecvdRRPower, RecvdRRPower_dBm, SignalStrengthScaleFactor;
 		double anginc = 0.1*RAD;
-		
+
 		if (!csm) {
 			csm = lem->agc.GetCSM();
 		}
-			
+
 
 		if (csm)
 		{
@@ -375,7 +379,7 @@ void LEM_RR::Timestep(double simdt) {
 			//need a better solution for multiple CSMs/LEMs in the same sceneriao
 			if (!(lem->lm_rr_to_csm_connector.connectedTo))
 			{
-				lem->lm_rr_to_csm_connector.ConnectTo(GetVesselConnector(csm,VIRTUAL_CONNECTOR_PORT,RADAR_RF_SIGNAL));
+				lem->lm_rr_to_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, RADAR_RF_SIGNAL));
 			}
 
 			//Global position of Earth, Moon and spacecraft, spacecraft rotation matrix from local to global
@@ -385,7 +389,7 @@ void LEM_RR::Timestep(double simdt) {
 			//oapiGetGlobalPos(hMoon, &R_M);
 			lem->GetRotationMatrix(LMRot);
 			csm->GetRotationMatrix(CSMRot);
-			
+
 
 			//Vector pointing from LM to CSM
 			R = CSMPos - LMPos;
@@ -409,7 +413,7 @@ void LEM_RR::Timestep(double simdt) {
 			//sprintf(oapiDebugString(), "ReturnedPower: %lf",  RecvdRRPower_dBm);
 
 			//In LM navigation base coordinates, left handed
-			for (int i = 0;i < 4;i++)
+			for (int i = 0; i < 4; i++)
 			{
 				U_RRL[i] = _V(U_RRL[i].y, U_RRL[i].x, U_RRL[i].z);
 
@@ -558,20 +562,20 @@ void LEM_RR::Timestep(double simdt) {
 			//if(lem->RadarTestSwitch.GetState() != THREEPOSSWITCH_UP){ sprintf(oapiDebugString(),"RR SLEW: SHAFT %f TRUNNION %f",shaftAngle*DEG,trunnionAngle*DEG); }
 			break;
 		case 2: // AGC
-			{
-				int pulses;
+		{
+			int pulses;
 
-				pulses = lem->scdu.GetErrorCounter();
+			pulses = lem->scdu.GetErrorCounter();
 
-				shaftVel = (RR_SHAFT_STEP*pulses);
-				shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
+			shaftVel = (RR_SHAFT_STEP*pulses);
+			shaftAngle += (RR_SHAFT_STEP*pulses)*simdt;
 
-				pulses = lem->tcdu.GetErrorCounter();
+			pulses = lem->tcdu.GetErrorCounter();
 
-				trunnionVel = (RR_SHAFT_STEP*pulses);
-				trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
-			}
-			break;
+			trunnionVel = (RR_SHAFT_STEP*pulses);
+			trunnionAngle += (RR_SHAFT_STEP*pulses)*simdt;
+		}
+		break;
 		}
 	}
 
@@ -725,7 +729,7 @@ void LEM_RR::SystemTimestep(double simdt) {
 	if (abs(shaftVel) > 0.01*RAD)
 	{
 		ac_source->DrawPower(13.8);
-		rrheat->GenerateHeat(13.8); 
+		rrheat->GenerateHeat(13.8);
 	}
 
 	if (abs(trunnionVel) > 0.01*RAD)
@@ -733,7 +737,77 @@ void LEM_RR::SystemTimestep(double simdt) {
 		ac_source->DrawPower(13.8);
 		rrheat->GenerateHeat(13.8);
 	}
-	
+
+}
+
+void LEM_RR::SelfTest(int LMNumber)
+{
+	switch (LMNumber)
+	{
+	case 3: //LM-3
+	{
+		rangetest = 362454.9;
+		ratetest = -150.876;
+		rdrxmtr = 3.1;
+	}
+	break;
+	case 4: //LM-4
+	{
+		rangetest = 361140.0;
+		ratetest = -148.742;
+		rdrxmtr = 2.9;
+	}
+	break;
+	case 5: //LM-5
+	{
+		rangetest = 362399.4;
+		ratetest = -149.047;
+		rdrxmtr = 2.6;
+	}
+	break;
+	case 6: //LM-6
+	{
+		rangetest = 362066.0;
+		ratetest = -153.01;
+		rdrxmtr = 3.7;
+	}
+	break;
+	case 7: //LM-7
+	{
+		rangetest = 362232.7;
+		ratetest = -151.181;
+		rdrxmtr = 2.4;
+	}
+	break;
+	case 8: //LM-8
+	{
+		rangetest = 362251.2;
+		ratetest = -152.4;
+		rdrxmtr = 2.6;
+	}
+	break;
+	case 10: //LM-10
+	{
+		rangetest = 362047.5;
+		ratetest = -152.4;
+		rdrxmtr = 3.5;
+	}
+	break;
+	case 11: //LM-11
+	{
+		rangetest = 360917.8;
+		ratetest = -152.248;
+		rdrxmtr = 3.0;
+	}
+	break;
+	case 12: //LM-12
+	{
+		rangetest = 361695.6;
+		ratetest = -149.504;
+		rdrxmtr = 3.0;
+	}
+	break;
+	}
 }
 
 void LEM_RR::DefineAnimations(UINT idx) {
@@ -777,7 +851,7 @@ void LEM_RR::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_double(scn, "RR_RCVDPOW", RCVDpow);
 	papiWriteScenario_double(scn, "RR_RCVDGAIN", RCVDgain);
 	papiWriteScenario_double(scn, "RR_RCVDPHASE", RCVDPhase);
-	oapiWriteLine(scn, end_str); 
+	oapiWriteLine(scn, end_str);
 }
 
 void LEM_RR::LoadState(FILEHANDLE scn, char *end_str) {
