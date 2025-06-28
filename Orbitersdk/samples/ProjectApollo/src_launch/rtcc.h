@@ -2963,6 +2963,8 @@ public:
 	void RMMGIT(EphemerisData2 sv_EI, double lng_T);
 	//Retrofire Planning Control Module
 	void RMSDBMP(EphemerisData sv, double CSMmass);
+	//Groundtrack Digitals Display
+	void RMDGTD();
 	//Recovery Target Selection Display
 	void RMDRTSD(EphemerisDataTable2 &tab, int opt, double val, double lng);
 	//Reentry MED Decoder
@@ -4232,6 +4234,34 @@ public:
 		int Type = 2;			//1 = Primary (lat and long), 2 = Contingency (long only)
 	} RZJCTTC;
 
+	struct GroundTrackDigitalsEntry
+	{
+		bool DataIndicator = true; //false = data, true = no data
+		bool AlternateLongitudeIndicator = false; //false = converged longitude, true = not converged
+		int Rev = 0;
+		double Latitude = 0.0;
+		double Longitude = 0.0;
+		double GET = 0.0;
+		double GMT = 0.0;
+		double TrueAnomaly = 0.0;
+	};
+
+	struct GroundTrackDigitalsTable
+	{
+		std::string VehicleName;
+		std::string ErrorMessage = "MED OUTDATED";
+		int Rev = 0;
+		int Mission = 0;
+		double InputLongitude = 0.0;
+		std::string StationID;
+		std::string REF;
+		int TUP = 0;
+		int CurrentPage = 1;
+		int TotalNumPages = 1;
+		int TotalNumEntries = 0;
+		GroundTrackDigitalsEntry table[40];
+	} RZDGTD;
+
 	struct RecoveryTargetDisplayEntry
 	{
 		bool DataIndicator = true; //false = data, true = no data
@@ -4653,6 +4683,13 @@ public:
 	{
 		//Block 1
 		int AGSNavUpdREFSMMAT = RTCC_REFSMMAT_TYPE_AGS;
+		//Block 2: Ground Track Digitals
+		int GrndTrkDigitalsVehID = RTCC_MPT_CSM;
+		int GrndTrkDigitalsOption = 1; //1 = rev+longitude, 2 = time+longitude
+		int GrndTrkDigitalsRev = 0;
+		double GrndTrkDigitalsTime = 0.0; //GET
+		double GrndTrkDigitalsLongitude = 0.0; //Longitude in radians
+		int GrndTrkDigitalsCoordinates = RTCC_COORDINATES_ECT;
 		//Block 3
 		int SpaceDigVehID = -1;
 		int SpaceDigCentralBody = -1;

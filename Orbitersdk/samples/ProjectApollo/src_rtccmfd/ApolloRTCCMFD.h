@@ -777,6 +777,7 @@ public:
 	void menuSLVNavigationUpdateUplink();
 	void menuVectorPanelSummaryPage();
 	void menuGetOnboardStateVectors();
+	void menuSetGroundtrackDigitalsPage();
 	void menuSetRetrofireConstraintsPage();
 	void menuSetRetrofireDigitalsPage();
 	void menuRetrofireGETIDialogue();
@@ -799,6 +800,9 @@ public:
 	void menuChooseRetrofireGs();
 	bool set_RetrofireGs(double val);
 	void menuChooseRetrofireUllage();
+	void menuCycleGroundTrackDigitalsPages();
+	void menuSetGroundtrackDigitalsInput();
+	void menuGroundtrackDigitalsCalc();
 	void menuSetRetrofireTargetSelectionPage();
 	void menuCycleRecoveryTargetSelectionPages();
 	void menuRecoveryTargetSelectionCalc();

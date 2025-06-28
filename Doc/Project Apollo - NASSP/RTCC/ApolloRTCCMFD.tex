@@ -3229,6 +3229,14 @@ MAT GET&An associated GET of any matrix display, such as time computed, time mad
 \end{figure}
 \end{landscape}
 \newpage
+\subsection{Groundtrack Digitals Display (MSK 0347)}
+This display shows subsatellite information for a designated vehicle to aid in determining recovery areas. The display is initialized only by input. On entry of a vehicle, revolution (or threshold time) and longitude the display program will compute one-degree increments of longitude for the next 40 degrees beginning with the input longitude. With each longitude thus generated will be computed and displayed a latitude, GET, GMT and true anomaly of the vehicle at the GMT. This is a paging display, yielding a maximum of two pages (20 lines per page).\\
+
+The display is available only in Earth Orbit and Lunar Orbit phases. No automatic updates are provided. An appropriate error message is displayed if any
+procedural or processing error is encountered.\\
+
+The display is only available in NASSP with the Mission Plan Table initialized.\\
+\newpage
 \subsection{Vector Comparison Display (MSK 1590)}
 
 \subsubsection{Function}

@@ -5806,6 +5806,9 @@ int ARCore::subThread()
 		GC->rtcc->BMSVPS(0, GC->rtcc->RTCCONLINEMON.IntBuffer[0]);
 		Result = DONE;
 	break;
+	case 62: //Groundtrack Digitals
+		GC->rtcc->RMDGTD();
+		break;
 	}
 
 	subThreadStatus = Result;

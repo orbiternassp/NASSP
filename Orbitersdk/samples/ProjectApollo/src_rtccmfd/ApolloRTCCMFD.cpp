@@ -1392,6 +1392,15 @@ void ApolloRTCCMFD::menuVectorPanelSummaryPage()
 	SelectPage(97);
 }
 
+void ApolloRTCCMFD::menuSetGroundtrackDigitalsPage()
+{
+	marker = 0;
+	markermax = 5;
+	subscreen = 0;
+	subscreenmax = 1;
+	SelectPage(101);
+}
+
 void ApolloRTCCMFD::menuSetRetrofireConstraintsPage()
 {
 	SelectPage(103);
@@ -2343,6 +2352,49 @@ bool GenericUllageInputBox(void *id, char *str, void *data)
 		return false;
 	}
 	return false;
+}
+
+void ApolloRTCCMFD::menuCycleGroundTrackDigitalsPages()
+{
+	if (GC->rtcc->RZDGTD.CurrentPage < GC->rtcc->RZDGTD.TotalNumPages)
+	{
+		GC->rtcc->RZDGTD.CurrentPage++;
+	}
+	else
+	{
+		GC->rtcc->RZDGTD.CurrentPage = 1;
+	}
+}
+
+void ApolloRTCCMFD::menuSetGroundtrackDigitalsInput()
+{
+	switch (marker)
+	{
+	case 0:
+		GC->rtcc->EZETVMED.GrndTrkDigitalsVehID = 4 - GC->rtcc->EZETVMED.GrndTrkDigitalsVehID;
+		break;
+	case 1:
+		GC->rtcc->EZETVMED.GrndTrkDigitalsOption = 3 - GC->rtcc->EZETVMED.GrndTrkDigitalsOption;
+		break;
+	case 2:
+		GenericGETInput(&GC->rtcc->EZETVMED.GrndTrkDigitalsTime, "Enter threshold time:");
+		break;
+	case 3:
+		GenericDoubleInput(&GC->rtcc->EZETVMED.GrndTrkDigitalsLongitude, "Enter initial longitude in degrees:", RAD);
+		break;
+	case 4:
+		GenericIntInput(&GC->rtcc->EZETVMED.GrndTrkDigitalsRev, "Enter revolution for calculation:");
+		break;
+	case 5:
+		if (GC->rtcc->EZETVMED.GrndTrkDigitalsCoordinates == RTCC_COORDINATES_ECT) GC->rtcc->EZETVMED.GrndTrkDigitalsCoordinates = RTCC_COORDINATES_MCT;
+		else GC->rtcc->EZETVMED.GrndTrkDigitalsCoordinates = RTCC_COORDINATES_ECT;
+		break;
+	}
+}
+
+void ApolloRTCCMFD::menuGroundtrackDigitalsCalc()
+{
+	G->startSubthread(62);
 }
 
 void ApolloRTCCMFD::menuCycleRecoveryTargetSelectionPages()
@@ -9863,6 +9915,7 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 	case 232: SetMEDInputPage("K19"); break;
 	case 233: SetMEDInputPage("K39"); break;
 	case 239: menuSetLMOpticsSupportTablePage(); break;
+	case 347: menuSetGroundtrackDigitalsPage(); break;
 	case 363: menuSetRTEDigitalsPage(); break;
 	case 366: menuSetRTEConstraintsPage(); break;
 	case 1501: menuSetMoonriseMoonsetTablePage(); break;
