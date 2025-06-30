@@ -2590,7 +2590,12 @@ void LEM_RadarTape::Timestep(double simdt) {
 	}
 
 	if (lem->AltRngMonSwitch.GetState()==TOGGLESWITCH_UP) {
-		if (lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_UP)
+		if (lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_UP && lem->RR.GetRadarRate() == 0.0)
+		{
+			setRange(lem->RR.GetRadarRange());
+			setRate(lem->RR.GetRadarRate());
+		}
+		else if (lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_UP)
 		{
 			setRange(lem->RR.GetRadarRange());
 			setRate(lem->RR.GetRadarRate() - 0.6096); // 2 f/s bias from procedures (TM=R2-2)
