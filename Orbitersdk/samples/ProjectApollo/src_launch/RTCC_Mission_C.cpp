@@ -2058,7 +2058,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "SPS-7");
 
-		sprintf(form->remarks, "Ullage: 4 jet, 15 seconds  SCS AUTO,  %s", alignstars);
+		sprintf(form->remarks, "Ullage: 4 jet, 15 seconds, SCS AUTO  %s", alignstars);
 
 		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv2);
 		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv2);
