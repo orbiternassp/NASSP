@@ -57,16 +57,42 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 2: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD
+	case 2:  //GENERIC CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD
+	case 90: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (8:10:00)
+	case 91: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (29:40:00)
+	case 92: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (42:00:00)
+	case 94:
 	{
 		AP7NAV * form = (AP7NAV *)pad;
 
-		VehicleDataBlock sv;
+		VehicleDataBlock sv, sv_1;
+		double NavGET, SVGMT;
 		char buffer1[1000];
 
-		sv = StateVectorCalcDataBlock(calcParams.src); //State vector for uplink
+		sv = StateVectorCalcDataBlock(calcParams.src); //State vector
 
-		NavCheckPAD(sv, *form);
+		if (fcn == 90)
+		{
+			NavGET = OrbMech::HHMMSSToSS(8, 10, 0);  //Nav Check GET
+		}
+		else if (fcn == 91)
+		{
+			NavGET = OrbMech::HHMMSSToSS(29, 40, 0);  //Nav Check GET
+		}
+		else if (fcn == 92)
+		{
+			NavGET = OrbMech::HHMMSSToSS(42, 0, 0);  //Nav Check GET
+		}
+		else
+		{
+			NavGET = GETfromGMT(sv.sv.GMT) - 30.0 * 60.0; //Nav Check GET as SV time - 30m
+		}
+
+		SVGMT = GMTfromGET(NavGET + 30.0 * 60.0);
+
+		sv_1 = coast(sv, SVGMT - sv.sv.GMT); //Time tag to Nav Check time
+
+		NavCheckPAD(sv, *form, NavGET);
 		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv.sv, true);
 
 		sprintf(uplinkdata, "%s", buffer1);
@@ -299,7 +325,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 11: //BLOCK DATA 2
+	case 11: //BLOCK DATA 2 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -318,7 +344,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 2;
 	}
 	break;
-	case 12: //BLOCK DATA 3
+	case 12: //BLOCK DATA 3 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -540,7 +566,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 16: //BLOCK DATA 4
+	case 16: //BLOCK DATA 4 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -559,7 +585,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 4;
 	}
 	break;
-	case 17: //BLOCK DATA 5
+	case 17: //BLOCK DATA 5	**Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -578,23 +604,25 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 5;
 	}
 	break;
-	case 18: //DOCKED DPS BURN - REFSMMAT AND SV FOR CMC
+	case 18: //DOCKED DPS BURN - REFSMMAT AND SV w/ NAV CHECK FOR CMC
 	{
+		AP7NAV * form = (AP7NAV *)pad;
+
 		PMMMPTInput in;
 		GMPOpt gmpopt;
 		REFSMMATOpt refsopt;
 		MATRIX3 REFSMMAT;
-		EphemerisData sv0, sv1;
+		VehicleDataBlock sv0, sv1;
 		VECTOR3 dV_imp;
-		double TIG_imp, SVGET;
+		double TIG_imp, NavGET, SVGMT;
 
-		sv0 = StateVectorCalcEphem(calcParams.src); //State vector
+		sv0 = StateVectorCalcDataBlock(calcParams.src); //State vector
 		med_m50.CSMWT = calcParams.src->GetMass();
 		med_m50.LMWT = calcParams.tgt->GetMass();
 
 		gmpopt.dLAN = 6.9*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_NSO; //Gives TIG at northernmost latitude
-		gmpopt.sv_in = sv0;
+		gmpopt.sv_in = sv0.sv;
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(49, 10, 0);
 		gmpopt.Area = PZMPTCSM.ConfigurationArea;
 		gmpopt.Weight = med_m50.CSMWT + med_m50.LMWT;
@@ -621,7 +649,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PoweredFlightProcessor(in, GMT_TIG, DeltaV_LVLH);
 		TimeofIgnition = GETfromGMT(GMT_TIG);
 
-		SVGET = TimeofIgnition - 12.0 * 60.0; //TIG-12
+		NavGET = OrbMech::HHMMSSToSS(42, 0, 0);  //Nav Check GET
+
+		SVGMT = GMTfromGET(NavGET + 30.0 * 60.0);
 
 		//Add 10.4 ft/s for the 4 second early cutoff
 		DeltaV_LVLH = DeltaV_LVLH + unit(DeltaV_LVLH)*10.4*0.3048;
@@ -635,23 +665,28 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.HeadsUp = false;
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
+
 		//Store for both CSM and LM
 		EMGSTSTM(RTCC_MPT_CSM, REFSMMAT, RTCC_REFSMMAT_TYPE_CUR, GMTfromGET(TimeofIgnition));
 		EMGSTSTM(RTCC_MPT_LM, REFSMMAT, RTCC_REFSMMAT_TYPE_CUR, GMTfromGET(TimeofIgnition));
 
 		char buffer1[1000];
 		char buffer2[1000];
+		char buffer3[1000];
 
-		sv1 = coast(sv0, GMTfromGET(SVGET) - sv0.GMT); //Time tag SV
+		sv1 = coast(sv0, SVGMT - sv0.sv.GMT); //Time tag SV
 
-		AGCStateVectorUpdate(buffer1, 1, 1, sv1, true);
-		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT);
+		NavCheckPAD(sv1, *form, NavGET);
 
-		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv1.sv);
+		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv1.sv);
+		AGCDesiredREFSMMATUpdate(buffer3, REFSMMAT);
+
+		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, Verb 66, Desired REFSMMAT");
+			sprintf(upDesc, "CSM & LM state vectors, Docked DPS REFSMMAT");
 		}
 	}
 	break;
@@ -659,7 +694,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP9AOTSTARPAD * form = (AP9AOTSTARPAD *)pad;
 
-		//form->CSMAtt = _V(79.0, 358.0, 309.0);
+		//form->CSMAtt = _V(79.0, 358.0, 309.0);  **remove if not needed**
 		form->Detent = 2;
 		form->GET = OrbMech::HHMMSSToSS(43, 55, 0);
 		form->Star = 015;
@@ -671,7 +706,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->CSMAtt = GA * DEG;
 	}
 	break;
-	case 20: //BLOCK DATA 6
+	case 20: //BLOCK DATA 6 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -690,44 +725,66 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 6;
 	}
 	break;
-	case 21: //DOCKED DPS BURN - REFSMMAT AND SV FOR LGC
+	case 21: //DOCKED DPS BURN - SV AND NAV CHECK FOR CMC
+	case 93: //DOCKED DPS BURN - REFSMMAT AND SV FOR LGC
 	{
 		AP11LMMNV * form = (AP11LMMNV *)pad;
 
 		AP10DAPDATA dappad;
 		AP11LMManPADOpt manopt;
-		EphemerisData sv0, sv1;
-		double SVGET;
+		VehicleDataBlock sv0, sv1;
+
+		double SVGET, NavGET;
 		char buffer1[1000];
 		char buffer2[1000];
 
-		sv0 = StateVectorCalcEphem(calcParams.src); //State vector
+		sv0 = StateVectorCalcDataBlock(calcParams.src); //State vector
 
 		manopt.TIG = TimeofIgnition;
 		manopt.dV_LVLH = DeltaV_LVLH;
 		manopt.enginetype = RTCC_ENGINETYPE_LMDPS;
 		manopt.HeadsUp = false;
 		manopt.REFSMMAT = EZJGMTX3.data[0].REFSMMAT;
-		manopt.RV_MCC = sv0;
+		manopt.RV_MCC = sv0.sv;
 		manopt.WeightsTable = GetWeightsTable(calcParams.tgt, false, true);
 
 		SVGET = TimeofIgnition - 12.0 * 60.0; //TIG-12
 
-		AP11LMManeuverPAD(manopt, *form);
-		LMDAPUpdate(calcParams.tgt, dappad, true);
+		sv1 = coast(sv0, GMTfromGET(SVGET) - sv0.sv.GMT); //Time tag SV
 
-		sv1 = coast(sv0, GMTfromGET(SVGET) - sv0.GMT); //Time tag SV
+		if (fcn == 93)
+		{
+			AP11LMManeuverPAD(manopt, *form);
+			LMDAPUpdate(calcParams.tgt, dappad, true);
 
-		sprintf(form->purpose, "Docked DPS");
+			sprintf(form->purpose, "Docked DPS");
 
-		AGCStateVectorUpdate(buffer1, 2, 3, sv1, true);
-		AGCREFSMMATUpdate(buffer2, EZJGMTX3.data[0].REFSMMAT, false);
+			AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_LM, sv1.sv, true);
+			AGCREFSMMATUpdate(buffer2, EZJGMTX3.data[0].REFSMMAT, false);
 
-		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
-		if (upString != NULL) {
-			// give to mcc
-			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "LM state vector, V66, REFSMMAT");
+			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "LM state vector, V66, Docked DPS REFSMMAT");
+			}
+		}
+		else
+		{
+			AP7NAV * form = (AP7NAV *)pad;
+			NavGET = TimeofIgnition - 30.0 * 60.0;  //Nav Check GET
+
+			NavCheckPAD(sv1, *form, NavGET);
+
+			AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_LM, sv1.sv);
+			AGCStateVectorUpdate(buffer2, 2, RTCC_MPT_CSM, sv1.sv);
+
+			sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "CSM & LM state vectors");
+			}
 		}
 	}
 	break;
@@ -753,7 +810,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->V42Angles.z = V42angles.z*DEG;
 	}
 	break;
-	case 24: //BLOCK DATA 7
+	case 24: //BLOCK DATA 7 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -772,7 +829,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 7;
 	}
 	break;
-	case 25: //BLOCK DATA 8
+	case 25: //BLOCK DATA 8 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -821,7 +878,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 27: //BLOCK DATA 9
+	case 27: //BLOCK DATA 9 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -840,7 +897,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 9;
 	}
 	break;
-	case 28: //BLOCK DATA 10
+	case 28: //BLOCK DATA 10 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -1349,7 +1406,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->paddata, "LM Jettison at %s. Roll %.1f, pitch %.1f, yaw %.1f", buff1, dockopt.CSMAngles.x*DEG, dockopt.CSMAngles.y*DEG, dockopt.CSMAngles.z*DEG);
 	}
 	break;
-	case 42: //BLOCK DATA 11
+	case 42: //BLOCK DATA 11 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -1398,7 +1455,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->paddata, "Separation at %s. Roll %.1f, pitch %.1f, yaw %.1f", buff1, manpad.Att.x, manpad.Att.y, manpad.Att.z);
 	}
 	break;
-	case 43: //BLOCK DATA 12
+	case 43: //BLOCK DATA 12 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -1417,7 +1474,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 12;
 	}
 	break;
-	case 44: //BLOCK DATA 13
+	case 44: //BLOCK DATA 13 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -1741,7 +1798,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->FDAIAngles[0] = Att * DEG;
 	}
 	break;
-	case 48: //BLOCK DATA 14
+	case 48: //BLOCK DATA 14 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -1761,7 +1818,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 14;
 	}
 	break;
-	case 49: //BLOCK DATA 15
+	case 49: //BLOCK DATA 15 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -1935,7 +1992,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		LandmarkTrackingPAD(opt, *form);
 	}
 	break;
-	case 55: //BLOCK DATA 16
+	case 55: //BLOCK DATA 16 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -1955,7 +2012,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 16;
 	}
 	break;
-	case 56: //BLOCK DATA 17
+	case 56: //BLOCK DATA 17 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -1975,7 +2032,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 17;
 	}
 	break;
-	case 60: //BLOCK DATA 18
+	case 60: //BLOCK DATA 18 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -1995,7 +2052,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 18;
 	}
 	break;
-	case 61: //BLOCK DATA 19
+	case 61: //BLOCK DATA 19 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -2044,7 +2101,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 65: //BLOCK DATA 20
+	case 65: //BLOCK DATA 20 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -2064,7 +2121,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 20;
 	}
 	break;
-	case 66: //BLOCK DATA 21
+	case 66: //BLOCK DATA 21 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -2110,7 +2167,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 70: //BLOCK DATA 22
+	case 70: //BLOCK DATA 22 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;
@@ -2130,7 +2187,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 22;
 	}
 	break;
-	case 71: //BLOCK DATA 23
+	case 71: //BLOCK DATA 23 **Block data needs pitch and yaw trims added**
 	{
 		AP7BLK * form = (AP7BLK *)pad;
 		AP7BLKOpt opt;

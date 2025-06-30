@@ -104,7 +104,7 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_PADONLY, PT_STARCHKPAD, mcc_calcs.GETEval(7.0 * 3600 + 20.0 * 60.0), 9, MST_D_DAY1STATE3);
 		break;
 	case MST_D_DAY1STATE3: //SV Update to Block Data 2
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(8.0 * 3600 + 30.0 * 60.0), 2, MST_D_DAY1STATE4);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(8.0 * 3600 + 30.0 * 60.0), 90, MST_D_DAY1STATE4);
 		break;
 	case MST_D_DAY1STATE4: //Block Data 2 to Block Data 3
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(19.0 * 3600.0 + 15.0 * 60.0), 11, MST_D_DAY2STATE1);
@@ -131,7 +131,7 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(28 * 3600.0 + 50.0 * 60.0), 102, MST_D_DAY2STATE8);
 		break;
 	case MST_D_DAY2STATE8: //SV Update to Block Data 4
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(28.0 * 3600.0 + 55.0 * 60.0), 2, MST_D_DAY2STATE9);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(28.0 * 3600.0 + 55.0 * 60.0), 91, MST_D_DAY2STATE9);
 		break;
 	case MST_D_DAY2STATE9: //Block Data 4 to Block Data 5
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(40.0 * 3600.0 + 10.0 * 60.0), 16, MST_D_DAY3STATE1);
@@ -140,22 +140,23 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(41.0 * 3600.0 + 10.0 * 60.0), 17, MST_D_DAY3STATE2);
 		break;
 	case MST_D_DAY3STATE2: //CMC Docked DPS Burn Update to LM AOT STAR OBS PAD
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, true, 18, MST_D_DAY3STATE3);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(41.0 * 3600.0 + 20.0 * 60.0), 18, MST_D_DAY3STATE3);
 		break;
 	case MST_D_DAY3STATE3: //LM AOT STAR OBS PAD to Block Data 6
-		UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, mcc_calcs.GETEval(47 * 60 * 60 + 10 * 60), 19, MST_D_DAY3STATE5);
+		UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, mcc_calcs.GETEval(47.0 * 3600.0 + 10.0 * 60.0), 19, MST_D_DAY3STATE5);
 		break;
+		// **Need SBand Steerable PAD here**
 	case MST_D_DAY3STATE5: //Block Data 6 to LM DAP PAD
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(47 * 3600 + 50 * 60), 20, MST_D_DAY3STATE6);
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(47.0 * 3600.0 + 50.0 * 60.0), 20, MST_D_DAY3STATE6);
 		break;
 	case MST_D_DAY3STATE6: //LM DAP PAD to CMC state vector updates
-		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, mcc_calcs.GETEval(48 * 60 * 60), 8, MST_D_DAY3STATE7);
+		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, mcc_calcs.GETEval(48.0 * 3600.0), 8, MST_D_DAY3STATE7);
 		break;
 	case MST_D_DAY3STATE7: //CMC state vector updates to LGC Docked DPS Burn Update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(48 * 60 * 60 + 10 * 60), 3, MST_D_DAY3STATE8);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(48.0 * 3600.0 + 10.0 * 60.0), 21, MST_D_DAY3STATE8);
 		break;
 	case MST_D_DAY3STATE8: //LGC Docked DPS Burn Update to LGC Gyro Torquing Angles
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 21, MST_D_DAY3STATE9);
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 93, MST_D_DAY3STATE9);
 		break;
 	case MST_D_DAY3STATE9: //LGC Gyro Torquing Angles to LGC Gyro Torquing Angles
 		UpdateMacro(UTP_PADONLY, PT_TORQANG, mcc_calcs.GETEval(49 * 60 * 60 + 5 * 60), 22, MST_D_DAY3STATE10);
