@@ -208,6 +208,22 @@ namespace OrbMech{
 		sprintf(buf + length, "%d:%02.1lf", minutes, seconds);
 	}
 
+	void format_time_HHMM(char *buf, double time)
+	{
+		// Format time to HH:MM
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds, 60.0);
+
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%02d:%02d", hours, minutes);
+	}
+
 	void format_time_HHHMM(char *buf, double time)
 	{
 		// Format time to HHH:MM

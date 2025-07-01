@@ -1833,6 +1833,20 @@ RTCC::RTCC() :
 
 	SystemParameters.MKRBKS = 19;
 
+	//Recovery Zones
+	RZC1ZNE.table[0].lat = 28.0*RAD;
+	RZC1ZNE.table[0].lng = -60.0*RAD;
+	RZC1ZNE.table[1].lat = 28.0*RAD;
+	RZC1ZNE.table[1].lng = -25.0*RAD;
+	RZC1ZNE.table[2].lat = 28.0*RAD;
+	RZC1ZNE.table[2].lng = 155.0*RAD;
+	RZC1ZNE.table[3].lat = 28.0*RAD;
+	RZC1ZNE.table[3].lng = 140.0*RAD;
+	RZC1ZNE.table[4].lat = -8.0*RAD; //Ascension
+	RZC1ZNE.table[4].lng = -14.0*RAD;
+	RZC1ZNE.table[5].lat = -14.0*RAD; //Samoa
+	RZC1ZNE.table[5].lng = -170.7*RAD;
+
 	//Set up the yearly coordinate system (default AGCEpoch = 1969)
 	InitializeCoordinateSystem();
 }
@@ -13958,8 +13972,8 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 		EPHEM2.Header = EPHEM.Header;
 		EPHEM2.Header.CSI = out;
 
-		double lng;
-		int err = RMMASCND(EPHEM2, MANTIMES, CurGMT, lng);
+		double GMT_asc, lng, RA;
+		int err = RMMASCND(EPHEM2, MANTIMES, CurGMT, GMT_asc, lng, RA);
 		if (err)
 		{
 			EMGPRINT("EMMDYNMC", 29);
@@ -23333,15 +23347,19 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 	return 0;
 }
 
-int RTCC::RMMASCND(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, double GMT_min, double &lng_asc)
+int RTCC::RMMASCND(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, double GMT_min, double &GMT_asc, double &lng_asc, double &RA)
 {
-	if (EPHEM.Header.CSI != 1 && EPHEM.Header.CSI != 3) return 5;
+	//Valid input coordinates are ECT, MCT and MCI
+	if (EPHEM.Header.CSI < 1 || EPHEM.Header.CSI > 3) return 5;
 	double GMT;
 
 	ELVCTRInputTable intab;
 	ELVCTROutputTable2 outtab;
 	EphemerisData2 sv_true;
 	double mu;
+
+	//Null outputs
+	GMT_asc = lng_asc = RA = 0.0;
 
 	if (EPHEM.Header.CSI == 1)
 	{
@@ -23424,20 +23442,32 @@ int RTCC::RMMASCND(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, dou
 		GMT += dt;
 		i++;
 	}
+	GMT_asc = GMT;
 
-	if (i >= imax)
-	{
-		lng_asc = u;
-		return 3;
-	}
-
+	//Calculate longitude and right ascension
 	double lat;
 	OrbMech::latlong_from_r(sv_true.R, lat, lng_asc);
 
 	if (EPHEM.Header.CSI == 1)
 	{
+		//ECT
+		//Calculate right ascension from true inertial longitude
+		RA = lng_asc + SystemParameters.MCLAMD;
+		//Calculate geographic longitude
 		lng_asc -= OrbMech::w_Earth*sv_true.GMT;
+		//Normalize both values
+		OrbMech::normalizeAngle(RA, false);
 		OrbMech::normalizeAngle(lng_asc, false);
+	}
+	else
+	{
+		//MCI and MCT
+		RA = lng_asc;
+	}
+
+	if (i >= imax)
+	{
+		return 3;
 	}
 
 	return 0;
@@ -38354,7 +38384,7 @@ void RTCC::RMDGTD()
 	EphemerisDataTable2 tab_ECI;
 	ManeuverTimesTable MANTIMES;
 	LunarStayTimesTable LUNSTAY;
-	err = ELFECH(gmt_min, NumVec, 0, EZETVMED.GrndTrkDigitalsVehID, tab_ECI, MANTIMES, LUNSTAY);
+	err = ELFECH(gmt_min, NumVec, 1, EZETVMED.GrndTrkDigitalsVehID, tab_ECI, MANTIMES, LUNSTAY);
 	//Error
 	if (err)
 	{
@@ -38545,6 +38575,129 @@ void RTCC::RMDRTSD(EphemerisDataTable2 &tab, int opt, double val, double lng_des
 	{
 		RZDRTSD.TotalNumPages = 2;
 	}
+}
+
+void RTCC::RMDASCND() //Recovery Ascending Node Display
+{
+	double GMT_min, GMT_max;
+	unsigned NumVec;
+	int err, TUP;
+
+	//Get GMT min/max either from rev crossing times or input times
+	if (EZETVMED.RecovAscNodeOption == 1)
+	{
+		//Revs
+		GMT_min = CapeCrossingGMT(EZETVMED.RecovAscNodeVehID, EZETVMED.RecovAscNodeBeginRev);
+		if (GMT_min < 0.0)
+		{
+			RZASCND.ErrorMessage = "REV NOT AVAILABLE";
+			return;
+		}
+		GMT_max = CapeCrossingGMT(EZETVMED.RecovAscNodeVehID, EZETVMED.RecovAscNodeEndRev);
+		if (GMT_max < 0.0)
+		{
+			RZASCND.ErrorMessage = "REV NOT AVAILABLE";
+			return;
+		}
+	}
+	else
+	{
+		//Times
+		GMT_min = GMTfromGET(EZETVMED.RecovAscNodeBeginTime);
+		GMT_max = GMTfromGET(EZETVMED.RecovAscNodeEndTime);
+	}
+	//Add a bit more than one orbit to gmt_max, for interpolation
+	GMT_max += 2.75*3600.0;
+
+	//Get number of vectors in interval
+	err = ELNMVC(GMT_min, GMT_max, EZETVMED.RecovAscNodeVehID, NumVec, TUP);
+	//Error?
+	if (err || NumVec < 9U)
+	{
+		RZASCND.ErrorMessage = "DATA NOT AVAILABLE FOR ";
+		if (EZETVMED.RecovAscNodeVehID == RTCC_MPT_CSM) RZASCND.ErrorMessage += "CSM";
+		else RZASCND.ErrorMessage += "LEM";
+		return;
+	}
+	//Get ephemeris in ECI coordinates
+	EphemerisDataTable2 tab_ECI;
+	ManeuverTimesTable MANTIMES;
+	LunarStayTimesTable LUNSTAY;
+	err = ELFECH(GMT_min, NumVec, 1, EZETVMED.RecovAscNodeVehID, tab_ECI, MANTIMES, LUNSTAY);
+	//Error
+	if (err)
+	{
+		RZASCND.ErrorMessage = "COULDNT GET VECTORS";
+		return;
+	}
+	//Convert to desired coordinate system (ECT or MCT)
+	EphemerisDataTable2 tab_true;
+	err = ELVCNV(tab_ECI.table, 0, EZETVMED.RecovAscNodeCoordinates, tab_true.table);
+	if (err)
+	{
+		RZASCND.ErrorMessage = "ELVCNV UNABLE TO ROTATE EPHEMERIS";
+		return;
+	}
+	tab_true.Header = tab_ECI.Header;
+	tab_true.Header.CSI = EZETVMED.RecovAscNodeCoordinates;
+
+	//Now the iteration loop
+	double GMT_guess, GMT_asc, lng_asc, RightAscension;
+	int i;
+
+	GMT_guess = GMT_min;
+	i = 0;
+	do
+	{
+		//Converge on ascending node
+		err = RMMASCND(tab_true, MANTIMES, GMT_guess, GMT_asc, lng_asc, RightAscension);
+		//Did it converge?
+		if (err)
+		{
+			//No
+			break;
+		}
+		//Exceeding maximum time?
+		if (GMT_asc > GMT_max)
+		{
+			break;
+		}
+		//Found a good solution
+		RZASCND.table[i].GMT = GMT_asc;
+		RZASCND.table[i].GET = GETfromGMT(RZASCND.table[i].GMT);
+		RZASCND.table[i].Longitude = lng_asc * DEG;
+		RZASCND.table[i].RightAscension = RightAscension / PI2 * 24.0*3600.0;
+		RZASCND.table[i].Rev = CapeCrossingRev(EZETVMED.RecovAscNodeVehID, GMT_asc);
+
+		//Set up next calculation
+		GMT_guess = GMT_asc + 3.0;
+		i++;
+	} while (i < 10);
+
+	//Final calculations
+	if (EZETVMED.RecovAscNodeVehID == RTCC_MPT_CSM)
+	{
+		RZASCND.VehicleName = "CSM";
+		RZASCND.StationID = PZMPTCSM.StationID;
+	}
+	else
+	{
+		RZASCND.VehicleName = "LEM";
+		RZASCND.StationID = PZMPTLEM.StationID;
+	}
+	switch (EZETVMED.RecovAscNodeCoordinates)
+	{
+	case RTCC_COORDINATES_ECT:
+		RZASCND.REF = "ECT";
+		break;
+	case RTCC_COORDINATES_MCT:
+		RZASCND.REF = "MCT";
+		break;
+	case RTCC_COORDINATES_MCI:
+		RZASCND.REF = "MCI";
+		break;
+	}
+	RZASCND.TotalNumEntries = i;
 }
 
 int RTCC::RMRMED(std::string med, std::vector<std::string> data)

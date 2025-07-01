@@ -94,6 +94,7 @@ public:
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, int val);
 	void Text_GET_MMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHMM(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMM(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
@@ -778,6 +779,7 @@ public:
 	void menuVectorPanelSummaryPage();
 	void menuGetOnboardStateVectors();
 	void menuSetGroundtrackDigitalsPage();
+	void menuSetRecoveryAscendingNodeDisplayPage();
 	void menuSetRetrofireConstraintsPage();
 	void menuSetRetrofireDigitalsPage();
 	void menuRetrofireGETIDialogue();
@@ -803,6 +805,8 @@ public:
 	void menuCycleGroundTrackDigitalsPages();
 	void menuSetGroundtrackDigitalsInput();
 	void menuGroundtrackDigitalsCalc();
+	void menuSetRecoveryAscendingNodeDisplayInput();
+	void menuRecoveryAscendingNodeDisplayCalc();
 	void menuSetRetrofireTargetSelectionPage();
 	void menuCycleRecoveryTargetSelectionPages();
 	void menuRecoveryTargetSelectionCalc();

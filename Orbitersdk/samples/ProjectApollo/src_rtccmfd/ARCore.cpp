@@ -5809,6 +5809,9 @@ int ARCore::subThread()
 	case 62: //Groundtrack Digitals
 		GC->rtcc->RMDGTD();
 		break;
+	case 63: //Recovery Ascending Node Display
+		GC->rtcc->RMDASCND();
+		break;
 	}
 
 	subThreadStatus = Result;

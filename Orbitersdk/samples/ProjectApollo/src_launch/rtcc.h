@@ -2602,7 +2602,7 @@ public:
 	//Cape Crossing Table Generation
 	int RMMEACC(int L, int ref_frame, int ephem_type, int rev0);
 	//Ascending Node Computation
-	int RMMASCND(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, double GMT_min, double &lng_asc);
+	int RMMASCND(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, double GMT_min, double &GMT_asc, double &lng_asc, double &RA);
 	//Environment Change Calculations
 	struct EMMENVInputTable
 	{
@@ -2967,6 +2967,8 @@ public:
 	void RMDGTD();
 	//Recovery Target Selection Display
 	void RMDRTSD(EphemerisDataTable2 &tab, int opt, double val, double lng);
+	//Recovery Ascending Node Display
+	void RMDASCND();
 	//Reentry MED Decoder
 	int RMRMED(std::string med, std::vector<std::string> data);
 	//Spacecraft Setting Control
@@ -4289,6 +4291,36 @@ public:
 		RecoveryTargetDisplayEntry table[40];
 	} RZDRTSD;
 
+	struct RecoveryAscndNodeEntry
+	{
+		int Rev = 0;
+		double Longitude = 0.0; //degrees
+		double RightAscension = 0.0; //seconds of right ascension
+		double GET = 0.0;
+		double GMT = 0.0;
+	};
+
+	struct RecoveryAscndNodeDisplay
+	{
+		std::string VehicleName;
+		std::string StationID;
+		std::string REF;
+		std::string ErrorMessage = "MED OUTDATED";
+		int TotalNumEntries = 0;
+		RecoveryAscndNodeEntry table[10];
+	} RZASCND;
+
+	struct RecoveryZoneDefinitionTableEntry
+	{
+		double lat = 0.0;
+		double lng = 0.0;
+	};
+
+	struct RecoveryZoneDefinitionTable
+	{
+		RecoveryZoneDefinitionTableEntry table[6];
+	} RZC1ZNE;
+
 	struct LMLaunchTargetTable
 	{
 		//K13
@@ -4698,6 +4730,14 @@ public:
 		double LandmarkGMT = 0.0;
 		double LandmarkDT = 0.0;
 		int LandmarkRef = 0;
+		//Block XX
+		int RecovAscNodeVehID = RTCC_MPT_CSM;
+		int RecovAscNodeOption = 1; //1 = Revs, 2 = Times
+		int RecovAscNodeBeginRev = 0;
+		int RecovAscNodeEndRev = 0;
+		double RecovAscNodeBeginTime = 0.0;
+		double RecovAscNodeEndTime = 0.0;
+		int RecovAscNodeCoordinates = RTCC_COORDINATES_ECT;
 
 		//DMT
 		int DMT1Vehicle = 0;

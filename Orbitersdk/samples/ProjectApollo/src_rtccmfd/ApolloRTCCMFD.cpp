@@ -405,6 +405,12 @@ void ApolloRTCCMFD::Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double va
 	Text(skp, x, y, Buffer);
 }
 
+void ApolloRTCCMFD::Text_GET_HHMM(oapi::Sketchpad *skp, int x, int y, double val)
+{
+	OrbMech::format_time_HHMM(Buffer, val);
+	Text(skp, x, y, Buffer);
+}
+
 void ApolloRTCCMFD::Text_GET_HHHMM(oapi::Sketchpad *skp, int x, int y, double val)
 {
 	GET_Display_HHHMM(Buffer, val);
@@ -1521,6 +1527,15 @@ void ApolloRTCCMFD::menuSetIMUParkingAnglesPage()
 	SelectPage(131);
 }
 
+void ApolloRTCCMFD::menuSetRecoveryAscendingNodeDisplayPage()
+{
+	marker = 0;
+	markermax = 6;
+	subscreen = 0;
+	subscreenmax = 1;
+	SelectPage(132);
+}
+
 void ApolloRTCCMFD::menuPerigeeAdjustCalc()
 {
 	G->PerigeeAdjustCalc();
@@ -2395,6 +2410,40 @@ void ApolloRTCCMFD::menuSetGroundtrackDigitalsInput()
 void ApolloRTCCMFD::menuGroundtrackDigitalsCalc()
 {
 	G->startSubthread(62);
+}
+
+void ApolloRTCCMFD::menuSetRecoveryAscendingNodeDisplayInput()
+{
+	switch (marker)
+	{
+	case 0:
+		GC->rtcc->EZETVMED.RecovAscNodeVehID = 4 - GC->rtcc->EZETVMED.RecovAscNodeVehID;
+		break;
+	case 1:
+		GC->rtcc->EZETVMED.RecovAscNodeOption = 3 - GC->rtcc->EZETVMED.RecovAscNodeOption;
+		break;
+	case 2:
+		GenericGETInput(&GC->rtcc->EZETVMED.RecovAscNodeBeginTime, "Enter begin time:");
+		break;
+	case 3:
+		GenericGETInput(&GC->rtcc->EZETVMED.RecovAscNodeEndTime, "Enter end time:");
+		break;
+	case 4:
+		GenericIntInput(&GC->rtcc->EZETVMED.RecovAscNodeBeginRev, "Enter begin revolution:");
+		break;
+	case 5:
+		GenericIntInput(&GC->rtcc->EZETVMED.RecovAscNodeEndRev, "Enter begin revolution:");
+		break;
+	case 6:
+		if (GC->rtcc->EZETVMED.RecovAscNodeCoordinates < 3) GC->rtcc->EZETVMED.RecovAscNodeCoordinates++;
+		else GC->rtcc->EZETVMED.RecovAscNodeCoordinates = 1;
+		break;
+	}
+}
+
+void ApolloRTCCMFD::menuRecoveryAscendingNodeDisplayCalc()
+{
+	G->startSubthread(63);
 }
 
 void ApolloRTCCMFD::menuCycleRecoveryTargetSelectionPages()
@@ -9921,6 +9970,7 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 	case 1501: menuSetMoonriseMoonsetTablePage(); break;
 	case 1502: menuSetSunriseSunsetTablePage(); break;
 	case 1503: menuSetNextStationContactsPage(); break;
+	case 1505: menuSetRecoveryAscendingNodeDisplayPage(); break;
 	case 1506: menuSetExpSiteAcqPage(); break;
 	case 1508: menuSetLandmarkAcquisitionDisplayPage(); break;
 	case 1590: menuSetVectorCompareDisplay(); break;
