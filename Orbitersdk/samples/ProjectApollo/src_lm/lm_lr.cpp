@@ -196,6 +196,7 @@ void LEM_LR::Timestep(double simdt) {
 			antennaAngle -= (2.4*simdt);
 			if (antennaAngle < 0) { antennaAngle = 0; }
 			dc_source->DrawPower(140);
+			lrheat->GenerateHeat(15); //heat from moving antenna
 			// sprintf(oapiDebugString(),"LR CPos %d Pos %0.1f",val12.Bits.LRPositionCommand,antennaAngle);
 		}
 		else {
@@ -209,6 +210,7 @@ void LEM_LR::Timestep(double simdt) {
 			antennaAngle += (2.4*simdt);
 			if (antennaAngle > 24) { antennaAngle = 24; }
 			dc_source->DrawPower(140);
+			lrheat->GenerateHeat(15); //heat from moving antenna
 			// sprintf(oapiDebugString(),"LR CPos %d Pos %0.1f",val12.Bits.LRPositionCommand,antennaAngle);
 		}
 		else {
@@ -398,8 +400,9 @@ void LEM_LR::SystemTimestep(double simdt)
 {
 	if (IsPowered())
 	{
-		lrheat->GenerateHeat(118);
+		lrheat->GenerateHeat(118.0 / 3.0); // 118W breaker heat load divided by 3 as this power is shared between the antenna assembly and the electronics assembly, with temperature sensor only on the antenna assembly
 	}
+	//sprintf(oapiDebugString(), "LRT %lf", GetAntennaTempF());
 }
 
 void LEM_LR::DefineAnimations(UINT idx) {
