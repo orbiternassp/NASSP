@@ -41,9 +41,12 @@ void MCC::MissionSequence_D()
 	switch (MissionState)
 	{
 	case MST_D_INSERTION:	//SV Update to Separation
-		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(3.0 * 3600.0 + 15.0 * 60.0), 7, MST_D_DAY1SVUPDATE);
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(1.0 * 3600.0 + 45.0 * 60.0), 1, MST_D_DAY1SVUPDATE1);
 		break;
-	case MST_D_DAY1SVUPDATE:
+	case MST_D_DAY1SVUPDATE1:
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(3.0 * 3600.0 + 15.0 * 60.0), 2, MST_D_DAY1SVUPDATE2);
+		break;
+	case MST_D_DAY1SVUPDATE2:
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(4.0 * 3600.0 + 6.0 * 60.0), 2, MST_D_SEPARATION);
 		break;
 	case MST_D_SEPARATION:	//Separation to SPS-1
@@ -116,19 +119,19 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_NONE, PT_NONE, true, 13, MST_D_DAY2STATE3);
 		break;
 	case MST_D_DAY2STATE3: //SPS-2 Update to SPS-3 Calculation
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(22.0 * 3600.0 + 25.0 * 60.0), 100, MST_D_DAY2STATE4);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(22.0 * 3600.0 + 25.0 * 60.0), 110, MST_D_DAY2STATE4);
 		break;
 	case MST_D_DAY2STATE4: //SPS-3 Calculation to SPS-3 Update
 		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(23.0 * 3600.0 + 55.0 * 60.0), 14, MST_D_DAY2STATE5);
 		break;
 	case MST_D_DAY2STATE5: //SPS-3 Update to SPS-4 Calculation
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(25.0 * 3600.0 + 30.0 * 60.0), 101, MST_D_DAY2STATE6);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(25.0 * 3600.0 + 30.0 * 60.0), 111, MST_D_DAY2STATE6);
 		break;
 	case MST_D_DAY2STATE6: //SPS-4 Calculation to SPS-4 Update
 		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(26.0 * 3600.0 + 50.0 * 60.0), 15, MST_D_DAY2STATE7);
 		break;
 	case MST_D_DAY2STATE7: //SPS-4 to SV Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(28 * 3600.0 + 50.0 * 60.0), 102, MST_D_DAY2STATE8);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(28 * 3600.0 + 50.0 * 60.0), 112, MST_D_DAY2STATE8);
 		break;
 	case MST_D_DAY2STATE8: //SV Update to Block Data 4
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(28.0 * 3600.0 + 55.0 * 60.0), 91, MST_D_DAY2STATE9);
@@ -156,19 +159,19 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(48.0 * 3600.0 + 10.0 * 60.0), 21, MST_D_DAY3STATE8);
 		break;
 	case MST_D_DAY3STATE8: //LGC Docked DPS Burn Update to LGC Gyro Torquing Angles
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 93, MST_D_DAY3STATE9);
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 92, MST_D_DAY3STATE9);
 		break;
 	case MST_D_DAY3STATE9: //LGC Gyro Torquing Angles to LGC Gyro Torquing Angles
-		UpdateMacro(UTP_PADONLY, PT_TORQANG, mcc_calcs.GETEval(49 * 60 * 60 + 5 * 60), 22, MST_D_DAY3STATE10);
+		UpdateMacro(UTP_PADONLY, PT_TORQANG, mcc_calcs.GETEval(49.0 * 3600.0 + 5.0 * 60.0), 22, MST_D_DAY3STATE10);
 		break;
 	case MST_D_DAY3STATE10: //LGC Gyro Torquing Angles to SPS-5 Calculation
-		UpdateMacro(UTP_PADONLY, PT_TORQANG, mcc_calcs.GETEval(52 * 60 * 60 + 50 * 60), 22, MST_D_DAY3STATE11);
+		UpdateMacro(UTP_PADONLY, PT_TORQANG, mcc_calcs.GETEval(52.0 * 3600.0 + 50.0 * 60.0), 22, MST_D_DAY3STATE11);
 		break;
 	case MST_D_DAY3STATE11: //SPS-5 Calculation to SPS-5 Update
 		UpdateMacro(UTP_NONE, PT_NONE, true, 23, MST_D_DAY3STATE12);
 		break;
 	case MST_D_DAY3STATE12: //SPS-5 Update to SV Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(55 * 60 * 60 + 30 * 60), 103, MST_D_DAY3STATE13);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(55 * 60 * 60 + 30 * 60), 113, MST_D_DAY3STATE13);
 		break;
 	case MST_D_DAY3STATE13: //SV Update to Block Data 7
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(56 * 60 * 60 + 40 * 60), 2, MST_D_DAY3STATE14);
