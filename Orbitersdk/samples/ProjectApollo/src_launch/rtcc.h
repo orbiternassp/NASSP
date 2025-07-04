@@ -2462,7 +2462,7 @@ public:
 	int DetermineSVBody(EphemerisData2 sv);
 	void RotateSVToSOI(EphemerisData &sv);
 	EphemerisData RotateSVToSOI(EphemerisData2 sv);
-	void NavCheckPAD(SV sv, AP7NAV &pad, double GET = 0.0);
+	void NavCheckPAD(VehicleDataBlock sv, AP7NAV &pad, double GET = 0.0);
 	void AGSStateVectorPAD(const AGSSVOpt &opt, AP11AGSSVPAD &pad);
 	void AP11LMManeuverPAD(const AP11LMManPADOpt &opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(const AP11ManPADOpt &opt, AP11MNV &pad);
@@ -2486,7 +2486,7 @@ public:
 	double GetDockedVesselMass(VESSEL *vessel) const;
 	SV StateVectorCalc(VESSEL *vessel, double SVMJD = 0.0);
 	EphemerisData StateVectorCalcEphem(VESSEL *vessel);
-	VehicleDataBlock StateVectorCalcDataBlock(VESSEL *vessel);
+	VehicleDataBlock StateVectorCalcDataBlock(VESSEL *vessel, double Area = -1.0, double KFactor = -1.0);
 	void ExecuteManeuver(EphemerisData sv, PLAWDTOutput WeightsTable_before, double P30TIG, VECTOR3 dV_LVLH, int Thruster, EphemerisData &sv_after, PLAWDTOutput &WeightsTable_after);
 	SV ExecuteManeuver(SV sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
 	VehicleDataBlock ExecuteManeuver(VehicleDataBlock sv, double P30TIG, VECTOR3 dV_LVLH, double attachedMass, int Thruster);
