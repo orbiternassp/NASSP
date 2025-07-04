@@ -3488,11 +3488,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, x, y, "0233 SHRT RDZ MON"); y++;
 		Text(skp, x, y, "0239 LOST"); y++;
 		x += 29; y = 1;
+		Text(skp, x, y, "0347 GRND TRK DIG"); y++;
 		Text(skp, x, y, "0363 RET ERTH DIG"); y++;
 		Text(skp, x, y, "0366 RET ERTH TRG"); y++;
 		Text(skp, x, y, "1501 MOONRISE SET"); y++;
 		Text(skp, x, y, "1502 SUNRISE SET"); y++;
 		Text(skp, x, y, "1503 NXT STA CONT"); y++;
+		Text(skp, x, y, "1505 REC ASC NODE"); y++;
 		Text(skp, x, y, "1506 EXP SITE ACQ"); y++;
 		Text(skp, x, y, "1508 LMK ACQ"); y++;
 		Text(skp, x, y, "1590 VEC COMP TBL"); y++;
@@ -7561,6 +7563,79 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		DFLBackgroundSlide(skp, 233, 4);
 		DFLDynamicData(skp, 233, 4);
 		break;
+	case 101:
+		if (subscreen == 0)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text(W / 2, CH / 2, "Groundtrack Digitals Input", 26);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			x = 1;  y = 3; dx = 7;
+			Text(skp, x, marker + y, "*");
+			x++;
+			Text(skp, x, y, "VEH:");
+			if (GC->rtcc->EZETVMED.GrndTrkDigitalsVehID == 1) Text(skp, x + dx, y, "CSM");
+			else Text(skp, x + dx, y, "LEM");
+			y++;
+			Text(skp, x, y, "OPT:");
+			if (GC->rtcc->EZETVMED.GrndTrkDigitalsOption == 1) Text(skp, x + dx, y, "Rev");
+			else Text(skp, x + dx, y, "Time");
+			y++;
+			if (GC->rtcc->EZETVMED.GrndTrkDigitalsOption == 2)
+			{
+				Text(skp, x, y, "TIME:");
+				Text_GET_HHHMMSS(skp, x + dx, y, GC->rtcc->EZETVMED.GrndTrkDigitalsTime);
+			}
+			y++;
+			Text(skp, x, y, "LNG:");
+			Text(skp, x + dx, y, "%.2lf", GC->rtcc->EZETVMED.GrndTrkDigitalsLongitude*DEG);
+			y++;
+			if (GC->rtcc->EZETVMED.GrndTrkDigitalsOption == 1)
+			{
+				Text(skp, x, y, "REV:");
+				Text(skp, x + dx, y, "%d", GC->rtcc->EZETVMED.GrndTrkDigitalsRev);
+			}
+			y++;
+			Text(skp, x, y, "REF:");
+			if (GC->rtcc->EZETVMED.GrndTrkDigitalsCoordinates == RTCC_COORDINATES_ECT) Text(skp, x + dx, y, "Earth");
+			else Text(skp, x + dx, y, "Moon");
+		}
+		else
+		{
+			SetMOCRFont(skp, 3, false);
+			GetCharSize(skp, CW, CH);
+			SetMOCRDisplayCentered(3);
+			Text(skp, 16, 0, "GROUNDTRACK DIGITALS");
+			Text(skp, 52, 0, "0347");
+			Text(skp, 2, 2, "VEH");
+			Text(skp, 11, 2, "STA ID");
+			Text(skp, 27, 2, "LNG");
+			Text(skp, 40, 2, "REF");
+			Text(skp, 50, 2, "/");
+			Text(skp, 0, 4, " REV     GET        GMT      LAT      LNG      TAA");
+			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+			SetMOCRFont(skp, 3, true);
+			Text(skp, 9, 2, GC->rtcc->RZDGTD.VehicleName);
+			Text(skp, 25, 2, GC->rtcc->RZDGTD.StationID);
+			Text_Longitude(skp, 38, 2, GC->rtcc->RZDGTD.InputLongitude);
+			Text(skp, 47, 2, GC->rtcc->RZDGTD.REF);
+			Text(skp, 50, 2, "%d", GC->rtcc->RZDGTD.CurrentPage);
+			Text(skp, 52, 2, "%d", GC->rtcc->RZDGTD.TotalNumPages);
+			{
+				int j = (GC->rtcc->RZDGTD.CurrentPage - 1) * 20;
+				for (int i = 0; i < 20; i++)
+				{
+					if (GC->rtcc->RZDGTD.table[i + j].DataIndicator) break;
+					Text(skp, 4, 6 + i, "%d", GC->rtcc->RZDGTD.table[i + j].Rev);
+					Text_GET_HHHMMSS(skp, 15, 6 + i, GC->rtcc->RZDGTD.table[i + j].GET);
+					Text_GET_HHHMMSS(skp, 26, 6 + i, GC->rtcc->RZDGTD.table[i + j].GMT);
+					Text_Latitude(skp, 34, 6 + i, GC->rtcc->RZDGTD.table[i + j].Latitude);
+					Text_Longitude(skp, 43, 6 + i, GC->rtcc->RZDGTD.table[i + j].Longitude);
+					Text(skp, 51, 6 + i, "%.2lf", GC->rtcc->RZDGTD.table[i + j].TrueAnomaly);
+				}
+			}
+			Text(skp, 50, 27, GC->rtcc->RZDGTD.ErrorMessage);
+		}
+		break;
 	case 103:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		skp->Text(W / 2, CH / 2, "Retrofire Constraints", 21);
@@ -9006,6 +9081,78 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(W - CW, 7 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "MGA: %+07.2lf°", G->IMUParkingAngles.z * DEG);
 		skp->Text(W - CW, 8 * H / 14, Buffer, strlen(Buffer));
+		break;
+	case 132:
+		if (subscreen == 0)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text(W / 2, CH / 2, "Recovery Ascnd Node Input", 26);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			x = 1;  y = 3; dx = 7;
+			Text(skp, x, marker + y, "*");
+			x++;
+			Text(skp, x, y, "VEH:");
+			if (GC->rtcc->EZETVMED.RecovAscNodeVehID == 1) Text(skp, x + dx, y, "CSM");
+			else Text(skp, x + dx, y, "LEM");
+			y++;
+			Text(skp, x, y, "OPT:");
+			if (GC->rtcc->EZETVMED.RecovAscNodeOption == 1) Text(skp, x + dx, y, "Revs");
+			else Text(skp, x + dx, y, "Times");
+			y++;
+			if (GC->rtcc->EZETVMED.RecovAscNodeOption == 2)
+			{
+				Text(skp, x, y, "TIME1:");
+				Text_GET_HHHMMSS(skp, x + dx, y, GC->rtcc->EZETVMED.RecovAscNodeBeginTime);
+				y++;
+				Text(skp, x, y, "TIME2:");
+				Text_GET_HHHMMSS(skp, x + dx, y, GC->rtcc->EZETVMED.RecovAscNodeEndTime);
+				y++;
+			}
+			else y += 2;
+			if (GC->rtcc->EZETVMED.RecovAscNodeOption == 1)
+			{
+				Text(skp, x, y, "REV1:");
+				Text(skp, x + dx, y, "%d", GC->rtcc->EZETVMED.RecovAscNodeBeginRev);
+				y++;
+				Text(skp, x, y, "REV2:");
+				Text(skp, x + dx, y, "%d", GC->rtcc->EZETVMED.RecovAscNodeEndRev);
+				y++;
+			}
+			else y += 2;
+			Text(skp, x, y, "REF:");
+			switch (GC->rtcc->EZETVMED.RecovAscNodeCoordinates)
+			{
+			case 1: Text(skp, x + dx, y, "ECT"); break;
+			case 2: Text(skp, x + dx, y, "MCI"); break;
+			case 3: Text(skp, x + dx, y, "MCT"); break;
+			}
+		}
+		else
+		{
+			SetMOCRFont(skp, 4, false);
+			GetCharSize(skp, CW, CH);
+			SetMOCRDisplayCentered(4);
+			Text(skp, 8, 0, "RECOVERY ASCENDING NODE");
+			Text(skp, 38, 0, "1505");
+			Text(skp, 2, 2, "VEH");
+			Text(skp, 12, 2, "STA ID");
+			Text(skp, 29, 2, "REF");
+			Text(skp, 1, 4, "REV     GET        GMT       LNG     RAS");
+			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+			SetMOCRFont(skp, 4, true);
+			Text(skp, 9, 2, GC->rtcc->RZASCND.VehicleName);
+			Text(skp, 26, 2, GC->rtcc->RZASCND.StationID);
+			Text(skp, 36, 2, GC->rtcc->RZASCND.REF);
+			for (int i = 0; i < GC->rtcc->RZASCND.TotalNumEntries; i++)
+			{
+				Text(skp, 4, 5 + i, "%d", GC->rtcc->RZASCND.table[i].Rev);
+				Text_GET_HHHMMSS(skp, 15, 5 + i, GC->rtcc->RZASCND.table[i].GET);
+				Text_GET_HHHMMSS(skp, 26, 5 + i, GC->rtcc->RZASCND.table[i].GMT);
+				Text_Longitude(skp, 35, 5 + i, GC->rtcc->RZASCND.table[i].Longitude, 2);
+				Text_GET_HHMM(skp, 42, 5 + i, GC->rtcc->RZASCND.table[i].RightAscension);
+			}
+			Text(skp, 35, 20, GC->rtcc->RZASCND.ErrorMessage);
+		}
 		break;
 	}
 
