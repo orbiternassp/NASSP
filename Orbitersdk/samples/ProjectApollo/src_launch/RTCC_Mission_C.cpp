@@ -589,7 +589,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		PMSTICN(lambert, res);
 
 		in.CONFIG = 1; //CSM
-		in.CSMWeight = med_m50.CSMWT;
+		in.CSMWeight = sv_A.Weight;
 		in.sv_before = res.sv_tig.sv;
 		in.V_aft = res.sv_tig.sv.V + res.dV;
 		in.DETU = 15.0; //Ullage
