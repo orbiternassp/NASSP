@@ -171,24 +171,27 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_NONE, PT_NONE, true, 23, MST_D_DAY3STATE12);
 		break;
 	case MST_D_DAY3STATE12: //SPS-5 Update to SV Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(55 * 60 * 60 + 30 * 60), 113, MST_D_DAY3STATE13);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(55.0 * 3600.0 + 30.0 * 60.0), 113, MST_D_DAY3STATE13);
 		break;
 	case MST_D_DAY3STATE13: //SV Update to Block Data 7
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(56 * 60 * 60 + 40 * 60), 2, MST_D_DAY3STATE14);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(56.0 * 3600.0 + 40.0 * 60.0), 93, MST_D_DAY3STATE14);
 		break;
 	case MST_D_DAY3STATE14: //Block Data 7 to Block Data 8
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(67 * 60 * 60 + 30 * 60), 24, MST_D_DAY4STATE1);
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(67.0 * 3600.0 + 30.0 * 60.0), 24, MST_D_DAY4STATE1);
 		break;
-	case MST_D_DAY4STATE1: //Block Data 8 to EVA REFSMMAT Update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(69 * 60 * 60 + 55 * 60), 25, MST_D_DAY4STATE2);
+	case MST_D_DAY4STATE1: //Block Data 8 to SCS Check
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(69.0 * 3600.0), 25, MST_D_DAY4STATE2);
 		break;
-	case MST_D_DAY4STATE2: //EVA REFSMMAT Update to state vector update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(77 * 60 * 60 + 45 * 60), 26, MST_D_DAY4STATE3);
+	case MST_D_DAY4STATE2: //SCS Check to EVA REFSMMAT Update
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(69.0 * 3600.0 + 55.0 * 60.0), 150, MST_D_DAY4STATE3, scrubbed, mcc_calcs.GETEval(77.0 * 3600.0 + 45.0 * 60.0), MST_D_DAY4STATE4);
 		break;
-	case MST_D_DAY4STATE3: //State vector update to Block Data 9
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(78 * 60 * 60 + 10 * 60), 2, MST_D_DAY4STATE4);
+	case MST_D_DAY4STATE3: //EVA REFSMMAT Update to SV Update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(77.0 * 3600.0 + 45.0 * 60.0), 26, MST_D_DAY4STATE4);
 		break;
-	case MST_D_DAY4STATE4: //Block Data 9 to Block Data 10
+	case MST_D_DAY4STATE4: //SV Update to Block Data 9
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(78 * 60 * 60 + 10 * 60), 94, MST_D_DAY4STATE5);
+		break;
+	case MST_D_DAY4STATE5: //Block Data 9 to Block Data 10
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(87 * 60 * 60 + 15 * 60), 27, MST_D_DAY5STATE1);
 		break;
 	case MST_D_DAY5STATE1: //Block Data 10 to CSM Rendezvous REFSMMAT update

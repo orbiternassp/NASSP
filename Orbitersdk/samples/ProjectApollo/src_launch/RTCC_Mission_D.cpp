@@ -33,6 +33,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "../src_rtccmfd/OrbMech.h"
 #include "mcc.h"
 #include "rtcc.h"
+#include "imu.h"
 
 bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc, char * upMessage)
 {
@@ -350,8 +351,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		P30TIG = OrbMech::HHMMSSToSS(5, 59, 0); //Needs to be computed for best time over Hawaii
 		dV_LVLH = _V(36.8, 0.0, 0.0)*0.3048;
 
-		NavGET = floor(P30TIG/60.0-30.0)*60.0;  //TIG-30m
-		SVGET = floor(P30TIG/60.0-1.0)*60.0;	//TIG-1m
+		NavGET = P30TIG - (30.0 * 60.0);  //TIG-30m
+		SVGET = floor(P30TIG/60.0 - 1.0) * 60.0;	//TIG-1m
 
 		opt.TIG = P30TIG;
 		opt.dV_LVLH = dV_LVLH;
@@ -546,8 +547,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalcEphem(calcParams.src);
 		WeightsTable = GetWeightsTable(calcParams.src, true, true);
 
-		NavGET = floor(TimeofIgnition/60.0-30.0)*60.0;  //TIG-30m
-		SVGET = floor(TimeofIgnition/60.0-1.0)*60.0;	//TIG-1m
+		NavGET = TimeofIgnition - (30.0 * 60.0);  //TIG-30m
+		SVGET = floor(TimeofIgnition/60.0 - 1.0) * 60.0;	//TIG-1m
 
 		opt.dV_LVLH = DeltaV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
@@ -558,17 +559,17 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.sv0 = sv0;
 		opt.WeightsTable = WeightsTable;
 
-		if (fcn == 100)
+		if (fcn == 110)
 		{
 			opt.UllageDT = 0.0;
 			opt.sxtstardtime = -30.0*60.0;
 		}
-		else if (fcn == 101)
+		else if (fcn == 111)
 		{
 			opt.UllageDT = 0.0;
 			opt.sxtstardtime = -40.0*60.0;
 		}
-		else if (fcn == 102)
+		else if (fcn == 112)
 		{
 			opt.UllageDT = 18.0;
 			opt.sxtstardtime = -30.0*60.0;
@@ -576,36 +577,49 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else
 		{
 			opt.UllageDT = 18.0;
-			opt.sxtstardtime = -40.0*60.0;
+			opt.sxtstardtime = -50.0*60.0;
 		}
 
 		AP7ManeuverPAD(opt, *form);
 
-		if (fcn == 100)
+		if (fcn == 110)
 		{
 			sprintf(form->purpose, "SPS-2");
 			sprintf(form->remarks, "No ullage");
 			//Bias pitch trim gimbal angle by 0.5° to induce transient at ignition. Gets mentioned in pre-mission documents, but wasn't actually done during the mission?!
 			form->pTrim += 0.5;
 		}
-		else if (fcn == 101)
+		else if (fcn == 111)
 		{
 			sprintf(form->purpose, "SPS-3");
 			sprintf(form->remarks, "No ullage");
 		}
-		else if (fcn == 102)
+		else if (fcn == 112)
 		{
 			sprintf(form->purpose, "SPS-4");
 			sprintf(form->remarks, "Ullage: 4 jet, %.0f seconds", opt.UllageDT);
 		}
 		else
 		{
+			AP11MNV tempPAD;
+			AP11ManPADOpt tempopt;
 			AP10DAPDATA dappad;
+			char planeangles[1000];
+
+			tempopt.dV_LVLH = _V(0.0, -1.0, 0.0)*0.3048;
+			tempopt.enginetype = RTCC_ENGINETYPE_CSMRCSPLUS4;
+			tempopt.REFSMMAT = opt.REFSMMAT;
+			tempopt.HeadsUp = opt.HeadsUp;
+			tempopt.TIG = TimeofIgnition;
+			tempopt.WeightsTable = WeightsTable;
+			tempopt.RV_MCC = coast(sv0, GMTfromGET(TimeofIgnition) - sv0.GMT);
+
+			AP11ManeuverPAD(tempopt, tempPAD);
+			sprintf(planeangles, "Out of plane angles: Roll %03.0f Pitch %03.0f Yaw %03.0f", tempPAD.Att.x, tempPAD.Att.y, tempPAD.Att.z);
 
 			sprintf(form->purpose, "SPS-5");
-
 			CSMDAPUpdate(calcParams.src, dappad, false);
-			sprintf(form->remarks, "Ullage: 4 jet, %.0f seconds  LM weight is %.0f", opt.UllageDT, dappad.OtherVehicleWeight);
+			sprintf(form->remarks, "Ullage: 4 jet, %.0f seconds  %s  LM weight is %.0f", opt.UllageDT, planeangles, dappad.OtherVehicleWeight);
 		}
 
 		sv1 = coast(sv0, GMTfromGET(SVGET) - sv0.GMT); //Time tag SV
@@ -825,7 +839,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else
 		{
 			AP7NAV * form = (AP7NAV *)pad;
-			NavGET = floor(TimeofIgnition/60.0-30.0)*60.0;  //Nav Check GET TIG-30m
+			NavGET = floor(TimeofIgnition/60.0 - 30.0) * 60.0;  //Nav Check GET TIG-30m
 
 			NavCheckPAD(sv1, *form, NavGET);
 
@@ -901,26 +915,49 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 8;
 	}
 	break;
+	case 150: //SCS Check
+	{
+		Saturn *cm = (Saturn *)calcParams.src;
+
+		if (cm->imu.IsPowered() == false) 		//Check on IMU power to determine if EVA REFSMMAT uplink should be scrubbed
+		{
+			scrubbed = true;
+		}
+
+		if (scrubbed)
+		{
+			sprintf(upMessage, "EVA will be performed with IMU powered down\nUse SCS Procedures");
+		}
+		else
+		{
+			sprintf(upMessage, "EVA will be performed with IMU");
+		}
+	}
+	break;
 	case 26: //EVA REFSMMAT
 	{
 		REFSMMATOpt opt;
 		MATRIX3 REFSMMAT, E;
 		VECTOR3 GA;
-		EphemerisData sv;
+		VehicleDataBlock sv0, sv1;
+		double SVGMT;
 		char buffer1[1000];
 		char buffer2[1000];
 
-		sv = StateVectorCalcEphem(calcParams.src);
+		sv0 = StateVectorCalcDataBlock(calcParams.src);
 		E = { 1,0,0, 0,1,0, 0,0,1 };
 
-		GA = HatchOpenThermalControl(sv.GMT, E);
+		SVGMT = GMTfromGET(OrbMech::HHMMSSToSS(73, 30, 0));  //SV Time tag for EVA REFSMMAT (EVA time)
+		sv1 = coast(sv0, SVGMT - sv0.sv.GMT); //Time tag SV
+
+		GA = HatchOpenThermalControl(sv1.sv.GMT, E);
 
 		opt.IMUAngles = GA;
 		opt.PresentREFSMMAT = E;
 		opt.REFSMMATopt = 7;
 		REFSMMAT = REFSMMATCalc(&opt);
 
-		AGCStateVectorUpdate(buffer1, 1, 1, sv, true);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv1.sv, true);
 		AGCDesiredREFSMMATUpdate(buffer2, REFSMMAT);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
@@ -1614,8 +1651,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PoweredFlightProcessor(in, GMT_TIG, dV_LVLH);
 		P30TIG = GETfromGMT(GMT_TIG);
 
-		NavGET = floor(P30TIG/60.0-30.0)*60.0;  //TIG-30m
-		SVGET = floor(P30TIG/60.0-1.0)*60.0;	//TIG-1m
+		NavGET = P30TIG - (30.0 * 60.0);  //TIG-30m
+		SVGET = floor(P30TIG/60.0 - 1.0) * 60.0;	//TIG-1m
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.REFSMMATTime = P30TIG;

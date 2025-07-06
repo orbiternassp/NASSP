@@ -61,6 +61,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_D_DAY4STATE2	61
 #define MST_D_DAY4STATE3	62
 #define MST_D_DAY4STATE4	63
+#define MST_D_DAY4STATE5	64
 #define MST_D_DAY5STATE1	70
 #define MST_D_DAY5STATE2	71
 #define MST_D_DAY5STATE3	72
