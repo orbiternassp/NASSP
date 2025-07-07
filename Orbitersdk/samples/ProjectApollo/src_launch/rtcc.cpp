@@ -6356,6 +6356,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_BOOL("RTCC_GZGENCSN_LDPPPoweredDescentSimFlag", GZGENCSN.LDPPPoweredDescentSimFlag);
 	SAVE_DOUBLE("RTCC_GZGENCSN_LDPPDescentFlightArc", GZGENCSN.LDPPDescentFlightArc);
 	SAVE_DOUBLE("RTCC_GZGENCSN_LDPPLandingSiteOffset", GZGENCSN.LDPPLandingSiteOffset);
+	i = CapeCrossingRev(RTCC_MPT_CSM, RTCCPresentTimeGMT()); SAVE_INT("EZCCSM", i); //Saving the current rev is enough for the reload logic
+	i = CapeCrossingRev(RTCC_MPT_LM, RTCCPresentTimeGMT()); SAVE_INT("EZCLEM", i); //Saving the current rev is enough for the reload logic
 	if (EZETVMED.SpaceDigVehID != -1)
 	{
 		SAVE_INT("EZETVMED_SpaceDigVehID", EZETVMED.SpaceDigVehID);
@@ -6679,6 +6681,22 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_BOOL("RTCC_GZGENCSN_LDPPPoweredDescentSimFlag", GZGENCSN.LDPPPoweredDescentSimFlag);
 		LOAD_DOUBLE("RTCC_GZGENCSN_LDPPDescentFlightArc", GZGENCSN.LDPPDescentFlightArc);
 		LOAD_DOUBLE("RTCC_GZGENCSN_LDPPLandingSiteOffset", GZGENCSN.LDPPLandingSiteOffset);
+
+		if (papiReadScenario_int(line, "EZCCSM", inttemp) || papiReadScenario_int(line, "EZCLEM", inttemp))
+		{
+			CapeCrossingTable *tab;
+			if (papiReadScenario_int(line, "EZCCSM", inttemp))
+			{
+				tab = &EZCCSM;
+			}
+			else
+			{
+				tab = &EZCLEM;
+			}
+			//Set up fake cape crossing table with current rev
+			tab->NumRev = 1;
+			tab->NumRevFirst = tab->NumRevLast = inttemp;
+		}
 
 		LOAD_INT("EZETVMED_SpaceDigVehID", EZETVMED.SpaceDigVehID);
 		LOAD_INT("EZETVMED_SpaceDigCentralBody", EZETVMED.SpaceDigCentralBody);
@@ -23219,7 +23237,7 @@ VECTOR3 RTCC::EMMGFDAI(VECTOR3 Att, bool IsIMU) const
 
 int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 {
-	int rev, rev_max = 24;
+	int iErr, rev, rev_max = 24;
 	double lng_des, GMT_min, GMT_cross;
 
 	OrbitEphemerisTable *ephemeris;
@@ -23252,18 +23270,27 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 	ManeuverTimesTable MANTIMES;
 	LunarStayTimesTable LUNSTAY;
 
-	ELFECH(ephemeris->EPHEM.Header.TL, ephemeris->EPHEM.Header.NumVec, 0, L, EPHEM, MANTIMES, LUNSTAY);
-	
+	iErr = ELFECH(ephemeris->EPHEM.Header.TL, ephemeris->EPHEM.Header.NumVec, 0, L, EPHEM, MANTIMES, LUNSTAY);
+	//Error checks
+	if (ephemeris->EPHEM.Header.NumVec == 0U)
+	{
+		RMGENT("RMMEACC", 12); //ELFECH returned no ephemeris at all
+		return 1;
+	}
+	if (iErr && ephemeris->EPHEM.Header.NumVec > 0)
+	{
+		RMGENT("RMMEACC", 6); //ELFECH returned error but some ephemeris
+	}
 	if (EPHEM.Header.NumVec < 9)
 	{
-		//Error
+		RMGENT("RMMEACC", 10); //ELFECH returned fewer than 9 vectors
 		return 1;
 	}
 
 	EphemerisDataTable2 EPHEM2;
 	EphemerisData2 temp_out;
 	VECTOR3 W_ES, V_true, h_true;
-	double sign;
+	double sign, err;
 	int out;
 
 	if (ref_frame == 0)
@@ -23283,7 +23310,7 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 	{
 		if (ELVCNV(EPHEM.table[j], 0, out, temp_out))
 		{
-			//Error
+			RMGENT("RMMEACC", 11); //ELVCNV unable to rotate vectors
 			return 1;
 		}
 		
@@ -23301,7 +23328,7 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 
 	if (EPHEM2.table.size() < 9)
 	{
-		//Error
+		RMGENT("RMMEACC", 10); //ELFECH returned fewer than 9 vectors
 		return 1;
 	}
 
@@ -23338,8 +23365,21 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 
 	while (rev < rev_max)
 	{
-		if (RLMTLC(EPHEM2, MANTIMES, lng_des, GMT_min, GMT_cross, sv_cross, &LUNSTAY))
+		//Find longitude crossing
+		err = RLMTLC(EPHEM2, MANTIMES, lng_des, GMT_min, GMT_cross, sv_cross, &LUNSTAY);
+		//No crossing? Just stop.
+		if (err == -1.0)
 		{
+			break;
+		}
+		//Convergence error? Print message.
+		if (err != 0.0)
+		{
+			RTCCONLINEMON.DoubleBuffer[0] = err;
+			RTCCONLINEMON.TextBuffer[0] = L == 1 ? "CSM" : "LEM";
+			RTCCONLINEMON.TextBuffer[1] = ref_frame == BODY_EARTH ? "EARTH " : "LUNAR ";
+			RTCCONLINEMON.IntBuffer[0] = rev0 + rev;
+			RMGENT("RMMEACC", 7);
 			break;
 		}
 
@@ -24093,6 +24133,7 @@ void RTCC::EMDSSMMD(bool sun, int ind, double param)
 
 int RTCC::CapeCrossingRev(int L, double GMT)
 {
+	//Returns the rev number for a given GMT. If the GMT is outside the limits of the cape crossing table, returns 1
 	CapeCrossingTable *table;
 	if (L == RTCC_MPT_LM)
 	{
@@ -24130,6 +24171,7 @@ int RTCC::CapeCrossingRev(int L, double GMT)
 
 double RTCC::CapeCrossingGMT(int L, int rev)
 {
+	//Returns the rev crossing GMT for a given rev. Returns a negative value if no valid time was found
 	CapeCrossingTable *table;
 	if (L == RTCC_MPT_LM)
 	{
@@ -30657,11 +30699,13 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 		{
 			table = &EZCLEM;
 		}
-
+		//Error if no cape crossing table has been generated
 		if (table->NumRev == 0) return 2;
-
-		int delta = rev + 1 - table->NumRevFirst;
-
+		//Get current rev
+		int rev0 = CapeCrossingRev(veh, RTCCPresentTimeGMT());
+		//Get difference
+		int delta = rev - rev0;
+		//Apply difference
 		table->NumRevFirst += delta;
 		table->NumRevLast += delta;
 	}
@@ -39048,6 +39092,43 @@ void RTCC::RMDRXDV(bool rte)
 			tab->lat_IP = tab->lng_IP = 0.0;
 		}
 	}
+}
+
+void RTCC::RMGENT(std::string source, int n)
+{
+	std::vector<std::string> message;
+	std::string temp1;
+	char Buffer[128];
+
+	switch (n)
+	{
+	case 6:
+		message.push_back("ELFECH RETURNED ERROR, BUT SOME EPH.");
+		break;
+	case 7:
+		sprintf(Buffer, "RLMTLC CONVERGENCE ERROR OF %.5lf RADIANS", RTCCONLINEMON.DoubleBuffer[0]);
+		message.push_back(Buffer);
+		temp1 = "AT BEGIN TIME OF " + RTCCONLINEMON.TextBuffer[0] + " " + RTCCONLINEMON.TextBuffer[1] + " REV " + std::to_string(RTCCONLINEMON.IntBuffer[0]);
+		message.push_back(temp1);
+		break;
+	case 8:
+		message.push_back("BAD VEHICLE ID TO CAPE XING ROUTINE");
+		break;
+	case 9:
+		message.push_back("ID OF INACTIVE VEHICLE TO CAPE XING");
+		break;
+	case 10:
+		message.push_back("FEWER THAN 9 VECTORS IN CURRENT EPH.");
+		break;
+	case 11:
+		message.push_back("ELVCNV UNABLE TO ROTATE EPH. TO ECT/MCT");
+		break;
+	case 12:
+		message.push_back("ELFECH RETURNED NO EPHEMERIS AT ALL");
+		break;
+	}
+
+	OnlinePrint(source, message);
 }
 
 void RTCC::PMDARM(EphemerisData sv_CSM, EphemerisData sv_LM)

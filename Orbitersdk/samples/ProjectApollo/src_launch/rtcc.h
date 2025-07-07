@@ -2975,6 +2975,8 @@ public:
 	void RMSSCS(int entry);
 	//External DV Parameters
 	void RMDRXDV(bool rte);
+	//Reentry online print
+	void RMGENT(std::string source, int n);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
