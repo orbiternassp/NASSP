@@ -172,6 +172,7 @@ typedef struct {
 typedef struct {
 	int crewNumber;
 	int crewStatus;
+	double UCTAStatus;
 	double PrimECSHeating;
 	double PrimECSTestHeating;
 	double SecECSHeating;
@@ -1320,10 +1321,14 @@ public:
 	//
 	// FloodLight
 	//
-	void UpdateFloodLights();
 	PointLight* floodLight_P5;
 	PointLight* floodLight_P8;
 	PointLight* floodLight_P100;
+
+	//
+	// Custom quicksave behaviour
+	//
+	void QuicksaveScenario();
 
 protected:
 

@@ -224,7 +224,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv = StateVectorCalcEphem(calcParams.src);
 
-		TLIBase = floor((TimeofIgnition / 1800.0) + 0.5)*1800.0; //Round to next half hour
+		TLIBase = floor((TimeofIgnition / 60.0))*60.0; //Round down to next minute
 		TIG = TLIBase + 90.0*60.0;
 		entopt.lng = -25.0*RAD;
 
@@ -242,7 +242,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.vessel = calcParams.src;
 		entopt.RV_MCC = sv1;
 
-		EntryTargeting(&entopt, &res); //Target Load for uplink
+		EntryTargeting(&entopt, &res); //Target load for uplink
 
 		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -539,7 +539,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector, target load");
+					sprintf(upDesc, "CSM state vector, Target load");
 				}
 			}
 		}
@@ -619,7 +619,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load");
+				sprintf(upDesc, "CSM state vector, Target load");
 			}
 		}
 	}
@@ -796,7 +796,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load");
+				sprintf(upDesc, "CSM state vector, Target load");
 			}
 		}
 	}
@@ -929,7 +929,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load, Landing Site REFSMMAT");
+				sprintf(upDesc, "CSM state vector, Target load, Landing Site REFSMMAT");
 			}
 		}
 	}
@@ -1057,7 +1057,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;
@@ -1108,7 +1108,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, target load");
+			sprintf(upDesc, "CSM state vector, Target load");
 		}
 	}
 	break;
@@ -1251,7 +1251,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP11AGSACT *form = (AP11AGSACT*)pad;
 
-		SV sv1, sv2, sv_INP;
+		VehicleDataBlock sv_CSM, sv_LM, sv_LM_post_DOI;
 		double t_sunrise, t_TPI, KFactor;
 
 		PDAPOpt opt;
@@ -1259,13 +1259,13 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		LEM *l = (LEM *)calcParams.tgt;
 
-		sv1 = StateVectorCalc(calcParams.tgt);
-		sv2 = StateVectorCalc(calcParams.src);
+		sv_CSM = StateVectorCalcDataBlock(calcParams.src);
+		sv_LM = StateVectorCalcDataBlock(calcParams.tgt);
 
-		sv_INP = ExecuteManeuver(sv1, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
+		sv_LM_post_DOI = ExecuteManeuver(sv_LM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
 
 		t_sunrise = calcParams.PDI + 3.0*3600.0;
-		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(sv2, t_sunrise) - 23.0*60.0;
+		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(ConvertEphemDatatoSV(sv_CSM.sv, sv_CSM.Weight), t_sunrise) - 23.0*60.0;
 
 		bool res_k = CalculateAGSKFactor(&l->agc.vagc, &l->aea.vags, KFactor);
 		if (res_k)
@@ -1274,32 +1274,26 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 
 		opt.dt_stage = 999999.9;
-		opt.W_TAPS = 4711.0;
-		opt.W_TDRY = 6874.3;
+		opt.W_TAPS = l->GetAscentStageMass(); //4711.0;
+		opt.W_TDRY = l->GetMass() - l->GetPropellantMass(l->GetPropellantHandleByIndex(0)); //6874.3;
 		opt.dt_step = 20.0;
-		opt.t_TPI = t_TPI;
-		opt.IsTwoSegment = true;
-		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
+		opt.GMT_TPI = GMTfromGET(t_TPI);
+		opt.IsTwoSegment = false;
 		opt.R_LS = OrbMech::r_from_latlong(BZLAND.lat[RTCC_LMPOS_BEST], BZLAND.lng[RTCC_LMPOS_BEST], BZLAND.rad[RTCC_LMPOS_BEST]);
-		opt.sv_A = sv_INP;
-		opt.sv_P = sv2;
-		opt.TLAND = CZTDTGTU.GETTD;
+		opt.sv_LM = sv_LM_post_DOI;
+		opt.sv_CSM = sv_CSM;
+		opt.GMT_LAND = GMTfromGET(CZTDTGTU.GETTD);
+		opt.dt_CAN = 0.0;
+		opt.DV_CAN = _V(0, 0, 0);
+		opt.dt_CSI = 50.0*60.0;
 
 		PoweredDescentAbortProgram(opt, res);
 
 		form->KFactor = GETfromGMT(GetAGSClockZero());
-		form->DEDA224 = (int)(res.DEDA224 / 0.3048 / 100.0);
-		form->DEDA225 = (int)(res.DEDA225 / 0.3048 / 100.0);
-		form->DEDA226 = (int)(res.DEDA226 / 0.3048 / 100.0);
-		form->DEDA227 = OrbMech::DoubleToDEDA(res.DEDA227 / 0.3048*pow(2, -20), 14);
-
-		/*
-		Pad-load:
-		form->DEDA224 = 60267;
-		form->DEDA225 = 58148;
-		form->DEDA226 = 70312;
-		form->DEDA227 = -50031;
-		*/
+		form->DEDA224 = (int)(res.J1 / 0.3048 / 100.0);
+		form->DEDA225 = (int)(res.A_min / 0.3048 / 100.0);
+		form->DEDA226 = (int)(res.A_max / 0.3048 / 100.0);
+		form->DEDA227 = (int)(res.K1 / 0.3048 / 100.0*pow(2, 3));
 	}
 	break;
 	case 37: //SEPARATION MANEUVER
@@ -1399,7 +1393,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "LM state vector, DOI target load, descent target load");
+			sprintf(upDesc, "LM state vector, DOI target load, Descent target load");
 		}
 	}
 	break;
@@ -1543,7 +1537,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load");
+				sprintf(upDesc, "CSM state vector, Target load");
 			}
 		}
 	}
@@ -1565,7 +1559,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv2 = coast(sv1, -30.0*60.0);
 		LunarOrbitMapUpdate(sv2, upd_ellip);
 
-		form->Rev = 1;
+		sprintf(form->Rev, "1");
 		form->type = 2;
 		form->AOSGET = upd_hyper.AOSGET;
 		form->LOSGET = upd_hyper.LOSGET;
@@ -1646,9 +1640,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11PDIPAD * form = (AP11PDIPAD *)pad;
 
 		PDIPADOpt opt;
-		SV sv;
+		VehicleDataBlock sv;
 
-		sv = StateVectorCalc(calcParams.tgt);
+		sv = StateVectorCalcDataBlock(calcParams.tgt);
 
 		opt.direct = false;
 		opt.dV_LVLH = DeltaV_LVLH;
@@ -1701,7 +1695,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SV sv_CSM2, sv_LM2;
 		PLAWDTOutput WeightsTable_CSM, WeightsTable_LM, WeightsTable_LM2;
 		VECTOR3 dV_LVLH;
-		double t_sunrise, t_CSI, t_TPI, dt, P30TIG, t_P, t_TPI_actual;
+		double t_sunrise, t_CSI, t_TPI, P30TIG, t_P;
 
 		sv_CSM = StateVectorCalcEphem(calcParams.src);
 		WeightsTable_CSM = GetWeightsTable(calcParams.src, true, false);
@@ -1715,6 +1709,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		t_sunrise = calcParams.PDI + 3.0*3600.0;
 		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(sv_CSM2, t_sunrise) - 23.0*60.0;
+		t_TPI = round(t_TPI / 30.0)*30.0; //Round to next 30 seconds
 
 		GZGENCSN.TIElevationAngle = 26.6*RAD;
 
@@ -1722,23 +1717,14 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.DH = 15.0*1852.0;
 		//Angle confirmed by Apollo 11 FIDO loop (finally!)
 		opt.PhaseAngle = 4.475*RAD;
-		opt.sv_A = ConvertSVtoEphemData(sv_LM2);
-		opt.sv_P = ConvertSVtoEphemData(sv_CSM2);
+		opt.sv_C.sv = ConvertSVtoEphemData(sv_LM2);
+		opt.sv_T.sv = ConvertSVtoEphemData(sv_CSM2);
 		//PDI+12
 		opt.T1 = GMTfromGET(calcParams.PDI + 12.0*60.0);
-		//Estimate for T2
-		opt.T2 = GMTfromGET(opt.T1 + 3600.0 + 46.0*60.0);
-
-		for (int i = 0;i < 2;i++)
-		{
-			PMSTICN(opt, res);
-
-			//Find TPI time
-			PMSTICN_ELEV(res.sv_tig2_apo, opt.sv_P, GZGENCSN.TIElevationAngle, OrbMech::mu_Moon, t_TPI_actual);
-
-			dt = GMTfromGET(t_TPI) - t_TPI_actual;
-			opt.T2 += dt;
-		}
+		//T2 at 40 minutes before TPI
+		opt.T2 = GMTfromGET(t_TPI - 40.0*60.0);
+		//Calculate two impulse solution
+		PMSTICN(opt, res);
 
 		t_P = OrbMech::period(sv_DOI.R, sv_DOI.V + res.dV, OrbMech::mu_Moon);
 		t_CSI = GETfromGMT(opt.T2) - t_P / 2.0;
@@ -2282,7 +2268,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, target load");
+				sprintf(upDesc, "CSM state vector, Target load");
 			}
 		}
 	}
@@ -2659,7 +2645,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				char buffer2[1000];
 
 				sprintf(upMessage, "%s has been scrubbed", manname);
-				sprintf(upDesc, "CSM state vector, entry target");
+				sprintf(upDesc, "CSM state vector, Entry target");
 
 				AGCStateVectorUpdate(buffer1, sv, true);
 				CMCEntryUpdate(buffer2, res.latitude, res.longitude);
@@ -2683,7 +2669,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				char buffer3[1000];
 
 				sprintf(upMessage, "%s has been scrubbed", manname);
-				sprintf(upDesc, "CSM state vector, entry target, Entry REFSMMAT");
+				sprintf(upDesc, "CSM state vector, Entry target, Entry REFSMMAT");
 
 				AGCStateVectorUpdate(buffer1, sv, true);
 				CMCEntryUpdate(buffer2, res.latitude, res.longitude);
@@ -2711,7 +2697,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector, target load");
+					sprintf(upDesc, "CSM state vector, Target load");
 				}
 			}
 			//MCC-6 and 7 decision
@@ -2734,7 +2720,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 				if (upString != NULL) {
 					// give to mcc
 					strncpy(upString, uplinkdata, 1024 * 3);
-					sprintf(upDesc, "CSM state vector, target load, Entry REFSMMAT");
+					sprintf(upDesc, "CSM state vector, Target load, Entry REFSMMAT");
 				}
 			}
 		}
@@ -2818,7 +2804,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, entry target");
+				sprintf(upDesc, "CSM state vector, Entry target");
 			}
 		}
 	}

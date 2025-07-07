@@ -12,11 +12,13 @@ public:
 		int None;
 		int GNC;
 		int ECS;
+		int ECSDBG;
 		int IU;
 		int TELE;
 		int Debug;
 		int LGC;
 		int Failures;
+		int SL;
 	} page;
 
 	ProjectApolloMFDButtons();

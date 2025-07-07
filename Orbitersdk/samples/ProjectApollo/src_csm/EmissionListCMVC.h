@@ -21,7 +21,8 @@ DWORD IntegralLights_P8[] = {
 	VC_MAT_FDAI_Frame_t,
 	VC_MAT_Meters_P1_t,
 	VC_MAT_Meters_P2_P8_t,
-	VC_MAT_Rotarys_P8_t
+	VC_MAT_Rotarys_P8_t,
+	VC_MAT_TW_Switches_CMP
 };
 
 // Material Emissions Panel 8 without Emission Texture
@@ -129,6 +130,9 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_EventTimerLEB,
 	VC_MAT_csm_waste_disposal_rotary,
 	VC_MAT_Panel382_Cover,
+	VC_MAT_TW_Switches_LEB,
+	VC_MAT_TW_Switches_CMP,
+	VC_MAT_TW_Switches_LMP,
 
 	// DSKY Panel 2 Lights Materials
 	VC_MAT_DSKY_Lights_GIMBAL_LOCK,
@@ -255,8 +259,8 @@ DWORD IntegralLights_P5[] = {
 	VC_MAT_Meters_P3_t,
 	VC_MAT_Rotarys_P5_t,
 	VC_MAT_Talkbacks_P2_t,
-	VC_MAT_Talkbacks_P3_t
-
+	VC_MAT_Talkbacks_P3_t,
+	VC_MAT_TW_Switches_LMP
 };
 
 DWORD FloodLights_P5[] = {
@@ -284,6 +288,7 @@ DWORD IntegralLights_P100[] = {
 	VC_MAT_DSKY_Keys_LEB_t,
 	VC_MAT_Rotarys_P100_t,
 	VC_MAT_Panel306,
+	VC_MAT_TW_Switches_LEB
 };
 
 DWORD IntegralLights_P100_NoTex[] = {

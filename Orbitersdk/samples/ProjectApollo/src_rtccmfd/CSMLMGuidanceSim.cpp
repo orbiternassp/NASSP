@@ -278,7 +278,7 @@ PMMRKJ_LABEL_12A:
 	{
 		DTUL = TAU - TBM;
 	}
-PMMRKJ_LABEL_12B:
+PMMRKJ_LABEL_12B: //We come here for the last pass through a maneuver phase
 	PCRUNG(Eph, WeightTable);
 	if (KGN == 5 || IERR != 0)
 	{
@@ -1130,10 +1130,10 @@ PCRDD_LABEL_3C:
 	return;
 
 PCRDD_LABEL_6A:
-	if (MPHASE == 6)
+	if (MPHASE == 7) //Max thrust phase
 	{
-		//THRUST = TL;
-		//WTLRT = WDOT;
+		THRUST = TL;
+		WTLRT = WDOT * TArr.WDMULT;
 	}
 	THX = THRUST * cos(P_G)*cos(Y_G);
 	if (AttGiven)

@@ -197,6 +197,7 @@
     <ClCompile Include="..\..\src_rtccmfd\TLIProcessor.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLTrajectoryComputers.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TwoImpulseProcessor.cpp" />
     <ClCompile Include="..\..\src_sys\thread.cpp" />
     <ClCompile Include="..\..\src_launch\mccvc.cpp" />
   </ItemGroup>
@@ -239,6 +240,7 @@
     <ClInclude Include="..\..\src_rtccmfd\TLIProcessor.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLTrajectoryComputers.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TwoImpulseProcessor.h" />
     <ClInclude Include="..\..\src_sys\thread.h" />
   </ItemGroup>
   <ItemGroup>

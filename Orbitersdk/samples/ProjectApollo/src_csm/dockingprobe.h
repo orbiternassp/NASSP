@@ -64,7 +64,7 @@ public:
 	void Init(Saturn *s);
 	double GetStatus() { return Status; }
 	bool IsDocked() { return Docked; }
-	bool IsInstalled();
+	bool InCabin();
 	bool IsHardDocked();
 	bool IsExtended() { return (Status == DOCKINGPROBE_STATUS_EXTENDED); };
 	bool IsRetracted() { return (Status == DOCKINGPROBE_STATUS_RETRACTED); };
