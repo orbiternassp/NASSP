@@ -523,6 +523,7 @@ private:								// Saturn LV
 	double TI5F5;									// Time of Earth orbit retro maneuver
 	double T7M10;									// Time in TB7 to compute inertial attitude corresponding to locally referenced separation maneuver
 	double T7M11;									// Time in TB7 for the slingshot/LOX dump maneuver (Apollo 8)
+	double DTB6N;									// Delay time between the setting of TB6 and the initiation of restart preparations for the second reignition of the S-IVB (Apollo 9 only)
 	
 	// PAD-LOADED TABLES
 	double Fx[5][5];								// Pre-IGM pitch polynomial
