@@ -422,6 +422,10 @@ struct AP10DAPDATA
 	double OtherVehicleWeight;	// LM weight (or CSM for LM DAP PAD)
 	double PitchTrim;			// Pitch gimbal trim
 	double YawTrim;				// Yaw gimbal trim (or roll for LM DAP PAD)
+	double LMPitchTrim;			// LM Pitch gimbal trim
+	double LMRollTrim;			// LM Roll gimbal trim
+	double DVTO;				// Tail off thrust
+	int type;					// 1 = Apollo 9 Rendezvous
 };
 
 //APOLLO 10 CSI PAD

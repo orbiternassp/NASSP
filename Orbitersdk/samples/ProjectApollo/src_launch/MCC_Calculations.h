@@ -51,6 +51,7 @@ public:
 	double FindOrbitalSunset(SV sv, double t_sunset_guess);
 	double FindOrbitalMidnight(SV sv, double t_TPI_guess);
 	void FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS);
+	double ComputeDVTO(double mass); //Computes SPS Tail-off
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
 	void PrelaunchMissionInitialization();

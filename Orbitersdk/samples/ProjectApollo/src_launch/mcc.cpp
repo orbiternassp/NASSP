@@ -1784,11 +1784,14 @@ void MCC::SaveState(FILEHANDLE scn) {
 		else if (padNumber == PT_AP10DAPDATA)
 		{
 			AP10DAPDATA * form = (AP10DAPDATA *)padForm;
-
 			SAVE_DOUBLE("MCC_AP10DAPDATA_OtherVehicleWeight", form->OtherVehicleWeight);
-			SAVE_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			SAVE_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			SAVE_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_LMPitchTrim", form->LMPitchTrim);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_LMRollTrim", form->LMRollTrim);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_DVTO", form->DVTO);
+			SAVE_INT("MCC_AP10DAPDATA_type", form->type);
 		}
 		else if (padNumber == PT_AP11LMMNV)
 		{
@@ -2460,9 +2463,13 @@ void MCC::LoadState(FILEHANDLE scn) {
 			AP10DAPDATA * form = (AP10DAPDATA *)padForm;
 
 			LOAD_DOUBLE("MCC_AP10DAPDATA_OtherVehicleWeight", form->OtherVehicleWeight);
-			LOAD_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			LOAD_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			LOAD_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_LMPitchTrim", form->LMPitchTrim);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_LMRollTrim", form->LMRollTrim);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_DVTO", form->DVTO);
+			LOAD_INT("MCC_AP10DAPDATA_type", form->type);
 		}
 		else if (padNumber == PT_AP11LMMNV)
 		{
@@ -3268,11 +3275,17 @@ void MCC::drawPad(bool writetofile){
 	{
 		AP10DAPDATA * form = (AP10DAPDATA *)padForm;
 
-		sprintf(buffer, "DAP PAD\n%+06.0f\n%+06.0f\n%+07.2f\n%+07.2f", form->ThisVehicleWeight, form->OtherVehicleWeight, form->PitchTrim, form->YawTrim);
+		if (form->type == 1)
+		{
+			sprintf(buffer, "RENDEZVOUS DAP PAD\n%+06.0f CSM WT\n%+06.0f LM WT\n%+07.2f GDA\n%+07.2f TRIM\n%+07.2f SPS\n%+07.2f TRIM\n%+03.1f SPS TAIL-OFF", form->ThisVehicleWeight, form->OtherVehicleWeight, form->LMPitchTrim, form->LMRollTrim, form->PitchTrim, form->YawTrim, form->DVTO);
+		}
+		else
+		{
+			sprintf(buffer, "DAP PAD\n%+06.0f\n%+06.0f\n%+07.2f\n%+07.2f", form->ThisVehicleWeight, form->OtherVehicleWeight, form->PitchTrim, form->YawTrim);
+		}
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
-	break;
 	case PT_AP11LMMNV:
 	{
 		AP11LMMNV * form = (AP11LMMNV *)padForm;

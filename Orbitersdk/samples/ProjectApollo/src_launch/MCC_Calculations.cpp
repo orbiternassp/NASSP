@@ -139,6 +139,13 @@ bool MCC_Calculations::GETEval(double get)
 	return false;
 }
 
+double MCC_Calculations::ComputeDVTO(double mass) //mass in kg
+{
+	double DVTO;
+	DVTO = (pRTCC->SystemParameters.MCTST5 * pRTCC->SystemParameters.MCTSD5) / mass;
+	return DVTO*3.28084; //Convert to ft/s
+}
+
 double MCC_Calculations::FindOrbitalSunrise(VehicleDataBlock sv, double t_sunrise_guess)
 {
 	//Temporary conversion function
