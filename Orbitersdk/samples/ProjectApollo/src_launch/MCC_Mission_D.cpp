@@ -40,14 +40,14 @@ void MCC::MissionSequence_D()
 {
 	switch (MissionState)
 	{
-	case MST_D_INSERTION:	//SV Update to Separation
-		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(1.0 * 3600.0 + 45.0 * 60.0), 1, MST_D_DAY1SVUPDATE1);
+	case MST_D_INSERTION:	//Insertion SV Update to SV Update
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(1.0 * 3600.0 + 45.0 * 60.0), 2, MST_D_DAY1SVUPDATE1);
 		break;
-	case MST_D_DAY1SVUPDATE1:
+	case MST_D_DAY1SVUPDATE1:  //SV Update to Separation
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(3.0 * 3600.0 + 15.0 * 60.0), 2, MST_D_DAY1SVUPDATE2);
 		break;
 	case MST_D_DAY1SVUPDATE2:
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(4.0 * 3600.0 + 6.0 * 60.0), 2, MST_D_SEPARATION);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(4.0 * 3600.0 + 6.0 * 60.0), 3, MST_D_SEPARATION);
 		break;
 	case MST_D_SEPARATION:	//Separation to SPS-1
 
@@ -182,35 +182,44 @@ void MCC::MissionSequence_D()
 	case MST_D_DAY4STATE1: //Block Data 8 to SCS Check
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(69.0 * 3600.0), 25, MST_D_DAY4STATE2);
 		break;
-	case MST_D_DAY4STATE2: //SCS Check to EVA REFSMMAT Update
-		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(69.0 * 3600.0 + 55.0 * 60.0), 150, MST_D_DAY4STATE3, scrubbed, mcc_calcs.GETEval(77.0 * 3600.0 + 45.0 * 60.0), MST_D_DAY4STATE4);
+	case MST_D_DAY4STATE2: //SCS Check to EVA REFSMMAT Update or Block Data 9 Flown
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(69.0 * 3600.0 + 55.0 * 60.0), 150, MST_D_DAY4STATE3_NOMINAL, scrubbed, mcc_calcs.GETEval(76.0 * 3600.0 + 25.0 * 60.0), MST_D_DAY4STATE3_FLOWN);
 		break;
-	case MST_D_DAY4STATE3: //EVA REFSMMAT Update to SV Update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(77.0 * 3600.0 + 45.0 * 60.0), 26, MST_D_DAY4STATE4);
+		// Nominal EVA
+	case MST_D_DAY4STATE3_NOMINAL: //EVA REFSMMAT Update to SV Update Nominal
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(77.0 * 3600.0 + 45.0 * 60.0), 26, MST_D_DAY4STATE4_NOMINAL);
 		break;
-	case MST_D_DAY4STATE4: //SV Update to Block Data 9
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(78 * 60 * 60 + 10 * 60), 94, MST_D_DAY4STATE5);
+	case MST_D_DAY4STATE4_NOMINAL: //SV Update Nominal to Block Data 9 Nominal
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(78.0 * 3600.0 + 10.0 * 60.0), 95, MST_D_DAY4STATE5_NOMINAL);
 		break;
-	case MST_D_DAY4STATE5: //Block Data 9 to Block Data 10
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(87 * 60 * 60 + 15 * 60), 27, MST_D_DAY5STATE1);
+	case MST_D_DAY4STATE5_NOMINAL: //Block Data 9 Nominal to Block Data 10
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(87.0 * 3600.0 + 15.0 * 60.0), 27, MST_D_DAY5STATE1);
 		break;
-	case MST_D_DAY5STATE1: //Block Data 10 to CSM Rendezvous REFSMMAT update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(89 * 60 * 60 + 5 * 60), 28, MST_D_DAY5STATE2);
+		// Flown EVA
+	case MST_D_DAY4STATE3_FLOWN: //Block Data 9 Flown to SV Update Flown
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(76.0 * 3600.0 + 35.0 * 60.0), 27, MST_D_DAY4STATE4_FLOWN);
 		break;
-	case MST_D_DAY5STATE2: //CSM Rendezvous REFSMMAT update to LM DAP update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(91 * 60 * 60), 29, MST_D_DAY5STATE3);
+	case MST_D_DAY4STATE4_FLOWN: //SV Update Flown to Block Data 10
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(87.0 * 3600.0 + 15.0 * 60.0), 94, MST_D_DAY5STATE1);
 		break;
-	case MST_D_DAY5STATE3: //LM DAP update to LM Rendezvous REFSMMAT update
-		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, mcc_calcs.GETEval(91 * 60 * 60 + 10 * 60), 6, MST_D_DAY5STATE4);
+		// Continue normal timeline
+	case MST_D_DAY5STATE1: //Block Data 10 to CSM Rendezvous DAP & REFSMMAT Update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(89.0 * 3600.0 + 5.0 * 60.0), 28, MST_D_DAY5STATE2);
 		break;
-	case MST_D_DAY5STATE4: //LM Rendezvous REFSMMAT update to gyro torquing angles update
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(91 * 60 * 60 + 15 * 60), 30, MST_D_DAY5STATE5);
+	case MST_D_DAY5STATE2: //CSM Rendezvous DAP & REFSMMAT Update to LM Rendezvous REFSMMAT Update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP10DAPDATA, mcc_calcs.GETEval(91.0 * 3600.0 + 10.0 * 60.0), 29, MST_D_DAY5STATE3);
 		break;
-	case MST_D_DAY5STATE5: //Gyro torquing angles update to Phasing update
-		UpdateMacro(UTP_PADONLY, PT_TORQANG, mcc_calcs.GETEval(92 * 60 * 60 + 5 * 60), 31, MST_D_DAY5STATE6);
+	case MST_D_DAY5STATE3: //LM Rendezvous REFSMMAT Update to LM Gyro Torquing Angles Update
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(91.0 * 3600.0 + 15.0 * 60.0), 30, MST_D_DAY5STATE4);
 		break;
-	case MST_D_DAY5STATE6: //Phasing update to TPI0 update
-		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, mcc_calcs.GETEval(94 * 60 * 60 + 30 * 60), 32, MST_D_DAY5STATE7);
+	case MST_D_DAY5STATE4: //LM Gyro torquing angles update to Phasing update
+		UpdateMacro(UTP_PADONLY, PT_TORQANG, mcc_calcs.GETEval(92.0 * 3600.0), 31, MST_D_DAY5STATE5);
+		break;
+	case MST_D_DAY5STATE5: //Phasing update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, mcc_calcs.GETEval(92.0 * 3600.0 + 35.0 * 60.0), 32, MST_D_DAY5STATE6);
+		break;
+	case MST_D_DAY5STATE6: //SV Update to TPI0 update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(94.0 * 3600.0 + 30.0 * 60.0), 97, MST_D_DAY5STATE7);
 		break;
 	case MST_D_DAY5STATE7: //TPI0 update to Insertion update
 		UpdateMacro(UTP_PADONLY, PT_AP9LMTPI, mcc_calcs.GETEval(95 * 60 * 60 + 10 * 60), 33, MST_D_DAY5STATE8);
