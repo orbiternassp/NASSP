@@ -1936,6 +1936,12 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "RADARTAPE_START", sizeof("RADARTAPE_START"))) {
 			RadarTape.LoadState(scn, "RADARTAPE_END");
 		}
+		else if (!strnicmp(line, CROSSPOINTER_LEFT_STRING, 17)) {
+			crossPointerLeft.LoadState(line);
+		}
+		else if (!strnicmp(line, CROSSPOINTER_RIGHT_STRING, 17)) {
+			crossPointerRight.LoadState(line);
+		}
 		else if (!strnicmp(line, LMOPTICS_START_STRING, sizeof(LMOPTICS_START_STRING))) {
 			optics.LoadState(scn);
 		}
@@ -2444,6 +2450,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	RR.SaveState(scn,"LEM_RR_START","LEM_RR_END");
 	LR.SaveState(scn, "LEM_LR_START", "LEM_LR_END");
 	RadarTape.SaveState(scn, "RADARTAPE_START", "RADARTAPE_END");
+	crossPointerLeft.SaveState(scn, CROSSPOINTER_LEFT_STRING);
+	crossPointerRight.SaveState(scn, CROSSPOINTER_RIGHT_STRING);
 
 	//Save Optics
 	optics.SaveState(scn);
