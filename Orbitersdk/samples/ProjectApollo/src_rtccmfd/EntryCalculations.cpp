@@ -2368,13 +2368,37 @@ VECTOR3 RetrofirePlanning::RMMATT_LVLH_Body(VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_
 	return LVLHAngles;
 }
 
-MATRIX3 RetrofirePlanning::RMMATT_REFSMMAT(VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, VECTOR3 R) const
+MATRIX3 RetrofirePlanning::RMMATT_REFSMMAT(VECTOR3 U_T, VECTOR3 R, int thruster, int TrimIndicator, double mass) const
 {
-	//Desired REFSMMAT from body axes and position vector
-	VECTOR3 X_SM, Y_SM, Z_SM;
-	X_SM = -X_B;
-	Y_SM = unit(crossp(X_SM, R));
+	VECTOR3 Y_T, Z_T, X_SM, Y_SM, Z_SM;
+	double P_G, Y_G;
+
+	if (thruster == RTCC_ENGINETYPE_CSMSPS)
+	{
+		if (TrimIndicator == -1)
+		{
+			double T, WDOT;
+			unsigned int IC = 1;
+			pRTCC->GIMGBL(mass, 0.0, P_G, Y_G, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 1, 0.0);
+		}
+		else
+		{
+			pRTCC->GetSystemGimbalAngles(RTCC_ENGINETYPE_CSMSPS, P_G, Y_G);
+		}
+	}
+	else
+	{
+		P_G = Y_G = 0.0;
+	}
+
+	Y_T = unit(crossp(U_T, R));
+	Z_T = unit(crossp(U_T, Y_T));
+	X_SM = U_T * cos(Y_G)*cos(P_G) - Y_T * sin(Y_G)*cos(P_G) + Z_T * sin(P_G);
+	Y_SM = U_T * sin(Y_G) + Y_T * cos(Y_G);
 	Z_SM = unit(crossp(X_SM, Y_SM));
+
+	X_SM = -X_SM;
+	Y_SM = -Y_SM;
 
 	return _M(X_SM.x, X_SM.y, X_SM.z, Y_SM.x, Y_SM.y, Y_SM.z, Z_SM.x, Z_SM.y, Z_SM.z);
 }
@@ -2421,7 +2445,7 @@ void RetrofirePlanning::RMSTTF()
 	else
 	{
 		tab->RefsID = "DES";
-		refsdata.REFSMMAT = RMMATT_REFSMMAT(X_B, Y_B, Z_B, sv_TIG.R);
+		refsdata.REFSMMAT = RMMATT_REFSMMAT(U_T, sv_TIG.R, Thruster, GimbalIndicator, CSMmass_Sep);
 	}
 
 	//Calculate retrofire IMU attitude
