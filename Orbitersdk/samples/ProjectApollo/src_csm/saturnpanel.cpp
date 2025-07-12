@@ -4622,7 +4622,12 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiLeft.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);			
+			fdaiLeft.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);
+
+// TODO by Jordan 
+//			oapiBlt(srfFDAICamTexture, surf, 0, 0, 0, 0, 186, 186);	// 533, 612
+//			oapiBlt(srfFDAICamTexture, surf, 0, 0, 563, 642, 186, 186);
+			
 		}
 		return true;
 

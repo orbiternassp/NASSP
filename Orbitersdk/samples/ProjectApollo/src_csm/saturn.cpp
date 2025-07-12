@@ -1560,8 +1560,7 @@ void Saturn::SetAnimations(double simdt)
 
 	DoMeshAnimation(panel382CoverState, panel382CoverAnim, 0.5, simdt);
 	DoMeshAnimation(altimeterCoverState, altimeterCoverAnim, 2.0, simdt);
-	DoMeshAnimation(wasteDisposalState, wasteDisposalAnim, 2.0, simdt);
-	DoMeshAnimation(wasteDisposalState, wasteDisposalAnim2, 2.0, simdt);
+	DoMeshAnimation(wasteDisposalState, wasteDisposalAnim, 1.0, simdt);
 	DoMeshAnimation(ordealState, ordealMeshAnim, 3.0, simdt);
 	DoMeshAnimation(DSKY_GlareshadeState, DSKY_GlareshadeAnim, 2.0, simdt);
 	DoMeshAnimation(EMSDV_GlareshadeState, EMSDV_GlareshadeAnim, 2.0, simdt);
@@ -1581,7 +1580,8 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	TRACE(buffer);
 
 	SetAnimations(simdt);
-	UpdatePointingArrow();
+//	UpdatePointingArrow();
+//	InitFDAICustomCamera();
 	SetVCCueCardsArrows();
 
 	//

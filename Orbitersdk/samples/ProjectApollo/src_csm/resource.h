@@ -1696,6 +1696,10 @@
 // Integral Lights Cue Card
 #define AID_VC_CUE_CARDS_LIGHTING  7020
 
+// Pointing arrow
+#define AID_CMVC_POINTINGARROW 7021
+
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED

@@ -32,6 +32,12 @@
 // which need them.
 //
 
+#ifdef _OPENORBITER
+#include <gcCoreAPI.h>
+#else
+#include <gcConst.h>
+#endif
+
 #include "PanelSDK/PanelSDK.h"
 
 #include "connector.h"
@@ -1626,7 +1632,6 @@ protected:
 	/// Waste Disposal
 	MGROUP_ROTATE *wasteDisposalKnob;
 	UINT wasteDisposalAnim;
-	UINT wasteDisposalAnim2;
 	AnimState wasteDisposalState;
 
 	/// Panel 382 Cover
@@ -4268,6 +4273,12 @@ protected:
 	void SetVCLighting(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
 	void SetVCLighting(UINT meshidx, int material, int EmissionMode, double state, int cnt);
 #endif
+
+//	CAMERAHANDLE hFDAICam = NULL;
+	SURFHANDLE srfFDAICamTexture;
+//	SURFHANDLE hFDAISurf;
+
+//	void InitFDAICustomCamera(void);
 
 	//
 	// Systems functions.
