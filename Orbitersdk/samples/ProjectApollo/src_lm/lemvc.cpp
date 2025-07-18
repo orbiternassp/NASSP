@@ -1672,6 +1672,9 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, VC_MAT_Rotary_LM_Panel_12_14, MAT_EMISSION, 0, 1);
 		}
 
+		// LMVC Ordeal Lighting Switch
+		SetVCLighting(vcidx, IntegralLights_LMVC_Ordeal, MAT_EMISSION, ordeal.LightingPower(), NUM_ELEMENTS(IntegralLights_LMVC_Ordeal));
+
 		SetVCLighting(vcidx, NumericLights_LMVC,  MAT_LIGHT, (lca.GetNumericVoltage() / 115.0) + floodRotaryValue, NUM_ELEMENTS(NumericLights_LMVC));
 
 		if (CWEA.GetMasterAlarm()) {

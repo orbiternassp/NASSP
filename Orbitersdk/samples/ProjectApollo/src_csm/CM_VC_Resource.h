@@ -1115,7 +1115,7 @@
 #define VC_MAT_Accelerometer_Cover 1
 #define VC_MAT_Altimeter_Cover 2
 #define VC_MAT_AttitudeSetNumbers 3
-#define VC_MAT_CB_black_t 4
+#define VC_MAT_CircuitBreakers_t 4
 #define VC_MAT_coas_t 5
 #define VC_MAT_CWLights_P8_t 6
 #define VC_MAT_CW_Lights_P2_AC_BUS1 7
@@ -1301,7 +1301,7 @@
 #define VC_TEX_CMVCTex2_dds 1
 #define VC_TEX_AccelerometerCover_dds 2
 #define VC_TEX_AltimeterCover_dds 3
-#define VC_TEX_CB_black_dds 4
+#define VC_TEX_CircuitBreakers_dds 4
 #define VC_TEX_coas_dds 5
 #define VC_TEX_CMVCTex1_dds 6
 #define VC_TEX_AditionalParts_dds 7

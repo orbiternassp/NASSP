@@ -10,8 +10,8 @@ DWORD FloodLights_LMVC[] = {
 	VC_MAT_Ascent_Engine_Cover_t,
 	VC_MAT_Bags_Shelf_t,
 	VC_MAT_Cabin_Recirculation_Assembly_t,
-	VC_MAT_CB_black_t,
-	VC_MAT_CB_white_t,
+//	VC_MAT_CB_black_t,
+//	VC_MAT_CB_white_t,
 	VC_MAT_COAS_1_t,
 	VC_MAT_COAS_1ovhd_t,
 	VC_MAT_COAS_Holder1_t,
@@ -109,6 +109,7 @@ DWORD FloodLights_LMVC[] = {
 	VC_MAT_Panel_02_CW_Lights_RNDZ_RDR,
 	VC_MAT_Panel_02_CW_Lights_SBD_RCVR,
 	VC_MAT_Panel_02_CW_Lights_WATER_QTY,
+	VC_MAT_CircuitBreakers_t,
 
 	//Tapemeter Lights
 	VC_MAT_Panel1_Tapemeter_AltAltRate,
@@ -116,7 +117,10 @@ DWORD FloodLights_LMVC[] = {
 	VC_MAT_RCS_HE_PRESS_x10,
 
 // Caution & Warning Lights Frame
-	VC_MAT_CW_Frame
+	VC_MAT_CW_Frame,
+
+// Ordeal
+	VC_MAT_Ordeal_Lighting_LMVC_2_t
 };
 
 DWORD IntegralLights_LMVC[] = {
@@ -124,7 +128,6 @@ DWORD IntegralLights_LMVC[] = {
 	VC_MAT_LMVC_t,
 	VC_MAT_Rotary_LM_t,
 	VC_MAT_FDAI_LM_t,
-	VC_MAT_Ordeal_Knob
 //	VC_MAT_FDAI_ball_LM_t
 };
 
@@ -270,6 +273,14 @@ DWORD FloodLights_XPointer_Shades[] = {
 
 DWORD FloodLights_WindowShades[] = {
 	0
+};
+
+//
+// Ordeal
+//
+DWORD IntegralLights_LMVC_Ordeal[] = {
+	VC_MAT_Ordeal_Knob,
+	VC_MAT_Ordeal_Lighting_LMVC_2_t
 };
 
 #endif // !__EMISSIONLISTCMVC

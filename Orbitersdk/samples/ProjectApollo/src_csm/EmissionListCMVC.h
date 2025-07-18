@@ -65,7 +65,8 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_MissionTimer_Glareshade,
 	VC_MAT_EMSDeltaV_Glareshield,
 	VC_MAT_Alluminum,
-	VC_MAT_CB_black_t,
+//	VC_MAT_CB_black_t,
+	VC_MAT_CircuitBreakers_t,
 	VC_MAT_CM_VC_Color_1,
 	VC_MAT_CM_VC_Color_2,
 	VC_MAT_CM_VC_Color_3,
@@ -271,7 +272,7 @@ DWORD IntegralLights_P5[] = {
 DWORD FloodLights_P5[] = {
 
 	// TODO Material List
-	VC_MAT_CB_black_t,
+//	VC_MAT_CB_black_t,
 	VC_MAT_CMVCTex2_t,
 	VC_MAT_CMVCTex3_t,
 	VC_MAT_Colors_t,
