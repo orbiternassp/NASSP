@@ -745,7 +745,6 @@ protected:
 	void SetCompLight(int m, bool state);
 	void SetContactLight(int m, bool state);
 	void SetPowerFailureLight(int m, bool state);
-	void SetStageSeqRelayLight(int m, bool state);
 
 #ifdef _OPENORBITER
 	void SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);

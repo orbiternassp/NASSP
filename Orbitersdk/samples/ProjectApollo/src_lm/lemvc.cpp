@@ -1991,17 +1991,17 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_SEQ_LIGHTS:
 		if (lca.GetCompDockVoltage() > 2.25 && (scera1.GetVoltage(12, 11) > 2.5 && stage < 2 || LampToneTestRotary.GetState() == 6)) {
-			SetStageSeqRelayLight(VC_MAT_L19_StageSeq_SysA, true); // Light On
+			SetCompLight(VC_MAT_L19_StageSeq_SysA, true); // Light On
 		}
 		else {
-			SetStageSeqRelayLight(VC_MAT_L19_StageSeq_SysA, false); // Light Off
+			SetCompLight(VC_MAT_L19_StageSeq_SysA, false); // Light Off
 		}
 
 		if (lca.GetCompDockVoltage() > 2.25 && (scera1.GetVoltage(12, 12) > 2.5 || LampToneTestRotary.GetState() == 6)) {
-			SetStageSeqRelayLight(VC_MAT_L20_StageSeq_SysB, true); // Light On
+			SetCompLight(VC_MAT_L20_StageSeq_SysB, true); // Light On
 		}
 		else {
-			SetStageSeqRelayLight(VC_MAT_L20_StageSeq_SysB, false); // Light Off
+			SetCompLight(VC_MAT_L20_StageSeq_SysB, false); // Light Off
 		}
 		return true;
 
@@ -3575,41 +3575,6 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 		mat->emissive.g = 0;
 		mat->emissive.b = 0;
 		mat->emissive.a = 1;
-	}
-
-	oapiSetMaterial(vcmesh, m, mat);
-}
-
-void LEM::SetStageSeqRelayLight(int m, bool state) {
-
-	if (!vcmesh)
-		return;
-
-	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
-
-	if (state == true)
-	{   // ON
-		mat->diffuse.r = 1;
-		mat->diffuse.g = 1;
-		mat->diffuse.b = 1;
-		mat->diffuse.a = 1;
-
-		mat->emissive.r = 1;
-		mat->emissive.g = 1;
-		mat->emissive.b = 1;
-		mat->emissive.a = 1;
-	}
-	else
-	{   // OFF
-		mat->diffuse.r = 0.184f;
-		mat->diffuse.g = 0.157f;
-		mat->diffuse.b = 0.141f;
-		mat->diffuse.a = 1.0f;
-
-        mat->emissive.r = 0.0f;
-        mat->emissive.g = 0.0f;
-        mat->emissive.b = 0.0f;
-        mat->emissive.a = 1.0f;
 	}
 
 	oapiSetMaterial(vcmesh, m, mat);
