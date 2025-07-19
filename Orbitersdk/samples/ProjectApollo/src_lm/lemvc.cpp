@@ -1034,6 +1034,9 @@ void LEM::RegisterActiveAreas()
 	// LMVC Lighting
 	oapiVCRegisterArea(AID_LMVC_LIGHTING,  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
+	// Pointing arrow
+	oapiVCRegisterArea(AID_LMVC_POINTINGARROW, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
 	oapiVCRegisterArea(AID_VC_LM_CWS_LEFT, _R(238*TexMul, 27*TexMul, 559*TexMul, 153*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_MISSION_CLOCK, _R(54*TexMul, 259*TexMul, 224*TexMul, 284*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
 	oapiVCRegisterArea(AID_VC_EVENT_TIMER, _R(273*TexMul, 259*TexMul, 368*TexMul, 284*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex1);
@@ -1709,6 +1712,11 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
         }
 
 		return true;
+	}
+
+		case AID_LMVC_POINTINGARROW:
+	{
+		UpdatePointingArrow();
 	}
 
 	case AID_VC_LM_CWS_LEFT:

@@ -1340,7 +1340,7 @@ void LEM::SetAnimations(double simdt) {
 void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 
 	SetAnimations(simdt);
-	UpdatePointingArrow();
+//	UpdatePointingArrow();
 
 	if (CheckPanelIdInTimestep) {
 		oapiSetPanel(PanelId);

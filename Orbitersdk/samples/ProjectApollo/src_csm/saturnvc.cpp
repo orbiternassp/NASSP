@@ -5962,7 +5962,9 @@ void Saturn::ToggleFlashlight()
 void Saturn::UpdatePointingArrow()
 {
 	if (!vcmesh) return;
+
 	bool arrowVisible = checkControl.getFlashing();
+	if (!arrowVisible) return;	// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
 
 	PanelSwitchItem *nextActiveSwitch = MainPanelVC.GetFlashingItem();
 
@@ -5978,7 +5980,7 @@ void Saturn::UpdatePointingArrow()
 	bool HatchActuatorHandleSelectorOpenFlash = HatchActuatorHandleSelectorOpen.IsFlashing();
 	bool HatchVentValveRotaryFlash = HatchVentValveRotary.IsFlashing();
 	
-	if (!arrowVisible || nextActiveSwitch == nullptr && !Panel382Flash && !ASCPRollFlash && !ASCPPitschFlash && !ASCPYawFlash		// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
+	if (nextActiveSwitch == nullptr && !Panel382Flash && !ASCPRollFlash && !ASCPPitschFlash && !ASCPYawFlash
 			&& !EMSDvSetSwitchFlash && !HatchToggleFlash && !HatchGearBoxSelectorFlash && !HatchActuatorHandleSelectorFlash
 			&& !HatchActuatorHandleSelectorOpenFlash && !HatchVentValveRotaryFlash) {
 		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_NEVER);
