@@ -1248,7 +1248,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		OrbMech::format_time_HHMMSS(GETbuffer2, t_TPI0);
 
 		sprintf(form->purpose, "Phasing");
-		sprintf(form->remarks, "SEP time: %s  TPI0: %s", GETbuffer1, GETbuffer2);
+		sprintf(form->remarks, "SEP time: %s, TPI0: %s", GETbuffer1, GETbuffer2);
 	}
 	break;
 	case 33: //TPI0 MANEUVER
@@ -1280,6 +1280,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.GMT_TIG = opt.T1;
 
 		AP9LMTPIPAD(manopt, *form);
+
 	}
 	break;
 	case 34: //INSERTION MANEUVER
@@ -1473,23 +1474,23 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP10DAPDATA dappad;
 		AP11LMManPADOpt opt;
 		GMPOpt gmpopt;
-		SV sv0;
+		VehicleDataBlock sv0, sv1;
 		VECTOR3 dV_LVLH, dV_imp;
-		double P30TIG, TIG_imp;
+		double P30TIG, TIG_imp, SVGET;
 		char buffer1[1000];
 
-		sv0 = StateVectorCalc(calcParams.tgt);
+		sv0 = StateVectorCalcDataBlock(calcParams.tgt);
 
 		gmpopt.dV = 7427.5*0.3048;
 		gmpopt.long_D = -95.0*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_FCL;
 		gmpopt.Pitch = 0.0;
-		gmpopt.sv_in = ConvertSVtoEphemData(sv0);
+		gmpopt.sv_in = sv0.sv;
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(101, 30, 0);
 		gmpopt.Yaw = -45.0*RAD;
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
-		PoweredFlightProcessor(sv0, TIG_imp, RTCC_ENGINETYPE_LMAPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
+		PoweredFlightProcessor(ConvertEphemDatatoSV(sv0.sv, sv0.Weight), TIG_imp, RTCC_ENGINETYPE_LMAPS, 0.0, dV_imp, false, P30TIG, dV_LVLH);
 
 		TimeofIgnition = P30TIG;
 		DeltaV_LVLH = dV_LVLH;
@@ -1498,7 +1499,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_LMAPS;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->lm->agc.vagc, false);
-		opt.RV_MCC = ConvertSVtoEphemData(sv0);
+		opt.RV_MCC = sv0.sv;
 		opt.WeightsTable = GetWeightsTable(calcParams.tgt, false, false);
 
 		AP11LMManeuverPAD(opt, *form);
@@ -1507,13 +1508,54 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sprintf(form->purpose, "APS Depletion");
 		sprintf(form->remarks, "LM weight is %.0f", dappad.ThisVehicleWeight);
 
-		AGCStateVectorUpdate(buffer1, sv0, false);
+		SVGET = floor(P30TIG/60.0-12.0)*60.0;	//TIG-12m
+
+		sv1 = coast(sv0, GMTfromGET(SVGET) - sv0.sv.GMT); //Time tag SV
+
+		AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_LM, sv1.sv, true);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "LM state vector");
+			sprintf(upDesc, "LM state vector, V66");
+		}
+	}
+	break;
+	case 120: //P42 GROUND COMMAND
+	case 121: //PRO
+	case 122: //ENTER
+	case 123: //PRO
+	{
+		char updesc[128];
+		LEM *lem = (LEM *)calcParams.tgt;
+
+		if (fcn == 120)
+		{
+			//Add AEAA code
+			sprintf(uplinkdata, "V37E42ER");
+			sprintf(updesc, "LM: P42 APS thrusting");
+		}
+		else if (fcn == 121)
+		{
+			sprintf(uplinkdata, "ER");
+			sprintf(updesc, "");
+		}
+		else if (fcn == 122)
+		{
+			sprintf(uplinkdata, "V33ER");
+			sprintf(updesc, "");
+		}
+		else if (fcn == 123)
+		{
+			sprintf(uplinkdata, "V33ER");
+			sprintf(updesc, "");
+		}
+
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, updesc);
 		}
 	}
 	break;
@@ -1545,7 +1587,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		char buff1[64];
 		OrbMech::format_time_HHMMSS(buff1, TimeofIgnition - 30.0*60.0);
 
-		sprintf(form->paddata, "LM Jettison at %s. Roll %.1f, pitch %.1f, yaw %.1f", buff1, dockopt.CSMAngles.x*DEG, dockopt.CSMAngles.y*DEG, dockopt.CSMAngles.z*DEG);
+		sprintf(form->paddata, "LM Jettison at %s\nLM Angles: Roll %03.0f, Pitch %03.0f, Yaw %03.0f\nCSM Angles: Roll %.1f, Pitch %.1f, Yaw %.1f", buff1, dockopt.LMAngles.x*DEG, dockopt.LMAngles.y*DEG, dockopt.LMAngles.z*DEG,
+			dockopt.CSMAngles.x*DEG, dockopt.CSMAngles.y*DEG, dockopt.CSMAngles.z*DEG);
 	}
 	break;
 	case 42: //BLOCK DATA 11 **Block data needs pitch and yaw trims added**
@@ -1590,11 +1633,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.WeightsTable.CC[RTCC_CONFIG_C] = true;
 		opt.WeightsTable.ConfigWeight = opt.WeightsTable.CSMWeight = 10000.0; //Doesn't matter
 
+		calcParams.SEP = TimeofIgnition - 20.0 * 60.0;
+
 		AP7ManeuverPAD(opt, manpad);
 
 		OrbMech::format_time_HHMMSS(buff1, TimeofIgnition - 20.0*60.0);
 
-		sprintf(form->paddata, "Separation at %s. Roll %.1f, pitch %.1f, yaw %.1f", buff1, manpad.Att.x, manpad.Att.y, manpad.Att.z);
+		sprintf(form->paddata, "SEP Attitude: Roll %.1f, Pitch %.1f, Yaw %.1f  SEP TIG: %s", manpad.Att.x, manpad.Att.y, manpad.Att.z, buff1);
 	}
 	break;
 	case 43: //BLOCK DATA 12 **Block data needs pitch and yaw trims added**

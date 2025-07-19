@@ -219,28 +219,28 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, mcc_calcs.GETEval(92.0 * 3600.0 + 35.0 * 60.0), 32, MST_D_DAY5STATE6);
 		break;
 	case MST_D_DAY5STATE6: //SV Update to TPI0 update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(94.0 * 3600.0 + 30.0 * 60.0), 97, MST_D_DAY5STATE7);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(rtcc->TimeofIgnition - (35.0 * 60.0)), 97, MST_D_DAY5STATE7);
 		break;
 	case MST_D_DAY5STATE7: //TPI0 update to Insertion update
-		UpdateMacro(UTP_PADONLY, PT_AP9LMTPI, mcc_calcs.GETEval(95 * 60 * 60 + 10 * 60), 33, MST_D_DAY5STATE8);
+		UpdateMacro(UTP_PADONLY, PT_AP9LMTPI, mcc_calcs.GETEval(95.0 * 3600.0 + 10.0 * 60.0), 33, MST_D_DAY5STATE8);
 		break;
 	case MST_D_DAY5STATE8: //Insertion update to CSI update
-		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, mcc_calcs.GETEval(rtcc->calcParams.Insertion + 10.0*60.0), 34, MST_D_DAY5STATE9);
+		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, mcc_calcs.GETEval(rtcc->calcParams.Insertion + 10.0 * 60.0), 34, MST_D_DAY5STATE9);
 		break;
 	case MST_D_DAY5STATE9: //CSI update to CDH update
-		UpdateMacro(UTP_PADONLY, PT_AP10CSI, mcc_calcs.GETEval(rtcc->calcParams.CSI + 15.0*60.0), 35, MST_D_DAY5STATE10);
+		UpdateMacro(UTP_PADONLY, PT_AP10CSI, mcc_calcs.GETEval(rtcc->calcParams.CSI + 15.0 * 60.0), 35, MST_D_DAY5STATE10);
 		break;
 	case MST_D_DAY5STATE10: //CDH update to TPI update
-		UpdateMacro(UTP_PADONLY, PT_AP9LMCDH, mcc_calcs.GETEval(rtcc->calcParams.CDH + 15.0*60.0), 36, MST_D_DAY5STATE11);
+		UpdateMacro(UTP_PADONLY, PT_AP9LMCDH, mcc_calcs.GETEval(rtcc->calcParams.CDH + 15.0 * 60.0), 36, MST_D_DAY5STATE11);
 		break;
 	case MST_D_DAY5STATE11: //TPI update to LM realign attitude update
-		UpdateMacro(UTP_PADONLY, PT_AP9LMTPI, mcc_calcs.GETEval(99.0*3600.0 + 15.0*60.0), 37, MST_D_DAY5STATE12);
+		UpdateMacro(UTP_PADONLY, PT_AP9LMTPI, mcc_calcs.GETEval(99.0 * 3600.0 + 15.0 * 60.0), 37, MST_D_DAY5STATE12);
 		break;
 	case MST_D_DAY5STATE12: //LM realign attitude update to LM realign attitude update
-		UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, SubStateTime > 3.0*60.0, 38, MST_D_DAY5STATE13);
+		UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, SubStateTime > 3.0 * 60.0, 38, MST_D_DAY5STATE13);
 		break;
 	case MST_D_DAY5STATE13: //LM realign attitude update to LM burn to depletion update
-		UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, mcc_calcs.GETEval(99.0*3600.0 + 55.0*60.0), 39, MST_D_DAY5STATE14);
+		UpdateMacro(UTP_PADONLY, PT_AP9AOTSTARPAD, mcc_calcs.GETEval(99.0 * 3600.0 + 55.0 * 60.0), 39, MST_D_DAY5STATE14);
 		break;
 	case MST_D_DAY5STATE14: //LM burn to depletion update to LM jettison attitude update
 		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, SubStateTime > 3.0*60.0, 40, MST_D_DAY5STATE15);
@@ -249,15 +249,27 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(100.0*3600.0 + 35.0*60.0), 41, MST_D_DAY5STATE16);
 		break;
 	case MST_D_DAY5STATE16: //Block Data 11 to post jettison sep maneuver
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(101.0*3600.0 + 10.0*60.0), 42, MST_D_DAY5STATE17);
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(101.0 * 3600.0 + 10.0 * 60.0), 42, MST_D_DAY5STATE17);
 		break;
-	case MST_D_DAY5STATE17: //Post jettison sep maneuver to state vector update
-		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(103.0*3600.0 + 5.0*60.0), 75, MST_D_DAY5STATE18);
+	case MST_D_DAY5STATE17: //Post jettison sep maneuver to AEAA ARM/P42
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(rtcc->TimeofIgnition - 10.0 * 60.0), 75, MST_D_DAY5STATE18);
 		break;
-	case MST_D_DAY5STATE18: //State vector update to Block Data 12
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(104.0*3600.0 + 15.0*60.0), 2, MST_D_DAY5STATE19);
+	case MST_D_DAY5STATE18: //AEAA ARM/P42 to LM DSKY Enter
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, SubStateTime > 10.0, 120, MST_D_DAY5STATE19);
 		break;
-	case MST_D_DAY5STATE19: //Block Data 12 to Block Data 13
+	case MST_D_DAY5STATE19: //LM DSKY Enter to LM DSKY PRO
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, SubStateTime > 10.0, 121, MST_D_DAY5STATE20);
+		break;
+	case MST_D_DAY5STATE20: //LM DSKY PRO to LM DSKY PRO
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, mcc_calcs.GETEval(rtcc->TimeofIgnition - 7.0), 122, MST_D_DAY5STATE21);
+		break;
+	case MST_D_DAY5STATE21: //LM DSKY PRO to SV Update
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, mcc_calcs.GETEval(103.0*3600.0 + 5.0*60.0), 123, MST_D_DAY5STATE22);
+		break;
+	case MST_D_DAY5STATE22: //SV Update to Block Data 12
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(104.0*3600.0 + 15.0*60.0), 2, MST_D_DAY5STATE23);
+		break;
+	case MST_D_DAY5STATE23: //Block Data 12 to Block Data 13
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(114.0*3600.0 + 55.0*60.0), 43, MST_D_DAY6STATE1);
 		break;
 	case MST_D_DAY6STATE1: //Block Data 13 to SPS-6 Update

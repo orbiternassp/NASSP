@@ -3399,7 +3399,7 @@ void MCC::drawPad(bool writetofile){
 		sprintf(buffer, "LM AOT STAR OBSERVATION");
 		OrbMech::SStoHHMMSS(form->GET, hh, mm, ss);
 
-		sprintf(buffer, "%s\n%03d HR GET\n%02d MIN\n%02.0f SEC\n%d AOT DETENT\n%02o NAV STAR\n%03.0f R\n%03.0f P\n%03.0f Y", buffer, hh, mm, ss, form->Detent, form->Star, form->CSMAtt.x, form->CSMAtt.y, form->CSMAtt.z);
+		sprintf(buffer, "%s\n%03d HR GET\n%02d MIN\n%02.0f SEC\n%d AOT DETENT\n%02o NAV STAR\n%03.1f R\n%03.1f P\n%03.1f Y", buffer, hh, mm, ss, form->Detent, form->Star, form->CSMAtt.x, form->CSMAtt.y, form->CSMAtt.z);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
