@@ -26,17 +26,10 @@
 #if !defined(_PA_SATURN_H)
 #define _PA_SATURN_H
 
-
 //
 // I hate nested includes, but this is much easier than adding them to all the files
 // which need them.
 //
-
-#ifdef _OPENORBITER
-#include <gcCoreAPI.h>
-#else
-#include <gcConst.h>
-#endif
 
 #include "PanelSDK/PanelSDK.h"
 
