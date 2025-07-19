@@ -154,10 +154,10 @@ void MCC::MissionSequence_C()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(96.0 * 3600.0 + 20.0 * 60.0), 76, MST_C_DAY4STATE1);
 		break;
 	case MST_C_DAY4STATE1: // Block Data 11 to SCT Star Count 2
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(97.0 * 3600.0), 20, MST_C_DAY4STATE3);
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(97.0 * 3600.0), 20, MST_C_DAY4STATE2);
 		break;
 	case MST_C_DAY4STATE2: // SCT Star Count 2 to SV Update
-		UpdateMacro(UTP_PADONLY, PT_AP7STRCNTPAD, mcc_calcs.GETEval(98.0 * 3600.0 + 20.0 * 60.0), 70, MST_C_DAY4STATE3);
+		UpdateMacro(UTP_PADONLY, PT_AP7STRCNTPAD, mcc_calcs.GETEval(99.0 * 3600.0 + 20.0 * 60.0), 70, MST_C_DAY4STATE3);
 		break;
 	case MST_C_DAY4STATE3: // SV Update to Block Data 12
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(105.0 * 3600.0 + 50.0 * 60.0), 77, MST_C_DAY4STATE4);

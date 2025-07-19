@@ -1547,7 +1547,7 @@ void ARCore::GetStateVectorFromAGC(bool csm, bool cmc)
 
 void ARCore::NavCheckPAD(bool IsCSM)
 {
-	SV sv;
+	VehicleDataBlock sv;
 
 	VESSEL *v;
 
@@ -1562,7 +1562,7 @@ void ARCore::NavCheckPAD(bool IsCSM)
 
 	if (v == NULL) return;
 
-	sv = GC->rtcc->StateVectorCalc(v);
+	sv = GC->rtcc->StateVectorCalcDataBlock(v);
 
 	GC->rtcc->NavCheckPAD(sv, navcheckpad, navcheckpad.NavChk[0]);
 }
@@ -5806,6 +5806,12 @@ int ARCore::subThread()
 		GC->rtcc->BMSVPS(0, GC->rtcc->RTCCONLINEMON.IntBuffer[0]);
 		Result = DONE;
 	break;
+	case 62: //Groundtrack Digitals
+		GC->rtcc->RMDGTD();
+		break;
+	case 63: //Recovery Ascending Node Display
+		GC->rtcc->RMDASCND();
+		break;
 	}
 
 	subThreadStatus = Result;

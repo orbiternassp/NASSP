@@ -139,6 +139,14 @@ bool MCC_Calculations::GETEval(double get)
 	return false;
 }
 
+double MCC_Calculations::FindOrbitalSunrise(VehicleDataBlock sv, double t_sunrise_guess)
+{
+	//Temporary conversion function
+	SV sv2;
+	sv2 = pRTCC->ConvertEphemDatatoSV(sv.sv, sv.Weight);
+	return FindOrbitalSunrise(sv2, t_sunrise_guess);
+}
+
 double MCC_Calculations::FindOrbitalSunrise(SV sv, double t_sunrise_guess)
 {
 	SV sv1;
@@ -153,6 +161,14 @@ double MCC_Calculations::FindOrbitalSunrise(SV sv, double t_sunrise_guess)
 
 	ttoSunrise = OrbMech::sunrise(pRTCC->SystemParameters.MAT_J2000_BRCS, sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, true, false, false);
 	return t_sunrise_guess + ttoSunrise;
+}
+
+double MCC_Calculations::FindOrbitalSunset(VehicleDataBlock sv, double t_sunset_guess)
+{
+	//Temporary conversion function
+	SV sv2;
+	sv2 = pRTCC->ConvertEphemDatatoSV(sv.sv, sv.Weight);
+	return FindOrbitalSunset(sv2, t_sunset_guess);
 }
 
 double MCC_Calculations::FindOrbitalSunset(SV sv, double t_sunset_guess)
@@ -467,4 +483,30 @@ void MCC_Calculations::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV
 	sprintf(Buffer, "TIG %s", Buffer2);
 	oapiWriteLog(Buffer);
 	*/
+}
+
+void MCC_Calculations::StoreStateVector(VehicleDataBlock sv)
+{
+	pRTCC->calcParams.SVSTORE1 = pRTCC->ConvertEphemDatatoSV(sv.sv, sv.Weight);
+}
+
+void MCC_Calculations::StoreStateVector(SV sv)
+{
+	pRTCC->calcParams.SVSTORE1 = sv;
+}
+
+void MCC_Calculations::StoreStateVector(EphemerisData sv, double Weight)
+{
+	pRTCC->calcParams.SVSTORE1 = pRTCC->ConvertEphemDatatoSV(sv, Weight);
+}
+
+void MCC_Calculations::RestoreStateVector(VehicleDataBlock &sv)
+{
+	sv.sv = pRTCC->ConvertSVtoEphemData(pRTCC->calcParams.SVSTORE1);
+	sv.Weight = pRTCC->calcParams.SVSTORE1.mass;
+}
+
+void MCC_Calculations::RestoreStateVector(SV &sv)
+{
+	sv = pRTCC->calcParams.SVSTORE1;
 }

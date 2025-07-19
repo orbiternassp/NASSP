@@ -61,13 +61,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		AP7NAV * form = (AP7NAV *)pad;
 
-		SV sv;
+		VehicleDataBlock sv;
 		char buffer1[1000];
 
-		sv = StateVectorCalc(calcParams.src); //State vector for uplink
+		sv = StateVectorCalcDataBlock(calcParams.src); //State vector for uplink
 
 		NavCheckPAD(sv, *form);
-		AGCStateVectorUpdate(buffer1, sv, true);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv.sv);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -880,27 +880,29 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 30: //LM Rendezvous REFSMMAT Update
 	{
 		MATRIX3 REFSMMAT;
-		EphemerisData sv0, sv_uplink;
+		VehicleDataBlock sv0, sv_uplink;
 
 		AP7NAV * form = (AP7NAV *)pad;
 
-		sv0 = StateVectorCalcEphem(calcParams.src);
-		med_m50.CSMWT = calcParams.src->GetMass();
-		med_m50.LMWT = calcParams.tgt->GetMass();
+		sv0.sv = StateVectorCalcEphem(calcParams.src);
+		sv0.KFactor = PZMPTLEM.KFactor;
+		sv0.Area = PZMPTLEM.ConfigurationArea;
+		sv0.Weight = calcParams.src->GetMass() + calcParams.tgt->GetMass();
+
 		REFSMMAT = EZJGMTX3.data[0].REFSMMAT;
 
 		//Generate state vector for uplink
-		sv_uplink = coast(sv0, GMTfromGET(92.0*3600.0) - sv0.GMT, med_m50.CSMWT + med_m50.LMWT, PZMPTLEM.ConfigurationArea, 1.0, false);
+		sv_uplink = coast(sv0, GMTfromGET(92.0*3600.0) - sv0.sv.GMT);
 
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
 
-		AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_CSM, sv_uplink);
-		AGCStateVectorUpdate(buffer2, 2, RTCC_MPT_LM, sv_uplink);
+		AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_CSM, sv_uplink.sv);
+		AGCStateVectorUpdate(buffer2, 2, RTCC_MPT_LM, sv_uplink.sv);
 		AGCREFSMMATUpdate(buffer3, REFSMMAT, false);
 
-		NavCheckPAD(ConvertEphemDatatoSV(sv_uplink), *form, 92.0*3600.0);
+		NavCheckPAD(sv_uplink, *form, 92.0*3600.0);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
 		if (upString != NULL) {

@@ -189,6 +189,7 @@ Gumdrop:ProjectApollo\Saturn5
   LEMCHECK Doc\Project Apollo - NASSP\Checklists\Apollo 9 LM Checklists.xls
 LVDC_BEGIN
   LVDC_FSPFileName Config\ProjectApollo\AS-504 Flight Sequence Program.txt
+  LVDC_alpha_D_op 0
   LVDC_ALFTSA 2.126
   LVDC_ART 5.0
   LVDC_BETAA 36.05354
@@ -211,7 +212,11 @@ LVDC_BEGIN
   LVDC_R_L 6373424.0
   LVDC_T_1 245.0
   LVDC_T_2 94.7
-  LVDC_T3PRA 49.56
+  LVDC_T2IR 0.0
+  LVDC_T2IRB 0.0
+  LVDC_T3PRA 60.0
+  LVDC_T3PRB 239.0
+  LVDC_DTB6N 5003.0
   LVDC_THTEO 0.0
   LVDC_T_LO 57583.0
   LVDC_TI5F3 -9257.0

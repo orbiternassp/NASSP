@@ -449,6 +449,8 @@ namespace OrbMech {
 	//Time format MM:SS.C
 	void format_time_MMSSC(char *buf, double time);
 	//Time format HH:MM
+	void format_time_HHMM(char *buf, double time);
+	//Time format HHH:MM
 	void format_time_HHHMM(char *buf, double time);
 	//Time format HH:MM:SS
 	void format_time_HHMMSS(char *buf, double time);
