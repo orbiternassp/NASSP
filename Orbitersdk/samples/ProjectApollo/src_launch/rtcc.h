@@ -3816,6 +3816,8 @@ public:
 		bool IsPacficWindow = true;
 		//Available DV, for mode 3, feet per second
 		double dv_available = 5000.0;
+		//Delta V vector for mode 6
+		VECTOR3 dV_LVLH = _V(0, 0, 0);
 
 		//CONSTANTS - THESE SHOULD BE SYSTEM PARAMETERS
 		double DELTA = 0.0;
@@ -5085,8 +5087,10 @@ private:
 	double CapeCrossingFirst(int L);
 	double CapeCrossingLast(int L);
 	void ECMPAY(EphemerisDataTable2 &EPH, ManeuverTimesTable &MANTIMES, double GMT, bool sun, double &Pitch, double &Yaw);
+public:
 	//PMMMPT Begin Burn Time Computation Subroutine
 	void PCBBT(double *DELT, double *WDI, double *TU, double W, double TIMP, double DELV, int NPHASE, double &T, double &GMTBB, double &GMTI, double &WA);
+private:
 	//PMMMPT Matrix Utility Subroutine
 	void PCMATO(double **A, double *Y, double **B, double *X, int M, int N, double *W1, double lambda, double *W2);
 	//PMMMPT Gaussian Elimination Subroutine

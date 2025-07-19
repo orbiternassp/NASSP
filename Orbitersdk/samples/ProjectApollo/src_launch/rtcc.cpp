@@ -5037,6 +5037,7 @@ void RTCC::TranslunarInjectionProcessor(bool mpt, EphemerisData *sv, PLAWDTOutpu
 	medquant.GMT_TIG = GMTfromGET(PZTLIPLN.GET_TLI);
 	medquant.IPOA = PZTLIPLN.IsPacficWindow ? 1 : 2;
 	medquant.Opportunity = PZTLIPLN.Opportunity;
+	medquant.dV_LVLH = PZTLIPLN.dV_LVLH;
 
 	if (PZTLIPLN.Mode == 2 || PZTLIPLN.Mode == 5)
 	{
