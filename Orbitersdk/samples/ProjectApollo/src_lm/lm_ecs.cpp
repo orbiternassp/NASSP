@@ -1488,7 +1488,7 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	// For simplicity's sake, we'll use a docked LM as it would be at IVT, at first docking the LM is empty!
 	Cabin_Press = 0; Cabin_Temp = 0;
 	Suit_Press = 0; Suit_Temp = 0;
-	SuitCircuit_CO2 = 0; HX_CO2 = 0;
+	SuitCircuit_CO2 = 0; SGD_CO2 = 0;
 	Water_Sep1_RPM = 0; Water_Sep2_RPM = 0;
 	Suit_Circuit_Relief = 0;
 	Cabin_Gas_Return = 0;
@@ -1614,10 +1614,10 @@ double LEM_ECS::GetSensorCO2MMHg() {
 	if (!SuitCircuit_CO2) {
 		SuitCircuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
 	}
-	if (!HX_CO2) {
-		HX_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:CO2_PPRESS");
+	if (!SGD_CO2) {
+		SGD_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:CO2_PPRESS");
 	}
-	return ((*SuitCircuit_CO2 + *HX_CO2) / 2.0) * MMHG;
+	return ((*SuitCircuit_CO2 + *SGD_CO2) / 2.0) * MMHG;
 }
 
 double LEM_ECS::DescentWaterTankQuantity() {
@@ -1969,8 +1969,8 @@ double LEM_ECS::GetECSSensorCO2MMHg() {
 	if (!SuitCircuit_CO2) {
 		SuitCircuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
 	}
-	if (!HX_CO2) {
-		HX_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:CO2_PPRESS");
+	if (!SGD_CO2) {
+		SGD_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:CO2_PPRESS");
 	}
-	return ((*SuitCircuit_CO2 + *HX_CO2) / 2.0) * MMHG;
+	return ((*SuitCircuit_CO2 + *SGD_CO2) / 2.0) * MMHG;
 }
