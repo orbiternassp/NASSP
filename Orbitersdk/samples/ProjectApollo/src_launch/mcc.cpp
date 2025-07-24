@@ -1557,6 +1557,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP7NAV_lat", form->lat[0]);
 			SAVE_DOUBLE("MCC_AP7NAV_lng", form->lng[0]);
 			SAVE_DOUBLE("MCC_AP7NAV_NavChk", form->NavChk[0]);
+			SAVE_STRING("MCC_AP7NAV_remarks", form->remarks[0]);
 		}
 		else if (padNumber == 4)
 		{
@@ -2236,6 +2237,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP7NAV_lat", form->lat[0]);
 			LOAD_DOUBLE("MCC_AP7NAV_lng", form->lng[0]);
 			LOAD_DOUBLE("MCC_AP7NAV_NavChk", form->NavChk[0]);
+			LOAD_STRING("MCC_AP7NAV_remarks", form->remarks[0], 256);
 		}
 		else if (padNumber == 4)
 		{
@@ -2848,7 +2850,7 @@ void MCC::drawPad(bool writetofile){
 		{
 			AP7NAV * form = (AP7NAV *)padForm;
 			OrbMech::format_time_prec(tmpbuf, form->NavChk[0]);
-			sprintf(buffer, "NAV CHECK\nGET (N34):\n%s\n %+07.2f LAT\n %+07.2f LNG\n %+07.1f ALT\n", tmpbuf, form->lat[0], form->lng[0], form->alt[0]);
+			sprintf(buffer, "NAV CHECK\nGET (N34):\n%s\n %+07.2f LAT\n %+07.2f LNG\n %+07.1f ALT\n  %s", tmpbuf, form->lat[0], form->lng[0], form->alt[0], form->remarks[0]);
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
@@ -3265,7 +3267,7 @@ void MCC::drawPad(bool writetofile){
 				sprintf(buffer, "%s%02.f NM South\n", buffer, abs(form->CRDist[i]));
 			}
 
-			sprintf(buffer, "%sN 89\nLAT %+07.3f\nLONG/2 %+07.3f\nALTITUDE %+07.2f NM\n", buffer, form->Lat[i], form->Lng05[i], form->Alt[i]);
+			sprintf(buffer, "%sN 89\nLAT %+07.3f\nLONG/2 %+07.3f\nALTITUDE %+07.2f NM\n \n", buffer, form->Lat[i], form->Lng05[i], form->Alt[i]);
 		}
 
 		oapiAnnotationSetText(NHpad, buffer);

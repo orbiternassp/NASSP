@@ -46,6 +46,7 @@ struct AP7NAV {
 	double lat[5];		// Latitude for N43
 	double lng[5];		// Longitude for N43
 	double alt[5];		// Altitude for N43
+	char remarks[5][256];	// remarks
 };
 
 // APOLLO 7 - MANEUVER

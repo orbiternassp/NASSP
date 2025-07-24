@@ -155,7 +155,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 97: //CSM STATE VECTOR UPDATE, V66 (92:30:00)
 	case 98: //CSM STATE VECTOR UPDATE AND NAV CHECK PAD (103:30:00)
 	case 99: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (120:30:00)
-	case 100: //CSM STATE VECTOR UPDATE AND NAV CHECK PAD (127:30:00)
+	case 100: //CSM STATE VECTOR UPDATE (127:30:00)
 	case 101: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (149:45:00)
 	case 102: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (174:55:00)
 	{
@@ -164,7 +164,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		VehicleDataBlock sv, sv_1;
 		double NavGET, SVGMT;
 		bool V66Flag = true; //V66 flag
-		bool NavCkFlag = true; //Nav Check flag
 		char buffer1[1000];
 
 		sv = StateVectorCalcDataBlock(calcParams.src); //State vector
@@ -206,11 +205,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else if (fcn == 97)
 		{
 			NavGET = OrbMech::HHMMSSToSS(92, 30, 0);  //Nav Check GET
-			NavCkFlag = false; //No Nav Check PAD
 		}
 		else if (fcn == 98)
 		{
 			NavGET = OrbMech::HHMMSSToSS(103, 30, 0);  //Nav Check GET
+			V66Flag = false;
 		}
 		else if (fcn == 99)
 		{
@@ -245,10 +244,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv_1 = coast(sv, SVGMT - sv.sv.GMT); //Time tag SV
 
-		if (NavCkFlag == true)
-		{
-			NavCheckPAD(sv, *form, NavGET);
-		}
+		NavCheckPAD(sv, *form, NavGET);
 
 		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_1.sv, V66Flag);
 
@@ -303,57 +299,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->TAlign[0] = 0.0;
 	}
 	break;
-	/*
-	case 10:	//SPS-1
-	{
-		AP7MNV * form = (AP7MNV *)pad;
-
-		AP7ManPADOpt opt;
-		double P30TIG, NavGET, SVGET;
-		VECTOR3 dV_LVLH;
-		EphemerisData sv0, sv1;
-		PLAWDTOutput WeightsTable;
-		char buffer1[1000];
-		char buffer2[1000];
-
-		sv0 = StateVectorCalcEphem(calcParams.src);
-		WeightsTable = GetWeightsTable(calcParams.src, true, true);
-
-		P30TIG = OrbMech::HHMMSSToSS(5, 59, 0); //Needs to be computed for best time over Hawaii
-
-		dV_LVLH = _V(36.8, 0.0, 0.0)*0.3048;
-
-		NavGET = P30TIG - (30.0 * 60.0);  //TIG-30m
-		SVGET = floor(P30TIG/60.0 - 1.0) * 60.0;	//TIG-1m
-
-		opt.TIG = P30TIG;
-		opt.dV_LVLH = dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		opt.HeadsUp = true;
-		opt.sxtstardtime = -25.0*60.0;
-		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		opt.navcheckGET = 0;
-		opt.sv0 = sv0;
-		opt.WeightsTable = WeightsTable;
-
-		sv1 = coast(sv0, GMTfromGET(SVGET) - sv0.GMT); //Time tag SV for uplink
-
-		AP7ManeuverPAD(opt, *form);
-		sprintf(form->purpose, "SPS-1");
-		sprintf(form->remarks, "No ullage  Gimbal angles using launch REFSMMAT");
-
-		AGCStateVectorUpdate(buffer1, 1, 1, sv1, true);
-		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
-
-		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
-		if (upString != NULL) {
-			// give to mcc
-			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, V66, Target load");
-		}
-	}
-	break;
-	*/
 	case 10:	//SPS-1  
 	{
 		AP7MNV * form = (AP7MNV *)pad;
@@ -1522,34 +1467,45 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 	}
 	break;
-	case 120: //P42 GROUND COMMAND
-	case 121: //PRO
-	case 122: //ENTER
-	case 123: //PRO
+	case 120: //ARM AEAA GROUND COMMAND
+	case 121: //P42 GROUND COMMAND
+	case 122: //ENTER, BYPASS AUTO MNVR
+	case 123: //PRO, BYPASS TRIM
+	case 124: //PRO, ENG ON
 	{
 		char updesc[128];
 		LEM *lem = (LEM *)calcParams.tgt;
 
 		if (fcn == 120)
 		{
-			//Add AEAA code
-			sprintf(uplinkdata, "V37E42ER");
-			sprintf(updesc, "LM: P42 APS thrusting");
+			//AEAA arming code
+			lem->aeaa->SetRelay(1, 1, 0);
+			lem->aeaa->SetRelay(1, 2, 0);
+			lem->aeaa->SetRelay(2, 1, 0);
+			lem->aeaa->SetRelay(2, 2, 0);
+
+			sprintf(uplinkdata, "");
+			sprintf(updesc, "MCC CMD: ARM AEAA");
 		}
 		else if (fcn == 121)
 		{
-			sprintf(uplinkdata, "ER");
-			sprintf(updesc, "");
+			sprintf(uplinkdata, "V37E42ER");
+			sprintf(updesc, "MCC CMD: P42 APS thrusting");
 		}
 		else if (fcn == 122)
 		{
-			sprintf(uplinkdata, "V33ER");
-			sprintf(updesc, "");
+			sprintf(uplinkdata, "ER");
+			sprintf(updesc, "MCC CMD: BYPASS AUTO MNVR");
 		}
 		else if (fcn == 123)
 		{
 			sprintf(uplinkdata, "V33ER");
-			sprintf(updesc, "");
+			sprintf(updesc, "MCC CMD: BYPASS TRIM");
+		}
+		else if (fcn == 124)
+		{
+			sprintf(uplinkdata, "V33ER");
+			sprintf(updesc, "MCC CMD: ENG ON");
 		}
 
 		if (upString != NULL) {
@@ -1712,8 +1668,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			gmpopt.ManeuverCode = RTCC_GMP_HBL;
 			gmpopt.sv_in = sv0;
 			gmpopt.TIG_GET = OrbMech::HHMMSSToSS(121, 30, 0);
-
-			opt.sxtstardtime = -20.0*60.0;
 		}
 		else
 		{
@@ -1724,8 +1678,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			gmpopt.sv_in = sv0;
 			gmpopt.TIG_GET = OrbMech::HHMMSSToSS(169, 10, 0);
 			gmpopt.N = 46;
-
-			opt.sxtstardtime = -40.0*60.0;
 		}
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
@@ -1748,8 +1700,20 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PoweredFlightProcessor(in, GMT_TIG, dV_LVLH);
 		P30TIG = GETfromGMT(GMT_TIG);
 
-		NavGET = P30TIG - (30.0 * 60.0);  //TIG-30m
-		SVGET = floor(P30TIG/60.0 - 1.0) * 60.0;	//TIG-1m
+		if (fcn == 45)
+		{
+			NavGET = OrbMech::HHMMSSToSS(120, 30, 0);	 //Nav Check GET
+			SVGET = OrbMech::HHMMSSToSS(121, 0, 0);		 //SV GET
+
+			opt.sxtstardtime = -20.0*60.0;
+		}
+		else
+		{
+			NavGET = P30TIG - (30.0 * 60.0);			//TIG-30m
+			SVGET = floor(P30TIG/60.0 - 1.0) * 60.0;	//TIG-1m
+
+			opt.sxtstardtime = -40.0*60.0;
+		}
 
 		refsopt.dV_LVLH = dV_LVLH;
 		refsopt.REFSMMATTime = P30TIG;
@@ -1762,7 +1726,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.dV_LVLH = dV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = true;
-		opt.navcheckGET = P30TIG - 30.0*60.0;
+		opt.navcheckGET = NavGET;
 		opt.REFSMMAT = REFSMMAT;
 		opt.TIG = P30TIG;
 		opt.UllageThrusterOpt = false;
@@ -1774,7 +1738,10 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (fcn == 45)
 		{
+			char GETbuffer[64];
 			sprintf(form->purpose, "SPS-6");
+			OrbMech::format_time_HHMMSS(GETbuffer, NavGET);
+			sprintf(form->remarks, "Nav Check Time: %s", GETbuffer);
 		}
 		else
 		{
@@ -1783,7 +1750,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv1 = coast(sv0, GMTfromGET(SVGET) - sv0.GMT); //Time tag SV
 
-		AGCStateVectorUpdate(buffer1, 1, 1, sv0, true);
+		AGCStateVectorUpdate(buffer1, 1, 1, sv1, true);
 		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
@@ -2031,26 +1998,45 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	case 50: //LANDMARK TRACKING T ALIGN
+	case 130: //LANDMARK SV 1
+	case 131: //LANDMARK SV 2
+	case 132: //LANDMARK SV 3
 	{
-		GENERICPAD * form = (GENERICPAD *)pad;
+		AP7NAV * form = (AP7NAV *)pad;
 
-		SV sv0, sv1;
+		VehicleDataBlock sv0, sv1;
 		OBJHANDLE hSun;
-		double GETbase, dt, t_align;
+		double SR_guess, t_align, SVGMT, NavGET;
 		char buff[64], buffer1[1000];
 
-		GETbase = CalcGETBase();
-		sv0 = StateVectorCalc(calcParams.src);
-		sv1 = coast(sv0, OrbMech::HHMMSSToSS(142, 50, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase));
-		hSun = oapiGetObjectByName("Sun");
+		sv0 = StateVectorCalcDataBlock(calcParams.src);
 
-		dt = OrbMech::sunrise(SystemParameters.MAT_J2000_BRCS, sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, true, false);
-		t_align = OrbMech::GETfromMJD(sv1.MJD, GETbase) + dt;
+		if (fcn == 50)
+		{
+			SR_guess = OrbMech::HHMMSSToSS(142, 50, 0);
+		}
+		else
+		{
+			SR_guess = GETfromGMT(sv0.sv.GMT) + 30.0 * 60.0;
+		}
 
-		OrbMech::format_time_HHMMSS(buff, t_align);
-		sprintf(form->paddata, "T Align is %s GET", buff);
+		t_align = floor(mcc->mcc_calcs.FindOrbitalSunrise(sv0, SR_guess));
 
-		AGCStateVectorUpdate(buffer1, sv0, true, true);
+		NavGET = (t_align - 30.0 * 60.0);
+
+		SVGMT = GMTfromGET(t_align);
+
+		sv1 = coast(sv0, SVGMT - sv0.sv.GMT); //Time tag SV
+
+		NavCheckPAD(sv1, *form, NavGET);
+
+		if (fcn == 50)
+		{
+			OrbMech::format_time_HHMMSS(buff, t_align);
+			sprintf(form->remarks[0], "T-Align: %s", buff);
+		}
+
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv1.sv, true);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -2066,29 +2052,29 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 54: //LANDMARK TRACKING UPDATE 4
 	{
 		LMARKTRKPADOpt opt;
-		EphemerisData sv0;
+		VehicleDataBlock sv0;
 
 		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
 
-		sv0 = StateVectorCalcEphem(calcParams.src);
+		sv0 = StateVectorCalcDataBlock(calcParams.src);
 
-		opt.sv0 = sv0;
+		opt.sv0 = sv0.sv;
 
 		if (fcn == 51)
 		{
-			sprintf(form->LmkID[0], "021");
+			sprintf(form->LmkID[0], "021"); //Corpus Christi (SE US)
 			opt.LmkTime[0] = OrbMech::HHMMSSToSS(142, 30, 0);
 			opt.alt[0] = 0.0;
 			opt.lat[0] = 27.689*RAD;
 			opt.lng[0] = -97.243*RAD;
 
-			sprintf(form->LmkID[1], "207");
+			sprintf(form->LmkID[1], "207"); //Punta Dumford (NW Africa)
 			opt.LmkTime[1] = OrbMech::HHMMSSToSS(143, 0, 0);
 			opt.alt[1] = 0.0;
 			opt.lat[1] = 23.617*RAD;
 			opt.lng[1] = -15.985*RAD;
 
-			sprintf(form->LmkID[2], "255");
+			sprintf(form->LmkID[2], "255"); //Ruzizi River (Central Africa)
 			opt.LmkTime[2] = OrbMech::HHMMSSToSS(143, 10, 0);
 			opt.alt[2] = 0.42*1852.0;
 			opt.lat[2] = -3.362*RAD;
@@ -2098,25 +2084,25 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 		else if (fcn == 52)
 		{
-			sprintf(form->LmkID[0], "010");
+			sprintf(form->LmkID[0], "010"); //Punta Yayahmeko (NW Mexico)
 			opt.LmkTime[0] = OrbMech::HHMMSSToSS(144, 10, 0);
 			opt.alt[0] = 0.0;
 			opt.lat[0] = 28.876*RAD;
 			opt.lng[0] = -112.584*RAD;
 
-			sprintf(form->LmkID[1], "042");
+			sprintf(form->LmkID[1], "042"); //Cape Fear (SE US)
 			opt.LmkTime[1] = OrbMech::HHMMSSToSS(144, 15, 0);
 			opt.alt[1] = 0.0;
 			opt.lat[1] = 33.840*RAD;
 			opt.lng[1] = -77.962*RAD;
 
-			sprintf(form->LmkID[2], "212");
+			sprintf(form->LmkID[2], "212"); //Pt Hunier (NW Africa)
 			opt.LmkTime[2] = OrbMech::HHMMSSToSS(144, 20, 0);
 			opt.alt[2] = 0.0;
 			opt.lat[2] = 9.451*RAD;
 			opt.lng[2] = -13.831*RAD;
 
-			sprintf(form->LmkID[3], "222");
+			sprintf(form->LmkID[3], "222"); //Pnt De Ilha, Angola (SW Africa)
 			opt.LmkTime[3] = OrbMech::HHMMSSToSS(144, 25, 0);
 			opt.alt[3] = 0.0;
 			opt.lat[3] = -8.758*RAD;
@@ -2126,53 +2112,53 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		}
 		else if (fcn == 53)
 		{
-			sprintf(form->LmkID[0], "002");
+			sprintf(form->LmkID[0], "002"); //Cape Kumukahi (Hawaii)
 			opt.LmkTime[0] = OrbMech::HHMMSSToSS(145, 30, 0);
 			opt.alt[0] = 0.0;
 			opt.lat[0] = 21.161*RAD;
 			opt.lng[0] = -156.713*RAD;
 
-			sprintf(form->LmkID[1], "005");
-			opt.LmkTime[1] = OrbMech::HHMMSSToSS(145, 45, 0);
-			opt.alt[1] = 0.01*1852.0;
-			opt.lat[1] = 33.479*RAD;
-			opt.lng[1] = -118.606*RAD;
+			sprintf(form->LmkID[1], "018"); //El Paso (SW US)
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(145, 40, 0);
+			opt.alt[1] = 0.65*1852.0;
+			opt.lat[1] = 31.855*RAD;
+			opt.lng[1] = -106.374*RAD;
 
-			sprintf(form->LmkID[2], "044");
-			opt.LmkTime[2] = OrbMech::HHMMSSToSS(145, 50, 0);
+			sprintf(form->LmkID[2], "049"); //Grand Bahama (Caribbean)
+			opt.LmkTime[2] = OrbMech::HHMMSSToSS(145, 45, 0);
 			opt.alt[2] = 0.0;
-			opt.lat[2] = 31.150*RAD;
-			opt.lng[2] = -81.395*RAD;
+			opt.lat[2] = 26.694*RAD;
+			opt.lng[2] = -78.978*RAD;
 
-			/*sprintf(form->LmkID[3], "049");
-			opt.LmkTime[3] = OrbMech::HHMMSSToSS(145, 55, 0);
-			opt.alt[3] = 0.0;
-			opt.lat[3] = 26.694*RAD;
-			opt.lng[3] = -78.978*RAD;*/
+			sprintf(form->LmkID[3], "074"); //Martinique (Caribbean)
+			opt.LmkTime[3] = OrbMech::HHMMSSToSS(145, 50, 0);
+			opt.alt[3] = -0.01*1852.0;
+			opt.lat[3] = 14.779*RAD;
+			opt.lng[3] = -60.892*RAD;
 
-			opt.entries = 3;
+			opt.entries = 4;
 		}
 		else if (fcn == 54)
 		{
-			sprintf(form->LmkID[0], "006");
+			sprintf(form->LmkID[0], "006"); //Point Loma (SW US)
 			opt.LmkTime[0] = OrbMech::HHMMSSToSS(147, 0, 0);
-			opt.alt[0] = 0.01*1852.0;
+			opt.alt[0] = -0.01*1852.0;
 			opt.lat[0] = 32.665*RAD;
 			opt.lng[0] = -117.242*RAD;
 
-			sprintf(form->LmkID[1], "020");
+			sprintf(form->LmkID[1], "020"); //Galveston (SE US)
 			opt.LmkTime[1] = OrbMech::HHMMSSToSS(147, 5, 0);
 			opt.alt[1] = 0.0;
 			opt.lat[1] = 29.263*RAD;
 			opt.lng[1] = -94.859*RAD;
 
-			sprintf(form->LmkID[2], "067");
+			sprintf(form->LmkID[2], "067"); //Point Chimanche, DR (Caribbean)
 			opt.LmkTime[2] = OrbMech::HHMMSSToSS(147, 10, 0);
-			opt.alt[2] = 0.0;
+			opt.alt[2] = -0.01*1852.0;
 			opt.lat[2] = 17.812*RAD;
 			opt.lng[2] = -71.654*RAD;
 
-			sprintf(form->LmkID[3], "139");
+			sprintf(form->LmkID[3], "139"); //Punta De Mucuripe (Brazil)
 			opt.LmkTime[3] = OrbMech::HHMMSSToSS(147, 15, 0);
 			opt.alt[3] = 0.0;
 			opt.lat[3] = -3.699*RAD;
@@ -2282,7 +2268,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_align = GET_AOS - 5.0*60.0;
 
 		OrbMech::format_time_HHMMSS(buff, t_align);
-		sprintf(form->paddata, "T Align is %s GET", buff);
+		sprintf(form->paddata, "T-Align: %s", buff);
 
 		AGCStateVectorUpdate(buffer1, sv0, true, true);
 		sprintf(uplinkdata, "%s", buffer1);
