@@ -7571,7 +7571,7 @@ void ApolloRTCCMFD::menuSetTLIProcessorInput()
 		GC->rtcc->PZTLIPLN.Opportunity = 3 - GC->rtcc->PZTLIPLN.Opportunity;
 		break;
 	case 4:
-		if (GC->rtcc->PZTLIPLN.Mode < 5)
+		if (GC->rtcc->PZTLIPLN.Mode < 6)
 		{
 			GC->rtcc->PZTLIPLN.Mode++;
 		}
@@ -7591,6 +7591,10 @@ void ApolloRTCCMFD::menuSetTLIProcessorInput()
 		else if (GC->rtcc->PZTLIPLN.Mode == 4)
 		{
 			GenericDoubleInput(&GC->rtcc->PZTLIPLN.h_ap, "Input height of apogee (2700 to 7000 NM):");
+		}
+		else if (GC->rtcc->PZTLIPLN.Mode == 6)
+		{
+			GenericVectorInput(&GC->rtcc->PZTLIPLN.dV_LVLH, "Input Delta V vector in feet per second:", 0.3048);
 		}
 		else
 		{

@@ -450,6 +450,7 @@ On a typical lunar mission all the targeting needed for TLI has been loaded into
 	\item Specified total Delta V
 	\item Specified apogee altitude
 	\item Integrated non-free return trajectory to the nominal nodal position at the Moon
+	\item External Delta V
 \end{enumerate}
 
 \subsubsection{Inputs}
@@ -459,7 +460,7 @@ On a typical lunar mission all the targeting needed for TLI has been loaded into
 \textbf{Opp:} Select the TLI opportunity. For option 1 this is the input to choose when the TLI is done and for all options this changes certain parameters associated with one of the opportunities in the LVDC, mostly the time of S-IVB mixture ratio shift from ignition.\\
 \textbf{Mode:} Choose the TLI processor calculation mode, see list above.\\
 \textbf{TIG:} Time of ignition. Not used for option 1. Used as a very rough initial guess in option 2 and 5, that only has to be accurate to a full orbit. In options 3 and 4 this is the exact time of ignition used.\\
-\textbf{DV:} Delta V of the maneuver (option 3 only).\\
+\textbf{DV:} Delta V of the maneuver (option 3) or Delta V vector (option 6).\\
 \textbf{APO:} Apogee altitude to be achieved by the maneuver (option 4 only).\\
 \textbf{Window:} Pacific or Atlantic TLI window, for the lunar mission options (2 and 5) this is used to generate the initial guess.\\
 \textbf{SFP:} For the lunar mission options (2 and 5) the target parameters are taken from the Skeleton Flight Plan table, which has two sets of data. See the Midcourse Correction Processor for more details about the SFP.\\

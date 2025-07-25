@@ -6368,6 +6368,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		case 5:
 			skp->Text(CW * 10, 7 * H / 22, "Non-Free Return", 15);
 			break;
+		case 6:
+			skp->Text(CW * 10, 7 * H / 22, "External DV", 11);
+			break;
 		default:
 			skp->Text(CW * 10, 7 * H / 22, "Hypersurface", 12);
 			break;
@@ -6391,6 +6394,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 			sprintf_s(Buffer, "%.0lf NM", GC->rtcc->PZTLIPLN.h_ap);
 			skp->Text(CW * 10, 9 * H / 22, Buffer, strlen(Buffer));
+		}
+		else if (GC->rtcc->PZTLIPLN.Mode == 6)
+		{
+			skp->Text(CW * 2, 9 * H / 22, "DV:", 4);
+			AGC_Display(Buffer, GC->rtcc->PZTLIPLN.dV_LVLH.x / 0.3048);
+			skp->Text(CW * 10, 9 * H / 22, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, GC->rtcc->PZTLIPLN.dV_LVLH.y / 0.3048);
+			skp->Text(CW * 10, 10 * H / 22, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, GC->rtcc->PZTLIPLN.dV_LVLH.z / 0.3048);
+			skp->Text(CW * 10, 11 * H / 22, Buffer, strlen(Buffer));
 		}
 		else if (GC->rtcc->PZTLIPLN.Mode == 2 || GC->rtcc->PZTLIPLN.Mode == 5)
 		{
