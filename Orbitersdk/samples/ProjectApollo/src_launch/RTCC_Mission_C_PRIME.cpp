@@ -633,7 +633,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				}
 				else
 				{
-					sprintf(ullage, "");
+					sprintf(ullage, "4 jet translation");
 				}
 
 				AP11ManeuverPAD(manopt, *form);
