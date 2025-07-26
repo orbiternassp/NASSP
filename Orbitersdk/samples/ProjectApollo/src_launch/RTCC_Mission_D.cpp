@@ -158,6 +158,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 100: //CSM STATE VECTOR UPDATE (127:30:00)
 	case 101: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (149:45:00)
 	case 102: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (174:55:00)
+	case 103: //CSM STATE VECTOR UPDATE (199:30:00)
 	{
 		AP7NAV * form = (AP7NAV *)pad;
 
@@ -227,6 +228,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else if (fcn == 102)
 		{
 			NavGET = OrbMech::HHMMSSToSS(174, 55, 0);  //Nav Check GET
+		}
+		else if (fcn == 103)
+		{
+			NavGET = OrbMech::HHMMSSToSS(199, 30, 0);  //Nav Check GET
+			V66Flag = false;
 		}
 		else
 		{
@@ -797,7 +803,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		manopt.RV_MCC = sv0.sv;
 		manopt.WeightsTable = GetWeightsTable(calcParams.tgt, false, true);
 
-		SVGET = floor(TimeofIgnition/60.0-12.0)*60.0;	//TIG-12m
+		SVGET = floor(TimeofIgnition/60.0 - 12.0) * 60.0;	//TIG-12m
 
 		sv1 = coast(sv0, GMTfromGET(SVGET) - sv0.sv.GMT); //Time tag SV
 
@@ -1712,7 +1718,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			NavGET = P30TIG - (30.0 * 60.0);			//TIG-30m
 			SVGET = floor(P30TIG/60.0 - 1.0) * 60.0;	//TIG-1m
 
-			opt.sxtstardtime = -40.0*60.0;
+			opt.sxtstardtime = -30.0*60.0;
 		}
 
 		refsopt.dV_LVLH = dV_LVLH;
@@ -1741,11 +1747,12 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			char GETbuffer[64];
 			sprintf(form->purpose, "SPS-6");
 			OrbMech::format_time_HHMMSS(GETbuffer, NavGET);
-			sprintf(form->remarks, "Nav Check Time: %s", GETbuffer);
+			sprintf(form->remarks, "Ullage: 2 jet, %.0f seconds  Nav Check Time: %s", opt.UllageDT, GETbuffer);
 		}
 		else
 		{
 			sprintf(form->purpose, "SPS-7");
+			sprintf(form->remarks, "Ullage: 2 jet, %.0f seconds", opt.UllageDT);
 		}
 
 		sv1 = coast(sv0, GMTfromGET(SVGET) - sv0.GMT); //Time tag SV
@@ -1997,7 +2004,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->Num = 15;
 	}
 	break;
-	case 50: //LANDMARK TRACKING T ALIGN
+	case 50:  //LANDMARK TRACKING T ALIGN
 	case 130: //LANDMARK SV 1
 	case 131: //LANDMARK SV 2
 	case 132: //LANDMARK SV 3
@@ -2005,7 +2012,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		VehicleDataBlock sv0, sv1;
-		OBJHANDLE hSun;
 		double SR_guess, t_align, SVGMT, NavGET;
 		char buff[64], buffer1[1000];
 
@@ -2049,7 +2055,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 51: //LANDMARK TRACKING UPDATE 1
 	case 52: //LANDMARK TRACKING UPDATE 2
 	case 53: //LANDMARK TRACKING UPDATE 3
-	case 54: //LANDMARK TRACKING UPDATE 4
+	case 54: //LANDMARK TRACKING UPDATE 4	
+	case 76: //LANDMARK TRACKING UPDATE 5
 	{
 		LMARKTRKPADOpt opt;
 		VehicleDataBlock sv0;
@@ -2166,6 +2173,22 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			opt.entries = 4;
 		}
+		else if (fcn == 76)
+		{
+			sprintf(form->LmkID[0], "006"); //Point Loma (SW US)
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(195, 10, 0);
+			opt.alt[0] = -0.01*1852.0;
+			opt.lat[0] = 32.665*RAD;
+			opt.lng[0] = -117.242*RAD;
+
+			sprintf(form->LmkID[1], "130"); //Guarico Dam (South America)
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(195, 20, 0);
+			opt.alt[1] = 0.08*1852.0;
+			opt.lat[1] = 8.942*RAD;
+			opt.lng[1] = -67.406*RAD;
+
+			opt.entries = 2;
+		}
 
 		LandmarkTrackingPAD(opt, *form);
 	}
@@ -2252,26 +2275,40 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 62: //S065 T ALIGN
 	{
-		GENERICPAD * form = (GENERICPAD *)pad;
+		AP7NAV * form = (AP7NAV *)pad;
 
-		SV sv0, sv1;
-		char buff[64];
-		double t_align, dt, GET_AOS, GET_LOS;
-		char buffer1[1000];
+		VehicleDataBlock sv0, sv1, sv2, svt;
+		double t_align1, t_guessGMT1, GET_AOS1, GET_LOS1, t_align2, t_guessGMT2, GET_AOS2, GET_LOS2, SVGMT, NavGET;
+		char t1[64], t2[64], buffer[1000];
 
-		sv0 = StateVectorCalc(calcParams.src);
-		dt = OrbMech::HHMMSSToSS(190, 25, 0) - OrbMech::GETfromMJD(sv0.MJD, CalcGETBase());
-		sv1 = coast(sv0, dt);
+		sv0 = StateVectorCalcDataBlock(calcParams.src);
 
-		//Northern Mexico
-		mcc->mcc_calcs.FindRadarAOSLOS(sv1, 31.91666*RAD, -105.0*RAD, GET_AOS, GET_LOS);
-		t_align = GET_AOS - 5.0*60.0;
+		NavGET = OrbMech::HHMMSSToSS(188, 30, 0);
 
-		OrbMech::format_time_HHMMSS(buff, t_align);
-		sprintf(form->paddata, "T-Align: %s", buff);
+		t_guessGMT1 = GMTfromGET(OrbMech::HHMMSSToSS(190, 0, 0));
+		t_guessGMT2 = GMTfromGET(OrbMech::HHMMSSToSS(191, 50, 0));
 
-		AGCStateVectorUpdate(buffer1, sv0, true, true);
-		sprintf(uplinkdata, "%s", buffer1);
+		SVGMT = GMTfromGET(NavGET + 30.0 * 60.0);
+
+		svt = coast(sv0, SVGMT - sv0.sv.GMT); //Time tag SV for uplink
+		sv1 = coast(sv0, t_guessGMT1 - sv0.sv.GMT); //T-Align 1
+		sv2 = coast(sv0, t_guessGMT2 - sv0.sv.GMT); //T-Align 2
+
+		mcc->mcc_calcs.FindRadarAOSLOS(ConvertEphemDatatoSV(sv1.sv), 31.91666*RAD, -105.0*RAD, GET_AOS1, GET_LOS1);
+		mcc->mcc_calcs.FindRadarAOSLOS(ConvertEphemDatatoSV(sv2.sv), 31.0*RAD, -115.5*RAD, GET_AOS2, GET_LOS2);
+
+		t_align1 = floor(GET_AOS1/60.0 - 5.0) * 60.0;
+		t_align2 = floor(GET_AOS2/60.0 - 5.0) * 60.0;
+
+		NavCheckPAD(svt, *form, NavGET);
+
+		OrbMech::format_time_HHMMSS(t1, t_align1);
+		OrbMech::format_time_HHMMSS(t2, t_align2);
+		sprintf(form->remarks[0], "T-Align 1: %s  T-Align 2: %s", t1, t2);
+
+		AGCStateVectorUpdate(buffer, 1, RTCC_MPT_CSM, svt.sv, true);
+
+		sprintf(uplinkdata, "%s", buffer);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
@@ -2548,18 +2585,20 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		REFSMMATOpt refsopt;
 		MATRIX3 REFSMMAT;
-		SV sv0, sv1;
-		double dt, GET_AOS, GET_LOS, GET_AOS_HAW, GET_LOS_HAW;
+		VehicleDataBlock sv0, sv1;
+		double SVGMT, GET_AOS, GET_LOS, GET_AOS_HAW, GET_LOS_HAW;
 
-		sv0 = StateVectorCalc(calcParams.src);
+		sv0 = StateVectorCalcDataBlock(calcParams.src);
 
-		dt = OrbMech::HHMMSSToSS(193, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, CalcGETBase());
-		sv1 = coast(sv0, dt);
+		SVGMT = GMTfromGET(OrbMech::HHMMSSToSS(193, 0, 0));
+
+		sv1 = coast(sv0, SVGMT - sv0.sv.GMT);
 
 		//Carnarvon
-		mcc->mcc_calcs.FindRadarAOSLOS(sv1, -24.90619*RAD, 113.72595*RAD, GET_AOS, GET_LOS);
+		mcc->mcc_calcs.FindRadarAOSLOS(ConvertEphemDatatoSV(sv1.sv), -24.90619*RAD, 113.72595*RAD, GET_AOS, GET_LOS);
+
 		//Hawaii
-		mcc->mcc_calcs.FindRadarAOSLOS(sv1, 21.44719*RAD, -157.76307*RAD, GET_AOS_HAW, GET_LOS_HAW);
+		mcc->mcc_calcs.FindRadarAOSLOS(ConvertEphemDatatoSV(sv1.sv), 21.44719*RAD, -157.76307*RAD, GET_AOS_HAW, GET_LOS_HAW);
 
 		refsopt.csmlmdocked = false;
 		refsopt.dV_LVLH = _V(0, -1.0, 0.0); //Pointing north
@@ -2578,13 +2617,37 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		OrbMech::format_time_HHMMSS(buff3, GET_AOS_HAW);
 		OrbMech::format_time_HHMMSS(buff4, GET_LOS_HAW);
 
-		sprintf(form->paddata, "Carnarvon AOS %s LOS %s, Hawaii AOS %s LOS %s", buff1, buff2, buff3, buff4);
+		sprintf(form->paddata, "Carnarvon AOS: %s LOS: %s  Hawaii AOS: %s LOS: %s", buff1, buff2, buff3, buff4);
 
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "High Gain Antenna Test REFSMMAT");
 		}
+	}
+	break;
+
+	case 81: //Backup GDC Align Stars
+	{
+		GENERICPAD * form = (GENERICPAD *)pad;
+
+		AP11MNV  tempPAD;
+		AP11ManPADOpt tempopt;
+
+		VehicleDataBlock sv0;
+
+		sv0 = StateVectorCalcDataBlock(calcParams.src);
+
+		tempopt.HeadsUp = false;
+		tempopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);;
+		tempopt.TIG = GETfromGMT(OrbMech::HHMMSSToSS(196, 0, 0));
+		tempopt.PrefGDCStars = 2; //Acrux/Atria
+		tempopt.RV_MCC = sv0.sv;
+
+		AP11ManeuverPAD(tempopt, tempPAD);
+
+		sprintf(form->paddata, "SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", tempPAD.SetStars, tempPAD.GDCangles.x, tempPAD.GDCangles.y, tempPAD.GDCangles.z);
+
 	}
 	break;
 	}
