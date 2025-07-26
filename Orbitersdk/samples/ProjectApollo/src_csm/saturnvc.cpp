@@ -2004,7 +2004,8 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		/////////////////////
 
 		// First Darken All Lights
-		double floodRotaryValue = 0.0; //FloodRotarySwitch.GetOutput();
+//		double floodRotaryValue = 0.0; //FloodRotarySwitch.GetOutput();
+		double floodRotaryValue = (FloodRotarySwitch.GetOutput() / 20) + (RightFloodRotarySwitch.GetOutput() / 20) + (Panel100FloodRotarySwitch.GetOutput() / 20);
 
 // Hardcoded Materials with no Texture
 		SetVCLighting(vcidx,   VC_MAT_FDAI_errorneedle, MAT_LIGHT, floodRotaryValue, 1);
@@ -5619,6 +5620,7 @@ void Saturn::DefineVCAnimations()
 
 	// Forward Hatch
 	MainPanelVC.AddSwitch(&PressEqualValve, AID_VC_FWDHATCH_PRESS_EQU_VLV);
+	PressEqualValve.SetReference(VECTOR3 {0.0011, -0.0000, 1.0773 }, VECTOR3 { -1, 0, 0 });
 
 	// Panel 600
 	const VECTOR3	P600_SW_AXIS = { -1, 0, 0 };
