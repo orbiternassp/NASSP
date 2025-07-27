@@ -305,6 +305,49 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->TAlign[0] = 0.0;
 	}
 	break;
+	/*
+	case 10:	//SPS-1
+	{
+		AP7MNV * form = (AP7MNV *)pad;
+
+		AP7ManPADOpt opt;
+		double P30TIG;
+		VECTOR3 dV_LVLH;
+		EphemerisData sv0;
+		PLAWDTOutput WeightsTable;
+		char buffer1[1000];
+
+		sv0 = StateVectorCalcEphem(calcParams.src); //State vector for uplink
+		WeightsTable = GetWeightsTable(calcParams.src, true, true);
+
+		P30TIG = OrbMech::HHMMSSToSS(5, 59, 0);
+		dV_LVLH = _V(36.8, 0.0, 0.0)*0.3048;
+
+		opt.TIG = P30TIG;
+		opt.dV_LVLH = dV_LVLH;
+		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+		opt.HeadsUp = true;
+		opt.sxtstardtime = -30.0*60.0;
+		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+		opt.navcheckGET = 0;
+		opt.sv0 = sv0;
+		opt.WeightsTable = WeightsTable;
+
+		AP7ManeuverPAD(opt, *form);
+		sprintf(form->purpose, "SPS-1");
+		sprintf(form->remarks, "Gimbal angles with pad REFSMMAT");
+
+		CMCExternalDeltaVUpdate(buffer1, P30TIG, dV_LVLH);
+
+		sprintf(uplinkdata, "%s", buffer1);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "Target load");
+		}
+	}
+	break;
+	*/
 	case 10:	//SPS-1  
 	{
 		AP7MNV * form = (AP7MNV *)pad;
@@ -2278,8 +2321,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7NAV * form = (AP7NAV *)pad;
 
 		VehicleDataBlock sv0, sv1, sv2, svt;
-		double t_align1, t_guessGMT1, GET_AOS1, GET_LOS1, t_align2, t_guessGMT2, GET_AOS2, GET_LOS2, SVGMT, NavGET;
-		char t1[64], t2[64], buffer[1000];
+		double t_align1, t_guessGMT1, GET_AOS1, GET_LOS1, t_align2, t_guessGMT2, GET_AOS2, GET_LOS2, t_align3, SVGMT, NavGET;
+		char t1[64], t2[64], t3[64], buffer[1000];
 
 		sv0 = StateVectorCalcDataBlock(calcParams.src);
 
@@ -2299,12 +2342,14 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		t_align1 = floor(GET_AOS1/60.0 - 5.0) * 60.0;
 		t_align2 = floor(GET_AOS2/60.0 - 5.0) * 60.0;
+		t_align3 = floor(mcc->mcc_calcs.FindOrbitalSunrise(sv0, OrbMech::HHMMSSToSS(194, 50, 0))/60.0) * 60.0;
 
 		NavCheckPAD(svt, *form, NavGET);
 
 		OrbMech::format_time_HHMMSS(t1, t_align1);
 		OrbMech::format_time_HHMMSS(t2, t_align2);
-		sprintf(form->remarks[0], "T-Align 1: %s  T-Align 2: %s", t1, t2);
+		OrbMech::format_time_HHMMSS(t3, t_align3);
+		sprintf(form->remarks[0], "T-Align 1: %s  T-Align 2: %s  T-Align 3: %s", t1, t2, t3);
 
 		AGCStateVectorUpdate(buffer, 1, RTCC_MPT_CSM, svt.sv, true);
 
