@@ -5973,7 +5973,7 @@ void Saturn::UpdatePointingArrow()
 	// The next ones need to be checked individualy
 	bool Panel382Flash = Panel382Cover.IsFlashing();
 	bool ASCPRollFlash = ASCPRollSwitch.IsFlashing();
-	bool ASCPPitschFlash = ASCPPitchSwitch.IsFlashing();
+	bool ASCPPitchFlash = ASCPPitchSwitch.IsFlashing();
 	bool ASCPYawFlash = ASCPYawSwitch.IsFlashing();
 	bool EMSDvSetSwitchFlash = (EMSDvDisplay.IsFlashing() || EMSScrollDisplay.IsFlashing());
 	bool HatchToggleFlash = HatchToggle.IsFlashing();
@@ -5982,7 +5982,7 @@ void Saturn::UpdatePointingArrow()
 	bool HatchActuatorHandleSelectorOpenFlash = HatchActuatorHandleSelectorOpen.IsFlashing();
 	bool HatchVentValveRotaryFlash = HatchVentValveRotary.IsFlashing();
 	
-	if (nextActiveSwitch == nullptr && !Panel382Flash && !ASCPRollFlash && !ASCPPitschFlash && !ASCPYawFlash
+	if (nextActiveSwitch == nullptr && !Panel382Flash && !ASCPRollFlash && !ASCPPitchFlash && !ASCPYawFlash
 			&& !EMSDvSetSwitchFlash && !HatchToggleFlash && !HatchGearBoxSelectorFlash && !HatchActuatorHandleSelectorFlash
 			&& !HatchActuatorHandleSelectorOpenFlash && !HatchVentValveRotaryFlash) {
 		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_NEVER);
@@ -5992,11 +5992,11 @@ void Saturn::UpdatePointingArrow()
 	if (Panel382Flash) {								// Special handling for Panel 382 Cover and others
 		activeSwitchPos = _V(-1.0863, 0.2080, -0.6266);	
 	} else if (ASCPRollFlash) {
-		activeSwitchPos = _V(-0.987496, 0.343888, 0.267233);	
-	} else if (ASCPPitschFlash){
-		activeSwitchPos = _V(-0.987695, 0.308488, 0.255534);	
+		activeSwitchPos = _V(-0.9876,  0.3509,  0.2435);	
+	} else if (ASCPPitchFlash){
+		activeSwitchPos = _V(-0.9878,  0.3154,  0.2322);	
 	} else if (ASCPYawFlash){
-		activeSwitchPos = _V(-0.987796, 0.272688, 0.243934);
+		activeSwitchPos = _V(-0.9879,  0.2797,  0.2202);
 	} else if (EMSDvSetSwitchFlash){
 		activeSwitchPos = _V(-0.507325, 0.7327, 0.36895);
 	} else if (HatchToggleFlash){
@@ -6030,6 +6030,73 @@ void Saturn::UpdatePointingArrow()
 	} else {
 		activeSwitchPos = nextActiveSwitch->GetReference();
 	}
+
+	// These also require special handling, as their pivot point is behind the VC fuselage
+	if (SuitCircuitFlow300Switch.IsFlashing()) {
+		activeSwitchPos = _V(-0.5899,  0.0386,  0.4808);
+	} else if (SuitCircuitFlow301Switch.IsFlashing()) {
+		activeSwitchPos = _V(-0.5966,  0.0402,  0.3217);
+	} else if (SuitCircuitFlow302Switch.IsFlashing()) {
+		activeSwitchPos = _V(-0.5966, -0.0599,  0.3220);
+	} else if (LeftAudioVOXSensThumbwheel.IsFlashing()) {
+		activeSwitchPos = _V( 0.0624,  0.3522,  0.5200);
+	} else if (LeftAudioPadComVolumeThumbwheel.IsFlashing()) {
+		activeSwitchPos = _V( 0.0624,  0.3771,  0.4618);
+	} else if (LeftAudioSBandVolumeThumbwheel.IsFlashing()) {
+		activeSwitchPos = _V( 0.0625,  0.4026,  0.4028);
+	} else if (RightAudioMasterVolumeThumbwheel.IsFlashing()) {
+		activeSwitchPos = _V(-0.0683,  0.3522,  0.5200);
+	} else if (RightAudioIntercomVolumeThumbwheel.IsFlashing()) {
+		activeSwitchPos = _V(-0.0683,  0.3771,  0.4617);
+	} else if (RightAudioVHFAMVolumeThumbwheel.IsFlashing()) {
+		activeSwitchPos = _V(-0.0685,  0.4025,  0.4027);
+	} else if (SPSGimbalPitchThumbwheel.IsFlashing()) {
+		activeSwitchPos = _V(-0.6693,  0.3896,  0.2575);
+	} else if (SPSGimbalYawThumbwheel.IsFlashing()) {
+		activeSwitchPos = _V(-0.6134,  0.3897,  0.2577);
+	} else if (CabinTempAutoControlSwitch.IsFlashing()) {
+		activeSwitchPos = _V( 0.4013,  0.5133,  0.2933);
+	} else if (SquelchAThumbwheel.IsFlashing()) {
+		activeSwitchPos = _V( 0.5833,  0.3380,  0.2403);
+	} else if (SquelchBThumbwheel.IsFlashing()) {
+		activeSwitchPos = _V( 0.5832,  0.2821,  0.2218);
+	} else if (ModeIntercomVOXSensThumbwheelSwitch.IsFlashing()) {
+		activeSwitchPos = _V( 0.8493,  0.7437,  0.3066);
+	} else if (PadCommVolumeThumbwheelSwitch.IsFlashing()) {
+		activeSwitchPos = _V( 0.8947,  0.6943,  0.2899);
+	} else if (SBandVolumeThumbwheelSwitch.IsFlashing()) {
+		activeSwitchPos = _V( 0.9408,  0.6439,  0.2729);
+	} else if (PowerMasterVolumeThumbwheelSwitch.IsFlashing()) {
+		activeSwitchPos = _V( 0.8945,  0.7514,  0.2466);
+	} else if (IntercomVolumeThumbwheelSwitch.IsFlashing()) {
+		activeSwitchPos = _V( 0.9421,  0.6994,  0.2289);
+	} else if (VHFAMVolumeThumbwheelSwitch.IsFlashing()) {
+		activeSwitchPos = _V( 0.9871,  0.6499,  0.2123);
+	} else if (LeftModeIntercomVOXSensThumbwheelSwitch.IsFlashing()) {
+		activeSwitchPos = _V(-0.9010,  0.7509,  0.2442);
+	} else if (LeftPadCommVolumeThumbwheelSwitch.IsFlashing()) {
+		activeSwitchPos = _V(-0.9459,  0.7012,  0.2272);
+	} else if (LeftSBandVolumeThumbwheelSwitch.IsFlashing()) {
+		activeSwitchPos = _V(-0.9915,  0.6506,  0.2097);
+	} else if (LeftPowerMasterVolumeThumbwheelSwitch.IsFlashing()) {
+		activeSwitchPos = _V(-0.8578,  0.7476,  0.3055);
+	} else if (LeftIntercomVolumeThumbwheelSwitch.IsFlashing()) {
+		activeSwitchPos = _V(-0.9050,  0.6953,  0.2876);
+	} else if (LeftVHFAMVolumeThumbwheelSwitch.IsFlashing()) {
+		activeSwitchPos = _V(-0.9498,  0.6457,  0.2704);
+	} else if (CabinPressureReliefLever1.IsFlashing()) {
+		activeSwitchPos = _V(-1.2171,  0.7811, -0.2383);
+	} else if (CabinPressureReliefLever2.IsFlashing()) {
+		activeSwitchPos = _V(-1.2067,  0.6746, -0.2383);
+	} else if (SuitCircuitReturnValveLever.IsFlashing()) {
+		activeSwitchPos = _V(-1.0608,  0.2392, -0.3428);
+	} else if (GlycolToRadiatorsLever.IsFlashing()) {
+		activeSwitchPos = _V(-1.1482,  0.9683, -0.2124);
+	} else if (PostLDGVentValveLever.IsFlashing()) {
+		activeSwitchPos = _V( 0.1835,  0.9203,  0.4144);
+	}
+
+
 
 	VECTOR3 camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs;	
 
