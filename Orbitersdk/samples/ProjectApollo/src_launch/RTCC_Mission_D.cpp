@@ -306,48 +306,48 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	/*
-	case 10:	//SPS-1
-	{
-		AP7MNV * form = (AP7MNV *)pad;
+case 10:	//SPS-1
+{
+	AP7MNV * form = (AP7MNV *)pad;
 
-		AP7ManPADOpt opt;
-		double P30TIG;
-		VECTOR3 dV_LVLH;
-		EphemerisData sv0;
-		PLAWDTOutput WeightsTable;
-		char buffer1[1000];
+	AP7ManPADOpt opt;
+	double P30TIG;
+	VECTOR3 dV_LVLH;
+	EphemerisData sv0;
+	PLAWDTOutput WeightsTable;
+	char buffer1[1000];
 
-		sv0 = StateVectorCalcEphem(calcParams.src); //State vector for uplink
-		WeightsTable = GetWeightsTable(calcParams.src, true, true);
+	sv0 = StateVectorCalcEphem(calcParams.src); //State vector for uplink
+	WeightsTable = GetWeightsTable(calcParams.src, true, true);
 
-		P30TIG = OrbMech::HHMMSSToSS(5, 59, 0);
-		dV_LVLH = _V(36.8, 0.0, 0.0)*0.3048;
+	P30TIG = OrbMech::HHMMSSToSS(5, 59, 0);
+	dV_LVLH = _V(36.8, 0.0, 0.0)*0.3048;
 
-		opt.TIG = P30TIG;
-		opt.dV_LVLH = dV_LVLH;
-		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		opt.HeadsUp = true;
-		opt.sxtstardtime = -30.0*60.0;
-		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		opt.navcheckGET = 0;
-		opt.sv0 = sv0;
-		opt.WeightsTable = WeightsTable;
+	opt.TIG = P30TIG;
+	opt.dV_LVLH = dV_LVLH;
+	opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
+	opt.HeadsUp = true;
+	opt.sxtstardtime = -30.0*60.0;
+	opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
+	opt.navcheckGET = 0;
+	opt.sv0 = sv0;
+	opt.WeightsTable = WeightsTable;
 
-		AP7ManeuverPAD(opt, *form);
-		sprintf(form->purpose, "SPS-1");
-		sprintf(form->remarks, "Gimbal angles with pad REFSMMAT");
+	AP7ManeuverPAD(opt, *form);
+	sprintf(form->purpose, "SPS-1");
+	sprintf(form->remarks, "Gimbal angles with pad REFSMMAT");
 
-		CMCExternalDeltaVUpdate(buffer1, P30TIG, dV_LVLH);
+	CMCExternalDeltaVUpdate(buffer1, P30TIG, dV_LVLH);
 
-		sprintf(uplinkdata, "%s", buffer1);
-		if (upString != NULL) {
-			// give to mcc
-			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "Target load");
-		}
+	sprintf(uplinkdata, "%s", buffer1);
+	if (upString != NULL) {
+		// give to mcc
+		strncpy(upString, uplinkdata, 1024 * 3);
+		sprintf(upDesc, "Target load");
 	}
-	break;
-	*/
+}
+break;
+*/
 	case 10:	//SPS-1  
 	{
 		AP7MNV * form = (AP7MNV *)pad;
@@ -355,6 +355,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP7ManPADOpt opt;
 		AP11LMARKTRKPAD TCAtempPAD;
 		LMARKTRKPADOpt landmarkoptTCA;
+
 		double TIGGuess, P30TIG, NavGET, SVGET;
 		VECTOR3 dV_LVLH;
 		EphemerisData sv0, sv1;
@@ -2675,24 +2676,20 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 81: //Backup GDC Align Stars
 	{
 		GENERICPAD * form = (GENERICPAD *)pad;
-
-		AP11MNV  tempPAD;
-		AP11ManPADOpt tempopt;
+		double AlignGET;
+		MATRIX3 REFSMMAT;
+		VECTOR3 GDCangles;
+		char SetStars[64];
 
 		VehicleDataBlock sv0;
 
 		sv0 = StateVectorCalcDataBlock(calcParams.src);
+		AlignGET = OrbMech::HHMMSSToSS(196, 0, 0);
+		REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);;
 
-		tempopt.HeadsUp = false;
-		tempopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);;
-		tempopt.TIG = GETfromGMT(OrbMech::HHMMSSToSS(196, 0, 0));
-		tempopt.PrefGDCStars = 2; //Acrux/Atria
-		tempopt.RV_MCC = sv0.sv;
+		mcc->mcc_calcs.BackupGDCAlignment(sv0, AlignGET, REFSMMAT, 2, GDCangles, SetStars);
 
-		AP11ManeuverPAD(tempopt, tempPAD);
-
-		sprintf(form->paddata, "SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", tempPAD.SetStars, tempPAD.GDCangles.x, tempPAD.GDCangles.y, tempPAD.GDCangles.z);
-
+		sprintf(form->paddata, "SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", SetStars, GDCangles.x, GDCangles.y, GDCangles.z);
 	}
 	break;
 	}
