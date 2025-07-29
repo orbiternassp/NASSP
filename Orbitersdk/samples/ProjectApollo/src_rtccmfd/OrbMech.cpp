@@ -5229,6 +5229,16 @@ double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu)
 	return sqrt(mu / pow(GetSemiMajorAxis(R, V, mu), 3));
 }
 
+double GetTrueMotion(VECTOR3 R, VECTOR3 V, double mu)
+{
+	double h, r;
+
+	h = length(crossp(R, V));
+	r = length(R);
+
+	return h / (r*r);
+}
+
 double CMCEMSRangeToGo(MATRIX3 Rot_J_B, VECTOR3 R05G, double MJD05G, double lat, double lng)
 {
 	//INPUT:
