@@ -231,7 +231,7 @@ const VECTOR3 P2_ROT_POS[P2_ROTCOUNT] = {
 
 // Panel 2 thumbwheels
 const VECTOR3 P2_TW_POS[P2_TWCOUNT] = {
-	{0.401265, 0.505918, 0.316016}
+	{0.401266, 0.508807,  0.307282}
 };
 
 // Panel 3 switches
@@ -259,7 +259,7 @@ const VECTOR3 P3_ROT_POS[P3_ROTCOUNT] = {
 
 // Panel 3 thumbwheels
 const VECTOR3 P3_TW_POS[P3_TWCOUNT] = {
-	{0.583245, 0.330605, 0.262933}, {0.583238, 0.274712, 0.244441}
+	{0.583246, 0.333249,  0.254939}, {0.583238, 0.277356,  0.236447}
 };
 
 // Panel 4 switches
@@ -318,8 +318,8 @@ const VECTOR3 P6_TOGGLE_POS[P6_SWITCHCOUNT] = {
 
 // Panel 6 thumbwheels
 const VECTOR3 P6_TW_POS[P6_TWCOUNT] = {
-{0.866054, 0.754017, 0.320149}, {0.911476, 0.704552, 0.303417}, {0.957546, 0.654224, 0.286437}, {0.911209, 0.761705, 0.260160}, {0.958827, 0.709672, 0.242413},
-{1.003814, 0.660211, 0.225816}
+{0.860167, 0.750426, 0.315406}, {0.905187, 0.700716,  0.298350}, {0.951258, 0.650388,  0.281370}, {0.904921, 0.757869,  0.255093}, {0.952538, 0.705835,  0.237347},
+{0.997525, 0.656375,  0.220749}
 };
 
 // Panel 7 switches
@@ -375,8 +375,8 @@ const VECTOR3 P9_TOGGLE_POS[P9_SWITCHCOUNT] = {
 
 // Panel 9 thumbwheels
 const VECTOR3 P9_TW_POS[P9_TWCOUNT] = {
-{-0.918161, 0.761724, 0.256630}, {-0.963076, 0.712007, 0.239669}, {-1.008716, 0.661478, 0.222166}, {-0.875023, 0.758446, 0.317993}, {-0.922192, 0.706136, 0.300108},
-{-0.967003, 0.656571, 0.282920}
+{-0.911422, 0.757517,  0.251769}, {-0.956337, 0.707799,  0.234808}, {-1.001978, 0.657270,  0.217304}, {-0.868194, 0.754182,  0.313067}, {-0.915352, 0.701869,  0.295175},
+{-0.960264, 0.652364,  0.278058}
 };
 
 // Panel 10 switches
@@ -387,8 +387,8 @@ const VECTOR3 P10_TOGGLE_POS[P10_SWITCHCOUNT] = {
 
 // Panel 10 thumbwheels
 const VECTOR3 P10_TW_POS[P10_TWCOUNT] = {
-{0.062441, 0.375373, 0.527708}, {0.062346, 0.400230, 0.469464}, {0.062460, 0.425729, 0.410503}, {-0.068344, 0.375389, 0.527684}, {-0.068339, 0.400247, 0.469400},
-{-0.068455, 0.425636, 0.410426}
+{0.062440,   0.367128,  0.524263}, {0.062345,   0.391985,  0.466019}, {0.062459,   0.417484,  0.407058}, {-0.068344,   0.367143,  0.524239}, {-0.068340,   0.392002,  0.465955},
+{-0.068456,   0.417391,  0.406982}
 };
 
 // Panel 12 rotaries
@@ -6031,72 +6031,30 @@ void Saturn::UpdatePointingArrow()
 		activeSwitchPos = nextActiveSwitch->GetReference();
 	}
 
-	// These also require special handling, as their pivot point is behind the VC fuselage
-	if (SuitCircuitFlow300Switch.IsFlashing()) {
-		activeSwitchPos = _V(-0.5899,  0.0386,  0.4808);
-	} else if (SuitCircuitFlow301Switch.IsFlashing()) {
-		activeSwitchPos = _V(-0.5966,  0.0402,  0.3217);
-	} else if (SuitCircuitFlow302Switch.IsFlashing()) {
-		activeSwitchPos = _V(-0.5966, -0.0599,  0.3220);
-	} else if (LeftAudioVOXSensThumbwheel.IsFlashing()) {
-		activeSwitchPos = _V( 0.0624,  0.3522,  0.5200);
-	} else if (LeftAudioPadComVolumeThumbwheel.IsFlashing()) {
-		activeSwitchPos = _V( 0.0624,  0.3771,  0.4618);
-	} else if (LeftAudioSBandVolumeThumbwheel.IsFlashing()) {
-		activeSwitchPos = _V( 0.0625,  0.4026,  0.4028);
-	} else if (RightAudioMasterVolumeThumbwheel.IsFlashing()) {
-		activeSwitchPos = _V(-0.0683,  0.3522,  0.5200);
-	} else if (RightAudioIntercomVolumeThumbwheel.IsFlashing()) {
-		activeSwitchPos = _V(-0.0683,  0.3771,  0.4617);
-	} else if (RightAudioVHFAMVolumeThumbwheel.IsFlashing()) {
-		activeSwitchPos = _V(-0.0685,  0.4025,  0.4027);
-	} else if (SPSGimbalPitchThumbwheel.IsFlashing()) {
-		activeSwitchPos = _V(-0.6693,  0.3896,  0.2575);
-	} else if (SPSGimbalYawThumbwheel.IsFlashing()) {
-		activeSwitchPos = _V(-0.6134,  0.3897,  0.2577);
-	} else if (CabinTempAutoControlSwitch.IsFlashing()) {
-		activeSwitchPos = _V( 0.4013,  0.5133,  0.2933);
-	} else if (SquelchAThumbwheel.IsFlashing()) {
-		activeSwitchPos = _V( 0.5833,  0.3380,  0.2403);
-	} else if (SquelchBThumbwheel.IsFlashing()) {
-		activeSwitchPos = _V( 0.5832,  0.2821,  0.2218);
-	} else if (ModeIntercomVOXSensThumbwheelSwitch.IsFlashing()) {
-		activeSwitchPos = _V( 0.8493,  0.7437,  0.3066);
-	} else if (PadCommVolumeThumbwheelSwitch.IsFlashing()) {
-		activeSwitchPos = _V( 0.8947,  0.6943,  0.2899);
-	} else if (SBandVolumeThumbwheelSwitch.IsFlashing()) {
-		activeSwitchPos = _V( 0.9408,  0.6439,  0.2729);
-	} else if (PowerMasterVolumeThumbwheelSwitch.IsFlashing()) {
-		activeSwitchPos = _V( 0.8945,  0.7514,  0.2466);
-	} else if (IntercomVolumeThumbwheelSwitch.IsFlashing()) {
-		activeSwitchPos = _V( 0.9421,  0.6994,  0.2289);
-	} else if (VHFAMVolumeThumbwheelSwitch.IsFlashing()) {
-		activeSwitchPos = _V( 0.9871,  0.6499,  0.2123);
-	} else if (LeftModeIntercomVOXSensThumbwheelSwitch.IsFlashing()) {
-		activeSwitchPos = _V(-0.9010,  0.7509,  0.2442);
-	} else if (LeftPadCommVolumeThumbwheelSwitch.IsFlashing()) {
-		activeSwitchPos = _V(-0.9459,  0.7012,  0.2272);
-	} else if (LeftSBandVolumeThumbwheelSwitch.IsFlashing()) {
-		activeSwitchPos = _V(-0.9915,  0.6506,  0.2097);
-	} else if (LeftPowerMasterVolumeThumbwheelSwitch.IsFlashing()) {
-		activeSwitchPos = _V(-0.8578,  0.7476,  0.3055);
-	} else if (LeftIntercomVolumeThumbwheelSwitch.IsFlashing()) {
-		activeSwitchPos = _V(-0.9050,  0.6953,  0.2876);
-	} else if (LeftVHFAMVolumeThumbwheelSwitch.IsFlashing()) {
-		activeSwitchPos = _V(-0.9498,  0.6457,  0.2704);
-	} else if (CabinPressureReliefLever1.IsFlashing()) {
-		activeSwitchPos = _V(-1.2171,  0.7811, -0.2383);
-	} else if (CabinPressureReliefLever2.IsFlashing()) {
-		activeSwitchPos = _V(-1.2067,  0.6746, -0.2383);
-	} else if (SuitCircuitReturnValveLever.IsFlashing()) {
-		activeSwitchPos = _V(-1.0608,  0.2392, -0.3428);
-	} else if (GlycolToRadiatorsLever.IsFlashing()) {
-		activeSwitchPos = _V(-1.1482,  0.9683, -0.2124);
-	} else if (PostLDGVentValveLever.IsFlashing()) {
-		activeSwitchPos = _V( 0.1835,  0.9203,  0.4144);
+	// These switches need special treatment because their click point is not the same as their pivot point.
+	static PanelSwitchItem *specialSwitches[] = {
+		&SuitCircuitFlow300Switch, &SuitCircuitFlow301Switch, &SuitCircuitFlow302Switch, &LeftAudioVOXSensThumbwheel, &LeftAudioPadComVolumeThumbwheel,
+		&LeftAudioSBandVolumeThumbwheel, &RightAudioMasterVolumeThumbwheel, &RightAudioIntercomVolumeThumbwheel, &RightAudioVHFAMVolumeThumbwheel,
+		&SPSGimbalPitchThumbwheel, &SPSGimbalYawThumbwheel, &CabinTempAutoControlSwitch, &SquelchAThumbwheel, &SquelchBThumbwheel,
+		&ModeIntercomVOXSensThumbwheelSwitch, &PadCommVolumeThumbwheelSwitch, &SBandVolumeThumbwheelSwitch, &PowerMasterVolumeThumbwheelSwitch,
+		&IntercomVolumeThumbwheelSwitch, &VHFAMVolumeThumbwheelSwitch, &LeftModeIntercomVOXSensThumbwheelSwitch, &LeftPadCommVolumeThumbwheelSwitch,
+		&LeftSBandVolumeThumbwheelSwitch, &LeftPowerMasterVolumeThumbwheelSwitch, &LeftIntercomVolumeThumbwheelSwitch, &LeftVHFAMVolumeThumbwheelSwitch,
+		&CabinPressureReliefLever1, &CabinPressureReliefLever2, &SuitCircuitReturnValveLever, &GlycolToRadiatorsLever, &PostLDGVentValveLever
+	};
+
+	const VECTOR3 specialSwitchesPos[] = {
+		_V(-0.5899,  0.0386,  0.4808), _V(-0.5966,  0.0402,  0.3217), _V(-0.5966, -0.0599,  0.3220), _V( 0.0624,  0.3522,  0.5200), _V( 0.0624,  0.3771,  0.4618),
+		_V( 0.0625,  0.4026,  0.4028), _V(-0.0683,  0.3522,  0.5200), _V(-0.0683,  0.3771,  0.4617), _V(-0.0685,  0.4025,  0.4027), _V(-0.6693,  0.3896,  0.2575),
+		_V(-0.6134,  0.3897,  0.2577), _V( 0.4013,  0.5133,  0.2933), _V( 0.5833,  0.3380,  0.2403), _V( 0.5832,  0.2821,  0.2218), _V( 0.8493,  0.7437,  0.3066),
+		_V( 0.8947,  0.6943,  0.2899), _V( 0.9408,  0.6439,  0.2729), _V( 0.8945,  0.7514,  0.2466), _V( 0.9421,  0.6994,  0.2289), _V( 0.9871,  0.6499,  0.2123),
+		_V(-0.9010,  0.7509,  0.2442), _V(-0.9459,  0.7012,  0.2272), _V(-0.9915,  0.6506,  0.2097), _V(-0.8578,  0.7476,  0.3055), _V(-0.9050,  0.6953,  0.2876),
+		_V(-0.9498,  0.6457,  0.2704), _V(-1.2171,  0.7811, -0.2383), _V(-1.2067,  0.6746, -0.2383), _V(-1.0608,  0.2392, -0.3428), _V(-1.1482,  0.9683, -0.2124),
+		_V( 0.1835,  0.9203,  0.4144)
+	};
+
+	for (int i = 0; i < NUM_ELEMENTS(specialSwitches); i++){
+		if (specialSwitches[i]->IsFlashing()) activeSwitchPos = specialSwitchesPos[i];
 	}
-
-
 
 	VECTOR3 camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs;	
 

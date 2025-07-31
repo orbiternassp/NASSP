@@ -3700,6 +3700,22 @@ void LEM::UpdatePointingArrow()
 	VECTOR3 activeSwitchPos;
 	activeSwitchPos = nextActiveSwitch->GetReference();
 
+	// These switches need special treatment because their click point is not the same as their pivot point.
+	static PanelSwitchItem *specialSwitches[] = {
+		&CDRAudSBandVol, &CDRAudICSVol, &CDRAudVOXSens, &CDRAudVHFAVol, &CDRAudVHFBVol, &CDRAudMasterVol,
+		&LMPAudSBandVol, &LMPAudICSVol, &LMPAudVOXSens, &LMPAudVHFAVol, &LMPAudVHFBVol, &LMPAudMasterVol, &VHFASquelch, &VHFBSquelch
+	};
+
+	const VECTOR3 specialSwitchesPos[] = {
+		_V(-1.0583, 0.0721, 1.3820), _V(-1.0575, 0.0718, 1.4357), _V(-1.0228, 0.0606, 1.4950), _V(-0.9708, 0.0430, 1.3820), _V(-0.9708, 0.0430, 1.4368),
+		_V( 0.9708, 0.0430, 1.4949), _V( 1.0616, 0.0677, 1.5006), _V( 1.0615, 0.0678, 1.4452), _V( 1.0287, 0.0582, 1.3907), _V( 0.9768, 0.0434, 1.5001),
+		_V( 0.9773, 0.0433, 1.4452), _V( 0.9773, 0.0431, 1.3908), _V( 0.9767, 0.0434, 1.2569), _V( 0.9770, 0.0433, 1.1843)
+	};
+
+	for (int i = 0; i < NUM_ELEMENTS(specialSwitches); i++){
+		if (specialSwitches[i]->IsFlashing()) activeSwitchPos = specialSwitchesPos[i];
+	}
+
 	VECTOR3 camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs;	
 
 	oapiCameraGlobalPos(&camPosGlobal);					// Get camera (in global co-ords)
