@@ -1321,7 +1321,8 @@ for a vector fetch, a time of abort, and maneuver targets. This type of manual e
 The launch window processor (LWP) can be used to calculate the optimal liftoff time and launch targeting parameters for Saturn IB missions to a rendezvous target in orbit, such as Skylab and ASTP. In the input descriptions below GMTLO* refers to the lift-off time that is required to achieve zero phase angle to the target at insertion.
 \subsubsection{Inputs}
 
-\textbf{TGT:} Select target vehicle in orbit for rendezvous.\\
+\textbf{PAD:} Select the launchpad (CSM or LEM). The pad coordinates are system parameters.\\
+\textbf{TGT:} Select target vehicle in orbit for rendezvous. If the MPT is active then the selection is the vector time. If no vector time is given (negative value input) then either the present time is used or, if there should be any maneuvers on the MPT, the first free flight vector after the last MPT maneuver.\\
 \textbf{LOT:} Liftoff time option. The options are: 
 
 \begin{itemize}
@@ -1362,6 +1363,7 @@ The launch window processor (LWP) can be used to calculate the optimal liftoff t
 \textbf{DELNOF:} Flag for option to compute differential nodal regression from insertion to rendezvous.\\
 \textbf{DELNO:} Angle that is added to the target descending node to account for differential nodal regression.\\
 \textbf{PHASE:} Expected phase angle at insertion. The default option is 90-270$^{\circ}$, which should work for most of the 0-360$^{\circ}$ range. Near 360$^{\circ}$ some difficulty to converge could arise, so if a calculation fails then switching this option to 270-540$^{\circ}$ can help. Other than that there should be no need to change the default value.\\
+\textbf{LAZCOE:} Coefficients of the empirical launch azimuth polynomial. The polynomial has the form \(A\textsubscript{z} = A\textsubscript{00} + A\textsubscript{01}i + A\textsubscript{10}\lambda + A\textsubscript{11}i\lambda\), where i is the inclination and \(\lambda\) is the descending node angle. All input and output angles in radian. \\
 \textbf{DIS:} Go to launch targeting display.\\ 
 \textbf{BCK:} Go back to utilities page.\\
 
@@ -3490,6 +3492,8 @@ MHTDTC\_N&Number of entries in DPS thrust table&1&\\
 MGTESE&Number of tesseral and sectorial coefficients in Earth potential&0 (use 4 in Open Orbiter)&\\
 \hline
 MMTESE&Number of tesseral and sectorial coefficients in Moon potential&0 (use 3 in Open Orbiter)&\\
+\hline
+LAZCOE&Saturn IB launch targeting launch azimuth polynomial& 8568.36235 -20.131 -1.2501 5.5863385&\\
 \hline
 \end{tabular}
 \newpage

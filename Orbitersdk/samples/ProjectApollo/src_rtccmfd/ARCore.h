@@ -26,6 +26,22 @@ struct ApolloRTCCMFDData {  // global data storage
 	double uplinkBufferSimt;
 };
 
+struct MEDInput
+{
+	std::string Label;			//Short description on MFD page
+	std::string Description;	//Detailed description in MFD input box
+	std::string Unit;			//Unit displayed on MFD page
+	std::string Data;
+};
+
+struct MEDInputPage
+{
+	std::string Title;			//Title displayed on MFD page
+	std::string MEDCode;
+	std::vector<MEDInput> table;
+	int display = -1;
+};
+
 class AR_GCore
 {
 public:
@@ -102,6 +118,9 @@ public:
 
 	//GENERAL PARAMETERS
 	double t_TPI;				// Generally used TPI time
+
+	//MANUAL ENTRY DEVICE
+	std::vector<MEDInputPage> MEDInputData;
 
 	//MOCR DISPLAY
 	void DFLBackgroundSlide(oapi::Sketchpad *skp, DWORD W, DWORD H, unsigned display);
