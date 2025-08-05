@@ -78,6 +78,7 @@ class SIBSystems
 {
 public:
 	SIBSystems(VESSEL *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop, Pyro &SIB_SIVB_Sep, Sound &LaunchS, Sound &SShutS);
+	~SIBSystems();
 	void Timestep(double misst, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -108,12 +109,12 @@ public:
 	virtual bool GetEngineStop();
 	bool FireRetroRockets();
 
-	virtual void ConnectUmbilical(SCMUmbilical *umb);
-	virtual void DisconnectUmbilical();
-	bool IsUmbilicalConnected();
+	SCMUmbilical *SCMUmb;
 protected:
 	double GetSumThrust();
 	bool ESEGetSIBThrustOKSimulate(int eng, int n);
+	void DisconnectUmbilical();
+	bool IsUmbilicalConnected();
 
 	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
@@ -200,6 +201,4 @@ protected:
 	bool ThrustOK[24];
 
 	bool OutboardEnginesCutoffSignal;
-
-	SCMUmbilical *SCMUmb;
 };
