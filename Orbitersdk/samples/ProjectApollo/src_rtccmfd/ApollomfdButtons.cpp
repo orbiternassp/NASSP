@@ -2558,7 +2558,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu75[] =
 	{
 		{ "General MED Input", 0, 'G' },
-		{ "", 0, ' ' },
+		{ "MED inputs from file", 0, 'Q' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -2575,7 +2575,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu75, sizeof(mnu75) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("MED", OAPI_KEY_G, &ApolloRTCCMFD::menuGeneralMEDRequest);
-	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("FIL", OAPI_KEY_Q, &ApolloRTCCMFD::menuMEDInputFromFile);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
@@ -4153,7 +4153,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu122[] =
 	{
-		{ "CSM or LM pad", 0, 'P' },
+		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -4170,7 +4170,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu122, sizeof(mnu122) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("PAD", OAPI_KEY_P, &ApolloRTCCMFD::menuSLVLaunchTargetingPad);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
