@@ -6800,16 +6800,7 @@ void ApolloRTCCMFD::menuVECPOINTCalc()
 void ApolloRTCCMFD::RecallStatus(void)
 {
 	//MFD data got reloaded in LoadState from the constructor, but resetting the MFD buttons crashes there. Do it here instead
-
-	if (screen == 130)
-	{
-		//Special logic for MED input page
-		//SetMEDInputPage(ActiveMEDInputPage.MEDCode);
-	}
-	else
-	{
-		SelectPage(screen);
-	}
+	SelectPage(screen);
 }
 
 void ApolloRTCCMFD::GetREFSMMATfromAGC()
