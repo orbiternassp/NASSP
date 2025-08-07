@@ -190,7 +190,7 @@ protected:
 	//Closest approach to landing site in CHAPLA
 	double GMT_LS_CA;
 
-	//Time of DOI, PDI and touchdown
+	//Time of DOI, PDI and touchdown (GMT)
 	double t_DOI, t_IGN, t_TD;
 	//Stored state vectors
 	EphemerisData sv_CSM, sv_V, sv_LM;

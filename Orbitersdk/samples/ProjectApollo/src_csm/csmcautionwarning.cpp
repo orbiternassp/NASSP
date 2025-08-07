@@ -85,17 +85,17 @@ bool CSMCautionWarningSystem::FuelCellBad(FuelCellStatus& fc, int index)
 
 	//please refactor me...and the rest of the CWS to be more voltage-based
 	switch (index) {
-		// 4.025 V = 0.161 lb/r H2
-		// 3.9875 V = 1.276 lb/r O2
+		//System handbook CW values 4.075V for CW light, 0.161 lb/hr H2 & 1.276 lb/hr O2
+		//Voltage scaled to meet these values
 
 	case 1:
-		if (sat->FCH2FlowSensor1.Voltage() > 4.025 || sat->FCO2FlowSensor1.Voltage() > 3.9875) { bad = true; }
+		if (sat->FCH2FlowSensor1.Voltage() > 4.075 || sat->FCO2FlowSensor1.Voltage() > 4.075) { bad = true; }
 		break;
 	case 2:
-		if (sat->FCH2FlowSensor2.Voltage() > 4.025 || sat->FCO2FlowSensor2.Voltage() > 3.9875) { bad = true; }
+		if (sat->FCH2FlowSensor2.Voltage() > 4.075 || sat->FCO2FlowSensor2.Voltage() > 4.075) { bad = true; }
 		break;
 	case 3:
-		if (sat->FCH2FlowSensor3.Voltage() > 4.025 || sat->FCO2FlowSensor3.Voltage() > 3.9875) { bad = true; }
+		if (sat->FCH2FlowSensor3.Voltage() > 4.075 || sat->FCO2FlowSensor3.Voltage() > 4.075) { bad = true; }
 		break;
 	}
 
@@ -791,3 +791,16 @@ void CSMCautionWarningSystem::LoadState(FILEHANDLE scn)
 	}
 }
 
+//
+// Code by Jordan
+//
+int CSMCautionWarningSystem::GetGNLampState() {
+	return GNLampState;
+}
+bool CSMCautionWarningSystem::GetGNPGNSAlarm() {
+	return GNPGNSAlarm;
+}
+
+int CSMCautionWarningSystem::GetSource() {
+	return Source;
+}

@@ -108,6 +108,8 @@ struct RLOTDisplay
 	double GSTAR = 0.0;
 	double TYAW = 0.0;
 	double DH = 0.0;
+	double GPAZ = 0.0;
+	double YP = 0.0;
 };
 
 struct LWPStateVectorTable
@@ -123,8 +125,23 @@ struct LWPStateVectorTable
 struct LWPInputTable
 {
 	LWPInputTable();
+
+	//Target vector time (GET). Use present time if set to a negative value
+	double TargetVectorTime;
+	//Position/velocity input state vector for target vehicle
+	VECTOR3 RT, VT;
+	double TT;
+	//Chaser vehicle K-Factor
+	double CKFACT;
+	//Chaser vehicle reference area
+	double CAREA;
+	//Chaser vehicle weight at insertion
+	double CWHT;
+
 	//0 = inplane opening (ascending node), 1 = inplane closing (descending node), 2 = opening and closing (both)
 	int NS;
+	//Day on which launch window times are computed, relative to base date
+	int DAY;
 	//Delta time to be subtracted from analytical inplane launch time to obtain empirical inplane launch time
 	double DTOPT;
 	//Flag to wrap initial phase angle (add 2NPI to phase angle)
@@ -151,9 +168,6 @@ struct LWPInputTable
 	double TSTART;
 	//Delta time after in-plane time to stop parameter table
 	double TEND;
-	//Position/velocity input state vector for target vehicle
-	VECTOR3 RT, VT;
-	double TT;
 	//Flag for option to compute differential nodal regression from insertion to rendezvous
 	//false = input DELNO, true = compute DELNO
 	bool DELNOF;
@@ -162,8 +176,6 @@ struct LWPInputTable
 	//Lift-off time options for launch targeting
 	//1 = input time, 2 = phase angle offset, 3 = biased phase zero (GMTLOR threshold), 4 = biased phase zero (TPLANE threshold), 5 = in-plane, 6 = in-plane with nodal regression
 	int LOT;
-	//Chaser vehicle weight at OMS-2
-	double CWHT;
 	//GMTLO* table flag. 1 = compute table, 2 = don't compute table
 	int STABLE;
 	//Delta time prior to each inplane launch point to start GMTLO* search
@@ -210,7 +222,7 @@ public:
 	LWPStateVectorTable svtab;
 protected:
 	void LWT();
-	void UPDAT(VECTOR3 &R, VECTOR3 &V, double &T, double T_des);
+	void UPDAT(VECTOR3 &R, VECTOR3 &V, double &T, double T_des, int TIMA = 0);
 	void NPLAN();
 	void LENSR(double GMTLO);
 	//GMT liftoff for a star time routine (zero phase angle)
@@ -231,9 +243,11 @@ protected:
 
 	//Utility functions:
 	//Compute phase angle between RT and RP
-	double PHANG();
+	double PHANG(bool wrapped = false) const;
 	//Compute time to travel phase angle
 	double TTHET(double phase);
+	//Argument of latitude
+	double ArgLat(VECTOR3 R, VECTOR3 V) const;
 
 	//Analytical in-plane time
 	double TIP;

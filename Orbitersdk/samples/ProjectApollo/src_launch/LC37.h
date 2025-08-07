@@ -90,7 +90,6 @@ protected:
 	char SIVBName[256];
 	SoundLib soundlib;
 	int state;
-	double LaunchMJD;
 	double MissionTime;
 
 	PSTREAM_HANDLE liftoffStream[2];
@@ -99,6 +98,7 @@ protected:
 	void DoFirstTimestep();
 	void SetTouchdownPointHeight(double height);
 	void DefineAnimations();
+	void UpdateMissionTime();
 
 	IUUmbilical *IuUmb;
 	SCMUmbilical *SCMUmb;

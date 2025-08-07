@@ -27,6 +27,15 @@
 
 #define NUM_ELEMENTS(x) (sizeof((x))/sizeof((x)[0]))
 
+#ifdef _OPENORBITER
+#define MAT_EMISSION MatProp::Emission
+#define MAT_LIGHT MatProp::Light
+#else
+#define MAT_EMISSION MESHM_EMISSION2
+#define MAT_LIGHT MESHM_EMISSION
+#endif
+
+
 namespace nassp
 {
 	namespace utils
@@ -38,6 +47,7 @@ namespace nassp
 			Saturn,
 			LEM,
 			MCC,
+			Skylab,
 			SaturnIB_SIVB,
 			SaturnV_SIVB,
 			SIVB,
@@ -63,6 +73,9 @@ namespace nassp
 				return false;
 			case MCC:
 				if (!_stricmp(classname, "ProjectApollo\\MCC") || !_stricmp(classname, "ProjectApollo/MCC")) return true;
+				return false;
+			case Skylab:
+				if (!_stricmp(classname, "ProjectApollo\\Skylab") || !_stricmp(classname, "ProjectApollo/Skylab")) return true;
 				return false;
 			case SaturnIB_SIVB:
 				if (!_stricmp(classname, "ProjectApollo\\nsat1stg2") || !_stricmp(classname, "ProjectApollo/nsat1stg2")) return true;

@@ -328,6 +328,10 @@ protected:
 	double t_BBO;
 	//Time of blackout end
 	double t_EBO;
+	//Time of second blackout begin
+	double t_BBO2;
+	//Time of second blackout end
+	double t_EBO2;
 	//Last height
 	double H_prev;
 	//Last G-Level
@@ -343,6 +347,14 @@ protected:
 	double R_EMS;
 	//Time of circular velocity (25500 ft/s)
 	double t_V_Circ;
+	//Time when G&N starts mode 2 (Huntest, P64)
+	double t_GN_Mode_2 = 0.0;
+	//Time when G&N starts mode 3 (Upcontrol, P65)
+	double t_GN_Mode_3 = 0.0;
+	//Time when G&N starts mode 4 (Ballistic, P66)
+	double t_GN_Mode_4 = 0.0;
+	//Time when G&N starts mode 5 (Final, P67)
+	double t_GN_Mode_5 = 0.0;
 	//Atmospheric density
 	double rho;
 	//Last guidance time

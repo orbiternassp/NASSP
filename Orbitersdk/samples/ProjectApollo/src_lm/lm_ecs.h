@@ -113,9 +113,12 @@ class LEMForwardHatch
 {
 public:
 	LEMForwardHatch(Sound &opensound, Sound &closesound);
-	void Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab);
+	void Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab, h_Tank *ucdt);
+	virtual void JettisonEquipment();
+	bool GetJettisonStatus() { return jettComplete; }
 	void DefineAnimations(UINT idx);
 	void DefineAnimationsVC(UINT idx);
+	double GetLMUCDPct() { return ((UCDTank->space.GetMass() / (UCDTank->space.Volume * 1000.0)) * 100.0); }
 	void Timestep(double simdt);
 	void Toggle();
 
@@ -126,11 +129,13 @@ public:
 protected:
 	AnimState2 hatch_state;
 	bool open;
+	bool jettComplete;
 
 	LEM *lem;
 	ToggleSwitch *ForwardHatchHandle;
 	ToggleSwitch *ForwardHatchReliefValve;
 	h_Tank *cabin;
+	h_Tank *UCDTank;
 
 	Sound &OpenSound;
 	Sound &CloseSound;

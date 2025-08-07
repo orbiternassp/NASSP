@@ -872,6 +872,8 @@
 
 #define AID_VC_WINDOWSHADES              3040
 
+#define AID_VC_EVAANTENNAHANDLE			 3050
+
 // VC Active Areas (Panel 1)
 #define AID_VC_PANEL_1				    ((id >= 3100) && (id <= 3140))
 #define AID_VC_SWITCH_P1_01		        3101	// Rate/error monitor CDR
@@ -1087,9 +1089,7 @@
 #define AID_VC_SEQ_LIGHTS      3829
 #define AID_VC_PANEL8_TALKBACKS 3830
 
-#define AID_LMVC_INTEGRAL_LIGHT  3831
-#define AID_LMVC_FLOOD_LIGHT     3832
-#define AID_LMVC_NUMERICS_LIGHT  3833
+#define AID_LMVC_LIGHTING      3831
 
 // VC Active Areas (Panel 11)
 #define AID_VC_PANEL_11			((id >= 4100) && (id <= 4199))
@@ -1357,6 +1357,8 @@
 #define AID_VC_VENT2                    5025
 #define AID_VC_ACTOVRDCDR               5026
 #define AID_VC_ACTOVRDLMP               5027
+
+#define AID_VC_EVA_Ant_Handle			5100
 
 #define IDB_LEM_FDAI_ROLL               10006
 

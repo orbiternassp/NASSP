@@ -100,6 +100,8 @@ namespace mission
 		virtual bool LMHasLegs() const;
 		//false = LM has no deflectors, true = LM has deflectors
 		virtual bool LMHasDeflectors() const;
+		//false = LM has no RTG Cask, true = LM has RTG Cask
+		virtual bool LMHasCask() const;
 		//false = CSM has no HGA, true = CSM has a HGA
 		virtual bool CSMHasHGA() const;
 		//false = CSM has no VHF Ranging System, true = CSM has VHF Ranging System
@@ -170,6 +172,7 @@ namespace mission
 		bool GetCueCards(const std::vector<CueCardConfig> &cue, unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs);
 
 		void AddCueCard(int vehicle, unsigned location, std::string meshname, VECTOR3 ofs);
+		void ClearCueCards(int vehicle);
 
 		void AddCSMCueCard(unsigned location, std::string meshname, VECTOR3 ofs = _V(0, 0, 0));
 		void AddLMCueCard(unsigned location, std::string meshname, VECTOR3 ofs = _V(0, 0, 0));
@@ -205,6 +208,7 @@ namespace mission
 		bool bLMHasAscEngArmAssy;
 		bool bLMHasLegs;
 		bool bLMHasDeflectors;
+		bool bLMHasCask;
 		bool bCSMHasHGA;
 		bool bCSMHasVHFRanging;
 		bool bInvertLMStageBit;
@@ -215,6 +219,8 @@ namespace mission
 		bool bHasRateAidedOptics;
 		bool bCrossPointerReversePolarity;
 		bool bCrossPointerShades;
+		bool bCSMUseDefaultCueCards;
+		bool bLMUseDefaultCueCards;
 		std::vector<CueCardConfig> CSMCueCards;
 		std::vector<CueCardConfig> LMCueCards;
 		double dTEPHEM0;

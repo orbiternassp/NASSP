@@ -97,7 +97,6 @@ protected:
 	SoundLib soundlib;
 	OBJHANDLE hLV;
 	int state;
-	double LaunchMJD;
 	double MissionTime;
 	bool Hold;
 	bool bCommit;
@@ -115,6 +114,7 @@ protected:
 	void DoFirstTimestep();
 	void SetTouchdownPointHeight(double height);
 	void DefineAnimations();
+	void UpdateMissionTime();
 
 	Saturn1b *sat;
 	S1B *s1b;

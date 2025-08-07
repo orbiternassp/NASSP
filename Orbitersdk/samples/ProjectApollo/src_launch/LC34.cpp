@@ -108,8 +108,7 @@ LC34::LC34(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	s1b = NULL;
 	sivb = NULL;
 	state = STATE_PRELAUNCH;
-	LaunchMJD = 99999.9;
-	MissionTime = 0.0;
+	MissionTime = MINUS_INFINITY;
 	Hold = false;
 	bCommit = false;
 
@@ -207,7 +206,7 @@ void LC34::clbkPreStep(double simt, double simdt, double mjd)
 {
 	if (!firstTimestepDone) DoFirstTimestep();
 
-	MissionTime = (oapiGetSimMJD() - LaunchMJD)*24.0*3600.0;
+	UpdateMissionTime();
 
 	if (swingarmState.Moving()) {
 		double dp = simdt * 0.25;
@@ -574,13 +573,21 @@ void LC34::DefineAnimations() {
 	AddAnimationComponent(swingarmAnim, 0, 1, &mgroupSwingarm4);
 }
 
+void LC34::UpdateMissionTime()
+{
+	//First try to get mission time from the Saturn class
+	if (sat) MissionTime = sat->GetMissionTime();
+	//Then from the S-IVB class
+	else if (sivb) MissionTime = sivb->GetMissionTime();
+	//Otherwise don't update the time
+}
+
 void LC34::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 
 	char *line;
 
 	while (oapiReadScenario_nextline (scn, line)) {
 
-		papiReadScenario_double(line, "LAUNCHMJD", LaunchMJD);
 		papiReadScenario_bool(line, "HOLD", Hold);
 		papiReadScenario_bool(line, "COMMIT", bCommit);
 		papiReadScenario_string(line, "SIBNAME", SIBName);
@@ -621,7 +628,6 @@ void LC34::clbkSaveState(FILEHANDLE scn) {
 		oapiWriteScenario_string(scn, "SIBNAME", SIBName);
 	if (SIVBName[0])
 		oapiWriteScenario_string(scn, "SIVBNAME", SIVBName);
-	papiWriteScenario_double(scn, "LAUNCHMJD", LaunchMJD);
 }
 
 int LC34::clbkConsumeDirectKey(char *kstate) {

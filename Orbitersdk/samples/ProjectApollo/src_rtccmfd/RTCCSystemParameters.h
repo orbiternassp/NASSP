@@ -242,6 +242,18 @@ struct RTCCSystemParameters
 		MCSRMU = 0.494857310015327;
 		MCERMU = 4.461996919999204;
 
+		//Earth
+		MDCMAT[0] = -1.1619e-9; MDCMAT[1] = 1.5654e-6; MDCMAT[2] = 2.1625e-6; MDCMAT[3] = 3.18750e-7; MDCMAT[4] = 9.7078e-8;
+		MDCMAT[5] = -5.1257e-7; MDCMAT[6] = 7.739e-8; MDCMAT[7] =  5.7700e-8; MDCMAT[8] = -3.4567e-9;
+		MDSMAT[0] = -4.1312e-9; MDSMAT[1] = -8.9613e-7; MDSMAT[2] = 2.6809e-7; MDSMAT[3] = -2.15567e-8; MDSMAT[4] = 1.9885e-7;
+		MDSMAT[5] = -4.4095e-7; MDSMAT[6] = 1.497e-7; MDSMAT[7] = -1.2389e-8; MDSMAT[8] = 6.4464e-9;
+		MGTESE = 0; //4 to use the full tesseral data. Use 0 in Orbiter Beta and earlier, 4 in Open Orbiter
+
+		//Moon
+		MMCMAT[0] = 0.0; MMCMAT[1] = 0.20715e-4; MMCMAT[2] = 0.34e-4; MMCMAT[3] = 0.0; MMCMAT[4] = 0.02583e-4; MMCMAT[5] = 0.0; MMCMAT[6] = 0.0; MMCMAT[7] = 0.0; MMCMAT[8] = 0.0;
+		MMSMAT[0] = 0.0; MMSMAT[1] = 0.0; MMSMAT[2] = 0.0; MMSMAT[3] = 0.0; MMSMAT[4] = 0.0; MMSMAT[5] = 0.0; MMSMAT[6] = 0.0; MMSMAT[7] = 0.0; MMSMAT[8] = 0.0;
+		MMTESE = 0; //3 with L1 model. Use 0 in Orbiter Beta and earlier, 3 in Open Orbiter
+
 		//Time from launch to EOI, seconds
 		MDLIEV[0] = 0.76673814e3;
 		MDLIEV[1] = -0.18916781e1;
@@ -396,6 +408,8 @@ struct RTCCSystemParameters
 		MCVTB2 = 1.0;
 		MCVDTM = 2.0;
 		MCCRAM = 0.5;
+		MCVCWT = 19246.4*0.45359237;
+		MCVLWT = 3828.0*0.45359237;
 
 		MCTCT1 = 196.6 * 4.4482216152605;
 		MCTCT2 = 393.2 * 4.4482216152605;
@@ -665,6 +679,23 @@ struct RTCCSystemParameters
 		MHVCCG.CG[19] = _V(934.701130, 3.973806, 6.541933)*0.0254;
 		MHVCCG.N = 20;
 
+		//Thrust tables
+		for (int i = 0; i < 40; i++)
+		{
+			//SPS
+			MHTSTC.Weight[i] = 0.0;
+			MHTSTC.Thrust[i] = _V(91188.544, 29.60667013, 0.0);
+			//APS
+			MHTATC.Weight[i] = 0.0;
+			MHTATC.Thrust[i] = _V(15297.43, 5.049776716, 0.0);
+			//DPS
+			MHTDTC.Weight[i] = 0.0;
+			MHTDTC.Thrust[i] = _V(9712.5 * 4.4482216152605, 14.63626597, 0.0);
+		}
+		MHTSTC.N = 1;
+		MHTATC.N = 1;
+		MHTDTC.N = 1;
+
 		MDZBLK[0] = -0.9174410e1;
 		MDZBLK[1] = -0.8217687e1;
 		MDZBLK[2] = 0.6120521e1;
@@ -826,6 +857,21 @@ struct RTCCSystemParameters
 	double MCSRMU;
 	//Square root of gravitational constant of the Earth (Er^3/hr^2)^1/2
 	double MCERMU;
+
+	//C-matrix used in Earth potential
+	double MDCMAT[9];
+	//S-matrix used in Earth potential
+	double MDSMAT[9];
+	//Number of tesseral and sectorial coefficients in Earth potential
+	int MGTESE;
+
+	//C-matrix used in Moon potential
+	double MMCMAT[9];
+	//S-matrix used in Moon potential
+	double MMSMAT[9];
+	//Number of tesseral and sectorial coefficients in Moon potential
+	int MMTESE;
+
 	//Polynomial coefficients for insertion conditions
 	double MDLIEV[16];
 	//Earth orbit insertion constants
@@ -964,6 +1010,10 @@ struct RTCCSystemParameters
 	double MCVDTM;
 	//Converts RHO*AREA/MASS to .5 RHO*AREA/MASS in Er. (eventually in Er at least...)
 	double MCCRAM;
+	//CSM limiting weight for fuel exhaustion test (0.8 of dry weight)
+	double MCVCWT;
+	//LM limiting weight for fuel exhaustion test
+	double MCVLWT;
 
 	//Thrust of CSM RCS+X (2 quads)
 	double MCTCT1;
@@ -1143,6 +1193,14 @@ struct RTCCSystemParameters
 		VECTOR3 CG[40];
 		int N;
 	} MHVLCG, MHVACG, MHVCCG; //LM ascent+descent, LM ascent, CSM
+
+	//Thrust tables
+	struct ThrustTable
+	{
+		double Weight[40];
+		VECTOR3 Thrust[40]; //Thrust, weight loss rate, spare
+		int N;
+	} MHTSTC, MHTATC, MHTDTC; //SPS, APS, DPS
 
 	//DPS engine gimbal plane
 	double MGVDGD = 154.0*0.0254;

@@ -37,7 +37,7 @@ TLTrajectoryComputers::TLTrajectoryComputers(RTCC *r) : RTCCModule(r)
 
 	F_I_SIVB = 179847.1544797684; //LBF, 800000.0 Newton
 	F_SIVB = 202328.0487897395; //LBF, 900000.0 Newton
-	WDOT_SIVB = 1677750.443641722;; //LBS per hours, 211.393 kg/s
+	WDOT_SIVB = 1677750.443641722; //LBS per hours, 211.393 kg/s
 	T_MRS_SIVB = 50.0 / 3600.0; //Hours
 
 	gamma_reentry = -6.52*RAD;
@@ -553,6 +553,7 @@ bool TLTrajectoryComputers::IntegratedTrajectoryComputer(std::vector<double> &va
 	//6: Inclination of return in rad
 	//7: Height of return in Er
 	//8: Apogee height in Er
+	//9: TLI Delta V in m/s
 
 	TLMCCGeneralizedIteratorArray *vars;
 	vars = static_cast<TLMCCGeneralizedIteratorArray*>(varPtr);
@@ -570,8 +571,6 @@ bool TLTrajectoryComputers::IntegratedTrajectoryComputer(std::vector<double> &va
 		vars->C3_TLI = var[4];
 		vars->dt_EPO = var[5] * 3600.0;
 		vars->delta_TLI = var[6];
-
-		dt_node = 0.0; //Not needed?
 
 		sv0 = vars->sv0;
 
@@ -593,16 +592,35 @@ bool TLTrajectoryComputers::IntegratedTrajectoryComputer(std::vector<double> &va
 		state_TLI2.sv.R *= R_E;
 		state_TLI2.sv.V *= R_E / 3600.0;
 		state_TLI2.sv.GMT *= 3600.0;
+		state_TLI2.Mass *= 0.45359237;
 		vars->dv_TLI *= R_E / 3600.0;
 
 		vars->sv_tli_cut = state_TLI2.sv;
+		arr[9] = vars->dv_TLI;
 
+		//Simulate only TLI?
+		if (vars->TLIOnlyIndicator) return false;
+		//Simulate through apogee?
 		if (vars->EllipticalCaseIndicator)
 		{
 			//Propagate state vector to apogee
 			pRTCC->PMMCEN(state_TLI2.sv, 0.0, 100.0*3600.0, 2, 0.0, 1.0, sv_ap, ITS);
+
+			//Error: Did not find apogee or reached lunar SOI
+			if (ITS != 2 || sv_ap.RBI != BODY_EARTH)
+			{
+				return true;
+			}
+
 			arr[8] = (length(sv_ap.R) - R_E) / R_E;
 			return false;
+		}
+
+		sv0_apo = vars->sv_tli_cut;
+		
+		if (vars->NodeStopIndicator)
+		{
+			dt_node = vars->GMT_nd - vars->sv_tli_cut.GMT;
 		}
 	}
 	else

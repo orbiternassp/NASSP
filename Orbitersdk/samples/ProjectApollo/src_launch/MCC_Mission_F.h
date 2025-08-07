@@ -225,6 +225,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_34	333
 // Ends at TEI map update
 #define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_35	334
+// Ends at TV update
+#define MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_36	335
 // Ends at PTC REFSMMAT update
 #define MST_F_TRANSEARTH_1	400
 // Ends at state vector update

@@ -48,13 +48,22 @@ public:
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkFocusChanged(bool getfocus, OBJHANDLE hNewVessel, OBJHANDLE hOldVessel);
 	void clbkGetRadiationForce(const VECTOR3& mflux, VECTOR3& F, VECTOR3& pos);
+	virtual void SetTrackLights(bool mode);
+	bool GetTrackLightStatus() { return trackLightsActive; };
 
 	ATMDC *GetATMDC() { return &atmdc; }
+
+protected:
+	bool trackLightsActive;
+
 private:
 	void AddTACS();
+	void AddTrackLights();
 
 	Skylab_VHFtoCSM_VHF_Connector skylab_vhf2csm_vhf_connector;
 	VESSEL *csm; //Pointer to CSM for various purposes
+
+	VECTOR3 cgShift = _V(0.066, 0.6198, -6.1392);
 
 	//Thruster Attitude Control System (TACS)
 	PROPELLANT_HANDLE ph_tacs;
@@ -62,6 +71,9 @@ private:
 
 	//Systems
 	ATMDC atmdc;
+
+	VECTOR3 tracklightPos[2];
+	BEACONLIGHTSPEC tracklights[2];
 
 private:
 	class SkylabAnimations {
@@ -81,6 +93,7 @@ private:
 		UINT anim_ATMArray3[11];
 		UINT anim_ATMArray4[11];
 		UINT anim_ClothesLineBoom[4];
+
 	};
 
 	const VECTOR3 MeshOffset = _V(0, 0, -7.925);

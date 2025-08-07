@@ -24,6 +24,7 @@
 
 #include "RF_calc.h"
 #include "paCBGmessageID.h"
+#include "timingequipment.h"
 
 /* PCM DOWN-TELEMETRY
 
@@ -194,7 +195,8 @@ public:
 	LM_VHF();
 	void Init(LEM *vessel, h_HeatLoad *vhfh);	       // Initialization
 	void Timestep(double simt);        // TimeStep
-	
+	void DefineAnimations(UINT idx);
+	void SetAnimation(double position);
 	void SystemTimestep(double simdt); // System Timestep
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
@@ -235,9 +237,13 @@ public:
 
 	double RCVDinputPowRCVR_A; //Power received by transcever A in dBm
 	double RCVDinputPowRCVR_B;//Power received by transcever B in dBm
+
+	//Animations
+	UINT anim_VHF;
+
 };
 
-class LM_PCM
+class LM_PCM : public TimingEquipment
 {
 public:
 	LM_PCM();
@@ -246,7 +252,7 @@ public:
 	void Timestep(double simt);     // TimeStep
 	void SystemTimestep(double simdt);
 
-	bool TimingSignal();	//Geenerates 512khz timing signal
+	virtual bool TimingSignal();	//Geenerates 512khz timing signal
 
 	double last_update;				// simt of last update
 protected:

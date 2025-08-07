@@ -61,12 +61,13 @@ MissionTimer::~MissionTimer()
 	// Nothing for now.
 }
 
-void MissionTimer::Init(e_object *a, e_object *b, ContinuousRotationalSwitch *dimmer, e_object *c, ToggleSwitch *override)
+void MissionTimer::Init(e_object *a, e_object *b, ContinuousRotationalSwitch *dimmer, e_object *c, ToggleSwitch *override, TimingEquipment* extTiming)
 {
 	DCPower.WireToBuses(a, b);
 	WireTo(c);
 	DimmerRotationalSwitch = dimmer;
 	DimmerOverride = override;
+	externalTimingEquipment = extTiming;
 }
 
 void MissionTimer::Reset()
@@ -286,40 +287,50 @@ void MissionTimer::Render(SURFHANDLE surf, SURFHANDLE digits, bool csm, int TexM
 	if (!IsPowered() || !IsDisplayPowered())
 		return;
 
-	const int DigitWidth = 19*TexMul;
-	const int DigitHeight = 21*TexMul;
-	int Curdigit, Curdigit2;
+	const int DigitWidth = 21*TexMul;
+	const int DigitHeight = 23*TexMul;
+	int Curdigit, divisor;
 
-	// Hour display on three digit
-	Curdigit = hours / 100;
-	Curdigit2 = hours / 1000;
-	oapiBlt(surf, digits, 0, 0, DigitWidth*(Curdigit- (Curdigit2 * 10)), 0,DigitWidth,DigitHeight);
+	// Display tuning fork symbol if CTE (CM) or PCMTE (LM) reference is lost, and we're operating on internal frequency
+	if (!externalTimingEquipment->TimingSignal()) {
+		oapiBlt(surf, digits, 0, 0, (int)(DigitWidth * 13.33), 0, DigitWidth / 2, DigitHeight);
+	}
 
-	Curdigit = hours / 10;
-	Curdigit2 = hours / 100;
-	oapiBlt(surf, digits, 0+20*TexMul, 0, DigitWidth*(Curdigit- (Curdigit2 * 10)), 0, DigitWidth,DigitHeight);
+	// Margin of half of a digit on the left for the tuning-fork symbol
+	double margin = 0.5;
 
-	Curdigit = hours;
-	Curdigit2 = hours / 10;
-	oapiBlt(surf, digits, 0+39*TexMul, 0, DigitWidth*(Curdigit- (Curdigit2 * 10)), 0, DigitWidth,DigitHeight);
+	// Hours
+	divisor = 100;
+	for (int i = 0; i < 3; ++i) {
+		Curdigit = (hours / divisor) % 10;
+		oapiBlt(surf, digits, (int)((DigitWidth * (i + margin)) * 0.95), 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+		// Adjust divisor for next digit
+		divisor /= 10;
+	}
 
-	// Minute display on two digit
-	Curdigit = minutes / 10;
-	Curdigit2 = minutes / 100;
-	oapiBlt(surf, digits, 0+62*TexMul, 0, DigitWidth*(Curdigit- (Curdigit2 * 10)), 0, DigitWidth,DigitHeight);
+	// Add additional third-digit margin between hours and minutes
+	margin += 3.0 + 0.33;
 
-	Curdigit = minutes;
-	Curdigit2 = minutes / 10;
-	oapiBlt(surf, digits, 0+81*TexMul, 0, DigitWidth*(Curdigit- (Curdigit2 * 10)), 0, DigitWidth,DigitHeight);
+	// Minutes
+	divisor = 10;
+	for (int i = 0; i < 2; ++i) {
+		Curdigit = (minutes / divisor) % 10;
+		oapiBlt(surf, digits, (int)((DigitWidth * (i + margin)) * 0.95), 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+		// Adjust divisor for next digit
+		divisor /= 10;
+	}
 
-	// second display on two digit
-	Curdigit = seconds / 10;
-	Curdigit2 = seconds / 100;
-	oapiBlt(surf, digits, 0+104*TexMul, 0, DigitWidth*(Curdigit- (Curdigit2 * 10)), 0, DigitWidth,DigitHeight);
+	// Add additional third-digit margin between minutes and seconds
+	margin += 2.0 + 0.33;
 
-	Curdigit = seconds;
-	Curdigit2 = seconds/10;
-	oapiBlt(surf, digits, 0+123*TexMul, 0, DigitWidth*(Curdigit- (Curdigit2 * 10)), 0, DigitWidth,DigitHeight);
+	// Seconds
+	divisor = 10;
+	for (int i = 0; i < 2; ++i) {
+		Curdigit = (seconds / divisor) % 10;
+		oapiBlt(surf, digits, (int)((DigitWidth * (i + margin)) * 0.95), 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+		// Adjust divisor for next digit
+		divisor /= 10;
+	}
 }
 
 void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm, int TexMul)
@@ -327,40 +338,50 @@ void MissionTimer::Render90(SURFHANDLE surf, SURFHANDLE digits, bool csm, int Te
 	if (!IsPowered() || !IsDisplayPowered())
 		return;
 
-	const int DigitWidth = 21*TexMul;
-	const int DigitHeight = 19*TexMul;
-	int Curdigit, Curdigit2;
+	const int DigitWidth = 23 * TexMul;
+	const int DigitHeight = 21 * TexMul;
+	int Curdigit, divisor;
 
-	// Hour display on three digit
-	Curdigit = hours / 100;
-	Curdigit2 = hours / 1000;
-	oapiBlt(surf, digits, 0, 0, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
+	// Display tuning fork symbol if CTE (CM) or PCMTE (LM) reference is lost, and we're operating on internal frequency
+	if (!externalTimingEquipment->TimingSignal()) {
+		oapiBlt(surf, digits, 0, 0, 0, (int)(DigitHeight * 13.33), DigitWidth, DigitHeight / 2);
+	}
 
-	Curdigit = hours / 10;
-	Curdigit2 = hours / 100;
-	oapiBlt(surf, digits, 0, 0 + 20*TexMul, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
+	// Margin of half of a digit on the left for the tuning-fork symbol
+	double margin = 0.5;
 
-	Curdigit = hours;
-	Curdigit2 = hours / 10;
-	oapiBlt(surf, digits, 0, 0 + 39*TexMul, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
+	// Hours
+	divisor = 100;
+	for (int i = 0; i < 3; ++i) {
+		Curdigit = (hours / divisor) % 10;
+		oapiBlt(surf, digits, 0, (int)((DigitHeight * (i + margin)) * 0.95), 0, DigitHeight * Curdigit, DigitWidth, DigitHeight);
+		// Adjust divisor for next digit
+		divisor /= 10;
+	}
 
-	// Minute display on two digit
-	Curdigit = minutes / 10;
-	Curdigit2 = minutes / 100;
-	oapiBlt(surf, digits, 0, 0 + 62*TexMul, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
+	// Add additional third-digit margin between hours and minutes
+	margin += 3.0 + 0.33;
 
-	Curdigit = minutes;
-	Curdigit2 = minutes / 10;
-	oapiBlt(surf, digits, 0, 0 + 81*TexMul, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
+	// Minutes
+	divisor = 10;
+	for (int i = 0; i < 2; ++i) {
+		Curdigit = (minutes / divisor) % 10;
+		oapiBlt(surf, digits, 0, (int)((DigitHeight * (i + margin)) * 0.95), 0, DigitHeight * Curdigit, DigitWidth, DigitHeight);
+		// Adjust divisor for next digit
+		divisor /= 10;
+	}
 
-	// second display on two digit
-	Curdigit = seconds / 10;
-	Curdigit2 = seconds / 100;
-	oapiBlt(surf, digits, 0, 0 + 104*TexMul, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
+	// Add additional third-digit margin between minutes and seconds
+	margin += 2.0 + 0.33;
 
-	Curdigit = seconds;
-	Curdigit2 = seconds / 10;
-	oapiBlt(surf, digits, 0, 0 + 123*TexMul, DigitWidth * (Curdigit - (Curdigit2 * 10)), 0, DigitWidth, DigitHeight);
+	// Seconds
+	divisor = 10;
+	for (int i = 0; i < 2; ++i) {
+		Curdigit = (seconds / divisor) % 10;
+		oapiBlt(surf, digits, 0, (int)((DigitHeight * (i + margin)) * 0.95), 0, DigitHeight * Curdigit, DigitWidth, DigitHeight);
+		// Adjust divisor for next digit
+		divisor /= 10;
+	}
 }
 
 void MissionTimer::SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool persistent)
@@ -418,33 +439,24 @@ void LEMEventTimer::Render(SURFHANDLE surf, SURFHANDLE digits, int TexMul)
 	if (!IsPowered() || !IsDisplayPowered())
 		return;
 
-	//
-	// Digits are 16x19.
-	//
-
-	const int DigitWidth = 19*TexMul;
-	const int DigitHeight = 21*TexMul;
+	const int DigitWidth = 21*TexMul;
+	const int DigitHeight = 23*TexMul;
 	int Curdigit, Curdigit2;
 
-	// Minute display on two digit
-	Curdigit = minutes / 10;
-	Curdigit2 = minutes / 100;
-	oapiBlt(surf, digits, 0, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
+	// Minutes
+	Curdigit = minutes % 10;
+	Curdigit2 = (minutes / 10) % 10;
+	oapiBlt(surf, digits, 0, 0, DigitWidth * Curdigit2, 0, DigitWidth, DigitHeight);
+	oapiBlt(surf, digits, DigitWidth, 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 
-	Curdigit = minutes;
-	Curdigit2 = minutes / 10;
-	oapiBlt(surf, digits, 20*TexMul, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
+	double margin = 2.33;	// One-third digit gap between minutes and seconds
 
-	//oapiBlt(surf, digits, 37, 0, DigitWidth2, 0, 4, DigitWidth);
-
-	// second display on two digit
-	Curdigit = seconds / 10;
-	Curdigit2 = seconds / 100;
-	oapiBlt(surf, digits, 43*TexMul, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
-
-	Curdigit = seconds;
-	Curdigit2 = seconds/10;
-	oapiBlt(surf, digits, 62*TexMul, 0, DigitWidth * (Curdigit-(Curdigit2*10)), 0, DigitWidth,DigitHeight);
+	// Seconds
+	Curdigit = seconds % 10;
+	Curdigit2 = (seconds / 10) % 10;
+	oapiBlt(surf, digits, (int)(DigitWidth * margin), 0, DigitWidth * Curdigit2, 0, DigitWidth, DigitHeight);
+	oapiBlt(surf, digits, (int)(DigitWidth * (margin + 1)), 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
+	// I subtract 1 from this final digit's target position to fix floating point rounding causing the last digit to be one pixel further away than the rest.
 }
 
 void LEMEventTimer::CountingThroughZero(double &t)
@@ -473,6 +485,14 @@ EventTimer::~EventTimer()
 	//
 	// Nothing for now
 	//
+}
+
+void EventTimer::Init(e_object* a, e_object* b, ContinuousRotationalSwitch* dimmer, e_object* c, ToggleSwitch* override)
+{
+	DCPower.WireToBuses(a, b);
+	WireTo(c);
+	DimmerRotationalSwitch = dimmer;
+	DimmerOverride = override;
 }
 
 void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits, int TexMul)

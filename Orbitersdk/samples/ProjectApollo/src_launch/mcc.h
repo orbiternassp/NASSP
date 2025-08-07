@@ -28,6 +28,7 @@
 #include <fstream>
 #include <atomic>
 #include "thread.h"
+#include "MCC_Calculations.h"
 
 // Save file strings
 #define MCC_START_STRING	"MCC_BEGIN"
@@ -182,6 +183,10 @@
 #define PT_LMP22ACQPAD      34
 #define PT_AP12LMASCPAD     35
 #define PT_AP12SEPPAD		36
+#define PT_AP7STRCNTPAD		37
+#define PT_AP7WSMRPAD		38
+#define PT_AP7P23PAD		39
+#define PT_AP7PTCPAD		40
 #define PT_NONE				99
 #define PT_GENERIC			100
 
@@ -298,6 +303,7 @@ public:
 	void MissionSequence_SL();
 
 	RTCC *rtcc;												// Pointer to RTCC
+	MCC_Calculations mcc_calcs;
 	Saturn *cm;												// Pointer to CM
 	LEM *lm;												// Pointer to LM
 	SIVB *sivb;												// Pointer to SIVB

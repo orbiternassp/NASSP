@@ -23,8 +23,9 @@
   **************************************************************************/
 
 
-#if !defined(_PA_MISSIONTIMER_H)
-#define _PA_MISSIONTIMER_H
+#pragma once
+
+#include "timingequipment.h"
 
 #define MISSIONTIMER_2_START_STRING "MISSIONTIMER2_START"
 #define MISSIONTIMER_306_START_STRING "MISSIONTIMER306_START"
@@ -43,7 +44,7 @@ public:
 	MissionTimer(PanelSDK &p);
 	virtual ~MissionTimer();
 
-	void Init(e_object *a, e_object *b, ContinuousRotationalSwitch *dimmer, e_object *c, ToggleSwitch *overide);
+	void Init(e_object *a, e_object *b, ContinuousRotationalSwitch *dimmer, e_object *c, ToggleSwitch *overide, TimingEquipment* extTiming);
 	void Timestep(double simt, double deltat, bool persistent);
 	virtual void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str, bool persistent);
@@ -100,6 +101,7 @@ protected:
 	ContinuousRotationalSwitch *DimmerRotationalSwitch;
 	ToggleSwitch *DimmerOverride;
 	PowerMerge DCPower;
+	TimingEquipment* externalTimingEquipment;
 };
 
 //
@@ -110,6 +112,7 @@ class EventTimer: public MissionTimer {
 public:
 	EventTimer(PanelSDK &p);
 	virtual ~EventTimer();
+	void Init(e_object* a, e_object* b, ContinuousRotationalSwitch* dimmer, e_object* c, ToggleSwitch* override);
 	void Render(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);
 	void Render90(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);
 	void SystemTimestep(double simdt);
@@ -141,5 +144,3 @@ protected:
 #define TIMER_COUNT_DOWN	0
 #define TIMER_COUNT_NONE	1
 #define TIMER_COUNT_UP		2
-
-#endif

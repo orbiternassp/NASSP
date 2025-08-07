@@ -29,15 +29,21 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 struct LunarTargetingProgramInput
 {
+	LunarTargetingProgramInput();
+	//0 = Current trajectory impact evaluation, 1 = input maneuver impact evaluation, 2 = converge on target
+	int mode;
+	//true = Optimize maneuver
+	bool bOptimize;
 	EphemerisData sv_in;
 	double mass;
 	double pitch_guess;
 	double yaw_guess;
 	double bt_guess;
-	double tig_guess; //In GET
+	double tig_guess; //In GMT
 
-	double lat_tgt;
-	double lng_tgt;
+	double lat_tgt; //Desired latitude of impact
+	double lng_tgt; //Desired longitude of impact
+	double gmt_imp_tgt; //Desired GMT of impact
 	double TB8; //Time of TB8 since GRR
 };
 
@@ -48,9 +54,10 @@ struct LunarTargetingProgramOutput
 	double yaw = 0.0;
 	double bt = 0.0;
 
-	double lat_imp = 0.0;
-	double lng_imp = 0.0;
-	double get_imp = 0.0;
+	double lat_imp = 0.0; //Latitude of impact, degrees
+	double lng_imp = 0.0; //Longitude of impact, degrees
+	double fpa_imp = 0.0; //Flight-path angle of impact, degrees
+	double get_imp = 0.0; //GET of impact
 
 	int err = 0;
 	double FlybyAlt = 0.0; //Nautical miles, only in case of no impact
@@ -66,6 +73,7 @@ struct LUNTARGeneralizedIteratorArray
 	double mass_f;
 	double lat;
 	double lng;
+	double fpa;
 	double gmt_imp;
 	double dv_R;
 };
@@ -81,7 +89,7 @@ public:
 	LUNTARGeneralizedIteratorArray outarray;
 protected:
 	bool ConvergeOnImpactSTR(double dv, double dgamma, double dpsi, double lat, double lng);
-	bool ConvergeOnImpact(double dv, double dgamma, double dpsi, double lat, double lng);
+	bool ConvergeOnImpact(double dv, double dgamma, double dpsi, double lat, double lng, double gmt_imp, bool optimize);
 	EphemerisData SimulateBurn(double pitch, double yaw, double dv, double &mass_f, double &bt);
 	VECTOR3 BurnAttitude(double pitch, double yaw);
 

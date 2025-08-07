@@ -437,6 +437,7 @@
     <ClInclude Include="..\..\src_csm\secs.h" />
     <ClInclude Include="..\..\src_sys\soundevents.h" />
     <ClInclude Include="..\..\src_sys\soundlib.h" />
+    <ClInclude Include="..\..\src_sys\timingequipment.h" />
     <ClInclude Include="..\..\src_sys\toggleswitch.h" />
     <ClInclude Include="..\..\src_aux\tracer.h" />
     <ClInclude Include="..\..\src_sys\yaAGC\agc_engine.h" />

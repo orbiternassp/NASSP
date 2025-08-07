@@ -162,6 +162,7 @@ void Sat5LMDSC::Setup()
 			if (state > 2) HideProbes();
 		}
 		HideDeflectors();
+		HideCask();
 	}
 
 	double tdph = -2.38;
@@ -263,6 +264,7 @@ void Sat5LMDSC::clbkVisualCreated(VISHANDLE vis, int refcount)
 		desstg_devmesh = GetDevMesh(vis, dscidx);
 		HideProbes();
 		HideDeflectors();
+		HideCask();
 	}
 }
 
@@ -303,6 +305,23 @@ void Sat5LMDSC::HideDeflectors()
 
 		for (int i = 0; i < 2; i++) {
 			oapiEditMeshGroup(desstg_devmesh, meshgroup_deflectors[i], &ges);
+		}
+	}
+}
+
+void Sat5LMDSC::HideCask()
+{
+	if (!desstg_devmesh)
+		return;
+	if (!pMission->LMHasCask()) {
+		static UINT meshgroup_cask[4] = { DS_GRP_Cask, DS_GRP_CaskFoil, DS_GRP_CaskMount, DS_GRP_Cask_Handle };
+
+		GROUPEDITSPEC ges;
+		ges.flags = (GRPEDIT_ADDUSERFLAG);
+		ges.UsrFlag = 3;
+
+		for (int i = 0; i < 4; i++) {
+			oapiEditMeshGroup(desstg_devmesh, meshgroup_cask[i], &ges);
 		}
 	}
 }

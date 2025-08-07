@@ -430,10 +430,12 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 	OpenSound(opensound), CloseSound(closesound)
 {
 	open = false;
+	jettComplete = false;
 	ForwardHatchHandle = NULL;
 	ForwardHatchReliefValve = NULL;
 	lem = NULL;
 	cabin = NULL;
+	UCDTank = NULL;
 
 	hatch_state.SetOperatingSpeed(0.2);
 	anim_Hatch = -1;
@@ -442,12 +444,28 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 	anim_FwdHatchReliefValve = -1;
 }
 
-void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab)
+void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab, h_Tank *ucdt)
 {
 	lem = l;
 	ForwardHatchHandle = fhh;
 	ForwardHatchReliefValve = fhr;
 	cabin = cab;
+	UCDTank = ucdt;
+}
+
+void LEMForwardHatch::JettisonEquipment()
+{
+	if (IsOpen() && !jettComplete)
+	{
+		double ucdTemp = UCDTank->GetTemp();
+		UCDTank->space.composition[SUBSTANCE_H2O].mass -= (UCDTank->space.composition[SUBSTANCE_H2O].mass * 0.999);
+		UCDTank->space.composition[SUBSTANCE_H2O].SetTemp(ucdTemp);
+
+		UCDTank->space.GetQ();
+		UCDTank->space.GetMass();
+
+		jettComplete = true;
+	}
 }
 
 void LEMForwardHatch::DefineAnimations(UINT idx)
@@ -540,18 +558,20 @@ void LEMForwardHatch::Toggle()
 void LEMForwardHatch::LoadState(char *line) {
 
 	int i1;
+	int j = 0;
 	double a, b;
 
-	sscanf(line + 13, "%d %lf %lf", &i1, &a, &b);
+	sscanf(line + 13, "%d %lf %lf %i", &i1, &a, &b, &j);
 	open = (i1 != 0);
 	hatch_state.SetState(a, b);
+	jettComplete = (j != 0);
 }
 
 void LEMForwardHatch::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
 
-	sprintf(buffer, "%i %lf %lf", (open ? 1 : 0), hatch_state.State(), hatch_state.Speed());
+	sprintf(buffer, "%i %lf %lf %d", (open ? 1 : 0), hatch_state.State(), hatch_state.Speed(), jettComplete);
 	oapiWriteScenario_string(scn, "FORWARDHATCH", buffer);
 }
 

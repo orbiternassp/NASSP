@@ -455,9 +455,15 @@ struct RMMYNIOutputTable
 	double t_gmax = 0.0;
 	double t_BBO = 0.0;
 	double t_EBO = 0.0;
+	double t_BBO2 = 0.0;
+	double t_EBO2 = 0.0;
 	double R_EMS = 0.0;
 	double V_EMS = 0.0;
 	double t_V_Circ = 0.0;
+	double t_GN_Mode_2 = 0.0; //Time when G&N starts mode 2 (Huntest, P64)
+	double t_GN_Mode_3 = 0.0; //Time when G&N starts mode 3 (Upcontrol, P65)
+	double t_GN_Mode_4 = 0.0; //Time when G&N starts mode 4 (Ballistic, P66)
+	double t_GN_Mode_5 = 0.0; //Time when G&N starts mode 5 (Final, P67)
 	//1 = time limit, 2 = impact, 3 = skipout
 	int IEND;
 };
@@ -583,6 +589,8 @@ struct RetrofireDisplayParametersTableData
 	double H_Sep;
 	double H_apo_sep, H_peri_sep;
 	double P_G_Sep, Y_G_Sep;
+	//External DV vector for sep/shaping
+	VECTOR3 VG_XDV_Sep;
 };
 
 struct RetrofireDisplayParametersTable
@@ -615,6 +623,7 @@ struct TimeConstraintsTable
 	double GMTPI = 0.0;
 	std::string StationID;
 	int TUP = 0;
+	int NV = 0;
 	double h_a = 0.0;
 	double h_p = 0.0;
 };
@@ -700,6 +709,7 @@ struct SLVTargetingParametersTable
 	double BIAS = 0.0;
 	double LATLS = 0.0;
 	double LONGLS = 0.0;
+	int Pad = 1; //Launchpad (1 = CSM, 2 = LM)
 };
 
 struct StationData
@@ -744,4 +754,19 @@ struct StationData
 struct StationTable
 {
 	std::vector<StationData> table;
+};
+
+//State vector and more
+struct VehicleDataBlock
+{
+	VehicleDataBlock::VehicleDataBlock()
+	{
+		KFactor = 0.0;
+		Area = 0.0;
+		Weight = 1.0;
+	}
+	EphemerisData sv;
+	double KFactor;
+	double Area;
+	double Weight;
 };

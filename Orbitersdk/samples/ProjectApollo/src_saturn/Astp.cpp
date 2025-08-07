@@ -137,11 +137,6 @@ void ASTP::Setup()
 
 void ASTP::clbkPreStep(double simt, double simdt, double mjd)
 {
-	// Delete DM/SLA docking port at DM extraction from SIVB
-	if (docksla && !DockingStatus(1)) {
-		DelDock(docksla);
-		docksla = NULL;
-	}
 }
 
 void ASTP::clbkDockEvent(int dock, OBJHANDLE connected)
@@ -160,12 +155,6 @@ void ASTP::clbkDockEvent(int dock, OBJHANDLE connected)
 	}
 }
 void ASTP::clbkPostCreation() {
-
-	// Delete DM/SLA docking port if DM extracted from SIVB
-	if (docksla && !DockingStatus(1)) {
-		DelDock(docksla);
-		docksla = NULL;
-	}
 }
 
 void ASTP::StartSeparationPyros()

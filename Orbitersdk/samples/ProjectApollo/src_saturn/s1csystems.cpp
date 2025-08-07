@@ -65,6 +65,7 @@ void F1Engine::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	papiWriteScenario_bool(scn, "GSECUTOFF", GSECutoff);
 	papiWriteScenario_bool(scn, "RSSCUTOFF", RSSCutoff);
 	papiWriteScenario_bool(scn, "ENGINERUNNING", EngineRunning);
+	if (EngineFailed) papiWriteScenario_bool(scn, "ENGINEFAILED", EngineFailed);
 	papiWriteScenario_double(scn, "THRUSTTIMER", ThrustTimer);
 	papiWriteScenario_double(scn, "PITCHCMD", pitchCmd);
 	papiWriteScenario_double(scn, "PITCHPOS", pitchPos);
@@ -89,6 +90,7 @@ void F1Engine::LoadState(FILEHANDLE scn, char *end_str) {
 		papiReadScenario_bool(line, "GSECUTOFF", GSECutoff);
 		papiReadScenario_bool(line, "RSSCUTOFF", RSSCutoff);
 		papiReadScenario_bool(line, "ENGINERUNNING", EngineRunning);
+		papiReadScenario_bool(line, "ENGINEFAILED", EngineFailed);
 		papiReadScenario_double(line, "THRUSTTIMER", ThrustTimer);
 		papiReadScenario_double(line, "PITCHCMD", pitchCmd);
 		papiReadScenario_double(line, "PITCHPOS", pitchPos);
@@ -482,11 +484,11 @@ void SICSystems::GetThrustOK(bool *ok)
 	}
 }
 
-void SICSystems::SetEngineFailed(int n)
+void SICSystems::SetEngineFailed(int n, bool condition)
 {
 	if (n >= 0 && n <= 4)
 	{
-		f1engines[n]->SetFailed();
+		f1engines[n]->SetFailed(condition);
 	}
 }
 

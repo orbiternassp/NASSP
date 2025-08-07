@@ -34,6 +34,7 @@ struct AP7BLK {
 	double GETI[8];		// TIG
 	double dVC[8];		// dV for EMS
 	char Wx[8][10];		// Weather cndx ("GOOD-FAIR-POOR")
+	int Num;			// Block data number
 };
 
 // APOLLO 7 - P27 CMC UPDATE
@@ -64,7 +65,7 @@ struct AP7MNV {
 	double lat;			// Latitude for N43
 	double lng;			// Longitude for N43
 	double alt;			// Altitude for N43
-	char remarks[128];	// remarks
+	char remarks[256];	// remarks
 };
 
 // APOLLO 7 - TERMINAL PHASE INITIATE
@@ -164,7 +165,6 @@ struct STARCHKPAD
 	double TAlign[2];	// Align Time for nominal IMU orientation prior to daylight star check - if required
 };
 
-
 // APOLLO 11 - LUNAR ENTRY
 
 struct AP11ENT
@@ -199,6 +199,9 @@ struct AP11ENT
 	double SXP[2];				// BSS X position on COAS for entry attitude check
 	char LiftVector[2][4];		// Lift vector desired at .05G's based on entry corridor
 	char remarks[2][128];		// Remarks
+	//Additional information
+	bool UsesP65[2];			// True if P65 is used in the reentry
+	bool UsesP66[2];			// True if P66 is used in the reentry
 };
 
 // APOLLO 11 - TRANSLUNAR INJECTION
@@ -263,6 +266,8 @@ struct AP11MNV {
 		LMWeight = 0.0;
 		dV = _V(0, 0, 0);
 		GETI = 0.0;
+		HA_P30 = 0.0;
+		HP_P30 = 0.0;
 		sprintf(remarks, "");
 	}
 
@@ -273,7 +278,7 @@ struct AP11MNV {
 	double GETI;		// TIG
 	VECTOR3 dV;			// P30 dV
 	VECTOR3 Att;		// Attitude at TIG
-	double HA, HP;		// Predicted apogee/perigee after maneuver
+	double HA, HP;		// Predicted apogee/perigee after maneuver. Equivalent to a V82 after the maneuver.
 	double Vt;			//Total dV
 	double burntime;	// Burn time
 	double Vc;			// EMS dV
@@ -291,7 +296,8 @@ struct AP11MNV {
 	char remarks[128];	// remarks
 	int type;           // 1 = Full PAD, 2 = Abbreviated PAD
 
-	double LMWeight;	// LM weight
+	double LMWeight;		// LM weight
+	double HA_P30, HP_P30;	// Predicted P30 apogee/perigee after maneuver. The HA/HP displayed by P30 before the maneuver.
 };
 
 // APOLLO 11 LM - MANEUVER
@@ -373,9 +379,13 @@ struct AP11AGSSVPAD
 
 struct AP10MAPUPDATE
 {
-	AP10MAPUPDATE() :Rev(0), LOSGET(0.0), AOSGET(0.0), PMGET(0.0), SSGET(0.0), SRGET(0.0), type(0), LOSGET2(0.0), AOSGET2(0.0), PMGET2(0.0), SSGET2(0.0) {}
+	AP10MAPUPDATE() : LOSGET(0.0), AOSGET(0.0), PMGET(0.0), SSGET(0.0), SRGET(0.0), type(0), LOSGET2(0.0), AOSGET2(0.0), PMGET2(0.0), SSGET2(0.0)
+	{
+		sprintf(Rev, "");
+		sprintf(remarks, "");
+	}
 
-	int Rev;		//Revolution of update
+	char Rev[10];	//Revolution of update
 	double LOSGET;	//Time of LOS
 	double AOSGET;	//Time of AOS
 	double PMGET;	//Time of meridian crossing (150° or 180° W), alternative: AOS without burn
@@ -385,8 +395,9 @@ struct AP10MAPUPDATE
 	double SSGET2;  //Time of sunset for a second rev (type = 3)
 	double PMGET2;	//Time of meridian crossing (150° or 180°W) for a second rev (type = 3)
 	double AOSGET2; //Time of AOS for a second rev (type = 3) or taking LOI into account (type = 2) or TEI (type = 5)
-					//0 = Only LOS/AOS and PM, 1 = Display all parameters, 2 = LOS, AOS with and AOS without LOI, 3 = Like 1 but for two revs, 4 = Like 0 but shows 180° instead of PM,
-	int type;		//5 = like 2 but for TEI, 6 = like 0 but shows 150° instead of PM, 7 = LOS, AOS w/ TEI, AOS w/o TEI
+	int type;		//0 = Only LOS/AOS and PM, 1 = Display all parameters, 2 = LOS, AOS with and AOS without LOI, 3 = Like 1 but for two revs, 4 = Like 0 but shows 180° instead of PM,
+					//5 = like 2 but for TEI, 6 = like 0 but shows 150° instead of PM, 7 = LOS, AOS w/ TEI, AOS w/o TEI
+	char remarks[256];	// remarks
 };
 
 // APOLLO 11 LANDMARK TRACKING PAD
@@ -543,6 +554,7 @@ struct AP11LMASCPAD
 };
 
 //APOLLO 7 MANUAL RETRO ATTITUDE ORIENTATION
+
 struct AP7RETRORIENTPAD
 {
 	double GET_Day = 0.0;
@@ -593,11 +605,60 @@ struct AP12LMASCPAD
 };
 
 //APOLLO 12 SEPARATION PAD
+
 struct AP12SEPPAD
 {
 	double t_Undock;
 	VECTOR3 Att_Undock;
 	double t_Separation;
+};
+
+// APOLLO 7 - SCT STAR COUNT PAD
+
+struct AP7STRCNTPAD
+{
+	char Mode[2];		// Mode
+	double GETSR;		// Time of sunrise
+	double GETSS_12;	// Time of sunset minus 12 minutes
+	VECTOR3 AttSR;		// Gimbal angles required to place SC at proper initial attitude (SR)
+	VECTOR3 AttSS_12;	// Gimbal angles required to place SC at proper initial attitude (SS-12)
+	double TAlign;		// Align Time for nominal IMU orientation - if required
+	int type;			// 0 = SCT, 1 = SXT
+	int Star1;			// Star ID
+	int Star2;			// Star ID
+};
+
+// APOLLO 7 - WSMR PAD
+
+struct AP7WSMRPAD
+{
+	double GETAOS;		// Time of WSMR AOS
+	double GETRR;		// Time of RR XPDR Acquisition
+	VECTOR3 AttAOS;		// Gimbal angles required to place SC at proper RR XPDR attitude
+	double TAlign;		// Align Time for nominal IMU orientation
+};
+
+// APOLLO 7 - P23 PAD
+
+struct AP7P23PAD
+{
+	int entries;
+	double GET[2];		// Start time
+	int Ldmk[2];	    // Landmark ID
+	int Star[2];		// Star ID
+	VECTOR3 Att[2];		// Gimbal angles required to place SC at proper initial attitude for midcourse navigation
+	double Shaft[2];	// Shaft angle
+	double Trun[2];		// Trunnion angle
+};
+
+// Apollo 7 - PTC/SPS COLD SOAK PAD
+
+struct AP7PTCPAD
+{
+	int type;		// 0 = PTC, 1 = SPS
+	double GET;		// T0 Time
+	VECTOR3 Att;	// Gimbal angles required
+	double TAlign;	// Align Time
 };
 
 //GENERIC STRING

@@ -152,6 +152,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src_aux\Mission.cpp" />
     <ClCompile Include="..\..\src_launch\mccvessel.cpp" />
+    <ClCompile Include="..\..\src_launch\MCC_Calculations.cpp" />
     <ClCompile Include="..\..\src_launch\MCC_Mission_B.cpp" />
     <ClCompile Include="..\..\src_launch\MCC_Mission_C.cpp" />
     <ClCompile Include="..\..\src_launch\MCC_Mission_C_PRIME.cpp" />
@@ -196,6 +197,7 @@
     <ClCompile Include="..\..\src_rtccmfd\TLIProcessor.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLTrajectoryComputers.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TwoImpulseProcessor.cpp" />
     <ClCompile Include="..\..\src_sys\thread.cpp" />
     <ClCompile Include="..\..\src_launch\mccvc.cpp" />
   </ItemGroup>
@@ -203,6 +205,7 @@
     <ClInclude Include="..\..\src_aux\Mission.h" />
     <ClInclude Include="..\..\src_aux\paCBGmessageID.h" />
     <ClInclude Include="..\..\src_launch\mccvessel.h" />
+    <ClInclude Include="..\..\src_launch\MCC_Calculations.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_B.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_C.h" />
     <ClInclude Include="..\..\src_launch\MCC_Mission_C_PRIME.h" />
@@ -237,6 +240,7 @@
     <ClInclude Include="..\..\src_rtccmfd\TLIProcessor.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLTrajectoryComputers.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TwoImpulseProcessor.h" />
     <ClInclude Include="..\..\src_sys\thread.h" />
   </ItemGroup>
   <ItemGroup>

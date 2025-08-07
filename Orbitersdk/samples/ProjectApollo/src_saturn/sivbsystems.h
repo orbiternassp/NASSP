@@ -246,7 +246,7 @@ public:
 	double GetLOXTankUllagePressurePSI() { return LOXTankUllagePressurePSI; }
 	bool GetBurnerMalfunction() { return BurnerMalfunctionSignal; }
 
-	void SetEngineFailed();
+	void SetEngineFailed(bool fail);
 	void SetO2H2BurnerFailed(bool fail);
 
 	void SaveState(FILEHANDLE scn);

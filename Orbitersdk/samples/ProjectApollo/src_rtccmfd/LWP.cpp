@@ -25,12 +25,19 @@
 
 LWPInputTable::LWPInputTable()
 {
+	TargetVectorTime = -1.0;
+
 	LAZCOE[0] = 490.931*RAD;
 	LAZCOE[1] = -20.131;
 	LAZCOE[2] = -1.2501;
 	LAZCOE[3] = 0.0975*DEG;
 
+	CKFACT = 1.0;
+	CAREA = 129.4*pow(0.3048, 2);
+	CWHT = 20000.0;
+
 	NS = 0;
+	DAY = 0;
 	DTOPT = 6.0*60.0;
 	WRAP = 0;
 	NEGTIV = 0;
@@ -39,7 +46,7 @@ LWPInputTable::LWPInputTable()
 	PFA = 18.8*RAD;
 	RINS = 6528178.0; //EDD
 	VINS = 7835.13; //EDD
-	YSMAX = 14.0*RAD;
+	YSMAX = 5.0*RAD;
 	LW = 2;
 	STABLE = 2;
 	LPT = 0;
@@ -50,6 +57,10 @@ LWPInputTable::LWPInputTable()
 	DTGRR = 17.0;
 	BIAS = 0.0;
 	GMTLOR = 0.0;
+	OFFSET = 0.0;
+	ANOM = OrbMech::R_Earth + 100.0*1852.0;
+	DHW = 0.0;
+	DU = PI;
 	Pad = 1;
 }
 
@@ -133,15 +144,35 @@ void LaunchWindowProcessor::LWP(const LWPInputTable &in)
 	}
 }
 
-void LaunchWindowProcessor::UPDAT(VECTOR3 &R, VECTOR3 &V, double &T, double T_des)
+void LaunchWindowProcessor::UPDAT(VECTOR3 &R, VECTOR3 &V, double &T, double T_des, int TIMA)
 {
 	PMMAEG pmmaeg;
 	AEGBlock aeg;
 
 	aeg.Data.coe_osc = OrbMech::GIMIKC(R, V, GLOCON.mu);
 	aeg.Data.TS = T;
-	aeg.Data.TE = T_des;
-	aeg.Data.TIMA = 0;
+	if (TIMA == 0)
+	{
+		//Time
+		aeg.Data.TIMA = 0;
+		aeg.Data.TE = T_des;
+	}
+	else
+	{
+		//Argument of latitude
+		aeg.Data.TIMA = 2;
+		aeg.Data.Item8 = T_des;
+
+		double U = ArgLat(R, V);
+		if (aeg.Data.Item8 > U)
+		{
+			aeg.Data.Item10 = 0.0;
+		}
+		else
+		{
+			aeg.Data.Item10 = 1.0;
+		}
+	}
 
 	pmmaeg.CALL(aeg.Header, aeg.Data, aegdata);
 
@@ -212,6 +243,7 @@ void LaunchWindowProcessor::NPLAN()
 
 	do
 	{
+		//Update state vector to TIP
 		UPDAT(RT, VT, TT, TIP);
 
 		UT = asin2(sin(LATLS) / sin(aegdata.coe_mean.i));
@@ -227,8 +259,8 @@ void LaunchWindowProcessor::NPLAN()
 		}
 
 		LAMBDA = aegdata.coe_osc.h - GLOCON.w_E*TIP;
+		OrbMech::normalizeAngle(LAMBDA);
 		LONG = LAMBDA + ETA;
-
 		if (LONG < 0)
 		{
 			LONG += PI2;
@@ -257,8 +289,8 @@ void LaunchWindowProcessor::LWT()
 	double V, DV, TIP0;
 	ITERSTATE iter;
 
-	//Initial guess for liftoff time, current target state vector time
-	TIP = TT;
+	//Initial guess for liftoff time
+	TIP = 86400.0 * (double)(inp.DAY);
 	
 LWT1:
 	iter.dv = 0.0;
@@ -293,7 +325,7 @@ LWT1:
 		TPLANE = OPEN;
 		LENSR(TPLANE);
 
-		PAO = PHANG();
+		PAO = PHANG(true);
 	}
 	if (inp.NS == 2)
 	{
@@ -310,7 +342,7 @@ LWT1:
 		TPLANE = CLOSE;
 		LENSR(TPLANE);
 
-		PAC = PHANG();
+		PAC = PHANG(true);
 	}
 	if (inp.STABLE == 1)
 	{
@@ -335,23 +367,47 @@ double LaunchWindowProcessor::TTHET(double phase)
 	return phase / aegdata.l_dot;
 }
 
-double LaunchWindowProcessor::PHANG()
+double LaunchWindowProcessor::ArgLat(VECTOR3 R, VECTOR3 V) const
 {
-	VECTOR3 u, R_A1, U_L;
-	double phase;
+	VECTOR3 K, h, n;
+	double u;
 
-	u = unit(crossp(RT, VT));
-	U_L = unit(crossp(u, RT));
-
-	R_A1 = unit(RP - u * dotp(RP, u))*length(RP);
-
-	phase = acos(dotp(unit(R_A1), unit(RT)));
-	if (dotp(U_L, R_A1) > 0)
+	K = _V(0, 0, 1);
+	h = unit(crossp(R, V));
+	n = crossp(K, h);
+	u = acos2(dotp(unit(n), unit(R)));
+	if (R.z < 0)
 	{
-		phase = -phase;
+		u = PI2 - u;
 	}
+	return u;
+}
 
-	return phase;
+double LaunchWindowProcessor::PHANG(bool wrapped) const
+{
+	//wrapped: false = -180 to 180°, true = based on NEGTIV and WRAP
+	double PA;
+	PA = OrbMech::PHSANG(RT, VT, RP);
+	if (wrapped == false) return PA;
+
+	if (inp.NEGTIV == 0)
+	{
+		while (PA >= PI2) PA -= PI2;
+		while (PA < 0) PA += PI2;
+	}
+	else if (inp.NEGTIV == 1)
+	{
+		while (PA >= 0) PA -= PI2;
+		while (PA < -PI2) PA += PI2;
+	}
+	else
+	{
+		while (PA >= PI) PA -= PI2;
+		while (PA < -PI) PA += PI2;
+	}
+	PA += PI2 * (double)inp.WRAP;
+
+	return PA;
 }
 
 void LaunchWindowProcessor::GMTLS(double TI, double TF)
@@ -370,6 +426,7 @@ void LaunchWindowProcessor::GMTLS(double TI, double TF)
 			error = -1;
 			return;
 		}
+		//Start search
 		ITER = 0;
 		do
 		{
@@ -399,7 +456,7 @@ void LaunchWindowProcessor::GMTLS(double TI, double TF)
 void LaunchWindowProcessor::RLOT()
 {
 	double DALT, DTYAW, UINS, ANGLE, ALT, DHA, UOC;
-	int ITER, ITINS, LAST;
+	int ITER, ITER2, ITINS, LAST;
 
 	ITER = ITINS = 0;
 	LAST = 1;
@@ -428,9 +485,11 @@ void LaunchWindowProcessor::RLOT()
 		GMTLO = TPLANE + inp.TRANS;
 		break;
 	}
+
 	GMTLS(GMTLO, GMTLO + 1.0); //The 1.0 doesn't matter as STABLE is set to 2
 	do
 	{
+		ITER2 = 0;
 		do
 		{
 			ITINS = 0;
@@ -456,7 +515,7 @@ void LaunchWindowProcessor::RLOT()
 							error = -1;
 							return;
 						}
-					} while (abs(ANGLE) < PROCON.DOS);
+					} while (abs(ANGLE) > PROCON.DOS);
 					inp.LOT = 1;
 					break;
 				case 3:
@@ -467,17 +526,20 @@ void LaunchWindowProcessor::RLOT()
 					break;
 				}
 
-				switch (inp.INSCO)
+				if (inp.INSCO == 2 || inp.INSCO == 3)
 				{
-				case 1:
-					break;
-				case 2:
-				case 3:
+					//Desired argument of latitude
 					UOC = UINS + inp.DU;
-					UPDAT(RP, VP, TP, UOC);
+					while (UOC >= PI2)
+					{
+						UOC -= PI2;
+					}
+					//Update chaser to argument of latitude
+					UPDAT(RP, VP, TP, UOC, 2);
 					if (inp.INSCO == 2)
 					{
-						UPDAT(RT, VT, TT, UOC);
+						//Update target to same time? Phase match?
+						UPDAT(RT, VT, TT, TP);
 						DHA = length(RT) - length(RP);
 						DALT = DHA - inp.DHW;
 					}
@@ -487,7 +549,6 @@ void LaunchWindowProcessor::RLOT()
 						DALT = inp.DHW - ALT;
 					}
 					inp.VINS = inp.VINS + DALT / 3420.0;
-					break;
 				}
 				ITINS++;
 				if (ITINS >= PROCON.CMAX)
@@ -511,8 +572,8 @@ void LaunchWindowProcessor::RLOT()
 				DTYAW = TYAW - GMTLO;
 				GMTLO = TYAW;
 			}
-			ITER++;
-			if (ITER >= PROCON.CMAX)
+			ITER2++;
+			if (ITER2 >= PROCON.CMAX)
 			{
 				error = -1;
 				return;
@@ -611,28 +672,10 @@ void LaunchWindowProcessor::NSERT(VECTOR3 RB, VECTOR3 VB, double GMTB, double &U
 	LENSR(GMTLO);
 	TINS = TP;
 
-	PA = PHANG();
+	PA = PHANG(true);
 
-	if (inp.NEGTIV == 0)
-	{
-		while (PA >= PI2) PA -= PI2;
-		while (PA < 0) PA += PI2;
-	}
-	else if (inp.NEGTIV == 1)
-	{
-		while (PA >= 0) PA -= PI2;
-		while (PA < -PI2) PA += PI2;
-	}
-	else
-	{
-		while (PA >= PI) PA -= PI2;
-		while (PA < -PI) PA += PI2;
-	}
-	PA += PI2 * (double)inp.WRAP;
-
-	DH = length(RT) - length(RP); //TBD
-	//TBD: Calculate UINS
-	UINS = 0.0;
+	DH = length(RT) - length(RP);
+	UINS = ArgLat(RP, VP);
 }
 
 void LaunchWindowProcessor::LWPT()
@@ -704,6 +747,8 @@ void LaunchWindowProcessor::RLOTD()
 	rlott.GSTAR = GSTAR;
 	rlott.TYAW = TYAW;
 	rlott.DH = DH;
+	rlott.GPAZ = GPAZ;
+	rlott.YP = WEDGE;
 }
 
 //Launch Window Processor Output Tables routine

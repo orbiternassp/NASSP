@@ -3380,6 +3380,8 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	theta_N_op = false;
 	TU = false;
 	TU10 = false;
+	Timer1Overflow = false;
+	Timer2Overflow = false;
 	// Integers
 	DGST2 = 0;
 	DVASW = 0;
@@ -3470,6 +3472,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	dot_eta_T = 0;
 	dT_3 = 0;
 	dT_4 = 0;
+	DTB6N = 0.0;
 	dt_c = 0;
 	dT_cost = 0;
 	dT_F = 0;
@@ -3840,6 +3843,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	tgt_index = 0;
 	SIICenterEngineCutoff = false;
 	FixedAttitudeBurn = false;
+	SIIOrbitInsertion = false;
 }
 
 // Setup
@@ -4340,6 +4344,9 @@ void LVDCSV::Init(){
 	C_A[10] = _V(0.84918, -0.46168, -0.25641);
 	R_STA = 6374932.0;
 
+	//Apollo 9
+	DTB6N = 5003.0;
+
 	// Set up remainder
 	LVDC_Timebase = -1;						// Start up halted in pre-launch pre-GRR loop
 	LVDC_TB_ETime = 0;
@@ -4351,6 +4358,7 @@ void LVDCSV::Init(){
 	CountPIPA = false;
 	SIICenterEngineCutoff = false;
 	FixedAttitudeBurn = false;
+	SIIOrbitInsertion = false;
 	if(!Initialized){ lvlog = fopen("lvlog.txt","w+"); }
 	fprintf(lvlog,"init complete\r\n");
 	fflush(lvlog);
@@ -4395,11 +4403,14 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_int(scn, "LVDC_S4B_IGN", S4B_IGN);
 	oapiWriteScenario_int(scn, "LVDC_S4B_REIGN", S4B_REIGN);
 	oapiWriteScenario_int(scn, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
+	oapiWriteScenario_int(scn, "LVDC_SIIOrbitInsertion", SIIOrbitInsertion);
 	papiWriteScenario_boolarr(scn, "LVDC_T2STAT", T2STAT, 11);
 	oapiWriteScenario_int(scn, "LVDC_TerminalConditions", TerminalConditions);
 	oapiWriteScenario_int(scn, "LVDC_theta_N_op", theta_N_op);
 	oapiWriteScenario_int(scn, "LVDC_TU", TU);
 	oapiWriteScenario_int(scn, "LVDC_TU10", TU10);
+	oapiWriteScenario_int(scn, "LVDC_Timer1Overflow", Timer1Overflow);
+	oapiWriteScenario_int(scn, "LVDC_Timer2Overflow", Timer2Overflow);
 	oapiWriteScenario_int(scn, "LVDC_AttitudeManeuverState", AttitudeManeuverState);
 	oapiWriteScenario_int(scn, "LVDC_DGST2", DGST2);
 	oapiWriteScenario_int(scn, "LVDC_DPM", DPM.to_ulong());
@@ -4598,6 +4609,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_dot_eta_T", dot_eta_T);
 	papiWriteScenario_double(scn, "LVDC_dT_3", dT_3);
 	papiWriteScenario_double(scn, "LVDC_dT_4", dT_4);
+	papiWriteScenario_double(scn, "LVDC_DTB6N", DTB6N);
 	papiWriteScenario_double(scn, "LVDC_dt_c", dt_c);
 	papiWriteScenario_double(scn, "LVDC_dT_cost", dT_cost);
 	papiWriteScenario_double(scn, "LVDC_dT_F", dT_F);
@@ -5103,11 +5115,14 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_bool(line, "LVDC_S4B_IGN", S4B_IGN);
 		papiReadScenario_bool(line, "LVDC_S4B_REIGN", S4B_REIGN);
 		papiReadScenario_bool(line, "LVDC_SIICenterEngineCutoff", SIICenterEngineCutoff);
+		papiReadScenario_bool(line, "LVDC_SIIOrbitInsertion", SIIOrbitInsertion);
 		papiReadScenario_boolarr(line, "LVDC_T2STAT", T2STAT, 11);
 		papiReadScenario_bool(line, "LVDC_TerminalConditions", TerminalConditions);
 		papiReadScenario_bool(line, "LVDC_theta_N_op", theta_N_op);
 		papiReadScenario_bool(line, "LVDC_TU", TU);
 		papiReadScenario_bool(line, "LVDC_TU10", TU10);
+		papiReadScenario_bool(line, "LVDC_Timer1Overflow", Timer1Overflow);
+		papiReadScenario_bool(line, "LVDC_Timer2Overflow", Timer2Overflow);
 
 		// integers
 		papiReadScenario_int(line, "LVDC_AttitudeManeuverState", AttitudeManeuverState);
@@ -5391,6 +5406,7 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_dot_eta_T", dot_eta_T);
 		papiReadScenario_double(line, "LVDC_dT_3", dT_3);
 		papiReadScenario_double(line, "LVDC_dT_4", dT_4);
+		papiReadScenario_double(line, "LVDC_DTB6N", DTB6N);
 		papiReadScenario_double(line, "LVDC_dt_c", dt_c);
 		papiReadScenario_double(line, "LVDC_dT_cost", dT_cost);
 		papiReadScenario_double(line, "LVDC_dT_F", dT_F);
@@ -6050,23 +6066,8 @@ void LVDCSV::TimeStep(double simdt) {
 		//LVDC FLIGHT PROGRAM
 		SystemTimeUpdateRoutine();
 
-		//This would probably belong in the LVDA, hardware counters to cause interrupt
-		Timer1Counter--;
-		Timer2Counter--;
-
 		//Interrupt processing
-		for (int i = 0;i < 12;i++)
-		{
-			if (InterruptState[i] == false && DVIH[i] == false && GetInterrupt(i))
-			{
-				InterruptState[i] = true;
-				ProcessInterrupt(i);
-			}
-			else if (InterruptState[i] && GetInterrupt(i) == false)
-			{
-				InterruptState[i] = false;
-			}
-		}
+		InterruptProcessing();
 
 		/* **** LVDC GUIDANCE PROGRAM **** */		
 		switch(LVDC_Timebase){
@@ -6083,14 +6084,22 @@ void LVDCSV::TimeStep(double simdt) {
 					LVDC_Stop = true;
 				}
 			
+
 				// MR Shift
 				if(T_1 <= 0.0 && MRS == false){
-					fprintf(lvlog,"[TB%d+%f] MR Shift\r\n",LVDC_Timebase,LVDC_TB_ETime);
-					DVASW = DVASW | MSKSST3A;
-					SwitchSelectorProcessor(0);
+					if (SIIOrbitInsertion)
+					{
+						fprintf(lvlog, "[TB%d+%f] S-II CECO \r\n", LVDC_Timebase, LVDC_TB_ETime);
+						lvda.SwitchSelector(SWITCH_SELECTOR_SII, 15);
+					}
+					else
+					{
+						fprintf(lvlog, "[TB%d+%f] MR Shift\r\n", LVDC_Timebase, LVDC_TB_ETime);
+						DVASW = DVASW | MSKSST3A;
+						SwitchSelectorProcessor(0);
+					}
 					MRS = true;
 				}
-				
 				break;
 
 			case 4:	//Timebase 4
@@ -6170,6 +6179,20 @@ void LVDCSV::TimeStep(double simdt) {
 				{
 					LVDC_Stop = true;
 					return;
+				}
+				//Special Apollo 9 code for third S-IVB burn
+				if (FixedAttitudeBurn && first_op && TMM - TB6 > DTB6N)
+				{
+					//Reset parameters for burn
+					T_2R = TABLE15[1].T2IR;
+					Tt_3R = TABLE15[1].T3PR;
+					//Flag settings
+					DVP = 2;
+					first_op = false;
+					//Return to TB6
+					LVDC_Timebase = 6;
+					TimeBaseChangeRoutine();
+					TB6 = TI;
 				}
 				break;
 
@@ -6656,6 +6679,40 @@ void LVDCSV::TimeBaseChangeRoutine()
 	SwitchSelectorProcessor(2);
 }
 
+void LVDCSV::InterruptProcessing()
+{
+	//Timer 1 always counts down wrapping around through 0 and generates an interrupt when it hits 0.
+	Timer1Counter--;
+	if (Timer1Counter < 0) Timer1Counter = 403;
+	if (Timer1Counter == 0)
+	{
+		Timer1Overflow = true;
+	}
+
+	//Timer 2 counts down to 0 and does not wrap around. An interrupt is generated when it hits 0.
+	if (Timer2Counter > 0)
+	{
+		Timer2Counter--;
+		if (Timer2Counter == 0)
+		{
+			Timer2Overflow = true;
+		}
+	}
+
+	for (int i = 0; i < 12; i++)
+	{
+		if (InterruptState[i] == false && DVIH[i] == false && GetInterrupt(i))
+		{
+			InterruptState[i] = true;
+			ProcessInterrupt(i);
+		}
+		else if (InterruptState[i] && GetInterrupt(i) == false)
+		{
+			InterruptState[i] = false;
+		}
+	}
+}
+
 bool LVDCSV::GetInterrupt(int rupt)
 {
 	switch (rupt)
@@ -6676,10 +6733,10 @@ bool LVDCSV::GetInterrupt(int rupt)
 		return lvda.GetCMCSIVBCutoff();
 		break;
 	case INT11_Timer2Interrupt:
-		return (Timer2Counter <= 0);
+		return Timer2Overflow;
 		break;
 	case INT12_Timer1Interrupt:
-		return (Timer1Counter <= 0);
+		return Timer1Overflow;
 		break;
 	}
 	return false;
@@ -6687,6 +6744,29 @@ bool LVDCSV::GetInterrupt(int rupt)
 
 void LVDCSV::ProcessInterrupt(int rupt)
 {
+	switch (rupt)
+	{
+	case INT11_Timer2Interrupt:
+		Timer2Overflow = false;
+		Timer2Interrupt(false);
+		InterruptState[INT11_Timer2Interrupt] = false; //Reset interrupt here so that it can happen again on the next cycle, if needed
+		break;
+	case INT12_Timer1Interrupt:
+		Timer1Overflow = false;
+		Timer1Interrupt(false);
+		InterruptState[INT12_Timer1Interrupt] = false; //Reset interrupt here so that it can happen again on the next cycle, if needed
+		break;
+	default:
+		ProcessExternalInterrupt(rupt);
+		break;
+	}
+}
+
+void LVDCSV::ProcessExternalInterrupt(int rupt)
+{
+	//Set interrupt levels 2 & 3 in progress flags
+	DFIL2 = DFIL3 = true;
+
 	switch (rupt)
 	{
 	case INT2_SCInitSIISIVBSepA_SIVBEngineCutoffA:
@@ -6700,6 +6780,7 @@ void LVDCSV::ProcessInterrupt(int rupt)
 		break;
 	case INT6_SIIEnginesCutoff:
 		StartTimeBase4();
+		if (SIIOrbitInsertion) StartTimebase5(); //For Skylab, immediately start TB5 as well
 		break;
 	case INT7_GuidanceReferenceRelease:
 		if (LVDC_Timebase == 6)
@@ -6714,23 +6795,18 @@ void LVDCSV::ProcessInterrupt(int rupt)
 			}
 		}
 		break;
-	case INT11_Timer2Interrupt:
-		Timer2Counter = 403; //Automatically generates an interrupt every 4.032 seconds if not under program control
-		Timer2Interrupt(false);
-		InterruptState[INT11_Timer2Interrupt] = false; //Reset interrupt here so that it can happen again on the next cycle, if needed
-		break;
-	case INT12_Timer1Interrupt:
-		Timer1Counter = 403; //Automatically generates an interrupt every 4.032 seconds if not under program control
-		Timer1Interrupt(false);
-		InterruptState[INT12_Timer1Interrupt] = false; //Reset interrupt here so that it can happen again on the next cycle, if needed
-		break;
 	}
+
+	//Reset interrupt levels 2 & 3 in progress flags
+	DFIL2 = DFIL3 = false;
 }
 
 void LVDCSV::Timer1Interrupt(bool timer1schedule)
 {
 	if (timer1schedule == false)
 	{
+		//fprintf(lvlog, "T1 Interrupt at GRR+%lf for function %d\r\n", TMM, GST1M);
+
 		DFIL3 = true;
 		switch (GST1M)
 		{
@@ -6778,6 +6854,11 @@ void LVDCSV::Timer1Interrupt(bool timer1schedule)
 		}
 	}
 
+	if (Timer1Counter < 1)
+	{
+		Timer1Counter = 1;
+	}
+
 	//fprintf(lvlog, "T1 Interrupt. Counter %d\r\n", Timer1Counter);
 }
 
@@ -6785,7 +6866,7 @@ void LVDCSV::Timer2Interrupt(bool timer2schedule)
 {
 	if (timer2schedule == false)
 	{
-		//fprintf(lvlog, "T2 Interrupt at GRR+%lf\r\n", TMM);
+		//fprintf(lvlog, "T2 Interrupt at GRR+%lf for function %d\r\n", TMM, DGST2);
 		//Lock T2 Interrupt
 		DVIH[INT11_Timer2Interrupt] = true;
 		//Set T2 interrupt in progress indicator
@@ -7159,6 +7240,7 @@ void LVDCSV::DiscreteProcessor2()
 	if (DPM[DIN19_SIIEnginesOut] == false && DVIH[INT6_SIIEnginesCutoff] == false && lvda.GetSIIEnginesOut())
 	{
 		StartTimeBase4();
+		if (SIIOrbitInsertion) StartTimebase5(); //For Skylab, immediately start TB5 as well
 	}
 
 	if (fail)
@@ -7421,7 +7503,23 @@ void LVDCSV::IterativeGuidanceMode()
 				//fprintf(lvlog, "T_1 = 0, T_2 = 0\r\n");
 				// Go to CHI-TILDE LOGIC
 			}
-			if (!S4B_REIGN && T_2 <= ART) { GATE = true; }//pre SIVB-staging chi-freeze
+			if (!S4B_REIGN && T_2 <= ART)
+			{
+				//Second IGM stage over
+				if (SIIOrbitInsertion)
+				{
+					fprintf(lvlog, "[TB%d+%f] MR Shift\r\n", LVDC_Timebase, LVDC_TB_ETime);
+					DVASW = DVASW | MSKSST3A;
+					SwitchSelectorProcessor(0);
+					S4B_IGN = true;
+					S2_BURNOUT = true;
+				}
+				else
+				{
+					//pre SIVB-staging chi-freeze
+					GATE = true;
+				}
+			}
 		}
 		else {
 			//fprintf(lvlog, "Pre-MRS\n");
@@ -7772,12 +7870,17 @@ void LVDCSV::IterativeGuidanceMode()
 				T_GO = T_3;
 				DT_N = 0.7; //HSL takes about 0.7 seconds to run
 				//fprintf(lvlog, "HSL = true, GATE5 = true, T_GO = %f\r\n", T_GO);
-				//Set up engine pump purge control valve enable on sequence on first S-IVB burn
 				if (BOOST)
 				{
+					//Set up engine pump purge control valve enable on sequence on first S-IVB burn
 					DVASW = DVASW | MSKSSSPEC;
-					SwitchSelectorProcessor(0);
 				}
+				else
+				{
+					//Set up S-IVB cutoff sequence on second S-IVB burn
+					DVASW = DVASW | MSKSSS4C0;
+				}
+				SwitchSelectorProcessor(0);
 			}
 			if (BOOST == true) {
 				//fprintf(lvlog, "BOOST-TO-ORBIT ACTIVE\r\n");
@@ -8078,6 +8181,7 @@ SS0170:
 	if (!(DVASW & MSKSSCLS3))
 	{
 		//SS0191: process a class 4 alt. sequence request
+		//fprintf(lvlog, "Process a class 4 alt. sequence request. DVASW: %d\r\n", DVASW);
 		//Acquisition gain requested?
 		if (DVASW & MSKSSACQU)
 		{
@@ -8227,6 +8331,7 @@ MSS55: //Switch selector read time check
 	//S-IVB cutoff SS requested?
 	if (VASPI & MSKSSS4C0)
 	{
+		//fprintf(lvlog, "Switch selector: S-IVB cutoff requested\r\n");
 		DVSST = 1e10;
 		return;
 	}
@@ -8244,7 +8349,7 @@ MSS55: //Switch selector read time check
 		Timer1Interrupt(true);
 	}
 	return;
-MSS60: //Switch selector read issuance
+MSS60: //SWITCH SELECTOR READ ISSUANCE
 	//Issue read command and stage selected
 	lvda.SwitchSelector(VSNA1, VSNA2);
 	fprintf(lvlog, "[TB%d+%f] Switch Selector command issued: Stage %d Channel %d\r\n", LVDC_Timebase, LVDC_TB_ETime, VSNA1, VSNA2);
@@ -8259,7 +8364,7 @@ MSS60: //Switch selector read issuance
 	}
 	//TBD
 	return;
-MSS70:
+MSS70: //SWITCH SELECTOR RESET
 	//Schedule normal SS check
 	SSM = 1 + 3;
 	SSTUPQ(KSSB3);
@@ -8330,6 +8435,7 @@ SS2020:
 	if (SSTABLE[SST1PTR].time >= 0) goto SS2030;
 	//SS0111
 	//Process return from alternate sequence
+	//fprintf(lvlog, "Switch Selector process return from alternate sequence\r\n");
 	//Pump purge alt seq in progress?
 	if (VASPI & MSKSSSPEC)
 	{
@@ -8368,6 +8474,7 @@ SS2020:
 		SST1PTR = KSSINDXTB5B;
 	}
 	//Should this be here?
+	//fprintf(lvlog, "Timebase 5 started from switch selector\r\n");
 	StartTimebase5();
 	goto SS2020;
 SS2030:
@@ -8979,25 +9086,25 @@ void LVDCSV::MinorLoop(int entry)
 
 void LVDCSV::CutoffLogic()
 {
-	if (ModeCode25[MC25_FirstSIVBCutoffCommand] == false && HSL == true && S4B_IGN == true)
+	if (HSL)
 	{
-		//Accounts for an average half minor loop delay
-		if (T_CO - TMM <= 0.02)
+		if ((S4B_IGN && ModeCode25[MC25_FirstSIVBCutoffCommand] == false) || (S4B_REIGN && ModeCode26[MC26_SecondSIVBCutoffCommand] == false))
 		{
-			SwitchSelectorProcessor(8);
-			fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
-			ModeCode25[MC25_FirstSIVBCutoffCommand] = true;
-		}
-	}
-	if (ModeCode26[MC26_SecondSIVBCutoffCommand] == false && HSL == true && S4B_REIGN == true)
-	{
-		//Accounts for an average half minor loop delay and also a 20ms delay in issuing the cutoff command
-		if (T_CO - TMM <= 0.04)
-		{
-			DVASW = DVASW | MSKSSS4C1;
-			SwitchSelectorProcessor(0);
-			fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
-			ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
+			//Accounts for an average half minor loop delay
+			if (T_CO - TMM <= 0.02)
+			{
+				SwitchSelectorProcessor(8);
+				fprintf(lvlog, "SIVB VELOCITY CUTOFF! TMM = %f \r\n", TMM);
+
+				if (S4B_IGN)
+				{
+					ModeCode25[MC25_FirstSIVBCutoffCommand] = true;
+				}
+				else
+				{
+					ModeCode26[MC26_SecondSIVBCutoffCommand] = true;
+				}
+			}
 		}
 	}
 }
@@ -9214,6 +9321,7 @@ void LVDCSV::CheckTimeBase57()
 		if (LVDC_Timebase == 4 || LVDC_Timebase == 40)
 		{
 			//Start TB5
+			//fprintf(lvlog, "Timebase 5 started from CheckTimeBase57\r\n");
 			StartTimebase5();
 		}
 		else if (LVDC_Timebase == 6)
@@ -9317,6 +9425,12 @@ void LVDCSV::StartTimebase5()
 		NISTAT[12] = true;
 		//Start TLI calculations
 		NISTAT[14] = true;
+
+		//Inhibit all S-II and S-IVB engine out signals
+		DVIH[INT6_SIIEnginesCutoff] = true;
+		DVIH[INT4_SIVBEngineOutB] = true;
+		DPM[DIN19_SIIEnginesOut] = true;
+		DPM[DIN5_SIVBEngineOutA] = true;
 	}
 }
 

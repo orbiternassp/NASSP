@@ -75,6 +75,8 @@ TLIGuidanceSim::TLIGuidanceSim(RTCC *r, RTCCNIInputTable tablin, int &iretn, Eph
 	VEX3 = 0.0;
 	WDOT3 = 0.0;
 	TB2 = 0.0;
+
+	XL2 = XK1 = XK2 = XK3 = XK4 = XJ2 = S2 = P2 = Q2 = U2 = 0.0;
 }
 
 void TLIGuidanceSim::PCMTRL()
@@ -642,7 +644,7 @@ void TLIGuidanceSim::PCMGN()
 	double TEMP1, TEMP2, TEMP4, RMAG, VMAG, FOM, DDLT, CPP, SPP, T3P, TTOTP, XL3P, XJ3P, XLYP, PHIT, SGAMT, CGAMT, DELL2;
 	double SGAM, CGAM, XIT, XITD, ZETATD, ZETATG, PHIDI, PHIDT, XITG, DXIDP, DETADP, DZETDP, DELL3, DELT3, XL3, XJ3, U3, P3, S3, Q3;
 	double DXID, DETAD, DZETD, XLY, XBRY, XBRP, XJY, SY, QY, XKY, DY, DETA, XLP, C2, C4, XJP, QP, XKP, DP, DXI, XPRY, XPRP;
-	double ZCP, ZSP, ZCY, ZSY, TTOT, SP, DPIT;
+	double ZCP, ZSP, ZCY, ZSY, TTOT, SP, DPIT, R4;
 	int IFLOP;
 
 	if (T == TLAST)
@@ -675,6 +677,7 @@ void TLIGuidanceSim::PCMGN()
 	{
 		goto PMMSIU_PCMGN_20;
 	}
+	//Target update calculations
 	RN = P;
 	E = RMAG * (E - 1.0) / RN + 1.0;
 	TEMP1 = E * E;
@@ -701,6 +704,7 @@ PMMSIU_PCMGN_1A:
 	DDLT = T - TLAST;
 	goto PMMSIU_PCMGN_2A;
 PMMSIU_PCMGN_1B:
+	//Target update calculations
 	ALPHD = ALPHD - acos(TEMP4);
 	TEMP2 = E * cos(F);
 	RT = P / (1.0 + TEMP2);
@@ -715,7 +719,6 @@ PMMSIU_PCMGN_1B:
 PMMSIU_PCMGN_20:
 	PLPS = mul(PLMB, RINP);
 	X4 = mul(GG, PLPS);
-	double R4;
 	R4 = sqrt(X4.x*X4.x + X4.z*X4.z);
 	SPP = (-X4.x*1.0 - X4.z*0.0) / R4;
 	CPP = (-X4.z*1.0 + X4.x*0.0) / R4;
@@ -729,12 +732,15 @@ PMMSIU_PCMGN_20:
 	UTA = mul(OrbMech::tmat(GG), AGS);
 	goto PMMSIU_PCMGN_330;
 PMMSIU_PCMGN_2A:
+	//Test Mixture Ratio Shift Indicator
 	if (IMRS == 0)
 	{
+		//After MRS
 		goto PMMSIU_PCMGN_120;
 	}
 	else if (IMRS == -1)
 	{
+		//Before MRS
 		T2 = T2 - DDLT;
 		if (T2 > 0.0)
 		{
@@ -766,6 +772,7 @@ PMMSIU_PCMGN_2A:
 	}
 	else
 	{
+		//During MRS
 		T2 = (WDOT2*(TB4 - TB2) - WDOT3 * TB4);
 		TEMP1 = WDOT2 * TB2;
 		T2 = T2 / TEMP1;
@@ -795,6 +802,7 @@ PMMSIU_PCMGN_2A:
 			//Error exit
 			goto PMMSIU_PCMGN_700;
 		}
+		//Second stage integral calculations
 		TEMP1 = VEX2 * T2;
 		TEMP2 = 0.5*TEMP1*T2;
 		XL2 = VEX2 * log(TAU2 / (TAU2 - T2));
@@ -821,6 +829,7 @@ PMMSIU_PCMGN_2A:
 		//Error exit
 		goto PMMSIU_PCMGN_700;
 	}
+	//Third stage integral calculations and preliminary computations
 	TTOTP = T2 + T3P;
 	XL3P = VEX3 * log(TAU3 / (TAU3 - T3P));
 	XJ3P = XL3P * TAU3 - VEX3 * T3P;

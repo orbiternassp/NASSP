@@ -143,9 +143,9 @@ private:
 	//3 = Mainstage thrust during ullage (SPS, APS), Buildup to 10% from ullage end (DPS)
 	//4 = 10% FTP (DPS)
 	//5 = Buildup from 10% to FTP (DPS)
-	//6 = Max thrust phase
-	//7 = Tailoff
-	//8 = Ending
+	//6 = Spare (DPS intermediate throttle maybe)
+	//7 = Max thrust phase
+	//8 = Tailoff
 	int MPHASE;
 	//Short maneuver test
 	int KGN;

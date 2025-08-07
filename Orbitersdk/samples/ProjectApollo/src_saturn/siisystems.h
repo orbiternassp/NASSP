@@ -61,7 +61,7 @@ public:
 	void SetMixtureRatio(double ratio);
 	void SwitchSelector(int channel);
 
-	void SetEngineFailed(int n);
+	void SetEngineFailed(int n, bool fail);
 
 	void GetThrustOK(bool *ok);
 	bool GetPropellantDepletionEngineCutoff();

@@ -43,6 +43,7 @@
     <ClInclude Include="..\..\src_rtccmfd\TLMCC.h" />
     <ClInclude Include="..\..\src_rtccmfd\RTCCTables.h" />
     <ClInclude Include="..\..\src_rtccmfd\TLTrajectoryComputers.h" />
+    <ClInclude Include="..\..\src_rtccmfd\TwoImpulseProcessor.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src_launch\rtcc.cpp" />
@@ -76,6 +77,7 @@
     <ClCompile Include="..\..\src_rtccmfd\TLIProcessor.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLMCC.cpp" />
     <ClCompile Include="..\..\src_rtccmfd\TLTrajectoryComputers.cpp" />
+    <ClCompile Include="..\..\src_rtccmfd\TwoImpulseProcessor.cpp" />
     <ClCompile Include="..\..\src_sys\thread.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

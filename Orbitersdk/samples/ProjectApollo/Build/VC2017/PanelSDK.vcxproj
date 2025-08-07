@@ -148,6 +148,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_sys\PanelSDK\BUILD.H" />
+    <ClInclude Include="..\..\src_sys\PanelSDK\Internals\DataTables.h" />
     <ClInclude Include="..\..\src_sys\PanelSDK\Internals\Esystems.h" />
     <ClInclude Include="..\..\src_sys\PanelSDK\Internals\Hsystems.h" />
     <ClInclude Include="..\..\src_sys\PanelSDK\Matrix.h" />

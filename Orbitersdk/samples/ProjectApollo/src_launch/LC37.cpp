@@ -102,8 +102,7 @@ LC37::LC37(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 	touchdownPointHeight = -0.01; // pad height
 	state = STATE_PRELAUNCH;
 	abort = false;
-	LaunchMJD = 99999.9;
-	MissionTime = 0.0;
+	MissionTime = MINUS_INFINITY;
 	s1b = NULL;
 	sivb = NULL;
 
@@ -172,7 +171,7 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd)
 {
 	if (!firstTimestepDone) DoFirstTimestep();
 
-	MissionTime = (oapiGetSimMJD() - LaunchMJD)*24.0*3600.0;
+	UpdateMissionTime();
 
 	switch (state) {
 	case STATE_PRELAUNCH:
@@ -374,12 +373,18 @@ void LC37::DefineAnimations() {
 
 }
 
+void LC37::UpdateMissionTime()
+{
+	//Try to get the mission time from the S-IVB class
+	if (sivb) MissionTime = sivb->GetMissionTime();
+	//Otherwise don't update the time
+}
+
 void LC37::clbkLoadStateEx(FILEHANDLE scn, void *status) {
 
 	char *line;
 
 	while (oapiReadScenario_nextline (scn, line)) {
-		papiReadScenario_double(line, "LAUNCHMJD", LaunchMJD);
 		papiReadScenario_string(line, "SIBNAME", SIBName);
 		papiReadScenario_string(line, "SIVBNAME", SIVBName);
 
@@ -404,7 +409,6 @@ void LC37::clbkSaveState(FILEHANDLE scn) {
 		oapiWriteScenario_string(scn, "SIBNAME", SIBName);
 	if (SIVBName[0])
 		oapiWriteScenario_string(scn, "SIVBNAME", SIVBName);
-	papiWriteScenario_double(scn, "LAUNCHMJD", LaunchMJD);
 }
 
 int LC37::clbkConsumeDirectKey(char *kstate) {
