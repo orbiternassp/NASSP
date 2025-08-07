@@ -200,7 +200,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		double get_guess, lng_des, gmt_guess, gmt_min, gmt_max, NavGET;
 		AP7ManPADOpt opt;
 		VehicleDataBlock sv, sv_upl;
-		//EphemerisData sv, sv_upl;
 		PLAWDTOutput WeightsTable;
 		EMSMISSInputTable intab;
 		EphemerisDataTable2 tab;
@@ -299,8 +298,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		}
 		else
 		{
-			//Nav Check Calculation (T -42m)
-			OrbMech::SStoHHMMSS(abs(TimeofIgnition - 42.0*60.0), hh, mm, ss, 60.0);
+			//Nav Check Calculation (T -40m)
+			OrbMech::SStoHHMMSS(abs(TimeofIgnition - 40.0*60.0), hh, mm, ss, 60.0);
 			NavGET = OrbMech::HHMMSSToSS(hh, mm, 0);
 		}
 

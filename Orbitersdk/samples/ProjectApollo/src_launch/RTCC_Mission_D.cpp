@@ -350,7 +350,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	}
 	break;
 	/*
-case 10:	//SPS-1
+case 10: //SPS-1
 {
 	AP7MNV * form = (AP7MNV *)pad;
 
@@ -392,7 +392,7 @@ case 10:	//SPS-1
 }
 break;
 */
-	case 10:	//SPS-1  
+	case 10: //SPS-1  
 	{
 		AP7MNV * form = (AP7MNV *)pad;
 
@@ -402,16 +402,17 @@ break;
 
 		double TIGGuess, P30TIG, NavGET, SVGET;
 		VECTOR3 dV_LVLH;
-		EphemerisData sv0, sv1;
+		VehicleDataBlock sv0, sv1;
+		//EphemerisData sv0, sv1;
 		PLAWDTOutput WeightsTable;
 		char buffer1[1000];
 		char buffer2[1000];
 
-		sv0 = StateVectorCalcEphem(calcParams.src);
+		sv0 = StateVectorCalcDataBlock(calcParams.src);
 		WeightsTable = GetWeightsTable(calcParams.src, true, true);
 
 		TIGGuess = OrbMech::HHMMSSToSS(5, 40, 0);
-		landmarkoptTCA.sv0 = sv0;
+		landmarkoptTCA.sv0 = sv0.sv;
 		landmarkoptTCA.entries = 1;
 		landmarkoptTCA.Elevation = 90.0*RAD;
 
@@ -437,16 +438,16 @@ break;
 		opt.sxtstardtime = -25.0*60.0;
 		opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 		opt.navcheckGET = 0;
-		opt.sv0 = sv0;
+		opt.sv0 = sv0.sv;
 		opt.WeightsTable = WeightsTable;
 
-		sv1 = coast(sv0, GMTfromGET(SVGET) - sv0.GMT); //Time tag SV for uplink
+		sv1 = coast(sv0, GMTfromGET(SVGET) - sv0.sv.GMT); //Time tag SV for uplink
 
 		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "SPS-1");
 		sprintf(form->remarks, "No ullage\nGimbal angles using launch REFSMMAT");
 
-		AGCStateVectorUpdate(buffer1, 1, 1, sv1, true);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv1.sv, true);
 		CMCExternalDeltaVUpdate(buffer2, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
@@ -2543,7 +2544,7 @@ break;
 
 		AP7ManPADOpt opt;
 		double get_guess, lng_des, gmt_guess, gmt_min, gmt_max;
-		EphemerisData sv0, sv_preTIG;
+		VehicleDataBlock sv0, sv_preTIG;
 		PLAWDTOutput WeightsTable;
 		EMSMISSInputTable intab;
 		EphemerisDataTable2 tab;
@@ -2552,7 +2553,7 @@ break;
 		char buffer3[1000];
 
 		//Get state vector and mass
-		sv0 = StateVectorCalcEphem(calcParams.src);
+		sv0 = StateVectorCalcDataBlock(calcParams.src);
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		//GET and longitude for deorbit and splashdown
@@ -2564,7 +2565,7 @@ break;
 		gmt_min = gmt_guess;
 		gmt_max = gmt_guess + 2.75*60.0*60.0;
 
-		intab.AnchorVector = sv0;
+		intab.AnchorVector = sv0.sv;
 		intab.EphemerisBuildIndicator = true;
 		intab.ECIEphemerisIndicator = true;
 		intab.ECIEphemTableIndicator = &tab;
@@ -2599,13 +2600,13 @@ break;
 		RZJCTTC.R31_LVLHAttitude = _V(0.0, -48.5*RAD, PI);
 		RZJCTTC.R31_UllageTime = 15.0;
 		RZJCTTC.R31_Use4UllageThrusters = true;
-		RZJCTTC.R31_REFSMMAT = RTCC_REFSMMAT_TYPE_CUR;
+		RZJCTTC.R31_REFSMMAT = 9;
 		RZJCTTC.R31_GimbalIndicator = -1;
 		RZJCTTC.R31_InitialBankAngle = 0.0;
 		RZJCTTC.R31_GLevel = 0.2;
 		RZJCTTC.R31_FinalBankAngle = 55.0*RAD;
 
-		RMSDBMP(sv0, WeightsTable.ConfigWeight);
+		RMSDBMP(sv0.sv, WeightsTable.ConfigWeight);
 
 		//Save data
 		TimeofIgnition = RZRFDP.data[2].GETI;
@@ -2619,7 +2620,7 @@ break;
 		GMGMED("G00,CSM,DOD,CSM,CUR;");
 
 		//Uplinked state vector accurate at GETI minus 12 minutes
-		sv_preTIG = coast(sv0, GMTfromGET(floor(TimeofIgnition/60.0 - 12.0) * 60.0) - sv0.GMT, RTCC_MPT_CSM);
+		sv_preTIG = coast(sv0, GMTfromGET(floor(TimeofIgnition/60.0 - 12.0) * 60.0) - sv0.sv.GMT); //Time tag SV for uplink
 
 		opt.dV_LVLH = DeltaV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
@@ -2630,14 +2631,14 @@ break;
 		opt.TIG = TimeofIgnition;
 		opt.UllageDT = 18.0;
 		opt.UllageThrusterOpt = false;
-		opt.sv0 = sv0;
+		opt.sv0 = sv0.sv;
 		opt.WeightsTable = WeightsTable;
 
 		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "151-1A RETROFIRE");
 		sprintf(form->remarks, "Ullage: 2 jet, %.0f seconds", opt.UllageDT);
 
-		AGCStateVectorUpdate(buffer1, 1, 1, sv_preTIG, true);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_preTIG.sv, true);
 		CMCRetrofireExternalDeltaVUpdate(buffer2, SplashLatitude, SplashLongitude, TimeofIgnition, DeltaV_LVLH);
 		AGCDesiredREFSMMATUpdate(buffer3, EZJGMTX1.data[0].REFSMMAT);
 
