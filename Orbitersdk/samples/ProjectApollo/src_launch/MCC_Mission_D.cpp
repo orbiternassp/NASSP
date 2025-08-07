@@ -359,44 +359,47 @@ void MCC::MissionSequence_D()
 	case MST_D_DAY9STATE5: //HGA Test REFSMMAT to Landmark Tracking Update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, mcc_calcs.GETEval(193.0 * 3600.0 + 40.0 * 60), 80, MST_D_DAY9STATE6);
 		break;
-	case MST_D_DAY9STATE6: //Landmark Tracking Update to Backup GDC Align Angles
+	case MST_D_DAY9STATE6: //Landmark Tracking Update to Backup GDC Align Update
 		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, mcc_calcs.GETEval(195.0 * 3600.0 + 30.0 * 60), 76, MST_D_DAY9STATE7);
 		break;
-	case MST_D_DAY9STATE7: //Backup GDC Align Angles to Block Data 20
+	case MST_D_DAY9STATE7: //Backup GDC Align Update to Block Data 20
 		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(196.0 * 3600.0 + 45.0 * 60), 81, MST_D_DAY9STATE8);
 		break;
 	case MST_D_DAY9STATE8: //Block Data 20 to SV Update
 		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(198.0 * 3600.0 + 30.0 * 60.0), 65, MST_D_DAY9STATE9);
 		break;
 	case MST_D_DAY9STATE9: //SV Update to Block Data 21
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(209.0*3600.0 + 50.0*60.0), 103, MST_D_DAY10STATE1);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(209.0 * 3600.0 + 50.0 * 60.0), 103, MST_D_DAY10STATE1);
 		break;
-	case MST_D_DAY10STATE1: //Block Data 21 to T Align Update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(211.0*3600.0 + 28.0*60.0), 66, MST_D_DAY10STATE2);
+	case MST_D_DAY10STATE1: //Block Data 21 to T-Align Update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(211.0 * 3600.0 + 30.0 * 60.0), 66, MST_D_DAY10STATE2);
 		break;
-	case MST_D_DAY10STATE2: //T Align Update to S065 Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_GENERIC, mcc_calcs.GETEval(213.0*3600.0 + 50.0*60.0), 67, MST_D_DAY10STATE3);
+	case MST_D_DAY10STATE2: //T-Align Update to S065 Update
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(213.0 * 3600.0 + 50.0 * 60.0), 67, MST_D_DAY10STATE3);
 		break;
 	case MST_D_DAY10STATE3: //S065 Update to S065 Update
-		UpdateMacro(UTP_PADONLY, PT_S065UPDATE, mcc_calcs.GETEval(215.0*3600.0 + 28.0*60.0), 68, MST_D_DAY10STATE4);
+		UpdateMacro(UTP_PADONLY, PT_S065UPDATE, mcc_calcs.GETEval(215.0 * 3600.0 + 30.0 * 60.0), 68, MST_D_DAY10STATE4);
 		break;
-	case MST_D_DAY10STATE4: //S065 Update to state vector update
-		UpdateMacro(UTP_PADONLY, PT_S065UPDATE, mcc_calcs.GETEval(217.0*3600.0), 69, MST_D_DAY10STATE5);
+	case MST_D_DAY10STATE4: //S065 Update to SV Update
+		UpdateMacro(UTP_PADONLY, PT_S065UPDATE, mcc_calcs.GETEval(217.0 * 3600.0 + 25.0 * 60.0), 69, MST_D_DAY10STATE5);
 		break;
-	case MST_D_DAY10STATE5: //State vector update to Block Data 22
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(220.0*3600.0 + 48.0*60.0), 2, MST_D_DAY10STATE6);
+	case MST_D_DAY10STATE5: //SV Update to Landmark Tracking Update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 3.0, 104, MST_D_DAY10STATE6);
 		break;
-	case MST_D_DAY10STATE6: //Block Data 22 to CSM/LM state vector update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(221.0*3600.0 + 5.0*60.0), 70, MST_D_DAY10STATE7);
+	case MST_D_DAY10STATE6: //Landmark Tracking Update to Block Data 22
+		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, mcc_calcs.GETEval(220.0 * 3600.0 + 48.0 * 60.0), 77, MST_D_DAY10STATE7);
 		break;
-	case MST_D_DAY10STATE7: //CSM/LM state vector update to Block Data 23
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(232.0*3600.0 + 25.0*60.0), 3, MST_D_DAY11STATE1);
+	case MST_D_DAY10STATE7: //Block Data 22 to CSM/LM state vector update
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(221.0 * 3600.0 + 5.0 * 60.0), 70, MST_D_DAY10STATE8);
+		break;
+	case MST_D_DAY10STATE8: //CSM/LM state vector update to Block Data 23
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(233.0 * 3600.0 + 40.0 * 60.0), 105, MST_D_DAY11STATE1);
 		break;
 	case MST_D_DAY11STATE1: //Block Data 23 to Deorbit Maneuver Update
-		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(235.0*3600.0 + 15.0*60.0), 71, MST_D_DAY11STATE2);
+		UpdateMacro(UTP_PADONLY, PT_AP7BLK, mcc_calcs.GETEval(235.0 * 3600.0 + 15.0 * 60.0), 71, MST_D_DAY11STATE2);
 		break;
 	case MST_D_DAY11STATE2: //Deorbit Maneuver Update to Entry PAD Update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, SubStateTime > 5.0*60.0, 72, MST_D_DAY11STATE3);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, SubStateTime > 5.0 * 60.0, 72, MST_D_DAY11STATE3);
 		break;
 	case MST_D_DAY11STATE3: //Entry PAD to Entry PAD Postburn Update
 		UpdateMacro(UTP_PADONLY, PT_AP7ENT, cm->GetStage() == CM_STAGE, 73, MST_ORBIT_ENTRY);

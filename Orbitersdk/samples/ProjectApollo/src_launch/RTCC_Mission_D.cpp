@@ -144,6 +144,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		PMMWTC(49);
 	}
 	break;
+	//**Times in () are Nav Check Times**
 	case 2:  //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (2:29:00)
 	case 3:  //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (4:19:00)
 	case 90: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (8:10:00)
@@ -159,12 +160,14 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 101: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (149:45:00)
 	case 102: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (174:55:00)
 	case 103: //CSM STATE VECTOR UPDATE (199:30:00)
+	case 104: //CSM STATE VECTOR UPDATE (LM SLOT) (218:00:00)
 	{
 		AP7NAV * form = (AP7NAV *)pad;
 
-		VehicleDataBlock sv, sv_1;
+		VehicleDataBlock sv, sv1;
 		double NavGET, SVGMT;
 		bool V66Flag = true; //V66 flag
+		int slot = RTCC_MPT_CSM;
 		char buffer1[1000];
 
 		sv = StateVectorCalcDataBlock(calcParams.src); //State vector
@@ -234,6 +237,12 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			NavGET = OrbMech::HHMMSSToSS(199, 30, 0);  //Nav Check GET
 			V66Flag = false;
 		}
+		else if (fcn == 104)
+		{
+			NavGET = OrbMech::HHMMSSToSS(218, 0, 0);  //Nav Check GET
+			V66Flag = false;
+			slot = RTCC_MPT_LM;
+		}
 		else
 		{
 			NavGET = GETfromGMT(sv.sv.GMT) - 30.0 * 60.0; //Nav Check GET as SV time - 30m
@@ -248,11 +257,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			SVGMT = GMTfromGET(NavGET + 30.0 * 60.0); //Nav Check GET + 30m
 		}
 
-		sv_1 = coast(sv, SVGMT - sv.sv.GMT); //Time tag SV
+		sv1 = coast(sv, SVGMT - sv.sv.GMT); //Time tag SV
 
-		NavCheckPAD(sv, *form, NavGET);
+		NavCheckPAD(sv1, *form, NavGET);
 
-		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_1.sv, V66Flag);
+		AGCStateVectorUpdate(buffer1, 1, slot, sv1.sv, V66Flag);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -267,6 +276,41 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			{
 				sprintf(upDesc, "CSM state vector");
 			}
+		}
+	}
+	break;
+	case 105: //CSM AND LM STATE VECTOR UPDATE, LM NAV CHECK PAD (222:00:00)
+	{
+		AP7NAV * form = (AP7NAV *)pad;
+
+		VehicleDataBlock sv, svt, sv1, svt1;
+		double NavGET, SVGMT;
+		char buffer1[1000];
+		char buffer2[1000];
+
+		sv = StateVectorCalcDataBlock(calcParams.src); //CSM State vector
+		svt = StateVectorCalcDataBlock(calcParams.tgt); //LM State vector
+
+		NavGET = OrbMech::HHMMSSToSS(222, 0, 0);  //Nav Check GET
+
+		SVGMT = GMTfromGET(NavGET + 30.0 * 60.0); //Nav Check GET + 30m
+
+		sv1 = coast(sv, SVGMT - sv.sv.GMT); //Time tag SV
+		svt1 = coast(svt, SVGMT - svt.sv.GMT); //Time tag SV
+
+		NavCheckPAD(svt1, *form, NavGET);
+
+		sprintf(form->remarks[0], "Remarks:  Use LM slot for nav check");
+
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv1.sv);
+		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, svt1.sv);
+
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+
+			sprintf(upDesc, "CSM & LM state vectors");
 		}
 	}
 	break;
@@ -2048,7 +2092,7 @@ break;
 		form->Num = 15;
 	}
 	break;
-	case 50:  //LANDMARK TRACKING T ALIGN
+	case 50:  //LANDMARK TRACKING T-ALIGN
 	case 130: //LANDMARK SV 1
 	case 131: //LANDMARK SV 2
 	case 132: //LANDMARK SV 3
@@ -2101,6 +2145,7 @@ break;
 	case 53: //LANDMARK TRACKING UPDATE 3
 	case 54: //LANDMARK TRACKING UPDATE 4	
 	case 76: //LANDMARK TRACKING UPDATE 5
+	case 77: //LANDMARK TRACKING UPDATE 6
 	{
 		LMARKTRKPADOpt opt;
 		VehicleDataBlock sv0;
@@ -2110,7 +2155,7 @@ break;
 		sv0 = StateVectorCalcDataBlock(calcParams.src);
 
 		opt.sv0 = sv0.sv;
-
+		form->type = 1;
 		if (fcn == 51)
 		{
 			sprintf(form->LmkID[0], "021"); //Corpus Christi (SE US)
@@ -2233,6 +2278,22 @@ break;
 
 			opt.entries = 2;
 		}
+		else if (fcn == 77)
+		{
+			sprintf(form->LmkID[0], "005"); //Santa Catalina Island (SW US)
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(217, 50, 0);
+			opt.alt[0] = -0.01*1852.0;
+			opt.lat[0] = 33.479*RAD;
+			opt.lng[0] = -118.606*RAD;
+
+			sprintf(form->LmkID[1], "065"); //Tortue Island, Haiti (Caribbean)
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(218, 0, 0);
+			opt.alt[1] = -0.01*1852.0;
+			opt.lat[1] = 20.065*RAD;
+			opt.lng[1] = -72.971*RAD;
+
+			opt.entries = 2;
+		}
 
 		LandmarkTrackingPAD(opt, *form);
 	}
@@ -2317,7 +2378,7 @@ break;
 		form->Num = 19;
 	}
 	break;
-	case 62: //S065 T ALIGN
+	case 62: //S065 T-ALIGN
 	{
 		AP7NAV * form = (AP7NAV *)pad;
 
@@ -2402,29 +2463,37 @@ break;
 		form->Num = 21;
 	}
 	break;
-	case 67: //S065 T ALIGN
+	case 67: //S065 T-ALIGN
 	{
-		GENERICPAD * form = (GENERICPAD *)pad;
+		AP7NAV * form = (AP7NAV *)pad;
 
-		SV sv0, sv1;
+		VehicleDataBlock sv0, sv1;
 		char buff[64];
-		double t_align, t_guess;
+		double t_align, t_guess, SVGMT, NavGET;
 		char buffer1[1000];
 
-		sv0 = StateVectorCalc(calcParams.src);
-		t_guess = OrbMech::HHMMSSToSS(214, 21, 0);
+		sv0 = StateVectorCalcDataBlock(calcParams.src);
+		t_guess = OrbMech::HHMMSSToSS(215, 50, 0);
+		NavGET = OrbMech::HHMMSSToSS(212, 40, 0);
 
-		t_align = mcc->mcc_calcs.FindOrbitalSunrise(sv0, t_guess);
+		SVGMT = GMTfromGET(NavGET + 30.0 * 60.0);
+
+		sv1 = coast(sv0, SVGMT - sv0.sv.GMT); //Time tag SV for uplink
+
+		t_align = floor(mcc->mcc_calcs.FindOrbitalSunrise(sv0, t_guess)/60.0) * 60.0;
 
 		OrbMech::format_time_HHMMSS(buff, t_align);
-		sprintf(form->paddata, "T Align is %s GET", buff);
 
-		AGCStateVectorUpdate(buffer1, sv0, true, true);
+		sprintf(form->remarks[0], "T-Align is %s", buff);
+
+		NavCheckPAD(sv1, *form, NavGET);
+
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv1.sv);
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, V66");
+			sprintf(upDesc, "CSM state vector");
 		}
 	}
 	break;
@@ -2550,22 +2619,23 @@ break;
 		GMGMED("G00,CSM,DOD,CSM,CUR;");
 
 		//Uplinked state vector accurate at GETI minus 12 minutes
-		sv_preTIG = coast(sv0, GMTfromGET(TimeofIgnition - 12.0*60.0) - sv0.GMT, RTCC_MPT_CSM);
+		sv_preTIG = coast(sv0, GMTfromGET(floor(TimeofIgnition/60.0 - 12.0) * 60.0) - sv0.GMT, RTCC_MPT_CSM);
 
 		opt.dV_LVLH = DeltaV_LVLH;
 		opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		opt.HeadsUp = true;
-		opt.navcheckGET = TimeofIgnition - 40.0*60.0;
+		opt.navcheckGET = TimeofIgnition - 30.0*60.0;
 		opt.REFSMMAT = EZJGMTX1.data[0].REFSMMAT;
-		opt.sxtstardtime = -30.0*60.0;
+		opt.sxtstardtime = -15.0*60.0;
 		opt.TIG = TimeofIgnition;
-		opt.UllageDT = 15.0;
-		opt.UllageThrusterOpt = true;
+		opt.UllageDT = 18.0;
+		opt.UllageThrusterOpt = false;
 		opt.sv0 = sv0;
 		opt.WeightsTable = WeightsTable;
 
 		AP7ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "151-1A RETROFIRE");
+		sprintf(form->remarks, "Ullage: 2 jet, %.0f seconds", opt.UllageDT);
 
 		AGCStateVectorUpdate(buffer1, 1, 1, sv_preTIG, true);
 		CMCRetrofireExternalDeltaVUpdate(buffer2, SplashLatitude, SplashLongitude, TimeofIgnition, DeltaV_LVLH);
@@ -2575,7 +2645,7 @@ break;
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector, V66, Target load, Retrofire REFSMMAT");
+			sprintf(upDesc, "CSM state vector, V66, Target load, Entry REFSMMAT");
 		}
 	}
 	break;
@@ -2672,24 +2742,37 @@ break;
 		}
 	}
 	break;
-
-	case 81: //Backup GDC Align Stars
+	case 81: //Backup GDC Alignment
 	{
 		GENERICPAD * form = (GENERICPAD *)pad;
-		double AlignGET;
-		MATRIX3 REFSMMAT;
-		VECTOR3 GDCangles;
-		char SetStars[64];
 
 		VehicleDataBlock sv0;
+		REFSMMATOpt refsopt;
+		MATRIX3 GDCREFSMMAT, REFSMMAT;
+		VECTOR3 StarAngles, GDCAngles;
+		double AlignGET;
+		char SetStars[64];
 
 		sv0 = StateVectorCalcDataBlock(calcParams.src);
 		AlignGET = OrbMech::HHMMSSToSS(196, 0, 0);
-		REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);;
+		REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 
-		mcc->mcc_calcs.BackupGDCAlignment(sv0, AlignGET, REFSMMAT, 2, GDCangles, SetStars);
+		mcc->mcc_calcs.BackupGDCAlignment(sv0, AlignGET, REFSMMAT, 2, StarAngles, SetStars);
 
-		sprintf(form->paddata, "SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", SetStars, GDCangles.x, GDCangles.y, GDCangles.z);
+		refsopt.REFSMMATopt = 2;
+		refsopt.REFSMMATTime = OrbMech::HHMMSSToSS(194, 45, 0);
+		refsopt.useSV = true;
+		refsopt.RV_MCC = ConvertEphemDatatoSV(sv0.sv);
+
+		GDCREFSMMAT = REFSMMATCalc(&refsopt); //Using a second LVLH REFSMMAT for this, not sure what generated the ASCP pitch of 315
+
+		mcc->mcc_calcs.BackupGDCAlignment(sv0, AlignGET, GDCREFSMMAT, 2, GDCAngles, SetStars);
+
+		VECTOR3 IMUAngles = OrbMech::GimbalAngleConversion(REFSMMAT, _V(180*RAD, 180*RAD, 0), GDCREFSMMAT, true);
+
+		sprintf(form->paddata, "BACKUP GDC ALIGNMENT  SET STARS: %s  R %03.0f  P %03.0f  Y %03.0f  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f  IMU: %03.1f, %03.1f %03.1f", SetStars, StarAngles.x, StarAngles.y, StarAngles.z,
+			GDCAngles.x, GDCAngles.y, GDCAngles.z,
+			OrbMech::imulimit(IMUAngles.x*DEG), OrbMech::imulimit(IMUAngles.y*DEG), OrbMech::imulimit(IMUAngles.z*DEG));
 	}
 	break;
 	}
