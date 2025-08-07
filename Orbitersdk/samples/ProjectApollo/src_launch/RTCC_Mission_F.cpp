@@ -1333,7 +1333,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalcEphem(calcParams.src);
 
 		opt.sv0 = sv0;
-
+		form->type = 0;
 		if (fcn == 50)
 		{
 			sprintf(form->LmkID[0], "F-1");
@@ -2533,7 +2533,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(LS_ID, "LLS 3");
 		}
 		gmt_guess = GMTfromGET(get_guess);
-		
+
 		sv0 = StateVectorCalcEphem(calcParams.src);
 		mcc->mcc_calcs.CreateEphemeris(sv0, gmt_guess, gmt_guess + 4.0*3600.0, ephem);
 
@@ -2572,7 +2572,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		//T2: 65°E crossing
 		mcc->mcc_calcs.LongitudeCrossing(ephem, 65.0*RAD, T1, T2);
-		
+
 		//T3: 34°E crossing
 		mcc->mcc_calcs.LongitudeCrossing(ephem, 34.0*RAD, T2, T3);
 

@@ -1389,7 +1389,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		sv0 = StateVectorCalcEphem(calcParams.src);
 
 		opt.sv0 = sv0;
-
+		form->type = 0;
 		if (fcn == 55)
 		{
 			sprintf(form->LmkID[0], "010");

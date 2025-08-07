@@ -1763,6 +1763,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
 
 			SAVE_INT("MCC_AP11LMARKTRKPAD_entries", form->entries);
+			SAVE_INT("MCC_AP11LMARKTRKPAD_type", form->type);
 
 			for (int i = 0;i < form->entries;i++)
 			{
@@ -2441,6 +2442,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
 
 			LOAD_INT("MCC_AP11LMARKTRKPAD_entries", form->entries);
+			LOAD_INT("MCC_AP11LMARKTRKPAD_type", form->type);
 
 			for (int i = 0;i < form->entries;i++)
 			{
@@ -3247,16 +3249,27 @@ void MCC::drawPad(bool writetofile){
 
 		int hh, mm;
 		double ss;
-
+		LMARKTRKPADOpt opt;
 		sprintf(buffer, "P22 AUTO OPTICS\n");
 
-		for (int i = 0;i < form->entries;i++)
+		for (int i = 0; i < form->entries; i++)
 		{
 			sprintf(buffer, "%sLMK ID %s\n", buffer, form->LmkID[i]);
 			OrbMech::SStoHHMMSS(form->T1[i], hh, mm, ss);
 			sprintf(buffer, "%sT1 %03d:%02d:%02.f (HOR)\n", buffer, hh, mm, ss);
-			OrbMech::SStoHHMMSS(form->T2[i], hh, mm, ss);
-			sprintf(buffer, "%sT2 %03d:%02d:%02.f (35°)\n", buffer, hh, mm, ss);
+
+			if (form->type == 1)
+			{
+				opt.Elevation = 90.0*RAD;
+				OrbMech::SStoHHMMSS(form->T2[i], hh, mm, ss);
+				sprintf(buffer, "%sT2 %03d:%02d:%02.f (TCA)\n", buffer, hh, mm, ss);
+			}
+			else
+			{
+				OrbMech::SStoHHMMSS(form->T2[i], hh, mm, ss);
+				sprintf(buffer, "%sT2 %03d:%02d:%02.f (35°)\n", buffer, hh, mm, ss);
+			}
+
 
 			if (form->CRDist[i] > 0)
 			{
