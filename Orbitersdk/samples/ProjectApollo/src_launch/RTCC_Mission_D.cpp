@@ -243,10 +243,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			V66Flag = false;
 			slot = RTCC_MPT_LM;
 		}
-		else
-		{
-			NavGET = GETfromGMT(sv.sv.GMT) - 30.0 * 60.0; //Nav Check GET as SV time - 30m
-		}
 
 		if (fcn == 2)
 		{
