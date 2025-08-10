@@ -305,7 +305,7 @@ void MCC::MissionSequence_F()
 		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, mcc_calcs.GETEval(rtcc->TimeofIgnition + 10.0), 123, MST_F_LUNAR_ORBIT_DOI_DAY_30);
 		break;
 	case MST_F_LUNAR_ORBIT_DOI_DAY_30: //AGS Switchover to TEI-22 update
-		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, MoonRev >= 16 && MoonRevTime > 1.0*3600.0 + 15.0*60.0, 124, MST_F_LUNAR_ORBIT_DOI_DAY_31);
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, MoonRev >= 16 && MoonRevTime > 1.0*3600.0 + 15.0*60.0, 124, MST_F_LUNAR_ORBIT_DOI_DAY_31); //Needs to be changed to AGS ARM uplink
 		break;
 	case MST_F_LUNAR_ORBIT_DOI_DAY_31: //TEI-22 update to rev 22 map update
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 17 && MoonRevTime > 1.0*3600.0 + 15.0*60.0, 34, MST_F_LUNAR_ORBIT_DOI_DAY_32);
