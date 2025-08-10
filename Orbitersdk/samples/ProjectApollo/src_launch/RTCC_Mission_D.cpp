@@ -345,49 +345,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		form->TAlign[0] = 0.0;
 	}
 	break;
-	/*
-case 10: //SPS-1
-{
-	AP7MNV * form = (AP7MNV *)pad;
-
-	AP7ManPADOpt opt;
-	double P30TIG;
-	VECTOR3 dV_LVLH;
-	EphemerisData sv0;
-	PLAWDTOutput WeightsTable;
-	char buffer1[1000];
-
-	sv0 = StateVectorCalcEphem(calcParams.src); //State vector for uplink
-	WeightsTable = GetWeightsTable(calcParams.src, true, true);
-
-	P30TIG = OrbMech::HHMMSSToSS(5, 59, 0);
-	dV_LVLH = _V(36.8, 0.0, 0.0)*0.3048;
-
-	opt.TIG = P30TIG;
-	opt.dV_LVLH = dV_LVLH;
-	opt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-	opt.HeadsUp = true;
-	opt.sxtstardtime = -30.0*60.0;
-	opt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-	opt.navcheckGET = 0;
-	opt.sv0 = sv0;
-	opt.WeightsTable = WeightsTable;
-
-	AP7ManeuverPAD(opt, *form);
-	sprintf(form->purpose, "SPS-1");
-	sprintf(form->remarks, "Gimbal angles with pad REFSMMAT");
-
-	CMCExternalDeltaVUpdate(buffer1, P30TIG, dV_LVLH);
-
-	sprintf(uplinkdata, "%s", buffer1);
-	if (upString != NULL) {
-		// give to mcc
-		strncpy(upString, uplinkdata, 1024 * 3);
-		sprintf(upDesc, "Target load");
-	}
-}
-break;
-*/
 	case 10: //SPS-1  
 	{
 		AP7MNV * form = (AP7MNV *)pad;
@@ -420,6 +377,7 @@ break;
 
 		LandmarkTrackingPAD(landmarkoptTCA, TCAtempPAD);
 
+		//P30TIG = OrbMech::HHMMSSToSS(5, 59, 0); //Old hardcoded TIG
 		P30TIG = TCAtempPAD.T2[0];
 
 		dV_LVLH = _V(36.8, 0.0, 0.0)*0.3048;
