@@ -296,7 +296,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		NavCheckPAD(svt1, *form, NavGET);
 
-		sprintf(form->remarks[0], "Remarks:  Use LM slot for nav check");
+		sprintf(form->remarks, "Remarks:  Use LM slot for nav check");
 
 		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv1.sv);
 		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, svt1.sv);
@@ -2082,7 +2082,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		if (fcn == 50)
 		{
 			OrbMech::format_time_HHMMSS(buff, t_align);
-			sprintf(form->remarks[0], "T-Align: %s", buff);
+			sprintf(form->remarks, "T-Align: %s", buff);
 		}
 
 		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv1.sv, true);
@@ -2366,7 +2366,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		OrbMech::format_time_HHMMSS(t1, t_align1);
 		OrbMech::format_time_HHMMSS(t2, t_align2);
 		OrbMech::format_time_HHMMSS(t3, t_align3);
-		sprintf(form->remarks[0], "T-Align 1: %s  T-Align 2: %s  T-Align 3: %s", t1, t2, t3);
+		sprintf(form->remarks, "T-Align 1: %s  T-Align 2: %s  T-Align 3: %s", t1, t2, t3);
 
 		AGCStateVectorUpdate(buffer, 1, RTCC_MPT_CSM, svt.sv, true);
 
@@ -2439,7 +2439,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		OrbMech::format_time_HHMMSS(buff, t_align);
 
-		sprintf(form->remarks[0], "T-Align is %s", buff);
+		sprintf(form->remarks, "T-Align is %s", buff);
 
 		NavCheckPAD(sv1, *form, NavGET);
 
