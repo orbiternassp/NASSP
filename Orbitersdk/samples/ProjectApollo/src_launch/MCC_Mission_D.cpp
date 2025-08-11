@@ -40,13 +40,13 @@ void MCC::MissionSequence_D()
 {
 	switch (MissionState)
 	{
-	case MST_D_INSERTION:	//Insertion SV Update to SV Update
+	case MST_D_INSERTION:	//Insertion to SV Update
 		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(1.0 * 3600.0 + 45.0 * 60.0), 1, MST_D_DAY1SVUPDATE1);
 		break;
-	case MST_D_DAY1SVUPDATE1:  //SV Update to Separation
+	case MST_D_DAY1SVUPDATE1:  //SV Update to SV Update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(3.0 * 3600.0 + 15.0 * 60.0), 2, MST_D_DAY1SVUPDATE2);
 		break;
-	case MST_D_DAY1SVUPDATE2:
+	case MST_D_DAY1SVUPDATE2:  //SV Update to Separation
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7NAV, mcc_calcs.GETEval(4.0 * 3600.0 + 6.0 * 60.0), 3, MST_D_SEPARATION);
 		break;
 	case MST_D_SEPARATION:	//Separation to SPS-1
