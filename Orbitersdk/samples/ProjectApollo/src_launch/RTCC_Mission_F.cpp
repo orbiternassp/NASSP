@@ -2072,6 +2072,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		t_Depletion = OrbMech::GETfromMJD(MJD_depletion, GETbase);
 		sv2 = coast(sv1, t_Depletion - t_Depletion_guess);
 
+		TimeofIgnition = t_Depletion;
+
 		UY = unit(crossp(sv2.V, sv2.R));
 		UZ = unit(-sv2.R);
 		UX = crossp(UY, UZ);
@@ -2630,6 +2632,60 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		GENERICPAD * form = (GENERICPAD *)pad;
 
 		sprintf(form->paddata, "TV UPDATE  R 180 HGA  P 293 P -58  Y 000 Y 005");
+	}
+	break;
+	case 120: //ARM AEAA GROUND COMMAND
+	case 121: //P42 GROUND COMMAND
+	case 122: //ENTER, BYPASS AUTO MNVR
+	case 123: //PRO, ENG ON
+	case 124: //AGS Switchover
+	{
+		char updesc[128];
+		LEM *lem = (LEM *)calcParams.tgt;
+
+		if (fcn == 120)
+		{
+			//AEAA arming code
+			lem->aeaa->SetRelay(1, 1, 0);
+			lem->aeaa->SetRelay(1, 2, 0);
+			lem->aeaa->SetRelay(2, 1, 0);
+			lem->aeaa->SetRelay(2, 2, 0);
+
+			sprintf(uplinkdata, "");
+			sprintf(updesc, "MCC CMD: ARM AEAA");
+		}
+		else if (fcn == 121)
+		{
+			sprintf(uplinkdata, "V37E42ER");
+			sprintf(updesc, "MCC CMD: P42 APS thrusting");
+		}
+		else if (fcn == 122)
+		{
+			sprintf(uplinkdata, "ER");
+			sprintf(updesc, "MCC CMD: BYPASS AUTO MNVR");
+		}
+		else if (fcn == 123)
+		{
+			sprintf(uplinkdata, "V33ER");
+			sprintf(updesc, "MCC CMD: ENG ON");
+		}
+		else if (fcn == 124)
+		{
+			//AGS arming code
+			lem->aeaa->SetRelay(1, 3, 0);
+			lem->aeaa->SetRelay(1, 4, 0);
+			lem->aeaa->SetRelay(2, 3, 0);
+			lem->aeaa->SetRelay(2, 4, 0);
+
+			sprintf(uplinkdata, "");
+			sprintf(updesc, "MCC CMD: AGS SWITCHOVER");
+		}
+
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, updesc);
+		}
 	}
 	break;
 	}
