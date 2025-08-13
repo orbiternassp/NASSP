@@ -46,6 +46,7 @@ struct AP7NAV {
 	double lat[5];		// Latitude for N43
 	double lng[5];		// Longitude for N43
 	double alt[5];		// Altitude for N43
+	char remarks[256];	// remarks
 };
 
 // APOLLO 7 - MANEUVER
@@ -405,9 +406,10 @@ struct AP10MAPUPDATE
 struct AP11LMARKTRKPAD
 {
 	int entries;
+	int type;		        // 0: T2 = 35°, 1:T2 = TCA
 	char LmkID[4][128];		// Landmark ID
 	double T1[4];			// T1 time (landmark over horizon)
-	double T2[4];			// T2 time (spacecraft at 35° elevation from landmark)
+	double T2[4];			// T2 time (spacecraft at 35° elevation from landmark or TCA)
 	double CRDist[4];		// landmark distance to ground track
 	double Lat[4];			// landmark latitude
 	double Lng05[4];		// landmark longitude divided by 2
@@ -422,6 +424,10 @@ struct AP10DAPDATA
 	double OtherVehicleWeight;	// LM weight (or CSM for LM DAP PAD)
 	double PitchTrim;			// Pitch gimbal trim
 	double YawTrim;				// Yaw gimbal trim (or roll for LM DAP PAD)
+	double LMPitchTrim;			// LM Pitch gimbal trim
+	double LMRollTrim;			// LM Roll gimbal trim
+	double DVTO;				// Tail off thrust
+	int type;					// 1 = Apollo 9 Rendezvous
 };
 
 //APOLLO 10 CSI PAD

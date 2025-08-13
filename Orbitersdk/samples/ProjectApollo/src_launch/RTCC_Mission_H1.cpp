@@ -1994,6 +1994,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		GET_SV = GETfromGMT(sv0.GMT);
 
+		form->type = 0;
 		if (fcn == 61)
 		{
 			sprintf(form->LmkID[0], "H-1");
