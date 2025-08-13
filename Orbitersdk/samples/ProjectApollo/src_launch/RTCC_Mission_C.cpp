@@ -199,21 +199,21 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		MATRIX3 REFSMMAT;
 		double get_guess, lng_des, gmt_guess, gmt_min, gmt_max, NavGET;
 		AP7ManPADOpt opt;
-		AP11MNV  tempPAD;
-		AP11ManPADOpt tempopt;
-		EphemerisData sv, sv_upl;
+		VehicleDataBlock sv, sv_upl;
 		PLAWDTOutput WeightsTable;
 		EMSMISSInputTable intab;
 		EphemerisDataTable2 tab;
+		VECTOR3 GDCangles;
+		char SetStars[64];
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
 		char buffer4[1000];
-		char alignstars[1000];
-		char starsettime[1000];
+		char alignstars[256];
+		char starsettime[256];
 
 		//Get state vector and mass
-		sv = StateVectorCalcEphem(calcParams.src);
+		sv = StateVectorCalcDataBlock(calcParams.src);
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		if (fcn == 2)
@@ -232,7 +232,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		gmt_min = gmt_guess;
 		gmt_max = gmt_guess + 2.75*60.0*60.0;
 
-		intab.AnchorVector = sv;
+		intab.AnchorVector = sv.sv;
 		intab.EphemerisBuildIndicator = true;
 		intab.ECIEphemerisIndicator = true;
 		intab.ECIEphemTableIndicator = &tab;
@@ -273,7 +273,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		RZJCTTC.R31_GLevel = 0.2;
 		RZJCTTC.R31_FinalBankAngle = 55.0*RAD;
 
-		RMSDBMP(sv, WeightsTable.ConfigWeight);
+		RMSDBMP(sv.sv, WeightsTable.ConfigWeight);
 
 		//Save data
 		TimeofIgnition = RZRFDP.data[2].GETI;
@@ -298,8 +298,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		}
 		else
 		{
-			//Nav Check Calculation (T -42m)
-			OrbMech::SStoHHMMSS(abs(TimeofIgnition - 42.0*60.0), hh, mm, ss, 60.0);
+			//Nav Check Calculation (T -40m)
+			OrbMech::SStoHHMMSS(abs(TimeofIgnition - 40.0*60.0), hh, mm, ss, 60.0);
 			NavGET = OrbMech::HHMMSSToSS(hh, mm, 0);
 		}
 
@@ -312,23 +312,12 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		opt.sxtstardtime = -25.0*60.0;
 		opt.UllageDT = 15.0;
 		opt.UllageThrusterOpt = true;
-		opt.sv0 = sv;
+		opt.sv0 = sv.sv;
 		opt.WeightsTable = WeightsTable;
 
-		tempopt.dV_LVLH = DeltaV_LVLH;
-		tempopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		tempopt.HeadsUp = true;
-		tempopt.REFSMMAT = REFSMMAT;
-		tempopt.TIG = TimeofIgnition;
-		tempopt.sxtstardtime = -90.0*60.0;
-		tempopt.UllageThrusterOpt = true;
-		tempopt.UllageDT = 15.0;
-		tempopt.RV_MCC = sv;
-		tempopt.WeightsTable = WeightsTable;
-		tempopt.PrefGDCStars = 1; //Navi,Polaris
+		mcc->mcc_calcs.BackupGDCAlignment(sv_upl, opt.sxtstardtime, REFSMMAT, 1, GDCangles, SetStars);
 
-		AP11ManeuverPAD(tempopt, tempPAD);
-		sprintf(alignstars, "SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", tempPAD.SetStars, tempPAD.GDCangles.x, tempPAD.GDCangles.y, tempPAD.GDCangles.z);
+		sprintf(alignstars, "SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", SetStars, GDCangles.x, GDCangles.y, GDCangles.z);
 
 		AP7ManeuverPAD(opt, *form);
 		OrbMech::format_time_HHHMM(starsettime, TimeofIgnition - 19.0*60.0); //Need to find actual star set time, -19m used as guess from actual pads
@@ -336,18 +325,18 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		if (fcn == 2)
 		{
 			sprintf(form->purpose, "6-4 DEORBIT");
-			sv_upl = coast(sv, GMTfromGET(TimeofIgnition - 12.0*60.0) - sv.GMT, WeightsTable.ConfigWeight, WeightsTable.ConfigArea, WeightsTable.KFactor, false);
+			sv_upl = coast(sv, GMTfromGET(TimeofIgnition - 12.0*60.0) - sv.sv.GMT);
 			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds  Star check not available after %s", starsettime);
 		}
 		else
 		{
 			sprintf(form->purpose, "164-1A RETROFIRE");
-			sv_upl = coast(sv, GMTfromGET(TimeofIgnition - 12.0*60.0) - sv.GMT, WeightsTable.ConfigWeight, WeightsTable.ConfigArea, WeightsTable.KFactor, false);
+			sv_upl = coast(sv, GMTfromGET(TimeofIgnition - 12.0*60.0) - sv.sv.GMT);
 			sprintf(form->remarks, "Ullage: 4 jet, 15 seconds  %s  Star check not available after %s", alignstars, starsettime);
 		}
 
-		AGCStateVectorUpdate(buffer1, RTCC_MPT_CSM, RTCC_MPT_CSM, sv_upl);
-		AGCStateVectorUpdate(buffer2, RTCC_MPT_CSM, RTCC_MPT_LM, sv_upl);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_upl.sv);
+		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_upl.sv);
 		CMCRetrofireExternalDeltaVUpdate(buffer3, SplashLatitude, SplashLongitude, TimeofIgnition, DeltaV_LVLH);
 		AGCDesiredREFSMMATUpdate(buffer4, REFSMMAT);
 
@@ -1399,7 +1388,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		sv0 = StateVectorCalcEphem(calcParams.src);
 
 		opt.sv0 = sv0;
-
+		form->type = 0;
 		if (fcn == 55)
 		{
 			sprintf(form->LmkID[0], "010");
@@ -1603,8 +1592,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 	case 28: //MISSION C SPS-5: PUGS TEST AND MTVC
 	{
 		AP7MNV *form = (AP7MNV *)pad;
-		AP11MNV  tempPAD;
-		AP11ManPADOpt tempopt;
 
 		PMMMPTInput in;
 		GMPOpt orbopt;
@@ -1615,6 +1602,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		MATRIX3 REFSMMAT;
 		VehicleDataBlock sv, sv_1;
 		PLAWDTOutput WeightsTable;
+		VECTOR3 GDCangles;
+		char SetStars[64];
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
@@ -1678,18 +1667,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		manopt.sv0 = sv.sv;
 		manopt.WeightsTable = WeightsTable;
 
-		tempopt.dV_LVLH = dV_LVLH;
-		tempopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		tempopt.HeadsUp = true;
-		tempopt.REFSMMAT = REFSMMAT;
-		tempopt.TIG = P30TIG;
-		tempopt.sxtstardtime = -25.0*60.0;
-		tempopt.UllageThrusterOpt = false;
-		tempopt.UllageDT = 20.0;
-		tempopt.RV_MCC = sv.sv;
-		tempopt.WeightsTable = WeightsTable;
-		tempopt.PrefGDCStars = 1; //Navi,Polaris
-
 		//Time tagged SV
 		sv_1 = coast(sv, GMTfromGET(P30TIG - 12.0*60.0) - sv.sv.GMT); //Time tag to TIG -12m
 
@@ -1699,8 +1676,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		ExecuteManeuver(sv.sv, WeightsTable, P30TIG, dV_LVLH, RTCC_ENGINETYPE_CSMSPS, sv_cut, WeightsTableOut);
 		mcc->mcc_calcs.StoreStateVector(sv_cut, WeightsTableOut.ConfigWeight);
 
-		AP11ManeuverPAD(tempopt, tempPAD);
-		sprintf(alignstars, "SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", tempPAD.SetStars, tempPAD.GDCangles.x, tempPAD.GDCangles.y, tempPAD.GDCangles.z);
+		mcc->mcc_calcs.BackupGDCAlignment(sv_1, manopt.sxtstardtime, REFSMMAT, 1, GDCangles, SetStars);
+		sprintf(alignstars, "SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", SetStars, GDCangles.x, GDCangles.y, GDCangles.z);
 
 		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "SPS-5 / PUGS");
@@ -1938,8 +1915,10 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		VECTOR3 dV_LVLH, dV_imp;
 		double P30TIG, TIG_imp, NavGET;
 		MATRIX3 REFSMMAT;
-		EphemerisData sv, sv0, sv1, sv2;
+		VehicleDataBlock sv, sv0, sv1, sv2;
 		PLAWDTOutput WeightsTable;
+		VECTOR3 GDCangles;
+		char SetStars[64];
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
@@ -1950,22 +1929,22 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		double INFO[10];
 		int KAOP, KE;
 
-		sv = StateVectorCalcEphem(calcParams.src);
+		sv = StateVectorCalcDataBlock(calcParams.src);
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
 		sv0 = sv;
 		orbopt.dLOA = 0.0;
 		orbopt.TIG_GET = OrbMech::HHMMSSToSS(238, 40, 0);
 		orbopt.ManeuverCode = RTCC_GMP_SAO;
-		orbopt.sv_in = sv;
+		orbopt.sv_in = sv.sv;
 
 		//Do this three times to converge properly
 		for (int i = 0; i < 3; i++)
 		{
 			//Take state vector to estimated time of rev 164 crossing
-			sv1 = coast(sv0, GMTfromGET(260.0*3600.0) - sv0.GMT, RTCC_MPT_CSM);
+			sv1 = coast(sv0, GMTfromGET(260.0*3600.0) - sv0.sv.GMT);
 			//Convert to AEG and initialize
-			aeg = SVToAEG(sv1, WeightsTable.ConfigArea, WeightsTable.ConfigWeight, PZMPTCSM.KFactor);
+			aeg = SVToAEG(sv1.sv, WeightsTable.ConfigArea, WeightsTable.ConfigWeight, PZMPTCSM.KFactor);
 			PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
 			KAOP = -1; //Perigee only
 			KE = 0; //ECI
@@ -1975,8 +1954,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 			GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
 
-			sv0 = PZGPMELM.SV_before;
-			sv0.V = PZGPMELM.V_after;
+			sv0.sv = PZGPMELM.SV_before;
+			sv0.sv.V = PZGPMELM.V_after;
 		}
 
 		in.CONFIG = 1; //CSM
@@ -2025,34 +2004,22 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		manopt.sxtstardtime = -30.0 * 60.0;
 		manopt.UllageThrusterOpt = true;
 		manopt.UllageDT = 15.0;
-		manopt.sv0 = sv;
+		manopt.sv0 = sv.sv;
 		manopt.WeightsTable = WeightsTable;
 
-		tempopt.dV_LVLH = dV_LVLH;
-		tempopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		tempopt.HeadsUp = true;
-		tempopt.REFSMMAT = REFSMMAT;
-		tempopt.TIG = P30TIG;
-		tempopt.sxtstardtime = -90.0 * 60.0;
-		tempopt.UllageThrusterOpt = true;
-		tempopt.UllageDT = 15.0;
-		tempopt.RV_MCC = sv;
-		tempopt.WeightsTable = WeightsTable;
-		tempopt.PrefGDCStars = 1; //Navi,Polaris
-
 		//Time tagged SV
-		sv2 = coast(sv, GMTfromGET(P30TIG - 12.0*60.0) - sv.GMT); //Time tag to TIG -12m
+		sv2 = coast(sv, GMTfromGET(P30TIG - 12.0*60.0) - sv.sv.GMT); //Time tag to TIG -12m
 
-		AP11ManeuverPAD(tempopt, tempPAD);
-		sprintf(alignstars, "SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", tempPAD.SetStars, tempPAD.GDCangles.x, tempPAD.GDCangles.y, tempPAD.GDCangles.z);
+		mcc->mcc_calcs.BackupGDCAlignment(sv2, manopt.sxtstardtime, REFSMMAT, 1, GDCangles, SetStars);
+		sprintf(alignstars, "SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", SetStars, GDCangles.x, GDCangles.y, GDCangles.z);
 
 		AP7ManeuverPAD(manopt, *form);
 		sprintf(form->purpose, "SPS-7");
 
-		sprintf(form->remarks, "Ullage: 4 jet, 15 seconds  SCS AUTO,  %s", alignstars);
+		sprintf(form->remarks, "Ullage: 4 jet, 15 seconds, SCS AUTO  %s", alignstars);
 
-		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv2);
-		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv2);
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv2.sv);
+		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv2.sv);
 		CMCExternalDeltaVUpdate(buffer3, P30TIG, dV_LVLH);
 
 		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);

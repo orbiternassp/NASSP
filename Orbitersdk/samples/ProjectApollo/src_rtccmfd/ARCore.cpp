@@ -306,7 +306,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	{
 		rtcc->SystemParametersFile = "Apollo 7 Constants";
 		rtcc->LoadMissionFiles();
-		rtcc->LoadLaunchDaySpecificParameters(1968, 10, 11);
 		rtcc->GMGMED("P80,1,CSM,10,11,1968;");
 		rtcc->GMGMED("P10,CSM,15:02:45;");
 		rtcc->GMGMED("P12,CSM,15:02:45,72.0;");
@@ -320,7 +319,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 		rtcc->TLIFile = "Apollo 8 TLI";
 		rtcc->SFPFile = "Apollo 8 SFP";
 		rtcc->LoadMissionFiles();
-		rtcc->LoadLaunchDaySpecificParameters(1968, 12, 21);
 		rtcc->GMGMED("P80,1,CSM,12,21,1968;");
 		rtcc->GMGMED("P10,CSM,12:51:0;");
 		rtcc->GMGMED("P12,CSM,12:51:0,72.124;");
@@ -332,7 +330,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 	{
 		rtcc->SystemParametersFile = "Apollo 9 Constants";
 		rtcc->LoadMissionFiles();
-		rtcc->LoadLaunchDaySpecificParameters(1969, 3, 3);
 		rtcc->GMGMED("P80,1,CSM,3,3,1969;");
 		rtcc->GMGMED("P10,CSM,16:00:00;");
 		rtcc->GMGMED("P12,CSM,16:00:00,72.0;");
@@ -347,7 +344,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 		rtcc->TLIFile = "Apollo 10 TLI";
 		rtcc->SFPFile = "Apollo 10 SFP";
 		rtcc->LoadMissionFiles();
-		rtcc->LoadLaunchDaySpecificParameters(1969, 5, 18);
 		rtcc->GMGMED("P80,1,CSM,5,18,1969;");
 		rtcc->GMGMED("P10,CSM,16:49:00;");
 		rtcc->GMGMED("P12,CSM,16:49:00,72.028;");
@@ -362,7 +358,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 		rtcc->TLIFile = "Apollo 11 TLI";
 		rtcc->SFPFile = "Apollo 11 SFP";
 		rtcc->LoadMissionFiles();
-		rtcc->LoadLaunchDaySpecificParameters(1969, 7, 16);
 		rtcc->GMGMED("P80,1,CSM,7,16,1969;");
 		rtcc->GMGMED("P10,CSM,13:32:00;");
 		rtcc->GMGMED("P12,CSM,13:32:00,72.058;");
@@ -372,7 +367,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 		rtcc->GMGMED("P15,AGS,,90:00:00;");
 
 		//July 18 launch
-		//rtcc->LoadLaunchDaySpecificParameters(1969, 7, 18);
 		//rtcc->GMGMED("P80,1,CSM,7,18,1969;");
 		//rtcc->GMGMED("P10,CSM,15:32:00;");
 		//rtcc->GMGMED("P12,CSM,15:32:00,89.295;");
@@ -382,7 +376,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 		//rtcc->GMGMED("P15,AGS,,90:00:00;");
 
 		//July 21 launch
-		//rtcc->LoadLaunchDaySpecificParameters(1969, 7, 21);
 		//rtcc->GMGMED("P80,1,CSM,7,21,1969;");
 		//rtcc->GMGMED("P10,CSM,16:09:00;");
 		//rtcc->GMGMED("P12,CSM,16:09:00,94.6775;");
@@ -397,7 +390,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 		rtcc->TLIFile = "Apollo 12 TLI";
 		rtcc->SFPFile = "Apollo 12 SFP";
 		rtcc->LoadMissionFiles();
-		rtcc->LoadLaunchDaySpecificParameters(1969, 11, 14);
 		rtcc->GMGMED("P80,1,CSM,11,14,1969;");
 		rtcc->GMGMED("P10,CSM,16:22:00;");
 		rtcc->GMGMED("P12,CSM,16:22:00,72.029;");
@@ -412,7 +404,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 		rtcc->TLIFile = "Apollo 13 TLI";
 		rtcc->SFPFile = "Apollo 13 SFP";
 		rtcc->LoadMissionFiles();
-		rtcc->LoadLaunchDaySpecificParameters(1970, 4, 11);
 		rtcc->GMGMED("P80,1,CSM,4,11,1970;");
 		rtcc->GMGMED("P10,CSM,19:13:00;");
 		rtcc->GMGMED("P12,CSM,19:13:00,72.043;");
@@ -427,7 +418,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 		rtcc->TLIFile = "Apollo 14 TLI";
 		rtcc->SFPFile = "Apollo 14 SFP";
 		rtcc->LoadMissionFiles();
-		rtcc->LoadLaunchDaySpecificParameters(1971, 1, 31);
 		rtcc->GMGMED("P80,1,CSM,1,31,1971;");
 		rtcc->GMGMED("P10,CSM,20:23:00;");
 		rtcc->GMGMED("P12,CSM,20:23:00,72.067;");
@@ -442,7 +432,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 		rtcc->TLIFile = "Apollo 15 TLI";
 		rtcc->SFPFile = "Apollo 15 SFP";
 		rtcc->LoadMissionFiles();
-		rtcc->LoadLaunchDaySpecificParameters(1971, 7, 26);
 		rtcc->GMGMED("P80,1,CSM,7,26,1971;");
 		rtcc->GMGMED("P10,CSM,13:34:00;");
 		rtcc->GMGMED("P12,CSM,13:34:00,80.088;");
@@ -457,7 +446,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 		rtcc->TLIFile = "Apollo 16 TLI";
 		rtcc->SFPFile = "Apollo 16 SFP";
 		rtcc->LoadMissionFiles();
-		rtcc->LoadLaunchDaySpecificParameters(1972, 4, 16);
 		rtcc->GMGMED("P80,1,CSM,4,16,1972;");
 		rtcc->GMGMED("P10,CSM,17:54:00;");
 		rtcc->GMGMED("P12,CSM,17:54:00,72.034;");
@@ -472,7 +460,6 @@ void AR_GCore::SetMissionSpecificParameters(int mission)
 		rtcc->TLIFile = "Apollo 17 TLI";
 		rtcc->SFPFile = "Apollo 17 SFP";
 		rtcc->LoadMissionFiles();
-		rtcc->LoadLaunchDaySpecificParameters(1972, 12, 7);
 		rtcc->GMGMED("P80,1,CSM,12,7,1972;");
 		rtcc->GMGMED("P10,CSM,02:53:00;");
 		rtcc->GMGMED("P12,CSM,02:53:00,72.141;");
@@ -5557,16 +5544,61 @@ int ARCore::subThread()
 	break;
 	case 54: //Skylab Saturn IB Launch Targeting
 	{
-		if (Rendezvous_Target == NULL || GC->rtcc->GetGMTBase() == 0.0)
+		EphemerisData sv, sv_ECT;
+
+		if (GC->rtcc->GetGMTBase() == 0.0)
 		{
 			Result = DONE;
 			break;
 		}
-		
-		EphemerisData sv, sv_ECT;
+		if (GC->MissionPlanningActive)
+		{
+			VehicleDataBlock block;
+			std::string StaID;
+			double GMT;
+			int L;
 
-		sv = GC->rtcc->StateVectorCalcEphem(Rendezvous_Target);
+			//Is CSM or LM target vehicle, the first vehicle that launched?
+			L = (GC->rtcc->PZSLVCON.Pad == 1 ? RTCC_MPT_LM : RTCC_MPT_CSM);
+			//Test to see if a time was input to get target vehicle vector
+			if (GC->rtcc->PZSLVCON.TargetVectorTime < 0.0)
+			{
+				//Are any maneuvers in MPT of target vehicle?
+				MissionPlanTable *mpt = GC->rtcc->GetMPTPointer(L);
+				if (mpt->ManeuverNum > 0)
+				{
+					//Time after last maneuver in MPT of target vehicle
+					GMT = mpt->mantable.back().GMT_BO + 1.0;
+				}
+				else
+				{
+					//Present time
+					GMT = GC->rtcc->RTCCPresentTimeGMT();
+				}
+			}
+			else
+			{
+				//Use input time
+				GMT = GC->rtcc->GMTfromGET(GC->rtcc->PZSLVCON.TargetVectorTime);
+			}
 
+			if (GC->rtcc->PMSVEC(L, GMT, block, StaID))
+			{
+				Result = DONE;
+				break;
+			}
+			sv = block.sv;
+		}
+		else
+		{
+			if (Rendezvous_Target == NULL)
+			{
+				Result = DONE;
+				break;
+			}
+			sv = GC->rtcc->StateVectorCalcEphem(Rendezvous_Target);
+		}
+		//Convert to ECT
 		GC->rtcc->ELVCNV(sv, 1, sv_ECT);
 
 		GC->rtcc->PMMPAR(sv_ECT.R, sv_ECT.V, sv_ECT.GMT);
@@ -5812,6 +5844,22 @@ int ARCore::subThread()
 	case 63: //Recovery Ascending Node Display
 		GC->rtcc->RMDASCND();
 		break;
+	case 64: //CManual Entry Device Inputs from File
+	{
+		ifstream medinputfile(GC->rtcc->RTCCMEDBUFFER);
+		if (medinputfile.is_open())
+		{
+			std::string line;
+
+			while (getline(medinputfile, line))
+			{
+				sprintf_s(GC->rtcc->RTCCMEDBUFFER, 256, line.c_str());
+				GC->rtcc->GMGMED(GC->rtcc->RTCCMEDBUFFER);
+			}
+		}
+		Result = DONE;
+	}
+	break;
 	}
 
 	subThreadStatus = Result;

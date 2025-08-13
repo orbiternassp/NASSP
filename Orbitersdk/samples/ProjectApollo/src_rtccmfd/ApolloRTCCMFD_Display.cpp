@@ -6368,6 +6368,9 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		case 5:
 			skp->Text(CW * 10, 7 * H / 22, "Non-Free Return", 15);
 			break;
+		case 6:
+			skp->Text(CW * 10, 7 * H / 22, "External DV", 11);
+			break;
 		default:
 			skp->Text(CW * 10, 7 * H / 22, "Hypersurface", 12);
 			break;
@@ -6391,6 +6394,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 			sprintf_s(Buffer, "%.0lf NM", GC->rtcc->PZTLIPLN.h_ap);
 			skp->Text(CW * 10, 9 * H / 22, Buffer, strlen(Buffer));
+		}
+		else if (GC->rtcc->PZTLIPLN.Mode == 6)
+		{
+			skp->Text(CW * 2, 9 * H / 22, "DV:", 4);
+			AGC_Display(Buffer, GC->rtcc->PZTLIPLN.dV_LVLH.x / 0.3048);
+			skp->Text(CW * 10, 9 * H / 22, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, GC->rtcc->PZTLIPLN.dV_LVLH.y / 0.3048);
+			skp->Text(CW * 10, 10 * H / 22, Buffer, strlen(Buffer));
+			AGC_Display(Buffer, GC->rtcc->PZTLIPLN.dV_LVLH.z / 0.3048);
+			skp->Text(CW * 10, 11 * H / 22, Buffer, strlen(Buffer));
 		}
 		else if (GC->rtcc->PZTLIPLN.Mode == 2 || GC->rtcc->PZTLIPLN.Mode == 5)
 		{
@@ -8450,6 +8463,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		x = 3; y = 3;
 		if (subscreen == 0)
 		{
+			skp->Text(CW * x, y * H / 22, "PAD:", 4); y++;
 			skp->Text(CW * x, y * H / 22, "TGT:", 4); y++;
 			skp->Text(CW * x, y * H / 22, "LOT:", 4); y++;
 			skp->Text(CW * x, y * H / 22, "CKFACT:", 7); y++;
@@ -8467,17 +8481,39 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(CW * x, y * H / 22, "GAMINS:", 7); y++;
 			skp->Text(CW * x, y * H / 22, "GMTLOR:", 7); y++;
 			skp->Text(CW * x, y * H / 22, "OFFSET:", 7); y++;
-			skp->Text(CW * x, y * H / 22, "BIAS:", 5); y++;
-			skp->Text(CW * x, y * H / 22, "TRANS:", 6);
+			skp->Text(CW * x, y * H / 22, "BIAS:", 5);
 
 			x = 11; y = 3;
-			if (G->Rendezvous_Target != NULL)
+			if (GC->rtcc->PZSLVCON.Pad == 1)
 			{
-				sprintf(Buffer, "%s", G->Rendezvous_Target->GetName());
+				sprintf(Buffer, "CSM");
 			}
 			else
 			{
-				sprintf(Buffer, "No Target!");
+				sprintf(Buffer, "LEM");
+			}
+			skp->Text(CW * x, y * H / 22, Buffer, strlen(Buffer)); y++;
+			if (GC->MissionPlanningActive)
+			{
+				if (GC->rtcc->PZSLVCON.TargetVectorTime < 0.0)
+				{
+					sprintf(Buffer, "Present Time/After last MPT maneuver");
+				}
+				else
+				{
+					GET_Display2(Buffer, GC->rtcc->PZSLVCON.TargetVectorTime);
+				}
+			}
+			else
+			{
+				if (G->Rendezvous_Target != NULL)
+				{
+					sprintf(Buffer, "%s", G->Rendezvous_Target->GetName());
+				}
+				else
+				{
+					sprintf(Buffer, "No Target!");
+				}
 			}
 			skp->Text(CW * x, y * H / 22, Buffer, strlen(Buffer)); y++;
 			switch (GC->rtcc->PZSLVCON.LOT)
@@ -8529,31 +8565,37 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			if (GC->rtcc->PZSLVCON.LOT <= 3)
 			{
 				GET_Display2(Buffer, GC->rtcc->PZSLVCON.GMTLOR);
-				skp->Text(CW * x, 18 * H / 22, Buffer, strlen(Buffer));
+				skp->Text(CW * x, y * H / 22, Buffer, strlen(Buffer));
 			}
+			y++;
 			if (GC->rtcc->PZSLVCON.LOT == 2)
 			{
-				Text_Double(skp, CW * x, 19 * H / 22, "%+.3lf deg", GC->rtcc->PZSLVCON.OFFSET*DEG);
+				Text_Double(skp, CW * x, y * H / 22, "%+.3lf deg", GC->rtcc->PZSLVCON.OFFSET*DEG);
 			}
+			y++;
 			if (GC->rtcc->PZSLVCON.LOT == 3 || GC->rtcc->PZSLVCON.LOT == 4)
 			{
-				Text_Double(skp, CW * x, 20 * H / 22, "%+.1lf sec", GC->rtcc->PZSLVCON.BIAS);
+				Text_Double(skp, CW * x, y * H / 22, "%+.1lf sec", GC->rtcc->PZSLVCON.BIAS);
 			}
-			if (GC->rtcc->PZSLVCON.LOT == 5 || GC->rtcc->PZSLVCON.LOT == 6)
-			{
-				Text_Double(skp, CW * x, 21 * H / 22, "%+.1lf sec", GC->rtcc->PZSLVCON.TRANS);
-			}
+			y++;
 		}
 		else
 		{
+			skp->Text(CW * x, y * H / 22, "TRANS:", 6); y++;
 			skp->Text(CW * x, y * H / 22, "INSCO:", 6); y++;
 			skp->Text(CW * x, y * H / 22, "DHW:", 4); y++;
 			skp->Text(CW * x, y * H / 22, "DU:", 3); y++;
 			skp->Text(CW * x, y * H / 22, "ANOM:", 5); y++;
 			skp->Text(CW * x, y * H / 22, "DELNOF:", 7); y++;
 			skp->Text(CW * x, y * H / 22, "DELNO:", 6); y++;
-			skp->Text(CW * x, y * H / 22, "PHASE:", 6);
+			skp->Text(CW * x, y * H / 22, "PHASE:", 6); y++;
+			skp->Text(CW * x, y * H / 22, "LAZCOE:", 7);
 			x = 11; y = 3;
+			if (GC->rtcc->PZSLVCON.LOT == 5 || GC->rtcc->PZSLVCON.LOT == 6)
+			{
+				Text_Double(skp, CW * x, y * H / 22, "%+.1lf sec", GC->rtcc->PZSLVCON.TRANS);
+			}
+			y++;
 			if (GC->rtcc->PZSLVCON.INSCO == 1)
 			{
 				strcpy(Buffer, "Input VINS, GAMINS, RINS");
@@ -8610,7 +8652,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			{
 				strcpy(Buffer, "Invalid phase flags!");
 			}
-			skp->Text(CW * x, y * H / 22, Buffer, strlen(Buffer));
+			skp->Text(CW * x, y * H / 22, Buffer, strlen(Buffer)); y++;
+			Text_Double(skp, CW * x, y * H / 22, "%+.4lf", GC->rtcc->PZSLVCON.LAZCOE[0]); y++;
+			Text_Double(skp, CW * x, y * H / 22, "%+.4lf", GC->rtcc->PZSLVCON.LAZCOE[1]); y++;
+			Text_Double(skp, CW * x, y * H / 22, "%+.4lf", GC->rtcc->PZSLVCON.LAZCOE[2]); y++;
+			Text_Double(skp, CW * x, y * H / 22, "%+.4lf", GC->rtcc->PZSLVCON.LAZCOE[3]); y++;
 		}
 
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
@@ -8703,7 +8749,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		GET_Display2(Buffer, GC->rtcc->PZSLVTAR.TPLANE);
 		skp->Text(CW * x, 14 * H / 32, Buffer, strlen(Buffer));
 		Text_Double(skp, CW * x, 16 * H / 32, "%.3lf", GC->rtcc->PZSLVTAR.AZL);
-		if (GC->rtcc->PZSLVCON.Pad == 1)
+		if (GC->rtcc->PZSLVTAR.Pad == 1)
 		{
 			skp->Text(CW * x, 17 * H / 32, "CSM", 3);
 		}
@@ -9046,18 +9092,20 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetFont(font_menu3);
 		GetCharSize(skp, CW, CH);
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
-		skp->Text(W / 2, CH / 2, MEDInputData.Title.c_str(), MEDInputData.Title.size());
-		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-
-		skp->Text(CW, CH * (marker + 4), "*", 1);
-
-		for (unsigned i = 0; i < MEDInputData.table.size(); i++)
+		if (GC->MEDInputData.size() != 0U && GC->MEDInputData.size() > ActiveMEDInputPage)
 		{
-			Text_String(skp, CW * 2, CH * (i + 4), MEDInputData.table[i].Label);
-			Text_String(skp, CW * 22, CH * (i + 4), MEDInputData.table[i].Data);
-			Text_String(skp, CW * 36, CH * (i + 4), MEDInputData.table[i].Unit);
-		}
+			skp->Text(W / 2, CH / 2, GC->MEDInputData[ActiveMEDInputPage].Title.c_str(), GC->MEDInputData[ActiveMEDInputPage].Title.size());
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
 
+			skp->Text(CW, CH * (marker + 4), "*", 1);
+
+			for (unsigned i = 0; i < GC->MEDInputData[ActiveMEDInputPage].table.size(); i++)
+			{
+				Text_String(skp, CW * 2, CH * (i + 4), GC->MEDInputData[ActiveMEDInputPage].table[i].Label);
+				Text_String(skp, CW * 22, CH * (i + 4), GC->MEDInputData[ActiveMEDInputPage].table[i].Data);
+				Text_String(skp, CW * 36, CH * (i + 4), GC->MEDInputData[ActiveMEDInputPage].table[i].Unit);
+			}
+		}
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		Text_String(skp, W / 2, H - CH, GC->rtcc->RTCCONLINEMON.LastMEDMessage);
 		break;

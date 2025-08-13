@@ -44,6 +44,8 @@ LEM_RR::LEM_RR()
 	RREHeat = 0;
 	NoTrackSignal = false;
 	radarDataGood = false;
+	shaftVel = 0.0;
+	trunnionVel = 0.0;
 
 	anim_RRPitch = -1;
 	anim_RRYaw = -1;

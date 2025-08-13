@@ -1889,7 +1889,7 @@ void RTCC::LoadLaunchDaySpecificParameters(int year, int month, int day)
 {
 	//Mission initialization parameters
 	LoadMissionInitParameters(year, month, day);
-	//Solar and lunar ephemerides
+	//Solar and lunar ephemerides, Earth and lunar RNP matrices
 	QMEPHEM(SystemParameters.AGCEpoch, year, month, day, 0.0);
 }
 
@@ -2660,6 +2660,7 @@ bool RTCC::LoadMissionConstantsFile(std::string file)
 			papiReadScenario_int(Buff, "MHTDTC_N", SystemParameters.MHTDTC.N);
 			papiReadScenario_int(Buff, "MGTESE", SystemParameters.MGTESE);
 			papiReadScenario_int(Buff, "MMTESE", SystemParameters.MMTESE);
+			papiReadScenario_doublearr(Buff, "LAZCOE", PZSLVCON.LAZCOE, 4);
 		}
 
 		//Anything that is mission, but not launch day specific
@@ -5037,6 +5038,7 @@ void RTCC::TranslunarInjectionProcessor(bool mpt, EphemerisData *sv, PLAWDTOutpu
 	medquant.GMT_TIG = GMTfromGET(PZTLIPLN.GET_TLI);
 	medquant.IPOA = PZTLIPLN.IsPacficWindow ? 1 : 2;
 	medquant.Opportunity = PZTLIPLN.Opportunity;
+	medquant.dV_LVLH = PZTLIPLN.dV_LVLH;
 
 	if (PZTLIPLN.Mode == 2 || PZTLIPLN.Mode == 5)
 	{
@@ -18977,6 +18979,7 @@ void RTCC::PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT)
 
 	if (lwp.lwsum.LWPERROR) return;
 
+	PZSLVTAR.Pad = PZSLVCON.Pad;
 	PZSLVTAR.GMTLO = lwp.lwsum.GMTLO;
 	PZSLVTAR.TINS = lwp.lwsum.TINS;
 	PZSLVTAR.GSTAR = lwp.rlott.GSTAR;
@@ -29435,6 +29438,35 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		}
 		PMMWTC(49);
 	}
+	//Change vehicle weight
+	else if (med == "50")
+	{
+		//Item 1: MPT Code
+		rtcc::AddTextMEDItem(opt, 1, MHGVNM.tab);
+		//Item 2: CSM Weight
+		rtcc::AddDoubleMEDItem(opt, 2, true, false, 0.45359237, 2000.0, 0.0, -1.0);
+		//Item 3: S-IVB Weight
+		rtcc::AddDoubleMEDItem(opt, 2, true, false, 0.45359237, 2000.0, 0.0, -1.0);
+		//Item 4: LM Total Weight
+		rtcc::AddDoubleMEDItem(opt, 2, true, false, 0.45359237, 2000.0, 0.0, -1.0);
+		//Item 5: LM Ascent Weight
+		rtcc::AddDoubleMEDItem(opt, 2, true, false, 0.45359237, 2000.0, 0.0, -1.0);
+		//Item 6: Time of S-IVB Weight
+		rtcc::AddTimeMEDItem(opt, 2, false, true, 0.0, 0.0, GETfromGMT(RTCCPresentTimeGMT()), GETfromGMT(RTCCPresentTimeGMT()));
+
+		int err = rtcc::GenericMEDProcessing(opt, data, out);
+		if (err)
+		{
+			return err;
+		}
+		med_m50.Table = (out.Values[0].i == 0 ? RTCC_MPT_CSM : RTCC_MPT_LM);
+		med_m50.CSMWT = out.Values[1].d;
+		med_m50.SIVBWT = out.Values[2].d;
+		med_m50.LMWT = out.Values[3].d;
+		med_m50.LMASCWT = out.Values[4].d;
+		med_m50.WeightGET = out.Values[5].d;
+		PMMWTC(50);
+	}
 	//Change vehicle cross-sectional area or K-factor
 	else if (med == "51")
 	{
@@ -31097,7 +31129,8 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 				sv.RBI = BODY_MOON;
 			}
 
-			EMMXTR(sv.GMT, rmag, out.Values[1].d, out.Values[5].d, out.Values[4].d, PI05 - out.Values[2].d, out.Values[3].d, sv.RBI, sv.R, sv.V);
+			err = EMMXTR(sv.GMT, rmag, out.Values[1].d, out.Values[5].d, out.Values[4].d, PI05 - out.Values[2].d, out.Values[3].d, sv.RBI, sv.R, sv.V);
+			if (err) return 2;
 		}
 		else
 		{
@@ -31343,6 +31376,10 @@ int RTCC::GMSMED(std::string med, std::vector<std::string> data)
 
 		SystemParameters.MCLAMD = PIGBHA();
 		//TBD: Call EMLAMBNP
+		//Calculate initial present GMT
+		RTCC_GreenwichMeanTime = (oapiGetSimMJD() - SystemParameters.GMTBASE)*24.0*3600.0;
+		//Load launch day specific data
+		LoadLaunchDaySpecificParameters(GZGENCSN.Year, GZGENCSN.MonthofLiftoff, GZGENCSN.DayofLiftoff);
 	}
 	return 0;
 }
