@@ -4130,6 +4130,8 @@ bool ApolloRTCCMFD::set_ChooseTIThruster(std::string th)
 
 void ApolloRTCCMFD::menuSetM70Inputs()
 {
+	int num = (GC->MissionPlanningActive ? subscreen : 0);
+
 	switch (marker)
 	{
 	case 0:
@@ -4139,43 +4141,49 @@ void ApolloRTCCMFD::menuSetM70Inputs()
 		GenericGETInput(&GC->rtcc->med_m70.DeleteGET, "Delete all maneuvers in both MPTs after GET (Format: hhh:mm:ss, or negative number for no delete)");
 		break;
 	case 2:
-		if (subscreen < 6) subscreen++;
-		else subscreen = 0;
+		if (GC->MissionPlanningActive)
+		{
+			if (subscreen < 6) subscreen++;
+			else subscreen = 0;
+		}
 		break;
 	case 3:
 		menuChooseSPQDKIThruster();
 		break;
 	case 4:
-		if (GC->rtcc->med_m70.ManData[subscreen].Attitude < 5)
+		if (GC->rtcc->med_m70.ManData[num].Attitude < 5)
 		{
-			GC->rtcc->med_m70.ManData[subscreen].Attitude++;
+			GC->rtcc->med_m70.ManData[num].Attitude++;
 		}
 		else
 		{
-			GC->rtcc->med_m70.ManData[subscreen].Attitude = 1;
+			GC->rtcc->med_m70.ManData[num].Attitude = 1;
 		}
 		break;
 	case 5:
-		GenericUllageInput(&GC->rtcc->med_m70.ManData[subscreen].UllageQuads, &GC->rtcc->med_m70.ManData[subscreen].UllageDT);
+		GenericUllageInput(&GC->rtcc->med_m70.ManData[num].UllageQuads, &GC->rtcc->med_m70.ManData[num].UllageDT);
 		break;
 	case 6:
-		GC->rtcc->med_m70.ManData[subscreen].Iteration = !GC->rtcc->med_m70.ManData[subscreen].Iteration;
+		GC->rtcc->med_m70.ManData[num].Iteration = !GC->rtcc->med_m70.ManData[num].Iteration;
 		break;
 	case 7:
-		GenericDoubleInput(&GC->rtcc->med_m70.ManData[subscreen].TenPercentDT, "Delta T of 10% thrust for DPS (negative to ignore short burn test):");
+		GenericDoubleInput(&GC->rtcc->med_m70.ManData[num].TenPercentDT, "Delta T of 10% thrust for DPS (negative to ignore short burn test):");
 		break;
 	case 8:
-		GenericDoubleInput(&GC->rtcc->med_m70.ManData[subscreen].DPSThrustFactor, "DPS thrust scaling factor (0 to 1):");
+		GenericDoubleInput(&GC->rtcc->med_m70.ManData[num].DPSThrustFactor, "DPS thrust scaling factor (0 to 1):");
 		break;
 	case 9:
-		GC->rtcc->med_m70.ManData[subscreen].TimeFlag = !GC->rtcc->med_m70.ManData[subscreen].TimeFlag;
+		GC->rtcc->med_m70.ManData[num].TimeFlag = !GC->rtcc->med_m70.ManData[num].TimeFlag;
 		break;
 	case 10:
-		for (int i = 0; i < 7; i++)
+		if (GC->MissionPlanningActive)
 		{
-			if (i != subscreen)
+			for (int i = 0; i < 7; i++)
 			{
-				GC->rtcc->med_m70.ManData[i] = GC->rtcc->med_m70.ManData[subscreen];
+				if (i != subscreen)
+				{
+					GC->rtcc->med_m70.ManData[i] = GC->rtcc->med_m70.ManData[subscreen];
+				}
 			}
 		}
 		break;
@@ -4184,6 +4192,8 @@ void ApolloRTCCMFD::menuSetM70Inputs()
 
 void ApolloRTCCMFD::menuSetM72Inputs()
 {
+	int num = (GC->MissionPlanningActive ? subscreen : 0);
+
 	switch (marker)
 	{
 	case 0:
@@ -4203,36 +4213,39 @@ void ApolloRTCCMFD::menuSetM72Inputs()
 		menuChooseTIThruster();
 		break;
 	case 5:
-		if (GC->rtcc->med_m72.ManData[subscreen].Attitude < 5)
+		if (GC->rtcc->med_m72.ManData[num].Attitude < 5)
 		{
-			GC->rtcc->med_m72.ManData[subscreen].Attitude++;
+			GC->rtcc->med_m72.ManData[num].Attitude++;
 		}
 		else
 		{
-			GC->rtcc->med_m72.ManData[subscreen].Attitude = 1;
+			GC->rtcc->med_m72.ManData[num].Attitude = 1;
 		}
 		break;
 	case 6:
-		GenericUllageInput(&GC->rtcc->med_m72.ManData[subscreen].UllageQuads, &GC->rtcc->med_m72.ManData[subscreen].UllageDT);
+		GenericUllageInput(&GC->rtcc->med_m72.ManData[num].UllageQuads, &GC->rtcc->med_m72.ManData[num].UllageDT);
 		break;
 	case 7:
-		GC->rtcc->med_m72.ManData[subscreen].Iteration = !GC->rtcc->med_m72.ManData[subscreen].Iteration;
+		GC->rtcc->med_m72.ManData[num].Iteration = !GC->rtcc->med_m72.ManData[num].Iteration;
 		break;
 	case 8:
-		GenericDoubleInput(&GC->rtcc->med_m72.ManData[subscreen].TenPercentDT, "Delta T of 10% thrust for DPS (negative to ignore short burn test):");
+		GenericDoubleInput(&GC->rtcc->med_m72.ManData[num].TenPercentDT, "Delta T of 10% thrust for DPS (negative to ignore short burn test):");
 		break;
 	case 9:
-		GenericDoubleInput(&GC->rtcc->med_m72.ManData[subscreen].DPSThrustFactor, "DPS thrust scaling factor (0 to 1):");
+		GenericDoubleInput(&GC->rtcc->med_m72.ManData[num].DPSThrustFactor, "DPS thrust scaling factor (0 to 1):");
 		break;
 	case 10:
-		GC->rtcc->med_m72.ManData[subscreen].TimeFlag = !GC->rtcc->med_m72.ManData[subscreen].TimeFlag;
+		GC->rtcc->med_m72.ManData[num].TimeFlag = !GC->rtcc->med_m72.ManData[num].TimeFlag;
 		break;
 	case 11:
-		for (int i = 0; i < 2; i++)
+		if (GC->MissionPlanningActive)
 		{
-			if (i != subscreen)
+			for (int i = 0; i < 2; i++)
 			{
-				GC->rtcc->med_m72.ManData[i] = GC->rtcc->med_m72.ManData[subscreen];
+				if (i != subscreen)
+				{
+					GC->rtcc->med_m72.ManData[i] = GC->rtcc->med_m72.ManData[subscreen];
+				}
 			}
 		}
 		break;
