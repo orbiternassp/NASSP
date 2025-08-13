@@ -3727,7 +3727,7 @@ void IndicatorSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface) {
 		displayState += (drawState - 1);
 	}
 
-	oapiBlt(drawSurface, switchsurfacevc, x*TexMul, y*TexMul, width * (int)displayState*TexMul, 0, width*TexMul, height*TexMul);
+//	oapiBlt(drawSurface, switchsurfacevc, x*TexMul, y*TexMul, width * (int)displayState*TexMul, 0, width*TexMul, height*TexMul);
 }
 
 void IndicatorSwitch::SaveState(FILEHANDLE scn) {

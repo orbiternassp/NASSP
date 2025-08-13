@@ -1632,20 +1632,31 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			if (dsky.StbyLit())       { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_STBY); }
 			if (dsky.KbRelLit())      { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_KEY_REL); }
 			if (dsky.OprErrLit())     { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_OPR_ERR); }
-			if (dsky.PrioDispLit())   { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_PRIO_DISP); }
-			if (dsky.NoDAPLit())	  { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_NO_DAP); }
+//			if (dsky.PrioDispLit())   { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_PRIO_DISP); }
+//			if (dsky.NoDAPLit())	  { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_NO_DAP); }
 			if (dsky.TempLit())       { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_TEMP); }
 			if (dsky.GimbalLockLit()) { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_GIMBAL_LOCK); }
 			if (dsky.ProgLit())       { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_PROG); }
 			if (dsky.RestartLit())    { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_RESTART); }
 			if (dsky.TrackerLit())    { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_TRACKER); }
-			if (dsky.AltLit())        { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_ALT); }
-			if (dsky.VelLit())        { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_VEL); }
+//			if (dsky.AltLit())        { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_ALT); }
+//			if (dsky.VelLit())        { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_VEL); }
+
+			if (pMission->GetLMDSKYVersion() > 1) {
+				if (dsky.AltLit()) { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_ALT); }
+				if (dsky.VelLit()) { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_VEL); }
+			}
+			if (pMission->GetLMDSKYVersion() > 2) {
+				if (dsky.PrioDispLit())	{ DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_PRIO_DISP); }
+				if (dsky.NoDAPLit())	{ DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_NO_DAP); }
+			}
 		}
 
 //		sprintf(oapiDebugString(), "Integral Voltage = %lf", lca.GetNumericVoltage());
 
-		double floodRotaryValue = 0.0; // FloodLights.GetCDRRotaryVoltage() / 28.0;
+		// First Darken All Lights
+//		double floodRotaryValue = 0.0; // FloodLights.GetCDRRotaryVoltage() / 28.0;
+		double floodRotaryValue = (FloodLights.GetCDRRotaryVoltage() + FloodLights.GetLMPRotaryVoltage()) / 560.0;	// add some fake ambient light, max 10% of all floodlights
 		
 		/// Hardcode Materials with no Texture
 		SetVCLighting(vcidx,   VC_MAT_FDAI_errorneedle, MAT_LIGHT, floodRotaryValue, 1);

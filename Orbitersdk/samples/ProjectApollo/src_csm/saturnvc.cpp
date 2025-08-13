@@ -231,7 +231,7 @@ const VECTOR3 P2_ROT_POS[P2_ROTCOUNT] = {
 
 // Panel 2 thumbwheels
 const VECTOR3 P2_TW_POS[P2_TWCOUNT] = {
-	{0.401266, 0.508807,  0.307282}
+	{0.401266, 0.508807, 0.307282}
 };
 
 // Panel 3 switches
@@ -259,7 +259,7 @@ const VECTOR3 P3_ROT_POS[P3_ROTCOUNT] = {
 
 // Panel 3 thumbwheels
 const VECTOR3 P3_TW_POS[P3_TWCOUNT] = {
-	{0.583246, 0.333249,  0.254939}, {0.583238, 0.277356,  0.236447}
+	{0.583246, 0.333249, 0.254939}, { 0.583239, 0.277356, 0.236447}
 };
 
 // Panel 4 switches
@@ -318,8 +318,8 @@ const VECTOR3 P6_TOGGLE_POS[P6_SWITCHCOUNT] = {
 
 // Panel 6 thumbwheels
 const VECTOR3 P6_TW_POS[P6_TWCOUNT] = {
-{0.860167, 0.750426, 0.315406}, {0.905187, 0.700716,  0.298350}, {0.951258, 0.650388,  0.281370}, {0.904921, 0.757869,  0.255093}, {0.952538, 0.705835,  0.237347},
-{0.997525, 0.656375,  0.220749}
+	{0.860317, 0.750366, 0.315270}, {0.905577, 0.700821, 0.298540}, {0.951279, 0.650570, 0.281760}, {0.905167, 0.757648, 0.255131}, {0.952535, 0.705751, 0.237554},
+	{0.997660, 0.656238, 0.220930}
 };
 
 // Panel 7 switches
@@ -375,8 +375,8 @@ const VECTOR3 P9_TOGGLE_POS[P9_SWITCHCOUNT] = {
 
 // Panel 9 thumbwheels
 const VECTOR3 P9_TW_POS[P9_TWCOUNT] = {
-{-0.911422, 0.757517,  0.251769}, {-0.956337, 0.707799,  0.234808}, {-1.001978, 0.657270,  0.217304}, {-0.868194, 0.754182,  0.313067}, {-0.915352, 0.701869,  0.295175},
-{-0.960264, 0.652364,  0.278058}
+	{-0.911466, 0.757649, 0.251594}, {-0.956305, 0.708227, 0.234473}, {-1.001965, 0.657676, 0.216963}, {-0.868411, 0.754323, 0.313227}, {-0.915455, 0.701961, 0.295176},
+	{-0.960487, 0.652347, 0.277770}
 };
 
 // Panel 10 switches
@@ -387,8 +387,8 @@ const VECTOR3 P10_TOGGLE_POS[P10_SWITCHCOUNT] = {
 
 // Panel 10 thumbwheels
 const VECTOR3 P10_TW_POS[P10_TWCOUNT] = {
-{0.062440,   0.367128,  0.524263}, {0.062345,   0.391985,  0.466019}, {0.062459,   0.417484,  0.407058}, {-0.068344,   0.367143,  0.524239}, {-0.068340,   0.392002,  0.465955},
-{-0.068456,   0.417391,  0.406982}
+	{0.062555, 0.367049, 0.524446}, {0.062670, 0.392133, 0.466289}, {0.062424, 0.417737, 0.406948}, {-0.068272, 0.366996, 0.524580}, {-0.068121, 0.392125, 0.466180},
+	{-0.068347, 0.417703, 0.407045}
 };
 
 // Panel 12 rotaries
@@ -2005,9 +2005,9 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		// First Darken All Lights
 //		double floodRotaryValue = 0.0; //FloodRotarySwitch.GetOutput();
-		double floodRotaryValue = (FloodRotarySwitch.GetOutput() / 20) + (RightFloodRotarySwitch.GetOutput() / 20) + (Panel100FloodRotarySwitch.GetOutput() / 20);
+		double floodRotaryValue = (FloodRotarySwitch.GetOutput() + RightFloodRotarySwitch.GetOutput() + Panel100FloodRotarySwitch.GetOutput()) / 30;	// add some fake ambient light, max 10% of all floodlights
 
-// Hardcoded Materials with no Texture
+		// Hardcoded Materials with no Texture
 		SetVCLighting(vcidx,   VC_MAT_FDAI_errorneedle, MAT_LIGHT, floodRotaryValue, 1);
 		SetVCLighting(vcidx,   VC_MAT_FDAI_Cue, MAT_LIGHT, floodRotaryValue, 1);
 
@@ -4539,23 +4539,31 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&SPSOxidFlowValveMaxIndicator, AID_VC_SPSOXIDFLOWIND);
 	MainPanelVC.AddSwitch(&SPSOxidFlowValveMinIndicator, AID_VC_SPSOXIDFLOWIND);
 
-// TODO Panel 300 by Jordan
+// TODO SPS Engine Injector Valves by Jordan
 
 	NEEDLE_POS = { 0.498952, 0.694324, 0.358005 };
 	MainPanelVC.AddSwitch(&SPSInjectorValve1Indicator, AID_VC_SPS_INJ_VLV);
+//	SPSInjectorValve1Indicator.SetRotationRange(RAD * 90);
 	SPSInjectorValve1Indicator.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+//	SPSInjectorValve1Indicator.DefineMeshGroup(VC_GRP_SPS_ENG_VALVE_NEEDLE01);
 
 	NEEDLE_POS = { 0.527707, 0.694319, 0.358021 };
 	MainPanelVC.AddSwitch(&SPSInjectorValve2Indicator, AID_VC_SPS_INJ_VLV);
+//	SPSInjectorValve2Indicator.SetRotationRange(RAD * 90);
 	SPSInjectorValve2Indicator.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+//	SPSInjectorValve2Indicator.DefineMeshGroup(VC_GRP_SPS_ENG_VALVE_NEEDLE02);
 
 	NEEDLE_POS = { 0.556461, 0.694313, 0.358037 };
 	MainPanelVC.AddSwitch(&SPSInjectorValve3Indicator, AID_VC_SPS_INJ_VLV);
+//	SPSInjectorValve3Indicator.SetRotationRange(RAD * 90);
 	SPSInjectorValve3Indicator.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+//	SPSInjectorValve3Indicator.DefineMeshGroup(VC_GRP_SPS_ENG_VALVE_NEEDLE03);
 
 	NEEDLE_POS = { 0.585216, 0.694308, 0.358054 };
 	MainPanelVC.AddSwitch(&SPSInjectorValve4Indicator, AID_VC_SPS_INJ_VLV);
+//	SPSInjectorValve4Indicator.SetRotationRange(RAD * 90);
 	SPSInjectorValve4Indicator.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
+//	SPSInjectorValve4Indicator.DefineMeshGroup(VC_GRP_SPS_ENG_VALVE_NEEDLE04);
 
 	// Panel 4
 
@@ -5620,7 +5628,7 @@ void Saturn::DefineVCAnimations()
 
 	// Forward Hatch
 	MainPanelVC.AddSwitch(&PressEqualValve, AID_VC_FWDHATCH_PRESS_EQU_VLV);
-	PressEqualValve.SetReference(VECTOR3 {0.0011, -0.0000, 1.0773 }, VECTOR3 { -1, 0, 0 });
+//	PressEqualValve.SetReference(VECTOR3 {0.0011, -0.0000, 1.0773 }, VECTOR3 { -1, 0, 0 });
 
 	// Panel 600
 	const VECTOR3	P600_SW_AXIS = { -1, 0, 0 };
@@ -5966,7 +5974,10 @@ void Saturn::UpdatePointingArrow()
 	if (!vcmesh) return;
 
 	bool arrowVisible = checkControl.getFlashing();
-	if (!arrowVisible) return;	// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
+	if (!arrowVisible) {		// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
+		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_NEVER);
+		return;
+	};
 
 	PanelSwitchItem *nextActiveSwitch = MainPanelVC.GetFlashingItem();
 
@@ -6039,7 +6050,7 @@ void Saturn::UpdatePointingArrow()
 		&ModeIntercomVOXSensThumbwheelSwitch, &PadCommVolumeThumbwheelSwitch, &SBandVolumeThumbwheelSwitch, &PowerMasterVolumeThumbwheelSwitch,
 		&IntercomVolumeThumbwheelSwitch, &VHFAMVolumeThumbwheelSwitch, &LeftModeIntercomVOXSensThumbwheelSwitch, &LeftPadCommVolumeThumbwheelSwitch,
 		&LeftSBandVolumeThumbwheelSwitch, &LeftPowerMasterVolumeThumbwheelSwitch, &LeftIntercomVolumeThumbwheelSwitch, &LeftVHFAMVolumeThumbwheelSwitch,
-		&CabinPressureReliefLever1, &CabinPressureReliefLever2, &SuitCircuitReturnValveLever, &GlycolToRadiatorsLever, &PostLDGVentValveLever
+		&CabinPressureReliefLever1, &CabinPressureReliefLever2, &SuitCircuitReturnValveLever, &GlycolToRadiatorsLever, &PostLDGVentValveLever, &PressEqualValve
 	};
 
 	const VECTOR3 specialSwitchesPos[] = {
@@ -6049,7 +6060,7 @@ void Saturn::UpdatePointingArrow()
 		_V( 0.8947,  0.6943,  0.2899), _V( 0.9408,  0.6439,  0.2729), _V( 0.8945,  0.7514,  0.2466), _V( 0.9421,  0.6994,  0.2289), _V( 0.9871,  0.6499,  0.2123),
 		_V(-0.9010,  0.7509,  0.2442), _V(-0.9459,  0.7012,  0.2272), _V(-0.9915,  0.6506,  0.2097), _V(-0.8578,  0.7476,  0.3055), _V(-0.9050,  0.6953,  0.2876),
 		_V(-0.9498,  0.6457,  0.2704), _V(-1.2171,  0.7811, -0.2383), _V(-1.2067,  0.6746, -0.2383), _V(-1.0608,  0.2392, -0.3428), _V(-1.1482,  0.9683, -0.2124),
-		_V( 0.1835,  0.9203,  0.4144)
+		_V( 0.1835,  0.9203,  0.4144), _V( 0.0011, -0.0000,  1.0773) 
 	};
 
 	for (int i = 0; i < NUM_ELEMENTS(specialSwitches); i++){
@@ -6184,7 +6195,7 @@ void Saturn::UpdatePointingArrow()
 	DWORD matidx = mg->MtrlIdx;										// get its original material index;
 	MATERIAL *newMat = oapiMeshMaterial(hCMVC, matidx);				// get the group material
 	DWORD newMatIdx = oapiAddMaterial(hCMVC, newMat);				// add a copy of the material at the bootm
-	mg->MtrlIdx = newMatIdx;										//set the group material to the copy just added
+	mg->MtrlIdx = newMatIdx;										// set the group material to the copy just added
 
 	MATERIAL *mat = oapiMeshMaterial(hCMVC, matidx);				// Get the original material definition
 	MATERIAL *mat2 = new MATERIAL;									// Create the new material for the excahnge
