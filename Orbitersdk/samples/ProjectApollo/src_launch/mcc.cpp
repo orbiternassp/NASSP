@@ -1557,6 +1557,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP7NAV_lat", form->lat[0]);
 			SAVE_DOUBLE("MCC_AP7NAV_lng", form->lng[0]);
 			SAVE_DOUBLE("MCC_AP7NAV_NavChk", form->NavChk[0]);
+			SAVE_STRING("MCC_AP7NAV_remarks", form->remarks);
 		}
 		else if (padNumber == 4)
 		{
@@ -1762,6 +1763,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
 
 			SAVE_INT("MCC_AP11LMARKTRKPAD_entries", form->entries);
+			SAVE_INT("MCC_AP11LMARKTRKPAD_type", form->type);
 
 			for (int i = 0;i < form->entries;i++)
 			{
@@ -1784,11 +1786,14 @@ void MCC::SaveState(FILEHANDLE scn) {
 		else if (padNumber == PT_AP10DAPDATA)
 		{
 			AP10DAPDATA * form = (AP10DAPDATA *)padForm;
-
 			SAVE_DOUBLE("MCC_AP10DAPDATA_OtherVehicleWeight", form->OtherVehicleWeight);
-			SAVE_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			SAVE_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			SAVE_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_LMPitchTrim", form->LMPitchTrim);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_LMRollTrim", form->LMRollTrim);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_DVTO", form->DVTO);
+			SAVE_INT("MCC_AP10DAPDATA_type", form->type);
 		}
 		else if (padNumber == PT_AP11LMMNV)
 		{
@@ -2233,6 +2238,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP7NAV_lat", form->lat[0]);
 			LOAD_DOUBLE("MCC_AP7NAV_lng", form->lng[0]);
 			LOAD_DOUBLE("MCC_AP7NAV_NavChk", form->NavChk[0]);
+			LOAD_STRING("MCC_AP7NAV_remarks", form->remarks, 256);
 		}
 		else if (padNumber == 4)
 		{
@@ -2436,6 +2442,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
 
 			LOAD_INT("MCC_AP11LMARKTRKPAD_entries", form->entries);
+			LOAD_INT("MCC_AP11LMARKTRKPAD_type", form->type);
 
 			for (int i = 0;i < form->entries;i++)
 			{
@@ -2460,9 +2467,13 @@ void MCC::LoadState(FILEHANDLE scn) {
 			AP10DAPDATA * form = (AP10DAPDATA *)padForm;
 
 			LOAD_DOUBLE("MCC_AP10DAPDATA_OtherVehicleWeight", form->OtherVehicleWeight);
-			LOAD_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			LOAD_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			LOAD_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_LMPitchTrim", form->LMPitchTrim);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_LMRollTrim", form->LMRollTrim);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_DVTO", form->DVTO);
+			LOAD_INT("MCC_AP10DAPDATA_type", form->type);
 		}
 		else if (padNumber == PT_AP11LMMNV)
 		{
@@ -2841,7 +2852,7 @@ void MCC::drawPad(bool writetofile){
 		{
 			AP7NAV * form = (AP7NAV *)padForm;
 			OrbMech::format_time_prec(tmpbuf, form->NavChk[0]);
-			sprintf(buffer, "NAV CHECK\nGET (N34):\n%s\n %+07.2f LAT\n %+07.2f LNG\n %+07.1f ALT\n", tmpbuf, form->lat[0], form->lng[0], form->alt[0]);
+			sprintf(buffer, "NAV CHECK\nGET (N34):\n%s\n %+07.2f LAT\n %+07.2f LNG\n %+07.1f ALT\n  %s", tmpbuf, form->lat[0], form->lng[0], form->alt[0], form->remarks);
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
@@ -3132,8 +3143,8 @@ void MCC::drawPad(bool writetofile){
 		double ss, ss2;
 
 		sprintf(buffer, "CSM STAR CHECK UPDATE");
-		OrbMech::SStoHHMMSS(form->GET[0], hh, mm, ss, 0.01);
-		OrbMech::SStoHHMMSS(form->TAlign[0], hh2, mm2, ss2, 0.01);
+		OrbMech::SStoHHMMSS(form->GET[0], hh, mm, ss, 1.0);
+		OrbMech::SStoHHMMSS(form->TAlign[0], hh2, mm2, ss2, 1.0);
 
 		sprintf(buffer, "%s\nXX%03d HR GET\nXXX%02d MIN SR\nX%05.2f SEC\n%+06.1f R FDAI\n%+06.1f P\n%+06.1f Y\nXX%03d HR T ALIGN\nXXX%02d MIN\nX%05.2f SEC\n", buffer, hh, mm, ss, form->Att[0].x, form->Att[0].y, form->Att[0].z, hh2, mm2, ss2);
 
@@ -3238,16 +3249,27 @@ void MCC::drawPad(bool writetofile){
 
 		int hh, mm;
 		double ss;
-
+		LMARKTRKPADOpt opt;
 		sprintf(buffer, "P22 AUTO OPTICS\n");
 
-		for (int i = 0;i < form->entries;i++)
+		for (int i = 0; i < form->entries; i++)
 		{
 			sprintf(buffer, "%sLMK ID %s\n", buffer, form->LmkID[i]);
 			OrbMech::SStoHHMMSS(form->T1[i], hh, mm, ss);
 			sprintf(buffer, "%sT1 %03d:%02d:%02.f (HOR)\n", buffer, hh, mm, ss);
-			OrbMech::SStoHHMMSS(form->T2[i], hh, mm, ss);
-			sprintf(buffer, "%sT2 %03d:%02d:%02.f (35°)\n", buffer, hh, mm, ss);
+
+			if (form->type == 1)
+			{
+				opt.Elevation = 90.0*RAD;
+				OrbMech::SStoHHMMSS(form->T2[i], hh, mm, ss);
+				sprintf(buffer, "%sT2 %03d:%02d:%02.f (TCA)\n", buffer, hh, mm, ss);
+			}
+			else
+			{
+				OrbMech::SStoHHMMSS(form->T2[i], hh, mm, ss);
+				sprintf(buffer, "%sT2 %03d:%02d:%02.f (35°)\n", buffer, hh, mm, ss);
+			}
+
 
 			if (form->CRDist[i] > 0)
 			{
@@ -3258,7 +3280,7 @@ void MCC::drawPad(bool writetofile){
 				sprintf(buffer, "%s%02.f NM South\n", buffer, abs(form->CRDist[i]));
 			}
 
-			sprintf(buffer, "%sN 89\nLAT %+07.3f\nLONG/2 %+07.3f\nALTITUDE %+07.2f NM\n", buffer, form->Lat[i], form->Lng05[i], form->Alt[i]);
+			sprintf(buffer, "%sN 89\nLAT %+07.3f\nLONG/2 %+07.3f\nALTITUDE %+07.2f NM\n \n", buffer, form->Lat[i], form->Lng05[i], form->Alt[i]);
 		}
 
 		oapiAnnotationSetText(NHpad, buffer);
@@ -3268,11 +3290,17 @@ void MCC::drawPad(bool writetofile){
 	{
 		AP10DAPDATA * form = (AP10DAPDATA *)padForm;
 
-		sprintf(buffer, "DAP PAD\n%+06.0f\n%+06.0f\n%+07.2f\n%+07.2f", form->ThisVehicleWeight, form->OtherVehicleWeight, form->PitchTrim, form->YawTrim);
+		if (form->type == 1)
+		{
+			sprintf(buffer, "RENDEZVOUS DAP PAD\n%+06.0f CSM WT\n%+06.0f LM WT\n%+07.2f GDA\n%+07.2f TRIM\n%+07.2f SPS\n%+07.2f TRIM\n%+03.1f SPS TAIL-OFF", form->ThisVehicleWeight, form->OtherVehicleWeight, form->LMPitchTrim, form->LMRollTrim, form->PitchTrim, form->YawTrim, form->DVTO);
+		}
+		else
+		{
+			sprintf(buffer, "DAP PAD\n%+06.0f\n%+06.0f\n%+07.2f\n%+07.2f", form->ThisVehicleWeight, form->OtherVehicleWeight, form->PitchTrim, form->YawTrim);
+		}
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
-	break;
 	case PT_AP11LMMNV:
 	{
 		AP11LMMNV * form = (AP11LMMNV *)padForm;
@@ -3386,7 +3414,7 @@ void MCC::drawPad(bool writetofile){
 		sprintf(buffer, "LM AOT STAR OBSERVATION");
 		OrbMech::SStoHHMMSS(form->GET, hh, mm, ss);
 
-		sprintf(buffer, "%s\n%03d HR\n%02d MIN\n%02.0f SEC\n%d AOT DETENT\n%02o NAV STAR\n%03.0f R\n%03.0f P\n%03.0f Y", buffer, hh, mm, ss, form->Detent, form->Star, form->CSMAtt.x, form->CSMAtt.y, form->CSMAtt.z);
+		sprintf(buffer, "%s\n%03d HR GET\n%02d MIN\n%02.0f SEC\n%d AOT DETENT\n%02o NAV STAR\n%03.1f R\n%03.1f P\n%03.1f Y", buffer, hh, mm, ss, form->Detent, form->Star, form->CSMAtt.x, form->CSMAtt.y, form->CSMAtt.z);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}

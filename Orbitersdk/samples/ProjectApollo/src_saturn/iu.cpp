@@ -59,10 +59,7 @@ ControlSignalProcessor(this)
 
 IU::~IU()
 {
-	if (IuUmb)
-	{
-		IuUmb->AbortDisconnect();
-	}
+	DisconnectUmbilical();
 }
 
 void IU::SetMissionInfo(bool crewed, bool sccontpowered)
@@ -253,19 +250,18 @@ bool IU::DCSUplink(int type, void *upl)
 
 bool IU::IsUmbilicalConnected()
 {
-	if (IuUmb && IuUmb->IsIUUmbilicalConnected()) return true;
+	if (IuUmb) return true;
 
 	return false;
 }
 
-void IU::ConnectUmbilical(IUUmbilical *umb)
-{
-	IuUmb = umb;
-}
-
 void IU::DisconnectUmbilical()
 {
-	IuUmb = NULL;
+	if (IuUmb)
+	{
+		IuUmb->iu = NULL;
+		IuUmb = NULL;
+	}
 }
 
 void IU::DisconnectIU()

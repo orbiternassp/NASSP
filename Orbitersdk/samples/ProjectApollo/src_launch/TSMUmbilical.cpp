@@ -34,43 +34,44 @@ TSMUmbilical::TSMUmbilical(TailUmbilicalInterface *ml) : TailUmbilical(ml)
 
 TSMUmbilical::~TSMUmbilical()
 {
+	Disconnect();
 }
 
 void TSMUmbilical::Connect(SICSystems *sic)
 {
 	if (sic)
 	{
-		this->sic = sic;
-		sic->ConnectUmbilical(this);
-		UmbilicalConnected = true;
+		sic->TSMUmb = this;
 	}
+	this->sic = sic;
 }
 
 void TSMUmbilical::Disconnect()
 {
-	if (!UmbilicalConnected) return;
-
-	sic->DisconnectUmbilical();
-	UmbilicalConnected = false;
+	if (sic)
+	{
+		sic->TSMUmb = NULL;
+		sic = NULL;
+	}
 }
 
 bool TSMUmbilical::SIStageLogicCutoff()
 {
-	if (!UmbilicalConnected) return false;
+	if (!sic) return false;
 
 	return sic->GetEngineStop();
 }
 
 void TSMUmbilical::SetEngineStart(int eng)
 {
-	if (!UmbilicalConnected) return;
+	if (!sic) return;
 
 	sic->SetEngineStart(eng);
 }
 
 void TSMUmbilical::SIGSECutoff(bool cut)
 {
-	if (!UmbilicalConnected) return;
+	if (!sic) return;
 
 	sic->GSEEnginesCutoff(cut);
 }

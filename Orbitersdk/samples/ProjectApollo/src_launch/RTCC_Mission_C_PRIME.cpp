@@ -633,7 +633,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				}
 				else
 				{
-					sprintf(ullage, "");
+					sprintf(ullage, "4 jet translation");
 				}
 
 				AP11ManeuverPAD(manopt, *form);
@@ -1659,31 +1659,23 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 202: //Entry REFSMMAT
 	{
-		AP11MNV tempPAD;
-		AP11ManPADOpt opt;
 		MATRIX3 REFSMMAT;
-		EphemerisData sv_ephem;
+		VehicleDataBlock sv_ephem;
+		VECTOR3 GDCangles;
+		char SetStars[64];
 
 		char buffer1[1000];
 
 		GENERICPAD * form = (GENERICPAD *)pad;
 
-		sv_ephem = StateVectorCalcEphem(calcParams.src);
+		sv_ephem = StateVectorCalcDataBlock(calcParams.src);
 
 		REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT;
 
-		opt.TIG = calcParams.TEI + 45.0 * 60.0;
-		opt.RV_MCC = sv_ephem;
-		opt.REFSMMAT = REFSMMAT;
-		opt.PrefGDCStars = 3; //Sirius,Rigel
-		opt.sxtstardtime = 0.0;
-		opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
-
-		AP11ManeuverPAD(opt, tempPAD);
-
 		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT);
 
-		sprintf(form->paddata, "Backup GDC Alignment:  SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", tempPAD.SetStars, tempPAD.GDCangles.x, tempPAD.GDCangles.y, tempPAD.GDCangles.z);
+		mcc->mcc_calcs.BackupGDCAlignment(sv_ephem, (calcParams.TEI + 45.0 * 60.0), REFSMMAT, 3, GDCangles, SetStars);
+		sprintf(form->paddata, "Backup GDC Alignment:  SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", SetStars, GDCangles.x, GDCangles.y, GDCangles.z);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -1871,6 +1863,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 				sprintf(form->remarks, "%sP37: High-speed procedure (-MA) req'd", ullage);
 
+				AGCStateVectorUpdate(buffer1, sv, false);
 				AGCStateVectorUpdate(buffer1, sv, false);
 				CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
 

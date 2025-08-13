@@ -34,8 +34,6 @@ public:
 	TSMUmbilical(TailUmbilicalInterface *ml);
 	~TSMUmbilical();
 
-	bool IsUmbilicalConnected() { return UmbilicalConnected; }
-
 	void Connect(SICSystems* sic);
 	void Disconnect();
 
@@ -43,6 +41,8 @@ public:
 	bool SIStageLogicCutoff();
 	void SetEngineStart(int eng);
 	void SIGSECutoff(bool cut);
-protected:
+
 	SICSystems* sic;
+protected:
+
 };
