@@ -101,7 +101,7 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_DSKY_Keys_t,
 	VC_MAT_FDAI_Frame_t,
 	VC_MAT_FwdHatch_t,
-	VC_MAT_HolderRahmen_t,
+	VC_MAT_SwitchGuard_t,
 	VC_MAT_HOPEN_t,
 	VC_MAT_LMVC_t,
 	VC_MAT_MAINVCTEX_t,

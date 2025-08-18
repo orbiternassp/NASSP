@@ -5690,7 +5690,7 @@ void Saturn::DefineVCAnimations()
 		VC_GRP_Group_78,
 		VC_GRP_Group_78_OrdealLighting,
 		VC_GRP_SwitchGuard_P13,
-		VC_GRP_SwitchHolder_P13,
+		VC_GRP_SwitchBody_P13,
 		VC_GRP_Screws_Panel13,
 		VC_GRP_ORDEAL_Rot,
 		VC_GRP_Sw_P13_01,
