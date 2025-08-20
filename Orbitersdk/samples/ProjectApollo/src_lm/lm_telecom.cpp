@@ -42,6 +42,7 @@
 #include "LEM.h"
 #include "tracer.h"
 #include "papi.h"
+#include "Mission.h"
 
 #include "saturn.h"
 
@@ -2722,12 +2723,19 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad* 
 	antheatload = anthtld;
 	antenna->isolation = 0.000001; 
 	antenna->Area = 10783.0112; // Surface area of reflecting dish, probably good enough
-	if(lem != NULL){
+
+	if (lem != NULL && lem->pMission->GetLMNumber() < 6)
+	{
+		pitch = 225.0 * RAD;
+		yaw = 0.0 * RAD;
 		antheater->WireTo(&lem->HTR_SBD_ANT_CB);
 	}
-
-	pitch = -75.0*RAD;
-	yaw = -12.0*RAD;
+	else if (lem != NULL && lem->pMission->GetLMNumber() >= 6)
+	{
+		pitch = -75.0 * RAD;
+		yaw = -12.0 * RAD;
+		antheater->WireTo(&lem->HTR_SBD_ANT_CB);
+	}
 
 	double beamwidth = 12.5*RAD;
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0);
