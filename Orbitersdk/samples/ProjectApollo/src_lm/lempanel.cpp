@@ -520,7 +520,7 @@ void LEM::InitSwitches() {
 	else //initial S-Band positions for LM-6 and later (-75, -12)
 	{
 		Panel12AntPitchKnob.Register(PSH, "Panel12AntPitchKnob", 0.0, 0.0, 22.0); //For now retain the 0-22 scaling of the bitmaps for checklist backwards compatibility
-		Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 5.2, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
+		Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 5.0, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
 	}
 
 	Panel12AntPitchKnob.SetRotationRange(330.0 * RAD);
