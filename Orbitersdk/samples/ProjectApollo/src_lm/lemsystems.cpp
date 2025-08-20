@@ -2479,6 +2479,17 @@ void LEM::CreateMissionSpecificSystems()
 		aeaa = new LEM_AEAA();
 	}
 	EventTimerDisplay.SetReverseAtZero(pMission->IsLMEventTimerReversingAtZero());
+	SBandSteerable.AngleInit(pMission->GetLMNumber()); //Initializes S Band Antenna To Proper Closeout Angles
+	if (pMission->GetLMNumber() < 6) //Initializes S Band Antenna Knobs To Proper Closeout Angles
+	{
+		Panel12AntPitchKnob.SetInitValue(255.0 * RAD);
+		Panel12AntYawKnob.SetInitValue(0.0 * RAD);
+	}
+	else
+	{
+		Panel12AntPitchKnob.SetInitValue(-75.0 * RAD);
+		Panel12AntYawKnob.SetInitValue(-12.0 * RAD);
+	}
 }
 
 // SYSTEMS COMPONENTS

@@ -42,7 +42,6 @@
 #include "LEM.h"
 #include "tracer.h"
 #include "papi.h"
-#include "Mission.h"
 
 #include "saturn.h"
 
@@ -2724,16 +2723,7 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad* 
 	antenna->isolation = 0.000001; 
 	antenna->Area = 10783.0112; // Surface area of reflecting dish, probably good enough
 
-	if (lem != NULL && lem->pMission->GetLMNumber() < 6)
-	{
-		pitch = 225.0 * RAD;
-		yaw = 0.0 * RAD;
-		antheater->WireTo(&lem->HTR_SBD_ANT_CB);
-	}
-	else if (lem != NULL && lem->pMission->GetLMNumber() >= 6)
-	{
-		pitch = -75.0 * RAD;
-		yaw = -12.0 * RAD;
+	if (lem != NULL) {
 		antheater->WireTo(&lem->HTR_SBD_ANT_CB);
 	}
 
@@ -2743,6 +2733,20 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad* 
 	LEM_SteerableAntGain = pow(10, (16.5 / 10));
 	LEM_SteerableAntFrequency = 2119; //MHz. Should this get set somewhere else?
 	LEM_SteerableAntWavelength = C0 / (LEM_SteerableAntFrequency * 1000000); //meters
+}
+
+void LEM_SteerableAnt::AngleInit(int LMNumber)
+{
+	if (LMNumber < 6)
+	{
+		pitch = 225.0 * RAD;
+		yaw = 0.0 * RAD;
+	}
+	else
+	{
+		pitch = -75.0 * RAD;
+		yaw = -12.0 * RAD;
+	}
 }
 
 void LEM_SteerableAnt::Timestep(double simdt){

@@ -511,23 +511,13 @@ void LEM::InitSwitches() {
 	Panel12SBandAntSelKnob.AddPosition(3, 30);
 	Panel12SBandAntSelKnob.Register(PSH, "Panel12SBandAntSelKnob", 1);
 
-	//Special handling for initial S-Band antenna positions based on LM number
-	if (pMission->GetLMNumber() < 6) //initial S-Band positions for LM-5 and earlier (225, 0)
-	{
-		Panel12AntPitchKnob.Register(PSH, "Panel12AntPitchKnob", 22.0, 0.0, 22.0); //For now retain the 0-22 scaling of the bitmaps for checklist backwards compatibility
-		Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 6.0, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
-	}
-	else //initial S-Band positions for LM-6 and later (-75, -12)
-	{
-		Panel12AntPitchKnob.Register(PSH, "Panel12AntPitchKnob", 0.0, 0.0, 22.0); //For now retain the 0-22 scaling of the bitmaps for checklist backwards compatibility
-		Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 5.0, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
-	}
+	Panel12AntPitchKnob.Register(PSH, "Panel12AntPitchKnob", 22.0, 0.0, 22.0); //For now retain the 0-22 scaling of the bitmaps for checklist backwards compatibility
+	Panel12AntPitchKnob.SetRotationRange(330.0*RAD);
+	Panel12AntPitchKnob.SetOffset(-165.0*RAD);
 
-	Panel12AntPitchKnob.SetRotationRange(330.0 * RAD);
-	Panel12AntPitchKnob.SetOffset(-165.0 * RAD);
-
+	Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 6.0, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
 	Panel12AntYawKnob.SetRotationRange(PI);
-	Panel12AntYawKnob.SetOffset(-90.0 * RAD);
+	Panel12AntYawKnob.SetOffset(-90.0*RAD);
 
 	ComPitchMeter.Register(PSH, "ComPitchMeter", -75, 255, 5, -75);
 	Panel12SignalStrengthMeter.Register(PSH, "Panel12SignalStrengthMeter", 0, 100, 5);
