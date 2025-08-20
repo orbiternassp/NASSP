@@ -3722,16 +3722,15 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	if (KEYMOD_LCONTROL(kstate)) {
 		if (down) {
 			switch (key) {
-				case OAPI_KEY_H:
-					if (ViewCueCardArrows == true) {
-						ViewCueCardArrows = false;
-					}
-					else {
-						ViewCueCardArrows = true;
-					}
-					return 1;
+			case OAPI_KEY_H:
+				if (ViewCueCardArrows == true) {
+					ViewCueCardArrows = false;
 				}
-				return 0;
+				else {
+					ViewCueCardArrows = true;
+				}
+				return 1;
+			}
 		}
 	}
 
