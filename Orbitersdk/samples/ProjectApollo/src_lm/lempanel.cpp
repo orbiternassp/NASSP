@@ -515,7 +515,7 @@ void LEM::InitSwitches() {
 	Panel12AntPitchKnob.SetRotationRange(330.0*RAD);
 	Panel12AntPitchKnob.SetOffset(-165.0*RAD);
 
-	Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 5.0, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
+	Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 5.2, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
 	Panel12AntYawKnob.SetRotationRange(PI);
 	Panel12AntYawKnob.SetOffset(-90.0*RAD);
 
