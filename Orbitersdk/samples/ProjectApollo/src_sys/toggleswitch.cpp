@@ -2434,6 +2434,11 @@ double ContinuousSwitch::AngletoDisplay(double angle) const
 	return minValue + angle / slope;
 }
 
+void ContinuousSwitch::SetInitValue(double defaultValue)
+{
+	SetValue(DisplayToAngle(defaultValue));
+}
+
 void ContinuousSwitch::DefineMeshGroup(UINT _grpIndex)
 {
 	grpIndex = _grpIndex;
