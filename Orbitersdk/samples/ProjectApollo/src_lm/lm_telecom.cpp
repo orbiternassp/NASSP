@@ -2727,6 +2727,9 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad* 
 		antheater->WireTo(&lem->HTR_SBD_ANT_CB);
 	}
 
+	pitch = -75.0 * RAD;
+	yaw = -12.0 * RAD;
+
 	double beamwidth = 12.5*RAD;
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0);
 
@@ -2741,11 +2744,6 @@ void LEM_SteerableAnt::AngleInit(int LMNumber)
 	{
 		pitch = 225.0 * RAD;
 		yaw = 0.0 * RAD;
-	}
-	else
-	{
-		pitch = -75.0 * RAD;
-		yaw = -12.0 * RAD;
 	}
 }
 
