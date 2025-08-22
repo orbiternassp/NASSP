@@ -3301,6 +3301,7 @@ void MCC::drawPad(bool writetofile){
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
+	break;
 	case PT_AP11LMMNV:
 	{
 		AP11LMMNV * form = (AP11LMMNV *)padForm;
