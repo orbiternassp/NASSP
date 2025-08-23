@@ -1257,12 +1257,9 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	}
 	break;
 	case 35: //LGC ACTIVATION UPDATE
-	case 36: //AGS ACTIVATION UPDATE
 	{
-		AP11AGSACT* form = (AP11AGSACT*)pad;
-
 		VehicleDataBlock sv_CSM, sv_LM, sv_LM_post_DOI;
-		double t_sunrise1, t_sunrise2, t_TPI, KFactor;
+		double t_sunrise1, t_sunrise2, t_TPI;
 		int emem[14];
 		MATRIX3 REFSMMAT;
 		char buffer1[1000];
@@ -1283,12 +1280,6 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		t_sunrise2 = calcParams.PDI + 4.5 * 3600.0;
 		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(sv_CSM, t_sunrise1) - 23.0 * 60.0;
 
-		bool res_k = CalculateAGSKFactor(&l->agc.vagc, &l->aea.vags, KFactor);
-		if (res_k)
-		{
-			SystemParameters.MCGZSS = SystemParameters.MCGZSL + KFactor / 3600.0;
-		}
-
 		opt.dt_stage = 999999.9;
 		opt.W_TAPS = l->GetAscentStageMass(); //4711.0;
 		opt.W_TDRY = l->GetMass() - l->GetPropellantMass(l->GetPropellantHandleByIndex(0)); //6874.3;
@@ -1307,6 +1298,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.GMT_2TPI = mcc->mcc_calcs.FindOrbitalSunrise(sv_CSM, t_sunrise2) - 23.0 * 60.0;
 
 		PoweredDescentAbortProgram(opt, res);
+
+		calcParams.SVSTORE1.R.x = (int)(res.J1 / 0.3048 / 100.0);		    	//Stores DEDA 224 for the AGS PAD, temporary storage solution
+		calcParams.SVSTORE1.R.y = (int)(res.A_min / 0.3048 / 100.0);		    //Stores DEDA 225 for the AGS PAD, temporary storage solution
+		calcParams.SVSTORE1.R.z = (int)(res.A_max / 0.3048 / 100.0);			//Stores DEDA 226 for the AGS PAD, temporary storage solution
+		calcParams.SVSTORE1.V.x = (int)(res.K1 / 0.3048 / 100.0 * pow(2, 3));   //Stores DEDA 227 for the AGS PAD, temporary storage solution
 
 		emem[0] = 16;
 		emem[1] = 2550;
@@ -1331,23 +1327,33 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 
 		AGCREFSMMATUpdate(buffer3, REFSMMAT, false);
 
-		if (fcn == 35)
-		{
-			sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
-			if (upString != NULL) {
-				// give to mcc
-				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "LM state vector and V66, LGC Abort Constants, LS REFSMMAT");
-			}
+		sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+		if (upString != NULL) {
+			// give to mcc
+			strncpy(upString, uplinkdata, 1024 * 3);
+			sprintf(upDesc, "LM state vector and V66, LGC Abort Constants, LS REFSMMAT");
 		}
-		else
+	}
+	break;
+	case 36: //AGS ACTIVATION UPDATE
+	{
+		AP11AGSACT* form = (AP11AGSACT*)pad;
+
+		double KFactor;
+
+		LEM* l = (LEM*)calcParams.tgt;
+
+		bool res_k = CalculateAGSKFactor(&l->agc.vagc, &l->aea.vags, KFactor);
+		if (res_k)
 		{
-			form->KFactor = GETfromGMT(GetAGSClockZero());
-			form->DEDA224 = (int)(res.J1 / 0.3048 / 100.0);
-			form->DEDA225 = (int)(res.A_min / 0.3048 / 100.0);
-			form->DEDA226 = (int)(res.A_max / 0.3048 / 100.0);
-			form->DEDA227 = (int)(res.K1 / 0.3048 / 100.0 * pow(2, 3));
+			SystemParameters.MCGZSS = SystemParameters.MCGZSL + KFactor / 3600.0;
 		}
+
+		form->KFactor = GETfromGMT(GetAGSClockZero());
+		form->DEDA224 = calcParams.SVSTORE1.R.x;			//Loads DEDA 224 for the AGS PAD, temporary storage solution
+		form->DEDA225 = calcParams.SVSTORE1.R.y;			//Loads DEDA 225 for the AGS PAD, temporary storage solution
+		form->DEDA226 = calcParams.SVSTORE1.R.z;			//Loads DEDA 226 for the AGS PAD, temporary storage solution
+		form->DEDA227 = calcParams.SVSTORE1.V.x;			//Loads DEDA 227 for the AGS PAD, temporary storage solution
 	}
 	break;
 	case 37: //SEPARATION MANEUVER
