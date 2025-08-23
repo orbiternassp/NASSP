@@ -1257,48 +1257,31 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 	}
 	break;
 	case 35: //LGC ACTIVATION UPDATE
+	case 36: //AGS ACTIVATION UPDATE
 	{
-		SV sv;
+		AP11AGSACT* form = (AP11AGSACT*)pad;
+
+		VehicleDataBlock sv_CSM, sv_LM, sv_LM_post_DOI;
+		double t_sunrise1, t_sunrise2, t_TPI, KFactor;
+		int emem[14];
 		MATRIX3 REFSMMAT;
 		char buffer1[1000];
 		char buffer2[1000];
-
-		sv = StateVectorCalc(calcParams.src); //State vector for uplink
-
-		REFSMMAT = EZJGMTX3.data[RTCC_REFSMMAT_TYPE_LLD - 1].REFSMMAT;
-
-		AGCStateVectorUpdate(buffer1, sv, false, true);
-		AGCREFSMMATUpdate(buffer2, REFSMMAT, false);
-
-		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
-		if (upString != NULL) {
-			// give to mcc
-			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "LM state vector and V66, LS REFSMMAT");
-		}
-	}
-	break;
-	case 36: //AGS ACTIVATION UPDATE
-	{
-		AP11AGSACT *form = (AP11AGSACT*)pad;
-
-		VehicleDataBlock sv_CSM, sv_LM, sv_LM_post_DOI;
-		double t_sunrise, t_TPI, KFactor;
-		int emem[14];
-		char buffer1[1000];
+		char buffer3[1000];
 
 		PDAPOpt opt;
 		PDAPResults res;
 
-		LEM *l = (LEM*)calcParams.tgt;
+		LEM* l = (LEM*)calcParams.tgt;
 
 		sv_CSM = StateVectorCalcDataBlock(calcParams.src);
 		sv_LM = StateVectorCalcDataBlock(calcParams.tgt);
 
 		sv_LM_post_DOI = ExecuteManeuver(sv_LM, TimeofIgnition, DeltaV_LVLH, 0.0, RTCC_ENGINETYPE_LMDPS);
 
-		t_sunrise = calcParams.PDI + 3.0*3600.0;
-		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(ConvertEphemDatatoSV(sv_CSM.sv, sv_CSM.Weight), t_sunrise) - 23.0*60.0;
+		t_sunrise1 = calcParams.PDI + 3.0 * 3600.0;
+		t_sunrise2 = calcParams.PDI + 4.5 * 3600.0;
+		t_TPI = mcc->mcc_calcs.FindOrbitalSunrise(sv_CSM, t_sunrise1) - 23.0 * 60.0;
 
 		bool res_k = CalculateAGSKFactor(&l->agc.vagc, &l->aea.vags, KFactor);
 		if (res_k)
@@ -1316,43 +1299,54 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		opt.GMT_LAND = GMTfromGET(CZTDTGTU.GETTD);
 		opt.dt_CAN = 0.0;
 		opt.DV_CAN = _V(0, 0, 0);
-		opt.dt_CSI = 50.0*60.0;
+		opt.dt_CSI = 50.0 * 60.0;
 		opt.GMT_TPI = GMTfromGET(t_TPI);
-		opt.dt_2CAN = 50.0*60.0;
-		opt.DV_2CAN = _V(10.0, 0, 0)*0.3048;
-		opt.dt_2CSI = 110.0*60.0;
-		opt.GMT_2TPI = opt.GMT_TPI + OrbMech::HHMMSSToSS(1, 59, 0); //TBD: Use FindOrbitalSunrise
+		opt.dt_2CAN = 50.0 * 60.0;
+		opt.DV_2CAN = _V(10.0, 0, 0) * 0.3048;
+		opt.dt_2CSI = 110.0 * 60.0;
+		opt.GMT_2TPI = mcc->mcc_calcs.FindOrbitalSunrise(sv_CSM, t_sunrise2) - 23.0 * 60.0;
 
 		PoweredDescentAbortProgram(opt, res);
-
-		form->KFactor = GETfromGMT(GetAGSClockZero());
-		form->DEDA224 = (int)(res.J1 / 0.3048 / 100.0);
-		form->DEDA225 = (int)(res.A_min / 0.3048 / 100.0);
-		form->DEDA226 = (int)(res.A_max / 0.3048 / 100.0);
-		form->DEDA227 = (int)(res.K1 / 0.3048 / 100.0*pow(2, 3));
 
 		emem[0] = 16;
 		emem[1] = 2550;
 		emem[2] = OrbMech::DoubleToBuffer(res.J1, 23, 1);
 		emem[3] = OrbMech::DoubleToBuffer(res.J1, 23, 0);
-		emem[4] = OrbMech::DoubleToBuffer(res.K1*PI2, 23, 1);
-		emem[5] = OrbMech::DoubleToBuffer(res.K1*PI2, 23, 0);
+		emem[4] = OrbMech::DoubleToBuffer(res.K1 * PI2, 23, 1);
+		emem[5] = OrbMech::DoubleToBuffer(res.K1 * PI2, 23, 0);
 		emem[6] = OrbMech::DoubleToBuffer(res.J2, 23, 1);
 		emem[7] = OrbMech::DoubleToBuffer(res.J2, 23, 0);
-		emem[8] = OrbMech::DoubleToBuffer(res.K2*PI2, 23, 1);
-		emem[9] = OrbMech::DoubleToBuffer(res.K2*PI2, 23, 0);
+		emem[8] = OrbMech::DoubleToBuffer(res.K2 * PI2, 23, 1);
+		emem[9] = OrbMech::DoubleToBuffer(res.K2 * PI2, 23, 0);
 		emem[10] = OrbMech::DoubleToBuffer(res.Theta_LIM / PI2, 0, 1);
 		emem[11] = OrbMech::DoubleToBuffer(res.Theta_LIM / PI2, 0, 0);
 		emem[12] = OrbMech::DoubleToBuffer(res.R_amin, 24, 1);
 		emem[13] = OrbMech::DoubleToBuffer(res.R_amin, 24, 0);
 
-		V7XUpdate(71, buffer1, emem, 14);
+		V7XUpdate(71, buffer2, emem, 14);
 
-		sprintf(uplinkdata, "%s", buffer1);
-		if (upString != NULL) {
-			// give to mcc
-			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "LGC abort constants");
+		REFSMMAT = EZJGMTX3.data[RTCC_REFSMMAT_TYPE_LLD - 1].REFSMMAT;
+
+		AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_LM, sv_LM.sv, true);
+
+		AGCREFSMMATUpdate(buffer3, REFSMMAT, false);
+
+		if (fcn == 35)
+		{
+			sprintf(uplinkdata, "%s%s%s", buffer1, buffer2, buffer3);
+			if (upString != NULL) {
+				// give to mcc
+				strncpy(upString, uplinkdata, 1024 * 3);
+				sprintf(upDesc, "LM state vector and V66, LGC Abort Constants, LS REFSMMAT");
+			}
+		}
+		else
+		{
+			form->KFactor = GETfromGMT(GetAGSClockZero());
+			form->DEDA224 = (int)(res.J1 / 0.3048 / 100.0);
+			form->DEDA225 = (int)(res.A_min / 0.3048 / 100.0);
+			form->DEDA226 = (int)(res.A_max / 0.3048 / 100.0);
+			form->DEDA227 = (int)(res.K1 / 0.3048 / 100.0 * pow(2, 3));
 		}
 	}
 	break;
@@ -1831,7 +1825,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID &pad, char * upString, char * upDes
 		OrbMech::format_time_HHMMSS(buffer1, GET_T1);
 		OrbMech::format_time_HHMMSS(buffer2, GET_T2);
 
-		sprintf(form->paddata, "Fra Mauro Photography. T1: %s, T2: %s", buffer1, buffer2);
+		sprintf(form->paddata, "Fra Mauro Photography:  T1: %s  T2: %s", buffer1, buffer2);
 	}
 	break;
 	case 603: //S-158 PHOTOGRAPHY REV 27
