@@ -4331,62 +4331,71 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 	}
 	break;
 	case 54:
+	{
+		int num = (GC->MissionPlanningActive ? subscreen : 0);
+
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		skp->Text(W / 2, CH / 2, "Two Impulse Transfer (MED M72)", 30);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-		if (GC->rtcc->med_m72.Table == 1)
-		{
-			skp->Text(CW, 2 * H / 14, "Multiple Solution", 17);
-		}
-		else
-		{
-			skp->Text(CW, 2 * H / 14, "Corrective Combination", 22);
-		}
-		sprintf(Buffer, "%d", GC->rtcc->med_m72.Plan);
-		skp->Text(CW, 4 * H / 14, Buffer, strlen(Buffer));
+
+		x = 1;  y = 3; dx = 7;
+		Text(skp, x, marker + y, "*");
+		x++;
+
+		Text(skp, x, y, "TAB:");
+		if (GC->rtcc->med_m72.Table == 1) Text(skp, x + dx, y, "Multiple Solution");
+		else Text(skp, x + dx, y, "Corrective Combination");
+		y++;
+		Text(skp, x, y, "PLN:");
+		Text(skp, x + dx, y, "%d", GC->rtcc->med_m72.Plan); y++;
 		if (GC->MissionPlanningActive)
 		{
-			if (GC->rtcc->med_m72.DeleteGET > 0)
-			{
-				GET_Display(Buffer, GC->rtcc->med_m72.DeleteGET);
-				skp->Text(CW, 6 * H / 14, Buffer, strlen(Buffer));
-			}
-			else
-			{
-				skp->Text(CW, 6 * H / 14, "Do not delete", 13);
-			}
-
-			MPTAttitudeName(Buffer, GC->rtcc->med_m72.Attitude);
-			skp->Text(CW, 10 * H / 14, Buffer, strlen(Buffer));
+			Text(skp, x, y, "DEL:");
+			if (GC->rtcc->med_m72.DeleteGET > 0) Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_m72.DeleteGET);
+			else Text(skp, x + dx, y, "Do not delete");
 		}
-		ThrusterName(Buffer, GC->rtcc->med_m72.Thruster);
-		skp->Text(CW, 8 * H / 14, Buffer, strlen(Buffer));
-		PrintUllage(Buffer, GC->rtcc->med_m72.Thruster, GC->rtcc->med_m72.UllageQuads, GC->rtcc->med_m72.UllageDT);
-		skp->Text(CW, 12 * H / 14, Buffer, strlen(Buffer));
+		y++;
+		if (GC->MissionPlanningActive)
+		{
+			Text(skp, x, y, "MAN:");
+			Text(skp, x + dx, y, "Inputs for maneuver %d", subscreen + 1);
+		}
+		y++;
+		Text(skp, x, y, "THR:");
+		ThrusterName(Buffer, GC->rtcc->med_m72.ManData[num].Thruster);
+		Text(skp, x + dx, y, Buffer); y++;
+		if (GC->MissionPlanningActive)
+		{
+			Text(skp, x, y, "ATT:");
+			MPTAttitudeName(Buffer, GC->rtcc->med_m72.ManData[num].Attitude);
+			Text(skp, x + dx, y, Buffer);
+		}
+		y++;
+		Text(skp, x, y, "ULL:");
+		PrintUllage(Buffer, GC->rtcc->med_m72.ManData[num].Thruster, GC->rtcc->med_m72.ManData[num].UllageQuads, GC->rtcc->med_m72.ManData[num].UllageDT);
+		Text(skp, x + dx, y, Buffer); y++;
+		Text(skp, x, y, "ITE:");
+		if (GC->rtcc->med_m72.ManData[num].Iteration) Text(skp, x + dx, y, "Iterate");
+		else Text(skp, x + dx, y, "Do not iterate");
+		y++;
+		if (GC->rtcc->med_m72.ManData[num].Thruster == RTCC_ENGINETYPE_LMDPS)
+		{
+			Text(skp, x, y, "10P:");
+			Text(skp, x + dx, y, "%.1f s", GC->rtcc->med_m72.ManData[num].TenPercentDT); y++;
+			Text(skp, x, y, "DPS:");
+			Text(skp, x + dx, y, "%.3f", GC->rtcc->med_m72.ManData[num].DPSThrustFactor); y++;
+		}
+		else y += 2;
+		Text(skp, x, y, "TIM:");
+		if (GC->rtcc->med_m72.ManData[num].TimeFlag) Text(skp, x + dx, y, "Impulsive TIG");
+		else Text(skp, x + dx, y, "Optimum TIG");
+		y++;
+		if (GC->MissionPlanningActive)
+		{
+			Text(skp, x, y, "SAV:");
+			Text(skp, x + dx, y, "Use for all maneuvers");
+		}
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-		if (GC->rtcc->med_m72.Thruster == RTCC_ENGINETYPE_LMDPS)
-		{
-			sprintf_s(Buffer, "%.1f s", GC->rtcc->med_m72.TenPercentDT);
-			skp->Text(W - CW, 4 * H / 14, Buffer, strlen(Buffer));
-			sprintf_s(Buffer, "%.3f", GC->rtcc->med_m72.DPSThrustFactor);
-			skp->Text(W - CW, 6 * H / 14, Buffer, strlen(Buffer));
-		}
-		if (GC->rtcc->med_m72.Iteration)
-		{
-			skp->Text(W - CW, 2 * H / 14, "Iterate", 7);
-		}
-		else
-		{
-			skp->Text(W - CW, 2 * H / 14, "Do not iterate", 14);
-		}
-		if (GC->rtcc->med_m72.TimeFlag)
-		{
-			skp->Text(W - CW, 8 * H / 14, "Impulsive TIG", 13);
-		}
-		else
-		{
-			skp->Text(W - CW, 8 * H / 14, "Optimum TIG", 11);
-		}
 		if (GC->MissionPlanningActive == false)
 		{
 			GET_Display2(Buffer, G->P30TIG);
@@ -4403,69 +4412,72 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
 			skp->Text(W - CW, H - CH * 2, Buffer, strlen(Buffer));
 		}
+	}
 		break;
 	case 55:
+	{
+		int num = (GC->MissionPlanningActive ? subscreen : 0);
+
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		skp->Text(W / 2, CH / 2, "Transfer DKI, SPQ, or a Descent Plan", 36);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-		if (GC->rtcc->med_m70.Plan == 0)
-		{
-			skp->Text(CW, 2 * H / 14, "SPQ", 3);
-		}
-		else if (GC->rtcc->med_m70.Plan < 0)
-		{
-			skp->Text(CW, 2 * H / 14, "Descent Plan", 12);
-		}
-		else
-		{
-			sprintf_s(Buffer, "DKI Plan %d", GC->rtcc->med_m70.Plan);
-			skp->Text(CW, 2 * H / 14, Buffer, strlen(Buffer));
-		}
+
+		x = 1;  y = 3; dx = 7;
+		Text(skp, x, marker + y, "*");
+		x++;
+		Text(skp, x, y, "PLN:");
+		if (GC->rtcc->med_m70.Plan == 0) Text(skp, x + dx, y, "SPQ");
+		else if (GC->rtcc->med_m70.Plan < 0) Text(skp, x + dx, y, "Descent Plan");
+		else Text(skp, x + dx, y, "DKI Plan %d", GC->rtcc->med_m70.Plan);
+		y++;
 		if (GC->MissionPlanningActive)
 		{
-			if (GC->rtcc->med_m70.DeleteGET > 0)
-			{
-				GET_Display(Buffer, GC->rtcc->med_m70.DeleteGET);
-				skp->Text(CW, 4 * H / 14, Buffer, strlen(Buffer));
-			}
-			else
-			{
-				skp->Text(CW, 4 * H / 14, "Do not delete", 13);
-			}
+			Text(skp, x, y, "DEL:");
+			if (GC->rtcc->med_m70.DeleteGET > 0) Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_m70.DeleteGET);
+			else Text(skp, x + dx, y, "Do not delete");
 		}
-		ThrusterName(Buffer, GC->rtcc->med_m70.Thruster);
-		skp->Text(CW, 6 * H / 14, Buffer, strlen(Buffer));
+		y++;
 		if (GC->MissionPlanningActive)
 		{
-			MPTAttitudeName(Buffer, GC->rtcc->med_m70.Attitude);
-			skp->Text(CW, 8 * H / 14, Buffer, strlen(Buffer));
+			Text(skp, x, y, "MAN:");
+			Text(skp, x + dx, y, "Inputs for maneuver %d", subscreen + 1);
 		}
-		PrintUllage(Buffer, GC->rtcc->med_m70.Thruster, GC->rtcc->med_m70.UllageQuads, GC->rtcc->med_m70.UllageDT);
-		skp->Text(CW, 10 * H / 14, Buffer, strlen(Buffer));
-		if (GC->rtcc->med_m70.Iteration)
+		y++;
+		Text(skp, x, y, "THR:");
+		ThrusterName(Buffer, GC->rtcc->med_m70.ManData[num].Thruster);
+		Text(skp, x + dx, y, Buffer); y++;
+		if (GC->MissionPlanningActive)
 		{
-			skp->Text(CW, 12 * H / 14, "Iterate", 7);
+			Text(skp, x, y, "ATT:");
+			MPTAttitudeName(Buffer, GC->rtcc->med_m70.ManData[num].Attitude);
+			Text(skp, x + dx, y, Buffer);
 		}
-		else
+		y++;
+		Text(skp, x, y, "ULL:");
+		PrintUllage(Buffer, GC->rtcc->med_m70.ManData[num].Thruster, GC->rtcc->med_m70.ManData[num].UllageQuads, GC->rtcc->med_m70.ManData[num].UllageDT);
+		Text(skp, x + dx, y, Buffer); y++;
+		Text(skp, x, y, "ITE:");
+		if (GC->rtcc->med_m70.ManData[num].Iteration) Text(skp, x + dx, y, "Iterate");
+		else Text(skp, x + dx, y, "Do not iterate");
+		y++;
+		if (GC->rtcc->med_m70.ManData[num].Thruster == RTCC_ENGINETYPE_LMDPS)
 		{
-			skp->Text(CW, 12 * H / 14, "Do not iterate", 14);
+			Text(skp, x, y, "10P:");
+			Text(skp, x + dx, y, "%.1f s", GC->rtcc->med_m70.ManData[num].TenPercentDT); y++;
+			Text(skp, x, y, "DPS:");
+			Text(skp, x + dx, y, "%.3f", GC->rtcc->med_m70.ManData[num].DPSThrustFactor); y++;
+		}
+		else y += 2;
+		Text(skp, x, y, "TIM:");
+		if (GC->rtcc->med_m70.ManData[num].TimeFlag) Text(skp, x + dx, y, "Impulsive TIG");
+		else Text(skp, x + dx, y, "Optimum TIG");
+		y++;
+		if (GC->MissionPlanningActive)
+		{
+			Text(skp, x, y, "SAV:");
+			Text(skp, x + dx, y, "Use for all maneuvers");
 		}
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-		if (GC->rtcc->med_m70.TimeFlag)
-		{
-			skp->Text(W - CW, 2 * H / 14, "Impulsive TIG", 13);
-		}
-		else
-		{
-			skp->Text(W - CW, 2 * H / 14, "Optimum TIG", 11);
-		}
-		if (GC->rtcc->med_m70.Thruster == RTCC_ENGINETYPE_LMDPS)
-		{
-			sprintf_s(Buffer, "%.1f s", GC->rtcc->med_m70.TenPercentDT);
-			skp->Text(W - CW, 4 * H / 14, Buffer, strlen(Buffer));
-			sprintf_s(Buffer, "%.3f", GC->rtcc->med_m70.DPSThrustFactor);
-			skp->Text(W - CW, 6 * H / 14, Buffer, strlen(Buffer));
-		}
 		if (GC->MissionPlanningActive == false)
 		{
 			GET_Display2(Buffer, G->P30TIG);
@@ -4482,6 +4494,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
 			skp->Text(W - CW, H - CH * 2, Buffer, strlen(Buffer));
 		}
+	}
 		break;
 	case 56:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
@@ -6103,17 +6116,17 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 		}
 		Text_Int(skp, CW, 6 * H / 14, "%d", GC->rtcc->med_m78.ManeuverNumber);
-		ThrusterName(Buffer, GC->rtcc->med_m78.Thruster);
+		ThrusterName(Buffer, GC->rtcc->med_m78.ManData.Thruster);
 		skp->Text(CW, 8 * H / 14, Buffer, strlen(Buffer));
 		if (GC->MissionPlanningActive)
 		{
-			MPTAttitudeName(Buffer, GC->rtcc->med_m78.Attitude);
+			MPTAttitudeName(Buffer, GC->rtcc->med_m78.ManData.Attitude);
 			skp->Text(CW, 10 * H / 14, Buffer, strlen(Buffer));
 		}
-		PrintUllage(Buffer, GC->rtcc->med_m78.Thruster, GC->rtcc->med_m78.UllageQuads, GC->rtcc->med_m78.UllageDT);
+		PrintUllage(Buffer, GC->rtcc->med_m78.ManData.Thruster, GC->rtcc->med_m78.ManData.UllageQuads, GC->rtcc->med_m78.ManData.UllageDT);
 		skp->Text(CW, 12 * H / 14, Buffer, strlen(Buffer));
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-		if (GC->rtcc->med_m78.Iteration)
+		if (GC->rtcc->med_m78.ManData.Iteration)
 		{
 			skp->Text(W - CW, 2 * H / 14, "Iterate", 7);
 		}
@@ -6121,12 +6134,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			skp->Text(W - CW, 2 * H / 14, "Don't iterate", 13);
 		}
-		if (GC->rtcc->med_m78.Thruster == RTCC_ENGINETYPE_LMDPS)
+		if (GC->rtcc->med_m78.ManData.Thruster == RTCC_ENGINETYPE_LMDPS)
 		{
-			Text_Double(skp, W - CW, 4 * H / 14, "%.1lf s", GC->rtcc->med_m78.TenPercentDT);
-			Text_Double(skp, W - CW, 6 * H / 14, "%.3lf", GC->rtcc->med_m78.DPSThrustFactor);
+			Text_Double(skp, W - CW, 4 * H / 14, "%.1lf s", GC->rtcc->med_m78.ManData.TenPercentDT);
+			Text_Double(skp, W - CW, 6 * H / 14, "%.3lf", GC->rtcc->med_m78.ManData.DPSThrustFactor);
 		}
-		if (GC->rtcc->med_m78.TimeFlag)
+		if (GC->rtcc->med_m78.ManData.TimeFlag)
 		{
 			skp->Text(W - CW, 8 * H / 14, "Impulsive TIG", 13);
 		}
@@ -9781,7 +9794,7 @@ void ApolloRTCCMFD::RendezvousEvaluationDisplay(oapi::Sketchpad*skp)
 	Text(skp, 38, 4, "DH");
 	Text(skp, 45, 4, "HA");
 	Text(skp, 52, 4, "HP");
-	Text(skp, 5, 17, "PITCH     YAW      VX      VY      VZ");
+	Text(skp, 5, 18, "PITCH     YAW      VX      VY      VZ");
 	skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 	SetMOCRFont(skp, 3, true);
 	Text(skp, 21, 2, "%d", GC->rtcc->PZREDT.ID);
@@ -9804,11 +9817,11 @@ void ApolloRTCCMFD::RendezvousEvaluationDisplay(oapi::Sketchpad*skp)
 		Text(skp, 42, 5 + i * 2, "%.1lf", GC->rtcc->PZREDT.HEIGHT[i]);
 		Text(skp, 49, 5 + i * 2, "%.1lf", GC->rtcc->PZREDT.HA[i]);
 		Text(skp, 56, 5 + i * 2, "%.1lf", GC->rtcc->PZREDT.HP[i]);
-		Text(skp, 11, 18 + i, "%.3lf", GC->rtcc->PZREDT.Pitch[i]);
-		Text(skp, 20, 18 + i, "%.3lf", GC->rtcc->PZREDT.Yaw[i]);
-		Text(skp, 28, 18 + i, "%.1lf", GC->rtcc->PZREDT.DVVector[i].x);
-		Text(skp, 36, 18 + i, "%.1lf", GC->rtcc->PZREDT.DVVector[i].y);
-		Text(skp, 44, 18 + i, "%.1lf", GC->rtcc->PZREDT.DVVector[i].z);
+		Text(skp, 11, 19 + i, "%.3lf", GC->rtcc->PZREDT.Pitch[i]);
+		Text(skp, 20, 19 + i, "%.3lf", GC->rtcc->PZREDT.Yaw[i]);
+		Text(skp, 28, 19 + i, "%.1lf", GC->rtcc->PZREDT.DVVector[i].x);
+		Text(skp, 36, 19 + i, "%.1lf", GC->rtcc->PZREDT.DVVector[i].y);
+		Text(skp, 44, 19 + i, "%.1lf", GC->rtcc->PZREDT.DVVector[i].z);
 	}
 }
 
