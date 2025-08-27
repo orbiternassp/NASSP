@@ -6392,8 +6392,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
 	SAVE_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
 	SAVE_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
-	SAVE_DOUBLE("LOI_eta_1", PZLOIPLN.eta_1);
-	SAVE_DOUBLE("LOI_REVS1", PZLOIPLN.REVS1);
+	sprintf(Buffer, "%.2lf %.2lf %.2lf %.2lf %d %.2lf %.2lf %d", PZLOIPLN.HA_LLS, PZLOIPLN.HP_LLS, PZLOIPLN.DW, PZLOIPLN.REVS1, PZLOIPLN.REVS2, PZLOIPLN.eta_1, PZLOIPLN.dh_bias, PZLOIPLN.PlaneSolnForInterSoln);
+	oapiWriteScenario_string(scn, "RTCC_PZLOIPLN", Buffer);
 
 	SAVE_DOUBLE2("RTCC_SFP_DPSI_LOI", PZSFPTAB.blocks[0].dpsi_loi, PZSFPTAB.blocks[1].dpsi_loi);
 	SAVE_DOUBLE2("RTCC_SFP_DPSI_TEI", PZSFPTAB.blocks[0].dpsi_tei, PZSFPTAB.blocks[1].dpsi_tei);
@@ -6577,7 +6577,7 @@ void RTCC::SaveState(FILEHANDLE scn) {
 
 // Load State
 void RTCC::LoadState(FILEHANDLE scn) {
-	char Buff[128];
+	char Buff[256];
 	char *line;
 	int tmp = 0; // Used in boolean type loader
 	std::string strtemp;
@@ -6728,8 +6728,12 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
 		LOAD_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
 		LOAD_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
-		LOAD_DOUBLE("LOI_eta_1", PZLOIPLN.eta_1);
-		LOAD_DOUBLE("LOI_REVS1", PZLOIPLN.REVS1);
+		if (!strnicmp(line, "RTCC_PZLOIPLN", 13))
+		{
+			sscanf(line + 13, "%lf %lf %lf %lf %d %lf %lf %d",
+				&PZLOIPLN.HA_LLS, &PZLOIPLN.HP_LLS, &PZLOIPLN.DW, &PZLOIPLN.REVS1, &PZLOIPLN.REVS2, &PZLOIPLN.eta_1, &PZLOIPLN.dh_bias, &inttemp);
+			PZLOIPLN.PlaneSolnForInterSoln = (inttemp != 0);
+		}
 
 		LOAD_DOUBLE2("RTCC_SFP_DPSI_LOI", PZSFPTAB.blocks[0].dpsi_loi, PZSFPTAB.blocks[1].dpsi_loi);
 		LOAD_DOUBLE2("RTCC_SFP_DPSI_TEI", PZSFPTAB.blocks[0].dpsi_tei, PZSFPTAB.blocks[1].dpsi_tei);
@@ -30221,6 +30225,7 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 		inp.Table = med_m78.Table;
 		inp.ReplaceCode = med_m78.ReplaceCode;
 		inp.DeleteGMT = 0.0;
+		inp.Plan = med_m78.ManeuverNumber;
 		if (med_m78.Type)
 		{
 			inp.Type = 1;
@@ -30237,7 +30242,6 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 				return 2;
 			}
 		}
-		inp.Plan = med_m78.ManeuverNumber;
 		inp.ManData[0].Thruster = med_m78.ManData.Thruster;
 		inp.ManData[0].Attitude = med_m78.ManData.Attitude;
 		if (med_m78.ManData.UllageDT > 0 && med_m78.ManData.UllageDT <= 1)
