@@ -5139,7 +5139,7 @@ protected:
 	//Auxiliary subroutines
 	int PMMXFRGroundRules(MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan, double &VectorFetchTime);
 	int PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
-	int PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, const std::bitset<4> &CCP, int TVC, int Thruster, std::bitset<4> &CC, std::bitset<4> &CCMI);
+	int PMMXFRCheckConfigThruster(bool CheckConfig, double GMT, int L, int CCI, const std::bitset<4> &CCP, int TVC, int Thruster, std::bitset<4> &CC, std::bitset<4> &CCMI);
 	int PMMXFRFetchVector(double GMTI, int L, EphemerisData &sv);
 	int PMMXFRFetchAnchorVector(int L, EphemerisData &sv);
 	void PMMXFRWeightAtInitiation(int CCI, int CCMI, double &weight);
