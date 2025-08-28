@@ -999,12 +999,11 @@ void PushSwitch::InitSound(SoundLib *s) {
 		s->LoadSound(Sclick, BUTTON_SOUND);
 }
 
-
 //
-// Circuit braker switch.  Special case of Toggle Switch
+// Toggled push switch.  Special case of PushSwitch
 //
 
-bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
+bool ToggledPushSwitch::CheckMouseClick(int event, int mx, int my) {
 
 	int OldState = state;
 
@@ -1016,7 +1015,8 @@ bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
 		if (state) {
 			SwitchTo(0);
 			Sclick.play();
-		} else {
+		}
+		else {
 			SwitchTo(1);
 			Sclick.play();
 		}
@@ -1024,7 +1024,7 @@ bool CircuitBrakerSwitch::CheckMouseClick(int event, int mx, int my) {
 	return true;
 }
 
-bool CircuitBrakerSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
+bool ToggledPushSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
 {
 	int OldState = state;
 
@@ -1040,6 +1040,10 @@ bool CircuitBrakerSwitch::CheckMouseClickVC(int event, VECTOR3 &p)
 	}
 	return true;
 }
+
+//
+// Circuit braker switch.  Special case of Toggle Switch
+//
 
 double CircuitBrakerSwitch::Voltage()
 {
@@ -1458,6 +1462,15 @@ void PanelSwitchesVC::OnPostStep(double SimT, double DeltaT, double MJD)
 		SwitchList[i]->OnPostStep(SimT, DeltaT, MJD);
 	}
 }
+
+void PanelSwitchesVC::OnPostCreation()
+{
+	for (unsigned i = 0; i < SwitchList.size(); i++)
+	{
+		SwitchList[i]->OnPostCreation();
+	}
+}
+
 
 void PanelSwitchesVC::AddSwitch(PanelSwitchItem *s, int area)
 {
