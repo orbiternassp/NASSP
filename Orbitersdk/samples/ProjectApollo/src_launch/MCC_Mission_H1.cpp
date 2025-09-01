@@ -385,10 +385,10 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 3.0 * 60.0, 1, MST_H1_LUNAR_ORBIT_POST_LANDING_7);
 		break;
 	case MST_H1_LUNAR_ORBIT_POST_LANDING_7: //Rev 16 map update to DAP Load
-		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, mcc_calcs.GETEval(rtcc->calcParams.PDI + 2.0 * 3600.0 + 10.0 * 60.0), 600, MST_H1_LUNAR_ORBIT_POST_LANDING_8);
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, mcc_calcs.GETEval(rtcc->calcParams.PDI + 2.0 * 3600.0 + 15.0 * 60.0), 600, MST_H1_LUNAR_ORBIT_POST_LANDING_8);
 		break;
 	case MST_H1_LUNAR_ORBIT_POST_LANDING_8: //DAP Load to Liftoff Times Update 1
-		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, SubStateTime > 3.0 * 60.0, 8, MST_H1_LUNAR_ORBIT_POST_LANDING_9);
+		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, SubStateTime > 2.0 * 60.0, 8, MST_H1_LUNAR_ORBIT_POST_LANDING_9);
 		break;
 	case MST_H1_LUNAR_ORBIT_POST_LANDING_9: //Liftoff Times Update 1 to LM Tracking PAD
 		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, mcc_calcs.GETEval(rtcc->calcParams.PDI + 3.0 * 3600.0 + 23.0 * 60.0), 85, MST_H1_LUNAR_ORBIT_POST_LANDING_10);
@@ -415,7 +415,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 5.0 * 60.0, 1, MST_H1_LUNAR_ORBIT_EVA_DAY_1);
 		break;
 	case MST_H1_LUNAR_ORBIT_EVA_DAY_1: //Liftoff Times Update 2 to rev 20 map update
-		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, SubStateTime > 5.0 * 60.0, 86, MST_H1_LUNAR_ORBIT_EVA_DAY_2);
+		UpdateMacro(UTP_PADONLY, PT_LIFTOFFTIMES, SubStateTime > 3.0 * 60.0, 86, MST_H1_LUNAR_ORBIT_EVA_DAY_2);
 		break;
 	case MST_H1_LUNAR_ORBIT_EVA_DAY_2: //Rev 20 map update to Lunar Liftoff REFSMMAT Uplink
 		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, true, 600, MST_H1_LUNAR_ORBIT_EVA_DAY_3);

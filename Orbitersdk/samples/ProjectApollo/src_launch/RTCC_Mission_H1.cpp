@@ -2782,14 +2782,14 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		{
 			sprintf(form->purpose, "PLANE CHANGE 1");
 			sprintf(form->remarks, "Ullage: 2 jet, 15 seconds");
-			sprintf(updesc, "CSM state vector, Target load, PC REFSMMAT");
+			sprintf(updesc, "CSM state vector, Target load, Plane Change REFSMMAT");
 			AGCStateVectorUpdate(buffer1, sv, true);
 		}
 		else
 		{
 			sprintf(form->purpose, "PLANE CHANGE 2");
 			sprintf(form->remarks, "Ullage: 4 jet, 11 seconds");
-			sprintf(updesc, "CSM state vector, V66, Target load, PC REFSMMAT");
+			sprintf(updesc, "CSM state vector, V66, Target load, Plane Change REFSMMAT");
 			AGCStateVectorUpdate(buffer1, sv, true, true);
 		}
 
