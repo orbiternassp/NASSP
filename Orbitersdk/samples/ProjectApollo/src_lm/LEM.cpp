@@ -533,7 +533,6 @@ void LEM::Init()
 	status = 0;
 	CDRinPLSS = 0;
 	LMPinPLSS = 0;
-	EVAAntHandleStatus = false;
 
 	CMPowerToCDRBusRelayA = false;
 	CMPowerToCDRBusRelayB = false;
@@ -1311,25 +1310,7 @@ void LEM::SetAnimations(double simdt) {
 	//
 	//EVA Antenna
 	//
-	if (EVAAntHandleState.action == AnimState::CLOSING || EVAAntHandleState.action == AnimState::OPENING) {
-		double speed = 1.0; // Anim length in Seconds
-		double dp = simdt / speed;
-		if (EVAAntHandleState.action == AnimState::CLOSING) {
-			if (EVAAntHandleState.pos > 0.0) {
-				EVAAntHandleState.pos = max(0.0, EVAAntHandleState.pos - dp);
-			}
-			else
-				EVAAntHandleState.action = AnimState::CLOSED;
-		}
-		else { // opening
-			if (EVAAntHandleState.pos < 1.0)
-				EVAAntHandleState.pos = min(1.0, EVAAntHandleState.pos + dp);
-			else
-				EVAAntHandleState.action = AnimState::OPEN;
-		}
-		SetAnimation(EVAAntHandleAnim, EVAAntHandleState.pos);
-		LEM::VHF.SetAnimation(EVAAntHandleState.pos);
-	}
+	VHF.SetAnimation(EvaAntennaHandle.GetAnimState());
 }
 
 //
@@ -1479,10 +1460,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	inertialData.Timestep(simdt);
 
 	// Update VC animations
-	if (oapiCameraInternal() && oapiCockpitMode() == COCKPIT_VIRTUAL)
-	{
-		MainPanelVC.OnPostStep(simt, simdt, mjd);
-	}
+	MainPanelVC.OnPostStep(simt, simdt, mjd);
 
 	//
 	// Camera jostle.
@@ -2026,17 +2004,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "EVENTTIMER_START", sizeof("EVENTTIMER_START"))) {
 			EventTimerDisplay.LoadState(scn, EVENTTIMER_END_STRING);
 		}
-		else if (!strnicmp(line, "EVAANTENNAHANDLE", 16)) {
-			sscanf(line + 16, "%i", &EVAAntHandleStatus);
-			if (EVAAntHandleStatus) {
-				EVAAntHandleState.pos = 1.0;    // This is for the Handle
-
-				// Maybe you need to add here the ".pos" for the Antenna too.
-				// One more thing. The antenna can be seen for one frame when
-				// the simulation is started in pause mode.
-
-			}
-			}
 		else if (!strnicmp(line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
@@ -2101,6 +2068,9 @@ void LEM::clbkPostCreation()
 	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 	LoadDefaultSounds();
 	this->CWEA.LoadSounds();
+
+	// Switches
+	MainPanelVC.OnPostCreation();
 }
 
 void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
@@ -2127,8 +2097,6 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 		vcmesh = GetDevMesh(vis, vcidx);
 		SetCOAS();
 	}
-
-	AnimEVAAntHandle();
 }
 
 void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
@@ -2367,7 +2335,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "COASRETICLEVISIBLE", COASreticlevisible);
 
 	oapiWriteScenario_int(scn, "WINDOWSHADESENABLED", LEMWindowShades);
-	oapiWriteScenario_int(scn, "EVAANTENNAHANDLE", EVAAntHandleStatus);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
 	oapiWriteScenario_float (scn, "ASCFUEL", AscentFuelMassKg);

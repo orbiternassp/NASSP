@@ -2253,3 +2253,62 @@ void LEMMasterAlarmSwitch::InitVC(SURFHANDLE surf)
 {
 	switchsurfacevc = surf;
 }
+
+LEMEvaAntennaHandle::LEMEvaAntennaHandle()
+{
+	mshEVAAntHandleRotate = NULL;
+}
+
+LEMEvaAntennaHandle::~LEMEvaAntennaHandle()
+{
+	if (mshEVAAntHandleRotate)
+		delete mshEVAAntHandleRotate;
+}
+
+void LEMEvaAntennaHandle::DefineVCAnimations(UINT vc_idx)
+{
+	if (bHasDirection && !bHasAnimations)
+	{
+		pswitchtrans = new MGROUP_TRANSLATE(vc_idx, &grpIndex, 1, GetDirection());
+		mshEVAAntHandleRotate = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), _V(0, 1, 0), (float)(180 * RAD));
+
+		anim_switch = OurVessel->CreateAnimation(InitialAnimState());
+		OurVessel->AddAnimationComponent(anim_switch, 0.0, 0.1, pswitchtrans);
+		OurVessel->AddAnimationComponent(anim_switch, 0.1, 1.0, mshEVAAntHandleRotate);
+		VerifyAnimations();
+	}
+}
+
+void LEMEvaAntennaHandle::OnPostStep(double SimT, double DeltaT, double MJD)
+{
+	animState.Move(1.0*DeltaT); // 1.0 is speed
+}
+
+void LEMEvaAntennaHandle::DrawSwitchVC(int id, int event, SURFHANDLE surf)
+{
+	if (!bHasAnimations) return;
+	OurVessel->SetAnimation(anim_switch, animState.pos);
+}
+
+bool LEMEvaAntennaHandle::SwitchTo(int newState, bool dontspring)
+{
+	if (ToggledPushSwitch::SwitchTo(newState, dontspring))
+	{
+		// Set animation state
+		if (state == TOGGLESWITCH_UP && !animState.Open()) animState.action = AnimState::OPENING;
+		else if (state == TOGGLESWITCH_DOWN && !animState.Closed()) animState.action = AnimState::CLOSING;
+		return true;
+	}
+	return false;
+}
+
+void LEMEvaAntennaHandle::OnPostCreation()
+{
+	if (state == TOGGLESWITCH_UP) animState.Set(AnimState::OPEN, 1.0);
+	else animState.Set(AnimState::CLOSED, 0.0);
+}
+
+double LEMEvaAntennaHandle::GetAnimState()
+{
+	return animState.pos;
+}
