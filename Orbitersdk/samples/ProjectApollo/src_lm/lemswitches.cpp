@@ -2257,12 +2257,20 @@ void LEMMasterAlarmSwitch::InitVC(SURFHANDLE surf)
 LEMEvaAntennaHandle::LEMEvaAntennaHandle()
 {
 	mshEVAAntHandleRotate = NULL;
+	mshEVAAntHandleDown = NULL;
+	mshEVAAntHandleUp = NULL;
 }
 
 LEMEvaAntennaHandle::~LEMEvaAntennaHandle()
 {
 	if (mshEVAAntHandleRotate)
 		delete mshEVAAntHandleRotate;
+
+	if (mshEVAAntHandleDown)
+		delete mshEVAAntHandleDown;
+
+	if (mshEVAAntHandleUp)
+		delete mshEVAAntHandleUp;
 }
 
 void LEMEvaAntennaHandle::DefineVCAnimations(UINT vc_idx)
