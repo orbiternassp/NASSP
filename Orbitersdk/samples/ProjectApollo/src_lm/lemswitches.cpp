@@ -2269,12 +2269,14 @@ void LEMEvaAntennaHandle::DefineVCAnimations(UINT vc_idx)
 {
 	if (bHasDirection && !bHasAnimations)
 	{
-		pswitchtrans = new MGROUP_TRANSLATE(vc_idx, &grpIndex, 1, GetDirection());
-		mshEVAAntHandleRotate = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), _V(0, 1, 0), (float)(180 * RAD));
+		mshEVAAntHandleDown = new MGROUP_TRANSLATE(vc_idx, &grpIndex, 1, GetDirection());
+		mshEVAAntHandleRotate = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), _V(0, 1, 0), (float)(300 * RAD));
+		mshEVAAntHandleUp = new MGROUP_TRANSLATE(vc_idx, &grpIndex, 1, GetDirection() * -1);
 
 		anim_switch = OurVessel->CreateAnimation(InitialAnimState());
-		OurVessel->AddAnimationComponent(anim_switch, 0.0, 0.1, pswitchtrans);
-		OurVessel->AddAnimationComponent(anim_switch, 0.1, 1.0, mshEVAAntHandleRotate);
+		OurVessel->AddAnimationComponent(anim_switch, 0.0, 0.1, mshEVAAntHandleDown);
+		OurVessel->AddAnimationComponent(anim_switch, 0.1, 0.9, mshEVAAntHandleRotate);
+		OurVessel->AddAnimationComponent(anim_switch, 0.9, 1.0, mshEVAAntHandleUp);
 		VerifyAnimations();
 	}
 }
