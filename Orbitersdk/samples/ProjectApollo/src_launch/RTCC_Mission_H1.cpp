@@ -2449,13 +2449,14 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 	}
 	break;
 	case 400: //LGC CSM STATE VECTOR UPDATE WITH TIME TAG DOI-10 MINUTES
-	case 401: //LGC CSM STATE VECTOR UPDATE WITH TIME TAG AT LIFTOFF
+	case 401: //LGC RLS & CSM STATE VECTOR UPDATE WITH TIME TAG AT LIFTOFF
 	{
-		EphemerisData sv, sv_upl;
-		char buffer1[1000];
+		VehicleDataBlock sv, sv_upl;
 		double t_Tag;
+		char buffer1[1000];
+		char buffer2[1000];
 
-		sv = StateVectorCalcEphem(calcParams.src); //State vector for uplink
+		sv = StateVectorCalcDataBlock(calcParams.src); //State vector for uplink
 
 		if (fcn == 400)
 		{
@@ -2466,23 +2467,16 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 			t_Tag = calcParams.LunarLiftoff;
 		}
 
-		//Make sure no SV in the past is uplinked
-		if (t_Tag < GETfromGMT(RTCCPresentTimeGMT()))
-		{
-			sv_upl = sv;
-		}
-		else
-		{
-			sv_upl = coast(sv, t_Tag - GETfromGMT(sv.GMT));
-		}
+		sv_upl = coast(sv, t_Tag - sv.sv.GMT); //Time tag SV
 
-		AGCStateVectorUpdate(buffer1, RTCC_MPT_LM, RTCC_MPT_CSM, sv_upl);
+		AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_CSM, sv_upl.sv);
+		LandingSiteUplink(buffer2, RTCC_MPT_LM);
 
-		sprintf(uplinkdata, "%s", buffer1);
+		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM state vector");
+			sprintf(upDesc, "CSM state vector, RLS");
 		}
 	}
 	break;
