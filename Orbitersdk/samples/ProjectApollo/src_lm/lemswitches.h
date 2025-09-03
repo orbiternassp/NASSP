@@ -688,6 +688,8 @@ public:
 
 	double GetAnimState();
 protected:
-	MGROUP_ROTATE *mshEVAAntHandleRotate;
+	MGROUP_ROTATE* mshEVAAntHandleRotate;
+	MGROUP_TRANSLATE* mshEVAAntHandleDown;
+	MGROUP_TRANSLATE* mshEVAAntHandleUp;
 	AnimState animState;
 };
