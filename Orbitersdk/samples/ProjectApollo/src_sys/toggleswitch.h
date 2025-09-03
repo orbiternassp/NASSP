@@ -787,7 +787,7 @@ public:
 /// \brief Two-position circuit breaker switch.
 /// \ingroup PanelItems
 ///
-class CircuitBrakerSwitch: public SimplePushSwitch {
+class CircuitBrakerSwitch: public ToggledPushSwitch {
 
 public:
 	CircuitBrakerSwitch() { MaxAmps = 0.0; };

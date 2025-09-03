@@ -1028,7 +1028,7 @@ void LEM::RegisterActiveAreas()
 
 	// EVA Antenna
 	const VECTOR3 EVAAntHandleLoc = _V(-0.268539, 0.960945, -0.3565);						// Clickpoint Location ...
-	oapiVCRegisterArea(AID_VC_EVA_Ant_Handle, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);		// Area ...
+	oapiVCRegisterArea(AID_VC_EVA_Ant_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);		// Area ...
 	oapiVCSetAreaClickmode_Spherical(AID_VC_EVA_Ant_Handle, EVAAntHandleLoc + ofs, 0.05);	// Area Mode of the Click point
 
 	// LMVC Lighting
@@ -3310,7 +3310,7 @@ void LEM::DefineVCAnimations()
 
 	// EVA Antenna Handle
 	MainPanelVC.AddSwitch(&EvaAntennaHandle, AID_VC_EVA_Ant_Handle);
-	EvaAntennaHandle.SetDirection(_V(0, -0.01, 0));
+	EvaAntennaHandle.SetReference(_V(-0.268539, 0.960945, -0.3565), _V(0, -0.01, 0));
 	EvaAntennaHandle.DefineMeshGroup(VC_GRP_EVA_Ant_Handle);
 
 	// Define animations
