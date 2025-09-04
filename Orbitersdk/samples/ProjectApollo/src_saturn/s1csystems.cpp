@@ -601,6 +601,7 @@ void SICSystems::DisconnectUmbilical()
 {
 	if (TSMUmb)
 	{
+		TSMUmb->sic = NULL;
 		TSMUmb = NULL;
 	}
 }
