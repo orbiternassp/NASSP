@@ -6204,11 +6204,6 @@ void ApolloRTCCMFD::menuLSCalc()
 	G->LandingSiteUpdate();
 }
 
-void ApolloRTCCMFD::menuRevertRLSToPrelaunch()
-{
-	GeneralMEDRequest("S72,BEST,MED;");
-}
-
 void ApolloRTCCMFD::menuSVUpload()
 {
 	int type = AGCSVUplinkType(subscreen);

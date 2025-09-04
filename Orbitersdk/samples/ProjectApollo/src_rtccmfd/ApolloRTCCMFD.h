@@ -230,7 +230,6 @@ public:
 	void menuSVCalc();
 	void menuSVUpload();
 	void menuLSCalc();
-	void menuRevertRLSToPrelaunch();
 	void menuCycleAGSNavUpdREFSMMAT();
 	void menuSaveAGSREFSMMAT();
 	void menuAGSSVCalc();
