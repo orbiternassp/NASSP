@@ -808,7 +808,11 @@ void SIBSystems::SwitchSelector(int channel)
 
 void SIBSystems::DisconnectUmbilical()
 {
-	SCMUmb = NULL;
+	if (SCMUmb)
+	{
+		SCMUmb->sib = NULL;
+		SCMUmb = NULL;
+	}
 }
 
 bool SIBSystems::IsUmbilicalConnected()
