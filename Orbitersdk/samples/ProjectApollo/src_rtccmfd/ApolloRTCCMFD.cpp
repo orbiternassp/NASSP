@@ -1179,7 +1179,9 @@ void ApolloRTCCMFD::menuSetSPQorDKIRTransferPage()
 	{
 		GC->rtcc->med_m70.Plan = -1;
 	}
-
+	marker = 0;
+	markermax = 10;
+	subscreen = 0;
 	SelectPage(55);
 }
 
@@ -1291,14 +1293,14 @@ void ApolloRTCCMFD::menuSetOnlineMonitorPage()
 void ApolloRTCCMFD::menuLOITransferPage()
 {
 	GC->rtcc->med_m78.Type = true;
-	GC->rtcc->med_m78.Iteration = true; //Make the iterate option the default
+	GC->rtcc->med_m78.ManData.Iteration = true; //Make the iterate option the default
 	SelectPage(76);
 }
 
 void ApolloRTCCMFD::menuMCCTransferPage()
 {
 	GC->rtcc->med_m78.Type = false;
-	GC->rtcc->med_m78.Iteration = false; //Make the do not iterate option the default
+	GC->rtcc->med_m78.ManData.Iteration = false; //Make the do not iterate option the default
 	SelectPage(76);
 }
 
@@ -4109,65 +4111,6 @@ void ApolloRTCCMFD::menuSetMEDM11()
 	menuGeneralMEDRequest("CG Characteristics. Format: M11, Vehicle (C, L or A), No. of Entries in Table (1-40), Entry no. of this set (1-40), Weight, X-coord, Y-coord, Z-coord, Transfer Ind (T or blank);");
 }
 
-void ApolloRTCCMFD::menuCycleTITable()
-{
-	GC->rtcc->med_m72.Table = 3 - GC->rtcc->med_m72.Table;
-}
-
-void ApolloRTCCMFD::menuSetTIPlanNumber()
-{
-	bool TIPlanNumberInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose plan from multiple solution table (1-13):", TIPlanNumberInput, 0, 20, (void*)this);
-}
-
-bool TIPlanNumberInput(void *id, char *str, void *data)
-{
-	int num;
-
-	if (sscanf(str, "%d", &num) == 1)
-	{
-		if (num < 1 || num > 13)
-		{
-			return false;
-		}
-
-		((ApolloRTCCMFD*)data)->set_TIPlanNumber(num);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TIPlanNumber(int plan)
-{
-	GC->rtcc->med_m72.Plan = plan;
-}
-
-void ApolloRTCCMFD::menuTIDeleteGET()
-{
-	bool TIDeleteGETInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Delete all maneuvers in both MPTs after GET (Format: hhh:mm:ss, or negative number for no delete)", TIDeleteGETInput, 0, 20, (void*)this);
-}
-
-bool TIDeleteGETInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss;
-	double tig;
-
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		tig = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_TIDeleteGET(tig);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TIDeleteGET(double get)
-{
-	GC->rtcc->med_m72.DeleteGET = get;
-}
-
 void ApolloRTCCMFD::menuChooseTIThruster()
 {
 	bool ChooseTIThrusterInput(void *id, char *str, void *data);
@@ -4182,85 +4125,131 @@ bool ChooseTIThrusterInput(void *id, char *str, void *data)
 
 bool ApolloRTCCMFD::set_ChooseTIThruster(std::string th)
 {
-	return ThrusterType(th, GC->rtcc->med_m72.Thruster);
+	return ThrusterType(th, GC->rtcc->med_m72.ManData[subscreen].Thruster);
 }
 
-void ApolloRTCCMFD::menuCycleTIAttitude()
+void ApolloRTCCMFD::menuSetM70Inputs()
 {
-	if (GC->rtcc->med_m72.Attitude < 5)
+	int num = (GC->MissionPlanningActive ? subscreen : 0);
+
+	switch (marker)
 	{
-		GC->rtcc->med_m72.Attitude++;
+	case 0:
+		GenericIntInput(&GC->rtcc->med_m70.Plan, "-1 for descent plan, 0 for SPQ, 1-7 for DKI:", NULL, -1, 7);
+		break;
+	case 1:
+		GenericGETInput(&GC->rtcc->med_m70.DeleteGET, "Delete all maneuvers in both MPTs after GET (Format: hhh:mm:ss, or negative number for no delete)");
+		break;
+	case 2:
+		if (GC->MissionPlanningActive)
+		{
+			if (subscreen < 6) subscreen++;
+			else subscreen = 0;
+		}
+		break;
+	case 3:
+		menuChooseSPQDKIThruster();
+		break;
+	case 4:
+		if (GC->rtcc->med_m70.ManData[num].Attitude < 5)
+		{
+			GC->rtcc->med_m70.ManData[num].Attitude++;
+		}
+		else
+		{
+			GC->rtcc->med_m70.ManData[num].Attitude = 1;
+		}
+		break;
+	case 5:
+		GenericUllageInput(&GC->rtcc->med_m70.ManData[num].UllageQuads, &GC->rtcc->med_m70.ManData[num].UllageDT);
+		break;
+	case 6:
+		GC->rtcc->med_m70.ManData[num].Iteration = !GC->rtcc->med_m70.ManData[num].Iteration;
+		break;
+	case 7:
+		GenericDoubleInput(&GC->rtcc->med_m70.ManData[num].TenPercentDT, "Delta T of 10% thrust for DPS (negative to ignore short burn test):");
+		break;
+	case 8:
+		GenericDoubleInput(&GC->rtcc->med_m70.ManData[num].DPSThrustFactor, "DPS thrust scaling factor (0 to 1):");
+		break;
+	case 9:
+		GC->rtcc->med_m70.ManData[num].TimeFlag = !GC->rtcc->med_m70.ManData[num].TimeFlag;
+		break;
+	case 10:
+		if (GC->MissionPlanningActive)
+		{
+			for (int i = 0; i < 7; i++)
+			{
+				if (i != subscreen)
+				{
+					GC->rtcc->med_m70.ManData[i] = GC->rtcc->med_m70.ManData[subscreen];
+				}
+			}
+		}
+		break;
 	}
-	else
+}
+
+void ApolloRTCCMFD::menuSetM72Inputs()
+{
+	int num = (GC->MissionPlanningActive ? subscreen : 0);
+
+	switch (marker)
 	{
-		GC->rtcc->med_m72.Attitude = 1;
+	case 0:
+		GC->rtcc->med_m72.Table = 3 - GC->rtcc->med_m72.Table;
+		break;
+	case 1:
+		GenericIntInput(&GC->rtcc->med_m72.Plan, "Choose plan from multiple solution table (1-13):", 0, 1, 13);
+		break;
+	case 2:
+		GenericGETInput(&GC->rtcc->med_m72.DeleteGET, "Delete all maneuvers in both MPTs after GET (Format: hhh:mm:ss, or negative number for no delete)");
+		break;
+	case 3:
+		if (subscreen < 6) subscreen++;
+		else subscreen = 0;
+		break;
+	case 4:
+		menuChooseTIThruster();
+		break;
+	case 5:
+		if (GC->rtcc->med_m72.ManData[num].Attitude < 5)
+		{
+			GC->rtcc->med_m72.ManData[num].Attitude++;
+		}
+		else
+		{
+			GC->rtcc->med_m72.ManData[num].Attitude = 1;
+		}
+		break;
+	case 6:
+		GenericUllageInput(&GC->rtcc->med_m72.ManData[num].UllageQuads, &GC->rtcc->med_m72.ManData[num].UllageDT);
+		break;
+	case 7:
+		GC->rtcc->med_m72.ManData[num].Iteration = !GC->rtcc->med_m72.ManData[num].Iteration;
+		break;
+	case 8:
+		GenericDoubleInput(&GC->rtcc->med_m72.ManData[num].TenPercentDT, "Delta T of 10% thrust for DPS (negative to ignore short burn test):");
+		break;
+	case 9:
+		GenericDoubleInput(&GC->rtcc->med_m72.ManData[num].DPSThrustFactor, "DPS thrust scaling factor (0 to 1):");
+		break;
+	case 10:
+		GC->rtcc->med_m72.ManData[num].TimeFlag = !GC->rtcc->med_m72.ManData[num].TimeFlag;
+		break;
+	case 11:
+		if (GC->MissionPlanningActive)
+		{
+			for (int i = 0; i < 2; i++)
+			{
+				if (i != subscreen)
+				{
+					GC->rtcc->med_m72.ManData[i] = GC->rtcc->med_m72.ManData[subscreen];
+				}
+			}
+		}
+		break;
 	}
-}
-
-void ApolloRTCCMFD::menuTIUllageOption()
-{
-	GenericUllageInput(&GC->rtcc->med_m72.UllageQuads, &GC->rtcc->med_m72.UllageDT);
-}
-
-void ApolloRTCCMFD::menuM70UllageOption()
-{
-	GenericUllageInput(&GC->rtcc->med_m70.UllageQuads, &GC->rtcc->med_m70.UllageDT);
-}
-
-void ApolloRTCCMFD::menuCycleTIIterationFlag()
-{
-	GC->rtcc->med_m72.Iteration = !GC->rtcc->med_m72.Iteration;
-}
-
-void ApolloRTCCMFD::menuCycleTITimeFlag()
-{
-	GC->rtcc->med_m72.TimeFlag = !GC->rtcc->med_m72.TimeFlag;
-}
-
-void ApolloRTCCMFD::menuTIDPSTenPercentTime()
-{
-	bool MPTTIDPSTenPercentTimeInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Delta T of 10% thrust for DPS (negative to ignore short burn test):", MPTTIDPSTenPercentTimeInput, 0, 20, (void*)this);
-}
-
-bool MPTTIDPSTenPercentTimeInput(void *id, char *str, void *data)
-{
-	double deltat;
-	if (sscanf(str, "%lf", &deltat) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_TIDPSTenPercentTime(deltat);
-		return true;
-	}
-
-	return false;
-}
-
-void ApolloRTCCMFD::set_TIDPSTenPercentTime(double deltat)
-{
-	GC->rtcc->med_m72.TenPercentDT = deltat;
-}
-
-void ApolloRTCCMFD::menuTIDPSScaleFactor()
-{
-	bool TIDPSScaleFactorInput(void *id, char *str, void *data);
-	oapiOpenInputBox("DPS thrust scaling factor (0 to 1):", TIDPSScaleFactorInput, 0, 20, (void*)this);
-}
-
-bool TIDPSScaleFactorInput(void *id, char *str, void *data)
-{
-	double scale;
-	if (sscanf(str, "%lf", &scale) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_TIDPSScaleFactor(scale);
-		return true;
-	}
-
-	return false;
-}
-
-void ApolloRTCCMFD::set_TIDPSScaleFactor(double scale)
-{
-	GC->rtcc->med_m72.DPSThrustFactor = scale;
 }
 
 void ApolloRTCCMFD::menuChooseSPQDKIThruster()
@@ -4277,106 +4266,7 @@ bool ChooseSPQDKIThrusterInput(void *id, char *str, void *data)
 
 bool ApolloRTCCMFD::set_ChooseSPQDKIThruster(std::string th)
 {
-	return ThrusterType(th, GC->rtcc->med_m70.Thruster);
-}
-
-void ApolloRTCCMFD::menuM70SelectPlan()
-{
-	GenericIntInput(&GC->rtcc->med_m70.Plan, "-1 for descent plan, 0 for SPQ, 1-7 for DKI:", NULL, -1, 7);
-}
-
-void ApolloRTCCMFD::menuM70DeleteGET()
-{
-	bool MPTM70DeleteGETInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Delete all maneuvers in both MPTs after GET (Format: hhh:mm:ss, or negative number for no delete)", MPTM70DeleteGETInput, 0, 20, (void*)this);
-}
-
-bool MPTM70DeleteGETInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss;
-	double tig;
-
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		tig = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_MPTM70DeleteGET(tig);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_MPTM70DeleteGET(double get)
-{
-	GC->rtcc->med_m70.DeleteGET = get;
-}
-
-void ApolloRTCCMFD::menuM70CycleAttitude()
-{
-	if (GC->rtcc->med_m70.Attitude < 5)
-	{
-		GC->rtcc->med_m70.Attitude++;
-	}
-	else
-	{
-		GC->rtcc->med_m70.Attitude = 1;
-	}
-}
-
-void ApolloRTCCMFD::menuM70CycleIterationFlag()
-{
-	GC->rtcc->med_m70.Iteration = !GC->rtcc->med_m70.Iteration;
-}
-
-void ApolloRTCCMFD::menuM70CycleTimeFlag()
-{
-	GC->rtcc->med_m70.TimeFlag = !GC->rtcc->med_m70.TimeFlag;
-}
-
-void ApolloRTCCMFD::menuM70DPSTenPercentTime()
-{
-	bool MPTM70DPSTenPercentTimeInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Delta T of 10% thrust for DPS (negative to ignore short burn test):", MPTM70DPSTenPercentTimeInput, 0, 20, (void*)this);
-}
-
-bool MPTM70DPSTenPercentTimeInput(void *id, char *str, void *data)
-{
-	double deltat;
-	if (sscanf(str, "%lf", &deltat) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_M70DPSTenPercentTime(deltat);
-		return true;
-	}
-
-	return false;
-}
-
-void ApolloRTCCMFD::set_M70DPSTenPercentTime(double deltat)
-{
-	GC->rtcc->med_m70.TenPercentDT = deltat;
-}
-
-void ApolloRTCCMFD::menuM70DPSScaleFactor()
-{
-	bool M70DPSScaleFactorInput(void *id, char *str, void *data);
-	oapiOpenInputBox("DPS thrust scaling factor (0 to 1):", M70DPSScaleFactorInput, 0, 20, (void*)this);
-}
-
-bool M70DPSScaleFactorInput(void *id, char *str, void *data)
-{
-	double scale;
-	if (sscanf(str, "%lf", &scale) == 1)
-	{
-		((ApolloRTCCMFD*)data)->set_M70DPSScaleFactor(scale);
-		return true;
-	}
-
-	return false;
-}
-
-void ApolloRTCCMFD::set_M70DPSScaleFactor(double scale)
-{
-	GC->rtcc->med_m70.DPSThrustFactor = scale;
+	return ThrusterType(th, GC->rtcc->med_m70.ManData[subscreen].Thruster);
 }
 
 void ApolloRTCCMFD::menuChooseMPTDirectInputThruster()
@@ -4563,24 +4453,24 @@ bool ChooseLOIMCCThrusterInput(void *id, char *str, void *data)
 
 bool ApolloRTCCMFD::set_ChooseLOIMCCThruster(std::string th)
 {
-	return ThrusterType(th, GC->rtcc->med_m78.Thruster);
+	return ThrusterType(th, GC->rtcc->med_m78.ManData.Thruster);
 }
 
 void ApolloRTCCMFD::menuCycleLOIMCCAttitude()
 {
-	if (GC->rtcc->med_m78.Attitude < RTCC_ATTITUDE_AGS_EXDV)
+	if (GC->rtcc->med_m78.ManData.Attitude < RTCC_ATTITUDE_AGS_EXDV)
 	{
-		GC->rtcc->med_m78.Attitude++;
+		GC->rtcc->med_m78.ManData.Attitude++;
 	}
 	else
 	{
-		GC->rtcc->med_m78.Attitude = RTCC_ATTITUDE_INERTIAL;
+		GC->rtcc->med_m78.ManData.Attitude = RTCC_ATTITUDE_INERTIAL;
 	}
 }
 
 void ApolloRTCCMFD::menuLOIMCCUllageThrustersDT()
 {
-	GenericUllageInput(&GC->rtcc->med_m78.UllageQuads, &GC->rtcc->med_m78.UllageDT);
+	GenericUllageInput(&GC->rtcc->med_m78.ManData.UllageQuads, &GC->rtcc->med_m78.ManData.UllageDT);
 }
 
 void ApolloRTCCMFD::menuLOIMCCManeuverNumber()
@@ -4607,7 +4497,7 @@ void ApolloRTCCMFD::set_LOIMCCManeuverNumber(int num)
 
 void ApolloRTCCMFD::menuCycleLOIMCCIterationFlag()
 {
-	GC->rtcc->med_m78.Iteration = !GC->rtcc->med_m78.Iteration;
+	GC->rtcc->med_m78.ManData.Iteration = !GC->rtcc->med_m78.ManData.Iteration;
 }
 
 void ApolloRTCCMFD::menuLOIMCCDPSTenPercentDeltaT()
@@ -4630,7 +4520,7 @@ bool LOIMCCDPSTenPercentDeltaTInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIMCCDPSTenPercentDeltaT(double deltat)
 {
-	GC->rtcc->med_m78.TenPercentDT = deltat;
+	GC->rtcc->med_m78.ManData.TenPercentDT = deltat;
 }
 
 void ApolloRTCCMFD::menuLOIMCCDPSThrustScaling()
@@ -4653,12 +4543,12 @@ bool LOIMCCDPSThrustScalingInput(void *id, char *str, void *data)
 
 void ApolloRTCCMFD::set_LOIMCCDPSThrustScaling(double scale)
 {
-	GC->rtcc->med_m78.DPSThrustFactor = scale;
+	GC->rtcc->med_m78.ManData.DPSThrustFactor = scale;
 }
 
 void ApolloRTCCMFD::menuCycleLOIMCCTimeFlag()
 {
-	GC->rtcc->med_m78.TimeFlag = !GC->rtcc->med_m78.TimeFlag;
+	GC->rtcc->med_m78.ManData.TimeFlag = !GC->rtcc->med_m78.ManData.TimeFlag;
 }
 
 void ApolloRTCCMFD::menuTransferTIToMPT()
