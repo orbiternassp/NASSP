@@ -137,6 +137,8 @@ struct GNDataTab
 	VECTOR3 UTR;
 	//Target vector
 	VECTOR3 URT;
+	//Unit vector normal to trajectory plane
+	VECTOR3 UNI;
 	//Earth rate times time
 	double WT;
 	//Desired great circle range (radians)
@@ -233,7 +235,11 @@ protected:
 	double ConstantGLogic(VECTOR3 unitR, VECTOR3 VI, double D);
 	bool IsInBlackout(double v_r, double h);
 	void EventsRoutine();
-	void RollControl();
+	//Attitude control
+	void SCSRollRateControl(double DESRATE);
+	void SCSRollControl();
+	void ReentryDAP();
+	void UpdateAttitude(double ACCEL);
 
 	//G&N
 	void GNInitialization();
@@ -260,7 +266,12 @@ protected:
 	double DT;
 	//Ratio of area to mass of spacecraft
 	double N;
+	//Current bank angle
 	double Bank;
+	//Midstep bank angle
+	double MBank;
+	//Next bank angle (end of step)
+	double FBank;
 	VECTOR3 DELV;
 	double DRAG;
 	double A_X;
@@ -268,6 +279,8 @@ protected:
 	double K1;
 	//Final bank angle
 	double K2;
+	//Mode: 1 = Zero lift, 2 = Max Lift, 3 = G&N, 4 = Bank angle - time to reverse bank angle, 5 = Constant bank angle, 6 = Constant bank to G, then roll, 7 = Bank angle to G-level then maximum lift
+	//8 = Bank angle to a G-level then bank angle-time to reverse bank angle, 9 = Bank angle to a G-level then another bank angle to impact prediction, 10 = constant G
 	int LiftMode;
 	//Has 0.05g been passed?
 	bool K05G;
@@ -361,6 +374,8 @@ protected:
 	double TLAST;
 	double CMArea;
 	double CMWeight;
+	//Temporary value
+	double TEMP;
 
 	//Parameters for constant G and G&N
 	double VSAT;
@@ -368,12 +383,18 @@ protected:
 	double C16, C17;
 
 	//Constants
-	double HS;
-	double GS;
-	double KWE;
-	double RE;
+	double HS;	//Atmosphere scale height (RTCC system parameter MCASHT)
+	double GS;	//Nominal G value for scaling (RTCC system parameter MCEGRB)
+	double KWE;	//Equatorial Earth rate
+	double RE;	//Earth radius
 	double ATK; //Angle in RAD to meters (meters/rad)
-	double K_D;
+	double K_D; //EMS integration constant
+
+	//RTCC system parameter
+	double MCGAEG;	//Attitude error gain
+	double MCGARL;	//Attitude rate limit
+	double MCGAXA;	//Acceleration about X-body axis
+	double MCGRTG;	//Rate gain
 
 	//G&N
 	GNDataTab GNData;
