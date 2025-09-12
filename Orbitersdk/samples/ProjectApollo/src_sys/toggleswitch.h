@@ -231,6 +231,7 @@ public:
 	virtual const VECTOR3& GetDirection() const;
 	virtual const VECTOR3& GetReference() const;
 	virtual void OnPostStep(double SimT, double DeltaT, double MJD) {}
+	virtual void OnPostCreation() {}
 
 	virtual void SetReference(const VECTOR3& ref);
 	virtual void SetReference(const VECTOR3& ref, const VECTOR3& dir);
@@ -769,18 +770,28 @@ protected:
 };
 
 ///
+/// A two-position switch which is pushed in/out rather than toggled up/down, but is toggle.
+/// \brief Two-position toggled push switch.
+/// \ingroup PanelItems
+///
+
+class ToggledPushSwitch : public SimplePushSwitch {
+public:
+	bool CheckMouseClick(int event, int mx, int my);
+	bool CheckMouseClickVC(int event, VECTOR3 &p);
+};
+
+///
 /// A two-position electrical circuit breaker switch which is pushed in and pulled out rather 
 /// than toggled up/down, and turns its electrical supply on and off as it does so.
 /// \brief Two-position circuit breaker switch.
 /// \ingroup PanelItems
 ///
-class CircuitBrakerSwitch: public SimplePushSwitch {
+class CircuitBrakerSwitch: public ToggledPushSwitch {
 
 public:
 	CircuitBrakerSwitch() { MaxAmps = 0.0; };
 
-	bool CheckMouseClick(int event, int mx, int my);
-	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s = 0, double amps = 30.0);
 
 	double Voltage();
@@ -1634,6 +1645,7 @@ public:
 	bool VCMouseEvent(int id, int event, VECTOR3 &p);
 	bool VCRedrawEvent(int id, int event, SURFHANDLE surf);
 	void OnPostStep(double SimT, double DeltaT, double MJD);
+	void OnPostCreation();
 	void AddSwitch(PanelSwitchItem *s, int area = -1);
 	void ClearSwitches();
 protected:

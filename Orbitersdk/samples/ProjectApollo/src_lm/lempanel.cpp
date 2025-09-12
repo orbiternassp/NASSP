@@ -2708,6 +2708,9 @@ void LEM::SetSwitches(int panel) {
 	ForwardHatchValveSwitchRow.Init(AID_LEM_FWD_HATCH_VALVE, MainPanel);
 	ForwardHatchReliefValve.Init(0, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], srf[SRF_BORDER_178x187], ForwardHatchValveSwitchRow);
 
+	// EVA antenna handle
+	EvaAntennaHandle.Init(0, 0, 0, 0, 0, 0, UpperHatchValveSwitchRow); // Dummy, not functional on the 2D panel
+
 	// Radar Tape
 	// Used to be in lemsystems, but placed here for proper loading of both tape bitmaps
 	RadarTape.Init(this, &RNG_RT_ALT_RT_DC_CB, &RNG_RT_ALT_RT_AC_CB, srf[SRF_RADAR_TAPE], srf[SRF_RADAR_TAPE2]);

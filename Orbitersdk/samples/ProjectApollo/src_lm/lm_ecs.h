@@ -286,11 +286,11 @@ class LEMWaterSeparationSelector
 {
 public:
 	LEMWaterSeparationSelector();
-	void Init(h_Tank *wssv, CircuitBrakerSwitch* wsss);
+	void Init(h_Tank *wssv, ToggledPushSwitch* wsss);
 	void SystemTimestep(double simdt);
 protected:
 	h_Tank *WaterSeparationSelectorValve;
-	CircuitBrakerSwitch *WaterSeparationSelectorSwitch;
+	ToggledPushSwitch *WaterSeparationSelectorSwitch;
 };
 
 class LEMCabinFan

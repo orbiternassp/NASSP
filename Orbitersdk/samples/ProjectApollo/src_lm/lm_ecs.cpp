@@ -1100,7 +1100,7 @@ LEMWaterSeparationSelector::LEMWaterSeparationSelector()
 	WaterSeparationSelectorSwitch = NULL;
 }
 
-void LEMWaterSeparationSelector::Init(h_Tank *wssv, CircuitBrakerSwitch* wsss)
+void LEMWaterSeparationSelector::Init(h_Tank *wssv, ToggledPushSwitch* wsss)
 {
 	WaterSeparationSelectorValve = wssv;
 	WaterSeparationSelectorSwitch = wsss;
