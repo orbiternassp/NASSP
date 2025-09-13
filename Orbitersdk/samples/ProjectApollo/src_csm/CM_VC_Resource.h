@@ -7,10 +7,10 @@
 #define VC_NGRP 1096
 
 // Number of materials:
-#define VC_NMAT 183
+#define VC_NMAT 182
 
 // Number of textures:
-#define VC_NTEX 36
+#define VC_NTEX 35
 
 // Named mesh groups:
 #define VC_GRP_AbortLightPanel1 0
@@ -1283,17 +1283,16 @@
 #define VC_MAT_Rotarys_P5_t 169
 #define VC_MAT_SCS_Rates_Card_t 170
 #define VC_MAT_CM_VC_Color_2 171
-#define VC_MAT_DOR_t 172
-#define VC_MAT_HOPEN_t 173
-#define VC_MAT_CM_VC_Color_3 174
-#define VC_MAT_LMVC_t 175
-#define VC_MAT_SwitchCover_t 176
-#define VC_MAT_SwitchGuard_t 177
-#define VC_MAT_TW_Switches 178
-#define VC_MAT_Talkbacks_Frame_t 179
-#define VC_MAT_Talkbacks_P2_t 180
-#define VC_MAT_Talkbacks_P3_t 181
-#define VC_MAT_csm_waste_disposal_rotary 182
+#define VC_MAT_SideHatch 172
+#define VC_MAT_CM_VC_Color_3 173
+#define VC_MAT_LMVC_t 174
+#define VC_MAT_SwitchCover_t 175
+#define VC_MAT_SwitchGuard_t 176
+#define VC_MAT_TW_Switches 177
+#define VC_MAT_Talkbacks_Frame_t 178
+#define VC_MAT_Talkbacks_P2_t 179
+#define VC_MAT_Talkbacks_P3_t 180
+#define VC_MAT_csm_waste_disposal_rotary 181
 
 // Named Textures:
 #define VC_TEX_CMVCTex2_dds 1
@@ -1326,10 +1325,9 @@
 #define VC_TEX_CMVCPanel382_Cover_dds 28
 #define VC_TEX_Rotary_dds 29
 #define VC_TEX_SCS_Rates_Card_dds 30
-#define VC_TEX_DOR_DDS 31
-#define VC_TEX_HOPEN_DDS 32
-#define VC_TEX_LMVC_dds 33
-#define VC_TEX_SwitchCover_dds 34
-#define VC_TEX_HolderRahmen_dds 35
-#define VC_TEX_csm_waste_disposal_rotary_dds 36
+#define VC_TEX_SideHatch_new_dds 31
+#define VC_TEX_LMVC_dds 32
+#define VC_TEX_SwitchCover_dds 33
+#define VC_TEX_HolderRahmen_dds 34
+#define VC_TEX_csm_waste_disposal_rotary_dds 35
 

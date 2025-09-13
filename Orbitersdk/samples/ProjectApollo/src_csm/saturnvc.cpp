@@ -1083,14 +1083,15 @@ void Saturn::RegisterActiveAreas() {
 
 	// Side Hatch
 	if (viewpos != SATVIEW_LOWER_CENTER) {
-		const VECTOR3 SideHatchLocation = { 0.2436, 1.1710, 0.1699 };
-		const VECTOR3 SideHatch_HandleRot1Location = { 0.3076, 1.3543, -0.1137 };
-		const VECTOR3 SideHatch_HandleRot2Location = { 0.2348, 1.2453, 0.0608 };
-		const VECTOR3 SideHatch_VentValveLocation = { -0.2637, 1.1932, 0.1462 };
-		const VECTOR3 SideHatch_openLocation = { -0.4243, 1.7647, 0.6818 };
-		const VECTOR3 SideHatch_HandleRot1_openLocation = { -0.4944, 2.0370, 0.4730 };
-		const VECTOR3 SideHatch_HandleRot2_openLocation = { -0.4556, 1.8491, 0.5764 };
-		const VECTOR3 SideHatch_VentValve_openLocation = { -0.4557, 1.4090, 0.3188 };
+		const VECTOR3 SideHatchLocation = { 0.252602, 1.10923, 0.138505 };
+		const VECTOR3 SideHatch_HandleRot1Location = { 0.322375, 1.26952, -0.140631 };
+		const VECTOR3 SideHatch_HandleRot2Location = { 0.235498, 1.14957, 0.030519 };
+		const VECTOR3 SideHatch_VentValveLocation = { -0.265141, 1.20124, 0.146229 };
+
+		const VECTOR3 SideHatch_openLocation = { -0.30083, 1.81891, 0.694745 };
+		const VECTOR3 SideHatch_HandleRot1_openLocation = { -0.349197, 2.08465, 0.506269 };
+		const VECTOR3 SideHatch_HandleRot2_openLocation = { -0.300838, 1.88328	, 0.597599 };
+		const VECTOR3 SideHatch_VentValve_openLocation = { -0.396115, 1.45676, 0.331093 };
 
 		if (!SideHatch.IsOpen()) {
 
@@ -6012,21 +6013,21 @@ void Saturn::UpdatePointingArrow()
 		activeSwitchPos = _V(-0.507325, 0.7327, 0.36895);
 	} else if (HatchToggleFlash){
 		if (!SideHatch.IsOpen()) {
-			activeSwitchPos = _V( 0.2436, 1.1710, 0.1699 );		// SideHatchLocation
+			activeSwitchPos = _V( 0.252602, 1.10923, 0.138505 );		// SideHatchLocation
 		} else {
-			activeSwitchPos = _V( -0.4243, 1.7647, 0.6818 );	// SideHatch_openLocation
+			activeSwitchPos = _V( -0.30083, 1.81891, 0.694745 );	// SideHatch_openLocation
 		}
 	} else if (HatchGearBoxSelectorFlash){
 		if (!SideHatch.IsOpen()) {
-			activeSwitchPos = _V( 0.3076, 1.3543, -0.1137 );	// SideHatch_HandleRot1Location
+			activeSwitchPos = _V( 0.322375, 1.26952, -0.140631 );		// SideHatch_HandleRot1Location
 		} else {
-			activeSwitchPos = _V( -0.4944, 2.0370, 0.4730 );	// SideHatch_HandleRot1_openLocation
+			activeSwitchPos = _V( -0.349197, 2.08465, 0.506269 );	// SideHatch_HandleRot1_openLocation
 		}
 	} else if (HatchActuatorHandleSelectorFlash){
 		if (!SideHatch.IsOpen()) {
-			activeSwitchPos = _V( 0.2348, 1.2453, 0.0608 );		// SideHatch_HandleRot2Location
+			activeSwitchPos = _V( 0.235498, 1.14957, 0.030519 );	// SideHatch_HandleRot2Location
 		} else {
-			activeSwitchPos = _V( -0.4556, 1.8491, 0.5764 );	// SideHatch_HandleRot2_openLocation
+			activeSwitchPos = _V( -0.300838, 1.88328 , 0.597599 );	// SideHatch_HandleRot2_openLocation
 		}
 //	} else if (HatchActuatorHandleSelectorOpenFlash){
 //		if (!SideHatch.IsOpen()) {
@@ -6034,9 +6035,9 @@ void Saturn::UpdatePointingArrow()
 //		}
 	} else if (HatchVentValveRotaryFlash){
 		if (!SideHatch.IsOpen()) {
-			activeSwitchPos = _V( -0.2637, 1.1932, 0.1462 );	// SideHatch_VentValveLocation
+			activeSwitchPos = _V( -0.265141, 1.20124, 0.146229 );	// SideHatch_VentValveLocation
 		} else {
-			activeSwitchPos = _V( -0.4557, 1.4090, 0.3188 );	// SideHatch_VentValve_openLocation
+			activeSwitchPos = _V( -0.396115, 1.45676, 0.331093 );	// SideHatch_VentValve_openLocation
 		}
 	} else {
 		activeSwitchPos = nextActiveSwitch->GetReference();
