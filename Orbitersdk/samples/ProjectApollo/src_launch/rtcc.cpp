@@ -2401,19 +2401,7 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 
 			papiReadScenario_int(Buff, "LDPPDwellOrbits", GZGENCSN.LDPPDwellOrbits);
 			papiReadScenario_double(Buff, "PZLOIPLN_HP_LLS", PZLOIPLN.HP_LLS);
-			if (papiReadScenario_double(Buff, "LSLat", dtemp))
-			{
-				BZLAND.lat[RTCC_LMPOS_BEST] = BZLAND.lat[RTCC_LMPOS_MED] = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "LSLng", dtemp))
-			{
-				BZLAND.lng[RTCC_LMPOS_BEST] = BZLAND.lng[RTCC_LMPOS_MED] = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "LSRad", dtemp))
-			{
-				BZLAND.rad[RTCC_LMPOS_BEST] = BZLAND.rad[RTCC_LMPOS_MED] = dtemp * 1852.0;
-			}
-			else if (papiReadScenario_double(Buff, "TLAND", dtemp))
+			if (papiReadScenario_double(Buff, "TLAND", dtemp))
 			{
 				CZTDTGTU.GETTD = dtemp * 3600.0;
 			}
@@ -35124,7 +35112,10 @@ void RTCC::PMMSFPIN()
 	temptab.GMTTimeFlag = RTCCPresentTimeGMT();
 	PZSFPTAB.blocks[0] = temptab;
 
-	//TBD: Store landing site coordinates?
+	//Store landing site coordinates. TBD: This should actually be stored in MCSMLR (radius) and MDZSID (presumably latitude and longitude)
+	BZLAND.rad[0] = PZSFPTAB.blocks[0].rad_lls;
+	BZLAND.lat[0] = PZSFPTAB.blocks[0].lat_lls;
+	BZLAND.lng[0] = PZSFPTAB.blocks[0].lng_lls;
 
 	delete[] XARRAY;
 	delete[] YARRAY;
