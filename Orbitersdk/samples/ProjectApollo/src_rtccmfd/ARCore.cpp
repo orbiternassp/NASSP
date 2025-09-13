@@ -4681,7 +4681,7 @@ int ARCore::subThread()
 			PMMMPTInput in;
 
 			//Get all required data for PMMMPT and error checking
-			if (GetVesselParameters(MAN_VEH == RTCC_MPT_CSM, vesselisdocked, GC->rtcc->med_m72.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
+			if (GetVesselParameters(MAN_VEH == RTCC_MPT_CSM, vesselisdocked, GC->rtcc->med_m72.ManData[0].Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
 			{
 				//Error
 				Result = DONE;
@@ -4689,16 +4689,16 @@ int ARCore::subThread()
 			}
 
 			in.VehicleArea = 0.0;
-			in.IterationFlag = GC->rtcc->med_m72.Iteration;
-			in.IgnitionTimeOption = GC->rtcc->med_m72.TimeFlag;
-			in.Thruster = GC->rtcc->med_m72.Thruster;
+			in.IterationFlag = GC->rtcc->med_m72.ManData[0].Iteration;
+			in.IgnitionTimeOption = GC->rtcc->med_m72.ManData[0].TimeFlag;
+			in.Thruster = GC->rtcc->med_m72.ManData[0].Thruster;
 
 			in.sv_before = res.sv_tig.sv;
 			in.V_aft = res.sv_tig.sv.V + res.dV;
-			in.DETU = GC->rtcc->med_m72.UllageDT;
-			in.UT = GC->rtcc->med_m72.UllageQuads;
-			in.DT_10PCT = GC->rtcc->med_m72.TenPercentDT;
-			in.DPSScaleFactor = GC->rtcc->med_m72.DPSThrustFactor;
+			in.DETU = GC->rtcc->med_m72.ManData[0].UllageDT;
+			in.UT = GC->rtcc->med_m72.ManData[0].UllageQuads;
+			in.DT_10PCT = GC->rtcc->med_m72.ManData[0].TenPercentDT;
+			in.DPSScaleFactor = GC->rtcc->med_m72.ManData[0].DPSThrustFactor;
 
 			double GMT_TIG;
 			VECTOR3 DV;
@@ -4707,10 +4707,10 @@ int ARCore::subThread()
 				//Save for Maneuver PAD and uplink
 				P30TIG = GC->rtcc->GETfromGMT(GMT_TIG);
 				dV_LVLH = DV;
-				manpadenginetype = GC->rtcc->med_m72.Thruster;
+				manpadenginetype = GC->rtcc->med_m72.ManData[0].Thruster;
 				HeadsUp = true;
-				manpad_ullage_dt = GC->rtcc->med_m72.UllageDT;
-				manpad_ullage_opt = GC->rtcc->med_m72.UllageQuads;
+				manpad_ullage_dt = GC->rtcc->med_m72.ManData[0].UllageDT;
+				manpad_ullage_opt = GC->rtcc->med_m72.ManData[0].UllageQuads;
 			}
 		}
 
@@ -4753,7 +4753,7 @@ int ARCore::subThread()
 			PMMMPTInput in;
 
 			//Get all required data for PMMMPT and error checking
-			if (GetVesselParameters(block->Display[0].VEH == RTCC_MPT_CSM, vesselisdocked, GC->rtcc->med_m70.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
+			if (GetVesselParameters(block->Display[0].VEH == RTCC_MPT_CSM, vesselisdocked, GC->rtcc->med_m70.ManData[0].Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
 			{
 				//Error
 				Result = DONE;
@@ -4761,23 +4761,23 @@ int ARCore::subThread()
 			}
 
 			in.VehicleArea = 0.0;
-			in.IterationFlag = GC->rtcc->med_m70.Iteration;
-			in.IgnitionTimeOption = GC->rtcc->med_m70.TimeFlag;
-			in.Thruster = GC->rtcc->med_m70.Thruster;
+			in.IterationFlag = GC->rtcc->med_m70.ManData[0].Iteration;
+			in.IgnitionTimeOption = GC->rtcc->med_m70.ManData[0].TimeFlag;
+			in.Thruster = GC->rtcc->med_m70.ManData[0].Thruster;
 
 			in.sv_before = elem->SV_before[0].sv;
 			in.V_aft = elem->V_after[0];
-			if (GC->rtcc->med_m70.UllageDT < 0)
+			if (GC->rtcc->med_m70.ManData[0].UllageDT < 0)
 			{
 				in.DETU = GC->rtcc->SystemParameters.MCTNDU;
 			}
 			else
 			{
-				in.DETU = GC->rtcc->med_m70.UllageDT;
+				in.DETU = GC->rtcc->med_m70.ManData[0].UllageDT;
 			}
-			in.UT = GC->rtcc->med_m70.UllageQuads;
-			in.DT_10PCT = GC->rtcc->med_m70.TenPercentDT;
-			in.DPSScaleFactor = GC->rtcc->med_m70.DPSThrustFactor;
+			in.UT = GC->rtcc->med_m70.ManData[0].UllageQuads;
+			in.DT_10PCT = GC->rtcc->med_m70.ManData[0].TenPercentDT;
+			in.DPSScaleFactor = GC->rtcc->med_m70.ManData[0].DPSThrustFactor;
 
 			double GMT_TIG;
 			VECTOR3 DV;
@@ -4786,10 +4786,10 @@ int ARCore::subThread()
 				//Save for Maneuver PAD and uplink
 				P30TIG = GC->rtcc->GETfromGMT(GMT_TIG);
 				dV_LVLH = DV;
-				manpadenginetype = GC->rtcc->med_m70.Thruster;
+				manpadenginetype = GC->rtcc->med_m70.ManData[0].Thruster;
 				HeadsUp = true;
-				manpad_ullage_dt = GC->rtcc->med_m70.UllageDT;
-				manpad_ullage_opt = GC->rtcc->med_m70.UllageQuads;
+				manpad_ullage_dt = GC->rtcc->med_m70.ManData[0].UllageDT;
+				manpad_ullage_opt = GC->rtcc->med_m70.ManData[0].UllageQuads;
 			}
 		}
 
@@ -4920,7 +4920,7 @@ int ARCore::subThread()
 				attachedMass = GC->rtcc->GetDockedVesselMass(v);
 			}
 
-			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->PZLDPDIS.GETIG[0], GC->rtcc->med_m70.Thruster, attachedMass, GC->rtcc->PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH, sv_pre, sv_post);
+			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->PZLDPDIS.GETIG[0], GC->rtcc->med_m70.ManData[0].Thruster, attachedMass, GC->rtcc->PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH, sv_pre, sv_post);
 		}
 
 		Result = DONE;
@@ -5165,7 +5165,7 @@ int ARCore::subThread()
 			PMMMPTInput in;
 
 			//Get all required data for PMMMPT and error checking
-			if (GetVesselParameters(GC->rtcc->med_m78.Table == RTCC_MPT_CSM, vesselisdocked, GC->rtcc->med_m78.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
+			if (GetVesselParameters(GC->rtcc->med_m78.Table == RTCC_MPT_CSM, vesselisdocked, GC->rtcc->med_m78.ManData.Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
 			{
 				//Error
 				Result = DONE;
@@ -5173,23 +5173,23 @@ int ARCore::subThread()
 			}
 
 			in.VehicleArea = 129.4*pow(0.3048, 2); //TBD
-			in.IterationFlag = GC->rtcc->med_m78.Iteration;
-			in.IgnitionTimeOption = GC->rtcc->med_m78.TimeFlag;
-			in.Thruster = GC->rtcc->med_m78.Thruster;
+			in.IterationFlag = GC->rtcc->med_m78.ManData.Iteration;
+			in.IgnitionTimeOption = GC->rtcc->med_m78.ManData.TimeFlag;
+			in.Thruster = GC->rtcc->med_m78.ManData.Thruster;
 
 			in.sv_before = sv_man_bef;
 			in.V_aft = V_man_after;
-			if (GC->rtcc->med_m78.UllageDT < 0)
+			if (GC->rtcc->med_m78.ManData.UllageDT < 0)
 			{
 				in.DETU = GC->rtcc->SystemParameters.MCTNDU;
 			}
 			else
 			{
-				in.DETU = GC->rtcc->med_m78.UllageDT;
+				in.DETU = GC->rtcc->med_m78.ManData.UllageDT;
 			}
-			in.UT = GC->rtcc->med_m78.UllageQuads;
-			in.DT_10PCT = GC->rtcc->med_m78.TenPercentDT;
-			in.DPSScaleFactor = GC->rtcc->med_m78.DPSThrustFactor;
+			in.UT = GC->rtcc->med_m78.ManData.UllageQuads;
+			in.DT_10PCT = GC->rtcc->med_m78.ManData.TenPercentDT;
+			in.DPSScaleFactor = GC->rtcc->med_m78.ManData.DPSThrustFactor;
 
 			double GMT_TIG;
 			VECTOR3 DV;
@@ -5198,10 +5198,10 @@ int ARCore::subThread()
 				//Save for Maneuver PAD and uplink
 				P30TIG = GC->rtcc->GETfromGMT(GMT_TIG);
 				dV_LVLH = DV;
-				manpadenginetype = GC->rtcc->med_m78.Thruster;
+				manpadenginetype = GC->rtcc->med_m78.ManData.Thruster;
 				HeadsUp = true;
 				manpad_ullage_dt = in.DETU;
-				manpad_ullage_opt = GC->rtcc->med_m78.UllageQuads;
+				manpad_ullage_opt = GC->rtcc->med_m78.ManData.UllageQuads;
 			}
 		}
 

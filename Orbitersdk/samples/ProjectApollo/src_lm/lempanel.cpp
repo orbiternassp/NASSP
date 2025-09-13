@@ -511,11 +511,11 @@ void LEM::InitSwitches() {
 	Panel12SBandAntSelKnob.AddPosition(3, 30);
 	Panel12SBandAntSelKnob.Register(PSH, "Panel12SBandAntSelKnob", 1);
 
-	Panel12AntPitchKnob.Register(PSH, "Panel12AntPitchKnob", 22.0, 0.0, 22.0); //For now retain the 0-22 scaling of the bitmaps for checklist backwards compatibility
+	Panel12AntPitchKnob.Register(PSH, "Panel12AntPitchKnob", 0.0, 0.0, 22.0); //For now retain the 0-22 scaling of the bitmaps for checklist backwards compatibility
 	Panel12AntPitchKnob.SetRotationRange(330.0*RAD);
 	Panel12AntPitchKnob.SetOffset(-165.0*RAD);
 
-	Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 6.0, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
+	Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 5.2, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
 	Panel12AntYawKnob.SetRotationRange(PI);
 	Panel12AntYawKnob.SetOffset(-90.0*RAD);
 
@@ -2707,6 +2707,9 @@ void LEM::SetSwitches(int panel) {
 
 	ForwardHatchValveSwitchRow.Init(AID_LEM_FWD_HATCH_VALVE, MainPanel);
 	ForwardHatchReliefValve.Init(0, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], srf[SRF_BORDER_178x187], ForwardHatchValveSwitchRow);
+
+	// EVA antenna handle
+	EvaAntennaHandle.Init(0, 0, 0, 0, 0, 0, UpperHatchValveSwitchRow); // Dummy, not functional on the 2D panel
 
 	// Radar Tape
 	// Used to be in lemsystems, but placed here for proper loading of both tape bitmaps
