@@ -128,15 +128,6 @@ void LEM::ToggleEVA(bool isCDR)
 	}
 }
 
-void LEM::AnimEVAAntHandle()
-{
-	if (EVAAntHandleStatus) {
-		EVAAntHandleState.action = AnimState::OPENING;
-	} else {
-		EVAAntHandleState.action = AnimState::CLOSING;
-	}
-}
-
 void LEM::StopEVA(bool isCDR)
 
 {
