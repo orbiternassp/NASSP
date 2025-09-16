@@ -3685,11 +3685,19 @@ void LEM::ToggleFlashlight()
 void LEM::UpdatePointingArrow()
 {
 	if (!vcmesh) return;
+
 	bool arrowVisible = checkControl.getFlashing();
+	if (!arrowVisible) {		// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
+		SetMeshVisibilityMode(hLMPointingArrowidx, MESHVIS_NEVER);
+		return;
+	};
 
 	PanelSwitchItem *nextActiveSwitch = MainPanelVC.GetFlashingItem();
 
-	if (!arrowVisible || nextActiveSwitch == nullptr) {	// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
+	// The next ones need to be checked individualy
+	bool ForwardHatchReliefValveFlash = ForwardHatchReliefValve.IsFlashing();
+
+	if (nextActiveSwitch == nullptr && !ForwardHatchReliefValveFlash) {	// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
 		SetMeshVisibilityMode(hLMPointingArrowidx, MESHVIS_NEVER);
 		return;
 	}
@@ -3698,7 +3706,11 @@ void LEM::UpdatePointingArrow()
 //	return;
 
 	VECTOR3 activeSwitchPos;
-	activeSwitchPos = nextActiveSwitch->GetReference();
+	if (ForwardHatchReliefValveFlash) {								// Special handling for others
+		activeSwitchPos = _V(0.204116, -0.493528, 1.57612);	
+	} else {
+		activeSwitchPos = nextActiveSwitch->GetReference();
+	}
 
 	// These switches need special treatment because their click point is not the same as their pivot point.
 	static PanelSwitchItem *specialSwitches[] = {
