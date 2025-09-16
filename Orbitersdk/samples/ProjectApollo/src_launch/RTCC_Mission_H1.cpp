@@ -1662,11 +1662,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		}
 		else if (fcn == 45)
 		{
-			sprintf(form->remarks, "%s,\nAssumes no PC-2", form->remarks);
+			sprintf(form->remarks, "%s,\nAssumes no LOPC-2", form->remarks);
 		}
 		else if (fcn == 46)
 		{
-			sprintf(form->remarks, "%s,\nAssumes PC-2", form->remarks);
+			sprintf(form->remarks, "%s,\nAssumes LOPC-2", form->remarks);
 		}
 		else if (fcn == 49 || fcn == 50)
 		{
@@ -3063,9 +3063,9 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 	case 110: //SEP BURN & LM JETT PAD + CMC SV UPLINK
 	{
 		AP11ManPADOpt opt;
-		EphemerisData sv, sv_temp, sv_LM;
+		EphemerisData sv, sv_temp, sv_temp_A, sv_LM, sv_LM_A;
 		VECTOR3 dV_LVLH, VG;
-		double t_Sep, t_Jett, m_LM, gmt;
+		double t_Sep, t_Jett, m_LM, gmt, SV_GMT;
 		char buffer1[100], buffer2[100];
 
 		int hh, mm;
@@ -3093,7 +3093,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		AP11ManeuverPAD(opt, *form);
 		sprintf(form->purpose, "SEP BURN");
 		OrbMech::SStoHHMMSS(t_Jett, hh, mm, ss);
-		sprintf(form->remarks, "Jettison PAD: GET %d:%02d:%02.0lf R 219 P 358 Y 342\nSep burn is Z-axis, retrograde", hh, mm, ss);
+		sprintf(form->remarks, "1 foot per second, Z-axis, retrograde  LM Jettison PAD:  R 219 P 358 Y 342  GET %d:%02d:%02.0lf", hh, mm, ss);
 		form->type = 2;
 
 		//To get an accurate LM state vector after jettison, take jettison DV into account
@@ -3116,14 +3116,19 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		sv_LM = sv_temp;
 		sv_LM.V -= unit(VG) * 0.1739;
 
-		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_temp);
-		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_LM);
+		SV_GMT = GMTfromGET(TimeofIgnition - 10.0 * 60.0);
+		sv_temp_A = coast(sv_temp, SV_GMT - sv_temp.GMT);
+		sv_LM_A = coast(sv_LM, SV_GMT - sv_LM.GMT);
+		mcc->mcc_calcs.StoreStateVector(sv_LM_A, m_LM);
+
+		AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_temp_A);
+		AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_LM_A);
 
 		sprintf(uplinkdata, "%s%s", buffer1, buffer2);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "CSM and LM state vectors (TIG-10)");
+			sprintf(upDesc, "CSM and LM state vectors");
 		}
 	}
 	break;
@@ -3137,7 +3142,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 
 		AP11LMMNV* form = (AP11LMMNV*)pad;
 
-		sv = StateVectorCalc(calcParams.tgt);
+		mcc->mcc_calcs.RestoreStateVector(sv);
 
 		TimeofIgnition = calcParams.LunarLiftoff + OrbMech::HHMMSSToSS(7, 23, 23);
 		DeltaV_LVLH = _V(-181.2, 60.3, -1.5) * 0.3048;
@@ -3151,7 +3156,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		opt.WeightsTable = GetWeightsTable(calcParams.tgt, false, false);
 
 		AP11LMManeuverPAD(opt, *form);
-		sprintf(form->purpose, "IMPACT PAD");
+		sprintf(form->purpose, "LM DEORBIT");
 		form->Att.x = 63.0;
 		form->Att.y = 240.0;
 
@@ -3175,7 +3180,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "LM state vector (TIG-10), Impact burn Target load");
+			sprintf(upDesc, "LM state vector , Target load");
 		}
 	}
 	break;
@@ -3204,12 +3209,12 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		else if (fcn == 121)
 		{
 			sprintf(uplinkdata, "V33ER");
-			sprintf(updesc, "");
+			sprintf(updesc, "LM: PRO");
 		}
 		else if (fcn == 122)
 		{
 			sprintf(uplinkdata, "ER");
-			sprintf(updesc, "");
+			sprintf(updesc, "LM: ENTER");
 		}
 		else if (fcn == 123)
 		{

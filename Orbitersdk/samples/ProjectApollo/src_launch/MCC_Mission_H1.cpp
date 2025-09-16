@@ -402,13 +402,13 @@ void MCC::MissionSequence_H1()
 	case MST_H1_LUNAR_ORBIT_POST_LANDING_12: //Rev 18 map update to rev 19 map update
 		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 18 && MoonRevTime > 30.0 * 60.0, 600, MST_H1_LUNAR_ORBIT_POST_LANDING_13);
 		break;
-	case MST_H1_LUNAR_ORBIT_POST_LANDING_13: //Rev 19 map update to PC-1 Evaluation
+	case MST_H1_LUNAR_ORBIT_POST_LANDING_13: //Rev 19 map update to LOPC-1 Evaluation
 		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, MoonRev >= 18 && MoonRevTime > 52.0 * 60.0, 600, MST_H1_LUNAR_ORBIT_PLANE_CHANGE_1);
 		break;
-	case MST_H1_LUNAR_ORBIT_PLANE_CHANGE_1: //PC-1 Evaluation to PC-1 Update or CMC CSM state vector update
+	case MST_H1_LUNAR_ORBIT_PLANE_CHANGE_1: //LOPC-1 Evaluation to LOPC-1 Update or CMC CSM state vector update
 		UpdateMacro(UTP_NONE, PT_NONE, true, 93, MST_H1_LUNAR_ORBIT_PLANE_CHANGE_2, scrubbed, MoonRev >= 19 && MoonRevTime > 50.0 * 60.0, MST_H1_LUNAR_ORBIT_NO_PLANE_CHANGE_1);
 		break;
-	case MST_H1_LUNAR_ORBIT_PLANE_CHANGE_2: //PC-1 Update to Liftoff Times Update 2
+	case MST_H1_LUNAR_ORBIT_PLANE_CHANGE_2: //LOPC-1 Update to Liftoff Times Update 2
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->TimeofIgnition + 5 * 60.0), 94, MST_H1_LUNAR_ORBIT_EVA_DAY_1);
 		break;
 	case MST_H1_LUNAR_ORBIT_NO_PLANE_CHANGE_1: //CMC CSM state vector update to Liftoff Times Update 2
@@ -499,16 +499,16 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, SubStateTime > 3.0 * 60.0, 600, MST_H1_LUNAR_ORBIT_ASCENT_DAY_11);
 		break;
 	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_11: //SEP burn PAD to Impact burn PAD
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 3.0 * 60.0, 110, MST_H1_LUNAR_ORBIT_ASCENT_DAY_12);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0 * 60.0, 110, MST_H1_LUNAR_ORBIT_ASCENT_DAY_12);
 		break;
 	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_12: //Impact burn PAD to CSM P76 PAD
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, mcc_calcs.GETEval(rtcc->calcParams.SEP - 50.0 * 60.0), 111, MST_H1_LUNAR_ORBIT_ASCENT_DAY_13);
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, mcc_calcs.GETEval(rtcc->calcParams.SEP - 45.0 * 60.0), 111, MST_H1_LUNAR_ORBIT_ASCENT_DAY_13);
 		break;
 	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_13: //CSM P76 PAD to rev 34 map update
 		UpdateMacro(UTP_PADONLY, PT_AP11P76PAD, SubStateTime > 3.0 * 60.0, 112, MST_H1_LUNAR_ORBIT_ASCENT_DAY_14);
 		break;
 	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_14: //Rev 34 map update to DAP data
-		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, SubStateTime > 3.0 * 60.0, 600, MST_H1_LUNAR_ORBIT_ASCENT_DAY_15);
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, SubStateTime > 5.0 * 60.0, 600, MST_H1_LUNAR_ORBIT_ASCENT_DAY_15);
 		break;
 	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_15: //DAP data to P42 uplink
 		UpdateMacro(UTP_PADONLY, PT_AP10DAPDATA, mcc_calcs.GETEval(rtcc->calcParams.SEP + 5.0 * 60.0), 7, MST_H1_LUNAR_ORBIT_ASCENT_DAY_16);
@@ -528,10 +528,10 @@ void MCC::MissionSequence_H1()
 	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_20: //LM command ullage off to LM impact prediction
 		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, mcc_calcs.GETEval(rtcc->calcParams.TIGSTORE1 + 5.0 * 60.0), 123, MST_H1_LUNAR_ORBIT_ASCENT_DAY_21);
 		break;
-	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_21: //LM impact prediction to PC-2 Update
+	case MST_H1_LUNAR_ORBIT_ASCENT_DAY_21: //LM impact prediction to LOPC-2 Update
 		UpdateMacro(UTP_PADONLY, PT_GENERIC, MoonRev >= 38 && MoonRevTime > 50.0 * 60.0, 124, MST_H1_LUNAR_ORBIT_PC2_DAY_1);
 		break;
-	case MST_H1_LUNAR_ORBIT_PC2_DAY_1: //PC-2 Update to Photography REFSMMAT calculation
+	case MST_H1_LUNAR_ORBIT_PC2_DAY_1: //LOPC-2 Update to Photography REFSMMAT calculation
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0 * 60.0, 95, MST_H1_LUNAR_ORBIT_PC2_DAY_2);
 		break;
 	case MST_H1_LUNAR_ORBIT_PC2_DAY_2: //Photography REFSMMAT calculation to rev 39 map update
