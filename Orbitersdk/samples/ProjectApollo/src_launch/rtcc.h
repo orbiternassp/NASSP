@@ -2779,10 +2779,11 @@ public:
 	void BMGPRIME(std::string source, int n);
 	void BMGPRIME(std::string source, std::vector<std::string> message);
 	//D.C. MED Decoder
-	int BMQDCMED(std::string med, std::vector<std::string> data);
+	void BMQDCMED(std::string med, std::vector<std::string> data, int &err, unsigned &param);
 	//Vector Comparison Control
 	void BMSVEC();
 	//Vector Panel Summary Control
+	void BMSVPS(int queid, const StateVectorTableEntry &sv);
 	void BMSVPS(int queid, int PBIID);
 	int BMSVPSVectorFetch(const std::string &vecid, EphemerisData &sv_out);
 	int GetStateVectorTableEntry(std::string VectorType, int mpt);

@@ -1739,7 +1739,7 @@ void ApolloRTCCMFD::menuSetAGOPInput()
 		{
 			GenericIntInput(&GC->AGOP_Stars[0], "Enter star ID in decimal format (1-400):", NULL, 1, 400);
 		}
-		else if (GC->AGOP_Option == 6)
+		else if (GC->AGOP_Option == 4 || GC->AGOP_Option == 6)
 		{
 			GC->AGOP_HeadsUp = !GC->AGOP_HeadsUp;
 		}
@@ -6204,11 +6204,6 @@ void ApolloRTCCMFD::menuLSCalc()
 	G->LandingSiteUpdate();
 }
 
-void ApolloRTCCMFD::menuRevertRLSToPrelaunch()
-{
-	GeneralMEDRequest("S72,BEST,MED;");
-}
-
 void ApolloRTCCMFD::menuSVUpload()
 {
 	int type = AGCSVUplinkType(subscreen);
@@ -10207,6 +10202,11 @@ void ApolloRTCCMFD::SetMEDInputPageP14()
 	SetMEDInputPage("P14");
 }
 
+void ApolloRTCCMFD::SetMEDInputPageS84()
+{
+	SetMEDInputPage("S84");
+}
+
 void AddMEDInputTitle(MEDInputPage &MEDInputData, std::string MEDCode, std::string Title)
 {
 	MEDInputData.MEDCode = MEDCode;
@@ -10358,8 +10358,11 @@ void ApolloRTCCMFD::SetMEDInputPage(std::string med)
 			AddMEDInput(page.table, "YDOT:", "Velocity in Earth radii per hour:", "0.0", "ER/hr");
 			AddMEDInput(page.table, "ZDOT:", "Velocity in Earth radii per hour:", "0.0", "ER/hr");
 			AddMEDInput(page.table, "GMT:", "GMT of vector (format HHH:MM:SS.TH):", "000:00:00.00", "GMT");
+			AddMEDInput(page.table, "ID:", "Vector ID (any slot in vector panel)", "ILHE001", "");
 			AddMEDInput(page.table, "Reference:", "Coordinate system of vector (ECI, ECT, MCI, MCT or EMP)", "ECI", "");
 			AddMEDInput(page.table, "Lunar Surf.:", "Lunar Surface Indicator (S if vector is on the surface of Moon):", "", "");
+
+			page.display = 97;
 		}
 
 		ActiveMEDInputPage = GC->MEDInputData.size();

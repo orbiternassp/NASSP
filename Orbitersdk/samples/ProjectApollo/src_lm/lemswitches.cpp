@@ -2253,3 +2253,72 @@ void LEMMasterAlarmSwitch::InitVC(SURFHANDLE surf)
 {
 	switchsurfacevc = surf;
 }
+
+LEMEvaAntennaHandle::LEMEvaAntennaHandle()
+{
+	mshEVAAntHandleRotate = NULL;
+	mshEVAAntHandleDown = NULL;
+	mshEVAAntHandleUp = NULL;
+}
+
+LEMEvaAntennaHandle::~LEMEvaAntennaHandle()
+{
+	if (mshEVAAntHandleRotate)
+		delete mshEVAAntHandleRotate;
+
+	if (mshEVAAntHandleDown)
+		delete mshEVAAntHandleDown;
+
+	if (mshEVAAntHandleUp)
+		delete mshEVAAntHandleUp;
+}
+
+void LEMEvaAntennaHandle::DefineVCAnimations(UINT vc_idx)
+{
+	if (bHasDirection && !bHasAnimations)
+	{
+		mshEVAAntHandleDown = new MGROUP_TRANSLATE(vc_idx, &grpIndex, 1, GetDirection());
+		mshEVAAntHandleRotate = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), _V(0, 1, 0), (float)(300 * RAD));
+		mshEVAAntHandleUp = new MGROUP_TRANSLATE(vc_idx, &grpIndex, 1, GetDirection() * -1);
+
+		anim_switch = OurVessel->CreateAnimation(InitialAnimState());
+		OurVessel->AddAnimationComponent(anim_switch, 0.0, 0.1, mshEVAAntHandleDown);
+		OurVessel->AddAnimationComponent(anim_switch, 0.1, 0.9, mshEVAAntHandleRotate);
+		OurVessel->AddAnimationComponent(anim_switch, 0.9, 1.0, mshEVAAntHandleUp);
+		VerifyAnimations();
+	}
+}
+
+void LEMEvaAntennaHandle::OnPostStep(double SimT, double DeltaT, double MJD)
+{
+	animState.Move(1.0*DeltaT); // 1.0 is speed
+}
+
+void LEMEvaAntennaHandle::DrawSwitchVC(int id, int event, SURFHANDLE surf)
+{
+	if (!bHasAnimations) return;
+	OurVessel->SetAnimation(anim_switch, animState.pos);
+}
+
+bool LEMEvaAntennaHandle::SwitchTo(int newState, bool dontspring)
+{
+	if (ToggledPushSwitch::SwitchTo(newState, dontspring))
+	{
+		// Set animation state
+		if (state == TOGGLESWITCH_UP && !animState.Open()) animState.action = AnimState::OPENING;
+		else if (state == TOGGLESWITCH_DOWN && !animState.Closed()) animState.action = AnimState::CLOSING;
+		return true;
+	}
+	return false;
+}
+
+void LEMEvaAntennaHandle::OnPostCreation()
+{
+	if (state == TOGGLESWITCH_UP) animState.Set(AnimState::OPEN, 1.0);
+	else animState.Set(AnimState::CLOSED, 0.0);
+}
+
+double LEMEvaAntennaHandle::GetAnimState()
+{
+	return animState.pos;
+}

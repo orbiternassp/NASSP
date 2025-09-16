@@ -2401,19 +2401,7 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 
 			papiReadScenario_int(Buff, "LDPPDwellOrbits", GZGENCSN.LDPPDwellOrbits);
 			papiReadScenario_double(Buff, "PZLOIPLN_HP_LLS", PZLOIPLN.HP_LLS);
-			if (papiReadScenario_double(Buff, "LSLat", dtemp))
-			{
-				BZLAND.lat[RTCC_LMPOS_BEST] = BZLAND.lat[RTCC_LMPOS_MED] = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "LSLng", dtemp))
-			{
-				BZLAND.lng[RTCC_LMPOS_BEST] = BZLAND.lng[RTCC_LMPOS_MED] = dtemp * RAD;
-			}
-			else if (papiReadScenario_double(Buff, "LSRad", dtemp))
-			{
-				BZLAND.rad[RTCC_LMPOS_BEST] = BZLAND.rad[RTCC_LMPOS_MED] = dtemp * 1852.0;
-			}
-			else if (papiReadScenario_double(Buff, "TLAND", dtemp))
+			if (papiReadScenario_double(Buff, "TLAND", dtemp))
 			{
 				CZTDTGTU.GETTD = dtemp * 3600.0;
 			}
@@ -26763,7 +26751,7 @@ bool RTCC::GMGMED(char *str)
 	}
 	else if (medtype == 'S')
 	{
-		err = BMQDCMED(code, MEDSequence);
+		BMQDCMED(code, MEDSequence, err, param);
 	}
 	else if (medtype == 'U')
 	{
@@ -35124,7 +35112,10 @@ void RTCC::PMMSFPIN()
 	temptab.GMTTimeFlag = RTCCPresentTimeGMT();
 	PZSFPTAB.blocks[0] = temptab;
 
-	//TBD: Store landing site coordinates?
+	//Store landing site coordinates. TBD: This should actually be stored in MCSMLR (radius) and MDZSID (presumably latitude and longitude)
+	BZLAND.rad[0] = PZSFPTAB.blocks[0].rad_lls;
+	BZLAND.lat[0] = PZSFPTAB.blocks[0].lat_lls;
+	BZLAND.lng[0] = PZSFPTAB.blocks[0].lng_lls;
 
 	delete[] XARRAY;
 	delete[] YARRAY;
@@ -35305,14 +35296,21 @@ void RTCC::CMMRFMAT(int L, int id, int addr)
 	block->UpdateNo++;
 }
 
-int RTCC::BMQDCMED(std::string med, std::vector<std::string> data)
+void RTCC::BMQDCMED(std::string med, std::vector<std::string> data, int &err, unsigned &param)
 {
+	std::vector<rtcc::MEDProcessingOptions> opt;
+	rtcc::MEDProcessingOutput out;
+
+	err = 0;
+	param = 0;
+
 	//LM Position Vector Table (Should be in BMLMED instead)
 	if (med == "72")
 	{
 		if (data.size() != 2)
 		{
-			return 1;
+			err = 1;
+			return;
 		}
 		int id1;
 		if (data[0] == "BEST")
@@ -35333,7 +35331,8 @@ int RTCC::BMQDCMED(std::string med, std::vector<std::string> data)
 		}
 		else
 		{
-			return 2;
+			err = 2;
+			return;
 		}
 		int id2;
 		if (data[1] == "PNGCS")
@@ -35350,33 +35349,113 @@ int RTCC::BMQDCMED(std::string med, std::vector<std::string> data)
 		}
 		else
 		{
-			return 2;
+			err = 2;
+			return;
 		}
 		BZLAND.lat[id1] = BZLAND.lat[id2];
 		BZLAND.lng[id1] = BZLAND.lng[id2];
 		BZLAND.rad[id1] = BZLAND.rad[id2];
+	}
+	//Specify vector comparison parameter
+	else if (med == "80")
+	{
+
+	}
+	//Vector Panel Summary Entry
+	else if (med == "84")
+	{
+		if (data.size() < 10)
+		{
+			err = 1;
+			return;
+		}
+
+		//Item 1: Vehicle
+		rtcc::AddTextMEDItem(opt, 1, { "CSM", "LEM" });
+		//Item 2: X
+		rtcc::AddDoubleMEDItem(opt, 1, true, true, SystemParameters.MCCMCU, -60.0, 60.0);
+		//Item 3: Y
+		rtcc::AddDoubleMEDItem(opt, 1, true, true, SystemParameters.MCCMCU, -60.0, 60.0);
+		//Item 4: Z
+		rtcc::AddDoubleMEDItem(opt, 1, true, true, SystemParameters.MCCMCU, -60.0, 60.0);
+		//Item 5: XDOT
+		rtcc::AddDoubleMEDItem(opt, 1, true, true, SystemParameters.MCCMCU / 3600.0, -60.0, 60.0);
+		//Item 6: YDOT
+		rtcc::AddDoubleMEDItem(opt, 1, true, true, SystemParameters.MCCMCU / 3600.0, -60.0, 60.0);
+		//Item 7: ZDOT
+		rtcc::AddDoubleMEDItem(opt, 1, true, true, SystemParameters.MCCMCU / 3600.0, -60.0, 60.0);
+		//Item 8: GMT
+		rtcc::AddTimeMEDItem(opt, 1, true, false);
+		//Item 9: Vector ID
+		rtcc::AddTextMEDItem(opt, 1, {data[8]});
+		//Item 10: Reference
+		rtcc::AddTextMEDItem(opt, 1, {"ECI", "ECT", "MCI", "MCT", "EMP"});
+		//Item 11: Lunar Surface Indicator
+		rtcc::AddTextMEDItem(opt, 2, { "", "S" }, 0);
+
+		err = rtcc::GenericMEDProcessing(opt, data, out);
+		if (err)
+		{
+			param = out.errorItem;
+			return;
+		}
+		StateVectorTableEntry sv;
+		EphemerisData2 svtemp, svtemp2;
+
+		svtemp.R = _V(out.Values[1].d, out.Values[2].d, out.Values[3].d);
+		svtemp.V = _V(out.Values[4].d, out.Values[5].d, out.Values[6].d);
+		svtemp.GMT = out.Values[7].d;
+
+		sv.VectorCode = data[8];
+		if (data[8].size() != 7U)
+		{
+			err = 1;
+			param = 9;
+			return;
+		}
+		sv.ID = atoi(data[8].substr(4, 3).c_str());
+		if (out.Values[9].i <= 1)
+		{
+			sv.Vector.RBI = BODY_EARTH;
+		}
+		else
+		{
+			sv.Vector.RBI = BODY_MOON;
+		}
+		sv.LandingSiteIndicator = (out.Values[10].i == 0 ? false : true);
+		//Convert
+		if (ELVCNV(svtemp, out.Values[9].i, sv.Vector.RBI == BODY_EARTH ? RTCC_COORDINATES_ECI : RTCC_COORDINATES_MCI, svtemp2))
+		{
+			err = 2;
+			param = 10;
+			return;
+		}
+		sv.Vector.R = svtemp2.R;
+		sv.Vector.V = svtemp2.V;
+		sv.Vector.GMT = svtemp2.GMT;
+
+		BMSVPS(3, sv);
 	}
 	//Simulate vector control and DC PBI's
 	else if (med == "99")
 	{
 		if (data.size() != 1)
 		{
-			return 1;
+			err = 1;
+			return;
 		}
 
 		int code;
 		if (sscanf(data[0].c_str(), "%d", &code) != 1)
 		{
-			return 2;
+			err = 2;
+			return;
 		}
 		if (code >= 300 && code <= 335)
 		{
 			BMSVPS(0, code);
 		}
-
-		return 0;
 	}
-	return 0;
 }
 
 int RTCC::BMSVPSVectorFetch(const std::string &vecid, EphemerisData &sv_out)
@@ -35422,6 +35501,99 @@ int RTCC::GetStateVectorTableEntry(std::string VectorType, int mpt)
 		val += 6;
 	}
 	return val;
+}
+
+void RTCC::BMSVPS(int queid, const StateVectorTableEntry &sv)
+{
+	// S84 MED?
+	if (queid != 3)
+	{
+		//Error 1: An unrecognizable queue ID was detected
+		RTCCONLINEMON.IntBuffer[0] = 1;
+		BMGPRIME("BMSVPS", 24);
+		return;
+	}
+	if (sv.VectorCode.size() != 7)
+	{
+		RTCCONLINEMON.IntBuffer[0] = 9;
+		BMGPRIME("BMSVPS", 24);
+		return;
+	}
+	// Useable or evaluation
+	bool eval;
+	StateVectorTableEntry *tab;
+	if (sv.VectorCode[3] == 'E')
+	{
+		tab = &BZEVLVEC.data[0];
+		eval = true;
+	}
+	else if (sv.VectorCode[3] == 'U')
+	{
+		tab = &BZUSEVEC.data[0];
+		eval = false;
+	}
+	else
+	{
+		RTCCONLINEMON.IntBuffer[0] = 9;
+		BMGPRIME("BMSVPS", 24);
+		return;
+	}
+	// CSM vs LM
+	int offset;
+	if (sv.VectorCode[1] == 'C')
+	{
+		offset = 0;
+	}
+	else if (sv.VectorCode[1] == 'L')
+	{
+		if (eval)
+		{
+			offset = 4;
+		}
+		else
+		{
+			offset = 6;
+		}
+	}
+	else
+	{
+		RTCCONLINEMON.IntBuffer[0] = 9;
+		BMGPRIME("BMSVPS", 24);
+		return;
+	}
+	// CMC, LGC, AGS or IU
+	int comp;
+	if (sv.VectorCode[0] == 'C')
+	{
+		comp = 0;
+	}
+	else if (sv.VectorCode[0] == 'L')
+	{
+		comp = 1;
+	}
+	else if (sv.VectorCode[0] == 'A')
+	{
+		comp = 2;
+	}
+	else if (sv.VectorCode[0] == 'I')
+	{
+		comp = 3;
+	}
+	else
+	{
+		RTCCONLINEMON.IntBuffer[0] = 9;
+		BMGPRIME("BMSVPS", 24);
+		return;
+	}
+	//High-speed
+	if (sv.VectorCode[2] != 'H')
+	{
+		RTCCONLINEMON.IntBuffer[0] = 9;
+		BMGPRIME("BMSVPS", 24);
+		return;
+	}
+	//Store
+	tab[offset + comp] = sv;
 }
 
 void RTCC::BMSVPS(int queid, int PBIID)

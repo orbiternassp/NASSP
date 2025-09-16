@@ -230,7 +230,6 @@ public:
 	void menuSVCalc();
 	void menuSVUpload();
 	void menuLSCalc();
-	void menuRevertRLSToPrelaunch();
 	void menuCycleAGSNavUpdREFSMMAT();
 	void menuSaveAGSREFSMMAT();
 	void menuAGSSVCalc();
@@ -852,6 +851,7 @@ public:
 	void SetMEDInputPageM75();
 	void SetMEDInputPageP13();
 	void SetMEDInputPageP14();
+	void SetMEDInputPageS84();
 	void SetMEDInputPage(std::string med);
 	void menuMEDInputCalc();
 	void menuInputMEDData();

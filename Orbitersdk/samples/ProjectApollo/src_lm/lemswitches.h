@@ -673,3 +673,23 @@ protected:
 	LEM_CWEA *cwea;
 	SURFHANDLE switchsurfacevc;
 };
+
+class LEMEvaAntennaHandle : public ToggledPushSwitch
+{
+public:
+	LEMEvaAntennaHandle();
+	virtual ~LEMEvaAntennaHandle();
+	virtual void DefineVCAnimations(UINT vc_idx);
+	virtual void OnPostStep(double SimT, double DeltaT, double MJD);
+	virtual void DrawSwitchVC(int id, int event, SURFHANDLE surf);
+	virtual bool SwitchTo(int newState, bool dontspring = false);
+	virtual void OnPostCreation();
+	virtual void InitSound(SoundLib *s) {} // To avoid loading the sound
+
+	double GetAnimState();
+protected:
+	MGROUP_ROTATE* mshEVAAntHandleRotate;
+	MGROUP_TRANSLATE* mshEVAAntHandleDown;
+	MGROUP_TRANSLATE* mshEVAAntHandleUp;
+	AnimState animState;
+};
