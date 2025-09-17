@@ -3647,11 +3647,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		{
 			if (fcn == 216 && length(DeltaV_LVLH) != 0.0)
 			{
-				sprintf(form->remarks[0], "Assumes MCC6");
+				sprintf(form->remarks[0], "Assumes MCC-6");
 			}
 			else if (fcn == 217 && length(DeltaV_LVLH) != 0.0)
 			{
-				sprintf(form->remarks[0], "Assumes MCC7");
+				sprintf(form->remarks[0], "Assumes MCC-7");
 			}
 		}
 
@@ -3667,7 +3667,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "CSM state vector, V66, entry update");
+				sprintf(upDesc, "CSM state vector, V66, Entry update");
 			}
 		}
 	}
