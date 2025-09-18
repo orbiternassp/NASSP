@@ -183,8 +183,7 @@ void cbLMVesim(int inputID, int eventType, int newValue, void *pdata) {
 			break;
 		case LM_BUTTON_ENG_START:
 			//Engine Start Button
-			pLM->ManualEngineStart.Push();
-			pLM->ButtonClick();
+			pLM->ManualEngineStart.SetState(PUSHBUTTON_PUSHED);
 			break;
 		case LM_BUTTON_ENG_STOP:
 			//Engine Stop Button
@@ -1293,8 +1292,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	case OAPI_KEY_ADD:
 		//Engine Start Button
-		ManualEngineStart.Push();
-		ButtonClick();
+		ManualEngineStart.SetState(PUSHBUTTON_PUSHED);
 		return 1;
 	case OAPI_KEY_SUBTRACT:
 		//Engine Stop Button

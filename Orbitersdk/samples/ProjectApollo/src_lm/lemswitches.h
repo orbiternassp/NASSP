@@ -405,18 +405,14 @@ protected:
 	ThreePosSwitch *monswitch;
 };
 
-class EngineStartButton : public SimplePushSwitch {
+class EngineStartButton : public PushSwitch {
 
 public:
-	EngineStartButton() {};
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* stopbutton, LEM *l);
-	bool CheckMouseClick(int event, int mx, int my);
-	bool CheckMouseClickVC(int event, VECTOR3 &p);
-	bool Push();
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
 	void DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface, int xTexMul = 1);
 protected:
-	ToggleSwitch* stopbutton;
+	bool LightLogic();
 	LEM *lem;
 };
 
@@ -424,13 +420,12 @@ class EngineStopButton : public ToggleSwitch {
 
 public:
 	EngineStopButton() {};
-	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, SimplePushSwitch* startbutton, LEM *l);
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
 	bool CheckMouseClick(int event, int mx, int my);
 	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	bool Push();
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
 protected:
-	SimplePushSwitch* startbutton;
 	LEM *lem;
 };
 
