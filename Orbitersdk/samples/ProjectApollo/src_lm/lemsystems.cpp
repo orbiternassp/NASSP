@@ -2483,9 +2483,9 @@ void LEM::CreateMissionSpecificSystems()
 
 	if (pMission->GetLMNumber() < 6) // LM-5 And Earlier
 	{
-		Panel12AntPitchKnob.SetInitValue(22.0); //Initializes S Band Antenna Knobs To Proper Closeout Angles
-		Panel12AntYawKnob.SetInitValue(6.0); //Initializes S Band Antenna Knobs To Proper Closeout Angles
-		LandingAntSwitch.SetState(1); //Initializes LDR RDR Switch To Proper Closeout Position (DES)
+		Panel12AntPitchKnob.SetInitValue(22.0); //Initializes S Band Antenna Pitch Knob To Proper Closeout Angles
+		Panel12AntYawKnob.SetInitValue(6.0); //Initializes S Band Antenna Yaw Knob To Proper Closeout Angles
+		LandingAntSwitch.SetState(1); //Initializes LDG ANT Switch To Proper Closeout Position (DES)
 	}
 }
 
