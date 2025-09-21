@@ -1309,6 +1309,7 @@ public:
 
 	void UpdatePointingArrow();
 	PanelSwitchItem *nextActiveSwitch = nullptr;
+	void CheckBPC_SideHatchCover();
 
 	//
 	// Flashlight for VC
@@ -4032,9 +4033,9 @@ protected:
 	int coascdrreticleidx;
 	int cmvccuecardsarrowsidx;
 	int hcmPointingArrowidx;
+	int LESMeshidx;
 
 	DEVMESHHANDLE vcmesh;
-
 	bool ViewCueCardArrows;
 
 	double DockAngle;

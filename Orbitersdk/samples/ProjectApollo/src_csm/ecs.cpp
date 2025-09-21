@@ -988,6 +988,12 @@ void SaturnSideHatch::SaveState(FILEHANDLE scn) {
 	sprintf(buffer, "%i %i %lf %lf", (open ? 1 : 0), toggle, sidehatch_state.State(), sidehatch_state.Speed());
 	oapiWriteScenario_string(scn, "SIDEHATCH", buffer);
 }
+
+double SaturnSideHatch::GetAnimState()
+{
+	return sidehatch_state.State();
+}
+
 void SaturnSideHatch::DefineAnimationsVC(UINT idx)
 {
 	// Side Hatch Animations

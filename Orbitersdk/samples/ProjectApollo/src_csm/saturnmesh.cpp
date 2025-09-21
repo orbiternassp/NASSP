@@ -1041,8 +1041,8 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 		VECTOR3 mesh_dir_tower = mesh_dir + _V(0, 0, TowerOffset);
 		TowerOffset += 2.1; //Additional offset for CSM stage
 
-		meshidx = AddMesh(hsat5tower, &mesh_dir_tower);
-		SetMeshVisibilityMode(meshidx, MESHVIS_VCEXTERNAL);
+		LESMeshidx = AddMesh(hsat5tower, &mesh_dir_tower);
+		SetMeshVisibilityMode(LESMeshidx, MESHVIS_VCEXTERNAL);
 	}
 
 	// And the Crew
@@ -1569,8 +1569,8 @@ void Saturn::SetReentryMeshes() {
 		TowerOffset = 4.95;
 		VECTOR3 mesh_dir_tower = mesh_dir + _V(0, 0, TowerOffset);
 
-		meshidx = AddMesh (hsat5tower, &mesh_dir_tower);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		LESMeshidx = AddMesh (hsat5tower, &mesh_dir_tower);
+		SetMeshVisibilityMode (LESMeshidx, MESHVIS_VCEXTERNAL);
 	}
 
 	// And the Crew

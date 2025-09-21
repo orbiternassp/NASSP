@@ -249,6 +249,7 @@ public:
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	void DefineAnimationsVC(UINT idx);
+	double GetAnimState();
 
 protected:
 	bool open;

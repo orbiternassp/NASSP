@@ -1715,7 +1715,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 	}
 
-		case AID_LMVC_POINTINGARROW:
+	case AID_LMVC_POINTINGARROW:
 	{
 		UpdatePointingArrow();
 	}

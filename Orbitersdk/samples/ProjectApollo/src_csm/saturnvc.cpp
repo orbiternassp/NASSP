@@ -1106,9 +1106,7 @@ void Saturn::RegisterActiveAreas() {
 
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValveLocation + ofs, ROT);
-
-		}
-		else {
+		} else {
 
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatch_openLocation + ofs, 0.1);
@@ -6080,7 +6078,6 @@ void Saturn::UpdatePointingArrow()
 	GetMeshOffset(vcidx, ofs);
 
 	DEVMESHHANDLE hArrowMesh = GetDevMesh (vis, hcmPointingArrowidx);
-	
 	static bool first = true;
 	static VECTOR3* arrowData;
 	static VECTOR3* circleData;
@@ -6221,3 +6218,20 @@ void Saturn::UpdatePointingArrow()
 	SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_VC);
 }
 
+// TODO LaunchEscapeTower
+// Check if the SideHatch is open and hide the BPC SideHatch Cover
+void Saturn::CheckBPC_SideHatchCover() {
+	DEVMESHHANDLE hLESMesh = GetDevMesh (vis, LESMeshidx);
+	if (hLESMesh){
+		GROUPEDITSPEC LES_grpSpec;
+		memset(&LES_grpSpec, 0, sizeof(GROUPEDITSPEC));
+		LES_grpSpec.UsrFlag = 3;  						// flag for hide the group and shadow
+		if (SideHatch.GetAnimState() > 0.0) {
+			LES_grpSpec.flags = GRPEDIT_ADDUSERFLAG;
+		} else {
+			LES_grpSpec.flags = GRPEDIT_DELUSERFLAG;
+		}
+		oapiEditMeshGroup(hLESMesh, 1, &LES_grpSpec);
+		oapiEditMeshGroup(hLESMesh, 7, &LES_grpSpec);
+	}
+}

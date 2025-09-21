@@ -431,8 +431,8 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		{
 			TowerOffset = 26.15 + offset;
 			mesh_dir=_V(0, 0, TowerOffset);
-			meshidx = AddMesh (hsat5tower, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+			LESMeshidx = AddMesh (hsat5tower, &mesh_dir);
+			SetMeshVisibilityMode (LESMeshidx, MESHVIS_VCEXTERNAL);
 
 			//
 			// If the LES is attached, no point drawing things in the external view which can't
