@@ -618,7 +618,6 @@ void Saturn::InitVC()
 	srf[SRF_VC_LVENGLIGHTS_S1B] = oapiLoadTexture("ProjectApollo/VC/lv_eng_s1b.dds");
 	srf[SRF_VC_SPS_FONT_BLACK] = oapiLoadTexture("ProjectApollo/VC/fonts_black.dds");
 	srf[SRF_VC_SPS_FONT_WHITE] = oapiLoadTexture("ProjectApollo/VC/fonts_white.dds");
-	srf[SRF_VC_SPS_INJ_VLV] = oapiLoadTexture("ProjectApollo/VC/sps_injector_indicators.dds");
 	srf[SRF_VC_SPSMAXINDICATOR] = oapiLoadTexture("ProjectApollo/VC/SPSmax_indicator.dds");
 	srf[SRF_VC_SPSMININDICATOR] = oapiLoadTexture("ProjectApollo/VC/SPSmin_indicator.dds");
 	srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV] = oapiLoadTexture("ProjectApollo/VC/thumbwheel_large_fonts_inv.dds");
@@ -647,7 +646,6 @@ void Saturn::InitVC()
 	oapiSetSurfaceColourKey(srf[SRF_VC_LVENGLIGHTS_S1B], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_SPS_FONT_BLACK], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_SPS_FONT_WHITE], ck);
-	oapiSetSurfaceColourKey(srf[SRF_VC_SPS_INJ_VLV], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_SPSMAXINDICATOR], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_SPSMININDICATOR], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_THUMBWHEEL_LARGEFONTSINV], ck);
@@ -708,7 +706,6 @@ void Saturn::InitVC()
 	oapiVCRegisterArea(AID_VC_SPS_OXID_PCT, _R(137*TexMul, 1315*TexMul, 175*TexMul, 1328*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_SPS_FUEL_PCT, _R(137*TexMul, 1344*TexMul, 175*TexMul, 1357*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 	oapiVCRegisterArea(AID_VC_SPSOXIDFLOWIND, _R(78*TexMul, 1479*TexMul, 100*TexMul, 1521*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
-	oapiVCRegisterArea(AID_VC_SPS_INJ_VLV, _R(69*TexMul, 1210*TexMul, 247*TexMul, 1244*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 	// Lower Equipment Bay
 	oapiVCRegisterArea(AID_VC_MASTER_ALARM3, _R(1752*TexMul, 167*TexMul, 1797*TexMul, 203*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND, MainPanelTex2);
@@ -788,11 +785,6 @@ void Saturn::InitVC()
 
 	SPSOxidFlowValveMaxIndicator.InitVC(srf[SRF_VC_SPSMAXINDICATOR]);
 	SPSOxidFlowValveMinIndicator.InitVC(srf[SRF_VC_SPSMININDICATOR]);
-
-	SPSInjectorValve1Indicator.InitVC(srf[SRF_VC_SPS_INJ_VLV]);
-	SPSInjectorValve2Indicator.InitVC(srf[SRF_VC_SPS_INJ_VLV]);
-	SPSInjectorValve3Indicator.InitVC(srf[SRF_VC_SPS_INJ_VLV]);
-	SPSInjectorValve4Indicator.InitVC(srf[SRF_VC_SPS_INJ_VLV]);
 }
 
 void Saturn::ReleaseSurfacesVC()
@@ -4540,31 +4532,29 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&SPSOxidFlowValveMaxIndicator, AID_VC_SPSOXIDFLOWIND);
 	MainPanelVC.AddSwitch(&SPSOxidFlowValveMinIndicator, AID_VC_SPSOXIDFLOWIND);
 
-// TODO SPS Engine Injector Valves by Jordan
-
 	NEEDLE_POS = { 0.498952, 0.694324, 0.358005 };
-	MainPanelVC.AddSwitch(&SPSInjectorValve1Indicator, AID_VC_SPS_INJ_VLV);
-//	SPSInjectorValve1Indicator.SetRotationRange(RAD * 90);
+	MainPanelVC.AddSwitch(&SPSInjectorValve1Indicator);
+	SPSInjectorValve1Indicator.SetRotationRange(RAD * 90);
 	SPSInjectorValve1Indicator.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-//	SPSInjectorValve1Indicator.DefineMeshGroup(VC_GRP_SPS_ENG_VALVE_NEEDLE01);
+	SPSInjectorValve1Indicator.DefineMeshGroup(VC_GRP_SPS_ENG_VALVE_NEEDLE01);
 
 	NEEDLE_POS = { 0.527707, 0.694319, 0.358021 };
-	MainPanelVC.AddSwitch(&SPSInjectorValve2Indicator, AID_VC_SPS_INJ_VLV);
-//	SPSInjectorValve2Indicator.SetRotationRange(RAD * 90);
+	MainPanelVC.AddSwitch(&SPSInjectorValve2Indicator);
+	SPSInjectorValve2Indicator.SetRotationRange(RAD * 90);
 	SPSInjectorValve2Indicator.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-//	SPSInjectorValve2Indicator.DefineMeshGroup(VC_GRP_SPS_ENG_VALVE_NEEDLE02);
+	SPSInjectorValve2Indicator.DefineMeshGroup(VC_GRP_SPS_ENG_VALVE_NEEDLE02);
 
 	NEEDLE_POS = { 0.556461, 0.694313, 0.358037 };
-	MainPanelVC.AddSwitch(&SPSInjectorValve3Indicator, AID_VC_SPS_INJ_VLV);
-//	SPSInjectorValve3Indicator.SetRotationRange(RAD * 90);
+	MainPanelVC.AddSwitch(&SPSInjectorValve3Indicator);
+	SPSInjectorValve3Indicator.SetRotationRange(RAD * 90);
 	SPSInjectorValve3Indicator.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-//	SPSInjectorValve3Indicator.DefineMeshGroup(VC_GRP_SPS_ENG_VALVE_NEEDLE03);
+	SPSInjectorValve3Indicator.DefineMeshGroup(VC_GRP_SPS_ENG_VALVE_NEEDLE03);
 
 	NEEDLE_POS = { 0.585216, 0.694308, 0.358054 };
-	MainPanelVC.AddSwitch(&SPSInjectorValve4Indicator, AID_VC_SPS_INJ_VLV);
-//	SPSInjectorValve4Indicator.SetRotationRange(RAD * 90);
+	MainPanelVC.AddSwitch(&SPSInjectorValve4Indicator);
+	SPSInjectorValve4Indicator.SetRotationRange(RAD * 90);
 	SPSInjectorValve4Indicator.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-//	SPSInjectorValve4Indicator.DefineMeshGroup(VC_GRP_SPS_ENG_VALVE_NEEDLE04);
+	SPSInjectorValve4Indicator.DefineMeshGroup(VC_GRP_SPS_ENG_VALVE_NEEDLE04);
 
 	// Panel 4
 

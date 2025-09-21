@@ -605,7 +605,6 @@ public:
 		SRF_VC_LVENGLIGHTS_S1B,
 		SRF_VC_SPS_FONT_BLACK,
 		SRF_VC_SPS_FONT_WHITE,
-		SRF_VC_SPS_INJ_VLV,
 		SRF_VC_SPSMAXINDICATOR,
 		SRF_VC_SPSMININDICATOR,
 		SRF_VC_THUMBWHEEL_LARGEFONTSINV,
@@ -1988,10 +1987,10 @@ protected:
 	//
 
 	SwitchRow SPSInjectorValveIndicatorsRow;
-	IndicatorSwitch SPSInjectorValve1Indicator;
-	IndicatorSwitch SPSInjectorValve2Indicator;
-	IndicatorSwitch SPSInjectorValve3Indicator;
-	IndicatorSwitch SPSInjectorValve4Indicator;
+	SaturnSPSInjectorValveIndicator SPSInjectorValve1Indicator;
+	SaturnSPSInjectorValveIndicator SPSInjectorValve2Indicator;
+	SaturnSPSInjectorValveIndicator SPSInjectorValve3Indicator;
+	SaturnSPSInjectorValveIndicator SPSInjectorValve4Indicator;
 
 	SwitchRow SPSTestSwitchRow;
 	ThreePosSwitch SPSTestSwitch;

@@ -2425,11 +2425,11 @@ void Saturn::SetSwitches(int panel) {
 	// SPS switches (panel 3)
 	//
 	
-	SPSInjectorValveIndicatorsRow.Init(AID_SPS_INJ_VLV, MainPanel);
-	SPSInjectorValve1Indicator.Init(  0, 0, 34, 34, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
-	SPSInjectorValve2Indicator.Init( 48, 0, 34, 34, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
-	SPSInjectorValve3Indicator.Init( 96, 0, 34, 34, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
-	SPSInjectorValve4Indicator.Init(144, 0, 34, 34, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
+	SPSInjectorValveIndicatorsRow.Init(AID_SPS_INJ_VLV, MainPanel, &GaugePower);
+	SPSInjectorValve1Indicator.Init(g_Param.pen[5], g_Param.pen[5], SPSInjectorValveIndicatorsRow, this, 1);
+	SPSInjectorValve2Indicator.Init(g_Param.pen[5], g_Param.pen[5], SPSInjectorValveIndicatorsRow, this, 2);
+	SPSInjectorValve3Indicator.Init(g_Param.pen[5], g_Param.pen[5], SPSInjectorValveIndicatorsRow, this, 3);
+	SPSInjectorValve4Indicator.Init(g_Param.pen[5], g_Param.pen[5], SPSInjectorValveIndicatorsRow, this, 4);
 
 	SPSTestSwitchRow.Init(AID_SPSTESTSWITCH, MainPanel);
 	SPSTestSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SPSTestSwitchRow);
@@ -3572,7 +3572,7 @@ DLLCLBK void InitModule(HINSTANCE hModule) {
 	g_Param.pen[2] = oapiCreatePen (1, 1, RGB(  0,   0,   0));
 	g_Param.pen[3] = oapiCreatePen (1, 3, RGB( 77,  77,  77));
 	g_Param.pen[4] = oapiCreatePen (1, 3, RGB(  0,   0,   0));
-	g_Param.pen[5] = oapiCreatePen (1, 1, RGB(255,   0,   0));
+	g_Param.pen[5] = oapiCreatePen (1, 5, RGB(  0,   0,   0));
 	g_Param.pen[6] = oapiCreatePen (1, 3, RGB(255, 255, 255));
 }
 
@@ -4093,18 +4093,6 @@ void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 
 	} else if (s == &SPSHeliumValveBIndicator) {
 		SPSHeliumValveBIndicator.SetState(SPSPropellant.IsHeliumValveBOpen() ? 1 : 0);
-	
-	}  else if (s == &SPSInjectorValve1Indicator) {
-		SPSInjectorValve1Indicator.SetState(SPSEngine.GetInjectorValves12Open() ? 1 : 0);
-
-	}  else if (s == &SPSInjectorValve2Indicator) {
-		SPSInjectorValve2Indicator.SetState(SPSEngine.GetInjectorValves12Open() ? 1 : 0);
-
-	}  else if (s == &SPSInjectorValve3Indicator) {
-		SPSInjectorValve3Indicator.SetState(SPSEngine.GetInjectorValves34Open() ? 1 : 0);
-
-	}  else if (s == &SPSInjectorValve4Indicator) {
-		SPSInjectorValve4Indicator.SetState(SPSEngine.GetInjectorValves34Open() ? 1 : 0);
 	}
 }
 
@@ -5421,10 +5409,10 @@ void Saturn::InitSwitches() {
 	SMRCSProp2CTalkback.Register(PSH, "SMRCSProp2CTalkback", false);
 	SMRCSProp2DTalkback.Register(PSH, "SMRCSProp2DTalkback", false);
 
-	SPSInjectorValve1Indicator.Register(PSH, "SPSInjectorValve1Indicator", false);
-	SPSInjectorValve2Indicator.Register(PSH, "SPSInjectorValve2Indicator", false);
-	SPSInjectorValve3Indicator.Register(PSH, "SPSInjectorValve3Indicator", false);
-	SPSInjectorValve4Indicator.Register(PSH, "SPSInjectorValve4Indicator", false);
+	SPSInjectorValve1Indicator.Register(PSH, "SPSInjectorValve1Indicator", 0.0, 90.0, 2.0);
+	SPSInjectorValve2Indicator.Register(PSH, "SPSInjectorValve2Indicator", 0.0, 90.0, 2.0);
+	SPSInjectorValve3Indicator.Register(PSH, "SPSInjectorValve3Indicator", 0.0, 90.0, 2.0);
+	SPSInjectorValve4Indicator.Register(PSH, "SPSInjectorValve4Indicator", 0.0, 90.0, 2.0);
 
 	SPSOxidFlowValveMaxIndicator.Register(PSH, "SPSOxidFlowValveMaxIndicator", true);
 	SPSOxidFlowValveMinIndicator.Register(PSH, "SPSOxidFlowValveMinIndicator", true);

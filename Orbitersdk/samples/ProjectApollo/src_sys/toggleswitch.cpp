@@ -4021,9 +4021,9 @@ void RoundMeter::OnPostStep(double SimT, double DeltaT, double MJD)
 }
 
 void RoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle)
-
 {
 	// Needle function by Rob Conley from Mercury code
+	// Drawn from center of rotation to "rad" distance
 	
 	double dx = rad * cos(angle), dy = rad * sin(angle);
 
@@ -4032,6 +4032,20 @@ void RoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double a
 	skp->MoveTo(x, y); skp->LineTo(x + (int)(0.85 * dx + 0.5), y - (int)(0.85 * dy + 0.5));
 	skp->SetPen(Pen0);
 	skp->MoveTo(x, y); skp->LineTo(x + (int)(dx + 0.5), y - (int)(dy + 0.5));
+	oapiReleaseSketchpad(skp);
+}
+
+void RoundMeter::DrawNeedle2(SURFHANDLE surf, int x, int y, double rad_1, double rad_2, double angle)
+{
+	// Drawn from center of rotation to "rad_1" distance in one direction, "rad_2" in the other direction
+	// If rad_1 and rad_2 are set identical then the needle is centered on the axis of rotation
+
+	double dx1 = -rad_1 * cos(angle), dy1 = -rad_1 * sin(angle);
+	double dx2 = rad_2 * cos(angle), dy2 = rad_2 * sin(angle);
+
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	skp->SetPen(Pen0);
+	skp->Line(x + (int)(dx1 + 0.5), y - (int)(dy1 + 0.5), x + (int)(dx2 + 0.5), y - (int)(dy2 + 0.5));
 	oapiReleaseSketchpad(skp);
 }
 
