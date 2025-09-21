@@ -1739,6 +1739,7 @@ protected:
 	oapi::Pen *Pen1;
 
 	void DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle);
+	void DrawNeedle2(SURFHANDLE surf, int x, int y, double rad_1, double rad_2, double angle);
 
 	const double GetRotationRange() const;
 	double RotationRange;
