@@ -370,7 +370,6 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_SWLEVERTHREEPOS] 						= oapiCreateSurface (LOADBMP (IDB_SWLEVERTHREEPOS));
 	srf[SRF_ORDEAL_ROTARY] 							= oapiCreateSurface (LOADBMP (IDB_ORDEAL_ROTARY));
 	srf[SRF_LV_ENG_S1B]								= oapiCreateSurface (LOADBMP (IDB_LV_ENGINE_LIGHTS_S1B));
-	srf[SRF_SPS_INJ_VLV]						    = oapiCreateSurface (LOADBMP (IDB_SPS_INJ_VLV));
 	srf[SRF_THUMBWHEEL_GPI_PITCH]  					= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_GPI_PITCH));
 	srf[SRF_THUMBWHEEL_GPI_YAW]  					= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_GPI_YAW));
 	srf[SRF_THC]				  					= oapiCreateSurface (LOADBMP (IDB_THC));
@@ -558,7 +557,6 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey	(srf[SRF_THUMBWHEEL_LARGEFONTSINV],				g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_SWLEVERTHREEPOS],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_ORDEAL_ROTARY],						g_Param.col[4]);
-	oapiSetSurfaceColourKey	(srf[SRF_SPS_INJ_VLV],							g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_GPI_PITCH],    				g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_GPI_YAW],    				g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THC],				    				g_Param.col[4]);
