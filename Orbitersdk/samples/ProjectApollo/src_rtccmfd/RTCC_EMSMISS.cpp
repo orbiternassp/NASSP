@@ -845,14 +845,6 @@ void RTCC_EMSMISS::CallCSMLMIntegrator()
 		integin.KEPHOP = 0;
 	}
 	integin.KTRIMOP = mpt->mantable[i].TrimAngleInd;
-	if (state.WeightsTable.CC[RTCC_CONFIG_D] == true)
-	{
-		integin.LMDESCJETT = 1e70;
-	}
-	else
-	{
-		integin.LMDESCJETT = 0;
-	}
 
 	if (mpt->mantable[i].AttitudesInput)
 	{
