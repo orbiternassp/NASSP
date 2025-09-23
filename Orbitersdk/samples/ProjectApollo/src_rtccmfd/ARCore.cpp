@@ -1122,7 +1122,7 @@ void ARCore::DAPPADCalc(bool IsCSM)
 
 	if (IsCSM)
 	{
-		GC->rtcc->CSMDAPUpdate(v, DAP_PAD, vesselisdocked);
+		GC->rtcc->CSMDAPUpdate(v, DAP_PAD, vesselisdocked, lemdescentstage == false);
 	}
 	else
 	{
@@ -5291,7 +5291,7 @@ int ARCore::subThread()
 		in.Option = GC->AGOP_Option;
 		in.Mode = GC->AGOP_Mode;
 		in.AdditionalOption = GC->AGOP_AdditionalOption;
-		in.DeltaT = GC->AGOP_TimeStep;
+		in.DeltaT = GC->AGOP_TimeStep*60.0;
 
 		bool statevectorrequired = true;
 
