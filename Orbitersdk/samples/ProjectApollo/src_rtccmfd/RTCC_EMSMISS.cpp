@@ -351,8 +351,8 @@ void RTCC_EMSMISS::UpdateWeightsTableAndSVAfterManeuver()
 		break;
 	}
 
-	//Docking maneuver
-	if (mpt->mantable[i].CommonBlock.ConfigChangeInd == RTCC_CONFIGCHANGE_DOCKING)
+	//Docking maneuver logic (but skip if integration is cut off at end of maneuver)
+	if (intab->ManCutoffIndicator == 1 && mpt->mantable[i].CommonBlock.ConfigChangeInd == RTCC_CONFIGCHANGE_DOCKING)
 	{
 		//Get weights from other MPT at current time
 
