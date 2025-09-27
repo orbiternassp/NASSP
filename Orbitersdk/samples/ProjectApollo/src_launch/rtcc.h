@@ -5135,7 +5135,6 @@ protected:
 	bool MPTIsPrimaryThruster(int thruster, int i);
 	bool MPTIsUllageThruster(int thruster, int i);
 	int MPTGetPrimaryThruster(int thruster);
-	void MPTDockingManeuver(int L, MPTManeuver *man);
 public:
 	//Trajectory Update On-line Print
 	void EMGPRINT(std::string source, int i);
@@ -5145,6 +5144,7 @@ public:
 	void MPTGetConfigFromString(const std::string &str, std::bitset<4> &cfg);
 	void MPTGetStringFromConfig(const std::bitset<4> &cfg, char *str);
 	MissionPlanTable *GetMPTPointer(int L);
+	MPTVehicleDataBlock *MPTDockingManeuver(int L, double GMT_BO, PLAWDTOutput &plawdtout);
 protected:
 
 	//Auxiliary subroutines

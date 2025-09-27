@@ -21518,30 +21518,31 @@ MissionPlanTable* RTCC::GetMPTPointer(int L)
 	}
 }
 
-void RTCC::MPTDockingManeuver(int L, MPTManeuver *man)
+MPTVehicleDataBlock *RTCC::MPTDockingManeuver(int L, double GMT_BO, PLAWDTOutput &plawdtout)
 {
-	//INPUTS:
-	//L = vehicle code of active MPT
-	//man = MPT maneuver
+	//Returns weight table from other MPT at desired (GMT_BO) time
 
+	PLAWDTInput plawdtin;
+	unsigned int N, M, I, block;
 	MissionPlanTable *other_mpt;
-	unsigned int N, M, I;
-
+	MPTVehicleDataBlock *OtherCommonBlock;
+	
 	other_mpt = GetMPTPointer(4 - L);
 	N = other_mpt->ManeuverNum;
 	M = N;
 	I = 0;
-	//Find MPT block on other MPT before 
+
+	//Find MPT block on other MPT before maneuver
 	if (N > 0)
 	{
 		do
 		{
 			//Is burnout of maneuver before burnout of maneuver on other MPT?
-			if (man->GMT_BO <= other_mpt->mantable[I].GMT_BO)
+			if (GMT_BO <= other_mpt->mantable[I].GMT_BO)
 			{
 				//Yes
 				//Is burnout of maneuver before ignition of maneuver on other MPT?
-				if (man->GMT_BO < other_mpt->mantable[I].GMT_1)
+				if (GMT_BO < other_mpt->mantable[I].GMT_1)
 				{
 					//Yes
 					M = M - 1;
@@ -21553,14 +21554,9 @@ void RTCC::MPTDockingManeuver(int L, MPTManeuver *man)
 			I = I + 1;
 		} while (true);
 	}
-
-	PLAWDTInput plawdtin;
-	PLAWDTOutput plawdtout;
-	MPTVehicleDataBlock *OtherCommonBlock;
-
-	if (N - M == 0U)
+	block = N - M;
+	if (block == 0U)
 	{
-		//Block 1
 		plawdtin.Num = (unsigned int)other_mpt->CommonBlock.ConfigCode.to_ulong();
 		plawdtin.T_IN = GMTfromGET(other_mpt->SIVBVentingBeginGET);
 		OtherCommonBlock = &other_mpt->CommonBlock;
@@ -21568,12 +21564,11 @@ void RTCC::MPTDockingManeuver(int L, MPTManeuver *man)
 	else
 	{
 		//Maneuver block
-		unsigned int block = N - M;
-		plawdtin.Num = (unsigned int)other_mpt->mantable[block].CommonBlock.ConfigCode.to_ulong();
-		plawdtin.T_IN = other_mpt->mantable[block].GMT_BO;
-		OtherCommonBlock = &other_mpt->mantable[block].CommonBlock;
+		plawdtin.Num = (unsigned int)other_mpt->mantable[block - 1].CommonBlock.ConfigCode.to_ulong();
+		plawdtin.T_IN = other_mpt->mantable[block - 1].GMT_BO;
+		OtherCommonBlock = &other_mpt->mantable[block - 1].CommonBlock;
 	}
-	plawdtin.T_UP = man->GMT_BO;
+	plawdtin.T_UP = GMT_BO;
 	plawdtin.TableCode = -(4 - L);
 	plawdtin.CSMArea = OtherCommonBlock->CSMArea;
 	plawdtin.SIVBArea = OtherCommonBlock->SIVBArea;
@@ -21583,41 +21578,11 @@ void RTCC::MPTDockingManeuver(int L, MPTManeuver *man)
 	plawdtin.SIVBWeight = OtherCommonBlock->SIVBMass;
 	plawdtin.LMAscWeight = OtherCommonBlock->LMAscentMass;
 	plawdtin.LMDscWeight = OtherCommonBlock->LMDescentMass;
+
 	//Update from t_wts to t_end
 	PLAWDT(plawdtin, plawdtout);
 
-	//CSM in CC?
-	if (plawdtout.CC[RTCC_CONFIG_C])
-	{
-		//Store CSM area, weight, RCS fuel, SPS fuel
-		man->CommonBlock.CSMArea = plawdtout.CSMArea;
-		man->CommonBlock.CSMMass = plawdtout.CSMWeight;
-		man->CommonBlock.CSMRCSFuelRemaining = OtherCommonBlock->CSMRCSFuelRemaining;
-		man->CommonBlock.SPSFuelRemaining = OtherCommonBlock->SPSFuelRemaining;
-	}
-	if (plawdtout.CC[RTCC_CONFIG_S])
-	{
-		//Store S-IVB area, weight. Adjust S-IVB fuel for venting
-		man->CommonBlock.SIVBArea = plawdtout.SIVBArea;
-		man->CommonBlock.SIVBMass = plawdtout.SIVBWeight;
-		double DW = OtherCommonBlock->SIVBMass - plawdtout.SIVBWeight;
-		man->CommonBlock.SIVBFuelRemaining = OtherCommonBlock->SIVBFuelRemaining - DW;
-	}
-	if (plawdtout.CC[RTCC_CONFIG_A])
-	{
-		//Store LM ascent area, weight, RCS fuel, APS fuel
-		man->CommonBlock.LMAscentArea = plawdtout.LMAscArea;
-		man->CommonBlock.LMAscentMass = plawdtout.LMAscWeight;
-		man->CommonBlock.LMRCSFuelRemaining = OtherCommonBlock->LMRCSFuelRemaining;
-		man->CommonBlock.LMAPSFuelRemaining = OtherCommonBlock->LMAPSFuelRemaining;
-	}
-	if (plawdtout.CC[RTCC_CONFIG_A])
-	{
-		//Store LM ascent area, weight, DPS fuel
-		man->CommonBlock.LMDescentArea = plawdtout.LMDscArea;
-		man->CommonBlock.LMDescentMass = plawdtout.LMDscWeight;
-		man->CommonBlock.LMDPSFuelRemaining = OtherCommonBlock->LMDPSFuelRemaining;
-	}
+	return OtherCommonBlock;
 }
 
 OBJHANDLE RTCC::GetGravref(int body)
@@ -34840,7 +34805,45 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	//Docking maneuver
 	if (mptman->CommonBlock.ConfigChangeInd == RTCC_CONFIGCHANGE_DOCKING)
 	{
-		MPTDockingManeuver(L, mptman);
+		//Search other MPT for the specified vehicle areas and weights prior to this maneuver
+		PLAWDTOutput plawdtout;
+		MPTVehicleDataBlock *OtherCommonBlock;
+
+		OtherCommonBlock = MPTDockingManeuver(L, mptman->GMT_BO, plawdtout);
+		//TBD: Process PLAWDT error?
+
+		//CSM in CC?
+		if (plawdtout.CC[RTCC_CONFIG_C])
+		{
+			//Store CSM area, weight, RCS fuel, SPS fuel
+			mptman->CommonBlock.CSMArea = plawdtout.CSMArea;
+			mptman->CommonBlock.CSMMass = plawdtout.CSMWeight;
+			mptman->CommonBlock.CSMRCSFuelRemaining = OtherCommonBlock->CSMRCSFuelRemaining;
+			mptman->CommonBlock.SPSFuelRemaining = OtherCommonBlock->SPSFuelRemaining;
+		}
+		if (plawdtout.CC[RTCC_CONFIG_S])
+		{
+			//Store S-IVB area, weight. Adjust S-IVB fuel for venting
+			mptman->CommonBlock.SIVBArea = plawdtout.SIVBArea;
+			mptman->CommonBlock.SIVBMass = plawdtout.SIVBWeight;
+			double DW = OtherCommonBlock->SIVBMass - plawdtout.SIVBWeight;
+			mptman->CommonBlock.SIVBFuelRemaining = OtherCommonBlock->SIVBFuelRemaining - DW;
+		}
+		if (plawdtout.CC[RTCC_CONFIG_A])
+		{
+			//Store LM ascent area, weight, RCS fuel, APS fuel
+			mptman->CommonBlock.LMAscentArea = plawdtout.LMAscArea;
+			mptman->CommonBlock.LMAscentMass = plawdtout.LMAscWeight;
+			mptman->CommonBlock.LMRCSFuelRemaining = OtherCommonBlock->LMRCSFuelRemaining;
+			mptman->CommonBlock.LMAPSFuelRemaining = OtherCommonBlock->LMAPSFuelRemaining;
+		}
+		if (plawdtout.CC[RTCC_CONFIG_A])
+		{
+			//Store LM ascent area, weight, DPS fuel
+			mptman->CommonBlock.LMDescentArea = plawdtout.LMDscArea;
+			mptman->CommonBlock.LMDescentMass = plawdtout.LMDscWeight;
+			mptman->CommonBlock.LMDPSFuelRemaining = OtherCommonBlock->LMDPSFuelRemaining;
+		}
 	}
 	
 	//Sum weights of vehicles in configuration at end of maneuver

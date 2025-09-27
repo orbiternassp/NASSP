@@ -354,16 +354,11 @@ void RTCC_EMSMISS::UpdateWeightsTableAndSVAfterManeuver()
 	//Docking maneuver logic (but skip if integration is cut off at end of maneuver)
 	if (intab->ManCutoffIndicator == 1 && mpt->mantable[i].CommonBlock.ConfigChangeInd == RTCC_CONFIGCHANGE_DOCKING)
 	{
-		//Get weights from other MPT at current time
-
-		PLAWDTInput plawdtin;
+		//Get weights from other MPT at desired time
 		PLAWDTOutput plawdtout;
+		MPTVehicleDataBlock *OtherCommonBlock;
 
-		plawdtin.T_UP = state.StateVector.GMT;
-		plawdtin.TableCode = 4 - intab->VehicleCode;
-		plawdtin.VentingOpt = false; //TBD
-
-		pRTCC->PLAWDT(plawdtin, plawdtout);
+		OtherCommonBlock = pRTCC->MPTDockingManeuver(intab->VehicleCode, state.StateVector.GMT, plawdtout);
 
 		if (plawdtout.Err)
 		{
@@ -884,7 +879,7 @@ void RTCC_EMSMISS::WeightsAtManeuverBegin()
 	}
 }
 
-void RTCC_EMSMISS::UpdateConfigArea(PLAWDTOutput &tab)
+void RTCC_EMSMISS::UpdateConfigArea(PLAWDTOutput &tab) const
 {
 	tab.ConfigArea = 0.0;
 	if (tab.CC[RTCC_CONFIG_C] && tab.CSMArea > tab.ConfigArea) tab.ConfigArea = tab.CSMArea;

@@ -63,7 +63,7 @@ protected:
 	void UpdateWeightsTableAndSVAfterManeuver();
 	void WriteNIAuxOutputTable();
 	void WeightsAtManeuverBegin();
-	void UpdateConfigArea(PLAWDTOutput &tab);
+	void UpdateConfigArea(PLAWDTOutput &tab) const;
 	void WriteEphemerisHeaders();
 
 	bool InitEphemTables();
