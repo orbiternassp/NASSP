@@ -127,8 +127,8 @@ public:
 	void SetLGCAltitudeRate(int val);
 	void AGSAltitudeAltitudeRate(int Data);
 
-	double GetLGCAltitude() { return lgc_alt; };
-	double GetLGCAltitudeRate() { return lgc_altrate; };
+	double GetTapeAltitude() { return reqRange; };
+	double GetTapeAltitudeRate() { return reqRate; };
 
 	bool PowerSignalMonOn();
 	bool PowerFailure();
