@@ -1430,9 +1430,9 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		} else {
 			sprintf(thrsw, "MAN");
 		}
-
-		sprintf(oapiDebugString(), "PROG %s | V%s N%s | R1 %s | R2 %s | R3 %s | Alt: %.0lf ft | Alt Rate: %.1lf ft/s | PGNS Mode Control: %s | Throttle: %s | Fuel: %.0lf %% |", dsky.GetProg(),
-			dsky.GetVerb(), dsky.GetNoun(), dsky.GetR1(), dsky.GetR2(), dsky.GetR3(), RadarTape.GetLGCAltitude() * 3.2808399, RadarTape.GetLGCAltitudeRate() * 3.2808399,
+		//TODO: Alt and Alt Rate Need to return what's displayed on the tape instead of the LGC alt/rate always
+		sprintf(oapiDebugString(), "PROG %s | V%s N%s | R1 %s | R2 %s | R3 %s | Alt: %.0lf ft | Alt Rt: %.1lf ft/s | Fwd Vel: %.1lf ft/s | Lat Vel: %.1lf ft/s | PGNS Mode Cont: %s | Throt: %s | Fuel: %.0lf %% |", dsky.GetProg(),
+			dsky.GetVerb(), dsky.GetNoun(), dsky.GetR1(), dsky.GetR2(), dsky.GetR3(), RadarTape.GetLGCAltitude(), RadarTape.GetLGCAltitudeRate(), crossPointerLeft.GetFwdVel(), crossPointerLeft.GetLatVel(),
 			pgnssw, thrsw, DPSFuelPercentMeter.QueryValue() * 100);
 		if (!VcInfoActive) VcInfoActive = true;
 

@@ -166,6 +166,8 @@ public:
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	void GetVelocities(double &vx, double &vy);
+	double GetFwdVel() { return vel_x; };
+	double GetLatVel() { return vel_y; };
 	void UpdateDisplayValues(double simdt);
 	void MeterMovement(double simdt, double &val, double &dis_val);
 
