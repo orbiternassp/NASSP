@@ -1122,7 +1122,7 @@ void ARCore::DAPPADCalc(bool IsCSM)
 
 	if (IsCSM)
 	{
-		GC->rtcc->CSMDAPUpdate(v, DAP_PAD, vesselisdocked);
+		GC->rtcc->CSMDAPUpdate(v, DAP_PAD, vesselisdocked, lemdescentstage == false);
 	}
 	else
 	{

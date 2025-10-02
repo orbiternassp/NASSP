@@ -183,8 +183,7 @@ void cbLMVesim(int inputID, int eventType, int newValue, void *pdata) {
 			break;
 		case LM_BUTTON_ENG_START:
 			//Engine Start Button
-			pLM->ManualEngineStart.Push();
-			pLM->ButtonClick();
+			pLM->ManualEngineStart.SetState(PUSHBUTTON_PUSHED);
 			break;
 		case LM_BUTTON_ENG_STOP:
 			//Engine Stop Button
@@ -1214,9 +1213,31 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 	if ((down) && (key == OAPI_KEY_F)) {
 		ToggleFlashlight();
 	}
-
-	if (KEYMOD_SHIFT(keystate) || KEYMOD_CONTROL(keystate) || !down) {
+	//No Shift or Ctrl processing below here
+	if (KEYMOD_SHIFT(keystate) || KEYMOD_CONTROL(keystate)) {
 		return 0; 
+	}
+	//Engine Start Button
+	if (key == OAPI_KEY_ADD)
+	{
+		if (down)
+		{
+			ManualEngineStart.SetHeld(true);
+			ManualEngineStart.SetState(PUSHBUTTON_PUSHED);
+		}
+		else
+		{
+			// Doing SwitchTo instead of SetState prevents a second click on key up.
+			ManualEngineStart.SetHeld(false);
+			ManualEngineStart.SwitchTo(PUSHBUTTON_UNPUSHED);
+		}
+		return 1;
+	}
+
+	//No key releases below here
+	if (!down)
+	{
+		return 0;
 	}
 
 	// MCC CAPCOM interface key handling                                                                                                
@@ -1291,11 +1312,6 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 	// Engine start and stop
 	//
 
-	case OAPI_KEY_ADD:
-		//Engine Start Button
-		ManualEngineStart.Push();
-		ButtonClick();
-		return 1;
 	case OAPI_KEY_SUBTRACT:
 		//Engine Stop Button
 		CDRManualEngineStop.Push();

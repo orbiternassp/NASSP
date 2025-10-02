@@ -410,6 +410,7 @@ struct RTCCSystemParameters
 		MCCRAM = 0.5;
 		MCVCWT = 19246.4*0.45359237;
 		MCVLWT = 3828.0*0.45359237;
+		MCVDKA = 240.0*RAD;
 
 		MCTCT1 = 196.6 * 4.4482216152605;
 		MCTCT2 = 393.2 * 4.4482216152605;
@@ -1014,6 +1015,8 @@ struct RTCCSystemParameters
 	double MCVCWT;
 	//LM limiting weight for fuel exhaustion test
 	double MCVLWT;
+	//Nominal docking angle, rad
+	double MCVDKA;
 
 	//Thrust of CSM RCS+X (2 quads)
 	double MCTCT1;
