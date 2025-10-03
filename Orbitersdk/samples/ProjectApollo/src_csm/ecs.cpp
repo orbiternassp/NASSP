@@ -999,7 +999,7 @@ void SaturnSideHatch::DefineAnimationsVC(UINT idx)
 	// Side Hatch Animations
 	ANIMATIONCOMPONENT_HANDLE ach_SideHatchVC, ach_gearboxsel, ach_actuatorsel, ach_ventvalve;
 
-	const VECTOR3 SideHatch_HandleRot1Location = { 0.322375, 1.26952, -0.140631 };
+	const VECTOR3 SideHatch_HandleRot1Location = { 0.306458, 1.27405, -0.138274 };
 	const VECTOR3 SideHatch_HandleRot2Location = { 0.235498, 1.14957, 0.030519 };
 	const VECTOR3 SideHatch_VentValveLocation = { -0.265141, 1.20124, 0.146229 };
 

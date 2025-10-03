@@ -116,6 +116,21 @@ DWORD FloodLights_LMVC[] = {
 	VC_MAT_Panel1_Tapemeter_RangeRangeRate,
 	VC_MAT_RCS_HE_PRESS_x10,
 
+	// XPointer Light Bulbs
+	VC_MAT_Panel1_Bulb_AZ_RT,
+	VC_MAT_Panel1_Bulb_ELEV_RT,
+	VC_MAT_Panel1_Bulb_LAT_VEL,
+	VC_MAT_Panel1_Bulb_X1,
+	VC_MAT_Panel1_Bulb_X10,
+	VC_MAT_Panel1_Bulbs_FWD_VEL,
+
+	VC_MAT_Panel2_Bulb_AZ_RT,
+	VC_MAT_Panel2_Bulb_ELEV_RT,
+	VC_MAT_Panel2_Bulb_LAT_VEL,
+	VC_MAT_Panel2_Bulb_X1,
+	VC_MAT_Panel2_Bulb_X10,
+	VC_MAT_Panel2_Bulbs_FWD_VEL,
+
 // Caution & Warning Lights Frame
 	VC_MAT_CW_Frame,
 

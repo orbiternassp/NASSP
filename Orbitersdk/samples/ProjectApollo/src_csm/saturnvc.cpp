@@ -1008,7 +1008,7 @@ void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
 //		seatsfoldedmesh = GetDevMesh(vis, seatsfoldedidx);
 
 //		InitFDAICustomCamera();
-
+		CheckBPC_SideHatchCover();
 	}
 }
 
@@ -1076,12 +1076,14 @@ void Saturn::RegisterActiveAreas() {
 	// Side Hatch
 	if (viewpos != SATVIEW_LOWER_CENTER) {
 		const VECTOR3 SideHatchLocation = { 0.252602, 1.10923, 0.138505 };
-		const VECTOR3 SideHatch_HandleRot1Location = { 0.322375, 1.26952, -0.140631 };
+//		const VECTOR3 SideHatch_HandleRot1Location = { 0.322375, 1.26952, -0.140631 };
+		const VECTOR3 SideHatch_HandleRot1Location = { 0.306458, 1.27405, -0.138274 };
 		const VECTOR3 SideHatch_HandleRot2Location = { 0.235498, 1.14957, 0.030519 };
 		const VECTOR3 SideHatch_VentValveLocation = { -0.265141, 1.20124, 0.146229 };
 
 		const VECTOR3 SideHatch_openLocation = { -0.30083, 1.81891, 0.694745 };
-		const VECTOR3 SideHatch_HandleRot1_openLocation = { -0.349197, 2.08465, 0.506269 };
+//		const VECTOR3 SideHatch_HandleRot1_openLocation = { -0.349197, 2.08465, 0.506269 };
+		const VECTOR3 SideHatch_HandleRot1_openLocation = { -0.354822, 2.07255, 0.496192 };
 		const VECTOR3 SideHatch_HandleRot2_openLocation = { -0.300838, 1.88328	, 0.597599 };
 		const VECTOR3 SideHatch_VentValve_openLocation = { -0.396115, 1.45676, 0.331093 };
 
@@ -6007,9 +6009,9 @@ void Saturn::UpdatePointingArrow()
 		}
 	} else if (HatchGearBoxSelectorFlash){
 		if (!SideHatch.IsOpen()) {
-			activeSwitchPos = _V( 0.322375, 1.26952, -0.140631 );		// SideHatch_HandleRot1Location
+			activeSwitchPos = _V( 0.306458, 1.27405, -0.138274 );		// SideHatch_HandleRot1Location
 		} else {
-			activeSwitchPos = _V( -0.349197, 2.08465, 0.506269 );	// SideHatch_HandleRot1_openLocation
+			activeSwitchPos = _V( -0.354822, 2.07255, 0.496192 );	// SideHatch_HandleRot1_openLocation
 		}
 	} else if (HatchActuatorHandleSelectorFlash){
 		if (!SideHatch.IsOpen()) {
