@@ -1792,7 +1792,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
             SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, (lca.GetNumericVoltage() / 115.0), 1);
         }
         else {
-            SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, XP_LIT_ON, 1);
+            SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, 0.25, 1);
         }
 
 		return true;
@@ -3778,6 +3778,9 @@ void LEM::UpdatePointingArrow()
 	PanelSwitchItem *nextActiveSwitch = MainPanelVC.GetFlashingItem();
 
 	// The next ones need to be checked individualy
+	bool UpperHatchHandleFlash = UpperHatchHandle.IsFlashing();
+	bool UpperHatchReliefValveFlash = UpperHatchReliefValve.IsFlashing();
+	bool ForwardHatchHandleFlash = ForwardHatchHandle.IsFlashing();
 	bool ForwardHatchReliefValveFlash = ForwardHatchReliefValve.IsFlashing();
 
 	if (nextActiveSwitch == nullptr && !ForwardHatchReliefValveFlash) {	// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
@@ -3789,8 +3792,14 @@ void LEM::UpdatePointingArrow()
 //	return;
 
 	VECTOR3 activeSwitchPos;
-	if (ForwardHatchReliefValveFlash) {								// Special handling for others
-		activeSwitchPos = _V(0.204116, -0.493528, 1.57612);	
+	if (UpperHatchHandleFlash) {								// Special handling for others
+		activeSwitchPos = _V(-0.0021, 0.9917, 0.3372);	
+	} else if (UpperHatchReliefValveFlash) {
+		activeSwitchPos = _V(0.1467, 1.0035, 0.1677);	
+	} else if (ForwardHatchHandleFlash) {
+		activeSwitchPos = _V(-0.3440, -0.5710, 1.5847);	
+	} else if (ForwardHatchReliefValveFlash) {
+		activeSwitchPos = _V(0.2370, -0.5113, 1.5987);	
 	} else {
 		activeSwitchPos = nextActiveSwitch->GetReference();
 	}
