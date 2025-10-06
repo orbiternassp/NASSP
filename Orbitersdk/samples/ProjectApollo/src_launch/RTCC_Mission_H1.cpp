@@ -3492,7 +3492,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 					form->GET05G = res.GET05G;
 					if (opt.enginetype == RTCC_ENGINETYPE_CSMRCSPLUS4)
 					{
-						sprintf(form->remarks, "Use 4 RCS quads for the burn");
+						sprintf(form->remarks, "4 Jet +X RCS Burn");
 					}
 				}
 			}
