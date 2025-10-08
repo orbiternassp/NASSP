@@ -710,7 +710,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		if (fcn == 31)
 		{
 			sprintf(form->purpose, "LOI-1");
-			sprintf(form->remarks, "No ullage  Horizon window at ignition minus 2 minutes; 40 degrees unlit  Horizon window at ignition; 27 degrees unlit");
+			sprintf(form->remarks, "No ullage  Horizon window: At LOI-2m, 40 deg unlit. At LOI-0m, 27 deg unlit.");
 
 			char buffer1[1000];
 			char buffer2[1000];
