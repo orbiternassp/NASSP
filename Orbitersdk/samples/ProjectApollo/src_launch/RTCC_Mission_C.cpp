@@ -697,10 +697,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		{
 			scrubbed = true;
 		}
-		else
-		{
-			mcc->mcc_calcs.StoreStateVector(res.sv_tig2);
-		}
 
 		if (scrubbed)
 		{
@@ -715,6 +711,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			char buffer3[1000];
 			int enginetype;
 			enginetype = mcc->mcc_calcs.SPSRCSDecision(SystemParameters.MCTST1 / WeightsTable.ConfigWeight, res.dV);
+
+			mcc->mcc_calcs.StoreStateVector(res.sv_tig2);
 
 			in.CONFIG = 1; //CSM
 			in.CSMWeight = WeightsTable.CSMWeight;
@@ -755,7 +753,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 			if (enginetype == RTCC_ENGINETYPE_CSMSPS)
 			{
-				sprintf(form->remarks, "P40 SPS, Heads down");
+				sprintf(form->remarks, "Heads down, P40 SPS");
 			}
 			else
 			{
