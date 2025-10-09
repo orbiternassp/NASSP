@@ -1190,8 +1190,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TPD", OAPI_KEY_E, &ApolloRTCCMFD::menuCycleDKITerminalPhaseOption);
 	RegisterFunction("TPV", OAPI_KEY_V, &ApolloRTCCMFD::menuDKITerminalPhaseDefinitionValue);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("CSM", OAPI_KEY_N, &ApolloRTCCMFD::set_CSMVessel);
-	RegisterFunction("LM", OAPI_KEY_U, &ApolloRTCCMFD::set_LMVessel);
+	RegisterFunction("CHA", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("TGT", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDKIPage);
 
 

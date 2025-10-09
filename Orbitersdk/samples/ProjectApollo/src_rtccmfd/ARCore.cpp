@@ -2610,6 +2610,8 @@ int ARCore::subThread()
 		if (GC->MissionPlanningActive)
 		{
 			double GMT;
+
+			//Get chaser state vector
 			if (GC->rtcc->med_k30.ChaserVectorTime > 0)
 			{
 				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k30.ChaserVectorTime);
@@ -2618,12 +2620,12 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
-			if (GC->rtcc->PMSVEC(GC->rtcc->med_k30.Vehicle, GMT, opt.sv_C, opt.ChaserStationID))
+			if (GC->rtcc->PMSVEC(GC->rtcc->med_k30.Vehicle, true, GMT, GC->rtcc->med_k30.ChaserVectorID, opt.sv_C, opt.ChaserStationID))
 			{
 				Result = DONE;
 				break;
 			}
-
+			//Get target state vector
 			if (GC->rtcc->med_k30.TargetVectorTime > 0)
 			{
 				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k30.TargetVectorTime);
@@ -2632,7 +2634,7 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
-			if (GC->rtcc->PMSVEC(4 - GC->rtcc->med_k30.Vehicle, GMT, opt.sv_T, opt.TargetStationID))
+			if (GC->rtcc->PMSVEC(GC->rtcc->med_k30.Vehicle, false, GMT, GC->rtcc->med_k30.TargetVectorID, opt.sv_T, opt.TargetStationID))
 			{
 				Result = DONE;
 				break;
@@ -2702,7 +2704,7 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			std::string StaID;
+			std::string ChaserStaID, TargetChaserID;
 			double GMT_C, GMT_T;
 			int err;
 
@@ -2725,14 +2727,14 @@ int ARCore::subThread()
 			}
 
 			//Chaser
-			err = GC->rtcc->PMSVEC(GC->rtcc->med_k01.ChaserVehicle, GMT_C, sv_A, StaID);
+			err = GC->rtcc->PMSVEC(GC->rtcc->med_k01.ChaserVehicle, true, GMT_C, GC->rtcc->med_k01.ChaserVectorID, sv_A, ChaserStaID);
 			if (err)
 			{
 				Result = DONE;
 				break;
 			}
 			//Target
-			err = GC->rtcc->PMSVEC(4 - GC->rtcc->med_k01.ChaserVehicle, GMT_T, sv_P, StaID);
+			err = GC->rtcc->PMSVEC(GC->rtcc->med_k01.ChaserVehicle, false, GMT_T, GC->rtcc->med_k01.TargetVectorID, sv_P, TargetChaserID);
 			if (err)
 			{
 				Result = DONE;
@@ -3813,23 +3815,35 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			EphemerisData EPHEM;
+			VehicleDataBlock sv_chaser, sv_target;
+			std::string StaID;
+			int err;
 
-			int err = GC->rtcc->EMSFFV(GMT, RTCC_MPT_CSM, EPHEM);
+			//Get chaser state vector and weight
+			err = GC->rtcc->PMSVEC(GC->rtcc->med_k00.ChaserVehicle, true, GMT, GC->rtcc->med_k10.ChaserVectorID, sv_chaser, StaID);
 			if (err)
 			{
 				Result = DONE;
 				break;
 			}
-			opt.sv_CSM = EPHEM;
-
-			err = GC->rtcc->EMSFFV(GMT, RTCC_MPT_LM, EPHEM);
+			//Get target state vector and weight
+			err = GC->rtcc->PMSVEC(GC->rtcc->med_k00.ChaserVehicle, false, GMT, GC->rtcc->med_k10.TargetVectorID, sv_target, StaID);
 			if (err)
 			{
 				Result = DONE;
 				break;
 			}
-			opt.sv_LM = EPHEM;
+
+			if (GC->rtcc->med_k00.ChaserVehicle == RTCC_MPT_CSM)
+			{
+				opt.sv_CSM = sv_chaser.sv;
+				opt.sv_LM = sv_target.sv;
+			}
+			else
+			{
+				opt.sv_CSM = sv_target.sv;
+				opt.sv_LM = sv_chaser.sv;
+			}
 		}
 		else
 		{
@@ -4014,7 +4028,7 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->GMTfromGET(GC->PDAP_CSM_VectorTime);
 			}
-			if (GC->rtcc->PMSVEC(RTCC_MPT_CSM, GMT, sv_CSM, StaID))
+			if (GC->rtcc->PMSVEC(RTCC_MPT_CSM, true, GMT, "", sv_CSM, StaID))
 			{
 				Result = DONE;
 				break;
@@ -4029,7 +4043,7 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->GMTfromGET(GC->PDAP_LM_VectorTime);
 			}
-			if (GC->rtcc->PMSVEC(RTCC_MPT_LM, GMT, sv_LM, StaID))
+			if (GC->rtcc->PMSVEC(RTCC_MPT_LM, true, GMT, "", sv_LM, StaID))
 			{
 				Result = DONE;
 				break;
@@ -4812,7 +4826,7 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
-			if (GC->rtcc->PMSVEC(GC->rtcc->med_k32.Vehicle, GMT, opt.sv_C, opt.ChaserStationID))
+			if (GC->rtcc->PMSVEC(GC->rtcc->med_k32.Vehicle, true, GMT, GC->rtcc->med_k32.ChaserVectorID, opt.sv_C, opt.ChaserStationID))
 			{
 				Result = DONE;
 				break;
@@ -4826,7 +4840,7 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
-			if (GC->rtcc->PMSVEC(4 - GC->rtcc->med_k32.Vehicle, GMT, opt.sv_T, opt.TargetStationID))
+			if (GC->rtcc->PMSVEC(GC->rtcc->med_k32.Vehicle, false, GMT, GC->rtcc->med_k32.ChaserVectorID, opt.sv_T, opt.TargetStationID))
 			{
 				Result = DONE;
 				break;
@@ -5582,7 +5596,7 @@ int ARCore::subThread()
 				GMT = GC->rtcc->GMTfromGET(GC->rtcc->PZSLVCON.TargetVectorTime);
 			}
 
-			if (GC->rtcc->PMSVEC(L, GMT, block, StaID))
+			if (GC->rtcc->PMSVEC(L, true, GMT, "", block, StaID))
 			{
 				Result = DONE;
 				break;

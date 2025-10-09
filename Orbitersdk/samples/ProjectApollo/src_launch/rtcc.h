@@ -2715,7 +2715,7 @@ public:
 	void PMSVCT(int QUEID, int L);
 	void PMSVCT(int QUEID, int L, StateVectorTableEntry sv0);
 	//Vector Fetch Load Module
-	int PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID);
+	int PMSVEC(int MV, bool chaser, double GMT, std::string VectorID, VehicleDataBlock &block, std::string &StaID);
 	//Maneuver Execution Program
 	void PMSEXE(int L, double gmt);
 	//Earth Orbit Insertion Processor
@@ -3219,6 +3219,8 @@ public:
 		double CDH_Time = 0.0;
 		//For option 3
 		double CDH_Angle = PI;
+		std::string ChaserVectorID;
+		std::string TargetVectorID;
 	} med_k01;
 
 	//Maneuver Line Definition Initialization
@@ -3296,6 +3298,8 @@ public:
 		double EndTime = 0.0;
 		double TimeStep = 60.0;
 		double TimeRange = 600.0;
+		std::string ChaserVectorID;
+		std::string TargetVectorID;
 	} med_k30;
 
 	//Two Impulse Single Solution

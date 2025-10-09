@@ -6569,8 +6569,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_string(scn, "MED_K30", Buffer);
 	sprintf(Buffer, "%d %d %d %d %lf %lf", med_k31.TableIndicator, med_k31.PlanNumber, med_k31.UllageQuads, med_k31.LOSMode, med_k31.DeltaPitch, med_k31.TimeStep);
 	oapiWriteScenario_string(scn, "MED_K31", Buffer);
-	sprintf(Buffer, "%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", med_k32.Vehicle, med_k32.RequestIndicator, med_k32.ChaserVectorTime, med_k32.TargetVectorTime, med_k32.T_NCC, med_k32.DH_min,
-		med_k32.DH_max, med_k32.DH_inc, med_k32.T2_min, med_k32.T2_max, med_k32.TimeStep, med_k32.dt_TPI_slip);
+	sprintf(Buffer, "%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", med_k32.Vehicle, med_k32.RequestIndicator, med_k32.ChaserVectorTime, med_k32.TargetVectorTime,
+		med_k32.T_NCC, med_k32.DH_min, med_k32.DH_max, med_k32.DH_inc, med_k32.T2_min, med_k32.T2_max, med_k32.TimeStep, med_k32.dt_TPI_slip);
 	oapiWriteScenario_string(scn, "MED_K32", Buffer);
 
 	oapiWriteLine(scn, RTCC_END_STRING);
@@ -18519,10 +18519,47 @@ RTCC_PMSVCT_15:
 	EMSTRAJ(sv1, L);
 }
 
-int RTCC::PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID)
+int RTCC::PMSVEC(int MV, bool chaser, double GMT, std::string VectorID, VehicleDataBlock &block, std::string &StaID)
 {
-	MissionPlanTable *mpt = GetMPTPointer(L);
+	//INPUTS:
+	//MV: Maneuver vehicle code (1 = CSM, 3 = LEM)
+	//chaser: true = get chaser vehicle data, false = get target vehicle data
+	//GMT: Requested vector time (not used of StaID is set)
+	//VectorID: If set then GMT is ignored and a vector from the Vector Panel Summary is requested
+	//OUTPUTS:
+	//block: vehicle data block for requested vehicle
+	//StaID: Station ID associated with the output state vector
+	int L;
+	MissionPlanTable *mpt;
 	EphemerisData sv;
+	bool StaIDInput;
+
+	//Initialize
+	StaIDInput = false;
+	if (chaser)
+	{
+		L = MV;
+	}
+	else
+	{
+		L = 4 - MV;
+	}
+	mpt = GetMPTPointer(L);
+
+	//StaID input?
+	if (VectorID.empty() == false)
+	{
+		if (BMSVPSVectorFetch(VectorID, block.sv))
+		{
+			PMXSPT("PMSVEC", 49);
+			return 1;
+		}
+		GMT = block.sv.GMT;
+		StaID = VectorID;
+		StaIDInput = true;
+	}
+	//Get K-Factor
+	block.KFactor = mpt->KFactor;
 
 	//Are there any maneuvers?
 	if (mpt->mantable.size() == 0)
@@ -18530,6 +18567,8 @@ int RTCC::PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID)
 		//No
 		block.Area = mpt->ConfigurationArea;
 		block.Weight = mpt->TotalInitMass;
+		//If station ID was input then we are done
+		if (StaIDInput) return 0;
 	}
 	else
 	{
@@ -18569,6 +18608,8 @@ int RTCC::PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID)
 			block.Area = mpt->mantable[num - 1].TotalAreaAfter;
 			block.Weight = mpt->mantable[num - 1].TotalMassAfter;
 		}
+		//If station ID was input then  we are done
+		if (StaIDInput) return 0;
 		//Is vector time within 3 minutes of last maneuver time?
 		if (num > 0U && GMT < mpt->mantable[num - 1].GMT_BO + 3.0*60.0)
 		{
@@ -18579,14 +18620,13 @@ int RTCC::PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID)
 			goto PMSVEC_2_2;
 		}
 	}
-
+	//Get state vector from ephemeris
 	if (EMSFFV(GMT, L, block.sv))
 	{
 		PMXSPT("PMSVEC", 49);
 		return 1;
 	}
 PMSVEC_2_2:
-	block.KFactor = mpt->KFactor;
 	StaID = mpt->StationID;
 	return 0;
 }

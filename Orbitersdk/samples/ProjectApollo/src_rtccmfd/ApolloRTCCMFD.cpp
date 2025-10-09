@@ -890,7 +890,7 @@ void ApolloRTCCMFD::menuSetMenu()
 void ApolloRTCCMFD::menuSetTIMultipleSolutionPage()
 {
 	marker = 0;
-	markermax = 8;
+	markermax = 10;
 	subscreen = 0;
 	subscreenmax = 1;
 	SelectPage(1);
@@ -1085,7 +1085,7 @@ void ApolloRTCCMFD::menuSetSaturnVLVDCPage()
 void ApolloRTCCMFD::menuSetTICorrectiveCombinationPage()
 {
 	marker = 0;
-	markermax = 11;
+	markermax = 13;
 	subscreen = 0;
 	subscreenmax = 1;
 	SelectPage(37);
@@ -3653,6 +3653,12 @@ void ApolloRTCCMFD::menuSetTIMultipleSolutionInput()
 	case 7:
 		GenericDoubleInput(&GC->rtcc->med_k30.TimeRange, "Enter the range of time for the variable maneuver times:", 1.0);
 		break;
+	case 8:
+		GenericStringInput(&GC->rtcc->med_k30.ChaserVectorID, "Enter Vector ID for chaser (used instead of vector time):");
+		break;
+	case 9:
+		GenericStringInput(&GC->rtcc->med_k30.TargetVectorID, "Enter Vector ID for target (used instead of vector time):");
+		break;
 	}
 }
 
@@ -5573,6 +5579,12 @@ void ApolloRTCCMFD::menuSetCorrectiveCombinationInput()
 		break;
 	case 11:
 		GenericDoubleInput(&GC->rtcc->med_k32.dt_TPI_slip, "The amount by which TPI time is allowed to be slipped on either side of the nominal time:");
+		break;
+	case 12:
+		GenericStringInput(&GC->rtcc->med_k30.ChaserVectorID, "Enter Vector ID for chaser (used instead of vector time):");
+		break;
+	case 13:
+		GenericStringInput(&GC->rtcc->med_k30.TargetVectorID, "Enter Vector ID for target (used instead of vector time):");
 		break;
 	}
 }

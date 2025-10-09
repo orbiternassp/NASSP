@@ -95,14 +95,22 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, x, y, "T2:");
 			if (GC->rtcc->med_k30.EndTime >= 0) Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_k30.EndTime);
 			else Text(skp, x + dx, y, "WT = %.2f°", GC->rtcc->GZGENCSN.TITravelAngle*DEG);
+			y++;
 			if (GC->rtcc->med_k30.IVFlag != 0)
 			{
-				y++;
 				Text(skp, x, y, "INC:");
 				Text(skp, x + dx, y, "%.0lf s", GC->rtcc->med_k30.TimeStep); y++;
 				Text(skp, x, y, "RAN:");
-				Text(skp, x + dx, y, "%.0lf s", GC->rtcc->med_k30.TimeRange);
+				Text(skp, x + dx, y, "%.0lf s", GC->rtcc->med_k30.TimeRange); y++;
 			}
+			else
+			{
+				y += 2;
+			}
+			Text(skp, x, y, "CID:");
+			Text(skp, x + dx, y, GC->rtcc->med_k30.ChaserVectorID); y++;
+			Text(skp, x, y, "TID:");
+			Text(skp, x + dx, y, GC->rtcc->med_k30.TargetVectorID);
 			Text(skp, 1, 20, "OFFSETS:");
 			Text(skp, 1, 21, "DEL H");
 			Text(skp, 1, 22, "PHASE");
@@ -151,11 +159,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, 5, 8, std::string(1, GC->rtcc->TwoImpMultDispBuffer.GETFRZ));
 			Text(skp, 5, 9, std::string(1, GC->rtcc->TwoImpMultDispBuffer.GMTFRZ));
 			Text(skp, 27, 11, std::string(1, GC->rtcc->TwoImpMultDispBuffer.GETVAR));
+			Text(skp, 22, 4, GC->rtcc->TwoImpMultDispBuffer.LMSTAID);
 			Text_GET_HHHMMSSC(skp, 22, 5, GC->rtcc->TwoImpMultDispBuffer.GETTH_LM);
 			Text(skp, 22, 6, GC->rtcc->TwoImpMultDispBuffer.MAN_VEH);
 			Text(skp, 22, 7, "%.3lf", GC->rtcc->TwoImpMultDispBuffer.WT);
 			Text_GET_HHHMMSSC(skp, 22, 8, GC->rtcc->TwoImpMultDispBuffer.GET1);
 			Text_GET_HHHMMSSC(skp, 22, 9, GC->rtcc->TwoImpMultDispBuffer.GMT1);
+			Text(skp, 56, 4, GC->rtcc->TwoImpMultDispBuffer.CSMSTAID);
 			Text_GET_HHHMMSSC(skp, 56, 5, GC->rtcc->TwoImpMultDispBuffer.GETTH_CSM);
 			Text(skp, 56, 6, "%.4lf", GC->rtcc->TwoImpMultDispBuffer.PHASE);
 			Text(skp, 56, 7, "%.2lf", GC->rtcc->TwoImpMultDispBuffer.DH);
@@ -2764,15 +2774,28 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		if (GC->MissionPlanningActive)
 		{
-			//TBD: Chaser and target vector IDs
+			//Chaser and target vector IDs
+			skp->Text(W - CW, 8 * H / 14, GC->rtcc->med_k10.ChaserVectorID.c_str(), GC->rtcc->med_k10.ChaserVectorID.size());
+			skp->Text(W - CW, 8 * H / 14, GC->rtcc->med_k10.TargetVectorID.c_str(), GC->rtcc->med_k10.TargetVectorID.size());
 		}
 		else
 		{
-			//TBD: Chaser vs. target instead of CSM and LM?
-			PrintCSMVessel(Buffer);
-			skp->Text(W - CW, 8 * H / 14, Buffer, strlen(Buffer));
-			PrintLMVessel(Buffer);
-			skp->Text(W - CW, 10 * H / 14, Buffer, strlen(Buffer));
+			//Chaser vs. target vehicle names
+			if (GC->rtcc->med_k00.ChaserVehicle == RTCC_MPT_CSM)
+			{
+				PrintCSMVessel(Buffer);
+				skp->Text(W - CW, 8 * H / 14, Buffer, strlen(Buffer));
+				PrintLMVessel(Buffer);
+				skp->Text(W - CW, 10 * H / 14, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				PrintLMVessel(Buffer);
+				skp->Text(W - CW, 8 * H / 14, Buffer, strlen(Buffer));
+				PrintCSMVessel(Buffer);
+				skp->Text(W - CW, 10 * H / 14, Buffer, strlen(Buffer));
+			}
+			
 		}
 		break;
 	case 35:
@@ -2878,6 +2901,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				Text(skp, x, y, "SLIP:");
 				Text(skp, x + dx, y, "%.1lf min", GC->rtcc->med_k32.dt_TPI_slip);
 			}
+			y++;
+			Text(skp, x, y, "CID:");
+			Text(skp, x + dx, y, GC->rtcc->med_k32.ChaserVectorID); y++;
+			Text(skp, x, y, "TID:");
+			Text(skp, x + dx, y, GC->rtcc->med_k32.TargetVectorID);
 			Text(skp, 1, 21, "NSR NOMINALS:");
 			Text(skp, 1, 22, "GET");
 			Text(skp, 1, 23, "DEL H");
