@@ -389,6 +389,7 @@ namespace OrbMech {
 	MATRIX3 GetVesselToLocalRotMatrix(VESSEL *v);
 	double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu);
 	double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu);
+	double GetTrueMotion(VECTOR3 R, VECTOR3 V, double mu);
 	double CMCEMSRangeToGo(MATRIX3 Rot_J_B, VECTOR3 R05G, double MJD05G, double lat, double lng);
 	//RTCC EMXING support routine, calculate direction vectors and sine of elevation angle
 	void EMXINGElev(VECTOR3 R, VECTOR3 R_S, VECTOR3 &N, VECTOR3 &rho, double &sinang);
@@ -449,6 +450,8 @@ namespace OrbMech {
 	//Time format MM:SS.C
 	void format_time_MMSSC(char *buf, double time);
 	//Time format HH:MM
+	void format_time_HHMM(char *buf, double time);
+	//Time format HHH:MM
 	void format_time_HHHMM(char *buf, double time);
 	//Time format HH:MM:SS
 	void format_time_HHMMSS(char *buf, double time);

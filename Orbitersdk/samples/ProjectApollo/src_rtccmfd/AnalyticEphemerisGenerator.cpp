@@ -75,7 +75,7 @@ void PMMAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 	{
 		goto NewPMMAEG_V846;
 	}
-	if (in.coe_osc.i<0.18 || in.coe_osc.i>1.05)
+	if (in.coe_osc.i < 0.0 || in.coe_osc.i > PI)
 	{
 		goto NewPMMAEG_V846;
 	}
@@ -158,8 +158,9 @@ void PMMAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 	{
 		CurrentBlock.coe_osc = in.coe_osc;
 
-		double L_D, DX_L, DH, X_L, X_L_dot, ddt;
+		double L_D, DX_L, X_L, X_L_dot, ddt;
 		int LINE, COUNT;
+		bool DH;
 
 		if (in.TIMA != 3)
 		{
@@ -192,7 +193,19 @@ void PMMAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 					u += PI2;
 
 				X_L = u;
-				X_L_dot = CurrentBlock.l_dot + CurrentBlock.g_dot;
+
+				if (DH)
+				{
+					//First iteration
+					X_L_dot = CurrentBlock.l_dot + CurrentBlock.g_dot;
+				}
+				else
+				{
+					//Later iterations
+					VECTOR3 R, V;
+					OrbMech::GIMKIC(CurrentBlock.coe_osc, OrbMech::mu_Earth, R, V);
+					X_L_dot = OrbMech::GetTrueMotion(R, V, OrbMech::mu_Earth) + CurrentBlock.g_dot;
+				}
 			}
 			//Maneuver line
 			else
@@ -454,8 +467,9 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 	{
 		coe_osc1 = in.coe_osc;
 
-		double L_D, DX_L, DH, X_L, X_L_dot, ddt;
+		double L_D, DX_L, X_L, X_L_dot, ddt;
 		int LINE, COUNT;
+		bool DH;
 
 		if (in.TIMA != 3)
 		{
@@ -488,7 +502,18 @@ void PMMLAEG::CALL(AEGHeader &header, AEGDataBlock &in, AEGDataBlock &out)
 					u += PI2;
 
 				X_L = u;
-				X_L_dot = CurrentBlock.l_dot + CurrentBlock.g_dot;
+				if (DH)
+				{
+					//First iteration
+					X_L_dot = CurrentBlock.l_dot + CurrentBlock.g_dot;
+				}
+				else
+				{
+					//Later iterations
+					VECTOR3 R, V;
+					OrbMech::GIMKIC(CurrentBlock.coe_osc, OrbMech::mu_Moon, R, V);
+					X_L_dot = OrbMech::GetTrueMotion(R, V, OrbMech::mu_Moon) + CurrentBlock.g_dot;
+				}
 			}
 			//Maneuver line
 			else
@@ -753,8 +778,9 @@ namespace AnalyticEphemerisGenerator
 
 		//Other options
 		CELEMENTS coe_osc;
-		double L_D, DX_L, DH, X_L, X_L_dot, ddt, l_dot, g_dot, h_dot, mu, u;
+		double L_D, DX_L, X_L, X_L_dot, ddt, l_dot, g_dot, h_dot, mu, u;
 		int LINE, COUNT, err;
+		bool DH;
 
 		if (sv0.sv.RBI == BODY_EARTH)
 		{
@@ -797,7 +823,16 @@ namespace AnalyticEphemerisGenerator
 			else if (opt == 2)
 			{
 				X_L = u;
-				X_L_dot = l_dot + g_dot;
+				if (DH)
+				{
+					//First iteration
+					X_L_dot = l_dot + g_dot;
+				}
+				else
+				{
+					//Later iterations
+					X_L_dot = OrbMech::GetTrueMotion(sv1.sv.R, sv1.sv.V, mu) + g_dot;
+				}
 			}
 			//Maneuver line
 			else

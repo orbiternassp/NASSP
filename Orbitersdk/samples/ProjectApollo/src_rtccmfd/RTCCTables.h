@@ -709,6 +709,7 @@ struct SLVTargetingParametersTable
 	double BIAS = 0.0;
 	double LATLS = 0.0;
 	double LONGLS = 0.0;
+	int Pad = 1; //Launchpad (1 = CSM, 2 = LM)
 };
 
 struct StationData

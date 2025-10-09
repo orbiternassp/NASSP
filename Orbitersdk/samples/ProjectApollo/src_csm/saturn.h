@@ -74,6 +74,7 @@
 #include "dinput.h"
 #include "vesim.h"
 
+class MCC;
 class IU;
 class SIBSystems;
 class SICSystems;

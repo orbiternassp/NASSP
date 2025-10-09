@@ -208,6 +208,22 @@ namespace OrbMech{
 		sprintf(buf + length, "%d:%02.1lf", minutes, seconds);
 	}
 
+	void format_time_HHMM(char *buf, double time)
+	{
+		// Format time to HH:MM
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds, 60.0);
+
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%02d:%02d", hours, minutes);
+	}
+
 	void format_time_HHHMM(char *buf, double time)
 	{
 		// Format time to HHH:MM
@@ -5211,6 +5227,16 @@ double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu)
 double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu)
 {
 	return sqrt(mu / pow(GetSemiMajorAxis(R, V, mu), 3));
+}
+
+double GetTrueMotion(VECTOR3 R, VECTOR3 V, double mu)
+{
+	double h, r;
+
+	h = length(crossp(R, V));
+	r = length(R);
+
+	return h / (r*r);
 }
 
 double CMCEMSRangeToGo(MATRIX3 Rot_J_B, VECTOR3 R05G, double MJD05G, double lat, double lng)

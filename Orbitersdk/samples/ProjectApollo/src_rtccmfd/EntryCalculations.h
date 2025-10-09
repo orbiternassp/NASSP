@@ -96,7 +96,7 @@ protected:
 	void RMMATT_LVLH(VECTOR3 LVLH_Att, VECTOR3 R, VECTOR3 V, int thruster, int TrimIndicator, double mass, VECTOR3 &U_T, VECTOR3 &X_B, VECTOR3 &Y_B, VECTOR3 &Z_B) const;
 	VECTOR3 RMMATT_IMU(VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, MATRIX3 REFSMMAT) const;
 	VECTOR3 RMMATT_LVLH_Body(VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, VECTOR3 R, VECTOR3 V) const;
-	MATRIX3 RMMATT_REFSMMAT(VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, VECTOR3 R) const;
+	MATRIX3 RMMATT_REFSMMAT(VECTOR3 U_T, VECTOR3 R, int thruster, int TrimIndicator, double mass) const;
 	//Retrofire Output Control
 	void RMSTTF();
 	//Retrofire On-Line Printing

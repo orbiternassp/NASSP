@@ -332,6 +332,7 @@ class LEM_SteerableAnt: public LM_SBandAntenna {
 public:
 	LEM_SteerableAnt();
 	void Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad *anthtld);
+	void AngleInit(int LMNumber);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	void Timestep(double simdt);
