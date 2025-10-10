@@ -1517,24 +1517,25 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 	break;
 	case 64: //LGC ACTIVATION UPDATE
 	{
-		SV sv;
+		VehicleDataBlock sv_CSM, sv_LM;
 		REFSMMATOpt opt;
 		MATRIX3 REFSMMAT;
-		double TEPHEM0, tephem, t_AGC, t_actual, deltaT;
-		LEM *lem;
+		double tephem, t_AGC, t_actual, deltaT;
+		LEM* lem;
 		char clockupdate[128];
 		char buffer1[1000];
 		char buffer2[1000];
 		char buffer3[1000];
 
-		sv = StateVectorCalc(calcParams.src); //State vector for uplink
-		lem = (LEM *)calcParams.tgt;
-		TEPHEM0 = 40038.;
+		sv_CSM = StateVectorCalcDataBlock(calcParams.src);  //State vector for uplink
+		sv_LM = StateVectorCalcDataBlock(calcParams.tgt);  //State vector for uplink
+
+		lem = (LEM*)calcParams.tgt;
 
 		tephem = GetTEPHEMFromAGC(&lem->agc.vagc, false);
 		t_AGC = GetClockTimeFromAGC(&lem->agc.vagc) / 100.0;
 
-		tephem = (tephem / 8640000.) + TEPHEM0;
+		tephem = (tephem / 8640000.) + SystemParameters.TEPHEM0;
 		t_actual = (oapiGetSimMJD() - tephem) * 86400.;
 		deltaT = t_actual - t_AGC;
 
@@ -1548,15 +1549,16 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		REFSMMAT = REFSMMATCalc(&opt);
 
-		AGCStateVectorUpdate(buffer1, sv, true);
-		AGCStateVectorUpdate(buffer2, sv, false);
+		AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_LM, sv_LM.sv);
+		AGCStateVectorUpdate(buffer2, 2, RTCC_MPT_CSM, sv_CSM.sv);
+
 		AGCREFSMMATUpdate(buffer3, REFSMMAT, false);
 
 		sprintf(uplinkdata, "%s%s%s%s", clockupdate, buffer1, buffer2, buffer3);
 		if (upString != NULL) {
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
-			sprintf(upDesc, "Clock update, state vectors, LS REFSMMAT");
+			sprintf(upDesc, "Clock update, State vectors, LS REFSMMAT");
 		}
 	}
 	break;
