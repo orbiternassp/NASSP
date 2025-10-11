@@ -696,7 +696,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		if (length(res.dV) < 10.0*0.3048) //10 fps
 		{
 			scrubbed = true;
-			mcc->mcc_calcs.StoreStateVector(res.sv_tig2);
 		}
 
 		if (scrubbed)
@@ -704,7 +703,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			DeltaV_LVLH = _V(0, 0, 0);
 			sprintf(upMessage, "NCC-2 has been scrubbed.");
 		}
-
 		else
 		{
 			PMMMPTInput in;
@@ -713,6 +711,8 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			char buffer3[1000];
 			int enginetype;
 			enginetype = mcc->mcc_calcs.SPSRCSDecision(SystemParameters.MCTST1 / WeightsTable.ConfigWeight, res.dV);
+
+			mcc->mcc_calcs.StoreStateVector(res.sv_tig2);
 
 			in.CONFIG = 1; //CSM
 			in.CSMWeight = WeightsTable.CSMWeight;
@@ -753,7 +753,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 			if (enginetype == RTCC_ENGINETYPE_CSMSPS)
 			{
-				sprintf(form->remarks, "P40 SPS, Heads down");
+				sprintf(form->remarks, "Heads down, P40 SPS");
 			}
 			else
 			{
@@ -793,7 +793,6 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 			mcc->mcc_calcs.RestoreStateVector(sv_A);
 			NCC2scrubbed = false;
 		}
-
 		else
 		{
 			sv_A = StateVectorCalcDataBlock(calcParams.src);

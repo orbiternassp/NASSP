@@ -710,7 +710,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		if (fcn == 31)
 		{
 			sprintf(form->purpose, "LOI-1");
-			sprintf(form->remarks, "No ullage,  Horizon window: At ignition minus 2 minutes; 40 degrees unlit.  At ignition; 27 degrees unlit");
+			sprintf(form->remarks, "No ullage,  Horizon window: At ignition minus 2 minutes, 40 degrees unlit,  At ignition, 27 degrees unlit");
 
 			char buffer1[1000];
 			char buffer2[1000];
@@ -1463,7 +1463,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "CSM & LM state vectors, Target load");
-			sprintf(form->remarks, "No ullage,  Horizon window: At ignition minus 3 minutes; 27 degrees, horizon left.  At ignition; 18 degrees, horizon left");
+			sprintf(form->remarks, "No ullage,  Horizon window: At ignition minus 3 minutes, 27 degrees horizon left,  At ignition, 18 degrees horizon left");
 		}
 	}
 	break;
