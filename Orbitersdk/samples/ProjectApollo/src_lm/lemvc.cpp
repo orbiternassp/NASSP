@@ -3782,8 +3782,12 @@ void LEM::UpdatePointingArrow()
 	bool UpperHatchReliefValveFlash = UpperHatchReliefValve.IsFlashing();
 	bool ForwardHatchHandleFlash = ForwardHatchHandle.IsFlashing();
 	bool ForwardHatchReliefValveFlash = ForwardHatchReliefValve.IsFlashing();
+	bool LeftMasterAlarmFlash = LeftMasterAlarmSwitch.IsFlashing();
+	bool RightMasterAlarmFlash = RightMasterAlarmSwitch.IsFlashing();
 
-	if (nextActiveSwitch == nullptr && !ForwardHatchReliefValveFlash) {	// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
+	// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
+	if (nextActiveSwitch == nullptr && !UpperHatchHandleFlash && !UpperHatchReliefValveFlash && !ForwardHatchHandleFlash
+			&& !ForwardHatchReliefValveFlash && !LeftMasterAlarmFlash && !RightMasterAlarmFlash) {	
 		SetMeshVisibilityMode(hLMPointingArrowidx, MESHVIS_NEVER);
 		return;
 	}
@@ -3793,13 +3797,17 @@ void LEM::UpdatePointingArrow()
 
 	VECTOR3 activeSwitchPos;
 	if (UpperHatchHandleFlash) {								// Special handling for others
-		activeSwitchPos = _V(-0.0021, 0.9917, 0.3372);	
+		activeSwitchPos = _V(-0.0021, 0.9917, 0.3372);
 	} else if (UpperHatchReliefValveFlash) {
-		activeSwitchPos = _V(0.1467, 1.0035, 0.1677);	
+		activeSwitchPos = _V(0.1467, 1.0035, 0.1677);
 	} else if (ForwardHatchHandleFlash) {
-		activeSwitchPos = _V(-0.3440, -0.5710, 1.5847);	
+		activeSwitchPos = _V(-0.3440, -0.5710, 1.5847);
 	} else if (ForwardHatchReliefValveFlash) {
-		activeSwitchPos = _V(0.2370, -0.5113, 1.5987);	
+		activeSwitchPos = _V(0.2370, -0.5113, 1.5987);
+	} else if (LeftMasterAlarmFlash) {
+		activeSwitchPos = _V(-0.4159, 0.5993, 1.7025);
+	} else if (RightMasterAlarmFlash) {
+		activeSwitchPos = _V(0.41475, 0.5989, 1.7025);
 	} else {
 		activeSwitchPos = nextActiveSwitch->GetReference();
 	}
