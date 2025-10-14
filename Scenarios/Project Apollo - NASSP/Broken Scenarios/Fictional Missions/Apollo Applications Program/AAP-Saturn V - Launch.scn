@@ -3,7 +3,7 @@ AAP - Saturn V - Launch. After launch you will find yourself in a 185.2km 185.2 
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System ProjectApollo/Sol
+  System ProjectApollo/Sol_VirtualAGC
   Date MJD 41951.543565
 END_ENVIRONMENT
 

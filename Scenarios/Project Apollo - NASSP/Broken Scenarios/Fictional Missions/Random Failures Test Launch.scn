@@ -3,7 +3,7 @@ Test out the random failures with this mission. Odds are about one in ten of som
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System ProjectApollo/Sol
+  System ProjectApollo/Sol_VirtualAGC
   Date MJD 40418.52222222
 END_ENVIRONMENT
 
