@@ -1,11 +1,14 @@
 BEGIN_DESC
-Orbiter saved state at T = 307
+Apollo 8 - Entry Interface
 END_DESC
+
+BEGIN_URLDESC
+  NASSP/503
+END_URLDESC
 
 BEGIN_ENVIRONMENT
   System ProjectApollo\Sol_VirtualAGC
   Date MJD 40217.6518694139
-  Help NASSP/503
 END_ENVIRONMENT
 
 BEGIN_FOCUS
