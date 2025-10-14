@@ -2,10 +2,13 @@ BEGIN_DESC
 Pete Conrad, Al Bean and Dick Gordon make man's second landing on the moon. Pete's prescision landing near Surveyor III makes future accurate exploration possible. November 14, 1969. The scenario starts at T-4h00min, crew ingress is at T-1h40min. (AS-507)
 END_DESC
 
+BEGIN_URLDESC
+  NASSP/507
+END_URLDESC
+
 BEGIN_ENVIRONMENT
   System ProjectApollo\Sol_VirtualAGC
   Date MJD 40539.515277778
-  Help NASSP/507
 END_ENVIRONMENT
 
 BEGIN_FOCUS
