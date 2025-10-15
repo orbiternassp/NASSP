@@ -2,10 +2,13 @@ BEGIN_DESC
 Dave Scott, Jim Irwin and Al Worden make the first detailed exploration of the moon at Hadley Rille on July 26, 1971. They carried the first LRV. The scenario starts at T-4h00min, launch azimuth is +80.01°.
 END_DESC
 
+BEGIN_URLDESC
+  NASSP/510
+END_URLDESC
+
 BEGIN_ENVIRONMENT
   System ProjectApollo\Sol_VirtualAGC
   Date MJD 41158.3986111111
-  Help NASSP/510
 END_ENVIRONMENT
 
 BEGIN_FOCUS
