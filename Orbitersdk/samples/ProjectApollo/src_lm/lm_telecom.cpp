@@ -2701,6 +2701,7 @@ LEM_SteerableAnt::LEM_SteerableAnt()
 	pitch = 0.0;
 	yaw = 0.0;
 	moving = false;
+	driverateratio = 0.0;
 	hpbw_factor = 0.0;
 	SignalStrength = 0.0;
 
@@ -2765,12 +2766,6 @@ void LEM_SteerableAnt::Timestep(double simdt){
 	sband_proc_last[1] = sband_proc[1];
 
 	moving = false;
-
-	if (!IsPowered())
-	{
-		SignalStrength = 0.0;
-		return;
-	}
 
 	double AzimuthErrorSignal, ElevationErrorSignal;
 	double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
@@ -2844,6 +2839,8 @@ void LEM_SteerableAnt::Timestep(double simdt){
 		}
 		moving = true;
 	}
+
+	driverateratio = ((abs(pitchrate) / MaxServoRate) + (abs(yawrate) / MaxServoRate)) / 2.0;  //allows power draw based on drive rates
 
 	//sprintf(oapiDebugString(), "pitchrate: %f deg/sec, yawrate: %f deg/sec", pitchrate*DEG, yawrate*DEG);
 
@@ -2938,20 +2935,21 @@ void LEM_SteerableAnt::Timestep(double simdt){
 void LEM_SteerableAnt::SystemTimestep(double simdt)
 {
 	// Do we have power?
-	if (IsPowered()) {
-
-		lem->SBD_ANT_AC_CB.DrawPower(4); 	
+	if (IsPowered())
+	{
+		lem->SBD_ANT_AC_CB.DrawPower(4);
 		lem->COMM_SBAND_ANT_CB.DrawPower(0.83);
 		antheatload->GenerateHeat(4 + 0.83);
-
 	}
 
 	if (moving)
 	{
-		lem->SBD_ANT_AC_CB.DrawPower(27.9); 	//Need a source on this moving draw
-		lem->COMM_SBAND_ANT_CB.DrawPower(7.6);  //Need a source on this moving draw
-		//antheatload->GenerateHeat(0);		//Will add this once loads above are checked and sourced
+		lem->SBD_ANT_AC_CB.DrawPower(27.9 * driverateratio); 			//Need a source on this moving draw (currently AOH performance summary)
+		lem->COMM_SBAND_ANT_CB.DrawPower(7.6 * driverateratio);			//Need a source on this moving draw (currently AOH performance summary)
+		antheatload->GenerateHeat((27.9 + 7.6) * driverateratio);
 	}
+
+	//sprintf(oapiDebugString(),"Drive Rate Ratio %.01f", driverateratio);
 }
 
 bool LEM_SteerableAnt::IsPowered()
