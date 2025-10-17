@@ -1075,69 +1075,26 @@ void Saturn::RegisterActiveAreas() {
 
 	// Side Hatch
 	if (viewpos != SATVIEW_LOWER_CENTER) {
-		const VECTOR3 SideHatchLocation = { 0.252602, 1.10923, 0.138505 };
-//		const VECTOR3 SideHatch_HandleRot1Location = { 0.322375, 1.26952, -0.140631 };
-		const VECTOR3 SideHatch_HandleRot1Location = { 0.306458, 1.27405, -0.138274 };
-		const VECTOR3 SideHatch_HandleRot2Location = { 0.235498, 1.14957, 0.030519 };
-		const VECTOR3 SideHatch_VentValveLocation = { -0.265141, 1.20124, 0.146229 };
-
-		const VECTOR3 SideHatch_openLocation = { -0.30083, 1.81891, 0.694745 };
-//		const VECTOR3 SideHatch_HandleRot1_openLocation = { -0.349197, 2.08465, 0.506269 };
-		const VECTOR3 SideHatch_HandleRot1_openLocation = { -0.354822, 2.07255, 0.496192 };
-		const VECTOR3 SideHatch_HandleRot2_openLocation = { -0.300838, 1.88328	, 0.597599 };
-		const VECTOR3 SideHatch_VentValve_openLocation = { -0.396115, 1.45676, 0.331093 };
-
 		if (!SideHatch.IsOpen()) {
-
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatchLocation + ofs, 0.1);
-
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_GEARBOX_SEL, SideHatch_HandleRot1Location + ofs, ROT);
-
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, SideHatch_HandleRot2Location + ofs, ROT);
-
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValveLocation + ofs, ROT);
-
-			HatchToggle.SetReference(SideHatchLocation);
-			HatchGearBoxSelector.SetReference(SideHatch_HandleRot1Location);
-			HatchActuatorHandleSelector.SetReference(SideHatch_HandleRot2Location);
-			HatchVentValveRotary.SetReference(SideHatch_VentValveLocation);
 		} else {
 
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatch_openLocation + ofs, 0.1);
-
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_GEARBOX_SEL, SideHatch_HandleRot1_openLocation + ofs, ROT);
-
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, SideHatch_HandleRot2_openLocation + ofs, ROT);
-
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValve_openLocation + ofs, ROT);
-
-			HatchToggle.SetReference(SideHatch_openLocation);
-			HatchGearBoxSelector.SetReference(SideHatch_HandleRot1_openLocation);
-			HatchActuatorHandleSelectorOpen.SetReference(SideHatch_HandleRot2_openLocation);
-			HatchVentValveRotary.SetReference(SideHatch_VentValve_openLocation);
 		}
+		UpdateSideHatchClickspots(ofs);
 	}
 
 	// Forward Hatch
 	if (viewpos == SATVIEW_TUNNEL) {
-		const VECTOR3 FwdHatch_Location = { -0.1495, 0.0705, 1.0980 };
-		const VECTOR3 FwdHatch_Equal_ValveLocation = { 0.0011, -0.0000, 1.0773 };
-
 		oapiVCRegisterArea(AID_VC_FWDHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
-		oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_HANDLE, FwdHatch_Location + ofs, 0.1);
-
-		if (!ForwardHatch.IsOpen()) {
-			oapiVCRegisterArea(AID_VC_FWDHATCH_PRESS_EQU_VLV, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-			oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_PRESS_EQU_VLV, FwdHatch_Equal_ValveLocation + ofs, ROT);
-		}
+		oapiVCRegisterArea(AID_VC_FWDHATCH_PRESS_EQU_VLV, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+		UpdateForwardHatchClickspots(ofs);
 	}
 
     // COAS
@@ -6211,4 +6168,53 @@ void Saturn::CheckBPC_SideHatchCover() {
 		oapiEditMeshGroup(hLESMesh, 1, &LES_grpSpec);
 		oapiEditMeshGroup(hLESMesh, 7, &LES_grpSpec);
 	}
+}
+
+void Saturn::UpdateSideHatchClickspots(const VECTOR3 &ofs)
+{
+	const VECTOR3 SideHatchLocation = { 0.252602, 1.10923, 0.138505 };
+	const VECTOR3 SideHatch_HandleRot1Location = { 0.306458, 1.27405, -0.138274 };
+	const VECTOR3 SideHatch_HandleRot2Location = { 0.235498, 1.14957, 0.030519 };
+	const VECTOR3 SideHatch_VentValveLocation = { -0.265141, 1.20124, 0.146229 };
+
+	const VECTOR3 SideHatch_openLocation = { -0.30083, 1.81891, 0.694745 };
+	const VECTOR3 SideHatch_HandleRot1_openLocation = { -0.354822, 2.07255, 0.496192 };
+	const VECTOR3 SideHatch_HandleRot2_openLocation = { -0.300838, 1.88328	, 0.597599 };
+	const VECTOR3 SideHatch_VentValve_openLocation = { -0.396115, 1.45676, 0.331093 };
+
+	if (!SideHatch.IsOpen()) {
+
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatchLocation + ofs, 0.1);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_GEARBOX_SEL, SideHatch_HandleRot1Location + ofs, ROT);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, SideHatch_HandleRot2Location + ofs, ROT);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValveLocation + ofs, ROT);
+
+		HatchToggle.SetReference(SideHatchLocation);
+		HatchGearBoxSelector.SetReference(SideHatch_HandleRot1Location);
+		HatchActuatorHandleSelector.SetReference(SideHatch_HandleRot2Location);
+		HatchVentValveRotary.SetReference(SideHatch_VentValveLocation);
+	}
+	else {
+
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_HANDLE, SideHatch_openLocation + ofs, 0.1);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_GEARBOX_SEL, SideHatch_HandleRot1_openLocation + ofs, ROT);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, SideHatch_HandleRot2_openLocation + ofs, ROT);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValve_openLocation + ofs, ROT);
+
+		HatchToggle.SetReference(SideHatch_openLocation);
+		HatchGearBoxSelector.SetReference(SideHatch_HandleRot1_openLocation);
+		HatchActuatorHandleSelectorOpen.SetReference(SideHatch_HandleRot2_openLocation);
+		HatchVentValveRotary.SetReference(SideHatch_VentValve_openLocation);
+	}
+}
+
+void Saturn::UpdateForwardHatchClickspots(const VECTOR3 &ofs)
+{
+	const VECTOR3 FwdHatch_Location = { -0.1495, 0.0705, 1.0980 };
+	const VECTOR3 FwdHatch_Equal_ValveLocation = { 0.0011, -0.0000, 1.0773 };
+
+	oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_HANDLE, FwdHatch_Location + ofs, 0.1);
+	//Disable clickspot if hatch is open
+	double rad = (ForwardHatch.IsOpen() ? 0.0 : ROT);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_PRESS_EQU_VLV, FwdHatch_Equal_ValveLocation + ofs, rad);
 }

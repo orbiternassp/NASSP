@@ -1308,6 +1308,8 @@ public:
 	void UpdatePointingArrow();
 	PanelSwitchItem *nextActiveSwitch = nullptr;
 	void CheckBPC_SideHatchCover();
+	void UpdateSideHatchClickspots(const VECTOR3 &ofs);
+	void UpdateForwardHatchClickspots(const VECTOR3 &ofs);
 
 	//
 	// Flashlight for VC

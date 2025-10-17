@@ -4158,6 +4158,12 @@ void Saturn::PanelRefreshForwardHatch() {
 			RefreshPanelIdInTimestep = true;
 		}
 	}
+	else if (InVC && oapiCameraInternal())
+	{
+		VECTOR3 ofs;
+		GetMeshOffset(vcidx, ofs);
+		UpdateForwardHatchClickspots(ofs);
+	}
 }
 
 void Saturn::PanelRefreshSideHatch() {
@@ -4169,6 +4175,12 @@ void Saturn::PanelRefreshSideHatch() {
 		else {
 			RefreshPanelIdInTimestep = true;
 		}
+	}
+	else if (InVC && oapiCameraInternal())
+	{
+		VECTOR3 ofs;
+		GetMeshOffset(vcidx, ofs);
+		UpdateSideHatchClickspots(ofs);
 	}
 }
 
