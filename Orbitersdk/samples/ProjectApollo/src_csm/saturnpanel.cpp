@@ -2522,6 +2522,7 @@ void Saturn::SetSwitches(int panel) {
 	GTASwitch.InitGuard(0,  0, 55, 111, srf[SRF_GTACOVER], srf[SRF_BORDER_55x111]);
 	
 	EMSDvDisplayRow.Init(AID_EMSDVDISPLAY, MainPanel, &GaugePower);
+	EMSDvSetSwitch.Init(this);
 	EMSDvDisplay.Init(srf[SRF_DIGITAL], EMSDvDisplayRow, this);
 	EMSScrollDisplay.Init(EMSDvDisplayRow, this); 	// dummy switch/display for checklist controller
 

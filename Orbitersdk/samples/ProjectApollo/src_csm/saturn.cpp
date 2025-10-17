@@ -1232,7 +1232,7 @@ void Saturn::initSaturn()
 	wasteDisposalState.Set(AnimState::CLOSING, 0.0);
 	panel382CoverState.Set(AnimState::CLOSING, 0.0);
 	altimeterCoverState.Set(AnimState::OPENING, 1.0);
-	ordealState.Set(AnimState::CLOSING, 0.0);	//In reality the ORDEAL should be stowed for launch
+	ordealState.Set(AnimState::OPENING, 1.0);
 	DSKY_GlareshadeState.Set(AnimState::OPENING, 1.0);
 	EMSDV_GlareshadeState.Set(AnimState::OPENING, 1.0);
 	AccelerometerCoverState.Set(AnimState::OPENING, 1.0);

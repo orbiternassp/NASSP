@@ -1100,6 +1100,11 @@ void Saturn::RegisterActiveAreas() {
 
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValveLocation + ofs, ROT);
+
+			HatchToggle.SetReference(SideHatchLocation);
+			HatchGearBoxSelector.SetReference(SideHatch_HandleRot1Location);
+			HatchActuatorHandleSelector.SetReference(SideHatch_HandleRot2Location);
+			HatchVentValveRotary.SetReference(SideHatch_VentValveLocation);
 		} else {
 
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
@@ -1113,6 +1118,11 @@ void Saturn::RegisterActiveAreas() {
 
 			oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 			oapiVCSetAreaClickmode_Spherical(AID_VC_SIDEHATCH_VENT_VALVE, SideHatch_VentValve_openLocation + ofs, ROT);
+
+			HatchToggle.SetReference(SideHatch_openLocation);
+			HatchGearBoxSelector.SetReference(SideHatch_HandleRot1_openLocation);
+			HatchActuatorHandleSelectorOpen.SetReference(SideHatch_HandleRot2_openLocation);
+			HatchVentValveRotary.SetReference(SideHatch_VentValve_openLocation);
 		}
 	}
 
@@ -3384,16 +3394,21 @@ void Saturn::DefineVCAnimations()
 	SPSGimbalPitchThumbwheel.SetReference(P1_TW_POS[0], _V(1, 0, 0));
 	SPSGimbalPitchThumbwheel.DefineMeshGroup(VC_GRP_TW_P1_01);
 	SPSGimbalPitchThumbwheel.SetInitialAnimState(0.5);
+	SPSGimbalPitchThumbwheel.SetArrowOffset(_V(-0.6693, 0.3896, 0.2575) - P1_TW_POS[0]);
 
 	const VECTOR3	TW_SPSYAW_AXIS = { -0.00, sin(P1_3_TILT + (90.0 * RAD)), -cos(P1_3_TILT + (90.0 * RAD)) };
 	MainPanelVC.AddSwitch(&SPSGimbalYawThumbwheel, AID_VC_TW_P1_02);
 	SPSGimbalYawThumbwheel.SetReference(P1_TW_POS[1], TW_SPSYAW_AXIS);
 	SPSGimbalYawThumbwheel.DefineMeshGroup(VC_GRP_TW_P1_02);
 	SPSGimbalYawThumbwheel.SetInitialAnimState(0.5);
+	SPSGimbalYawThumbwheel.SetArrowOffset(_V(-0.6134, 0.3897, 0.2577) - P1_TW_POS[1]);
 
 	MainPanelVC.AddSwitch(&EMSFunctionSwitch, AID_VC_ROT_P1_01);
 	EMSFunctionSwitch.SetReference(P1_ROT_POS[0], P1_3_ROT_AXIS);
 	EMSFunctionSwitch.DefineMeshGroup(VC_GRP_Rot_P1_01);
+
+	MainPanelVC.AddSwitch(&MasterAlarmSwitch);
+	MasterAlarmSwitch.SetReference(_V(-0.775435, 0.709185, 0.361746));
 
 	VECTOR3 NEEDLE_POS = { -0.640937, 0.4098, 0.355623 };
 
@@ -3433,9 +3448,15 @@ void Saturn::DefineVCAnimations()
 	ems.DefineMeshGroup(VC_GRP_RSI_Indicator);
 
 	const VECTOR3 dvsetref = { -0.507344, 0.732746, 0.370513 };
-	EMSDvSetSwitch.Init(this);
+
 	EMSDvSetSwitch.SetReference(dvsetref);
 	EMSDvSetSwitch.DefineMeshGroup(VC_GRP_EMSDV_Set_switch);
+
+	MainPanelVC.AddSwitch(&EMSScrollDisplay);
+	EMSScrollDisplay.SetReference(_V(-0.507325, 0.7327, 0.36895));
+
+	MainPanelVC.AddSwitch(&EMSDvDisplay);
+	EMSDvDisplay.SetReference(_V(-0.507325, 0.7327, 0.36895));
 
 	// Panel 2
 
@@ -3900,6 +3921,7 @@ void Saturn::DefineVCAnimations()
 	PostLDGVentValveLever.SetReference(POSTLDGVENT_POS);
 	PostLDGVentValveLever.SetDirection(POSTLDGVENT_VECT);
 	PostLDGVentValveLever.DefineMeshGroup(VC_GRP_PostLandingVentHandle);
+	PostLDGVentValveLever.SetArrowOffset(_V(0.1835, 0.9203, 0.4144) - POSTLDGVENT_POS);
 
 	MainPanelVC.AddSwitch(&RCSIndicatorsSwitch, AID_VC_ROT_P2_01);
 	RCSIndicatorsSwitch.SetReference(P2_ROT_POS[0], P1_3_ROT_AXIS);
@@ -4118,6 +4140,7 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&CabinTempAutoControlSwitch, AID_VC_TW_P2_01);
 	CabinTempAutoControlSwitch.SetReference(P2_TW_POS[0], _V(1, 0, 0));
 	CabinTempAutoControlSwitch.DefineMeshGroup(VC_GRP_TW_P2_01);
+	CabinTempAutoControlSwitch.SetArrowOffset(_V(0.4013, 0.5133, 0.2933) - P2_TW_POS[0]);
 
 	MainPanelVC.AddSwitch(&SMRCSHelium1ATalkback, AID_VC_RCS_HELIUM1_TB);
 	MainPanelVC.AddSwitch(&SMRCSHelium1BTalkback, AID_VC_RCS_HELIUM1_TB);
@@ -4497,10 +4520,12 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&SquelchAThumbwheel, AID_VC_TW_P3_01);
 	SquelchAThumbwheel.SetReference(P3_TW_POS[0], _V(1, 0, 0));
 	SquelchAThumbwheel.DefineMeshGroup(VC_GRP_TW_P3_01);
+	SquelchAThumbwheel.SetArrowOffset(_V(0.5833, 0.3380, 0.2403) - P3_TW_POS[0]);
 
 	MainPanelVC.AddSwitch(&SquelchBThumbwheel, AID_VC_TW_P3_02);
 	SquelchBThumbwheel.SetReference(P3_TW_POS[1], _V(1, 0, 0));
 	SquelchBThumbwheel.DefineMeshGroup(VC_GRP_TW_P3_02);
+	SquelchBThumbwheel.SetArrowOffset(_V(0.5832, 0.2821, 0.2218) - P3_TW_POS[1]);
 
 	MainPanelVC.AddSwitch(&FuelCellPhIndicator, AID_VC_FCPHRADTEMPIND);
 	MainPanelVC.AddSwitch(&FuelCellRadTempIndicator, AID_VC_FCPHRADTEMPIND);
@@ -4714,26 +4739,32 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&ModeIntercomVOXSensThumbwheelSwitch, AID_VC_TW_P6_01);
 	ModeIntercomVOXSensThumbwheelSwitch.SetReference(P6_TW_POS[0], P6_SW_AXIS);
 	ModeIntercomVOXSensThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P6_01);
+	ModeIntercomVOXSensThumbwheelSwitch.SetArrowOffset(_V(0.8493, 0.7437, 0.3066) - P6_TW_POS[0]);
 
 	MainPanelVC.AddSwitch(&PadCommVolumeThumbwheelSwitch, AID_VC_TW_P6_02);
 	PadCommVolumeThumbwheelSwitch.SetReference(P6_TW_POS[1], P6_SW_AXIS);
 	PadCommVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P6_02);
+	PadCommVolumeThumbwheelSwitch.SetArrowOffset(_V(0.8947, 0.6943, 0.2899) - P6_TW_POS[1]);
 
 	MainPanelVC.AddSwitch(&SBandVolumeThumbwheelSwitch, AID_VC_TW_P6_03);
 	SBandVolumeThumbwheelSwitch.SetReference(P6_TW_POS[2], P6_SW_AXIS);
 	SBandVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P6_03);
+	SBandVolumeThumbwheelSwitch.SetArrowOffset(_V(0.9408, 0.6439, 0.2729) - P6_TW_POS[2]);
 
 	MainPanelVC.AddSwitch(&PowerMasterVolumeThumbwheelSwitch, AID_VC_TW_P6_04);
 	PowerMasterVolumeThumbwheelSwitch.SetReference(P6_TW_POS[3], P6_SW_AXIS);
 	PowerMasterVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P6_04);
+	PowerMasterVolumeThumbwheelSwitch.SetArrowOffset(_V(0.8945, 0.7514, 0.2466) - P6_TW_POS[3]);
 
 	MainPanelVC.AddSwitch(&IntercomVolumeThumbwheelSwitch, AID_VC_TW_P6_05);
 	IntercomVolumeThumbwheelSwitch.SetReference(P6_TW_POS[4], P6_SW_AXIS);
 	IntercomVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P6_05);
+	IntercomVolumeThumbwheelSwitch.SetArrowOffset(_V(0.9421, 0.6994, 0.2289) - P6_TW_POS[4]);
 
 	MainPanelVC.AddSwitch(&VHFAMVolumeThumbwheelSwitch, AID_VC_TW_P6_06);
 	VHFAMVolumeThumbwheelSwitch.SetReference(P6_TW_POS[5], P6_SW_AXIS);
 	VHFAMVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P6_06);
+	VHFAMVolumeThumbwheelSwitch.SetArrowOffset(_V(0.9871, 0.6499, 0.2123) - P6_TW_POS[5]);
 
 	// Panel 7
 
@@ -4966,26 +4997,32 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&LeftModeIntercomVOXSensThumbwheelSwitch, AID_VC_TW_P9_01);
 	LeftModeIntercomVOXSensThumbwheelSwitch.SetReference(P9_TW_POS[0], P9_SW_AXIS);
 	LeftModeIntercomVOXSensThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P9_01);
+	LeftModeIntercomVOXSensThumbwheelSwitch.SetArrowOffset(_V(-0.9010, 0.7509, 0.2442) - P9_TW_POS[0]);
 
 	MainPanelVC.AddSwitch(&LeftPadCommVolumeThumbwheelSwitch, AID_VC_TW_P9_02);
 	LeftPadCommVolumeThumbwheelSwitch.SetReference(P9_TW_POS[1], P9_SW_AXIS);
 	LeftPadCommVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P9_02);
+	LeftPadCommVolumeThumbwheelSwitch.SetArrowOffset(_V(-0.9459, 0.7012, 0.2272) - P9_TW_POS[1]);
 
 	MainPanelVC.AddSwitch(&LeftSBandVolumeThumbwheelSwitch, AID_VC_TW_P9_03);
 	LeftSBandVolumeThumbwheelSwitch.SetReference(P9_TW_POS[2], P9_SW_AXIS);
 	LeftSBandVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P9_03);
+	LeftSBandVolumeThumbwheelSwitch.SetArrowOffset(_V(-0.9915, 0.6506, 0.2097) - P9_TW_POS[2]);
 
 	MainPanelVC.AddSwitch(&LeftPowerMasterVolumeThumbwheelSwitch, AID_VC_TW_P9_04);
 	LeftPowerMasterVolumeThumbwheelSwitch.SetReference(P9_TW_POS[3], P9_SW_AXIS);
 	LeftPowerMasterVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P9_04);
+	LeftPowerMasterVolumeThumbwheelSwitch.SetArrowOffset(_V(-0.8578, 0.7476, 0.3055) - P9_TW_POS[3]);
 
 	MainPanelVC.AddSwitch(&LeftIntercomVolumeThumbwheelSwitch, AID_VC_TW_P9_05);
 	LeftIntercomVolumeThumbwheelSwitch.SetReference(P9_TW_POS[4], P9_SW_AXIS);
 	LeftIntercomVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P9_05);
+	LeftIntercomVolumeThumbwheelSwitch.SetArrowOffset(_V(-0.9050, 0.6953, 0.2876) - P9_TW_POS[4]);
 
 	MainPanelVC.AddSwitch(&LeftVHFAMVolumeThumbwheelSwitch, AID_VC_TW_P9_06);
 	LeftVHFAMVolumeThumbwheelSwitch.SetReference(P9_TW_POS[5], P9_SW_AXIS);
 	LeftVHFAMVolumeThumbwheelSwitch.DefineMeshGroup(VC_GRP_TW_P9_06);
+	LeftVHFAMVolumeThumbwheelSwitch.SetArrowOffset(_V(-0.9498, 0.6457, 0.2704) - P9_TW_POS[5]);
 
 	// Panel 10
 
@@ -5026,26 +5063,32 @@ void Saturn::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&LeftAudioVOXSensThumbwheel, AID_VC_TW_P10_01);
 	LeftAudioVOXSensThumbwheel.SetReference(P10_TW_POS[0], P10_SW_AXIS);
 	LeftAudioVOXSensThumbwheel.DefineMeshGroup(VC_GRP_TW_P10_01);
+	LeftAudioVOXSensThumbwheel.SetArrowOffset(_V(0.0624, 0.3522, 0.5200) - P10_TW_POS[0]);
 
 	MainPanelVC.AddSwitch(&LeftAudioPadComVolumeThumbwheel, AID_VC_TW_P10_02);
 	LeftAudioPadComVolumeThumbwheel.SetReference(P10_TW_POS[1], P10_SW_AXIS);
 	LeftAudioPadComVolumeThumbwheel.DefineMeshGroup(VC_GRP_TW_P10_02);
+	LeftAudioPadComVolumeThumbwheel.SetArrowOffset(_V(0.0624, 0.3771, 0.4618) - P10_TW_POS[1]);
 
 	MainPanelVC.AddSwitch(&LeftAudioSBandVolumeThumbwheel, AID_VC_TW_P10_03);
 	LeftAudioSBandVolumeThumbwheel.SetReference(P10_TW_POS[2], P10_SW_AXIS);
 	LeftAudioSBandVolumeThumbwheel.DefineMeshGroup(VC_GRP_TW_P10_03);
+	LeftAudioSBandVolumeThumbwheel.SetArrowOffset(_V(0.0625, 0.4026, 0.4028) - P10_TW_POS[2]);
 
 	MainPanelVC.AddSwitch(&RightAudioMasterVolumeThumbwheel, AID_VC_TW_P10_04);
 	RightAudioMasterVolumeThumbwheel.SetReference(P10_TW_POS[3], P10_SW_AXIS);
 	RightAudioMasterVolumeThumbwheel.DefineMeshGroup(VC_GRP_TW_P10_04);
+	RightAudioMasterVolumeThumbwheel.SetArrowOffset(_V(-0.0683, 0.3522, 0.5200) - P10_TW_POS[3]);
 
 	MainPanelVC.AddSwitch(&RightAudioIntercomVolumeThumbwheel, AID_VC_TW_P10_05);
 	RightAudioIntercomVolumeThumbwheel.SetReference(P10_TW_POS[4], P10_SW_AXIS);
 	RightAudioIntercomVolumeThumbwheel.DefineMeshGroup(VC_GRP_TW_P10_05);
+	RightAudioIntercomVolumeThumbwheel.SetArrowOffset(_V(-0.0683, 0.3771, 0.4617) - P10_TW_POS[4]);
 
 	MainPanelVC.AddSwitch(&RightAudioVHFAMVolumeThumbwheel, AID_VC_TW_P10_06);
 	RightAudioVHFAMVolumeThumbwheel.SetReference(P10_TW_POS[5], P10_SW_AXIS);
 	RightAudioVHFAMVolumeThumbwheel.DefineMeshGroup(VC_GRP_TW_P10_06);
+	RightAudioVHFAMVolumeThumbwheel.SetArrowOffset(_V(-0.0685, 0.4025, 0.4027) - P10_TW_POS[5]);
 
 	// Panel 12
 
@@ -5323,24 +5366,33 @@ void Saturn::DefineVCAnimations()
 	Dsky2SwitchReset.SetDirection(pb_P122_vector);
 	Dsky2SwitchReset.DefineMeshGroup(VC_GRP_PB_P122_19);
 
+	MainPanelVC.AddSwitch(&ASCPRollSwitch);
+	ASCPRollSwitch.SetReference(_V(-0.9876, 0.3509, 0.2435));
+
+	MainPanelVC.AddSwitch(&ASCPPitchSwitch);
+	ASCPPitchSwitch.SetReference(_V(-0.9878, 0.3154, 0.2322));
+
+	MainPanelVC.AddSwitch(&ASCPYawSwitch);
+	ASCPYawSwitch.SetReference(_V(-0.9879, 0.2797, 0.2202));
+
 	// Panel 300/301/302/303/305
 	const VECTOR3	PANEL30x_VECT = { 1, 0, 0 };
 	const VECTOR3	PANEL30x_DIR = { 0.035209, 0.536965, 0.842869 };
 
 	MainPanelVC.AddSwitch(&SuitCircuitFlow300Switch, AID_VC_Panel300_SuitFlowValve_Handle);
 	SuitCircuitFlow300Switch.SetReference(Panel300_SuitFlowValve_HandleLocation, PANEL30x_DIR);
-	SuitCircuitFlow300Switch.SetDirection(PANEL30x_DIR);
 	SuitCircuitFlow300Switch.DefineMeshGroup(VC_GRP_Panel300_SuitFlowValve_Handle);
+	SuitCircuitFlow300Switch.SetArrowOffset(_V(-0.5899, 0.0386, 0.4808) - Panel300_SuitFlowValve_HandleLocation);
 	
 	MainPanelVC.AddSwitch(&SuitCircuitFlow301Switch, AID_VC_Panel301_SuitFlowValve_Handle);
 	SuitCircuitFlow301Switch.SetReference(Panel301_SuitFlowValve_HandleLocation, PANEL30x_DIR);
-	SuitCircuitFlow301Switch.SetDirection(PANEL30x_DIR);
 	SuitCircuitFlow301Switch.DefineMeshGroup(VC_GRP_Panel301_SuitFlowValve_Handle);
+	SuitCircuitFlow301Switch.SetArrowOffset(_V(-0.5966, 0.0402, 0.3217) - Panel301_SuitFlowValve_HandleLocation);
 	
 	MainPanelVC.AddSwitch(&SuitCircuitFlow302Switch, AID_VC_Panel302_SuitFlowValve_Handle);
 	SuitCircuitFlow302Switch.SetReference(Panel302_SuitFlowValve_HandleLocation, PANEL30x_DIR);
-	SuitCircuitFlow302Switch.SetDirection(PANEL30x_DIR);
 	SuitCircuitFlow302Switch.DefineMeshGroup(VC_GRP_Panel302_SuitFlowValve_Handle);
+	SuitCircuitFlow302Switch.SetArrowOffset(_V(-0.5966, -0.0599, 0.3220) - Panel302_SuitFlowValve_HandleLocation);
 
 	MainPanelVC.AddSwitch(&SecondaryCabinTempValve, AID_VC_Rot_Panel303);
 	SecondaryCabinTempValve.SetReference(Rot_Panel303Location, PANEL30x_VECT);
@@ -5401,16 +5453,19 @@ void Saturn::DefineVCAnimations()
 	GlycolToRadiatorsLever.SetReference(PRIMGLYHANDLE_POS);
 	GlycolToRadiatorsLever.SetDirection(PRIMGLYHANDLE_VECT);
 	GlycolToRadiatorsLever.DefineMeshGroup(VC_GRP_Prim_Gly_Handle);
+	GlycolToRadiatorsLever.SetArrowOffset(_V(-1.1482, 0.9683, -0.2124) - PRIMGLYHANDLE_POS);
 
 	MainPanelVC.AddSwitch(&CabinPressureReliefLever1, AID_VC_Cab_Press_Rel_Handle1);
 	CabinPressureReliefLever1.SetReference(Cab_Press_Rel_Handle1Location, P325_HANDLE_AXIS);
 	CabinPressureReliefLever1.SetRotationRange(50 * RAD);
 	CabinPressureReliefLever1.DefineMeshGroup(VC_GRP_Cab_Press_Rel_Handle1);
+	CabinPressureReliefLever1.SetArrowOffset(_V(-1.2171, 0.7811, -0.2383) - Cab_Press_Rel_Handle1Location);
 
 	MainPanelVC.AddSwitch(&CabinPressureReliefLever2, AID_VC_Cab_Press_Rel_Handle2);
 	CabinPressureReliefLever2.SetReference(Cab_Press_Rel_Handle2Location, P325_HANDLE_AXIS);
 	CabinPressureReliefLever2.SetRotationRange(55 * RAD);
 	CabinPressureReliefLever2.DefineMeshGroup(VC_GRP_Cab_Press_Rel_Handle2);
+	CabinPressureReliefLever2.SetArrowOffset(_V(-1.2067, 0.6746, -0.2383) - Cab_Press_Rel_Handle2Location);
 
 	// Panel 326
 
@@ -5539,6 +5594,9 @@ void Saturn::DefineVCAnimations()
 	EvapWaterControlPrimaryRotary.SetReference(LEB_L_ROT_POS[9], rot_leb_l_vector);
 	EvapWaterControlPrimaryRotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_10);
 
+	MainPanelVC.AddSwitch(&this->Panel382Cover);
+	this->Panel382Cover.SetReference(_V(-1.0863, 0.2080, -0.6266));
+
 	MainPanelVC.AddSwitch(&WaterAccumulator1Rotary, AID_VC_ROT_LEB_L_11);
 	WaterAccumulator1Rotary.SetReference(LEB_L_ROT_POS[10], rot_leb_l_vector);
 	WaterAccumulator1Rotary.DefineMeshGroup(VC_GRP_Rot_LEB_Left_11);
@@ -5594,6 +5652,7 @@ void Saturn::DefineVCAnimations()
 	SuitCircuitReturnValveLever.SetReference(LEB_L_PUSHB_POS[0]);
 	SuitCircuitReturnValveLever.SetDirection(handle_leb_l_vector);
 	SuitCircuitReturnValveLever.DefineMeshGroup(VC_GRP_PB_LEB_Left_01);
+	SuitCircuitReturnValveLever.SetArrowOffset(_V(-1.0608, 0.2392, -0.3428) - LEB_L_PUSHB_POS[0]);
 
 	MainPanelVC.AddSwitch(&O2MainRegulatorASwitch, AID_VC_PUSHB_LEB_L_02);
 	O2MainRegulatorASwitch.SetReference(LEB_L_PUSHB_POS[1]);
@@ -5619,7 +5678,7 @@ void Saturn::DefineVCAnimations()
 
 	// Forward Hatch
 	MainPanelVC.AddSwitch(&PressEqualValve, AID_VC_FWDHATCH_PRESS_EQU_VLV);
-//	PressEqualValve.SetReference(VECTOR3 {0.0011, -0.0000, 1.0773 }, VECTOR3 { -1, 0, 0 });
+	PressEqualValve.SetReference(VECTOR3{ 0.0011, -0.0000, 1.0773 });// , VECTOR3{ -1, 0, 0 });
 
 	// Panel 600
 	const VECTOR3	P600_SW_AXIS = { -1, 0, 0 };
@@ -5973,90 +6032,16 @@ void Saturn::UpdatePointingArrow()
 	PanelSwitchItem *nextActiveSwitch = MainPanelVC.GetFlashingItem();
 
 	// The next ones need to be checked individualy
-	bool Panel382Flash = Panel382Cover.IsFlashing();
-	bool ASCPRollFlash = ASCPRollSwitch.IsFlashing();
-	bool ASCPPitchFlash = ASCPPitchSwitch.IsFlashing();
-	bool ASCPYawFlash = ASCPYawSwitch.IsFlashing();
-	bool EMSDvSetSwitchFlash = (EMSDvDisplay.IsFlashing() || EMSScrollDisplay.IsFlashing());
-	bool HatchToggleFlash = HatchToggle.IsFlashing();
-	bool HatchGearBoxSelectorFlash = HatchGearBoxSelector.IsFlashing();
-	bool HatchActuatorHandleSelectorFlash = HatchActuatorHandleSelector.IsFlashing();
 	bool HatchActuatorHandleSelectorOpenFlash = HatchActuatorHandleSelectorOpen.IsFlashing();
-	bool HatchVentValveRotaryFlash = HatchVentValveRotary.IsFlashing();
 	
-	if (nextActiveSwitch == nullptr && !Panel382Flash && !ASCPRollFlash && !ASCPPitchFlash && !ASCPYawFlash
-			&& !EMSDvSetSwitchFlash && !HatchToggleFlash && !HatchGearBoxSelectorFlash && !HatchActuatorHandleSelectorFlash
-			&& !HatchActuatorHandleSelectorOpenFlash && !HatchVentValveRotaryFlash) {
+	if (nextActiveSwitch == nullptr
+			&& !HatchActuatorHandleSelectorOpenFlash) {
 		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_NEVER);
 		return;
 	}
 	VECTOR3 activeSwitchPos;
-	if (Panel382Flash) {								// Special handling for Panel 382 Cover and others
-		activeSwitchPos = _V(-1.0863, 0.2080, -0.6266);	
-	} else if (ASCPRollFlash) {
-		activeSwitchPos = _V(-0.9876,  0.3509,  0.2435);	
-	} else if (ASCPPitchFlash){
-		activeSwitchPos = _V(-0.9878,  0.3154,  0.2322);	
-	} else if (ASCPYawFlash){
-		activeSwitchPos = _V(-0.9879,  0.2797,  0.2202);
-	} else if (EMSDvSetSwitchFlash){
-		activeSwitchPos = _V(-0.507325, 0.7327, 0.36895);
-	} else if (HatchToggleFlash){
-		if (!SideHatch.IsOpen()) {
-			activeSwitchPos = _V( 0.252602, 1.10923, 0.138505 );		// SideHatchLocation
-		} else {
-			activeSwitchPos = _V( -0.30083, 1.81891, 0.694745 );	// SideHatch_openLocation
-		}
-	} else if (HatchGearBoxSelectorFlash){
-		if (!SideHatch.IsOpen()) {
-			activeSwitchPos = _V( 0.306458, 1.27405, -0.138274 );		// SideHatch_HandleRot1Location
-		} else {
-			activeSwitchPos = _V( -0.354822, 2.07255, 0.496192 );	// SideHatch_HandleRot1_openLocation
-		}
-	} else if (HatchActuatorHandleSelectorFlash){
-		if (!SideHatch.IsOpen()) {
-			activeSwitchPos = _V( 0.235498, 1.14957, 0.030519 );	// SideHatch_HandleRot2Location
-		} else {
-			activeSwitchPos = _V( -0.300838, 1.88328 , 0.597599 );	// SideHatch_HandleRot2_openLocation
-		}
-//	} else if (HatchActuatorHandleSelectorOpenFlash){
-//		if (!SideHatch.IsOpen()) {
-//		} else {
-//		}
-	} else if (HatchVentValveRotaryFlash){
-		if (!SideHatch.IsOpen()) {
-			activeSwitchPos = _V( -0.265141, 1.20124, 0.146229 );	// SideHatch_VentValveLocation
-		} else {
-			activeSwitchPos = _V( -0.396115, 1.45676, 0.331093 );	// SideHatch_VentValve_openLocation
-		}
-	} else {
-		activeSwitchPos = nextActiveSwitch->GetReference();
-	}
 
-	// These switches need special treatment because their click point is not the same as their pivot point.
-	static PanelSwitchItem *specialSwitches[] = {
-		&SuitCircuitFlow300Switch, &SuitCircuitFlow301Switch, &SuitCircuitFlow302Switch, &LeftAudioVOXSensThumbwheel, &LeftAudioPadComVolumeThumbwheel,
-		&LeftAudioSBandVolumeThumbwheel, &RightAudioMasterVolumeThumbwheel, &RightAudioIntercomVolumeThumbwheel, &RightAudioVHFAMVolumeThumbwheel,
-		&SPSGimbalPitchThumbwheel, &SPSGimbalYawThumbwheel, &CabinTempAutoControlSwitch, &SquelchAThumbwheel, &SquelchBThumbwheel,
-		&ModeIntercomVOXSensThumbwheelSwitch, &PadCommVolumeThumbwheelSwitch, &SBandVolumeThumbwheelSwitch, &PowerMasterVolumeThumbwheelSwitch,
-		&IntercomVolumeThumbwheelSwitch, &VHFAMVolumeThumbwheelSwitch, &LeftModeIntercomVOXSensThumbwheelSwitch, &LeftPadCommVolumeThumbwheelSwitch,
-		&LeftSBandVolumeThumbwheelSwitch, &LeftPowerMasterVolumeThumbwheelSwitch, &LeftIntercomVolumeThumbwheelSwitch, &LeftVHFAMVolumeThumbwheelSwitch,
-		&CabinPressureReliefLever1, &CabinPressureReliefLever2, &SuitCircuitReturnValveLever, &GlycolToRadiatorsLever, &PostLDGVentValveLever, &PressEqualValve
-	};
-
-	const VECTOR3 specialSwitchesPos[] = {
-		_V(-0.5899,  0.0386,  0.4808), _V(-0.5966,  0.0402,  0.3217), _V(-0.5966, -0.0599,  0.3220), _V( 0.0624,  0.3522,  0.5200), _V( 0.0624,  0.3771,  0.4618),
-		_V( 0.0625,  0.4026,  0.4028), _V(-0.0683,  0.3522,  0.5200), _V(-0.0683,  0.3771,  0.4617), _V(-0.0685,  0.4025,  0.4027), _V(-0.6693,  0.3896,  0.2575),
-		_V(-0.6134,  0.3897,  0.2577), _V( 0.4013,  0.5133,  0.2933), _V( 0.5833,  0.3380,  0.2403), _V( 0.5832,  0.2821,  0.2218), _V( 0.8493,  0.7437,  0.3066),
-		_V( 0.8947,  0.6943,  0.2899), _V( 0.9408,  0.6439,  0.2729), _V( 0.8945,  0.7514,  0.2466), _V( 0.9421,  0.6994,  0.2289), _V( 0.9871,  0.6499,  0.2123),
-		_V(-0.9010,  0.7509,  0.2442), _V(-0.9459,  0.7012,  0.2272), _V(-0.9915,  0.6506,  0.2097), _V(-0.8578,  0.7476,  0.3055), _V(-0.9050,  0.6953,  0.2876),
-		_V(-0.9498,  0.6457,  0.2704), _V(-1.2171,  0.7811, -0.2383), _V(-1.2067,  0.6746, -0.2383), _V(-1.0608,  0.2392, -0.3428), _V(-1.1482,  0.9683, -0.2124),
-		_V( 0.1835,  0.9203,  0.4144), _V( 0.0011, -0.0000,  1.0773) 
-	};
-
-	for (int i = 0; i < NUM_ELEMENTS(specialSwitches); i++){
-		if (specialSwitches[i]->IsFlashing()) activeSwitchPos = specialSwitchesPos[i];
-	}
+	activeSwitchPos = nextActiveSwitch->GetChecklistReference();
 
 	VECTOR3 camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs;	
 
