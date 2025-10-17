@@ -2353,6 +2353,7 @@ void LEM::DefineVCAnimations()
 	crossPointerRight.DefineMeshGroup(VC_GRP_XpointerX_lmp, VC_GRP_XpointerY_lmp);
 
 	MainPanelVC.AddSwitch(&LeftMasterAlarmSwitch, AID_VC_LEM_MA_LEFT);
+	LeftMasterAlarmSwitch.SetReference(_V(-0.4159, 0.5993, 1.7025));
 
 	//Panel 2
 
@@ -2546,6 +2547,7 @@ void LEM::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&RCSMainSovBTB, AID_VC_MAIN_SOV_TALKBACKS);
 
 	MainPanelVC.AddSwitch(&RightMasterAlarmSwitch, AID_VC_LEM_MA_RIGHT);
+	RightMasterAlarmSwitch.SetReference(_V(0.41475, 0.5989, 1.7025));
 
 	//Panel 3
 
@@ -3047,26 +3049,32 @@ void LEM::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&CDRAudSBandVol, AID_VC_TW_P8_01);
 	CDRAudSBandVol.SetReference(P8_TW_POS[0], _V(0, 0, 1));
 	CDRAudSBandVol.DefineMeshGroup(VC_GRP_TW_P8_01);
+	CDRAudSBandVol.SetArrowOffset(_V(-1.0583, 0.0721, 1.3820) - P8_TW_POS[0]);
 
 	MainPanelVC.AddSwitch(&CDRAudICSVol, AID_VC_TW_P8_02);
 	CDRAudICSVol.SetReference(P8_TW_POS[1], _V(0, 0, 1));
 	CDRAudICSVol.DefineMeshGroup(VC_GRP_TW_P8_02);
+	CDRAudICSVol.SetArrowOffset(_V(-1.0575, 0.0718, 1.4357) - P8_TW_POS[1]);
 
 	MainPanelVC.AddSwitch(&CDRAudVOXSens, AID_VC_TW_P8_03);
 	CDRAudVOXSens.SetReference(P8_TW_POS[2], _V(0, 0, 1));
 	CDRAudVOXSens.DefineMeshGroup(VC_GRP_TW_P8_03);
+	CDRAudVOXSens.SetArrowOffset(_V(-1.0228, 0.0606, 1.4950) - P8_TW_POS[2]);
 
 	MainPanelVC.AddSwitch(&CDRAudVHFAVol, AID_VC_TW_P8_04);
 	CDRAudVHFAVol.SetReference(P8_TW_POS[3], _V(0, 0, 1));
 	CDRAudVHFAVol.DefineMeshGroup(VC_GRP_TW_P8_04);
+	CDRAudVHFAVol.SetArrowOffset(_V(-0.9708, 0.0430, 1.3820) - P8_TW_POS[3]);
 
 	MainPanelVC.AddSwitch(&CDRAudVHFBVol, AID_VC_TW_P8_05);
 	CDRAudVHFBVol.SetReference(P8_TW_POS[4], _V(0, 0, 1));
 	CDRAudVHFBVol.DefineMeshGroup(VC_GRP_TW_P8_05);
+	CDRAudVHFBVol.SetArrowOffset(_V(-0.9708, 0.0430, 1.4368) - P8_TW_POS[4]);
 
 	MainPanelVC.AddSwitch(&CDRAudMasterVol, AID_VC_TW_P8_06);
 	CDRAudMasterVol.SetReference(P8_TW_POS[5], _V(0, 0, 1));
 	CDRAudMasterVol.DefineMeshGroup(VC_GRP_TW_P8_06);
+	CDRAudMasterVol.SetArrowOffset(_V(0.9708, 0.0430, 1.4949) - P8_TW_POS[5]);
 
 	MainPanelVC.AddSwitch(&EDDesFuelVentTB, AID_VC_PANEL8_TALKBACKS);
 	MainPanelVC.AddSwitch(&EDDesOxidVentTB, AID_VC_PANEL8_TALKBACKS);
@@ -3177,6 +3185,14 @@ void LEM::DefineVCAnimations()
 		p12thumbw[i]->SetReference(P12_TW_POS[i], _V(0, 0, -1));
 		p12thumbw[i]->DefineMeshGroup(VC_GRP_TW_P12_01 + i);
 	}
+	LMPAudSBandVol.SetArrowOffset(_V(1.0616, 0.0677, 1.5006) - P12_TW_POS[0]);
+	LMPAudICSVol.SetArrowOffset(_V(1.0615, 0.0678, 1.4452) - P12_TW_POS[1]);
+	LMPAudVOXSens.SetArrowOffset(_V(1.0287, 0.0582, 1.3907) - P12_TW_POS[2]);
+	LMPAudVHFAVol.SetArrowOffset(_V(0.9768, 0.0434, 1.5001) - P12_TW_POS[3]);
+	LMPAudVHFBVol.SetArrowOffset(_V(0.9773, 0.0433, 1.4452) - P12_TW_POS[4]);
+	LMPAudMasterVol.SetArrowOffset(_V(0.9773, 0.0431, 1.3908) - P12_TW_POS[5]);
+	VHFASquelch.SetArrowOffset(_V(0.9767, 0.0434, 1.2569) - P12_TW_POS[6]);
+	VHFBSquelch.SetArrowOffset(_V(0.9770, 0.0433, 1.1843) - P12_TW_POS[7]);
 
 	MainPanelVC.AddSwitch(&ComPitchMeter);
 	ComPitchMeter.SetReference(P12_NEEDLE_POS[0], P12_ROT_AXIS);
@@ -3438,10 +3454,16 @@ void LEM::DefineVCAnimations()
 
 	// Hatches
 	MainPanelVC.AddSwitch(&UpperHatchHandle, AID_VC_OVERHEADHATCHHANDLE);
+	UpperHatchHandle.SetReference(UpperHatchHandleLocation);
+
 	MainPanelVC.AddSwitch(&UpperHatchReliefValve, AID_VC_OVERHEADHATCHRELIEFVALVE);
+	UpperHatchReliefValve.SetReference(UpperHatchReliefValveLocation);
 
 	MainPanelVC.AddSwitch(&ForwardHatchHandle, AID_VC_FORWARDHATCHHANDLE);
+	ForwardHatchHandle.SetReference(FwdHatchHandleLocation);
+
 	MainPanelVC.AddSwitch(&ForwardHatchReliefValve, AID_VC_FORWARDHATCHRELIEFVALVE);
+	ForwardHatchReliefValve.SetReference(FwdHatchReliefValveLocation);
 
 	// Utility Lights
 	MainPanelVC.AddSwitch(&UtilityLightSwitchCDR, AID_VC_UTILITYLIGHTCDR);
@@ -3777,17 +3799,8 @@ void LEM::UpdatePointingArrow()
 
 	PanelSwitchItem *nextActiveSwitch = MainPanelVC.GetFlashingItem();
 
-	// The next ones need to be checked individualy
-	bool UpperHatchHandleFlash = UpperHatchHandle.IsFlashing();
-	bool UpperHatchReliefValveFlash = UpperHatchReliefValve.IsFlashing();
-	bool ForwardHatchHandleFlash = ForwardHatchHandle.IsFlashing();
-	bool ForwardHatchReliefValveFlash = ForwardHatchReliefValve.IsFlashing();
-	bool LeftMasterAlarmFlash = LeftMasterAlarmSwitch.IsFlashing();
-	bool RightMasterAlarmFlash = RightMasterAlarmSwitch.IsFlashing();
-
 	// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
-	if (nextActiveSwitch == nullptr && !UpperHatchHandleFlash && !UpperHatchReliefValveFlash && !ForwardHatchHandleFlash
-			&& !ForwardHatchReliefValveFlash && !LeftMasterAlarmFlash && !RightMasterAlarmFlash) {	
+	if (nextActiveSwitch == nullptr) {	
 		SetMeshVisibilityMode(hLMPointingArrowidx, MESHVIS_NEVER);
 		return;
 	}
@@ -3795,38 +3808,7 @@ void LEM::UpdatePointingArrow()
 //	SetMeshVisibilityMode(hLMPointingArrowidx, MESHVIS_VC);
 //	return;
 
-	VECTOR3 activeSwitchPos;
-	if (UpperHatchHandleFlash) {								// Special handling for others
-		activeSwitchPos = _V(-0.0021, 0.9917, 0.3372);
-	} else if (UpperHatchReliefValveFlash) {
-		activeSwitchPos = _V(0.1467, 1.0035, 0.1677);
-	} else if (ForwardHatchHandleFlash) {
-		activeSwitchPos = _V(-0.3440, -0.5710, 1.5847);
-	} else if (ForwardHatchReliefValveFlash) {
-		activeSwitchPos = _V(0.2370, -0.5113, 1.5987);
-	} else if (LeftMasterAlarmFlash) {
-		activeSwitchPos = _V(-0.4159, 0.5993, 1.7025);
-	} else if (RightMasterAlarmFlash) {
-		activeSwitchPos = _V(0.41475, 0.5989, 1.7025);
-	} else {
-		activeSwitchPos = nextActiveSwitch->GetReference();
-	}
-
-	// These switches need special treatment because their click point is not the same as their pivot point.
-	static PanelSwitchItem *specialSwitches[] = {
-		&CDRAudSBandVol, &CDRAudICSVol, &CDRAudVOXSens, &CDRAudVHFAVol, &CDRAudVHFBVol, &CDRAudMasterVol,
-		&LMPAudSBandVol, &LMPAudICSVol, &LMPAudVOXSens, &LMPAudVHFAVol, &LMPAudVHFBVol, &LMPAudMasterVol, &VHFASquelch, &VHFBSquelch
-	};
-
-	const VECTOR3 specialSwitchesPos[] = {
-		_V(-1.0583, 0.0721, 1.3820), _V(-1.0575, 0.0718, 1.4357), _V(-1.0228, 0.0606, 1.4950), _V(-0.9708, 0.0430, 1.3820), _V(-0.9708, 0.0430, 1.4368),
-		_V( 0.9708, 0.0430, 1.4949), _V( 1.0616, 0.0677, 1.5006), _V( 1.0615, 0.0678, 1.4452), _V( 1.0287, 0.0582, 1.3907), _V( 0.9768, 0.0434, 1.5001),
-		_V( 0.9773, 0.0433, 1.4452), _V( 0.9773, 0.0431, 1.3908), _V( 0.9767, 0.0434, 1.2569), _V( 0.9770, 0.0433, 1.1843)
-	};
-
-	for (int i = 0; i < NUM_ELEMENTS(specialSwitches); i++){
-		if (specialSwitches[i]->IsFlashing()) activeSwitchPos = specialSwitchesPos[i];
-	}
+	VECTOR3 activeSwitchPos = nextActiveSwitch->GetChecklistReference();
 
 	VECTOR3 camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs;	
 

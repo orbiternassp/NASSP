@@ -2522,6 +2522,7 @@ void Saturn::SetSwitches(int panel) {
 	GTASwitch.InitGuard(0,  0, 55, 111, srf[SRF_GTACOVER], srf[SRF_BORDER_55x111]);
 	
 	EMSDvDisplayRow.Init(AID_EMSDVDISPLAY, MainPanel, &GaugePower);
+	EMSDvSetSwitch.Init(this);
 	EMSDvDisplay.Init(srf[SRF_DIGITAL], EMSDvDisplayRow, this);
 	EMSScrollDisplay.Init(EMSDvDisplayRow, this); 	// dummy switch/display for checklist controller
 
@@ -4157,6 +4158,12 @@ void Saturn::PanelRefreshForwardHatch() {
 			RefreshPanelIdInTimestep = true;
 		}
 	}
+	else if (InVC && oapiCameraInternal())
+	{
+		VECTOR3 ofs;
+		GetMeshOffset(vcidx, ofs);
+		UpdateForwardHatchClickspots(ofs);
+	}
 }
 
 void Saturn::PanelRefreshSideHatch() {
@@ -4168,6 +4175,12 @@ void Saturn::PanelRefreshSideHatch() {
 		else {
 			RefreshPanelIdInTimestep = true;
 		}
+	}
+	else if (InVC && oapiCameraInternal())
+	{
+		VECTOR3 ofs;
+		GetMeshOffset(vcidx, ofs);
+		UpdateSideHatchClickspots(ofs);
 	}
 }
 

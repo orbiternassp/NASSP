@@ -2275,7 +2275,7 @@ LEMEvaAntennaHandle::~LEMEvaAntennaHandle()
 
 void LEMEvaAntennaHandle::DefineVCAnimations(UINT vc_idx)
 {
-	if (bHasDirection && !bHasAnimations)
+	if (bHasDirection && bHasMeshGroup && !bHasAnimations)
 	{
 		mshEVAAntHandleDown = new MGROUP_TRANSLATE(vc_idx, &grpIndex, 1, GetDirection());
 		mshEVAAntHandleRotate = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), _V(0, 1, 0), (float)(300 * RAD));
@@ -2287,6 +2287,14 @@ void LEMEvaAntennaHandle::DefineVCAnimations(UINT vc_idx)
 		OurVessel->AddAnimationComponent(anim_switch, 0.9, 1.0, mshEVAAntHandleUp);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 void LEMEvaAntennaHandle::OnPostStep(double SimT, double DeltaT, double MJD)

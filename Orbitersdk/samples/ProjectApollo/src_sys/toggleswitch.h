@@ -230,12 +230,17 @@ public:
 	virtual void DefineVCAnimations(UINT vc_idx);
 	virtual const VECTOR3& GetDirection() const;
 	virtual const VECTOR3& GetReference() const;
+
+	/// Reference position in Virtual Cockpit for checklist
+	virtual VECTOR3 GetChecklistReference() const;
+
 	virtual void OnPostStep(double SimT, double DeltaT, double MJD) {}
 	virtual void OnPostCreation() {}
 
 	virtual void SetReference(const VECTOR3& ref);
 	virtual void SetReference(const VECTOR3& ref, const VECTOR3& dir);
 	virtual void SetDirection(const VECTOR3& _dir);
+	virtual void SetArrowOffset(const VECTOR3 & _off);
 	void SetInitialAnimState(double fState);
 	double InitialAnimState() const { return fInitialAnimState; };
 	
@@ -295,11 +300,16 @@ protected:
 	bool bHasAnimations;
 	bool bHasDirection;
 	bool bHasReference;
+	bool bHasMeshGroup;
 
 	double fInitialAnimState;
 
 	VECTOR3 reference;
 	VECTOR3 dir;
+
+	// reference is used in general for the arrow in the VC pointing to current active checklist switch
+	// If a different position is desired, this value can be set to make the arrow point to an offset position
+	VECTOR3 arrowoffset;
 
 	PanelSwitchItem *next;
 	PanelSwitchItem *nextForScenario;
