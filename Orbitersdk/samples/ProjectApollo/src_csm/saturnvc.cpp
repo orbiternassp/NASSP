@@ -2196,6 +2196,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_CMVC_POINTINGARROW:
 	{
 		UpdatePointingArrow();
+		SetVCCueCardsArrows();
 	}
 
 	case AID_VC_CUE_CARDS_LIGHTING:

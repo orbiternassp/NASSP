@@ -1306,7 +1306,6 @@ public:
 	void DoMeshAnimation(AnimState &, UINT &, double, double);
 
 	void UpdatePointingArrow();
-	PanelSwitchItem *nextActiveSwitch = nullptr;
 	void CheckBPC_SideHatchCover();
 	void UpdateSideHatchClickspots(const VECTOR3 &ofs);
 	void UpdateForwardHatchClickspots(const VECTOR3 &ofs);
@@ -4270,7 +4269,7 @@ protected:
 #endif
 
 //	CAMERAHANDLE hFDAICam = NULL;
-	SURFHANDLE srfFDAICamTexture;
+//	SURFHANDLE srfFDAICamTexture;
 //	SURFHANDLE hFDAISurf;
 
 //	void InitFDAICustomCamera(void);
