@@ -135,7 +135,10 @@ DWORD FloodLights_LMVC[] = {
 	VC_MAT_CW_Frame,
 
 // Ordeal
-	VC_MAT_Ordeal_Lighting_LMVC_2_t
+	VC_MAT_Ordeal_Lighting_LMVC_2_t,
+
+// TTCA
+	VC_MAT_TTCA
 };
 
 DWORD IntegralLights_LMVC[] = {

@@ -4,13 +4,13 @@
 // ========================================================
 
 // Number of mesh groups:
-#define VC_NGRP 673
+#define VC_NGRP 681
 
 // Number of materials:
-#define VC_NMAT 143
+#define VC_NMAT 144
 
 // Number of textures:
-#define VC_NTEX 33
+#define VC_NTEX 34
 
 // Named mesh groups:
 #define VC_GRP_ACA_CMR 0
@@ -650,42 +650,50 @@
 #define VC_GRP_SwitchHolder_RRGyro 634
 #define VC_GRP_SwitchHolder_UtilityLights 635
 #define VC_GRP_Switch_Guards_P14 636
-#define VC_GRP_TW_P12_01 637
-#define VC_GRP_TW_P12_02 638
-#define VC_GRP_TW_P12_03 639
-#define VC_GRP_TW_P12_04 640
-#define VC_GRP_TW_P12_05 641
-#define VC_GRP_TW_P12_06 642
-#define VC_GRP_TW_P12_07 643
-#define VC_GRP_TW_P12_08 644
-#define VC_GRP_TW_P8_01 645
-#define VC_GRP_TW_P8_02 646
-#define VC_GRP_TW_P8_03 647
-#define VC_GRP_TW_P8_04 648
-#define VC_GRP_TW_P8_05 649
-#define VC_GRP_TW_P8_06 650
-#define VC_GRP_TalkBacks_Frame 651
-#define VC_GRP_Tunnel 652
-#define VC_GRP_UpperHatch 653
-#define VC_GRP_UpperHatchHandle 654
-#define VC_GRP_UpperHatchHandleBase 655
-#define VC_GRP_UpperHatchReliefValve 656
-#define VC_GRP_UpperHatchValveBase 657
-#define VC_GRP_UtilityLightsPanel 658
-#define VC_GRP_Water_Control_Module 659
-#define VC_GRP_Water_Dispenser 660
-#define VC_GRP_Windows 661
-#define VC_GRP_WindowsInner 662
-#define VC_GRP_WindowsRim 663
-#define VC_GRP_XpointerX_cdr 664
-#define VC_GRP_XpointerX_lmp 665
-#define VC_GRP_XpointerY_cdr 666
-#define VC_GRP_XpointerY_lmp 667
-#define VC_GRP_z_AOT_Net 668
-#define VC_GRP_z_ECS_Protective_Net 669
-#define VC_GRP_z_Protective_Net_Rear 670
-#define VC_GRP_zzzCOAS_Glass 671
-#define VC_GRP_zzzCOAS_Glassovhd 672
+#define VC_GRP_TTCA_CDR_Body 637
+#define VC_GRP_TTCA_CDR_FrictionControl 638
+#define VC_GRP_TTCA_CDR_Handle 639
+#define VC_GRP_TTCA_CDR_SelectionLever 640
+#define VC_GRP_TTCA_LMP_Body 641
+#define VC_GRP_TTCA_LMP_FrictionControl 642
+#define VC_GRP_TTCA_LMP_Handle 643
+#define VC_GRP_TTCA_LMP_SelectionLever 644
+#define VC_GRP_TW_P12_01 645
+#define VC_GRP_TW_P12_02 646
+#define VC_GRP_TW_P12_03 647
+#define VC_GRP_TW_P12_04 648
+#define VC_GRP_TW_P12_05 649
+#define VC_GRP_TW_P12_06 650
+#define VC_GRP_TW_P12_07 651
+#define VC_GRP_TW_P12_08 652
+#define VC_GRP_TW_P8_01 653
+#define VC_GRP_TW_P8_02 654
+#define VC_GRP_TW_P8_03 655
+#define VC_GRP_TW_P8_04 656
+#define VC_GRP_TW_P8_05 657
+#define VC_GRP_TW_P8_06 658
+#define VC_GRP_TalkBacks_Frame 659
+#define VC_GRP_Tunnel 660
+#define VC_GRP_UpperHatch 661
+#define VC_GRP_UpperHatchHandle 662
+#define VC_GRP_UpperHatchHandleBase 663
+#define VC_GRP_UpperHatchReliefValve 664
+#define VC_GRP_UpperHatchValveBase 665
+#define VC_GRP_UtilityLightsPanel 666
+#define VC_GRP_Water_Control_Module 667
+#define VC_GRP_Water_Dispenser 668
+#define VC_GRP_Windows 669
+#define VC_GRP_WindowsInner 670
+#define VC_GRP_WindowsRim 671
+#define VC_GRP_XpointerX_cdr 672
+#define VC_GRP_XpointerX_lmp 673
+#define VC_GRP_XpointerY_cdr 674
+#define VC_GRP_XpointerY_lmp 675
+#define VC_GRP_z_AOT_Net 676
+#define VC_GRP_z_ECS_Protective_Net 677
+#define VC_GRP_z_Protective_Net_Rear 678
+#define VC_GRP_zzzCOAS_Glass 679
+#define VC_GRP_zzzCOAS_Glassovhd 680
 
 // Named Materials:
 #define VC_MAT_ACA_t 0
@@ -823,14 +831,15 @@
 #define VC_MAT_LMVC_Switches_Panel_12_14 132
 #define VC_MAT_LMVC_Switches_Panel_8 133
 #define VC_MAT_Switch_Guards_P14_t 134
-#define VC_MAT_Talkbacks_t 135
-#define VC_MAT_UpperHatch_t 136
-#define VC_MAT_Water_Dispenser_t 137
-#define VC_MAT_LM_Window_Frames 138
-#define VC_MAT_WindowsRim 139
-#define VC_MAT_Protective_Net_t 140
-#define VC_MAT_COASglass 141
-#define VC_MAT_COASglass2 142
+#define VC_MAT_TTCA 135
+#define VC_MAT_Talkbacks_t 136
+#define VC_MAT_UpperHatch_t 137
+#define VC_MAT_Water_Dispenser_t 138
+#define VC_MAT_LM_Window_Frames 139
+#define VC_MAT_WindowsRim 140
+#define VC_MAT_Protective_Net_t 141
+#define VC_MAT_COASglass 142
+#define VC_MAT_COASglass2 143
 
 // Named Textures:
 #define VC_TEX_LM_ACA_dds 1
@@ -863,7 +872,8 @@
 #define VC_TEX_WaterControlModule_dds 28
 #define VC_TEX_Hose_dds 29
 #define VC_TEX_HolderRahmen_dds 30
-#define VC_TEX_UpperHatch_dds 31
-#define VC_TEX_zzzMetalMantel_dds 32
-#define VC_TEX_zzzNet_dds 33
+#define VC_TEX_TTCA_dds 31
+#define VC_TEX_UpperHatch_dds 32
+#define VC_TEX_zzzMetalMantel_dds 33
+#define VC_TEX_zzzNet_dds 34
 
