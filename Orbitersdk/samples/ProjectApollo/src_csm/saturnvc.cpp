@@ -1075,18 +1075,11 @@ void Saturn::RegisterActiveAreas() {
 
 	// Side Hatch
 	if (viewpos != SATVIEW_LOWER_CENTER) {
-		if (!SideHatch.IsOpen()) {
-			oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-			oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-			oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-			oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		} else {
-
-			oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-			oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-			oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-			oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-		}
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_HANDLE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_GEARBOX_SEL, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+		oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
 		UpdateSideHatchClickspots(ofs);
 	}
 
@@ -5987,12 +5980,8 @@ void Saturn::UpdatePointingArrow()
 	};
 
 	PanelSwitchItem *nextActiveSwitch = MainPanelVC.GetFlashingItem();
-
-	// The next ones need to be checked individualy
-	bool HatchActuatorHandleSelectorOpenFlash = HatchActuatorHandleSelectorOpen.IsFlashing();
 	
-	if (nextActiveSwitch == nullptr
-			&& !HatchActuatorHandleSelectorOpenFlash) {
+	if (nextActiveSwitch == nullptr) {
 		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_NEVER);
 		return;
 	}
