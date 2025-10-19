@@ -1507,7 +1507,7 @@ void h_WaterSeparator::refresh(double dt) {
 		flow = fanned.GetMass() / dt;
 
 		// At 5.7 g/s flow, RPM should be approximately 2050 per Hamilton Standard LM ECS subsystem book
-		rpmcmd = flow * 1062.18; // This value gives approsximately 2050 RPM at 1.93 g/s flow which is what our current simulation tops off at.
+		rpmcmd = flow * 585.71; // This value gives approximately 2050 RPM at 3.5 g/s flow which is what our current simulation tops off at at 5.3 psi
 
 		if (flow != 0) {
 			h2oremovalratio = (RPM / rpmcmd);
@@ -1539,7 +1539,7 @@ void h_WaterSeparator::refresh(double dt) {
 				fanned.composition[SUBSTANCE_H2O].Q = fanned.composition[SUBSTANCE_H2O].Q * factor;
 
 				//if (!strcmp(name, "WATERSEP1"))
-					//sprintf(oapiDebugString(), "RPM %f Rate %f Removed %f Remaining %f", RPM, h2oremovalratio, removedmass / dt, fanned.composition[SUBSTANCE_H2O].mass / dt);
+					//sprintf(oapiDebugString(), "RPM %f Rate %f Removed %f Remaining %f Flow %f lb/min %f g/s", RPM, h2oremovalratio, removedmass / dt, fanned.composition[SUBSTANCE_H2O].mass / dt, flow * 0.132277, flow);
 			}
 		}
 

@@ -3310,7 +3310,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Move to CSM usable table", 0, 'U' },
 		{ "CSM ground tracking vector", 0, 'G' },
 		{ "CSM trajectory update", 0, 'C' },
-		{ "", 0, ' ' },
+		{ "VPS vector entry", 0, 'Q' },
 
 		{ "General MED request", 0, 'M' },
 		{ "Move to LM evaluation table", 0, 'F' },
@@ -3327,7 +3327,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("UV", OAPI_KEY_U, &ApolloRTCCMFD::menuMoveToUsableTableCSM);
 	RegisterFunction("DC", OAPI_KEY_G, &ApolloRTCCMFD::menuMPTTrajectoryUpdateCSM);
 	RegisterFunction("TUP", OAPI_KEY_C, &ApolloRTCCMFD::menuEphemerisUpdateCSM);
-	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("S84", OAPI_KEY_Q, &ApolloRTCCMFD::SetMEDInputPageS84);
 
 	RegisterFunction("MED", OAPI_KEY_M, &ApolloRTCCMFD::menuGeneralMEDRequest);
 	RegisterFunction("EV", OAPI_KEY_F, &ApolloRTCCMFD::menuMoveToEvalTableLEM);

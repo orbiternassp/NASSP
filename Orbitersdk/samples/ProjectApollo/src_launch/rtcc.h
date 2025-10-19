@@ -2471,7 +2471,7 @@ public:
 	void AP11LMManeuverPAD(const AP11LMManPADOpt &opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(const AP11ManPADOpt &opt, AP11MNV &pad);
 	void AP10CSIPAD(const AP10CSIPADOpt &opt, AP10CSI &pad);
-	void CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool docked);
+	void CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool docked, bool asc = false);
 	void LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool docked, bool asc = false);
 	void RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res);
 	void LunarOrbitMapUpdate(EphemerisData sv0, AP10MAPUPDATE &pad, double pm = -150.0*RAD);
@@ -2779,10 +2779,11 @@ public:
 	void BMGPRIME(std::string source, int n);
 	void BMGPRIME(std::string source, std::vector<std::string> message);
 	//D.C. MED Decoder
-	int BMQDCMED(std::string med, std::vector<std::string> data);
+	void BMQDCMED(std::string med, std::vector<std::string> data, int &err, unsigned &param);
 	//Vector Comparison Control
 	void BMSVEC();
 	//Vector Panel Summary Control
+	void BMSVPS(int queid, const StateVectorTableEntry &sv);
 	void BMSVPS(int queid, int PBIID);
 	int BMSVPSVectorFetch(const std::string &vecid, EphemerisData &sv_out);
 	int GetStateVectorTableEntry(std::string VectorType, int mpt);
@@ -2985,7 +2986,7 @@ public:
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
 	//Gimbal, Thrust and Weight Loss Rate Subroutine
-	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned IC, int IA, int IJ, double D);
+	int GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned IC, int IA, double D);
 	// MISSION PLANNING (P)
 	//LM AGS External DV Coordinate Transformation Subroutine
 	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);

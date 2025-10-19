@@ -9445,6 +9445,14 @@ void ApolloRTCCMFD::AGOPDisplayOption4(oapi::Sketchpad*skp)
 		skp->Text(CW * 16, 9 * H / 22, Buffer, strlen(Buffer));
 	}
 
+	//Landmark
+	sprintf(Buffer, "Lat: %.3lf°", GC->AGOP_Lat*DEG);
+	skp->Text(CW * 2, 11 * H / 22, Buffer, strlen(Buffer));
+	sprintf(Buffer, "Lng: %.3lf°", GC->AGOP_Lng*DEG);
+	skp->Text(CW * 2, 12 * H / 22, Buffer, strlen(Buffer));
+	sprintf(Buffer, "Alt: %.2lf NM", GC->AGOP_Alt / 1852.0);
+	skp->Text(CW * 2, 13 * H / 22, Buffer, strlen(Buffer));
+
 	if (GC->AGOP_Mode >= 4)
 	{
 		//Fixed antenna position
