@@ -6560,7 +6560,7 @@ void ApolloRTCCMFD::menuRTCCTimesInput()
 	case 6:
 		GET_Display2(Buff2, (GC->rtcc->SystemParameters.MCGZSS - GC->rtcc->SystemParameters.MCGZSL)*3600.0);
 		sprintf_s(Buff, "P15,AGS,,%s;", Buff2);
-		menuGeneralMEDRequest("GMT of zeroing AGC/LGC registers and fixing AGS platform. Format: P15,VEH,GMTZS,DELTA TIME;", Buff);
+		menuGeneralMEDRequest("GMT or GET of fixing the AGS platform. Format: P15,VEH,GMTZS,DELTA TIME;", Buff);
 		break;
 	case 7:
 		GET_Display2(Buff2, GC->rtcc->SystemParameters.MCGRIL*3600.0);

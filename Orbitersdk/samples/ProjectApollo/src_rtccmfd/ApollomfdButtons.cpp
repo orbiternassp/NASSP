@@ -4526,7 +4526,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu133[] =
 	{
-		{ "", 0, ' ' },
+		{ "Set input", 0, 'S' },
 		{ "Previous Item", 0, 'P' },
 		{ "Next Item", 0, 'N' },
 		{ "", 0, ' ' },
@@ -4534,7 +4534,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 
 		{ "MED input", 0, 'F' },
-		{ "", 0, ' ' },
+		{ "Update liftoff time", 0, 'T' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -4551,7 +4551,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("MED", OAPI_KEY_F, &ApolloRTCCMFD::menuGeneralMEDRequest);
-	RegisterFunction("", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("UPD", OAPI_KEY_T, &ApolloRTCCMFD::menuUpdateLiftoffTime);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
