@@ -221,7 +221,7 @@ public:
 	void menuTransferRTEToMPT();
 	bool set_RTESolution(char *str);
 	void menuGeneralMEDRequest();
-	void menuGeneralMEDRequest(char *message);
+	void menuGeneralMEDRequest(char *message, char *defaultvalue = 0);
 	void GeneralMEDRequest(char *str);
 	void menuMEDInputFromFile();
 	void ProcessMEDInputFromFile(char *str);
@@ -272,8 +272,6 @@ public:
 	void menuCycleSPQChaser();
 	void menuSetLaunchDate();
 	void set_launchdate(int year, int month, int day);
-	void menuSetLaunchTime();
-	void set_LaunchTime(int hours, int minutes, double seconds);
 	void menuChangeVesselStatus();
 	void menuCycleLMStage();
 	void menuUpdateLiftoffTime();
@@ -847,6 +845,8 @@ public:
 	void CycleEnableCalculation();
 	void CycleREFSMMATType(int &type, bool csm);
 	void menuSetThrustCGPage();
+	void menuSetRTCCTimesPage();
+	void menuRTCCTimesInput();
 
 	void SetMEDInputPageM75();
 	void SetMEDInputPageP13();
