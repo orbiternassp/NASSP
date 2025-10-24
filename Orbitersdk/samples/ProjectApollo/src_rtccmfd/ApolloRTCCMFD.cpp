@@ -1539,6 +1539,13 @@ void ApolloRTCCMFD::menuSetRecoveryAscendingNodeDisplayPage()
 	SelectPage(132);
 }
 
+void ApolloRTCCMFD::menuSetRTCCTimesPage()
+{
+	marker = 0;
+	markermax = 7;
+	SelectPage(133);
+}
+
 void ApolloRTCCMFD::menuPerigeeAdjustCalc()
 {
 	G->PerigeeAdjustCalc();
@@ -6096,10 +6103,10 @@ void ApolloRTCCMFD::menuGeneralMEDRequest()
 	menuGeneralMEDRequest("Manual Entry Device Input:");
 }
 
-void ApolloRTCCMFD::menuGeneralMEDRequest(char *message)
+void ApolloRTCCMFD::menuGeneralMEDRequest(char *message, char *defaultvalue)
 {
 	bool GeneralMEDRequestInput(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GeneralMEDRequestInput, 0, 50, (void*)this);
+	oapiOpenInputBox(message, GeneralMEDRequestInput, defaultvalue, 50, (void*)this);
 }
 
 bool GeneralMEDRequestInput(void *id, char *str, void *data)
@@ -6497,32 +6504,6 @@ void ApolloRTCCMFD::set_launchdate(int year, int month, int day)
 	GC->rtcc->GMGMED(Buff);
 }
 
-void ApolloRTCCMFD::menuSetLaunchTime()
-{
-	bool LaunchTimeInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the launch time (Format: HH:MM:SS.SS)", LaunchTimeInput, 0, 20, (void*)this);
-}
-
-bool LaunchTimeInput(void *id, char *str, void *data)
-{
-	int hours, minutes;
-	double seconds;
-
-	if (sscanf(str, "%d:%d:%lf", &hours, &minutes, &seconds) == 3)
-	{
-		((ApolloRTCCMFD*)data)->set_LaunchTime(hours, minutes, seconds);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LaunchTime(int hours, int minutes, double seconds)
-{
-	char Buff[128];
-	sprintf_s(Buff, "P10,CSM,%d:%d:%.2lf;", hours, minutes, seconds);
-	GC->rtcc->GMGMED(Buff);
-}
-
 void ApolloRTCCMFD::menuChangeVesselStatus()
 {
 	if (G->vesselisdocked == false)
@@ -6538,6 +6519,55 @@ void ApolloRTCCMFD::menuChangeVesselStatus()
 void ApolloRTCCMFD::menuCycleLMStage()
 {
 	G->lemdescentstage = !G->lemdescentstage;
+}
+
+void ApolloRTCCMFD::menuRTCCTimesInput()
+{
+	char Buff[128], Buff2[128];
+
+	switch (marker)
+	{
+	case 0:
+		GET_Display2(Buff2, GC->rtcc->SystemParameters.MCGMTL*3600.0);
+		sprintf_s(Buff, "P10,CSM,%s,NOTRAJ;", Buff2);
+		menuGeneralMEDRequest("Planned or actual liftoff time. Format: P10,VEH,GMTLO,TRAJ/NOTRAJ IND;", Buff);
+		break;
+	case 1:
+		GET_Display2(Buff2, GC->rtcc->SystemParameters.MCGRAG*3600.0);
+		sprintf_s(Buff, "P12,CSM,%s,%.2lf;", Buff2, GC->rtcc->SystemParameters.MCLABN*DEG);
+		menuGeneralMEDRequest("Planned or actual GRR time. Format: P12,VEH,GMTGRR,LAUNCH AZIMUTH;", Buff);
+		break;
+	case 2:
+		GET_Display2(Buff2, GC->rtcc->SystemParameters.MCGZSA*3600.0);
+		sprintf_s(Buff, "P15,AGC,%s;", Buff2);
+		menuGeneralMEDRequest("GMT of zeroing AGC/LGC registers and fixing AGS platform. Format: P15,VEH,GMTZS;", Buff);
+		break;
+	case 3:
+		GET_Display2(Buff2, GC->rtcc->SystemParameters.MCGRIC*3600.0);
+		sprintf_s(Buff, "P12,IU1,%s,%.2lf;", Buff2, GC->rtcc->SystemParameters.MCLABN*DEG);
+		menuGeneralMEDRequest("Planned or actual GRR time. Format: P12,VEH,GMTGRR,LAUNCH AZIMUTH;", Buff);
+		break;
+	case 4:
+		GET_Display2(Buff2, GC->rtcc->SystemParameters.MCGMTS*3600.0);
+		sprintf_s(Buff, "P10,LEM,%s,NOTRAJ;", Buff2);
+		menuGeneralMEDRequest("Planned or actual liftoff time. Format: P10,VEH,GMTLO,TRAJ/NOTRAJ IND;", Buff);
+		break;
+	case 5:
+		GET_Display2(Buff2, GC->rtcc->SystemParameters.MCGZSL*3600.0);
+		sprintf_s(Buff, "P15,LGC,%s;", Buff2);
+		menuGeneralMEDRequest("GMT of zeroing AGC/LGC registers and fixing AGS platform. Format: P15,VEH,GMTZS;", Buff);
+		break;
+	case 6:
+		GET_Display2(Buff2, (GC->rtcc->SystemParameters.MCGZSS - GC->rtcc->SystemParameters.MCGZSL)*3600.0);
+		sprintf_s(Buff, "P15,AGS,,%s;", Buff2);
+		menuGeneralMEDRequest("GMT or GET of fixing the AGS platform. Format: P15,VEH,GMTZS,DELTA TIME;", Buff);
+		break;
+	case 7:
+		GET_Display2(Buff2, GC->rtcc->SystemParameters.MCGRIL*3600.0);
+		sprintf_s(Buff, "P12,IU2,%s,%.2lf;", Buff2, GC->rtcc->SystemParameters.MCLABN*DEG);
+		menuGeneralMEDRequest("Planned or actual GRR time. Format: P12,VEH,GMTGRR,LAUNCH AZIMUTH;", Buff);
+		break;
+	}
 }
 
 void ApolloRTCCMFD::menuUpdateLiftoffTime()

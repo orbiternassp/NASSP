@@ -9215,6 +9215,39 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Text(skp, 35, 20, GC->rtcc->RZASCND.ErrorMessage);
 		}
 		break;
+	case 133:
+		skp->SetTextAlign(oapi::Sketchpad::CENTER);
+		skp->Text(W / 2, CH / 2, "RTCC Launch Event Times", 23);
+		skp->SetTextAlign(oapi::Sketchpad::LEFT);
+
+		x = 1;  y = 5; dx = 10;
+		Text(skp, x, marker + y, "*");
+		x++; x++;
+		Text(skp, x, y, "GMTLO1:");
+		Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->SystemParameters.MCGMTL*3600.0); y++;
+		Text(skp, x, y, "CMC GRR:");
+		Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->SystemParameters.MCGRAG*3600.0); y++;
+		Text(skp, x, y, "CMC ZS:");
+		Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->SystemParameters.MCGZSA*3600.0); y++;
+		Text(skp, x, y, "IU1 GRR:");
+		Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->SystemParameters.MCGRIC*3600.0); y++;
+		Text(skp, x, y, "GMTLO2:");
+		Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->SystemParameters.MCGMTS*3600.0); y++;
+		Text(skp, x, y, "LGC ZS:");
+		Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->SystemParameters.MCGZSL*3600.0); y++;
+		Text(skp, x, y, "AGS ZS:");
+		Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->SystemParameters.MCGZSS*3600.0); y++;
+		Text(skp, x, y, "IU2 GRR:");
+		Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->SystemParameters.MCGRIL*3600.0); y++;
+		y++;
+		Text(skp, x, y, "Launch Azimuth:"); y++;
+		Text(skp, x, y, "%.2lf DEG", GC->rtcc->SystemParameters.MCLABN*DEG); y++;
+		Text(skp, x, y, "AGS Minus LGC (K-Factor):"); y++;
+		Text_GMT_HHHMMSSCS(skp, x, y, GC->rtcc->SystemParameters.MCGZSS*3600.0);
+		Text(skp, x + 13, y, "GET");
+		x = 26;
+		for (y = 5; y < 13; y++) Text(skp, x, y, "GMT");
+		break;
 	}
 
 	return true;
