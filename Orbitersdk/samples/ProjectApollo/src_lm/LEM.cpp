@@ -1669,24 +1669,9 @@ void LEM::PostLoadSetup(bool define_anims)
 	// Realism Mode Settings
 	//
 
-	// Enable Orbiter's attitude control for unmanned missions
-	// as long as they rely on Orbiter's navmodes (killrot etc.)
-
-	if (!Crewed) {
-		checkControl.autoExecute(true);
-		checkControl.autoExecuteSlow(false);
-		checkControl.autoExecuteAllItemsAutomatic(true);
-	}
-
-	// Disable it and do some other settings when not in
-	// Quickstart mode
-
-	else {
-		checkControl.autoExecute(VAGCChecklistAutoEnabled);
-		checkControl.autoExecuteSlow(VAGCChecklistAutoSlow);
-		checkControl.autoExecuteAllItemsAutomatic(false);
-
-	}
+	checkControl.autoExecute(VAGCChecklistAutoEnabled);
+	checkControl.autoExecuteSlow(VAGCChecklistAutoSlow);
+	checkControl.autoExecuteAllItemsAutomatic(false);
 
 	// Also cause the AC busses to wire up
 	switch (EPSInverterSwitch.GetState()) {
