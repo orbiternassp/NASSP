@@ -78,6 +78,7 @@ static MESHHANDLE hLMPLRV;
 static MESHHANDLE hLRV;
 static MESHHANDLE hLRVConsole;
 static MESHHANDLE hTv;
+static MESHHANDLE hColorTV;
 static MESHHANDLE hEasepSWC;
 static MESHHANDLE hEasepPSEP;
 static MESHHANDLE hEasepLR3;
@@ -759,49 +760,53 @@ void LEVA::SetEquip()
 	vs1.vdata[0].y += distance * cos(vs1.vdata[0].z) / radius;
 
 	if (isCDR) {
-		if (ApolloNo <= 14) {
+		if (ApolloNo == 11) {
 			if (TvPlanted == false) {
 				oapiCreateVessel("TV", "ProjectApollo/EasepTV", vs1);
 				TvPlanted = true;
 			}
-			else {
-				if (ApolloNo == 11) {
-					if (EasepPsepPlanted == false) {
-						oapiCreateVessel("PSEP", "ProjectApollo/EasepPsep", vs1);
-						EasepPsepPlanted = true;
-					}
-					else if (EasepLr3Planted == false) {
-						oapiCreateVessel("LR3", "ProjectApollo/EasepLr3", vs1);
-						EasepLr3Planted = true;
-					}
-					else if (EasepSwcPlanted == false) {
-						oapiCreateVessel("SWC", "ProjectApollo/EasepSwc", vs1);
-						EasepSwcPlanted = true;
-					}
+		}
+		else if (ApolloNo >= 12) {
+
+			if (AlsepSBndPlanted == false) {
+				oapiCreateVessel("ALSEP SBnd", "ProjectApollo/AlsepSBnd", vs1);
+				AlsepSBndPlanted = true;
 				}
-				else {
-					if (ApolloNo >= 12) {
-						if (AlsepSBndPlanted == false) {
-							oapiCreateVessel("ALSEP SBnd", "ProjectApollo/AlsepSBnd", vs1);
-							AlsepSBndPlanted = true;
-						}
-						else if (AlsepStationPlanted == false) {
-							oapiCreateVessel("ALSEP Station", "ProjectApollo/AlsepStation", vs1);
-							AlsepStationPlanted = true;
-						}
-						else if (AlsepSWSPlanted == false) {
-							oapiCreateVessel("ALSEP SWS", "ProjectApollo/AlsepSWS", vs1);
-							AlsepSWSPlanted = true;
-						}
-					}
+			else if (AlsepStationPlanted == false) {
+				oapiCreateVessel("ALSEP Station", "ProjectApollo/AlsepStation", vs1);
+				AlsepStationPlanted = true;
+				}
+			else if (AlsepSWSPlanted == false) {
+				oapiCreateVessel("ALSEP SWS", "ProjectApollo/AlsepSWS", vs1);
+				AlsepSWSPlanted = true;
 				}
 			}
+		}
+
+	else if (ApolloNo == 11) {
+
+		if (EasepSwcPlanted == false) {
+			oapiCreateVessel("SWC", "ProjectApollo/EasepSwc", vs1);
+			EasepSwcPlanted = true;
+		}
+		else if (EasepPsepPlanted == false) {
+			oapiCreateVessel("PSEP", "ProjectApollo/EasepPsep", vs1);
+			EasepPsepPlanted = true;
+		}
+		else if (EasepLr3Planted == false) {
+			oapiCreateVessel("LR3", "ProjectApollo/EasepLr3", vs1);
+			EasepLr3Planted = true;
 		}
 	}
 
 		else if (ApolloNo >= 12) {
 
-			if (EasepSwcPlanted == false) {
+			if (TvPlanted == false) {
+				oapiCreateVessel("TV", "ProjectApollo/AlsepTV", vs1);
+				TvPlanted = true;
+				}
+
+			else if (EasepSwcPlanted == false) {
 				oapiCreateVessel("SWC", "ProjectApollo/EasepSwc", vs1);
 				EasepSwcPlanted = true;
 			}
@@ -1083,6 +1088,7 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 		hLRV = oapiLoadMeshGlobal ("ProjectApollo/LRV");
 		hLRVConsole = oapiLoadMeshGlobal ("ProjectApollo/LRV_console");
 		hTv = oapiLoadMeshGlobal("ProjectApollo/EASEP_TV");
+		hColorTV = oapiLoadMeshGlobal("ProjectApollo\ALSEP_TV");
 		hEasepSWC = oapiLoadMeshGlobal("ProjectApollo/EASEP_SWC");
 		hEasepPSEP = oapiLoadMeshGlobal("ProjectApollo/EASEP_PSEP");
 		hEasepLR3 = oapiLoadMeshGlobal("ProjectApollo/EASEP_LR3");
