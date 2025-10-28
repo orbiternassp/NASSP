@@ -3198,7 +3198,7 @@ void LEM::DefineVCAnimations()
 	ComPitchMeter.SetReference(P12_NEEDLE_POS[0], P12_ROT_AXIS);
 	ComPitchMeter.DefineMeshGroup(VC_GRP_Needle_P12_01);
 	ComPitchMeter.SetInitialAnimState(0.5); //TBD: Replace with 180.0/330.0 if 105 degrees is supposed to be at the top
-	ComYawMeter.SetRotationRange(270.0*RAD); //TBD: Better value
+	ComPitchMeter.SetRotationRange(270.0*RAD); //TBD: Better value
 
 	MainPanelVC.AddSwitch(&ComYawMeter);
 	ComYawMeter.SetReference(P12_NEEDLE_POS[1], P12_ROT_AXIS);
