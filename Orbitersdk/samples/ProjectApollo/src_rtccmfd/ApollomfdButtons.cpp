@@ -304,7 +304,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("CG", OAPI_KEY_S, &ApolloRTCCMFD::menuSetThrustCGPage);
 
 	RegisterFunction("DAT", OAPI_KEY_M, &ApolloRTCCMFD::menuSetLaunchDate);
-	RegisterFunction("TIM", OAPI_KEY_K, &ApolloRTCCMFD::menuSetLaunchTime);
+	RegisterFunction("TIM", OAPI_KEY_K, &ApolloRTCCMFD::menuSetRTCCTimesPage);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("UPD", OAPI_KEY_U, &ApolloRTCCMFD::menuUpdateLiftoffTime);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
@@ -4522,6 +4522,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
+
+
+	static const MFDBUTTONMENU mnu133[] =
+	{
+		{ "Set input", 0, 'S' },
+		{ "Previous Item", 0, 'P' },
+		{ "Next Item", 0, 'N' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "MED input", 0, 'F' },
+		{ "Update liftoff time", 0, 'T' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu133, sizeof(mnu133) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("SET", OAPI_KEY_O, &ApolloRTCCMFD::menuRTCCTimesInput);
+	RegisterFunction("<<", OAPI_KEY_P, &ApolloRTCCMFD::menuCycleMarkerDown);
+	RegisterFunction(">>", OAPI_KEY_N, &ApolloRTCCMFD::menuCycleMarkerUp);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_M, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("MED", OAPI_KEY_F, &ApolloRTCCMFD::menuGeneralMEDRequest);
+	RegisterFunction("UPD", OAPI_KEY_T, &ApolloRTCCMFD::menuUpdateLiftoffTime);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetConfigPage);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const
