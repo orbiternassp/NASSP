@@ -208,25 +208,25 @@ void LEVA::clbkPostCreation()
 	if (oapiGetVesselByName("LR3") == NULL) { EasepLr3Planted = false; }
 	else { EasepLr3Planted = true; }
 
-	if (oapiGetVesselByName("ALSEP Station") == NULL) { AlsepStationPlanted = false; }
+	if (oapiGetVesselByName("Centeral Station") == NULL) { AlsepStationPlanted = false; }
 	else { AlsepStationPlanted = true; }
 
-	if (oapiGetVesselByName("ALSEP SBnd") == NULL) { AlsepSBndPlanted = false; }
+	if (oapiGetVesselByName("S-Band") == NULL) { AlsepSBndPlanted = false; }
 	else { AlsepSBndPlanted = true; }
 
-	if (oapiGetVesselByName("ALSEP RTG") == NULL) { AlsepRTGPlanted= false; }
+	if (oapiGetVesselByName("RTG") == NULL) { AlsepRTGPlanted= false; }
 	else { AlsepRTGPlanted = true; }
 
-	if (oapiGetVesselByName("ALSEP PSE") == NULL) { AlsepPSEPlanted = false; }
+	if (oapiGetVesselByName("PSE") == NULL) { AlsepPSEPlanted = false; }
 	else { AlsepPSEPlanted = true; }
 
-	if (oapiGetVesselByName("ALSEP SWS") == NULL) { AlsepSWSPlanted = false; }
+	if (oapiGetVesselByName("SWS") == NULL) { AlsepSWSPlanted = false; }
 	else { AlsepSWSPlanted = true; }
 
-	if (oapiGetVesselByName("ALSEP LSM") == NULL) { AlsepLSMPlanted = false; }
+	if (oapiGetVesselByName("LSM") == NULL) { AlsepLSMPlanted = false; }
 	else { AlsepLSMPlanted= true; }
 
-	if (oapiGetVesselByName("ALSEP SIDE") == NULL) { AlsepSIDEPlanted = false; }
+	if (oapiGetVesselByName("SIDE") == NULL) { AlsepSIDEPlanted = false; }
 	else { AlsepSIDEPlanted = true; }
 
 }
@@ -769,15 +769,15 @@ void LEVA::SetEquip()
 		else if (ApolloNo >= 12) {
 
 			if (AlsepSBndPlanted == false) {
-				oapiCreateVessel("ALSEP SBnd", "ProjectApollo/AlsepSBnd", vs1);
+				oapiCreateVessel("S-Band", "ProjectApollo/AlsepSBnd", vs1);
 				AlsepSBndPlanted = true;
 				}
 			else if (AlsepStationPlanted == false) {
-				oapiCreateVessel("ALSEP Station", "ProjectApollo/AlsepStation", vs1);
+				oapiCreateVessel("Centeral Station", "ProjectApollo/AlsepStation", vs1);
 				AlsepStationPlanted = true;
 				}
 			else if (AlsepSWSPlanted == false) {
-				oapiCreateVessel("ALSEP SWS", "ProjectApollo/AlsepSWS", vs1);
+				oapiCreateVessel("SWS", "ProjectApollo/AlsepSWS", vs1);
 				AlsepSWSPlanted = true;
 				}
 			}
@@ -811,19 +811,19 @@ void LEVA::SetEquip()
 				EasepSwcPlanted = true;
 			}
 			else if (AlsepRTGPlanted == false) {
-				oapiCreateVessel("ALSEP RTG", "ProjectApollo/AlsepRTG", vs1);
+				oapiCreateVessel("RTG", "ProjectApollo/AlsepRTG", vs1);
 				AlsepRTGPlanted = true;
 			}
 			else if (AlsepPSEPlanted == false) {
-				oapiCreateVessel("ALSEP PSE", "ProjectApollo/AlsepPSE", vs1);
+				oapiCreateVessel("PSE", "ProjectApollo/AlsepPSE", vs1);
 				AlsepPSEPlanted = true;
 			}
 			else if (AlsepLSMPlanted == false) {
-				oapiCreateVessel("ALSEP LSM", "ProjectApollo/AlsepLSM", vs1);
+				oapiCreateVessel("LSM", "ProjectApollo/AlsepLSM", vs1);
 				AlsepLSMPlanted = true;
 			}
 			else if (AlsepSIDEPlanted == false) {
-				oapiCreateVessel("ALSEP SIDE", "ProjectApollo/AlsepSIDE", vs1);
+				oapiCreateVessel("SIDE", "ProjectApollo/AlsepSIDE", vs1);
 				AlsepSIDEPlanted = true;
 			}
 		}
