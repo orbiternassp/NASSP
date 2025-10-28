@@ -1080,8 +1080,8 @@ void Saturn::RegisterActiveAreas() {
 		oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
 		oapiVCRegisterArea(AID_VC_SIDEHATCH_ACT_HANDLE_SEL_OPEN, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
 		oapiVCRegisterArea(AID_VC_SIDEHATCH_VENT_VALVE, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
-		UpdateSideHatchClickspots(ofs);
 	}
+	UpdateSideHatchClickspots(ofs);
 
 	// Forward Hatch
 	if (viewpos == SATVIEW_TUNNEL) {
