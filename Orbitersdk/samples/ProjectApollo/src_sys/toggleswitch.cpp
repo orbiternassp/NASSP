@@ -4086,6 +4086,7 @@ RoundMeter::RoundMeter()
 {
 	pswitchrot = NULL;
 	RotationRange = RAD * 270;
+	fInitialAnimState = 0.5;
 }
 
 RoundMeter::~RoundMeter()
@@ -4117,7 +4118,7 @@ void RoundMeter::DefineVCAnimations(UINT vc_idx)
 	if (bHasDirection && bHasReference && !bHasAnimations)
 	{
 		pswitchrot = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), GetDirection(), (float)(GetRotationRange()));
-		anim_switch = OurVessel->CreateAnimation(0.5);
+		anim_switch = OurVessel->CreateAnimation(InitialAnimState());
 		OurVessel->AddAnimationComponent(anim_switch, 0.0f, 1.0f, pswitchrot);
 		VerifyAnimations();
 	}
