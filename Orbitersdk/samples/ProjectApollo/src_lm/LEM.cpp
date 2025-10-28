@@ -1414,25 +1414,51 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	// Debug string for displaying descent flight info from VC view
 	if (VcInfoEnabled && !Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL && viewpos == LMVIEW_LPD) {
 
-		char pgnssw[256];
-		char thrsw[256];
+		char pgnssw[32];
+		char thrsw[32];
+		char fwddir[32];
+		char latdir[32];
 
 		if (ModeControlPGNSSwitch.GetState() == 2) {
 			sprintf(pgnssw, "AUTO");
-		} else if (ModeControlPGNSSwitch.GetState() == 1) {
+		}
+		else if (ModeControlPGNSSwitch.GetState() == 1) {
 			sprintf(pgnssw, "ATT HOLD");
-		} else {
+		}
+		else {
 			sprintf(pgnssw, "OFF");
 		}
 
 		if (THRContSwitch.GetState() == 1) {
 			sprintf(thrsw, "AUTO");
-		} else {
+		}
+		else {
 			sprintf(thrsw, "MAN");
 		}
 
-		sprintf(oapiDebugString(), "PROG %s | V%s N%s | R1 %s | R2 %s | R3 %s | Alt: %.0lf ft | Alt Rate: %.1lf ft/s | PGNS Mode Control: %s | Throttle: %s | Fuel: %.0lf %% |", dsky.GetProg(),
-			dsky.GetVerb(), dsky.GetNoun(), dsky.GetR1(), dsky.GetR2(), dsky.GetR3(), RadarTape.GetLGCAltitude() * 3.2808399, RadarTape.GetLGCAltitudeRate() * 3.2808399,
+		if (crossPointerLeft.GetFwdVel() > 0) {
+			sprintf(fwddir, "FWD");
+		}
+		else if (crossPointerLeft.GetFwdVel() < 0) {
+			sprintf(fwddir, "AFT");
+		}
+		else {
+			sprintf(fwddir, "");
+		}
+
+		if (crossPointerLeft.GetLatVel() > 0) {
+			sprintf(latdir, "R");
+		}
+		else if (crossPointerLeft.GetFwdVel() < 0) {
+			sprintf(latdir, "L");
+		}
+		else {
+			sprintf(latdir, "");
+		}
+
+		sprintf(oapiDebugString(), "PROG %s | V%s N%s | R1 %s | R2 %s | R3 %s | Alt: %.0lf ft | Alt Rt: %.1lf ft/s | Fwd Vel: %.1lf ft/s %s | Lat Vel: %.1lf ft/s %s | PGNS Mode Cont: %s | Throt: %s | Fuel: %.0lf %% |", dsky.GetProg(),
+			dsky.GetVerb(), dsky.GetNoun(), dsky.GetR1(), dsky.GetR2(), dsky.GetR3(), RadarTape.GetTapeAltitude(), RadarTape.GetTapeAltitudeRate(),
+			crossPointerLeft.GetFwdVel(), fwddir, crossPointerLeft.GetLatVel(), latdir,
 			pgnssw, thrsw, DPSFuelPercentMeter.QueryValue() * 100);
 		if (!VcInfoActive) VcInfoActive = true;
 

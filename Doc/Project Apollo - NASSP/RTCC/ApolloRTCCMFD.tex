@@ -89,7 +89,37 @@ The main menu is dividing the MFD in the following categories:\\
 \textbf{CFG:} Configuration. Various settings for the MFD.\\
 \textbf{UPL:} Uplink Page. All uplinks to the AGCs and LVDC can be found here.\\
 \textbf{MCC:} MCC Displays. Shows the "TV Guide", a list of displays that were available in the MOCR.\\
+\newpage
+\section{Configuration}
 
+\textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\
+\textbf{TYP:} Choose the type of vehicle configuration (CSM or LM, docked or undocked).\\
+\textbf{STA:} Choose the type of LM configuration that is currently being used, ascent or descent configuration.\\
+\textbf{CG:} Page for changing the thrust and CG tables. The CG tables are used to determine e.g. SPS trim gimbal angles. The tables are a function of weight of the vehicle. The CG tables contain the center of gravity in 3 dimensions, while the thrust tables contain thrust and weight loss rate of the selected thruster. There are default tables; alternative an initial table can be loaded in the RTCC mission constants file. Afterwards the table are being saved and loaded in scenarios. Note that presently the CG tables are not saved in scenarios!
+
+\textbf{DAT:} Choose the launch date for the mission.\\
+\textbf{TIM:} Choose the launch time for the mission. This button leads to a subpage to select various times stored in the RTCC.\\
+\textbf{EPO:} Choose the AGC epoch. Usually this is a MJD at around January 1st of the yearly coordinate system defining period. This value should be automatically chose correctly for the AGC version in use.\\
+\textbf{UPD:} Update the liftoff time automatically by downlinking that time from the CMC or LGC. This will actually update three values in the RTCC: CSM liftoff time, time of clock zeroing in the CMC, time of clock zeroing in the LGC. These times are normally all set to the actual liftoff time of the CSM to get a consistent basis to calculate Ground Elapsed Time in the RTCC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\newpage
+\section{Initialization}
+For the flown, manned Apollo missions (Apollo 7-17) the initialization happens automatically upon loading the RTCC MFD for the first time, or if the MCC mission support functionality is enable, at Earth Orbit Insertion. This section applies therefore mostly for custom missions.\\
+As a first step a few files that supply data to the RTCC have to be selected. For more details on these see the "Config Files" chapter at the end of this manual. The file selection is done on a subpage of the Config page. Every mission needs to select at least a Constants file. This file is usually valid for a specific mission, no matter when it launches. For lunar missions the SFP file is required for the TLMCC Processor and the TLI file is required to simulate TLI. These files are usually valid for the duration of a monthly launch window. An init file, that contains additional initialization parameters for a specific launch day, can also be selected. The file is usually automatically selected by changing the launch day, but can afterwards be manually chosen as well.\\
+After the files have been selected the launch day should be initialized. This generates, among other things, the ephemerides data, so the launch day initialization is required before most calculations can be run in the RTCC.\\
+The liftoff time and GRR times of the onboard computers can be initialized before liftoff as well, on a subpage of the Config page (TIM button). After liftoff the UPD button on the Config page can be used to update the times to actual values, which can vary by a few tenths of a second from the planned time. The RTCC keeps track of the following times:\\
+
+\begin{itemize}
+	\item CSM liftoff time (MED P10). This is the time reference for Ground Elapsed Time.
+	\item CSM Guidance Reference Release (GRR) time (MED P12). The only purpose of this time is to calculate the Launch REFSMMAT.
+	\item CMC liftoff time/time of zeroing registers (MED P15). In AGC terms this is called TEPHEM. By convention this time is used as the reference for GET, so the CSM liftoff time and LGC time of zeroing registers should be set to this value.
+	\item IU GRR time (MED P12). Time at which the IU platform is set to inertial. Usually 17 seconds before liftoff.
+	\item LM liftoff time (MED P10). Only required for a dual launch mission (e.g. with the CSM on one Saturn IB, the LM on another Saturn IB). Not to be confused with the time at which the LM begins ascent from the Moon.
+	\item LGC liftoff time/time of zeroing registers (MED P15). Usually set to the same value as the CMC time.
+	\item AGS time of zeroing registers (MED P15). This value has two different input methods. Internally the RTCC stores this value as a GMT. The AGS clock is set with an offset bias from the LGC clock, so an additional input method is available (used by default) to input this time as a delay time from the LGC register zeroing time. This difference is known as the K-Factor. The RTCC times page shows the AGS time in both formats, GMT and GET.
+	\item Second IU GRR time (MED P12). On a dual launch mission a second IU GRR time can be set. The GRR time is used for e.g. state vector uplinks to the LVDC, so for that to work correctly this time will need to be set.
+\end{itemize}
+\newpage
 \section{Targeting}
 
 The targeting menu consists of the many maneuver calculation pages:\\
@@ -1718,19 +1748,6 @@ On the left side of this page appear the input parameters that are automatically
 \textbf{TGT:} Select a vessel in the simulation to automatically populate the input data.\\
 \textbf{AUT:} Automatically update the input data with the selected vessel.\\
 \textbf{VPS:} Go to the Vector Panel Summary page for MPT state vector management.\\
-\textbf{BCK:} Go back to the main menu.\\
-\newpage
-\section{Configuration}
-
-\textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\
-\textbf{TYP:} Choose the type of vehicle configuration (CSM or LM, docked or undocked).\\
-\textbf{STA:} Choose the type of LM configuration that is currently being used, ascent or descent configuration.\\
-\textbf{CG:} Page for changing the thrust and CG tables. The CG tables are used to determine e.g. SPS trim gimbal angles. The tables are a function of weight of the vehicle. The CG tables contain the center of gravity in 3 dimensions, while the thrust tables contain thrust and weight loss rate of the selected thruster. There are default tables; alternative an initial table can be loaded in the RTCC mission constants file. Afterwards the table are being saved and loaded in scenarios. Note that presently the CG tables are not saved in scenarios!
-
-\textbf{DAT:} Choose the launch date for the mission.\\
-\textbf{TIM:} Choose the launch time for the mission. This will update the launch time of the CSM stored in the RTCC.\\
-\textbf{EPO:} Choose the AGC epoch. Usually this is a MJD at around January 1st of the yearly coordinate system defining period. This value should be automatically chose correctly for the AGC version in use.\\
-\textbf{UPD:} Update the liftoff time automatically by downlinking that time from the CMC or LGC. This will actually update three values in the RTCC: CSM liftoff time, time of clock zeroing in the CMC, time of clock zeroing in the LGC. These times are normally all set to the actual liftoff time of the CSM to get a consistent basis to calculate Ground Elapsed Time in the RTCC.\\
 \textbf{BCK:} Go back to the main menu.\\
 \newpage
 \section{Example: Apollo 7 Rendezvous}

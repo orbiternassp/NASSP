@@ -2237,7 +2237,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "PC REFSMMAT");
+				sprintf(upDesc, "Plane Change REFSMMAT");
 			}
 		}
 		else
