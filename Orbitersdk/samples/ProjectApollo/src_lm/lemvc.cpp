@@ -2686,8 +2686,9 @@ void LEM::DefineVCAnimations()
 	TempMonitorInd.DefineMeshGroup(VC_GRP_Needle_P3_01);
 
 	MainPanelVC.AddSwitch(&RadarSignalStrengthMeter);
-	RadarSignalStrengthMeter.SetReference(_V(-0.264141, 0.235696, 1.62835), P3_ROT_AXIS);
+	RadarSignalStrengthMeter.SetReference(_V(-0.263996, 0.235573, 1.62816), P3_ROT_AXIS);
 	RadarSignalStrengthMeter.DefineMeshGroup(VC_GRP_Needle_Radar);
+	RadarSignalStrengthMeter.SetRotationRange(250.0*RAD);
 
 	MainPanelVC.AddSwitch(&RadarSlewSwitch, AID_VC_RR_SLEW_SWITCH);
 	RadarSlewSwitch.SetReference(_V(-0.264179, 0.149389, 1.56749));
@@ -3197,17 +3198,18 @@ void LEM::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&ComPitchMeter);
 	ComPitchMeter.SetReference(P12_NEEDLE_POS[0], P12_ROT_AXIS);
 	ComPitchMeter.DefineMeshGroup(VC_GRP_Needle_P12_01);
-	ComPitchMeter.SetInitialAnimState(0.5); //TBD: Replace with 180.0/330.0 if 105 degrees is supposed to be at the top
-	ComPitchMeter.SetRotationRange(270.0*RAD); //TBD: Better value
+	ComPitchMeter.SetInitialAnimState(135.0 / 247.5); //TBD: Replace with 180.0/330.0 if 105 degrees is supposed to be at the top
+	ComPitchMeter.SetRotationRange(247.50*RAD); //TBD: Better value
 
 	MainPanelVC.AddSwitch(&ComYawMeter);
 	ComYawMeter.SetReference(P12_NEEDLE_POS[1], P12_ROT_AXIS);
 	ComYawMeter.DefineMeshGroup(VC_GRP_Needle_P12_02);
-	ComYawMeter.SetRotationRange(126.9*RAD); //TBD: Better value
+	ComYawMeter.SetRotationRange(112.5*RAD); //TBD: Better value
 
 	MainPanelVC.AddSwitch(&Panel12SignalStrengthMeter);
 	Panel12SignalStrengthMeter.SetReference(P12_NEEDLE_POS[2], P12_ROT_AXIS);
 	Panel12SignalStrengthMeter.DefineMeshGroup(VC_GRP_Needle_P12_03);
+	Panel12SignalStrengthMeter.SetRotationRange(250.0*RAD);
 
 	MainPanelVC.AddSwitch(&TapeRecorderTB, AID_VC_RECORDER_TALKBACK);
 
@@ -3231,10 +3233,12 @@ void LEM::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&EPSDCVoltMeter);
 	EPSDCVoltMeter.SetReference(P14_NEEDLE_POS[0], P14_ROT_AXIS);
 	EPSDCVoltMeter.DefineMeshGroup(VC_GRP_Needle_P14_01);
+	EPSDCVoltMeter.SetRotationRange(250.0*RAD);
 
 	MainPanelVC.AddSwitch(&EPSDCAmMeter);
 	EPSDCAmMeter.SetReference(P14_NEEDLE_POS[1], P14_ROT_AXIS);
 	EPSDCAmMeter.DefineMeshGroup(VC_GRP_Needle_P14_02);
+	EPSDCAmMeter.SetRotationRange(250.0*RAD);
 
 	MainPanelVC.AddSwitch(&DSCBattery1TB, AID_VC_DSC_BATTERY_TALKBACKS);
 	MainPanelVC.AddSwitch(&DSCBattery2TB, AID_VC_DSC_BATTERY_TALKBACKS);
