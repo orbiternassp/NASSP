@@ -41,6 +41,8 @@ private:
 	bool spawned;
 
 protected:
+	VECTOR3 GetSunPos();
+	void RotateToFaceSun(VECTOR3 rsunloc);
 	OBJHANDLE hMaster;
 
 };

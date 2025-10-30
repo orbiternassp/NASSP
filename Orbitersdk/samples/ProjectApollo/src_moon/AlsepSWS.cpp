@@ -90,7 +90,10 @@ void AlsepSWS::clbkSetClassCaps(FILEHANDLE cfg)
 void AlsepSWS::DoFirstTimestep()
 {
 	if (spawned) {
-		//Point at Earth (To-Do)
+		VESSELSTATUS vs1;
+		GetStatus(vs1);
+		vs1.vdata[0].z = 90*RAD;
+		DefSetState(&vs1);
 		spawned = false;
 	}
 }

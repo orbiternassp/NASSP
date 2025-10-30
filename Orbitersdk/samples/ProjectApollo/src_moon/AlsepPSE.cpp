@@ -90,9 +90,48 @@ void AlsepPSE::clbkSetClassCaps(FILEHANDLE cfg)
 void AlsepPSE::DoFirstTimestep()
 {
 	if (spawned) {
-		//Point at Earth (To-Do)
+		RotateToFaceSun(GetSunPos());
 		spawned = false;
 	}
+}
+
+VECTOR3 AlsepPSE::GetSunPos()
+{
+	VECTOR3 rsun;
+	VECTOR3 rsuninv;
+	VECTOR3 rsunloc;
+	GetGlobalPos(rsun);
+	rsuninv = _V(-rsun.x, -rsun.y, -rsun.z);
+	Global2Local(rsuninv, rsunloc);
+
+	return rsunloc;
+}
+
+void AlsepPSE::RotateToFaceSun(VECTOR3 rsunloc)
+{
+	double heading = 0;
+	oapiGetHeading(hMaster, &heading);
+	if (heading >= PI2) heading -= PI2; //range always 0-2pi
+	else if (heading < 0) heading += PI2;
+
+	double sunangle = atan2(rsunloc.x, rsunloc.z); //current angle of sun on XY plane relative to z axis
+
+	double heading1 = heading;
+	double heading2 = heading;
+	heading1 += sunangle;
+	heading2 += (sunangle - PI);
+
+	if ((heading >= PI05) && (heading <= (PI05 * 3))) {
+		heading = heading1;
+	}
+	else {
+		heading = heading2;
+	}
+
+	VESSELSTATUS vs1;
+	GetStatus(vs1);
+	vs1.vdata[0].z = heading;
+	DefSetState(&vs1);
 }
 
 void AlsepPSE::clbkPreStep(double SimT, double SimDT, double mjd)
