@@ -272,6 +272,24 @@ protected:
 	UINT anim_ventvalve;
 };
 
+// Class to manage the Boost Protective Cover hatch animation
+class BoostProtectiveCover
+{
+public:
+	BoostProtectiveCover();
+	~BoostProtectiveCover();
+	void Init(Saturn *s, SaturnSideHatch *hatch);
+
+	void Timestep(double simdt);
+
+	void DefineAnimations(UINT idx);
+protected:
+	Saturn *saturn;
+	SaturnSideHatch *SideHatch;
+	UINT BPC_CoverAnim;
+	MGROUP_ROTATE *BPC_CoverRotation;
+};
+
 ///
 /// This class simulates the water plumbing in the CSM.
 /// \ingroup InternalSystems

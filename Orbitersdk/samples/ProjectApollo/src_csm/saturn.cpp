@@ -1148,7 +1148,6 @@ void Saturn::initSaturn()
 	coascdrreticleidx = -1;
 	cmvccuecardsarrowsidx = -1;
 	hcmPointingArrowidx = -1;
-	LESMeshidx = -1;
 
 	vcmesh = NULL;
 	vis = NULL;
@@ -1562,7 +1561,6 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	TRACE(buffer);
 
 	SetAnimations(simdt);
-	CheckBPC_SideHatchCover();
 //	UpdatePointingArrow();
 //	InitFDAICustomCamera();
 
