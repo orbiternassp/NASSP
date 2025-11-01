@@ -1008,7 +1008,6 @@ void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
 //		seatsfoldedmesh = GetDevMesh(vis, seatsfoldedidx);
 
 //		InitFDAICustomCamera();
-		CheckBPC_SideHatchCover();
 	}
 }
 
@@ -6140,24 +6139,6 @@ void Saturn::UpdatePointingArrow()
 //########################################################################
 //########################################################################
 	SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_VC);
-}
-
-// TODO LaunchEscapeTower
-// Check if the SideHatch is open and hide the BPC SideHatch Cover
-void Saturn::CheckBPC_SideHatchCover() {
-	DEVMESHHANDLE hLESMesh = GetDevMesh (vis, LESMeshidx);
-	if (hLESMesh){
-		GROUPEDITSPEC LES_grpSpec;
-		memset(&LES_grpSpec, 0, sizeof(GROUPEDITSPEC));
-		LES_grpSpec.UsrFlag = 3;  						// flag for hide the group and shadow
-		if (SideHatch.GetAnimState() > 0.0) {
-			LES_grpSpec.flags = GRPEDIT_ADDUSERFLAG;
-		} else {
-			LES_grpSpec.flags = GRPEDIT_DELUSERFLAG;
-		}
-		oapiEditMeshGroup(hLESMesh, 1, &LES_grpSpec);
-		oapiEditMeshGroup(hLESMesh, 7, &LES_grpSpec);
-	}
 }
 
 void Saturn::UpdateSideHatchClickspots(const VECTOR3 &ofs)

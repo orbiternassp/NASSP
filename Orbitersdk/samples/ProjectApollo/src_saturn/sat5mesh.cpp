@@ -925,8 +925,8 @@ void SaturnV::SetThirdStageMesh (double offset)
 	{
 		TowerOffset = 28.2 + offset;
 		mesh_dir=_V(0, 0, TowerOffset);
-		LESMeshidx = AddMesh (hsat5tower, &mesh_dir);
-		SetMeshVisibilityMode (LESMeshidx, MESHVIS_VCEXTERNAL);
+		meshidx = AddMesh (hsat5tower, &mesh_dir);
+		SetBPCMesh(meshidx);
 	}
 	else {
 		if (HasProbe) {

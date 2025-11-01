@@ -1034,6 +1034,41 @@ void SaturnSideHatch::DefineAnimationsVC(UINT idx)
 	saturn->SetAnimation(anim_ventvalve, 0.5);
 }
 
+BoostProtectiveCover::BoostProtectiveCover()
+{
+	saturn = NULL;
+	SideHatch = NULL;
+	BPC_CoverAnim = -1;
+	BPC_CoverRotation = NULL;
+}
+
+BoostProtectiveCover::~BoostProtectiveCover()
+{
+	if (BPC_CoverRotation) delete BPC_CoverRotation;
+}
+
+void BoostProtectiveCover::Init(Saturn *s, SaturnSideHatch *hatch)
+{
+	saturn = s;
+	SideHatch = hatch;
+}
+
+void BoostProtectiveCover::Timestep(double simdt)
+{
+	if (!saturn->LETAttached()) return;
+	saturn->SetAnimation(BPC_CoverAnim, SideHatch->GetAnimState());
+}
+
+void BoostProtectiveCover::DefineAnimations(UINT idx)
+{
+	static UINT BPC_Cover[2] = { 2,8 }; // LES_HatchWindow, LES_WindowGlas
+	if (BPC_CoverRotation) delete BPC_CoverRotation;
+	BPC_CoverRotation = new MGROUP_ROTATE(idx, BPC_Cover, 2, _V(-0.549913, 1.32721, -4.70315), _V(-0.195347, 0.471609, -0.859898), (float)(-140.0*RAD));
+	BPC_CoverAnim = saturn->CreateAnimation(0.0);
+	saturn->AddAnimationComponent(BPC_CoverAnim, 0.0, 1.0, BPC_CoverRotation); // Rotation
+
+	saturn->SetAnimation(BPC_CoverAnim, SideHatch->GetAnimState());
+}
 
 SaturnWaterController::SaturnWaterController() {
 }
