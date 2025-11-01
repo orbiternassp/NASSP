@@ -4312,17 +4312,8 @@ int ARCore::subThread()
 			opt.Thruster = manpadenginetype;
 			opt.InitialBank = GC->rtcc->RZC1RCNS.entry.GNInitialBank;
 			opt.GLevel = GC->rtcc->RZC1RCNS.entry.GLevel;
-
-			if (GC->rtcc->RZDBSC1.lat_T == 0)
-			{
-				opt.lat = 0;
-				opt.lng = 0;
-			}
-			else
-			{
-				opt.lat = GC->rtcc->RZDBSC1.lat_T;
-				opt.lng = GC->rtcc->RZDBSC1.lng_T;
-			}
+			opt.lat = GC->rtcc->RZDBSC1.lat_T;
+			opt.lng = GC->rtcc->RZDBSC1.lng_T;
 
 			VECTOR3 R, V;
 			double apo, peri;
@@ -4346,39 +4337,29 @@ int ARCore::subThread()
 		{
 			LunarEntryPADOpt opt;
 
-			if (GC->rtcc->RZDBSC1.lat_T == 0)
+			if (GC->MissionPlanningActive)
 			{
-				//EntryPADLat = entry->EntryLatPred;
-				//EntryPADLng = entry->EntryLngPred;
-			}
-			else
-			{
-				if (GC->MissionPlanningActive)
-				{
-					VehicleDataBlock sv0;
-					if (GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, sv0))
-					{
-						opt.sv0 = GC->rtcc->StateVectorCalc(v);
-					}
-					else
-					{
-						opt.sv0 = GC->rtcc->ConvertEphemDatatoSV(sv0.sv, sv0.Weight);
-					}
-				}
-				else
+				VehicleDataBlock sv0;
+				if (GC->rtcc->NewMPTTrajectory(RTCC_MPT_CSM, sv0))
 				{
 					opt.sv0 = GC->rtcc->StateVectorCalc(v);
 				}
-
-				//EntryPADLat = EntryLatcor;
-				//EntryPADLng = EntryLngcor;
-				opt.lat = GC->rtcc->RZDBSC1.lat_T;
-				opt.lng = GC->rtcc->RZDBSC1.lng_T;
-				opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
-				opt.SxtStarCheckAttitudeOpt = GC->EntryPADSxtStarCheckAttOpt;
-
-				GC->rtcc->LunarEntryPAD(opt, GC->lunarentrypad);
+				else
+				{
+					opt.sv0 = GC->rtcc->ConvertEphemDatatoSV(sv0.sv, sv0.Weight);
+				}
 			}
+			else
+			{
+				opt.sv0 = GC->rtcc->StateVectorCalc(v);
+			}
+
+			opt.lat = GC->rtcc->RZDBSC1.lat_T;
+			opt.lng = GC->rtcc->RZDBSC1.lng_T;
+			opt.REFSMMAT = GC->rtcc->EZJGMTX1.data[0].REFSMMAT;
+			opt.SxtStarCheckAttitudeOpt = GC->EntryPADSxtStarCheckAttOpt;
+
+			GC->rtcc->LunarEntryPAD(opt, GC->lunarentrypad);
 		}
 
 		Result = DONE;
