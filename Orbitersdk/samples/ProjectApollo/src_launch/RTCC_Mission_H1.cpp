@@ -1361,10 +1361,10 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		}
 
 		form->KFactor = GETfromGMT(GetAGSClockZero());
-		form->DEDA224 = calcParams.SVSTORE1.R.x;			//Loads DEDA 224 for the AGS PAD, temporary storage solution
-		form->DEDA225 = calcParams.SVSTORE1.R.y;			//Loads DEDA 225 for the AGS PAD, temporary storage solution
-		form->DEDA226 = calcParams.SVSTORE1.R.z;			//Loads DEDA 226 for the AGS PAD, temporary storage solution
-		form->DEDA227 = calcParams.SVSTORE1.V.x;			//Loads DEDA 227 for the AGS PAD, temporary storage solution
+		form->DEDA224 = (int)calcParams.SVSTORE1.R.x;			//Loads DEDA 224 for the AGS PAD, temporary storage solution
+		form->DEDA225 = (int)calcParams.SVSTORE1.R.y;			//Loads DEDA 225 for the AGS PAD, temporary storage solution
+		form->DEDA226 = (int)calcParams.SVSTORE1.R.z;			//Loads DEDA 226 for the AGS PAD, temporary storage solution
+		form->DEDA227 = (int)calcParams.SVSTORE1.V.x;			//Loads DEDA 227 for the AGS PAD, temporary storage solution
 	}
 	break;
 	case 37: //SEPARATION MANEUVER

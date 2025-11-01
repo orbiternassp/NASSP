@@ -40,15 +40,15 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 	DetermineManeuverType();
 
 	//Coast to threshold time
-	EphemerisData sv1;
+	VehicleDataBlock sv1;
 	double TIG_GMT, dt1;
 
 	TIG_GMT = pRTCC->GMTfromGET(opt->TIG_GET);
-	dt1 = TIG_GMT - opt->sv_in.GMT;
-	sv1 = pRTCC->coast(opt->sv_in, dt1, opt->Weight, opt->Area, opt->KFactor, false);
+	dt1 = TIG_GMT - opt->sv_in.sv.GMT;
+	sv1 = pRTCC->coast(opt->sv_in, dt1);
 
 	//Convert to AEG
-	aeg = pRTCC->SVToAEG(sv1, opt->Area, opt->Weight, opt->KFactor);
+	aeg = pRTCC->SVToAEG(sv1.sv, sv1.Area, sv1.Weight, sv1.KFactor);
 
 	//Initialize AEG
 	pRTCC->PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
@@ -63,7 +63,7 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 		return 4;
 	}
 
-	if (sv1.RBI == BODY_EARTH)
+	if (sv1.sv.RBI == BODY_EARTH)
 	{
 		R_E = pRTCC->SystemParameters.MCECAP;
 		mu = OrbMech::mu_Earth;

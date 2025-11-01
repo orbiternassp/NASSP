@@ -107,10 +107,6 @@ public:
 	void menuCorrectiveCombinationCalc();
 	void menuSetTwoImpulseSingleSolutionInput();
 	void menuTwoImpulseSingleSolutionCalc();
-	void SPQtimedialogue();
-	void set_SPQtime(double tig);
-	void menuSetSPQChaserThresholdTime();
-	void menuSetSPQTargetThresholdTime();
 	void menuDKINSRDHInput();
 	void menuDKINCCDHInput();
 	void SPQDHdialogue();
@@ -267,9 +263,7 @@ public:
 	void menuSwitchMapUpdate();
 	void menuSetMapUpdateGET();
 	void menuCycleMapUpdatePM();
-	void menuCycleSPQMode();
-	void set_CDHtimemode();
-	void menuCycleSPQChaser();
+	void menuSetSPQInput();
 	void menuSetLaunchDate();
 	void set_launchdate(int year, int month, int day);
 	void menuChangeVesselStatus();
@@ -368,7 +362,6 @@ public:
 	void menuVECPOINTSelectAttitude();
 	void menuVECPOINTOmicron();
 	void menuVECPOINTCalc();
-	void menuSetLDPPVectorTime();
 	void menuLSRadius();
 	void menuSetLDPPDwellOrbits();
 	void menuSetLDPPLandingSiteOffset();
@@ -380,8 +373,6 @@ public:
 	void menuLDPPCalc();
 	void menuSetDescPlanCalcPage();
 	void menuTranslunarPage();
-	void menuSetLDPPMode();
-	void menuSetLDPPSequence();
 	void menuTLANDUplinkCalc();
 	void menuTLANDUpload();
 	void menuSetDescPlanInitPage();
@@ -444,9 +435,6 @@ public:
 	void menuSetSPQMinimumPeriapsisAlt();
 	void menuSetSPQTPIDefinitionValue();
 	void set_SPQTPIDefinitionValue(double get);
-	void menuCycleSPQCDHPoint();
-	void menuSPQCDHValue();
-	bool set_SPQCDHValue(char* val);
 	void menuSetDKIElevation();
 	void menuSetDKITerminalPhaseAngle();
 	void menuSetDKIMinimumPerigee();
@@ -619,13 +607,8 @@ public:
 	void menuSetDescPlanTablePage();
 	void menuSetLDPPAzimuth();
 	void menuSetLDPPDescentFlightTime();
-	void cycleLDPPVehicle();
-	void menuSetLDPPDesiredHeight();
-	void menuLDPPThresholdTime1();
-	void menuLDPPThresholdTime2();
-	void menuLDPPThresholdTime3();
-	void menuLDPPThresholdTime4();
-	void set_LDPPThresholdTime(double dt, int thr);
+	void menuSetLDPPInput();
+	void menuLDPPThresholdTimesCheck();
 	void menuSetSunriseSunsetTablePage();
 	void menuSunriseSunsetTimesCalc();
 	void menuSetMoonriseMoonsetTablePage();
@@ -859,7 +842,7 @@ public:
 	void menuGenericGoToDisplay();
 	void menuReturnToMEDInput();
 
-	void GenericGETInput(double *get, char *message);
+	void GenericGETInput(double *get, char *message, void (ApolloRTCCMFD::*func)(void) = NULL);
 	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
 	void GenericDouble2Input(double *val1, double *val2, char* message, double factor1 = 1.0, double factor2 = 1.0);
 	void GenericIntInput(int *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL, int min = 1, int max = 0);

@@ -135,7 +135,8 @@ struct MED_K16
 	double GETTH3 = 0.0;
 	double GETTH4 = 0.0;
 	double DesiredHeight = 60.0*1852.0;
-	int Vehicle = RTCC_MPT_CSM; //1 = CSM, 3 = LEM (Instead of Vector ID)
+	int Vehicle = RTCC_MPT_CSM; //1 = CSM, 3 = LEM
+	std::string VectorID;
 };
 
 //Fuel Remaining
@@ -790,7 +791,9 @@ struct DKICommon
 struct SPQOpt //Coelliptic Sequence Processor
 {
 	VehicleDataBlock sv_A;
+	std::string ChaserStationID;
 	VehicleDataBlock sv_P;
+	std::string TargetStationID;
 	//GMT of CSI maneuver (<= 0 if not scheduled)
 	double GMT_CSI;
 	//GMT of CDH maneuver
@@ -3209,6 +3212,8 @@ public:
 		int ChaserVehicle = 1; //1 = CSM, 3 = LEM
 		double ChaserThresholdGET = -1.0;
 		double TargetThresholdGET = -1.0;
+		//0 = CSI on time, 1 = CDH (Delete CSI), 2 = optimum CSI
+		int CSIMode = 0;
 		//CSI time (GET)
 		double t_CSI = 0.0;
 		//1 = CDH at upcoming apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at upcoming apsis (Keplerian), 5 = Number of half revs
@@ -3219,6 +3224,10 @@ public:
 		double CDH_Time = 0.0;
 		//For option 3
 		double CDH_Angle = PI;
+		//Optimum CSI range in minutes
+		double dt_CSI_Range = 15.0;
+		//0 = CSI and CDH in-plane, 1 = CSI and CDH parallel to target
+		bool ParallelDVInd = false;
 		std::string ChaserVectorID;
 		std::string TargetVectorID;
 	} med_k01;
@@ -3273,6 +3282,7 @@ public:
 		int Vehicle = 1; //1 = CSM, 3 = LM
 		double VectorTime = 0.0;
 		double ThresholdTime = 0.0;
+		std::string VectorID;
 	} med_k20;
 
 	//Perifocus Adjust Computation

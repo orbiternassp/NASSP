@@ -476,10 +476,10 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		WeightsTable = GetWeightsTable(calcParams.src, true, true);
 		CurrentREFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 
-		gmpopt.sv_in = sv0;
-		gmpopt.Area = WeightsTable.ConfigArea;
-		gmpopt.Weight = WeightsTable.ConfigWeight;
-		gmpopt.KFactor = PZMPTCSM.KFactor;
+		gmpopt.sv_in.sv = sv0;
+		gmpopt.sv_in.Area = WeightsTable.ConfigArea;
+		gmpopt.sv_in.Weight = WeightsTable.ConfigWeight;
+		gmpopt.sv_in.KFactor = PZMPTCSM.KFactor;
 
 		if (fcn == 13)
 		{
@@ -722,11 +722,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		gmpopt.dLAN = 6.9*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_NSO; //Gives TIG at northernmost latitude
-		gmpopt.sv_in = sv0.sv;
+		gmpopt.sv_in = sv0;
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(49, 10, 0);
-		gmpopt.Area = PZMPTCSM.ConfigurationArea;
-		gmpopt.Weight = med_m50.CSMWT + med_m50.LMWT;
-		gmpopt.KFactor = PZMPTCSM.KFactor;
+		gmpopt.sv_in.Area = PZMPTCSM.ConfigurationArea;
+		gmpopt.sv_in.Weight = med_m50.CSMWT + med_m50.LMWT;
+		gmpopt.sv_in.KFactor = PZMPTCSM.KFactor;
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
 
@@ -1479,7 +1479,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.long_D = -95.0*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_FCL;
 		gmpopt.Pitch = 0.0;
-		gmpopt.sv_in = sv0.sv;
+		gmpopt.sv_in = sv0;
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(101, 30, 0);
 		gmpopt.Yaw = -45.0*RAD;
 
@@ -1706,8 +1706,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalcEphem(calcParams.src); //State vector for uplink
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
-		gmpopt.Area = WeightsTable.ConfigArea;
-		gmpopt.Weight = WeightsTable.ConfigWeight;
+		gmpopt.sv_in.Area = WeightsTable.ConfigArea;
+		gmpopt.sv_in.Weight = WeightsTable.ConfigWeight;
+		gmpopt.sv_in.KFactor = PZMPTCSM.KFactor;
 
 		if (fcn == 45)
 		{
@@ -1715,7 +1716,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			gmpopt.H_P = 97.0*1852.0;	//Should be 95, but ensures that even with residuals and drag the perigee won't fall below 95 at SPS-7, which makes the calculation much more reliable
 			gmpopt.long_D = 122.3*RAD;
 			gmpopt.ManeuverCode = RTCC_GMP_HBL;
-			gmpopt.sv_in = sv0;
+			gmpopt.sv_in.sv = sv0;
 			gmpopt.TIG_GET = OrbMech::HHMMSSToSS(121, 30, 0);
 		}
 		else
@@ -1724,7 +1725,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			gmpopt.H_P = 95.0*1852.0;	//Should be 97, but, see above
 			gmpopt.long_D = -45.0*RAD;
 			gmpopt.ManeuverCode = RTCC_GMP_HAS;
-			gmpopt.sv_in = sv0;
+			gmpopt.sv_in.sv = sv0;
 			gmpopt.TIG_GET = OrbMech::HHMMSSToSS(169, 10, 0);
 			gmpopt.N = 46;
 		}

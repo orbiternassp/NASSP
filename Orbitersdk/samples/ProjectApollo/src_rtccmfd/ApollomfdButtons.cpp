@@ -109,16 +109,16 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu3[] =
 	{
 		{ "SPQ Init", 0, 'I' },
-		{ "Chaser/Target", 0, 'V' },
-		{ "Chaser threshold", 0, 'F' },
-		{ "Target threshold", 0, 'G' },
-		{ "CSI or CDH", 0, 'M' },
-		{ "Time Mode", 0, 'T' },
+		{ "Set input", 0, 'S' },
+		{ "Previous Item", 0, 'P' },
+		{ "Next Item", 0, 'N' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 
-		{ "Maneuver Time", 0, 'N' },
 		{ "Cycle page", 0, 'P' },
 		{ "Calculate solution", 0, 'C' },
-		{ "Rendezvous Display", 0, 'D'},
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 		{ "Choose engine", 0, 'L' },
 		{ "Previous page", 0, 'B' },
 	};
@@ -126,15 +126,15 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu3, sizeof(mnu3) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("INI", OAPI_KEY_I, &ApolloRTCCMFD::menuSetSPQInitializationPage);
-	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::menuCycleSPQChaser);
-	RegisterFunction("CTH", OAPI_KEY_F, &ApolloRTCCMFD::menuSetSPQChaserThresholdTime);
-	RegisterFunction("TTH", OAPI_KEY_G, &ApolloRTCCMFD::menuSetSPQTargetThresholdTime);
-	RegisterFunction("MOD", OAPI_KEY_M, &ApolloRTCCMFD::menuCycleSPQMode);
-	RegisterFunction("TIM", OAPI_KEY_T, &ApolloRTCCMFD::set_CDHtimemode);
+	RegisterFunction("SET", OAPI_KEY_V, &ApolloRTCCMFD::menuSetSPQInput);
+	RegisterFunction("<<", OAPI_KEY_F, &ApolloRTCCMFD::menuCycleMarkerDown);
+	RegisterFunction(">>", OAPI_KEY_G, &ApolloRTCCMFD::menuCycleMarkerUp);
+	RegisterFunction("", OAPI_KEY_M, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
 
-	RegisterFunction("TIG", OAPI_KEY_N, &ApolloRTCCMFD::SPQtimedialogue);
 	RegisterFunction("PAG", OAPI_KEY_P, &ApolloRTCCMFD::menuCycleSubscreen);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::SPQcalc);
+	RegisterFunction("", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("TRA", OAPI_KEY_L, &ApolloRTCCMFD::menuSetSPQorDKIRTransferPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetRendezvousPage);
@@ -552,16 +552,16 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	static const MFDBUTTONMENU mnu16[] =
 	{
 		{ "Init parameters", 0, 'I' },
-		{ "Vehicle", 0, 'V' },
-		{ "Vessel or vector time", 0, 'T' },
-		{ "LDPP mode", 0, 'M' },
-		{ "LDPP sequence", 0, 'S' },
-		{ "Desired height", 0, 'H' },
+		{ "Set input", 0, 'S' },
+		{ "Previous Item", 0, 'P' },
+		{ "Next Item", 0, 'N' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 
-		{ "Threshold time 1", 0, 'A' },
-		{ "Threshold time 2", 0, 'C' },
-		{ "Threshold time 3", 0, 'D' },
-		{ "Threshold time 4", 0, 'E' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 		{ "LDPP display", 0, 'P' },
 		{ "Back to menu", 0, 'B' },
 	};
@@ -569,16 +569,16 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterPage(mnu16, sizeof(mnu16) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("INI", OAPI_KEY_G, &ApolloRTCCMFD::menuSetDescPlanInitPage);
-	RegisterFunction("VEH", OAPI_KEY_V, &ApolloRTCCMFD::cycleLDPPVehicle);
-	RegisterFunction("VTI", OAPI_KEY_D, &ApolloRTCCMFD::menuSetLDPPVectorTime);
-	RegisterFunction("MOD", OAPI_KEY_M, &ApolloRTCCMFD::menuSetLDPPMode);
-	RegisterFunction("SEQ", OAPI_KEY_S, &ApolloRTCCMFD::menuSetLDPPSequence);
-	RegisterFunction("HEI", OAPI_KEY_H, &ApolloRTCCMFD::menuSetLDPPDesiredHeight);
+	RegisterFunction("SET", OAPI_KEY_V, &ApolloRTCCMFD::menuSetLDPPInput);
+	RegisterFunction("<<", OAPI_KEY_P, &ApolloRTCCMFD::menuCycleMarkerDown);
+	RegisterFunction(">>", OAPI_KEY_N, &ApolloRTCCMFD::menuCycleMarkerUp);
+	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 
-	RegisterFunction("TH1", OAPI_KEY_A, &ApolloRTCCMFD::menuLDPPThresholdTime1);
-	RegisterFunction("TH2", OAPI_KEY_B, &ApolloRTCCMFD::menuLDPPThresholdTime2);
-	RegisterFunction("TH3", OAPI_KEY_D, &ApolloRTCCMFD::menuLDPPThresholdTime3);
-	RegisterFunction("TH4", OAPI_KEY_E, &ApolloRTCCMFD::menuLDPPThresholdTime4);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_B, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("DPT", OAPI_KEY_C, &ApolloRTCCMFD::menuSetDescPlanTablePage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 
@@ -2360,8 +2360,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 		{ "TPI time", 0, 'Q' },
 
-		{ "CDH option", 0, 'C' },
-		{ "CDH value", 0, 'D' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -2377,8 +2377,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("TPI", OAPI_KEY_Q, &ApolloRTCCMFD::menuSetSPQTPIDefinitionValue);
 
-	RegisterFunction("CDH", OAPI_KEY_C, &ApolloRTCCMFD::menuCycleSPQCDHPoint);
-	RegisterFunction("VAL", OAPI_KEY_D, &ApolloRTCCMFD::menuSPQCDHValue);
+	RegisterFunction("CDH", OAPI_KEY_C, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("VAL", OAPI_KEY_D, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);

@@ -256,7 +256,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "REFSMMATopt", G->REFSMMATopt);
 	papiWriteScenario_double(scn, "REFSMMAT_LVLH_Time", G->REFSMMAT_LVLH_Time);
 	papiWriteScenario_bool(scn, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
-	papiWriteScenario_double(scn, "CDHTIME", G->CDHtime);
+	papiWriteScenario_double(scn, "CDHTIME", GC->rtcc->med_k01.CDH_Time);
 	oapiWriteScenario_int(scn, "CDHTIMEMODE", G->CDHtimemode);
 
 	papiWriteScenario_double(scn, "P30TIG", G->P30TIG);
@@ -281,7 +281,7 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	oapiWriteScenario_int(scn, "GMPManeuverPoint", G->GMPManeuverPoint);
 	oapiWriteScenario_int(scn, "GMPManeuverType", G->GMPManeuverType);
 	oapiWriteScenario_int(scn, "GMPManeuverCode", G->GMPManeuverCode);
-	papiWriteScenario_double(scn, "SPSGET", G->SPSGET);
+	papiWriteScenario_double(scn, "SPSGET", GC->rtcc->med_k20.ThresholdTime);
 
 	papiWriteScenario_double(scn, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
 	papiWriteScenario_double(scn, "LDPPGETTH2", GC->rtcc->med_k16.GETTH2);
@@ -309,7 +309,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "REFSMMATopt", G->REFSMMATopt);
 		papiReadScenario_double(line, "REFSMMAT_LVLH_Time", G->REFSMMAT_LVLH_Time);
 		papiReadScenario_bool(line, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
-		papiReadScenario_double(line, "CDHTIME", G->CDHtime);
+		papiReadScenario_double(line, "CDHTIME", GC->rtcc->med_k01.CDH_Time);
 		papiReadScenario_int(line, "CDHTIMEMODE", G->CDHtimemode);
 
 		papiReadScenario_double(line, "P30TIG", G->P30TIG);
@@ -334,7 +334,7 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		papiReadScenario_int(line, "GMPManeuverPoint", G->GMPManeuverPoint);
 		papiReadScenario_int(line, "GMPManeuverType", G->GMPManeuverType);
 		papiReadScenario_int(line, "GMPManeuverCode", G->GMPManeuverCode);
-		papiReadScenario_double(line, "SPSGET", G->SPSGET);
+		papiReadScenario_double(line, "SPSGET", GC->rtcc->med_k20.ThresholdTime);
 
 		papiReadScenario_double(line, "LDPPGETTH1", GC->rtcc->med_k16.GETTH1);
 		papiReadScenario_double(line, "LDPPGETTH2", GC->rtcc->med_k16.GETTH2);
@@ -907,6 +907,8 @@ void ApolloRTCCMFD::menuSetThrustCGPage()
 
 void ApolloRTCCMFD::menuSetSPQPage()
 {
+	marker = 0;
+	markermax = 11;
 	subscreen = 0;
 	subscreenmax = 1;
 	SelectPage(3);
@@ -915,7 +917,7 @@ void ApolloRTCCMFD::menuSetSPQPage()
 void ApolloRTCCMFD::menuSetOrbAdjPage()
 {
 	marker = 0;
-	markermax = 7;
+	markermax = 8;
 	SelectPage(4);
 }
 
@@ -976,6 +978,8 @@ void ApolloRTCCMFD::menuSetVECPOINTPage()
 
 void ApolloRTCCMFD::menuSetDescPlanCalcPage()
 {
+	marker = 0;
+	markermax = 9;
 	SelectPage(16);
 }
 
@@ -2124,15 +2128,21 @@ void ApolloRTCCMFD::menuRetroSepAtt()
 	GenericVectorInput(&GC->rtcc->RZJCTTC.R30_Att, "Enter attitude of sep/shaping maneuver:", RAD);
 }
 
-void ApolloRTCCMFD::GenericGETInput(double *get, char *message)
+void ApolloRTCCMFD::GenericGETInput(double *get, char *message, void (ApolloRTCCMFD::*func)(void))
 {
+	void *data2;
+	tempData.dVal = get;
+	tempData.ptr = this;
+	tempData.func = func;
+	data2 = &tempData;
+
 	bool GenericGETInputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericGETInputBox, 0, 25, (void*)(get));
+	oapiOpenInputBox(message, GenericGETInputBox, 0, 25, data2);
 }
 
 bool GenericGETInputBox(void *id, char *str, void *data)
 {
-	double *get2 = static_cast<double*>(data);
+	RTCCMFDInputBoxData *arr = static_cast<RTCCMFDInputBoxData*>(data);
 
 	int hh, mm;
 	double ss, get;
@@ -2140,7 +2150,15 @@ bool GenericGETInputBox(void *id, char *str, void *data)
 	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
 	{
 		get = ss + 60 * (mm + 60 * hh);
-		*get2 = get;
+		*arr->dVal = get;
+		//Call function after setting value
+		if (arr->func)
+		{
+			ApolloRTCCMFD *ptr = arr->ptr;
+			void (ApolloRTCCMFD::*func)(void) = arr->func;
+
+			(ptr->*func)();
+		}
 		
 		return true;
 
@@ -3517,6 +3535,10 @@ void ApolloRTCCMFD::menuSetGMPInput()
 	{
 		GMPInput4Dialogue();
 	}
+	else if (marker == 8)
+	{
+		GenericStringInput(&GC->rtcc->med_k20.VectorID, "Enter Vector ID if desired (used instead of vector time):");
+	}
 }
 
 void ApolloRTCCMFD::menuGPMCycleVessel()
@@ -3671,81 +3693,12 @@ void ApolloRTCCMFD::menuSetTIMultipleSolutionInput()
 
 void ApolloRTCCMFD::OrbAdjGETDialogue()
 {
-	GenericGETInput(&G->SPSGET, "Choose the GET for the maneuver (Format: hhh:mm:ss)");
+	GenericGETInput(&GC->rtcc->med_k20.ThresholdTime, "Choose the GET for the maneuver (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::OrbAdjRevDialogue()
 {
 	GenericIntInput(&G->GMPRevs, "Number of revolutions:");
-}
-
-void ApolloRTCCMFD::menuSetSPQChaserThresholdTime()
-{
-	if (GC->MissionPlanningActive)
-	{
-		GenericGETInput(&GC->rtcc->med_k01.ChaserThresholdGET, "Choose the SPQ chaser threshold (Format: hhh:mm:ss)");
-	}
-	else
-	{
-		if (GC->rtcc->med_k01.ChaserVehicle == 1)
-		{
-			set_CSMVessel();
-		}
-		else
-		{
-			set_LMVessel();
-		}
-	}
-}
-
-void ApolloRTCCMFD::menuSetSPQTargetThresholdTime()
-{
-	if (GC->MissionPlanningActive)
-	{
-		GenericGETInput(&GC->rtcc->med_k01.TargetThresholdGET, "Choose the SPQ target threshold (Format: hhh:mm:ss)");
-	}
-	else
-	{
-		if (GC->rtcc->med_k01.ChaserVehicle == 1)
-		{
-			set_LMVessel();
-		}
-		else
-		{
-			set_CSMVessel();
-		}
-	}
-}
-
-void ApolloRTCCMFD::SPQtimedialogue()
-{
-	bool SPQGETInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the GET for the maneuver (Format: hhh:mm:ss)", SPQGETInput, 0, 20, (void*)this);
-}
-
-bool SPQGETInput(void *id, char *str, void *data)
-{
-	int hh, mm, ss, tig;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		tig = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_SPQtime(tig);
-
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_SPQtime(double tig)
-{
-	if (G->SPQMode == 1)
-	{
-		this->G->CDHtime = tig;
-	}
-	else
-	{
-		GC->rtcc->med_k01.t_CSI = tig;
-	}
 }
 
 void ApolloRTCCMFD::menuRTEDASTCodeDialogue()
@@ -6463,32 +6416,110 @@ void ApolloRTCCMFD::menuCycleMapUpdatePM()
 	G->mapUpdatePM = !G->mapUpdatePM;
 }
 
-void ApolloRTCCMFD::menuCycleSPQMode()
+void ApolloRTCCMFD::menuSetSPQInput()
 {
-	if (G->SPQMode < 2)
+	switch (marker)
 	{
-		G->SPQMode++;
-	}
-	else
-	{
-		G->SPQMode = 0;
-	}
-}
-
-void ApolloRTCCMFD::menuCycleSPQChaser()
-{
-	GC->rtcc->med_k01.ChaserVehicle = 4 - GC->rtcc->med_k01.ChaserVehicle;
-}
-
-void ApolloRTCCMFD::set_CDHtimemode()
-{
-	if (G->CDHtimemode < 1)
-	{
-		G->CDHtimemode++;
-	}
-	else
-	{
-		G->CDHtimemode = 0;
+	case 0:
+		GC->rtcc->med_k01.ChaserVehicle = 4 - GC->rtcc->med_k01.ChaserVehicle;
+		break;
+	case 1:
+		if (GC->MissionPlanningActive)
+		{
+			GenericGETInput(&GC->rtcc->med_k01.ChaserThresholdGET, "Choose the SPQ chaser threshold (Format: hhh:mm:ss)");
+		}
+		else
+		{
+			if (GC->rtcc->med_k01.ChaserVehicle == 1)
+			{
+				set_CSMVessel();
+			}
+			else
+			{
+				set_LMVessel();
+			}
+		}
+		break;
+	case 2:
+		if (GC->MissionPlanningActive)
+		{
+			GenericGETInput(&GC->rtcc->med_k01.TargetThresholdGET, "Choose the SPQ target threshold (Format: hhh:mm:ss)");
+		}
+		else
+		{
+			if (GC->rtcc->med_k01.ChaserVehicle == 1)
+			{
+				set_LMVessel();
+			}
+			else
+			{
+				set_CSMVessel();
+			}
+		}
+		break;
+	case 3:
+		if (GC->rtcc->med_k01.CSIMode < 2)
+		{
+			GC->rtcc->med_k01.CSIMode++;
+		}
+		else
+		{
+			GC->rtcc->med_k01.CSIMode = 0;
+		}
+		break;
+	case 4:
+		GenericGETInput(&GC->rtcc->med_k01.t_CSI, "Choose the GET for the CSI maneuver (Format: hhh:mm:ss):");
+		break;
+	case 5:
+		GenericDoubleInput(&GC->rtcc->med_k01.dt_CSI_Range, "CSI range in minutes (0 to 15):");
+		break;
+	case 6:
+		if (GC->rtcc->med_k01.I_CDH < 5)
+		{
+			GC->rtcc->med_k01.I_CDH++;
+		}
+		else
+		{
+			GC->rtcc->med_k01.I_CDH = 1;
+		}
+		break;
+	case 7:
+		if (GC->rtcc->med_k01.CSIMode == 1 || GC->rtcc->med_k01.I_CDH == 2)
+		{
+			GenericGETInput(&GC->rtcc->med_k01.CDH_Time, "Choose the GET for the CDH maneuver (Format: hhh:mm:ss):");
+		}
+		else if (GC->rtcc->med_k01.I_CDH == 3)
+		{
+			GenericDoubleInput(&GC->rtcc->med_k01.CDH_Angle, "Angle from CSI to CDH:", RAD);
+		}
+		else if (GC->rtcc->med_k01.I_CDH == 5)
+		{
+			GenericIntInput(&GC->rtcc->med_k01.CDH_Apsis, "No. of half revolutions since CSI:");
+		}
+		else
+		{
+			GenericIntInput(&GC->rtcc->med_k01.CDH_Apsis, "No. of apsis since CSI:");
+		}
+		break;
+	case 8:
+		GC->rtcc->med_k01.ParallelDVInd = !GC->rtcc->med_k01.ParallelDVInd;
+		break;
+	case 9:
+		if (G->CDHtimemode < 1)
+		{
+			G->CDHtimemode++;
+		}
+		else
+		{
+			G->CDHtimemode = 0;
+		}
+		break;
+	case 10:
+		GenericStringInput(&GC->rtcc->med_k01.ChaserVectorID, "Enter Vector ID for chaser (used instead of vector time):");
+		break;
+	case 11:
+		GenericStringInput(&GC->rtcc->med_k01.TargetVectorID, "Enter Vector ID for target (used instead of vector time):");
+		break;
 	}
 }
 
@@ -7288,25 +7319,6 @@ void ApolloRTCCMFD::menuLmkUseLandingSite()
 	GC->LmkLng = GC->rtcc->BZLAND.lng[0];
 }
 
-void ApolloRTCCMFD::menuSetLDPPVectorTime()
-{
-	if (GC->MissionPlanningActive)
-	{
-		GenericGETInput(&GC->rtcc->med_k16.VectorTime, "Choose the vector time (Format: hhh:mm:ss)");
-	}
-	else
-	{
-		if (GC->rtcc->med_k16.Vehicle == RTCC_MPT_LM)
-		{
-			set_LMVessel();
-		}
-		else
-		{
-			set_CSMVessel();
-		}
-	}
-}
-
 void ApolloRTCCMFD::menuLSRadius()
 {
 	GenericDoubleInput(&GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST], "Choose the landing site radius:", 1852.0);
@@ -7335,31 +7347,6 @@ void ApolloRTCCMFD::menuSetLDPPDescIgnHeight()
 void ApolloRTCCMFD::cycleLDPPPoweredDescSimFlag()
 {
 	GC->rtcc->GZGENCSN.LDPPPoweredDescentSimFlag = !GC->rtcc->GZGENCSN.LDPPPoweredDescentSimFlag;
-}
-
-void ApolloRTCCMFD::menuSetLDPPMode()
-{
-	if (GC->rtcc->med_k16.Mode < 7)
-	{
-		GC->rtcc->med_k16.Mode++;
-	}
-	else
-	{
-		GC->rtcc->med_k16.Mode = 1;
-	}
-	GC->rtcc->med_k16.Sequence = 1;
-}
-
-void ApolloRTCCMFD::menuSetLDPPSequence()
-{
-	if (GC->rtcc->med_k16.Sequence < 5)
-	{
-		GC->rtcc->med_k16.Sequence++;
-	}
-	else
-	{
-		GC->rtcc->med_k16.Sequence = 1;
-	}
 }
 
 void ApolloRTCCMFD::menuLDPPSaveTLAND()
@@ -7927,81 +7914,6 @@ bool SPQTPIDefinitionValueInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_SPQTPIDefinitionValue(double get)
 {
 	GC->rtcc->GZGENCSN.TPIDefinitionValue = get;
-}
-
-void ApolloRTCCMFD::menuCycleSPQCDHPoint()
-{
-	if (GC->rtcc->med_k01.I_CDH < 5)
-	{
-		GC->rtcc->med_k01.I_CDH++;
-	}
-	else
-	{
-		GC->rtcc->med_k01.I_CDH = 1;
-	}
-}
-
-void ApolloRTCCMFD::menuSPQCDHValue()
-{
-	bool SPQCDHValueInput(void* id, char *str, void *data);
-	if (GC->rtcc->med_k01.I_CDH == 3)
-	{
-		oapiOpenInputBox("Angle from CSI to CDH:", SPQCDHValueInput, 0, 20, (void*)this);
-	}
-	else if (GC->rtcc->med_k01.I_CDH == 2)
-	{
-		oapiOpenInputBox("GET of CDH:", SPQCDHValueInput, 0, 20, (void*)this);
-	}
-	else if(GC->rtcc->med_k01.I_CDH == 5)
-	{
-		oapiOpenInputBox("No. of half revolutions since CSI:", SPQCDHValueInput, 0, 20, (void*)this);
-	}
-	else
-	{
-		oapiOpenInputBox("No. of apsis since CSI:", SPQCDHValueInput, 0, 20, (void*)this);
-	}
-}
-
-bool SPQCDHValueInput(void* id, char *str, void *data)
-{
-	if (strlen(str) < 20)
-	{
-		return ((ApolloRTCCMFD*)data)->set_SPQCDHValue(str);
-	}
-	return false;
-}
-
-bool ApolloRTCCMFD::set_SPQCDHValue(char* val)
-{
-	if (GC->rtcc->med_k01.I_CDH == 3)
-	{
-		double angle;
-		if (sscanf(val, "%lf", &angle) == 1)
-		{
-			GC->rtcc->med_k01.CDH_Angle = angle * RAD;
-			return true;
-		}
-	}
-	else if (GC->rtcc->med_k01.I_CDH == 2)
-	{
-		int hh, mm;
-		double ss;
-		if (sscanf(val, "%d:%d:%lf", &hh, &mm, &ss) == 3)
-		{
-			GC->rtcc->med_k01.CDH_Time = ss + 60 * (mm + 60 * hh);
-			return true;
-		}
-	}
-	else
-	{
-		int n;
-		if (sscanf(val, "%d", &n) == 1)
-		{
-			GC->rtcc->med_k01.CDH_Apsis = n;
-			return true;
-		}
-	}
-	return false;
 }
 
 void ApolloRTCCMFD::menuSetDKIElevation()
@@ -8660,119 +8572,19 @@ void ApolloRTCCMFD::menuSetLDPPPoweredDescTime()
 	GenericGETInput(&GC->rtcc->GZGENCSN.LDPPTimeofPDI, "Time for powered descent ignition (0 to calculate it internally):");
 }
 
-void ApolloRTCCMFD::menuLDPPThresholdTime1()
+void ApolloRTCCMFD::menuLDPPThresholdTimesCheck()
 {
-	bool LDPPThresholdTime1Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Threshold time 1 (Format: hhh:mm:ss)", LDPPThresholdTime1Input, 0, 20, (void*)this);
-}
-
-bool LDPPThresholdTime1Input(void* id, char *str, void *data)
-{
-	int hh, mm, ss, dt;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	if (GC->rtcc->med_k16.GETTH2 < GC->rtcc->med_k16.GETTH1)
 	{
-		dt = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_LDPPThresholdTime(dt, 1);
-		return true;
+		GC->rtcc->med_k16.GETTH2 = GC->rtcc->med_k16.GETTH1;
 	}
-	return false;
-}
-
-void ApolloRTCCMFD::menuLDPPThresholdTime2()
-{
-	bool LDPPThresholdTime2Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Threshold time 2 (Format: hhh:mm:ss)", LDPPThresholdTime2Input, 0, 20, (void*)this);
-}
-
-bool LDPPThresholdTime2Input(void* id, char *str, void *data)
-{
-	int hh, mm, ss, dt;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	if (GC->rtcc->med_k16.GETTH3 < GC->rtcc->med_k16.GETTH2)
 	{
-		dt = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_LDPPThresholdTime(dt, 2);
-		return true;
+		GC->rtcc->med_k16.GETTH3 = GC->rtcc->med_k16.GETTH2;
 	}
-	return false;
-}
-
-void ApolloRTCCMFD::menuLDPPThresholdTime3()
-{
-	bool LDPPThresholdTime3Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Threshold time 3 (Format: hhh:mm:ss)", LDPPThresholdTime3Input, 0, 20, (void*)this);
-}
-
-bool LDPPThresholdTime3Input(void* id, char *str, void *data)
-{
-	int hh, mm, ss, dt;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	if (GC->rtcc->med_k16.GETTH4 < GC->rtcc->med_k16.GETTH3)
 	{
-		dt = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_LDPPThresholdTime(dt, 3);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::menuLDPPThresholdTime4()
-{
-	bool LDPPThresholdTime4Input(void* id, char *str, void *data);
-	oapiOpenInputBox("Threshold time 4 (Format: hhh:mm:ss)", LDPPThresholdTime4Input, 0, 20, (void*)this);
-}
-
-bool LDPPThresholdTime4Input(void* id, char *str, void *data)
-{
-	int hh, mm, ss, dt;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
-	{
-		dt = ss + 60 * (mm + 60 * hh);
-		((ApolloRTCCMFD*)data)->set_LDPPThresholdTime(dt, 4);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_LDPPThresholdTime(double dt, int thr)
-{
-	if (thr == 1)
-	{
-		GC->rtcc->med_k16.GETTH1 = dt;
-		if (GC->rtcc->med_k16.GETTH2 < GC->rtcc->med_k16.GETTH1)
-		{
-			GC->rtcc->med_k16.GETTH2 = GC->rtcc->med_k16.GETTH1;
-		}
-		if (GC->rtcc->med_k16.GETTH3 < GC->rtcc->med_k16.GETTH2)
-		{
-			GC->rtcc->med_k16.GETTH3 = GC->rtcc->med_k16.GETTH2;
-		}
-		if (GC->rtcc->med_k16.GETTH4 < GC->rtcc->med_k16.GETTH3)
-		{
-			GC->rtcc->med_k16.GETTH4 = GC->rtcc->med_k16.GETTH3;
-		}
-	}
-	else if (thr == 2)
-	{
-		GC->rtcc->med_k16.GETTH2 = dt;
-		if (GC->rtcc->med_k16.GETTH3 < GC->rtcc->med_k16.GETTH2)
-		{
-			GC->rtcc->med_k16.GETTH3 = GC->rtcc->med_k16.GETTH2;
-		}
-		if (GC->rtcc->med_k16.GETTH4 < GC->rtcc->med_k16.GETTH3)
-		{
-			GC->rtcc->med_k16.GETTH4 = GC->rtcc->med_k16.GETTH3;
-		}
-	}
-	else if (thr == 3)
-	{
-		GC->rtcc->med_k16.GETTH3 = dt;
-		if (GC->rtcc->med_k16.GETTH4 < GC->rtcc->med_k16.GETTH3)
-		{
-			GC->rtcc->med_k16.GETTH4 = GC->rtcc->med_k16.GETTH3;
-		}
-	}
-	else if (thr == 4)
-	{
-		GC->rtcc->med_k16.GETTH4 = dt;
+		GC->rtcc->med_k16.GETTH4 = GC->rtcc->med_k16.GETTH3;
 	}
 }
 
@@ -8781,21 +8593,77 @@ void ApolloRTCCMFD::menuSetLDPPDescentFlightTime()
 	GenericDoubleInput(&GC->rtcc->GZGENCSN.LDPPDescentFlightTime, "Descent flight time in minutes:", 60.0);
 }
 
-void ApolloRTCCMFD::cycleLDPPVehicle()
+void ApolloRTCCMFD::menuSetLDPPInput()
 {
-	if (GC->rtcc->med_k16.Vehicle == RTCC_MPT_CSM)
+	switch (marker)
 	{
-		GC->rtcc->med_k16.Vehicle = RTCC_MPT_LM;
+	case 0:
+		if (GC->rtcc->med_k16.Vehicle == RTCC_MPT_CSM)
+		{
+			GC->rtcc->med_k16.Vehicle = RTCC_MPT_LM;
+		}
+		else
+		{
+			GC->rtcc->med_k16.Vehicle = RTCC_MPT_CSM;
+		}
+		break;
+	case 1:
+		if (GC->MissionPlanningActive)
+		{
+			GenericGETInput(&GC->rtcc->med_k16.VectorTime, "Choose the vector time (Format: hhh:mm:ss)");
+		}
+		else
+		{
+			if (GC->rtcc->med_k16.Vehicle == RTCC_MPT_LM)
+			{
+				set_LMVessel();
+			}
+			else
+			{
+				set_CSMVessel();
+			}
+		}
+		break;
+	case 2:
+		if (GC->rtcc->med_k16.Mode < 7)
+		{
+			GC->rtcc->med_k16.Mode++;
+		}
+		else
+		{
+			GC->rtcc->med_k16.Mode = 1;
+		}
+		GC->rtcc->med_k16.Sequence = 1;
+		break;
+	case 3:
+		if (GC->rtcc->med_k16.Sequence < 5)
+		{
+			GC->rtcc->med_k16.Sequence++;
+		}
+		else
+		{
+			GC->rtcc->med_k16.Sequence = 1;
+		}
+		break;
+	case 4:
+		GenericGETInput(&GC->rtcc->med_k16.GETTH1, "Threshold time 1 (Format: hhh:mm:ss)", &ApolloRTCCMFD::menuLDPPThresholdTimesCheck);
+		break;
+	case 5:
+		GenericGETInput(&GC->rtcc->med_k16.GETTH2, "Threshold time 2 (Format: hhh:mm:ss)", &ApolloRTCCMFD::menuLDPPThresholdTimesCheck);
+		break;
+	case 6:
+		GenericGETInput(&GC->rtcc->med_k16.GETTH3, "Threshold time 3 (Format: hhh:mm:ss)", &ApolloRTCCMFD::menuLDPPThresholdTimesCheck);
+		break;
+	case 7:
+		GenericGETInput(&GC->rtcc->med_k16.GETTH4, "Threshold time 4 (Format: hhh:mm:ss)", &ApolloRTCCMFD::menuLDPPThresholdTimesCheck);
+		break;
+	case 8:
+		GenericDoubleInput(&GC->rtcc->med_k16.DesiredHeight, "Desired height in NM:", 1852.0);
+		break;
+	case 9:
+		GenericStringInput(&GC->rtcc->med_k16.VectorID, "Enter Vector ID if desired (used instead of vector time):");
+		break;
 	}
-	else
-	{
-		GC->rtcc->med_k16.Vehicle = RTCC_MPT_CSM;
-	}
-}
-
-void ApolloRTCCMFD::menuSetLDPPDesiredHeight()
-{
-	GenericDoubleInput(&GC->rtcc->med_k16.DesiredHeight, "Desired height in NM:", 1852.0);
 }
 
 void ApolloRTCCMFD::menuSunriseSunsetTimesCalc()

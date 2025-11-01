@@ -96,10 +96,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 struct GMPOpt
 {
 	int ManeuverCode;
-	EphemerisData sv_in;		//State vector as input or without
-	double Area = 0.0;
-	double Weight = 1.0;
-	double KFactor = 1.0;
+	VehicleDataBlock sv_in;		//State vector as input or without
+	std::string StationID;
 
 	//maneuver parameters
 

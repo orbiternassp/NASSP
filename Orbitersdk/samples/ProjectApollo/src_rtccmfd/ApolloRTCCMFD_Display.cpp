@@ -292,19 +292,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 
 			skp->Text(CW, 2 * H / 14, "SPQ Initialization", 18);
 
-			if (GC->rtcc->med_k01.ChaserVehicle == 1)
-			{
-				skp->Text(CW, 4 * H / 14, "Chaser: CSM", 11);
-				skp->Text(CW, 5 * H / 14, "Target: LEM", 11);
-			}
-			else
-			{
-				skp->Text(CW, 4 * H / 14, "Chaser: LEM", 11);
-				skp->Text(CW, 5 * H / 14, "Target: CSM", 11);
-			}
-
+			x = 1;  y = 6; dx = 8;
+			Text(skp, x, marker + y, "*");
+			x++;
+			Text(skp, x, y, "Chaser:");
+			if (GC->rtcc->med_k01.ChaserVehicle == 1) Text(skp, x + dx, y, "CSM");
+			else Text(skp, x + dx, y, "LEM");
+			y++;
 			if (GC->MissionPlanningActive)
 			{
+				Text(skp, x, y, "CTH:");
 				if (GC->rtcc->med_k01.ChaserThresholdGET < 0)
 				{
 					sprintf_s(Buffer, "Present Time");
@@ -325,10 +322,11 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 					PrintLMVessel(Buffer);
 				}
 			}
-			skp->Text(CW, 6 * H / 14, Buffer, strlen(Buffer));
-
+			Text(skp, x, y, Buffer);
+			y++;
 			if (GC->MissionPlanningActive)
 			{
+				Text(skp, x, y, "TTH:");
 				if (GC->rtcc->med_k01.TargetThresholdGET < 0)
 				{
 					sprintf_s(Buffer, "Present Time");
@@ -349,53 +347,73 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 					PrintCSMVessel(Buffer);
 				}
 			}
-			skp->Text(CW, 8 * H / 14, Buffer, strlen(Buffer));
-
-			if (G->SPQMode != 1)
+			Text(skp, x, y, Buffer);
+			y++;
+			Text(skp, x, y, "MOD:");
+			if (GC->rtcc->med_k01.CSIMode == 0) Text(skp, x + dx, y, "CSI");
+			else if (GC->rtcc->med_k01.CSIMode == 1) Text(skp, x + dx, y, "CDH");
+			else Text(skp, x + dx, y, "Optimum CSI");
+			y++;
+			Text(skp, x, y, "CSI:");
+			if (GC->rtcc->med_k01.CSIMode != 1)
 			{
-				if (G->SPQMode == 2)
-				{
-					skp->Text(CW, 10 * H / 14, "Optimum CSI", 11);
-				}
-				else
-				{
-					skp->Text(CW, 10 * H / 14, "CSI", 3);
-
-					if (G->CDHtimemode == 0)
-					{
-						skp->Text(CW, 12 * H / 14, "Fixed TPI time", 14);
-					}
-					else if (G->CDHtimemode == 1)
-					{
-						skp->Text(CW, 12 * H / 14, "Fixed DH", 8);
-					}
-				}
+				Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_k01.t_CSI);
 			}
-			else
+			y++;
+			Text(skp, x, y, "RAN:");
+			if (GC->rtcc->med_k01.CSIMode == 2)
 			{
-				skp->Text(CW, 10 * H / 14, "CDH", 3);
+				Text(skp, x + dx, y, "%.0lf min", GC->rtcc->med_k01.dt_CSI_Range);
+			}
+			y++;
 
+			Text(skp, x, y, "CDH:");
+			if (GC->rtcc->med_k01.CSIMode == 1 || GC->rtcc->med_k01.I_CDH == 2) Text(skp, x + dx, y, "CDH on time");
+			else if (GC->rtcc->med_k01.I_CDH == 1) Text(skp, x + dx, y, "CDH at upcoming apsis (AEG)");
+			else if (GC->rtcc->med_k01.I_CDH == 3) Text(skp, x + dx, y, "Angle from CSI to CDH");
+			else if (GC->rtcc->med_k01.I_CDH == 4) Text(skp, x + dx, y, "CDH at upcoming apsis (Keplerian)");
+			else Text(skp, x + dx, y, "CDH at N half-revs after CSI");
+			y++;
+
+			if (GC->rtcc->med_k01.CSIMode == 1 || GC->rtcc->med_k01.I_CDH == 2) Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->med_k01.CDH_Time);
+			else if (GC->rtcc->med_k01.I_CDH == 3) Text(skp, x + dx, y, "%.1lf°", GC->rtcc->med_k01.CDH_Angle*DEG);
+			else Text(skp, x + dx, y, "%d", GC->rtcc->med_k01.CDH_Apsis);
+			y++;
+
+			Text(skp, x, y, "PDV:");
+			if (GC->rtcc->med_k01.ParallelDVInd) Text(skp, x + dx, y, "CSI and CDH in-plane");
+			else Text(skp, x + dx, y, "CSI and CDH parallel to target");
+			y++;
+			Text(skp, x, y, "TIM:");
+			if (GC->rtcc->med_k01.CSIMode == 0)
+			{
 				if (G->CDHtimemode == 0)
 				{
-					skp->Text(CW, 12 * H / 14, "Fixed", 5);
+					Text(skp, x + dx, y, "Fixed TPI time");
 				}
 				else if (G->CDHtimemode == 1)
 				{
-					skp->Text(CW, 12 * H / 14, "Find GETI", 9);
+					Text(skp, x + dx, y, "Fixed DH");
 				}
 			}
-
-			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-			if (G->SPQMode != 1)
+			else if (GC->rtcc->med_k01.CSIMode == 1)
 			{
-				GET_Display(Buffer, GC->rtcc->med_k01.t_CSI);
-				skp->Text(W - CW, 2 * H / 14, Buffer, strlen(Buffer));
+				if (G->CDHtimemode == 0)
+				{
+					Text(skp, x + dx, y, "Fixed");
+				}
+				else if (G->CDHtimemode == 1)
+				{
+					Text(skp, x + dx, y, "Find GETI");
+				}
 			}
-			else
-			{
-				GET_Display(Buffer, G->CDHtime);
-				skp->Text(W - CW, 2 * H / 14, Buffer, strlen(Buffer));
-			}
+			y++;
+			Text(skp, x, y, "CID:");
+			Text(skp, x + dx, y, GC->rtcc->med_k01.ChaserVectorID);
+			y++;
+			Text(skp, x, y, "TID:");
+			Text(skp, x + dx, y, GC->rtcc->med_k01.TargetVectorID);
+			y++;
 		}
 		else
 		{
@@ -439,7 +457,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		GMPManeuverPointName(Buffer, G->GMPManeuverPoint);
 		skp->Text(CW * 6, CH * 5, Buffer, strlen(Buffer));
 		skp->Text(CW * 2, CH * 6, "GET", 3);
-		GET_Display(Buffer, G->SPSGET, false);
+		GET_Display(Buffer, GC->rtcc->med_k20.ThresholdTime, false);
 		skp->Text(CW * 6, CH * 6, Buffer, strlen(Buffer));
 
 		//Desired Maneuver Height
@@ -552,6 +570,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf(Buffer, "%d", G->GMPRevs);
 			skp->Text(CW * 6, CH * 10, Buffer, strlen(Buffer));
 		}
+		skp->Text(CW * 2, CH * 11, "VID", 3);
+		skp->Text(CW * 6, CH * 11, GC->rtcc->med_k20.VectorID.c_str(), GC->rtcc->med_k20.VectorID.size());
 		if (GC->rtcc->PZGPMDIS.Err)
 		{
 			sprintf(Buffer, "Error: %d", GC->rtcc->PZGPMDIS.Err);
@@ -1766,17 +1786,18 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(W / 2, CH / 2, "Computation for Lunar Descent Planning", 39);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		skp->Text(CW, 2 * H / 14, "Init", 4);
-		if (GC->rtcc->med_k16.Vehicle == RTCC_MPT_LM)
-		{
-			skp->Text(CW, 4 * H / 14, "LEM", 3);
-		}
-		else
-		{
-			skp->Text(CW, 4 * H / 14, "CSM", 3);
-		}
+
+		x = 1;  y = 6; dx = 7;
+		Text(skp, x, marker + y, "*");
+		x++;
+		Text(skp, x, y, "VEH:");
+		if (GC->rtcc->med_k16.Vehicle == RTCC_MPT_CSM) Text(skp, x + dx, y, "CSM");
+		else Text(skp, x + dx, y, "LEM");
+		y++;
+		Text(skp, x, y, "VTI:");
 		if (GC->MissionPlanningActive)
 		{
-			GET_Display(Buffer, GC->rtcc->med_k16.VectorTime, false);
+			GET_Display2(Buffer, GC->rtcc->med_k16.VectorTime);
 		}
 		else
 		{
@@ -1789,134 +1810,92 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				PrintCSMVessel(Buffer);
 			}
 		}
-		skp->Text(CW, 6 * H / 14, Buffer, strlen(Buffer));
+		Text(skp, x + dx, y, Buffer);
+		y++;
+		Text(skp, x, y, "MOD:");
+		if (GC->rtcc->med_k16.Mode == 1) Text(skp, x + dx, y, "CSM Phase Change");
+		else if (GC->rtcc->med_k16.Mode == 2) Text(skp, x + dx, y, "Single CSM Maneuver");
+		else if (GC->rtcc->med_k16.Mode == 3) Text(skp, x + dx, y, "Double CSM Maneuver");
+		else if (GC->rtcc->med_k16.Mode == 4) Text(skp, x + dx, y, "Descent Orbit Insertion");
+		else if (GC->rtcc->med_k16.Mode == 5) Text(skp, x + dx, y, "Double Hohmann, PC");
+		else if (GC->rtcc->med_k16.Mode == 6) Text(skp, x + dx, y, "LM Powered Descent");
+		else if (GC->rtcc->med_k16.Mode == 7) Text(skp, x + dx, y, "CSM Prelaunch Plane Change");
+		y++;
+
+		Text(skp, x, y, "SEQ:");
 		if (GC->rtcc->med_k16.Mode == 1)
 		{
-			skp->Text(CW, 8 * H / 14, "CSM Phase Change", 16);
-
-			if (GC->rtcc->med_k16.Sequence == 1)
-			{
-				skp->Text(CW, 10 * H / 14, "1: PC, DOI", 10);
-			}
-			else if (GC->rtcc->med_k16.Sequence == 2)
-			{
-				skp->Text(CW, 10 * H / 14, "2: PCC, DOI", 11);
-			}
-			else if (GC->rtcc->med_k16.Sequence == 3)
-			{
-				skp->Text(CW, 10 * H / 14, "3: ASP, CIA, DOI", 16);
-			}
-			else if (GC->rtcc->med_k16.Sequence == 4)
-			{
-				skp->Text(CW, 10 * H / 14, "4: PCCH, DOI", 12);
-			}
-			else if (GC->rtcc->med_k16.Sequence == 5)
-			{
-				skp->Text(CW, 10 * H / 14, "5: PCCT, DOI", 12);
-			}
+			if (GC->rtcc->med_k16.Sequence == 1) Text(skp, x + dx, y, "1: PC, DOI");
+			else if (GC->rtcc->med_k16.Sequence == 2) Text(skp, x + dx, y, "2: PCC, DOI");
+			else if (GC->rtcc->med_k16.Sequence == 3) Text(skp, x + dx, y, "3: ASP, CIA, DOI");
+			else if (GC->rtcc->med_k16.Sequence == 4) Text(skp, x + dx, y, "4: PCCH, DOI");
+			else if (GC->rtcc->med_k16.Sequence == 5) Text(skp, x + dx, y, "5: PCCT, DOI");
 		}
 		else if (GC->rtcc->med_k16.Mode == 2)
 		{
-			skp->Text(CW, 8 * H / 14, "Single CSM Maneuver", 19);
-
-			if (GC->rtcc->med_k16.Sequence == 2)
-			{
-				skp->Text(CW, 10 * H / 14, "2: ASH, DOI", 11);
-			}
-			else if (GC->rtcc->med_k16.Sequence == 3)
-			{
-				skp->Text(CW, 10 * H / 14, "3: CIR, DOI", 11);
-			}
+			if (GC->rtcc->med_k16.Sequence == 2)  Text(skp, x + dx, y, "2: ASH, DOI");
+			else if (GC->rtcc->med_k16.Sequence == 3) Text(skp, x + dx, y, "3: CIR, DOI");
 			else
 			{
 				sprintf(Buffer, "%d: Not Used", GC->rtcc->med_k16.Sequence);
-				skp->Text(CW, 10 * H / 14, Buffer, strlen(Buffer));
+				Text(skp, x + dx, y, Buffer);
 			}
 		}
 		else if (GC->rtcc->med_k16.Mode == 3)
 		{
-			skp->Text(CW, 8 * H / 14, "Double CSM Maneuver", 19);
-
-			if (GC->rtcc->med_k16.Sequence == 1)
-			{
-				skp->Text(CW, 10 * H / 14, "1: ASH at time, CIA, DOI", 24);
-			}
-			else if (GC->rtcc->med_k16.Sequence == 3)
-			{
-				skp->Text(CW, 10 * H / 14, "3: ASH at apsis, CIA, DOI", 25);
-			}
+			if (GC->rtcc->med_k16.Sequence == 1) Text(skp, x + dx, y, "1: ASH at time, CIA, DOI");
+			else if (GC->rtcc->med_k16.Sequence == 3) Text(skp, x + dx, y, "3: ASH at apsis, CIA, DOI");
 			else
 			{
 				sprintf(Buffer, "%d: Not Used", GC->rtcc->med_k16.Sequence);
-				skp->Text(CW, 10 * H / 14, Buffer, strlen(Buffer));
+				Text(skp, x + dx, y, Buffer);
 			}
 		}
 		else if (GC->rtcc->med_k16.Mode == 4)
 		{
-			skp->Text(CW, 8 * H / 14, "Descent Orbit Insertion", 23);
-			switch (GC->rtcc->med_k16.Sequence)
+			if (GC->rtcc->med_k16.Sequence == 1) Text(skp, x + dx, y, "1: DOI only");
+			else if (GC->rtcc->med_k16.Sequence == 2) Text(skp, x + dx, y, "2: DOI with plane change");
+			else if (GC->rtcc->med_k16.Sequence == 3) Text(skp, x + dx, y, "3: Integrated DOI only");
+			else if (GC->rtcc->med_k16.Sequence == 4) Text(skp, x + dx, y, "4: Integrated DOI with plane change");
+			else
 			{
-			case 1:
-				skp->Text(CW, 10 * H / 14, "1: DOI only", 11);
-				break;
-			case 2:
-				skp->Text(CW, 10 * H / 14, "2: DOI with plane change", 24);
-				break;
-			case 3:
-				skp->Text(CW, 10 * H / 14, "3: Integrated DOI only", 22);
-				break;
-			case 4:
-				skp->Text(CW, 10 * H / 14, "4: Integrated DOI with plane change", 35);
-				break;
-			default:
 				sprintf(Buffer, "%d: Not Used", GC->rtcc->med_k16.Sequence);
-				skp->Text(CW, 10 * H / 14, Buffer, strlen(Buffer));
-				break;
+				Text(skp, x + dx, y, Buffer);
 			}
 		}
 		else if (GC->rtcc->med_k16.Mode == 5)
 		{
-			skp->Text(CW, 8 * H / 14, "Double Hohmann, PC", 28);
-
-			if (GC->rtcc->med_k16.Sequence == 1)
-			{
-				skp->Text(CW, 10 * H / 14, "1: PC, HO1, HO2, DOI", 20);
-			}
-			else if (GC->rtcc->med_k16.Sequence == 2)
-			{
-				skp->Text(CW, 10 * H / 14, "2: HO1, PC, HO2, DOI", 20);
-			}
-			else if (GC->rtcc->med_k16.Sequence == 3)
-			{
-				skp->Text(CW, 10 * H / 14, "3: HO1, HO2, PC, DOI", 20);
-			}
+			if (GC->rtcc->med_k16.Sequence == 1) Text(skp, x + dx, y, "1: PC, HO1, HO2, DOI");
+			else if (GC->rtcc->med_k16.Sequence == 2) Text(skp, x + dx, y, "2: HO1, PC, HO2, DOI");
+			else if (GC->rtcc->med_k16.Sequence == 3) Text(skp, x + dx, y, "3: HO1, HO2, PC, DOI");
 			else
 			{
 				sprintf(Buffer, "%d: Not Used", GC->rtcc->med_k16.Sequence);
-				skp->Text(CW, 10 * H / 14, Buffer, strlen(Buffer));
+				Text(skp, x + dx, y, Buffer);
 			}
-		}
-		else if (GC->rtcc->med_k16.Mode == 6)
-		{
-			skp->Text(CW, 8 * H / 14, "LM Powered Descent", 18);
 		}
 		else if (GC->rtcc->med_k16.Mode == 7)
 		{
-			skp->Text(CW, 8 * H / 14, "CSM Prelaunch Plane Change", 26);
-			skp->Text(CW, 10 * H / 14, "PPC", 3);
+			Text(skp, x + dx, y, "PPC");
 		}
-
-		sprintf(Buffer, "%.3f NM", GC->rtcc->med_k16.DesiredHeight / 1852.0);
-		skp->Text(CW, 12 * H / 14, Buffer, strlen(Buffer));
-		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-		GET_Display(Buffer, GC->rtcc->med_k16.GETTH1, false);
-		skp->Text(W - CW, 2 * H / 14, Buffer, strlen(Buffer));
-		GET_Display(Buffer, GC->rtcc->med_k16.GETTH2, false);
-		skp->Text(W - CW, 4 * H / 14, Buffer, strlen(Buffer));
-		GET_Display(Buffer, GC->rtcc->med_k16.GETTH3, false);
-		skp->Text(W - CW, 6 * H / 14, Buffer, strlen(Buffer));
-		GET_Display(Buffer, GC->rtcc->med_k16.GETTH4, false);
-		skp->Text(W - CW, 8 * H / 14, Buffer, strlen(Buffer));
+		y++;
+		Text(skp, x, y, "TH1:");
+		Text_GET_HHHMMSS(skp, x + dx, y, GC->rtcc->med_k16.GETTH1);
+		y++;
+		Text(skp, x, y, "TH2:");
+		Text_GET_HHHMMSS(skp, x + dx, y, GC->rtcc->med_k16.GETTH2);
+		y++;
+		Text(skp, x, y, "TH3:");
+		Text_GET_HHHMMSS(skp, x + dx, y, GC->rtcc->med_k16.GETTH3);
+		y++;
+		Text(skp, x, y, "TH4:");
+		Text_GET_HHHMMSS(skp, x + dx, y, GC->rtcc->med_k16.GETTH4);
+		y++;
+		Text(skp, x, y, "HEI:");
+		Text(skp, x + dx, y, "%.3f NM", GC->rtcc->med_k16.DesiredHeight / 1852.0);
+		y++;
+		Text(skp, x, y, "VID:");
+		Text(skp, x + dx, y, GC->rtcc->med_k16.VectorID);
 		break;
 	case 17:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
@@ -5903,33 +5882,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf_s(Buffer, "%.1f°", GC->rtcc->GZGENCSN.TPIDefinitionValue*DEG);
 		}
 		skp->Text(CW, 12 * H / 14, Buffer, strlen(Buffer));
-		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-		if (GC->rtcc->med_k01.I_CDH == 1)
-		{
-			skp->Text(W - CW, 2 * H / 14, "CDH at upcoming apsis (AEG):", 28);
-			sprintf_s(Buffer, "%d", GC->rtcc->med_k01.CDH_Apsis);
-		}
-		else if (GC->rtcc->med_k01.I_CDH == 2)
-		{
-			skp->Text(W - CW, 2 * H / 14, "CDH on time:", 12);
-			GET_Display3(Buffer, GC->rtcc->med_k01.CDH_Time);
-		}
-		else if (GC->rtcc->med_k01.I_CDH == 3)
-		{
-			skp->Text(W - CW, 2 * H / 14, "Angle from CSI to CDH:", 22);
-			sprintf_s(Buffer, "%.1lf°", GC->rtcc->med_k01.CDH_Angle*DEG);
-		}
-		else if (GC->rtcc->med_k01.I_CDH == 4)
-		{
-			skp->Text(W - CW, 2 * H / 14, "CDH at upcoming apsis (Kepler):", 31);
-			sprintf_s(Buffer, "%d", GC->rtcc->med_k01.CDH_Apsis);
-		}
-		else
-		{
-			skp->Text(W - CW, 2 * H / 14, "CDH at N half-revs after CSI:", 29);
-			sprintf_s(Buffer, "%d", GC->rtcc->med_k01.CDH_Apsis);
-		}
-		skp->Text(W - CW, 4 * H / 14, Buffer, strlen(Buffer));
 		break;
 	case 70:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
