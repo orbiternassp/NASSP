@@ -765,46 +765,50 @@ void LEVA::SetEquip()
 				oapiCreateVessel("TV", "ProjectApollo/EasepTV", vs1);
 				TvPlanted = true;
 			}
-		}
-		else if (ApolloNo >= 12) {
-
-			if (AlsepSBndPlanted == false) {
+			else if (AlsepSBndPlanted == false) {
 				oapiCreateVessel("S-Band", "ProjectApollo/AlsepSBnd", vs1);
 				AlsepSBndPlanted = true;
+			}
+
+			else if (ApolloNo >= 12) {
+				if (AlsepSBndPlanted == false) {
+					oapiCreateVessel("S-Band", "ProjectApollo/AlsepSBnd", vs1);
+					AlsepSBndPlanted = true;
 				}
-			else if (AlsepStationPlanted == false) {
-				oapiCreateVessel("Centeral Station", "ProjectApollo/AlsepStation", vs1);
-				AlsepStationPlanted = true;
+				else if (AlsepStationPlanted == false) {
+					oapiCreateVessel("Centeral Station", "ProjectApollo/AlsepStation", vs1);
+					AlsepStationPlanted = true;
 				}
-			else if (AlsepSWSPlanted == false) {
-				oapiCreateVessel("SWS", "ProjectApollo/AlsepSWS", vs1);
-				AlsepSWSPlanted = true;
+				else if (AlsepSWSPlanted == false) {
+					oapiCreateVessel("SWS", "ProjectApollo/AlsepSWS", vs1);
+					AlsepSWSPlanted = true;
 				}
 			}
 		}
-
-	else if (ApolloNo == 11) {
-
-		if (EasepSwcPlanted == false) {
-			oapiCreateVessel("SWC", "ProjectApollo/EasepSwc", vs1);
-			EasepSwcPlanted = true;
-		}
-		else if (EasepPsepPlanted == false) {
-			oapiCreateVessel("PSEP", "ProjectApollo/EasepPsep", vs1);
-			EasepPsepPlanted = true;
-		}
-		else if (EasepLr3Planted == false) {
-			oapiCreateVessel("LR3", "ProjectApollo/EasepLr3", vs1);
-			EasepLr3Planted = true;
-		}
 	}
+
+		else if (ApolloNo == 11) {
+
+			if (EasepSwcPlanted == false) {
+				oapiCreateVessel("SWC", "ProjectApollo/EasepSwc", vs1);
+				EasepSwcPlanted = true;
+			}
+			else if (EasepPsepPlanted == false) {
+				oapiCreateVessel("PSEP", "ProjectApollo/EasepPsep", vs1);
+				EasepPsepPlanted = true;
+			}
+			else if (EasepLr3Planted == false) {
+				oapiCreateVessel("LR3", "ProjectApollo/EasepLr3", vs1);
+				EasepLr3Planted = true;
+			}
+		}
 
 		else if (ApolloNo >= 12) {
 
 			if (TvPlanted == false) {
 				oapiCreateVessel("TV", "ProjectApollo/AlsepTV", vs1);
 				TvPlanted = true;
-				}
+			}
 
 			else if (EasepSwcPlanted == false) {
 				oapiCreateVessel("SWC", "ProjectApollo/EasepSwc", vs1);
@@ -827,7 +831,6 @@ void LEVA::SetEquip()
 				AlsepSIDEPlanted = true;
 			}
 		}
-
 	GoEquip = false;
 }
 
