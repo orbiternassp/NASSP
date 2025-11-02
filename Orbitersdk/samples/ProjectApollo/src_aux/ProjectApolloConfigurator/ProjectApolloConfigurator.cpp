@@ -548,7 +548,7 @@ INT_PTR CALLBACK ProjectApolloConfigurator::DlgProcControl (HWND hWnd, UINT uMsg
 		} else if (HIWORD(wParam) == BN_CLICKED && (HWND)lParam == GetDlgItem(hWnd, IDC_BUTTON_CREATECONFIG)) {
 			std::string configdir = "Config\\ProjectApollo\\Vesim\\";
 			LPDIRECTINPUT8 dx8ppv;
-			HRESULT hr = DirectInput8Create((HINSTANCE) GetWindowLong(hWnd, GWLP_HINSTANCE), DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
+			HRESULT hr = DirectInput8Create((HINSTANCE) GetWindowLongPtr(hWnd, GWLP_HINSTANCE), DIRECTINPUT_VERSION, IID_IDirectInput8, (void **)&dx8ppv, NULL); // Give us a DirectInput context
 			if (!FAILED(hr)) {
 				Vesim lmvm(NULL, NULL), csmvm(NULL, NULL);
 				lmvm.setupDevices("LM", dx8ppv);
