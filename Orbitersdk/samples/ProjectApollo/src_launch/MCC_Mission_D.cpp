@@ -384,7 +384,7 @@ void MCC::MissionSequence_D()
 		UpdateMacro(UTP_PADONLY, PT_S065UPDATE, mcc_calcs.GETEval(217.0 * 3600.0 + 25.0 * 60.0), 69, MST_D_DAY10STATE5);
 		break;
 	case MST_D_DAY10STATE5: //SV Update to Landmark Tracking Update
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 3.0, 104, MST_D_DAY10STATE6);
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 2.0, 104, MST_D_DAY10STATE6);
 		break;
 	case MST_D_DAY10STATE6: //Landmark Tracking Update to Block Data 22
 		UpdateMacro(UTP_PADONLY, PT_AP11LMARKTRKPAD, mcc_calcs.GETEval(220.0 * 3600.0 + 48.0 * 60.0), 77, MST_D_DAY10STATE7);
