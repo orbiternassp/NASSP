@@ -2236,13 +2236,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else if (fcn == 77)
 		{
 			sprintf(form->LmkID[0], "005"); //Santa Catalina Island (SW US)
-			opt.LmkTime[0] = OrbMech::HHMMSSToSS(217, 50, 0);
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(217, 30, 0);
 			opt.alt[0] = -0.01*1852.0;
 			opt.lat[0] = 33.479*RAD;
 			opt.lng[0] = -118.606*RAD;
 
 			sprintf(form->LmkID[1], "065"); //Tortue Island, Haiti (Caribbean)
-			opt.LmkTime[1] = OrbMech::HHMMSSToSS(218, 0, 0);
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(217, 45, 0);
 			opt.alt[1] = -0.01*1852.0;
 			opt.lat[1] = 20.065*RAD;
 			opt.lng[1] = -72.971*RAD;
