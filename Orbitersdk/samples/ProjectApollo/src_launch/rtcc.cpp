@@ -20341,6 +20341,9 @@ void RTCC::PMMTLC(AEGHeader HEADER, AEGDataBlock AEGIN, AEGDataBlock &AEGOUT, do
 	MATRIX3 Rot;
 	double i_CB, g_CB, h_CB, u_CB, g_dot, h_dot, Z, DELTA, lambda_V, lambda_apo, w_CB, dlambda, DELTADOT, dt, u_CB_dot, mu_CB;
 
+	//Normalize input longitude
+	OrbMech::normalizeAngle(DESLAM, true);
+
 	if (HEADER.AEGInd == BODY_EARTH)
 	{
 		w_CB = OrbMech::w_Earth;
