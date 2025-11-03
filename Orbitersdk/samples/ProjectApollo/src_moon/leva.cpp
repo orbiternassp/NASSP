@@ -769,7 +769,7 @@ void LEVA::SetEquip()
 				oapiCreateVessel("S-Band", "ProjectApollo/AlsepSBnd", vs1);
 				AlsepSBndPlanted = true;
 			}
-
+		}
 			else if (ApolloNo >= 12) {
 				if (AlsepSBndPlanted == false) {
 					oapiCreateVessel("S-Band", "ProjectApollo/AlsepSBnd", vs1);
@@ -784,7 +784,7 @@ void LEVA::SetEquip()
 					AlsepSWSPlanted = true;
 				}
 			}
-		}
+	
 	}
 
 		else if (ApolloNo == 11) {
