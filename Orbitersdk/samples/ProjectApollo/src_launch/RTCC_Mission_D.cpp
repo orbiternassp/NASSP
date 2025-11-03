@@ -155,7 +155,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 96: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (90:00:00)
 	case 97: //CSM STATE VECTOR UPDATE, V66 (92:30:00)
 	case 98: //CSM STATE VECTOR UPDATE AND NAV CHECK PAD (103:30:00)
-	case 99: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (120:30:00)
+	//case 99: Unused
 	case 100: //CSM STATE VECTOR UPDATE (127:30:00)
 	case 101: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (149:45:00)
 	case 102: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (174:55:00)
@@ -214,10 +214,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			NavGET = OrbMech::HHMMSSToSS(103, 30, 0);  //Nav Check GET
 			V66Flag = false;
-		}
-		else if (fcn == 99)
-		{
-			NavGET = OrbMech::HHMMSSToSS(120, 30, 0);  //Nav Check GET
 		}
 		else if (fcn == 100)
 		{
