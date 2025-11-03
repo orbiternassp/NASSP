@@ -197,10 +197,7 @@ public:
 	void menuCycleRTEDIterateOption();
 	void menuSetEntryDesiredInclination();
 	void set_EntryDesiredInclination(double inc);
-	void menuSetRTEConstraintF86();
-	void set_RTEConstraintF86(std::string constr, double value);
-	void menuSetRTEConstraintF87();
-	void set_RTEConstraintF87(std::string constr, std::string value);
+	void menuSetRTEConstraints();
 	void menuAddRTESite();
 	void menuReplaceRTESite();
 	void menuDeleteRTESite();
@@ -285,6 +282,7 @@ public:
 	void menuCycleTLCCConfiguration();
 	void menuSetTLCCAlt();
 	void menuSetTLCCAltMode5();
+	void menuSetTLCCVectorID();
 	void menuSetTLCCDesiredInclination();
 	void menuSetMidcourseConstraintsPage();
 	void menuSetTLMCCAzimuthConstraints();
@@ -318,6 +316,7 @@ public:
 	void menuSetLOIDHBias();
 	void menuSetLOIDW();
 	void menuCycleLOIInterSolnFlag();
+	void menuSetLOIVectorID();
 	void menuSetLOIRevs1();
 	void menuSetLOIRevs2();
 	void menuSetLOIEta1();
@@ -385,6 +384,7 @@ public:
 	void set_LLWPDeltaHeights(double dh1, double dh2, double dh3);
 	void menuSetLLWPElevation();
 	void set_LLWPElevation(double elev);
+	void menuSetLLWPVectorID();
 	void menuSetTPIguess();
 	void menuLunarLiftoffCalc();
 	void menuLLTPCalc();
@@ -818,6 +818,7 @@ public:
 	void menuPerigeeAdjustThresholdTime();
 	void menuPerigeeAdjustTimeIncrement();
 	void menuPerigeeAdjustHeight();
+	void menuPerigeeAdjustVectorID();
 	void menuSetAGOPPage();
 	void menuCycleAGOPPage();
 	void menuSetAGOPInput();

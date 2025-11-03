@@ -2396,7 +2396,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		opt.lat = BZLAND.lat[0];
 		opt.lng = BZLAND.lng[0];
 		opt.R_LLS = BZLAND.rad[0];
-		opt.sv_CSM = sv_CSM;
+		opt.sv_CSM.sv = ConvertSVtoEphemData(sv_CSM);
+		opt.sv_CSM.Weight = sv_CSM.mass;
 		opt.theta_1 = 9.9588 * RAD;
 		opt.dt_1 = 447.0;
 
@@ -2606,7 +2607,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		opt.lat = BZLAND.lat[0];
 		opt.lng = BZLAND.lng[0];
 		opt.R_LLS = BZLAND.rad[0];
-		opt.sv_CSM = sv_CSM;
+		opt.sv_CSM.sv = ConvertSVtoEphemData(sv_CSM);
+		opt.sv_CSM.Weight = sv_CSM.mass;
 		opt.theta_1 = 9.9588 * RAD;
 		opt.dt_1 = 447.0;
 
@@ -2871,7 +2873,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		opt.lat = BZLAND.lat[0];
 		opt.lng = BZLAND.lng[0];
 		opt.R_LLS = BZLAND.rad[0];
-		opt.sv_CSM = sv_CSM;
+		opt.sv_CSM.sv = ConvertSVtoEphemData(sv_CSM);
+		opt.sv_CSM.Weight = sv_CSM.mass;
 		opt.theta_1 = 9.9588 * RAD;
 		opt.dt_1 = 447.0;
 		opt.t_hole = GMTfromGET(t_TPI);

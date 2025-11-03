@@ -1667,6 +1667,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(W - CW, 6 * H / 14, Buffer, strlen(Buffer));
 			sprintf(Buffer, "%.1f°", GC->rtcc->med_k18.psi_MX);
 			skp->Text(W - CW, 8 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(W - CW, 10 * H / 14, GC->rtcc->med_k18.VectorID.c_str(), GC->rtcc->med_k18.VectorID.size());
 			break;
 	case 13:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
@@ -2099,6 +2100,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			skp->Text(W - CW, 8 * H / 14, Buffer, strlen(Buffer));
 		}
+		skp->Text(W - CW, 10 * H / 14, GC->rtcc->PZMCCPLN.VectorID.c_str(), GC->rtcc->PZMCCPLN.VectorID.size());
 		break;
 	case 23:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
@@ -2158,23 +2160,24 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		if (GC->rtcc->med_k15.TPIDefinition == 1)
 		{
 			sprintf(Buffer, "TPI longitude: %.4lf°", GC->rtcc->med_k15.TPIValue*DEG);
-			skp->Text(W - CW, 4 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(W - CW, 2 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			skp->Text(W - CW, 4 * H / 14, "TPI at threshold time", 22);
+			skp->Text(W - CW, 2 * H / 14, "TPI at threshold time", 22);
 		}
 		if (GC->rtcc->med_k15.DeltaHTFlag > 0)
 		{
 			sprintf(Buffer, "Launch window with %d heights", GC->rtcc->med_k15.DeltaHTFlag);
-			skp->Text(W - CW, 6 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(W - CW, 4 * H / 14, Buffer, strlen(Buffer));
 		}
 		else
 		{
-			skp->Text(W - CW, 6 * H / 14, "Calc using input heights", 24);
+			skp->Text(W - CW, 4 * H / 14, "Calc using input heights", 24);
 			sprintf(Buffer, "%.2lf %.2lf %.2lf NM", GC->rtcc->med_k15.DH1 / 1852.0, GC->rtcc->med_k15.DH2 / 1852.0, GC->rtcc->med_k15.DH3 / 1852.0);
-			skp->Text(W - CW, 8 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(W - CW, 6 * H / 14, Buffer, strlen(Buffer));
 		}
+		skp->Text(W - CW, 8 * H / 14, GC->rtcc->med_k15.VectorID.c_str(), GC->rtcc->med_k15.VectorID.size());
 		break;
 	case 24:
 	{
@@ -2475,48 +2478,60 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, 51, 0, "0366");
 		Text(skp, 2, 4, "CONSTRAINTS");
 		Text(skp, 2, 6, "DVMAX");
-		Text(skp, 2, 8, "TZMIN");
-		Text(skp, 2, 10, "TZMAX");
-		Text(skp, 2, 12, "GMAX");
-		Text(skp, 2, 14, "HMINMC");
-		Text(skp, 2, 16, "IRMAX");
-		Text(skp, 2, 18, "RRBIAS");
-		Text(skp, 2, 20, "VRMAX");
-		Text(skp, 2, 22, "MOTION");
-		Text(skp, 2, 24, "TGTLN");
-		Text(skp, 2, 26, "VECID");
+		Text(skp, 2, 7, "TZMIN");
+		Text(skp, 2, 8, "TZMAX");
+		Text(skp, 2, 9, "GMAX");
+		Text(skp, 2, 10, "HMINMC");
+		Text(skp, 2, 11, "IRMAX");
+		Text(skp, 2, 12, "RRBIAS");
+		Text(skp, 2, 13, "VRMAX");
+		Text(skp, 2, 14, "MOTION");
+		Text(skp, 2, 15, "TGTLN");
+		Text(skp, 2, 16, "VECID");
+		Text(skp, 2, 17, "VECTOR");
 		Text(skp, 35, 4, "ATP");
 		Text(skp, 35, 18, "PTP");
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		SetMOCRFont(skp, 3, true);
+		Text(skp, 1, 6 + marker, "*");
 		Text(skp, 18, 6, "%.0f", GC->rtcc->PZREAP.DVMAX);
-		Text_GET_HHHMMSS(skp, 18, 8, GC->rtcc->PZREAP.TZMIN*3600.0);
-		Text_GET_HHHMMSS(skp, 18, 10, GC->rtcc->PZREAP.TZMAX*3600.0);
-		Text(skp, 18, 12, "%.1f", GC->rtcc->PZREAP.GMAX);
-		Text(skp, 18, 14, "%.1f", GC->rtcc->PZREAP.HMINMC);
-		Text(skp, 18, 16, "%.2f", GC->rtcc->PZREAP.IRMAX);
-		Text(skp, 18, 18, "%.0f", GC->rtcc->PZREAP.RRBIAS);
-		Text(skp, 18, 20, "%.0f", GC->rtcc->PZREAP.VRMAX);
+		Text(skp, 18, 7, "%.0lf hrs", GC->rtcc->PZREAP.TZMIN);
+		Text(skp, 18, 8, "%.0lf hrs",  GC->rtcc->PZREAP.TZMAX);
+		Text(skp, 18, 9, "%.1f", GC->rtcc->PZREAP.GMAX);
+		Text(skp, 18, 10, "%.1f", GC->rtcc->PZREAP.HMINMC);
+		Text(skp, 18, 11, "%.2f", GC->rtcc->PZREAP.IRMAX);
+		Text(skp, 18, 12, "%.0f", GC->rtcc->PZREAP.RRBIAS);
+		Text(skp, 18, 13, "%.0f", GC->rtcc->PZREAP.VRMAX);
 		if (GC->rtcc->PZREAP.MOTION == 0)
 		{
-			Text(skp, 18, 22, "EITHER");
+			Text(skp, 18, 14, "EITHER");
 		}
 		else if (GC->rtcc->PZREAP.MOTION == 1)
 		{
-			Text(skp, 18, 22, "DIRECT");
+			Text(skp, 18, 14, "DIRECT");
 		}
 		else
 		{
-			Text(skp, 18, 22, "CIRCUM");
+			Text(skp, 18, 14, "CIRCUM");
 		}
 		if (GC->rtcc->PZREAP.TGTLN == 0)
 		{
-			Text(skp, 18, 24, "SHALLOW", 7);
+			Text(skp, 18, 15, "SHALLOW");
 		}
 		else
 		{
-			Text(skp, 18, 24, "STEEP", 5);
+			Text(skp, 18, 15, "STEEP");
 		}
+		if (GC->rtcc->PZREAP.VECID == 0) Text(skp, 18, 16, "CSM");
+		else Text(skp, 18, 16, "LEM");
+		if (GC->rtcc->PZREAP.VECTYPE == 0) Text(skp, 18, 17, "CMC");
+		else if (GC->rtcc->PZREAP.VECTYPE == 1) Text(skp, 18, 17, "LGC");
+		else if (GC->rtcc->PZREAP.VECTYPE == 2) Text(skp, 18, 17, "AGS");
+		else if (GC->rtcc->PZREAP.VECTYPE == 3) Text(skp, 18, 17, "IU");
+		else if (GC->rtcc->PZREAP.VECTYPE == 4) Text(skp, 18, 17, "HSR");
+		else if (GC->rtcc->PZREAP.VECTYPE == 5) Text(skp, 18, 17, "DC");
+		else if (GC->rtcc->PZREAP.VECTYPE == 6) Text(skp, 18, 17, "ANC");
+		else if (GC->rtcc->PZREAP.VECTYPE == 7) Text(skp, 18, 17, "EPH");
 		for (unsigned i = 0; i < 5; i++)
 		{
 			//If first element is not valid, skip this ATP
@@ -8857,6 +8872,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			Text_Double(skp, W - CW, 4 * H / 14, "%.3lf", GC->rtcc->med_k28.DPSScaleFactor);
 		}
+		skp->Text(W - CW, 6 * H / 14, GC->rtcc->med_k28.VectorID.c_str(), GC->rtcc->med_k28.VectorID.size());
 		break;
 	case 125:
 		SetMOCRFont(skp, 4, false);

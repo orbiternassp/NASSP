@@ -582,7 +582,8 @@ struct LunarLiftoffTimeOpt
 	double R_LLS;
 	//Longitude at which TPI is to be scheduled
 	double lng_TPI;
-	SV sv_CSM;			//CSM State vector
+	VehicleDataBlock sv_CSM; //CSM State vector
+	std::string CSMStationID;
 };
 
 struct LLTPOpt
@@ -2649,7 +2650,7 @@ public:
 	//RTE Digital Reentry Subroutine
 	void PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SPS, double PHIMP, double LIMP, RTEDigitalSolutionTable &RED, int &ICC);
 	//Lunar Orbit Insertion Computational Unit
-	bool PMMLRBTI(EphemerisData sv);
+	bool PMMLRBTI(EphemerisData sv, std::string StationID = "");
 	//Lunar Orbit Insertion Display
 	void PMDLRBTI(const rtcc::LOIOptions &opt, const rtcc::LOIOutputData &out);
 	//Central Manual Entry Device Decoder
@@ -2726,7 +2727,7 @@ public:
 	//SLV Targeting Load Module
 	void PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT);
 	//Perigee Adjust
-	void PMMPAD(AEGBlock sv, double mass, double THT, double dt, double H_P, int Thruster, double DPSScaleFactor);
+	void PMMPAD(AEGBlock sv, double THT, double dt, double H_P, int Thruster, double DPSScaleFactor);
 	//Perigee Adjust Display
 	void PMDPAD();
 	//Mission Planning Print Load Module
@@ -3165,20 +3166,6 @@ public:
 		double BackupLongT = 9999.9;
 	} med_f82;
 
-	//Update return to Earth constraints
-	struct MED_F86
-	{
-		std::string Constraint;
-		double Value;
-	} med_f86;
-
-	//Update return to Earth constraints
-	struct MED_F87
-	{
-		std::string Constraint;
-		std::string Value;
-	} med_f87;
-
 	//Generate DKI
 	struct MED_K00
 	{
@@ -3261,6 +3248,7 @@ public:
 		double DH1 = 10.0*1852.0;
 		double DH2 = 15.0*1852.0;
 		double DH3 = 20.0*1852.0;
+		std::string VectorID;
 	} med_k15;
 
 	//LOI Computation
@@ -3274,6 +3262,7 @@ public:
 		double psi_MX = 271.0;
 		double psi_MN = 269.0;
 		double VectorTime = 0.0;
+		std::string VectorID;
 	} med_k18;
 
 	//GPM Maneuver Computation
@@ -3295,6 +3284,7 @@ public:
 		double H_P = 0.0;
 		int Thruster = RTCC_ENGINETYPE_CSMSPS;
 		double DPSScaleFactor = 0.0;
+		std::string VectorID;
 	} med_k28;
 
 	//Two Impulse Multiple Solution
@@ -4623,6 +4613,7 @@ public:
 	{
 		//Block 1
 		double VectorGET = 0.0;
+		std::string VectorID;
 		int Column = 1;
 		int Mode = 1;
 		double MidcourseGET = 0.0;

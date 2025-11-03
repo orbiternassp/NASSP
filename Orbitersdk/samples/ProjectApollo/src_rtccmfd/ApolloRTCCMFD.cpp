@@ -1040,6 +1040,8 @@ void ApolloRTCCMFD::menuSetRTEDigitalsPage()
 
 void ApolloRTCCMFD::menuSetRTEConstraintsPage()
 {
+	marker = 0;
+	markermax = 11;
 	SelectPage(29);
 }
 
@@ -1599,6 +1601,11 @@ void ApolloRTCCMFD::menuPerigeeAdjustTimeIncrement()
 void ApolloRTCCMFD::menuPerigeeAdjustHeight()
 {
 	GenericDoubleInput(&GC->rtcc->med_k28.H_P, "Perigee height in nautical miles:", 1.0);
+}
+
+void ApolloRTCCMFD::menuPerigeeAdjustVectorID()
+{
+	GenericStringInput(&GC->rtcc->med_k28.VectorID, "Enter Vector ID from VPS if desired (used instead of vector time):");
 }
 
 void ApolloRTCCMFD::menuCycleAGOPPage()
@@ -3537,7 +3544,7 @@ void ApolloRTCCMFD::menuSetGMPInput()
 	}
 	else if (marker == 8)
 	{
-		GenericStringInput(&GC->rtcc->med_k20.VectorID, "Enter Vector ID if desired (used instead of vector time):");
+		GenericStringInput(&GC->rtcc->med_k20.VectorID, "Enter Vector ID from VPS if desired (used instead of vector time):");
 	}
 }
 
@@ -3811,61 +3818,51 @@ void ApolloRTCCMFD::set_EntryDesiredInclination(double inc)
 	GC->rtcc->med_f75_f77.Inclination = inc * RAD;
 }
 
-void ApolloRTCCMFD::menuSetRTEConstraintF86()
+void ApolloRTCCMFD::menuSetRTEConstraints()
 {
-	bool RTEConstraintF86Input(void *id, char *str, void *data);
-	oapiOpenInputBox("Enter the RTE constraint (Format: Constraint,Value)", RTEConstraintF86Input, 0, 20, (void*)this);
-}
-
-bool RTEConstraintF86Input(void *id, char *str, void *data)
-{
-	char buff[100];
-	double val;
-
-	if (sscanf(str, "%[^','],%lf", buff, &val) == 2)
+	switch (marker)
 	{
-		std::string constr(buff);
-		((ApolloRTCCMFD*)data)->set_RTEConstraintF86(constr, val);
-		return true;
+	case 0:
+		GenericDoubleInput(&GC->rtcc->PZREAP.DVMAX, "Maximum allowable DV for the RTE maneuver in feet per second:");
+		break;
+	case 1:
+		GenericDoubleInput(&GC->rtcc->PZREAP.TZMIN, "Enter the minimum landing time in hours:");
+		break;
+	case 2:
+		GenericDoubleInput(&GC->rtcc->PZREAP.TZMAX, "Enter the maximum landing time in hours:");
+		break;
+	case 3:
+		GenericDoubleInput(&GC->rtcc->PZREAP.GMAX, "Constant g-level for use in return-to-earth digitals:");
+		break;
+	case 4:
+		GenericDoubleInput(&GC->rtcc->PZREAP.HMINMC, "Minimum height of pericynthion in nautical miles:");
+		break;
+	case 5:
+		GenericDoubleInput(&GC->rtcc->PZREAP.IRMAX, "Maximum return inclination in degrees:");
+		break;
+	case 6:
+		GenericDoubleInput(&GC->rtcc->PZREAP.RRBIAS, "Relative range override in nautical miles:");
+		break;
+	case 7:
+		GenericDoubleInput(&GC->rtcc->PZREAP.VRMAX, "Maximum return velocity in feet per second:");
+		break;
+	case 8:
+		if (GC->rtcc->PZREAP.MOTION < 2) GC->rtcc->PZREAP.MOTION++;
+		else GC->rtcc->PZREAP.MOTION = 0;
+		break;
+	case 9:
+		if (GC->rtcc->PZREAP.TGTLN < 1) GC->rtcc->PZREAP.TGTLN++;
+		else GC->rtcc->PZREAP.TGTLN = 0;
+		break;
+	case 10:
+		if (GC->rtcc->PZREAP.VECID < 1) GC->rtcc->PZREAP.VECID++;
+		else GC->rtcc->PZREAP.VECID = 0;
+		break;
+	case 11:
+		if (GC->rtcc->PZREAP.VECTYPE < 7) GC->rtcc->PZREAP.VECTYPE++;
+		else GC->rtcc->PZREAP.VECTYPE = 0;
+		break;
 	}
-
-	return false;
-}
-
-void ApolloRTCCMFD::set_RTEConstraintF86(std::string constr, double value)
-{
-	GC->rtcc->med_f86.Constraint = constr;
-	GC->rtcc->med_f86.Value = value;
-
-	GC->rtcc->PMQAFMED("86");
-}
-
-void ApolloRTCCMFD::menuSetRTEConstraintF87()
-{
-	bool RTEConstraintF87Input(void *id, char *str, void *data);
-	oapiOpenInputBox("Enter the RTE constraint (Format: Constraint,Value)", RTEConstraintF87Input, 0, 20, (void*)this);
-}
-
-bool RTEConstraintF87Input(void *id, char *str, void *data)
-{
-	char buff1[100], buff2[100];
-	if (sscanf(str, "%[^','],%s", buff1, buff2) == 2)
-	{
-		std::string constr(buff1);
-		std::string val(buff2);
-		((ApolloRTCCMFD*)data)->set_RTEConstraintF87(constr, val);
-		return true;
-	}
-
-	return false;
-}
-
-void ApolloRTCCMFD::set_RTEConstraintF87(std::string constr, std::string value)
-{
-	GC->rtcc->med_f87.Constraint = constr;
-	GC->rtcc->med_f87.Value = value;
-
-	GC->rtcc->PMQAFMED("87");
 }
 
 void ApolloRTCCMFD::menuAddRTESite()
@@ -7252,6 +7249,11 @@ void ApolloRTCCMFD::menuCycleLOIInterSolnFlag()
 	GC->rtcc->PZLOIPLN.PlaneSolnForInterSoln = !GC->rtcc->PZLOIPLN.PlaneSolnForInterSoln;
 }
 
+void ApolloRTCCMFD::menuSetLOIVectorID()
+{
+	GenericStringInput(&GC->rtcc->med_k18.VectorID, "Enter Vector ID from VPS if desired (used instead of vector time):");
+}
+
 void ApolloRTCCMFD::menuSetLOIEta1()
 {
 	GenericDoubleInput(&GC->rtcc->PZLOIPLN.eta_1, "True anomaly on LPO-1 for transferring from hyperbola to LPO-1:", 1.0);
@@ -7265,6 +7267,11 @@ void ApolloRTCCMFD::menuSetTLCCAlt()
 void ApolloRTCCMFD::menuSetTLCCAltMode5()
 {
 	GenericDoubleInput(&GC->rtcc->PZMCCPLN.h_PC_mode5, "Choose the pericynthion height for mode 5 (negative number to use data table value):", 1852.0);
+}
+
+void ApolloRTCCMFD::menuSetTLCCVectorID()
+{
+	GenericStringInput(&GC->rtcc->PZMCCPLN.VectorID, "Enter Vector ID from VPS if desired (used instead of vector time):");
 }
 
 void ApolloRTCCMFD::menuSetLOIDesiredAzi()
@@ -7451,6 +7458,11 @@ bool LLWPElevInput(void *id, char *str, void *data)
 void ApolloRTCCMFD::set_LLWPElevation(double elev)
 {
 	this->GC->rtcc->PZLTRT.ElevationAngle = elev * RAD;
+}
+
+void ApolloRTCCMFD::menuSetLLWPVectorID()
+{
+	GenericStringInput(&GC->rtcc->med_k15.VectorID, "Enter Vector ID from VPS if desired (used instead of vector time):");
 }
 
 void ApolloRTCCMFD::menuTMLat()
@@ -8661,7 +8673,7 @@ void ApolloRTCCMFD::menuSetLDPPInput()
 		GenericDoubleInput(&GC->rtcc->med_k16.DesiredHeight, "Desired height in NM:", 1852.0);
 		break;
 	case 9:
-		GenericStringInput(&GC->rtcc->med_k16.VectorID, "Enter Vector ID if desired (used instead of vector time):");
+		GenericStringInput(&GC->rtcc->med_k16.VectorID, "Enter Vector ID from VPS if desired (used instead of vector time):");
 		break;
 	}
 }

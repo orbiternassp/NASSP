@@ -426,7 +426,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Minimum azimuth", 0, 'M' },
 		{ "Desired azimuth", 0, 'N' },
 		{ "Maximum azimuth", 0, 'O' },
-		{ "", 0, ' ' },
+		{ "Vector ID", 0, 'C' },
 		{ "Back to menu", 0, 'B' },
 	};
 
@@ -443,7 +443,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("AMN", OAPI_KEY_M, &ApolloRTCCMFD::menuSetLOIMinAzi);
 	RegisterFunction("ADS", OAPI_KEY_N, &ApolloRTCCMFD::menuSetLOIDesiredAzi);
 	RegisterFunction("AMX", OAPI_KEY_O, &ApolloRTCCMFD::menuSetLOIMaxAzi);
-	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("VID", OAPI_KEY_Q, &ApolloRTCCMFD::menuSetLOIVectorID);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 
 
@@ -767,7 +767,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Pericynthion height", 0, 'H' },
 		{ "Return inclination", 0, 'I' },
 		{ "PC height for mode 5", 0, 'E' },
-		{ "", 0, ' ' },
+		{ "Vector ID", 0, 'A' },
 		{ "Back to menu", 0, 'B' }
 	};
 
@@ -784,7 +784,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("HPC", OAPI_KEY_H, &ApolloRTCCMFD::menuSetTLCCAlt);
 	RegisterFunction("INC", OAPI_KEY_I, &ApolloRTCCMFD::menuSetTLCCDesiredInclination);
 	RegisterFunction("PC5", OAPI_KEY_E, &ApolloRTCCMFD::menuSetTLCCAltMode5);
-	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("VID", OAPI_KEY_A, &ApolloRTCCMFD::menuSetTLCCVectorID);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuTranslunarPage);
 
 
@@ -797,10 +797,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "CSI option", 0, 'S' },
 		{ "CDH option", 0, 'D' },
 
-		{ "", 0, ' ' },
 		{ "TPI option", 0, 'P' },
 		{ "DH option", 0, 'A' },
 		{ "Delta heights", 0, 'E' },
+		{ "", 0, ' ' },
 		{ "LLWP Display", 0, 'F' },
 		{ "Back to menu", 0, 'B' }
 	};
@@ -814,10 +814,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("CSI", OAPI_KEY_S, &ApolloRTCCMFD::menuSetLLWPCSIFlag);
 	RegisterFunction("CDH", OAPI_KEY_D, &ApolloRTCCMFD::menuSetLLWPCDHFlag);
 
-	RegisterFunction("", OAPI_KEY_T, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("TPI", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("LLW", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("DH", OAPI_KEY_E, &ApolloRTCCMFD::menuSetLLWPDeltaHeights);
+	RegisterFunction("VID", OAPI_KEY_T, &ApolloRTCCMFD::menuSetLLWPVectorID);
 	RegisterFunction("DIS", OAPI_KEY_F, &ApolloRTCCMFD::menuSetLLWPDisplayPage);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);
 
@@ -994,9 +994,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu29[] =
 	{
-		{ "Constraints with number", 0, 'V' },
-		{ "Constraints with text", 0, 'T' },
-		{ "", 0, ' ' },
+		{ "Set input", 0, 'S' },
+		{ "Previous Item", 0, 'P' },
+		{ "Next Item", 0, 'N' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
@@ -1010,9 +1010,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu29, sizeof(mnu29) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("CO1", OAPI_KEY_V, &ApolloRTCCMFD::menuSetRTEConstraintF86);
-	RegisterFunction("CO2", OAPI_KEY_T, &ApolloRTCCMFD::menuSetRTEConstraintF87);
-	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("SET", OAPI_KEY_S, &ApolloRTCCMFD::menuSetRTEConstraints);
+	RegisterFunction("<<", OAPI_KEY_P, &ApolloRTCCMFD::menuCycleMarkerDown);
+	RegisterFunction(">>", OAPI_KEY_N, &ApolloRTCCMFD::menuCycleMarkerUp);
 	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_S, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_I, &ApolloRTCCMFD::menuVoid);
@@ -4228,9 +4228,9 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Perigee height", 0, 'P' },
 		{ "", 0, ' ' },
 
+		{ "Go to display", 0, 'C' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Vector ID", 0, 'E' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
@@ -4246,8 +4246,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("DIS", OAPI_KEY_C, &ApolloRTCCMFD::menuSetPerigeeAdjustDisplayPage);
-	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("VID", OAPI_KEY_E, &ApolloRTCCMFD::menuPerigeeAdjustVectorID);
 	RegisterFunction("", OAPI_KEY_R, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetTargetingMenu);

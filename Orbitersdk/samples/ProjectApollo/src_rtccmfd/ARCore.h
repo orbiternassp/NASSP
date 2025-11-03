@@ -231,6 +231,7 @@ public:
 	int menuCalculateAttitudeComparison(bool IsCSM, bool IsAGC);
 	void menuCalculateIMUParkingAngles(agc_t* agc);
 	int GetVehicleDataBlock(int L, double VectorTimeGET, std::string VectorID, VehicleDataBlock &sv, std::string &StationID);
+	int VectorFetch(int L, double VectorTimeGET, std::string VectorID, EphemerisData &sv, std::string &StationID);
 
 	int startSubthread(int fcn, bool IsCSM = true);
 	int subThread();

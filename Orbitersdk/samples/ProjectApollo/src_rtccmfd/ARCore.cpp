@@ -2976,41 +2976,16 @@ int ARCore::subThread()
 	break;
 	case 5: //LOI Targeting
 	{
+		std::string StationID;
 		EphemerisData sv0;
 
-		if (GC->MissionPlanningActive)
+		if (VectorFetch(RTCC_MPT_CSM, GC->rtcc->med_k18.VectorTime, GC->rtcc->med_k18.VectorID, sv0, StationID))
 		{
-			double gmt;
-			if (GC->rtcc->med_k18.VectorTime != 0.0)
-			{
-				gmt = GC->rtcc->GMTfromGET(GC->rtcc->med_k18.VectorTime);
-			}
-			else
-			{
-				gmt = GC->rtcc->RTCCPresentTimeGMT();
-				GC->rtcc->med_k18.VectorTime = GC->rtcc->GETfromGMT(gmt);
-			}
-
-			if (GC->rtcc->EMSFFV(gmt, RTCC_MPT_CSM, sv0))
-			{
-				Result = DONE;
-				break;
-			}
-		}
-		else
-		{
-			VESSEL *v = GC->rtcc->pCSM;
-
-			if (v == NULL)
-			{
-				Result = DONE;
-				break;
-			}
-
-			sv0 =  GC->rtcc->StateVectorCalcEphem(v);
+			Result = DONE;
+			break;
 		}
 
-		GC->rtcc->PMMLRBTI(sv0);
+		GC->rtcc->PMMLRBTI(sv0, StationID);
 
 		Result = DONE;
 	}
@@ -3284,49 +3259,31 @@ int ARCore::subThread()
 	break;
 	case 10: //Lunar Descent Planning Processor
 	{
+		std::string StationID;
 		EphemerisData sv;
 		double W_LM;
 
+		//Get the state vector
+		if (VectorFetch(GC->rtcc->med_k16.Vehicle, GC->rtcc->med_k16.VectorTime, GC->rtcc->med_k16.VectorID, sv, StationID))
+		{
+			Result = DONE;
+			break;
+		}
+		//Get LM weight
 		if (GC->MissionPlanningActive)
 		{
-			double gmt;
+			PLAWDTInput pin;
+			PLAWDTOutput pout;
 
-			if (GC->rtcc->med_k16.VectorTime != 0.0)
-			{
-				gmt = GC->rtcc->GMTfromGET(GC->rtcc->med_k16.VectorTime);
-			}
-			else
-			{
-				gmt = GC->rtcc->RTCCPresentTimeGMT();
-			}
+			pin.T_UP = sv.GMT;
+			pin.TableCode = GC->rtcc->med_k16.Vehicle;
 
-			if (GC->rtcc->EMSFFV(gmt, GC->rtcc->med_k16.Vehicle, sv))
-			{
-				Result = DONE;
-				break;
-			}
-			W_LM = 0.0; //TBD
+			GC->rtcc->PLAWDT(pin, pout);
+
+			W_LM = pout.LMAscWeight + pout.LMDscWeight;
 		}
 		else
 		{
-			VESSEL *v;
-
-			if (GC->rtcc->med_k16.Vehicle == RTCC_MPT_CSM)
-			{
-				v = GC->rtcc->pCSM;
-			}
-			else
-			{
-				v = GC->rtcc->pLM;
-			}
-
-			if (v == NULL)
-			{
-				Result = DONE;
-				break;
-			}
-
-			sv = GC->rtcc->StateVectorCalcEphem(v);
 			if (GC->rtcc->pLM)
 			{
 				W_LM = GC->rtcc->pLM->GetMass();
@@ -3446,24 +3403,22 @@ int ARCore::subThread()
 	break;
 	case 14: //MCC Targeting
 	{
+		std::string StationID;
 		EphemerisData sv0;
 		double CSMmass, LMmass;
 
+		//Get the state vector
+		if (VectorFetch(RTCC_MPT_CSM, GC->rtcc->PZMCCPLN.VectorGET, GC->rtcc->PZMCCPLN.VectorID, sv0, StationID))
+		{
+			Result = DONE;
+			break;
+		}
+		//Get CSM and LM masses
 		if (GC->MissionPlanningActive)
 		{
-			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->PZMCCPLN.VectorGET);
-			EphemerisData EPHEM;
-			if (GC->rtcc->EMSFFV(GMT, RTCC_MPT_CSM, EPHEM))
-			{
-				Result = DONE;
-				break;
-			}
-
-			sv0 = EPHEM;
-
 			PLAWDTInput pin;
 			PLAWDTOutput pout;
-			pin.T_UP = GMT;
+			pin.T_UP = sv0.GMT;
 			pin.TableCode = RTCC_MPT_CSM;
 			GC->rtcc->PLAWDT(pin, pout);
 
@@ -3479,8 +3434,6 @@ int ARCore::subThread()
 				Result = DONE;
 				break;
 			}
-
-			sv0 = GC->rtcc->StateVectorCalcEphem(v);
 
 			CSMmass = v->GetMass();
 			//Assume pre CSM separation from the S-IVB
@@ -3506,33 +3459,12 @@ int ARCore::subThread()
 	case 15:	//Lunar Launch Window Processor
 	{
 		LunarLiftoffTimeOpt opt;
-		SV sv_CSM;
+		std::string StationID;
 
-		if (GC->MissionPlanningActive)
+		if (GetVehicleDataBlock(RTCC_MPT_CSM, GC->rtcc->med_k15.CSMVectorTime, GC->rtcc->med_k15.VectorID, opt.sv_CSM, StationID))
 		{
-			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k15.CSMVectorTime);
-			EphemerisData EPHEM;
-			if (GC->rtcc->EMSFFV(GMT, RTCC_MPT_CSM, EPHEM))
-			{
-				Result = DONE;
-				break;
-			}
-			sv_CSM.R = EPHEM.R;
-			sv_CSM.V = EPHEM.V;
-			sv_CSM.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv_CSM.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
-		}
-		else
-		{
-			VESSEL *v = GC->rtcc->pCSM;
-
-			if (v == NULL)
-			{
-				Result = DONE;
-				break;
-			}
-
-			sv_CSM = GC->rtcc->StateVectorCalc(v);
+			Result = DONE;
+			break;
 		}
 
 		if (GC->rtcc->med_k15.CSI_Flag == 0)
@@ -3585,7 +3517,6 @@ int ARCore::subThread()
 		opt.lng = GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.R_LLS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 		opt.lng_TPI = GC->rtcc->med_k15.TPIValue;
-		opt.sv_CSM = sv_CSM;
 		if (GC->rtcc->med_k15.Chaser == 1)
 		{
 			opt.M = 1;
@@ -3596,6 +3527,7 @@ int ARCore::subThread()
 			opt.M = 2;
 			opt.P = 1;
 		}
+		opt.CSMStationID = StationID;
 
 		GC->rtcc->LunarLaunchWindowProcessor(opt);
 
@@ -5586,36 +5518,15 @@ int ARCore::subThread()
 	break;
 	case 56: //Perigee Adjust
 	{
-		EphemerisData sv0;
-		double mass, THT, dt, H_P, DPSScaleFactor;
+		std::string StationID;
+		VehicleDataBlock sv0;
+		double THT, dt, H_P, DPSScaleFactor;
 		int Thruster;
 
-		if (GC->MissionPlanningActive)
+		if (GetVehicleDataBlock(GC->rtcc->med_k28.VEH, GC->rtcc->med_k28.VectorTime, GC->rtcc->med_k28.VectorID, sv0, StationID))
 		{
-			//TBD
 			Result = DONE;
 			break;
-		}
-		else
-		{
-			VESSEL *v;
-			if (GC->rtcc->med_k28.VEH == RTCC_MPT_CSM)
-			{
-				v = GC->rtcc->pCSM;
-			}
-			else
-			{
-				v = GC->rtcc->pLM;
-			}
-
-			if (v == NULL)
-			{
-				Result = DONE;
-				break;
-			}
-
-			sv0 = GC->rtcc->StateVectorCalcEphem(v);
-			mass = v->GetMass();
 		}
 
 		THT = GC->rtcc->GMTfromGET(GC->rtcc->med_k28.ThresholdTime);
@@ -5624,9 +5535,9 @@ int ARCore::subThread()
 		Thruster = GC->rtcc->med_k28.Thruster;
 		DPSScaleFactor = GC->rtcc->med_k28.DPSScaleFactor;
 
-		AEGBlock sv1 = GC->rtcc->SVToAEG(sv0, 0.0, 1.0, 1.0); //TBD
+		AEGBlock sv1 = GC->rtcc->SVToAEG(sv0.sv, sv0.Area, sv0.Weight, sv0.KFactor);
 
-		GC->rtcc->PMMPAD(sv1, mass, THT, dt, H_P, Thruster, DPSScaleFactor);
+		GC->rtcc->PMMPAD(sv1, THT, dt, H_P, Thruster, DPSScaleFactor);
 		GC->rtcc->PMDPAD();
 
 		Result = DONE;
@@ -6261,8 +6172,8 @@ void ARCore::menuCalculateIMUParkingAngles(agc_t* agc)
 
 int ARCore::GetVehicleDataBlock(int L, double VectorTimeGET, std::string VectorID, VehicleDataBlock &sv, std::string &StationID)
 {
-	//This function works like the internal logic of K-type MEDs would work
-	//Both for MPT and non-MPT mode. Vector from VPS is supported in both modes
+	//This function works like the internal logic of K-type MEDs to get AEG data blocks
+	//It works for both for MPT and non-MPT mode. Vector from VPS is supported in both modes
 	//Return value other than 0 is an error
 	if (GC->MissionPlanningActive)
 	{
@@ -6306,11 +6217,87 @@ int ARCore::GetVehicleDataBlock(int L, double VectorTimeGET, std::string VectorI
 			//Just a default name
 			if (L == RTCC_MPT_CSM)
 			{
-				StationID = "APIC001";
+				StationID = "APIC999";
 			}
 			else
 			{
-				StationID = "APIL001";
+				StationID = "APIL999";
+			}
+		}
+	}
+	return 0;
+}
+
+int ARCore::VectorFetch(int L, double VectorTimeGET, std::string VectorID, EphemerisData &sv, std::string &StationID)
+{
+	//This function is like GetVehicleDataBlock when no masses are reqired. Works with both MPT and non-MPT. Takes optional vector ID into account. Otherwise, if vector time is zero, use present time.
+
+	//Was a VectorID input?
+	if (VectorID.empty() == false)
+	{
+		//Yes
+		if (GC->rtcc->BMSVPSVectorFetch(VectorID, sv))
+		{
+			return 1;
+		}
+		StationID = VectorID;
+	}
+	else
+	{
+		//No. Now the logic differs between MPT and non-MPT mode
+		if (GC->MissionPlanningActive)
+		{
+			double gmt;
+			if (VectorTimeGET != 0.0)
+			{
+				gmt = GC->rtcc->GMTfromGET(VectorTimeGET);
+			}
+			else
+			{
+				gmt = GC->rtcc->RTCCPresentTimeGMT();
+			}
+
+			if (GC->rtcc->EMSFFV(gmt, L, sv))
+			{
+				return 1;
+			}
+
+			if (L == RTCC_MPT_CSM)
+			{
+				StationID = GC->rtcc->PZMPTCSM.StationID;
+			}
+			else
+			{
+				StationID = GC->rtcc->PZMPTLEM.StationID;
+			}
+		}
+		else
+		{
+			VESSEL *v;
+
+			if (L == RTCC_MPT_CSM)
+			{
+				v = GC->rtcc->pCSM;
+			}
+			else
+			{
+				v = GC->rtcc->pLM;
+			}
+
+			if (v == NULL)
+			{
+				return 1;
+			}
+
+			sv = GC->rtcc->StateVectorCalcEphem(v);
+			//Just a default name
+			if (L == RTCC_MPT_CSM)
+			{
+				StationID = "APIC999";
+			}
+			else
+			{
+				StationID = "APIL999";
 			}
 		}
 	}
