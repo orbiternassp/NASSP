@@ -167,6 +167,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		VehicleDataBlock sv, sv1;
 		double NavGET, SVGMT;
 		bool V66Flag = true; //V66 flag
+		bool PADFlag = true; //PAD flag
 		int slot = RTCC_MPT_CSM;
 		char buffer1[1000];
 
@@ -209,6 +210,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else if (fcn == 97)
 		{
 			NavGET = OrbMech::HHMMSSToSS(92, 30, 0);  //Nav Check GET
+			PADFlag = false;
 		}
 		else if (fcn == 98)
 		{
@@ -223,6 +225,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			NavGET = OrbMech::HHMMSSToSS(127, 30, 0);  //Nav Check GET
 			V66Flag = false;
+			PADFlag = false;
 		}
 		else if (fcn == 101)
 		{
@@ -236,11 +239,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			NavGET = OrbMech::HHMMSSToSS(199, 30, 0);  //Nav Check GET
 			V66Flag = false;
+			PADFlag = false;
 		}
 		else if (fcn == 104)
 		{
 			NavGET = OrbMech::HHMMSSToSS(218, 0, 0);  //Nav Check GET
 			V66Flag = false;
+			PADFlag = false;
 			slot = RTCC_MPT_LM;
 		}
 
@@ -255,7 +260,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv1 = coast(sv, SVGMT - sv.sv.GMT); //Time tag SV
 
-		NavCheckPAD(sv1, *form, NavGET);
+		if (PADFlag == true)
+		{
+			AP7NAV* form = (AP7NAV*)pad;
+			NavCheckPAD(sv1, *form, NavGET);
+		}
 
 		AGCStateVectorUpdate(buffer1, 1, slot, sv1.sv, V66Flag);
 
