@@ -162,8 +162,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 103: //CSM STATE VECTOR UPDATE (199:30:00)
 	case 104: //CSM STATE VECTOR UPDATE (LM SLOT) (218:00:00)
 	{
-		AP7NAV * form = (AP7NAV *)pad;
-
 		VehicleDataBlock sv, sv1;
 		double NavGET, SVGMT;
 		bool V66Flag = true; //V66 flag
