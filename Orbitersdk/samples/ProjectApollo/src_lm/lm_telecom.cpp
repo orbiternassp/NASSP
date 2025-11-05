@@ -2767,108 +2767,110 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 	moving = false;
 
-	double AzimuthErrorSignal, ElevationErrorSignal;
-	double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
-
-	//actual Azimuth and Elevation error signals came from phase differences not signal strength
-	//both are be a function of tracking error though so this works
-	AzimuthErrorSignal = (HornSignalStrength[1] - HornSignalStrength[0])*0.25;
-	ElevationErrorSignal = (HornSignalStrength[3] - HornSignalStrength[2])*0.25;
-
-	//normalize Azimuth and Elevation error signals
-	if (SignalStrength > 0.0)
+	if (IsPowered())
 	{
-		AzimuthErrorSignalNorm = AzimuthErrorSignal / SignalStrength;
-		ElevationErrorSignalNorm = ElevationErrorSignal / SignalStrength;
-	}
-	else //prevent division by zero
-	{
-		AzimuthErrorSignalNorm = 0;
-		ElevationErrorSignalNorm = 0;
-	}
+		double AzimuthErrorSignal, ElevationErrorSignal;
+		double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
 
-	double pitchrate = 0.0;
-	double yawrate = 0.0;
+		//actual Azimuth and Elevation error signals came from phase differences not signal strength
+		//both are be a function of tracking error though so this works
+		AzimuthErrorSignal = (HornSignalStrength[1] - HornSignalStrength[0]) * 0.25;
+		ElevationErrorSignal = (HornSignalStrength[3] - HornSignalStrength[2]) * 0.25;
 
-	double PitchSlew, YawSlew;
-
-	const double TrkngCtrlGain = 270; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
-	const double TrkngRatelGain = 4.0; //
-	const double MaxServoRate = 20 * RAD;
-
-	//sprintf(oapiDebugString(), "AzimuthErrorSignal: %f, ElevationErrorSignal: %f", AzimuthErrorSignal, ElevationErrorSignal);
-
-	//Slew Mode
-	if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_DOWN)
-	{
-		PitchSlew = (lem->Panel12AntPitchKnob.GetValue()*15.0 - 75.0)*RAD;
-		YawSlew = (lem->Panel12AntYawKnob.GetValue()*15.0 - 90.0)*RAD;
-	}
-	//Auto Tracking
-	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
-	{
-		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm*exp(-simdt*10));
-		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm*exp(-simdt*10));
-	}
-	else
-	{
-		PitchSlew = pitch;
-		YawSlew = yaw;
-	}
-
-	
-	//sprintf(oapiDebugString(), "PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
-
-	//set antenna slew-rates
-	if (abs(PitchSlew - pitch) > 0.0001)
-	{
-		pitchrate = (PitchSlew - pitch)*TrkngRatelGain;
-		if (abs(pitchrate) > MaxServoRate)
+		//normalize Azimuth and Elevation error signals
+		if (SignalStrength > 0.0)
 		{
-			pitchrate = MaxServoRate *pitchrate / abs(pitchrate);
+			AzimuthErrorSignalNorm = AzimuthErrorSignal / SignalStrength;
+			ElevationErrorSignalNorm = ElevationErrorSignal / SignalStrength;
 		}
-		moving = true;
-	}
-
-	if (abs(YawSlew - yaw) > 0.0001)
-	{
-		yawrate = (YawSlew - yaw)*TrkngRatelGain;
-		if (abs(yawrate) > MaxServoRate)
+		else //prevent division by zero
 		{
-			yawrate = MaxServoRate *yawrate / abs(yawrate);
+			AzimuthErrorSignalNorm = 0;
+			ElevationErrorSignalNorm = 0;
 		}
-		moving = true;
+
+		double pitchrate = 0.0;
+		double yawrate = 0.0;
+
+		double PitchSlew, YawSlew;
+
+		const double TrkngCtrlGain = 270; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
+		const double TrkngRatelGain = 4.0; //
+		const double MaxServoRate = 20 * RAD;
+
+		//sprintf(oapiDebugString(), "AzimuthErrorSignal: %f, ElevationErrorSignal: %f", AzimuthErrorSignal, ElevationErrorSignal);
+
+		//Slew Mode
+		if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_DOWN)
+		{
+			PitchSlew = (lem->Panel12AntPitchKnob.GetValue() * 15.0 - 75.0) * RAD;
+			YawSlew = (lem->Panel12AntYawKnob.GetValue() * 15.0 - 90.0) * RAD;
+		}
+		//Auto Tracking
+		else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
+		{
+			PitchSlew = pitch + (TrkngCtrlGain * ElevationErrorSignalNorm * exp(-simdt * 10));
+			YawSlew = yaw + (TrkngCtrlGain * AzimuthErrorSignalNorm * exp(-simdt * 10));
+		}
+		else
+		{
+			PitchSlew = pitch;
+			YawSlew = yaw;
+		}
+
+
+		//sprintf(oapiDebugString(), "PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
+
+		//set antenna slew-rates
+		if (abs(PitchSlew - pitch) > 0.0001)
+		{
+			pitchrate = (PitchSlew - pitch) * TrkngRatelGain;
+			if (abs(pitchrate) > MaxServoRate)
+			{
+				pitchrate = MaxServoRate * pitchrate / abs(pitchrate);
+			}
+			moving = true;
+		}
+
+		if (abs(YawSlew - yaw) > 0.0001)
+		{
+			yawrate = (YawSlew - yaw) * TrkngRatelGain;
+			if (abs(yawrate) > MaxServoRate)
+			{
+				yawrate = MaxServoRate * yawrate / abs(yawrate);
+			}
+			moving = true;
+		}
+
+		driverateratio = ((abs(pitchrate) / MaxServoRate) + (abs(yawrate) / MaxServoRate)) / 2.0;  //allows power draw based on drive rates
+
+		//sprintf(oapiDebugString(), "pitchrate: %f deg/sec, yawrate: %f deg/sec", pitchrate*DEG, yawrate*DEG);
+
+		//Drive Antenna
+		pitch += pitchrate * simdt;
+		yaw += yawrate * simdt;
+
+		//sprintf(oapiDebugString(), "pitch: %f pitchrate %f, yaw: %f yawrate %f %d", pitch*DEG, pitchrate*DEG, yaw*DEG, yawrate*DEG, moving);
+
+		//Antenna Limits
+		if (pitch > 255.0 * RAD)
+		{
+			pitch = 255.0 * RAD;
+		}
+		else if (pitch < -75.0 * RAD)
+		{
+			pitch = -75.0 * RAD;
+		}
+
+		if (yaw > 87.0 * RAD)
+		{
+			yaw = 87.0 * RAD;
+		}
+		else if (yaw < -87.0 * RAD)
+		{
+			yaw = -87.0 * RAD;
+		}
 	}
-
-	driverateratio = ((abs(pitchrate) / MaxServoRate) + (abs(yawrate) / MaxServoRate)) / 2.0;  //allows power draw based on drive rates
-
-	//sprintf(oapiDebugString(), "pitchrate: %f deg/sec, yawrate: %f deg/sec", pitchrate*DEG, yawrate*DEG);
-
-	//Drive Antenna
-	pitch += pitchrate*simdt;
-	yaw += yawrate*simdt;
-
-	//sprintf(oapiDebugString(), "pitch: %f pitchrate %f, yaw: %f yawrate %f %d", pitch*DEG, pitchrate*DEG, yaw*DEG, yawrate*DEG, moving);
-
-	//Antenna Limits
-	if (pitch > 255.0*RAD)
-	{
-		pitch = 255.0*RAD;
-	}
-	else if (pitch < -75.0*RAD)
-	{
-		pitch = -75.0*RAD;
-	}
-
-	if (yaw > 87.0*RAD)
-	{
-		yaw = 87.0*RAD;
-	}
-	else if (yaw < -87.0*RAD)
-	{
-		yaw = -87.0*RAD;
-	}
-
 	//Signal Strength
 
 	double relang[4];
