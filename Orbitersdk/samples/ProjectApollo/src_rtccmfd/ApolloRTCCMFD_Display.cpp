@@ -2753,7 +2753,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				sprintf(Buffer, "");
 				break;
 			}
-			skp->Text(W - CW / 16, 2 * H / 14, Buffer, strlen(Buffer));
+			skp->Text(W - CW, 2 * H / 14, Buffer, strlen(Buffer));
 
 			if (GC->rtcc->GZGENCSN.DKI_TP_Definition == 1 || GC->rtcc->GZGENCSN.DKI_TP_Definition == 2)
 			{
@@ -2770,7 +2770,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			//Chaser and target vector IDs
 			skp->Text(W - CW, 8 * H / 14, GC->rtcc->med_k10.ChaserVectorID.c_str(), GC->rtcc->med_k10.ChaserVectorID.size());
-			skp->Text(W - CW, 8 * H / 14, GC->rtcc->med_k10.TargetVectorID.c_str(), GC->rtcc->med_k10.TargetVectorID.size());
+			skp->Text(W - CW, 10 * H / 14, GC->rtcc->med_k10.TargetVectorID.c_str(), GC->rtcc->med_k10.TargetVectorID.size());
 		}
 		else
 		{
@@ -2789,7 +2789,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				PrintCSMVessel(Buffer);
 				skp->Text(W - CW, 10 * H / 14, Buffer, strlen(Buffer));
 			}
-			
 		}
 		break;
 	case 35:

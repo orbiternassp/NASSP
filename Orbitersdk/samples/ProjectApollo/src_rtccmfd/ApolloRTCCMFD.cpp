@@ -1605,7 +1605,7 @@ void ApolloRTCCMFD::menuPerigeeAdjustHeight()
 
 void ApolloRTCCMFD::menuPerigeeAdjustVectorID()
 {
-	GenericStringInput(&GC->rtcc->med_k28.VectorID, "Enter Vector ID from VPS if desired (used instead of vector time):");
+	GenericStringInput(&GC->rtcc->med_k28.VectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
 }
 
 void ApolloRTCCMFD::menuCycleAGOPPage()
@@ -3544,7 +3544,7 @@ void ApolloRTCCMFD::menuSetGMPInput()
 	}
 	else if (marker == 8)
 	{
-		GenericStringInput(&GC->rtcc->med_k20.VectorID, "Enter Vector ID from VPS if desired (used instead of vector time):");
+		GenericStringInput(&GC->rtcc->med_k20.VectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
 	}
 }
 
@@ -3690,10 +3690,10 @@ void ApolloRTCCMFD::menuSetTIMultipleSolutionInput()
 		GenericDoubleInput(&GC->rtcc->med_k30.TimeRange, "Enter the range of time for the variable maneuver times:", 1.0);
 		break;
 	case 8:
-		GenericStringInput(&GC->rtcc->med_k30.ChaserVectorID, "Enter Vector ID for chaser (used instead of vector time):");
+		GenericStringInput(&GC->rtcc->med_k30.ChaserVectorID, "Enter Vector ID for chaser if desired (otherwise leave blank):");
 		break;
 	case 9:
-		GenericStringInput(&GC->rtcc->med_k30.TargetVectorID, "Enter Vector ID for target (used instead of vector time):");
+		GenericStringInput(&GC->rtcc->med_k30.TargetVectorID, "Enter Vector ID for target if desired (otherwise leave blank):");
 		break;
 	}
 }
@@ -5538,10 +5538,10 @@ void ApolloRTCCMFD::menuSetCorrectiveCombinationInput()
 		GenericDoubleInput(&GC->rtcc->med_k32.dt_TPI_slip, "The amount by which TPI time is allowed to be slipped on either side of the nominal time:");
 		break;
 	case 12:
-		GenericStringInput(&GC->rtcc->med_k30.ChaserVectorID, "Enter Vector ID for chaser (used instead of vector time):");
+		GenericStringInput(&GC->rtcc->med_k32.ChaserVectorID, "Enter Vector ID for chaser if desired (otherwise leave blank):");
 		break;
 	case 13:
-		GenericStringInput(&GC->rtcc->med_k30.TargetVectorID, "Enter Vector ID for target (used instead of vector time):");
+		GenericStringInput(&GC->rtcc->med_k32.TargetVectorID, "Enter Vector ID for target if desired (otherwise leave blank):");
 		break;
 	}
 }
@@ -6512,10 +6512,10 @@ void ApolloRTCCMFD::menuSetSPQInput()
 		}
 		break;
 	case 10:
-		GenericStringInput(&GC->rtcc->med_k01.ChaserVectorID, "Enter Vector ID for chaser (used instead of vector time):");
+		GenericStringInput(&GC->rtcc->med_k01.ChaserVectorID, "Enter Vector ID for chaser if desired (otherwise leave blank):");
 		break;
 	case 11:
-		GenericStringInput(&GC->rtcc->med_k01.TargetVectorID, "Enter Vector ID for target (used instead of vector time):");
+		GenericStringInput(&GC->rtcc->med_k01.TargetVectorID, "Enter Vector ID for target if desired (otherwise leave blank):");
 		break;
 	}
 }
@@ -7251,7 +7251,7 @@ void ApolloRTCCMFD::menuCycleLOIInterSolnFlag()
 
 void ApolloRTCCMFD::menuSetLOIVectorID()
 {
-	GenericStringInput(&GC->rtcc->med_k18.VectorID, "Enter Vector ID from VPS if desired (used instead of vector time):");
+	GenericStringInput(&GC->rtcc->med_k18.VectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
 }
 
 void ApolloRTCCMFD::menuSetLOIEta1()
@@ -7271,7 +7271,7 @@ void ApolloRTCCMFD::menuSetTLCCAltMode5()
 
 void ApolloRTCCMFD::menuSetTLCCVectorID()
 {
-	GenericStringInput(&GC->rtcc->PZMCCPLN.VectorID, "Enter Vector ID from VPS if desired (used instead of vector time):");
+	GenericStringInput(&GC->rtcc->PZMCCPLN.VectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
 }
 
 void ApolloRTCCMFD::menuSetLOIDesiredAzi()
@@ -7462,7 +7462,7 @@ void ApolloRTCCMFD::set_LLWPElevation(double elev)
 
 void ApolloRTCCMFD::menuSetLLWPVectorID()
 {
-	GenericStringInput(&GC->rtcc->med_k15.VectorID, "Enter Vector ID from VPS if desired (used instead of vector time):");
+	GenericStringInput(&GC->rtcc->med_k15.VectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
 }
 
 void ApolloRTCCMFD::menuTMLat()
@@ -7993,6 +7993,32 @@ void ApolloRTCCMFD::menuDKITerminalPhaseDefinitionValue()
 	case 6: //TPF at X minutes into day
 		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPF at X minutes into day:", 1.0);
 		break;
+	}
+}
+
+void ApolloRTCCMFD::menuChooseDKIChaser()
+{
+	if (GC->MissionPlanningActive)
+	{
+		GenericStringInput(&GC->rtcc->med_k10.ChaserVectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
+	}
+	else
+	{
+		if (GC->rtcc->med_k00.ChaserVehicle == RTCC_MPT_CSM) set_CSMVessel();
+		else set_LMVessel();
+	}
+}
+
+void ApolloRTCCMFD::menuChooseDKITarget()
+{
+	if (GC->MissionPlanningActive)
+	{
+		GenericStringInput(&GC->rtcc->med_k10.TargetVectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
+	}
+	else
+	{
+		if (GC->rtcc->med_k00.ChaserVehicle == RTCC_MPT_LM) set_CSMVessel();
+		else set_LMVessel();
 	}
 }
 
@@ -8673,7 +8699,7 @@ void ApolloRTCCMFD::menuSetLDPPInput()
 		GenericDoubleInput(&GC->rtcc->med_k16.DesiredHeight, "Desired height in NM:", 1852.0);
 		break;
 	case 9:
-		GenericStringInput(&GC->rtcc->med_k16.VectorID, "Enter Vector ID from VPS if desired (used instead of vector time):");
+		GenericStringInput(&GC->rtcc->med_k16.VectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
 		break;
 	}
 }

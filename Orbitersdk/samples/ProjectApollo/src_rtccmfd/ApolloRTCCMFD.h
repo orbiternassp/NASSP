@@ -445,6 +445,8 @@ public:
 	void menuDKIInitialPhaseFlag();
 	void menuCycleDKITerminalPhaseOption();
 	void menuDKITerminalPhaseDefinitionValue();
+	void menuChooseDKIChaser();
+	void menuChooseDKITarget();
 	void menuCycleTPIMode();
 	void TPIDTDialogue();
 	void menuSetLAPLiftoffTime();

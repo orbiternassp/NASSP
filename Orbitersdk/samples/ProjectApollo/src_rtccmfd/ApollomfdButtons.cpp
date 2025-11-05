@@ -1173,8 +1173,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Terminal phase definition", 0, 'E' },
 		{ "Terminal phase definition value", 0, 'V' },
 		{ "", 0, ' ' },
-		{ "Choose CSM", 0, 'N' },
-		{ "Choose LM", 0, 'U' },
+		{ "Choose chaser", 0, 'N' },
+		{ "Choose target", 0, 'U' },
 		{ "Back to DKI page", 0, 'B' },
 	};
 
@@ -1190,8 +1190,8 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("TPD", OAPI_KEY_E, &ApolloRTCCMFD::menuCycleDKITerminalPhaseOption);
 	RegisterFunction("TPV", OAPI_KEY_V, &ApolloRTCCMFD::menuDKITerminalPhaseDefinitionValue);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("CHA", OAPI_KEY_N, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("TGT", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("CHA", OAPI_KEY_N, &ApolloRTCCMFD::menuChooseDKIChaser);
+	RegisterFunction("TGT", OAPI_KEY_U, &ApolloRTCCMFD::menuChooseDKITarget);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetDKIPage);
 
 
