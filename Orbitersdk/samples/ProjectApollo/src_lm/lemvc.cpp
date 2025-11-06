@@ -2337,6 +2337,7 @@ void LEM::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&AbortSwitch, AID_VC_ABORT_BUTTON);
 	AbortSwitch.SetDirection(abortbuttonvector);
 	AbortSwitch.DefineMeshGroup(VC_GRP_AbortButton);
+	AbortSwitch.SetArrowOffset(_V(-0.10018, 0.436067, 1.68518));
 
 	MainPanelVC.AddSwitch(&AbortStageSwitch, AID_VC_ABORTSTAGE_BUTTON);
 	AbortStageSwitch.SetReference(abortbuttonvector, _V(-0.045187, 0.468451, 1.68831), _V(-0.047192, 0.437682, 1.68536), _V(1, 0, 0));
