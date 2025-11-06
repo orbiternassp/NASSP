@@ -2701,6 +2701,7 @@ LEM_SteerableAnt::LEM_SteerableAnt()
 	pitch = 0.0;
 	yaw = 0.0;
 	moving = false;
+	driverateratio = 0.0;
 	hpbw_factor = 0.0;
 	SignalStrength = 0.0;
 
@@ -2766,112 +2767,110 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 	moving = false;
 
-	if (!IsPowered())
+	if (IsPowered())
 	{
-		SignalStrength = 0.0;
-		return;
-	}
+		double AzimuthErrorSignal, ElevationErrorSignal;
+		double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
 
-	double AzimuthErrorSignal, ElevationErrorSignal;
-	double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
+		//actual Azimuth and Elevation error signals came from phase differences not signal strength
+		//both are be a function of tracking error though so this works
+		AzimuthErrorSignal = (HornSignalStrength[1] - HornSignalStrength[0]) * 0.25;
+		ElevationErrorSignal = (HornSignalStrength[3] - HornSignalStrength[2]) * 0.25;
 
-	//actual Azimuth and Elevation error signals came from phase differences not signal strength
-	//both are be a function of tracking error though so this works
-	AzimuthErrorSignal = (HornSignalStrength[1] - HornSignalStrength[0])*0.25;
-	ElevationErrorSignal = (HornSignalStrength[3] - HornSignalStrength[2])*0.25;
-
-	//normalize Azimuth and Elevation error signals
-	if (SignalStrength > 0.0)
-	{
-		AzimuthErrorSignalNorm = AzimuthErrorSignal / SignalStrength;
-		ElevationErrorSignalNorm = ElevationErrorSignal / SignalStrength;
-	}
-	else //prevent division by zero
-	{
-		AzimuthErrorSignalNorm = 0;
-		ElevationErrorSignalNorm = 0;
-	}
-
-	double pitchrate = 0.0;
-	double yawrate = 0.0;
-
-	double PitchSlew, YawSlew;
-
-	const double TrkngCtrlGain = 270; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
-	const double TrkngRatelGain = 4.0; //
-	const double MaxServoRate = 20 * RAD;
-
-	//sprintf(oapiDebugString(), "AzimuthErrorSignal: %f, ElevationErrorSignal: %f", AzimuthErrorSignal, ElevationErrorSignal);
-
-	//Slew Mode
-	if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_DOWN)
-	{
-		PitchSlew = (lem->Panel12AntPitchKnob.GetValue()*15.0 - 75.0)*RAD;
-		YawSlew = (lem->Panel12AntYawKnob.GetValue()*15.0 - 90.0)*RAD;
-	}
-	//Auto Tracking
-	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
-	{
-		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm*exp(-simdt*10));
-		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm*exp(-simdt*10));
-	}
-	else
-	{
-		PitchSlew = pitch;
-		YawSlew = yaw;
-	}
-
-	
-	//sprintf(oapiDebugString(), "PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
-
-	//set antenna slew-rates
-	if (abs(PitchSlew - pitch) > 0.0001)
-	{
-		pitchrate = (PitchSlew - pitch)*TrkngRatelGain;
-		if (abs(pitchrate) > MaxServoRate)
+		//normalize Azimuth and Elevation error signals
+		if (SignalStrength > 0.0)
 		{
-			pitchrate = MaxServoRate *pitchrate / abs(pitchrate);
+			AzimuthErrorSignalNorm = AzimuthErrorSignal / SignalStrength;
+			ElevationErrorSignalNorm = ElevationErrorSignal / SignalStrength;
 		}
-		moving = true;
-	}
-
-	if (abs(YawSlew - yaw) > 0.0001)
-	{
-		yawrate = (YawSlew - yaw)*TrkngRatelGain;
-		if (abs(yawrate) > MaxServoRate)
+		else //prevent division by zero
 		{
-			yawrate = MaxServoRate *yawrate / abs(yawrate);
+			AzimuthErrorSignalNorm = 0;
+			ElevationErrorSignalNorm = 0;
 		}
-		moving = true;
+
+		double pitchrate = 0.0;
+		double yawrate = 0.0;
+
+		double PitchSlew, YawSlew;
+
+		const double TrkngCtrlGain = 270; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
+		const double TrkngRatelGain = 4.0; //
+		const double MaxServoRate = 20 * RAD;
+
+		//sprintf(oapiDebugString(), "AzimuthErrorSignal: %f, ElevationErrorSignal: %f", AzimuthErrorSignal, ElevationErrorSignal);
+
+		//Slew Mode
+		if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_DOWN)
+		{
+			PitchSlew = (lem->Panel12AntPitchKnob.GetValue() * 15.0 - 75.0) * RAD;
+			YawSlew = (lem->Panel12AntYawKnob.GetValue() * 15.0 - 90.0) * RAD;
+		}
+		//Auto Tracking
+		else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
+		{
+			PitchSlew = pitch + (TrkngCtrlGain * ElevationErrorSignalNorm * exp(-simdt * 10));
+			YawSlew = yaw + (TrkngCtrlGain * AzimuthErrorSignalNorm * exp(-simdt * 10));
+		}
+		else
+		{
+			PitchSlew = pitch;
+			YawSlew = yaw;
+		}
+
+
+		//sprintf(oapiDebugString(), "PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
+
+		//set antenna slew-rates
+		if (abs(PitchSlew - pitch) > 0.0001)
+		{
+			pitchrate = (PitchSlew - pitch) * TrkngRatelGain;
+			if (abs(pitchrate) > MaxServoRate)
+			{
+				pitchrate = MaxServoRate * pitchrate / abs(pitchrate);
+			}
+			moving = true;
+		}
+
+		if (abs(YawSlew - yaw) > 0.0001)
+		{
+			yawrate = (YawSlew - yaw) * TrkngRatelGain;
+			if (abs(yawrate) > MaxServoRate)
+			{
+				yawrate = MaxServoRate * yawrate / abs(yawrate);
+			}
+			moving = true;
+		}
+
+		driverateratio = ((abs(pitchrate) / MaxServoRate) + (abs(yawrate) / MaxServoRate)) / 2.0;  //allows power draw based on drive rates
+
+		//sprintf(oapiDebugString(), "pitchrate: %f deg/sec, yawrate: %f deg/sec", pitchrate*DEG, yawrate*DEG);
+
+		//Drive Antenna
+		pitch += pitchrate * simdt;
+		yaw += yawrate * simdt;
+
+		//sprintf(oapiDebugString(), "pitch: %f pitchrate %f, yaw: %f yawrate %f %d", pitch*DEG, pitchrate*DEG, yaw*DEG, yawrate*DEG, moving);
+
+		//Antenna Limits
+		if (pitch > 255.0 * RAD)
+		{
+			pitch = 255.0 * RAD;
+		}
+		else if (pitch < -75.0 * RAD)
+		{
+			pitch = -75.0 * RAD;
+		}
+
+		if (yaw > 87.0 * RAD)
+		{
+			yaw = 87.0 * RAD;
+		}
+		else if (yaw < -87.0 * RAD)
+		{
+			yaw = -87.0 * RAD;
+		}
 	}
-
-	//sprintf(oapiDebugString(), "pitchrate: %f deg/sec, yawrate: %f deg/sec", pitchrate*DEG, yawrate*DEG);
-
-	//Drive Antenna
-	pitch += pitchrate*simdt;
-	yaw += yawrate*simdt;
-
-	//sprintf(oapiDebugString(), "pitch: %f pitchrate %f, yaw: %f yawrate %f %d", pitch*DEG, pitchrate*DEG, yaw*DEG, yawrate*DEG, moving);
-
-	//Antenna Limits
-	if (pitch > 255.0*RAD)
-	{
-		pitch = 255.0*RAD;
-	}
-	else if (pitch < -75.0*RAD)
-	{
-		pitch = -75.0*RAD;
-	}
-
-	if (yaw > 87.0*RAD)
-	{
-		yaw = 87.0*RAD;
-	}
-	else if (yaw < -87.0*RAD)
-	{
-		yaw = -87.0*RAD;
-	}
-
 	//Signal Strength
 
 	double relang[4];
@@ -2938,20 +2937,21 @@ void LEM_SteerableAnt::Timestep(double simdt){
 void LEM_SteerableAnt::SystemTimestep(double simdt)
 {
 	// Do we have power?
-	if (IsPowered()) {
-
-		lem->SBD_ANT_AC_CB.DrawPower(4); 	
+	if (IsPowered())
+	{
+		lem->SBD_ANT_AC_CB.DrawPower(4);
 		lem->COMM_SBAND_ANT_CB.DrawPower(0.83);
 		antheatload->GenerateHeat(4 + 0.83);
-
 	}
 
 	if (moving)
 	{
-		lem->SBD_ANT_AC_CB.DrawPower(27.9); 	//Need a source on this moving draw
-		lem->COMM_SBAND_ANT_CB.DrawPower(7.6);  //Need a source on this moving draw
-		//antheatload->GenerateHeat(0);		//Will add this once loads above are checked and sourced
+		lem->SBD_ANT_AC_CB.DrawPower(27.9 * driverateratio); 			//Need a source on this moving draw (currently AOH performance summary)
+		lem->COMM_SBAND_ANT_CB.DrawPower(7.6 * driverateratio);			//Need a source on this moving draw (currently AOH performance summary)
+		antheatload->GenerateHeat((27.9 + 7.6) * driverateratio);
 	}
+
+	//sprintf(oapiDebugString(),"Drive Rate Ratio %.01f", driverateratio);
 }
 
 bool LEM_SteerableAnt::IsPowered()
