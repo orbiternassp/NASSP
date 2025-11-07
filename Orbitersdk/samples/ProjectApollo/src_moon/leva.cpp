@@ -1091,7 +1091,7 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 		hLRV = oapiLoadMeshGlobal ("ProjectApollo/LRV");
 		hLRVConsole = oapiLoadMeshGlobal ("ProjectApollo/LRV_console");
 		hTv = oapiLoadMeshGlobal("ProjectApollo/EASEP_TV");
-		hColorTV = oapiLoadMeshGlobal("ProjectApollo\ALSEP_TV");
+		hColorTV = oapiLoadMeshGlobal("ProjectApollo/ALSEP_TV");
 		hEasepSWC = oapiLoadMeshGlobal("ProjectApollo/EASEP_SWC");
 		hEasepPSEP = oapiLoadMeshGlobal("ProjectApollo/EASEP_PSEP");
 		hEasepLR3 = oapiLoadMeshGlobal("ProjectApollo/EASEP_LR3");
