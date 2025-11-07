@@ -699,7 +699,7 @@ void LEM::SystemsInit()
 	OverheadHatch.Init(this, &UpperHatchHandle, &UpperHatchReliefValve, (h_Pipe*)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"));
 	OVHDCabinReliefDumpValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINOVHDHATCHVALVE"),
 		&UpperHatchReliefValve, &OverheadHatch);
-	ForwardHatch.Init(this, &ForwardHatchHandle, &ForwardHatchReliefValve, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"));
+	ForwardHatch.Init(this, &ForwardHatchHandle, &ForwardHatchReliefValve, (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK"));
 	FWDCabinReliefDumpValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINFWDHATCHVALVE"),
 		&ForwardHatchReliefValve, &ForwardHatch);
 	SuitCircuitReliefValve.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRELIEFVALVE"),
@@ -2330,7 +2330,8 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 	ecs.crewNumber = CrewInCabin->number + CDRSuited->number + LMPSuited->number;
 	ecs.crewStatus = CrewStatus.GetStatus();;
 
-
+	//Urine
+	ecs.UCTAStatus = ForwardHatch.GetLMUCDPct();
 }
 
 void LEM::SetCrewNumber(int number)
@@ -2478,6 +2479,14 @@ void LEM::CreateMissionSpecificSystems()
 		aeaa = new LEM_AEAA();
 	}
 	EventTimerDisplay.SetReverseAtZero(pMission->IsLMEventTimerReversingAtZero());
+	SBandSteerable.AngleInit(pMission->GetLMNumber()); //Initializes S Band Antenna To Proper Closeout Angles
+
+	if (pMission->GetLMNumber() < 6) // LM-5 And Earlier
+	{
+		Panel12AntPitchKnob.SetInitValue(22.0); //Initializes S Band Antenna Pitch Knob To Proper Closeout Angles
+		Panel12AntYawKnob.SetInitValue(6.0); //Initializes S Band Antenna Yaw Knob To Proper Closeout Angles
+		LandingAntSwitch.SetState(1); //Initializes LDG ANT Switch To Proper Closeout Position (DES)
+	}
 }
 
 // SYSTEMS COMPONENTS
@@ -2857,8 +2866,8 @@ CrossPointer::CrossPointer()
 	rateErrMonSw = NULL;
 	scaleSwitch = NULL;
 	dc_source = NULL;
-	vel_x = 0;
-	vel_y = 0;
+	vel_x = display_vel_x = callout_x = 0;
+	vel_y = display_vel_y = callout_y = 0;
 	lgc_forward = 0;
 	lgc_lateral = 0;
 	anim_xpointerx = -1;
@@ -2904,6 +2913,7 @@ void CrossPointer::Timestep(double simdt)
 	{
 		vel_x = 0;
 		vel_y = 0;
+		UpdateDisplayValues(simdt);
 		return;
 	}
 
@@ -2962,8 +2972,8 @@ void CrossPointer::Timestep(double simdt)
 			vx = 0;
 			vy = lem->aea.GetLateralVelocity()*0.3048;
 		}
-		vel_x = vx / 0.3048 * 20.0 / 200.0;
-		vel_y = vy / 0.3048 * 20.0 / 200.0;
+		vel_x = callout_x = vx / 0.3048 * 20.0 / 200.0;
+		vel_y = callout_y = vy / 0.3048 * 20.0 / 200.0;
 	}
 
 	//10 times finer scale
@@ -2974,12 +2984,13 @@ void CrossPointer::Timestep(double simdt)
 	}
 
 	//The output scaling is 20 for full deflection.
+	UpdateDisplayValues(simdt);
 }
 
 void CrossPointer::GetVelocities(double &vx, double &vy)
 {
-	vx = vel_x;
-	vy = vel_y;
+	vx = display_vel_x;
+	vy = display_vel_y;
 }
 
 void CrossPointer::SetDirection(const VECTOR3 &xvec, const VECTOR3 &yvec)
@@ -3008,24 +3019,34 @@ void CrossPointer::DefineVCAnimations(UINT vc_idx, bool left)
 	lem->AddAnimationComponent(anim_xpointery, 0.0f, 1.0f, ytrans);
 }
 
+void CrossPointer::UpdateDisplayValues(double simdt)
+{
+	MeterMovement(simdt, vel_x, display_vel_x);
+	MeterMovement(simdt, vel_y, display_vel_y);
+}
+
+void CrossPointer::MeterMovement(double simdt, double &val, double &dis_val)
+{
+	const double minMaxTime = 1.0;
+	double filtConstant = max(min(GAUGE_LPF_SCALAR * simdt * 5.0 / minMaxTime, 1.0), 0.0);
+	dis_val = dis_val * (1.0 - filtConstant) + (val * filtConstant);
+}
+
 void CrossPointer::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
-	if (anim_xpointerx != 1) lem->SetAnimation(anim_xpointerx, (vel_x / 40) + 0.5);
-	if (anim_xpointery != 1) lem->SetAnimation(anim_xpointery, (vel_y / 40) + 0.5);
+	if (anim_xpointerx != 1) lem->SetAnimation(anim_xpointerx, (display_vel_x / 40) + 0.5);
+	if (anim_xpointery != 1) lem->SetAnimation(anim_xpointery, (display_vel_y / 40) + 0.5);
 }
 
-void CrossPointer::SaveState(FILEHANDLE scn) {
+void CrossPointer::SaveState(FILEHANDLE scn, char *line_str)
+{
+	char buffer[128];
 
-	oapiWriteLine(scn, CROSSPOINTER_END_STRING);
+	sprintf(buffer, "%lf %lf", display_vel_x, display_vel_y);
+	oapiWriteScenario_string(scn, line_str, buffer);
 }
 
-void CrossPointer::LoadState(FILEHANDLE scn) {
-	char *line;
-
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, CROSSPOINTER_END_STRING, sizeof(CROSSPOINTER_END_STRING))) {
-			return;
-		}
-
-	}
+void CrossPointer::LoadState(char *line)
+{
+	sscanf(line + 17, "%lf %lf", &display_vel_x, &display_vel_y);
 }

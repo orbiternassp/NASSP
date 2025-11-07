@@ -33,12 +33,8 @@ public:
 	IUUmbilical(IUUmbilicalInterface *ml);
 	~IUUmbilical();
 
-	bool IsIUUmbilicalConnected() { return IUUmbilicalConnected; }
-
 	void Connect(IU* iu);
 	void Disconnect();
-	//Called by IU during a pad abort. Technically doesn't disconnect IU umbilical
-	virtual void AbortDisconnect();
 
 	//From ML to SLV
 	void SetEDSLiftoffEnableA();
@@ -84,9 +80,8 @@ public:
 	virtual bool ESEGetQBallSimulateCmd();
 	virtual bool ESEGetEDSAutoAbortSimulate(int n);
 	virtual bool ESEGetEDSLVCutoffSimulate(int n);
-protected:
-	IU* iu;
-	IUUmbilicalInterface* IuUmb;
 
-	bool IUUmbilicalConnected;
+	IU* iu;
+protected:
+	IUUmbilicalInterface* IuUmb;
 };

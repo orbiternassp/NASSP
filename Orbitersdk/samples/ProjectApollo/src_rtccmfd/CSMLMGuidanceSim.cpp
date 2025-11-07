@@ -278,7 +278,7 @@ PMMRKJ_LABEL_12A:
 	{
 		DTUL = TAU - TBM;
 	}
-PMMRKJ_LABEL_12B:
+PMMRKJ_LABEL_12B: //We come here for the last pass through a maneuver phase
 	PCRUNG(Eph, WeightTable);
 	if (KGN == 5 || IERR != 0)
 	{
@@ -347,15 +347,6 @@ PMMRKJ_LABEL_15A:
 		goto PMMRKJ_LABEL_22B;
 	}
 PMMRKJ_LABEL_15B:
-	IJ = 0;
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS && (TArr.IC == 13 || TArr.IC == 5) && TArr.LMDESCJETT <= TBM)
-	{
-		goto PMMRKJ_LABEL_15C;
-	}
-	goto PMMRKJ_LABEL_16A;
-PMMRKJ_LABEL_15C:
-	IJ = 1;
-PMMRKJ_LABEL_16A:
 	if (TArr.IC == 1)
 	{
 		WC = WT;
@@ -380,7 +371,7 @@ PMMRKJ_LABEL_16A:
 	if (TArr.KTRIMOP == -1)
 	{
 		IA = 1;
-		pRTCC->GIMGBL(WC, WL, P_G, Y_G, THRUST, WTLRT, TArr.ThrusterCode, TArr.IC, IA, IJ, TArr.DOCKANG);
+		pRTCC->GIMGBL(WC, WL, P_G, Y_G, THRUST, WTLRT, TArr.ThrusterCode, TArr.IC, IA, TArr.DOCKANG);
 		IA = -1;
 	}
 	else
@@ -572,15 +563,6 @@ void CSMLMPoweredFlightIntegration::PCINIT()
 
 	CD = pRTCC->SystemParameters.MCADRG;
 	CDFACT = 0.5 * TArr.DENSMULT *TArr.A;
-	
-	if (TArr.ThrusterCode == RTCC_ENGINETYPE_CSMSPS && (TArr.IC == 13 || TArr.IC == 5) && TArr.LMDESCJETT <= TBM)
-	{
-		IJ = 1;
-	}
-	else
-	{
-		IJ = 0;
-	}
 
 	DTMANE = 0.0;
 	A_T_in = TArr.AT;
@@ -1037,7 +1019,7 @@ void CSMLMPoweredFlightIntegration::PCRDD()
 	}
 	else
 	{
-		pRTCC->GIMGBL(WC, WL, P_G, Y_G, TL, WDOT, TArr.ThrusterCode, TArr.IC, IA, IJ, TArr.DOCKANG);
+		pRTCC->GIMGBL(WC, WL, P_G, Y_G, TL, WDOT, TArr.ThrusterCode, TArr.IC, IA, TArr.DOCKANG);
 		goto PCRDD_LABEL_6A;
 	}
 
@@ -1130,10 +1112,10 @@ PCRDD_LABEL_3C:
 	return;
 
 PCRDD_LABEL_6A:
-	if (MPHASE == 6)
+	if (MPHASE == 7) //Max thrust phase
 	{
-		//THRUST = TL;
-		//WTLRT = WDOT;
+		THRUST = TL;
+		WTLRT = WDOT * TArr.WDMULT;
 	}
 	THX = THRUST * cos(P_G)*cos(Y_G);
 	if (AttGiven)
@@ -1439,7 +1421,7 @@ void CSMLMPoweredFlightIntegration::CalcBodyAttitude()
 			double Thr, WDOT;
 			if (TArr.KTRIMOP == -1)
 			{
-				pRTCC->GIMGBL(TArr.CSMWT, TArr.LMAWT + TArr.LMDWT, P_G, Y_G, Thr, WDOT, TArr.ThrusterCode, TArr.IC, 1, IJ, TArr.DOCKANG);
+				pRTCC->GIMGBL(TArr.CSMWT, TArr.LMAWT + TArr.LMDWT, P_G, Y_G, Thr, WDOT, TArr.ThrusterCode, TArr.IC, 1, TArr.DOCKANG);
 			}
 			else
 			{

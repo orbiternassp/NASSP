@@ -385,7 +385,7 @@ int ShortAscentRendezvousMonitor::Calc(const ShortARMInputs &in, ShortARMDisplay
 		out.tab[i].GETI = pRTCC->GETfromGMT(TWEAK);
 
 		//Apply DV
-		sv_tweak_after = res.sv_tig;
+		sv_tweak_after = res.sv_tig.sv;
 		sv_tweak_after.V += res.dV;
 
 		//Calculate perilune after tweak
@@ -400,7 +400,7 @@ int ShortAscentRendezvousMonitor::Calc(const ShortARMInputs &in, ShortARMDisplay
 			MATRIX3 Mat;
 			double rho;
 
-			rho = in.Axhor - acos(pRTCC->BZLAND.rad[0] / length(res.sv_tig.R));
+			rho = in.Axhor - acos(pRTCC->BZLAND.rad[0] / length(res.sv_tig.sv.R));
 			Mat = OrbMech::_MRy(rho);
 			out.tab[i].DV_B = mul(Mat, res.dV_LVLH);
 		}

@@ -22,7 +22,16 @@
   **************************************************************************/
 
 #include "MCC_Calculations.h"
+#include "nassputils.h"
+#include "soundlib.h"
+#include "apolloguidance.h"
+#include "saturn.h"
+#include "iu.h"
+#include "sivb.h"
+#include "LVDC.h"
 #include "rtcc.h"
+
+using namespace nassp;
 
 MCC_Calculations::MCC_Calculations(RTCC *r) : RTCCModule(r)
 {
@@ -130,6 +139,21 @@ bool MCC_Calculations::GETEval(double get)
 	return false;
 }
 
+double MCC_Calculations::ComputeDVTO(double mass) //mass in kg
+{
+	double DVTO;
+	DVTO = (pRTCC->SystemParameters.MCTST5 * pRTCC->SystemParameters.MCTSD5) / mass;
+	return DVTO*3.28084; //Convert to ft/s
+}
+
+double MCC_Calculations::FindOrbitalSunrise(VehicleDataBlock sv, double t_sunrise_guess)
+{
+	//Temporary conversion function
+	SV sv2;
+	sv2 = pRTCC->ConvertEphemDatatoSV(sv.sv, sv.Weight);
+	return FindOrbitalSunrise(sv2, t_sunrise_guess);
+}
+
 double MCC_Calculations::FindOrbitalSunrise(SV sv, double t_sunrise_guess)
 {
 	SV sv1;
@@ -144,6 +168,30 @@ double MCC_Calculations::FindOrbitalSunrise(SV sv, double t_sunrise_guess)
 
 	ttoSunrise = OrbMech::sunrise(pRTCC->SystemParameters.MAT_J2000_BRCS, sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, true, false, false);
 	return t_sunrise_guess + ttoSunrise;
+}
+
+double MCC_Calculations::FindOrbitalSunset(VehicleDataBlock sv, double t_sunset_guess)
+{
+	//Temporary conversion function
+	SV sv2;
+	sv2 = pRTCC->ConvertEphemDatatoSV(sv.sv, sv.Weight);
+	return FindOrbitalSunset(sv2, t_sunset_guess);
+}
+
+double MCC_Calculations::FindOrbitalSunset(SV sv, double t_sunset_guess)
+{
+	SV sv1;
+	double GET_SV, dt, ttoSunset;
+
+	OBJHANDLE hSun = oapiGetObjectByName("Sun");
+
+	GET_SV = OrbMech::GETfromMJD(sv.MJD, pRTCC->CalcGETBase());
+	dt = t_sunset_guess - GET_SV;
+
+	sv1 = pRTCC->coast(sv, dt);
+
+	ttoSunset = OrbMech::sunrise(pRTCC->SystemParameters.MAT_J2000_BRCS, sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, false, false, false);
+	return t_sunset_guess + ttoSunset;
 }
 
 double MCC_Calculations::FindOrbitalMidnight(SV sv, double t_TPI_guess)
@@ -202,6 +250,65 @@ bool MCC_Calculations::REFSMMATDecision(VECTOR3 Att)
 	return false;
 }
 
+void MCC_Calculations::BackupGDCAlignment(VehicleDataBlock sv, double GET, MATRIX3 REFSMMAT, int PrefGDCStars, VECTOR3 &GDCangles, char *SetStars)
+{
+	//INPUTS:
+	//sv: State vector
+	//GET: Time of alignment
+	//REFSMMAT: REFSMMAT to be aligned to
+	//PrefGDCStars: Preferred star set for the GDC backup alignment. 0 = Deneb, Vega, 1 = Navi, Polaris, 2 = Acrux, Atria, 3 = Sirius, Rigel
+	//OUTPUTS:
+	//GDCangles: Backup GDC alignment angles in degrees (all zeros if no unocculted star set was found)
+	//SetStars: String with the calculated star set (or N/A if no set was found)
+
+	VehicleDataBlock sv_sxt;
+	double GMT, R_E;
+	int GDCset;
+
+	//Calculate GMT from input GET
+	GMT = pRTCC->GMTfromGET(GET);
+	//Propagate state vector to alignment time
+	sv_sxt = pRTCC->coast(sv, GMT - sv.sv.GMT);
+
+	//Get body radius
+	if (sv_sxt.sv.RBI == BODY_EARTH)
+	{
+		R_E = OrbMech::R_Earth;
+	}
+	else
+	{
+		R_E = OrbMech::R_Moon;
+	}
+	//Calculate backup GDC angles
+	GDCangles = OrbMech::backupgdcalignment(pRTCC->EZJGSTAR, REFSMMAT, sv_sxt.sv.R, R_E, PrefGDCStars, GDCset);
+	//Write output string
+	if (length(GDCangles) == 0.0)
+	{
+		sprintf(SetStars, "N/A");
+	}
+	else
+	{
+		//Convert to full IMU angles in degrees
+		GDCangles = _V(OrbMech::imulimit(GDCangles.x*DEG), OrbMech::imulimit(GDCangles.y*DEG), OrbMech::imulimit(GDCangles.z*DEG));
+		if (GDCset == 0)
+		{
+			sprintf(SetStars, "Deneb, Vega");
+		}
+		else if (GDCset == 1)
+		{
+			sprintf(SetStars, "Navi, Polaris");
+		}
+		else if (GDCset == 2)
+		{
+			sprintf(SetStars, "Acrux, Atria");
+		}
+		else
+		{
+			sprintf(SetStars, "Sirius, Rigel");
+		}
+	}
+}
+
 void MCC_Calculations::PrelaunchMissionInitialization()
 {
 	//Assumes mission file has been loaded. Also GZGENCSN.MonthofLiftoff, GZGENCSN.DayofLiftoff, GZGENCSN.Year in the scenario.
@@ -211,6 +318,47 @@ void MCC_Calculations::PrelaunchMissionInitialization()
 	//P80 MED: mission initialization
 	sprintf_s(Buff, "P80,1,CSM,%d,%d,%d;", pRTCC->GZGENCSN.MonthofLiftoff, pRTCC->GZGENCSN.DayofLiftoff, pRTCC->GZGENCSN.Year);
 	pRTCC->GMGMED(Buff);
+}
+
+double MCC_Calculations::GetLVDCOrbitalInsertionTime(VESSEL *v)
+{
+	if (utils::IsVessel(v, utils::SaturnIB) || utils::IsVessel(v, utils::SaturnIB_SIVB))
+	{
+		//Saturn IB LVDC
+		LVDC1B *lvdc;
+
+		if (utils::IsVessel(v, utils::SaturnIB))
+		{
+			Saturn *sat = (Saturn*)v;
+			lvdc = (LVDC1B*)sat->GetIU()->GetLVDC();
+		}
+		else
+		{
+			SIVB *sivb = (SIVB*)v;
+			lvdc = (LVDC1B*)sivb->GetIU()->GetLVDC();
+		}
+
+		return (lvdc->T_CO - 17.0); //TBD: Time when TB4 was established would be better, but it is not being saved yet
+	}
+	else if (utils::IsVessel(v, utils::SaturnV) || utils::IsVessel(v, utils::SaturnV_SIVB))
+	{
+		//Saturn V LVDC
+		LVDCSV *lvdc;
+
+		if (utils::IsVessel(v, utils::SaturnV))
+		{
+			Saturn *sat = (Saturn*)v;
+			lvdc = (LVDCSV*)sat->GetIU()->GetLVDC();
+		}
+		else
+		{
+			SIVB *sivb = (SIVB*)v;
+			lvdc = (LVDCSV*)sivb->GetIU()->GetLVDC();
+		}
+
+		return (lvdc->TB5 - 17.0);
+	}
+	else return 0.0;
 }
 
 void MCC_Calculations::DMissionRendezvousPlan(SV sv_A0, double &t_TPI0)
@@ -401,4 +549,30 @@ void MCC_Calculations::FMissionRendezvousPlan(VESSEL *chaser, VESSEL *target, SV
 	sprintf(Buffer, "TIG %s", Buffer2);
 	oapiWriteLog(Buffer);
 	*/
+}
+
+void MCC_Calculations::StoreStateVector(VehicleDataBlock sv)
+{
+	pRTCC->calcParams.SVSTORE1 = pRTCC->ConvertEphemDatatoSV(sv.sv, sv.Weight);
+}
+
+void MCC_Calculations::StoreStateVector(SV sv)
+{
+	pRTCC->calcParams.SVSTORE1 = sv;
+}
+
+void MCC_Calculations::StoreStateVector(EphemerisData sv, double Weight)
+{
+	pRTCC->calcParams.SVSTORE1 = pRTCC->ConvertEphemDatatoSV(sv, Weight);
+}
+
+void MCC_Calculations::RestoreStateVector(VehicleDataBlock &sv)
+{
+	sv.sv = pRTCC->ConvertSVtoEphemData(pRTCC->calcParams.SVSTORE1);
+	sv.Weight = pRTCC->calcParams.SVSTORE1.mass;
+}
+
+void MCC_Calculations::RestoreStateVector(SV &sv)
+{
+	sv = pRTCC->calcParams.SVSTORE1;
 }
