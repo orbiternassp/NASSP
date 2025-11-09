@@ -16703,7 +16703,7 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 			PMXSPT("PMMFUD", 42);
 			return;
 		}
-
+		//Compute and store new number of the TLI (TBD), the deorbit (TBD), last executed, last frozen, and remaining maneuvers
 		if (mpt->LastExecutedManeuver > 0)
 		{
 			mpt->LastExecutedManeuver -= man;
@@ -16712,7 +16712,7 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 		{
 			mpt->LastFrozenManeuver -= man;
 		}
-
+		//Move up the area, weight, begin time, end time sets in header to their proper place
 		for (unsigned i = man;i < mpt->ManeuverNum;i++)
 		{
 			mpt->TimeToBeginManeuver[i - man] = mpt->TimeToBeginManeuver[i];
@@ -16722,9 +16722,13 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 		}
 
 		mpt->ManeuverNum -= man;
+		//Store in header the configuration code, docking angle, areas, vehicle weights, and fuel weights from descriptive block of last maneuver to be deleted
 		mpt->DeltaDockingAngle = mpt->mantable[man - 1].DockingAngle;
 		mpt->ConfigurationArea = mpt->mantable[man - 1].TotalAreaAfter;
+		//Leave TUP intact
+		int TUP = mpt->CommonBlock.TUP;
 		mpt->CommonBlock = mpt->mantable[man - 1].CommonBlock;
+		mpt->CommonBlock.TUP = TUP;
 		//TBD: Compute and store new GET to begin venting
 
 		for (unsigned i = 0;i < man;i++)
@@ -17147,6 +17151,7 @@ void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGM
 	{
 		table->EPHEM.table.clear();
 		table->MANTIMES.Table.clear();
+		table->LUNRSTAY.LunarStayBeginGMT = table->LUNRSTAY.LunarStayEndGMT = -1.0;
 	}
 
 	RTCCNIAuxOutputTable aux;
