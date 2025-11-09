@@ -60,6 +60,7 @@ DWORD FloodLights_LMVC[] = {
 	VC_MAT_DEDA_Display,
 	VC_MAT_DEDA_Light,
 	VC_MAT_Ordeal_Knob,
+	VC_MAT_RecorderSwitchGuard,
 
 	// DSKY Lights
 	VC_MAT_DSKY_LIGHTS_ALT,

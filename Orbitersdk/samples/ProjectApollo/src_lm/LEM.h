@@ -699,6 +699,9 @@ public:
 	// Custom quicksave behaviour
 	void QuicksaveScenario();
 
+	// Hide or Show mesh group
+	void ChangeMeshGroupVisibility(int, int, bool);
+
 protected:
 
 	//

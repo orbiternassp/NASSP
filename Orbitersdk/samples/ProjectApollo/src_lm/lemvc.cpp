@@ -1642,6 +1642,22 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			}
 		}
 
+		// First hide all the texts
+		ChangeMeshGroupVisibility(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT,false);
+		ChangeMeshGroupVisibility(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT_2,false);
+		ChangeMeshGroupVisibility(vcidx,VC_GRP_Panel12_16_DC_BUS_FAULT,false);
+
+		if (pMission->GetLMNumber()<6){
+			ChangeMeshGroupVisibility(vcidx,VC_GRP_Panel12_16_DC_BUS_FAULT,true);
+		}
+		else if (pMission->GetLMNumber()>5 && (pMission->GetLMNumber()<9)) {
+			ChangeMeshGroupVisibility(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT_2,true);
+		}
+		else {
+			ChangeMeshGroupVisibility(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT,true);
+		}
+
+		
 //		sprintf(oapiDebugString(), "Integral Voltage = %lf", lca.GetNumericVoltage());
 
 		// First Darken All Lights
@@ -3969,3 +3985,20 @@ void LEM::UpdatePointingArrow()
 //########################################################################
 	SetMeshVisibilityMode(hLMPointingArrowidx, MESHVIS_VC);
 }
+
+void LEM::ChangeMeshGroupVisibility(int meshidx, int meshgrp, bool state){
+	DEVMESHHANDLE hmesh = GetDevMesh (vis, meshidx);	
+	if (hmesh){
+		GROUPEDITSPEC grpSpec;
+		memset(&grpSpec, 0, sizeof(GROUPEDITSPEC));
+		grpSpec.UsrFlag = 3;  						// flag for hide the group and shadow
+
+		if (!state) {
+			grpSpec.flags = GRPEDIT_ADDUSERFLAG;
+		} else {
+			grpSpec.flags = GRPEDIT_DELUSERFLAG;
+		}
+		oapiEditMeshGroup(hmesh, meshgrp, &grpSpec);
+	}
+}
+
