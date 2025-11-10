@@ -700,7 +700,7 @@ public:
 	void QuicksaveScenario();
 
 	// Hide or Show mesh group
-	void ChangeMeshGroupVisibility(int, int, bool);
+	void HideMeshGroup(int, int, bool);
 
 protected:
 

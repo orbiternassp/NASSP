@@ -1643,18 +1643,18 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 
 		// First hide all the texts
-		ChangeMeshGroupVisibility(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT,false);
-		ChangeMeshGroupVisibility(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT_2,false);
-		ChangeMeshGroupVisibility(vcidx,VC_GRP_Panel12_16_DC_BUS_FAULT,false);
+		HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT,true);
+		HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT_2,true);
+		HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_BUS_FAULT,true);
 
-		if (pMission->GetLMNumber()<6){
-			ChangeMeshGroupVisibility(vcidx,VC_GRP_Panel12_16_DC_BUS_FAULT,true);
+		if (pMission->GetLMNumber()<6){												// up to Apollo 11
+			HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_BUS_FAULT,false);
 		}
-		else if (pMission->GetLMNumber()>5 && (pMission->GetLMNumber()<9)) {
-			ChangeMeshGroupVisibility(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT_2,true);
+		else if (pMission->GetLMNumber()>5 && (pMission->GetLMNumber()<9)) {		// Apollo 12 to 14
+			HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT,false);
 		}
 		else {
-			ChangeMeshGroupVisibility(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT,true);
+			HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT_2,false);			// Apollo 15 to 17
 		}
 
 		
@@ -3986,14 +3986,14 @@ void LEM::UpdatePointingArrow()
 	SetMeshVisibilityMode(hLMPointingArrowidx, MESHVIS_VC);
 }
 
-void LEM::ChangeMeshGroupVisibility(int meshidx, int meshgrp, bool state){
+void LEM::HideMeshGroup(int meshidx, int meshgrp, bool hide){
 	DEVMESHHANDLE hmesh = GetDevMesh (vis, meshidx);	
 	if (hmesh){
 		GROUPEDITSPEC grpSpec;
 		memset(&grpSpec, 0, sizeof(GROUPEDITSPEC));
 		grpSpec.UsrFlag = 3;  						// flag for hide the group and shadow
 
-		if (!state) {
+		if (hide) {
 			grpSpec.flags = GRPEDIT_ADDUSERFLAG;
 		} else {
 			grpSpec.flags = GRPEDIT_DELUSERFLAG;
