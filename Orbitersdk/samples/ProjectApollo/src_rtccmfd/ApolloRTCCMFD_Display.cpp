@@ -10000,7 +10000,7 @@ void ApolloRTCCMFD::PrintUllage(char *Buffer, int Thruster, bool Use4Jets, doubl
 	}
 	else
 	{
-		sprintf_s(Buffer, 127, "");
+		sprintf_s(Buffer, 127, "N/A");
 	}
 }
 
