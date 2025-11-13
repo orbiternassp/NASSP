@@ -598,8 +598,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 {
 	GC = gcin;
 
-	SPQMode = 0;
-	CDHtime = 0.0;
 	CDHtimemode = 0;
 
 	//screen = 0;
@@ -632,7 +630,6 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GMPManeuverCode = 0;
 	GMPManeuverPoint = 0;
 	GMPManeuverType = 0;
-	SPSGET = 0.0;
 	GMPApogeeHeight = 0;
 	GMPPerigeeHeight = 0;
 	GMPWedgeAngle = 0.0;
@@ -2606,60 +2603,31 @@ int ARCore::subThread()
 	{
 		TwoImpulseOpt opt;
 		TwoImpulseResuls res;
+		int chaser, tgt;
 
-		if (GC->MissionPlanningActive)
+		//Which vehicle is chaser?
+		if (GC->rtcc->med_k30.Vehicle == 1)
 		{
-			double GMT;
-			if (GC->rtcc->med_k30.ChaserVectorTime > 0)
-			{
-				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k30.ChaserVectorTime);
-			}
-			else
-			{
-				GMT = GC->rtcc->RTCCPresentTimeGMT();
-			}
-			if (GC->rtcc->PMSVEC(GC->rtcc->med_k30.Vehicle, GMT, opt.sv_C, opt.ChaserStationID))
-			{
-				Result = DONE;
-				break;
-			}
-
-			if (GC->rtcc->med_k30.TargetVectorTime > 0)
-			{
-				GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k30.TargetVectorTime);
-			}
-			else
-			{
-				GMT = GC->rtcc->RTCCPresentTimeGMT();
-			}
-			if (GC->rtcc->PMSVEC(4 - GC->rtcc->med_k30.Vehicle, GMT, opt.sv_T, opt.TargetStationID))
-			{
-				Result = DONE;
-				break;
-			}
+			chaser = RTCC_MPT_CSM;
+			tgt = RTCC_MPT_LM;
 		}
 		else
 		{
-			if (GC->rtcc->pCSM == NULL || GC->rtcc->pLM == NULL)
-			{
-				Result = DONE;
-				break;
-			}
+			chaser = RTCC_MPT_LM;
+			tgt = RTCC_MPT_CSM;
+		}
 
-			VESSEL *chaser, *tgt;
-			if (GC->rtcc->med_k30.Vehicle == 1)
-			{
-				chaser = GC->rtcc->pCSM;
-				tgt = GC->rtcc->pLM;
-			}
-			else
-			{
-				chaser = GC->rtcc->pLM;
-				tgt = GC->rtcc->pCSM;
-			}
-
-			opt.sv_C = GC->rtcc->StateVectorCalcDataBlock(chaser);
-			opt.sv_T = GC->rtcc->StateVectorCalcDataBlock(tgt);
+		//Get chaser data
+		if (GetVehicleDataBlock(chaser, GC->rtcc->med_k30.ChaserVectorTime, GC->rtcc->med_k30.ChaserVectorID, opt.sv_C, opt.ChaserStationID))
+		{
+			Result = DONE;
+			break;
+		}
+		//Get target data
+		if (GetVehicleDataBlock(tgt, GC->rtcc->med_k30.TargetVectorTime, GC->rtcc->med_k30.TargetVectorID, opt.sv_T, opt.TargetStationID))
+		{
+			Result = DONE;
+			break;
 		}
 
 		opt.mode = 2;
@@ -2697,86 +2665,46 @@ int ARCore::subThread()
 	{
 		SPQOpt opt;
 		SPQResults res;
-		VehicleDataBlock sv_A, sv_P;
-		SV sv_pre, sv_post;
 
-		if (GC->MissionPlanningActive)
+		int chaser, tgt;
+
+		//Which vehicle is chaser?
+		if (GC->rtcc->med_k01.ChaserVehicle == 1)
 		{
-			std::string StaID;
-			double GMT_C, GMT_T;
-			int err;
-
-			//Vector times
-			if (GC->rtcc->med_k01.ChaserThresholdGET < 0)
-			{
-				GMT_C = GC->rtcc->RTCCPresentTimeGMT();
-			}
-			else
-			{
-				GMT_C = GC->rtcc->GMTfromGET(GC->rtcc->med_k01.ChaserThresholdGET);
-			}
-			if (GC->rtcc->med_k01.TargetThresholdGET < 0)
-			{
-				GMT_T = GC->rtcc->RTCCPresentTimeGMT();
-			}
-			else
-			{
-				GMT_T = GC->rtcc->GMTfromGET(GC->rtcc->med_k01.TargetThresholdGET);
-			}
-
-			//Chaser
-			err = GC->rtcc->PMSVEC(GC->rtcc->med_k01.ChaserVehicle, GMT_C, sv_A, StaID);
-			if (err)
-			{
-				Result = DONE;
-				break;
-			}
-			//Target
-			err = GC->rtcc->PMSVEC(4 - GC->rtcc->med_k01.ChaserVehicle, GMT_T, sv_P, StaID);
-			if (err)
-			{
-				Result = DONE;
-				break;
-			}
+			chaser = RTCC_MPT_CSM;
+			tgt = RTCC_MPT_LM;
 		}
 		else
 		{
-			if (GC->rtcc->pCSM == NULL || GC->rtcc->pLM == NULL)
-			{
-				Result = DONE;
-				break;
-			}
+			chaser = RTCC_MPT_LM;
+			tgt = RTCC_MPT_CSM;
+		}
 
-			VESSEL *chaser, *tgt;
-			if (GC->rtcc->med_k01.ChaserVehicle == RTCC_MPT_CSM)
-			{
-				chaser = GC->rtcc->pCSM;
-				tgt = GC->rtcc->pLM;
-			}
-			else
-			{
-				chaser = GC->rtcc->pLM;
-				tgt = GC->rtcc->pCSM;
-			}
-
-			sv_A = GC->rtcc->StateVectorCalcDataBlock(chaser);
-			sv_P = GC->rtcc->StateVectorCalcDataBlock(tgt);
+		//Get chaser data
+		if (GetVehicleDataBlock(chaser, GC->rtcc->med_k01.ChaserThresholdGET, GC->rtcc->med_k01.ChaserVectorID, opt.sv_A, opt.ChaserStationID))
+		{
+			Result = DONE;
+			break;
+		}
+		//Get target data
+		if (GetVehicleDataBlock(tgt, GC->rtcc->med_k01.TargetThresholdGET, GC->rtcc->med_k01.TargetVectorID, opt.sv_P, opt.TargetStationID))
+		{
+			Result = DONE;
+			break;
 		}
 
 		opt.DH = GC->rtcc->GZGENCSN.SPQDeltaH;
 		opt.E = GC->rtcc->GZGENCSN.SPQElevationAngle;
-		opt.sv_A = sv_A;
-		opt.sv_P = sv_P;
 		opt.WT = GC->rtcc->GZGENCSN.SPQTerminalPhaseAngle;
 		opt.ChaserID = GC->rtcc->med_k01.ChaserVehicle;
 		opt.h_min = GC->rtcc->GZGENCSN.SPQMinimumPerifocus;
 
-		if (SPQMode != 1)
+		if (GC->rtcc->med_k01.CSIMode != 1)
 		{
 			opt.GMT_CSI = GC->rtcc->GMTfromGET(GC->rtcc->med_k01.t_CSI);
 			opt.GMT_CDH = GC->rtcc->GMTfromGET(GC->rtcc->med_k01.CDH_Time);
 			
-			if (SPQMode == 2)
+			if (GC->rtcc->med_k01.CSIMode == 2)
 			{
 				opt.K_CDH = 1;
 				opt.OptimumCSI = true;
@@ -2792,11 +2720,11 @@ int ARCore::subThread()
 			opt.GMT_CSI = -1;
 			if (CDHtimemode == 0)
 			{
-				opt.GMT_CDH = GC->rtcc->GMTfromGET(CDHtime);
+				opt.GMT_CDH = GC->rtcc->GMTfromGET(GC->rtcc->med_k01.CDH_Time);
 			}
 			else
 			{
-				opt.GMT_CDH = GC->rtcc->FindDH(sv_A, sv_P, GC->rtcc->GMTfromGET(CDHtime), GC->rtcc->GZGENCSN.SPQDeltaH);
+				opt.GMT_CDH = GC->rtcc->FindDH(opt.sv_A, opt.sv_P, GC->rtcc->GMTfromGET(GC->rtcc->med_k01.CDH_Time), GC->rtcc->GZGENCSN.SPQDeltaH);
 			}
 		}
 		if (GC->rtcc->GZGENCSN.TPIDefinition == 3)
@@ -2810,12 +2738,14 @@ int ARCore::subThread()
 		opt.I_CDH = GC->rtcc->med_k01.I_CDH;
 		opt.DU_D = GC->rtcc->med_k01.CDH_Angle;
 		opt.N_CDH = GC->rtcc->med_k01.CDH_Apsis;
+		opt.dt_CSI_Range = GC->rtcc->med_k01.dt_CSI_Range*60.0;
+		opt.ParallelDVInd = GC->rtcc->med_k01.ParallelDVInd;
 
 		GC->rtcc->PMMDKI(opt, res);
 
-		if (SPQMode != 1)
+		if (GC->rtcc->med_k01.CSIMode != 1)
 		{
-			CDHtime = GC->rtcc->GETfromGMT(res.GMT_CDH);
+			GC->rtcc->med_k01.CDH_Time = GC->rtcc->GETfromGMT(res.GMT_CDH);
 		}
 
 		Result = DONE;
@@ -2824,44 +2754,18 @@ int ARCore::subThread()
 	case 3:	//Orbital Adjustment Targeting
 	{
 		GMPOpt opt;
-		EphemerisData sv0;
-		SV sv_pre, sv_post;
 
-		if (GC->MissionPlanningActive)
+		if (GetVehicleDataBlock(GC->rtcc->med_k20.Vehicle, GC->rtcc->med_k20.VectorTime, GC->rtcc->med_k20.VectorID, opt.sv_in, opt.StationID))
 		{
-			double GMT = GC->rtcc->GMTfromGET(SPSGET);
-			if (GC->rtcc->EMSFFV(GMT, GC->rtcc->med_k20.Vehicle, sv0))
-			{
-				Result = DONE;
-				break;
-			}
-		}
-		else
-		{
-			VESSEL *v;
-			if (GC->rtcc->med_k20.Vehicle == RTCC_MPT_CSM)
-			{
-				v = GC->rtcc->pCSM;
-			}
-			else
-			{
-				v = GC->rtcc->pLM;
-			}
-
-			if (v == NULL)
-			{
-				Result = DONE;
-				break;
-			}
-
-			sv0 = GC->rtcc->StateVectorCalcEphem(v);
+			Result = DONE;
+			break;
 		}
 
 		opt.ManeuverCode = GMPManeuverCode;
 		opt.H_A = GMPApogeeHeight;
 		opt.H_P = GMPPerigeeHeight;
 		opt.dH_D = GMPHeightChange;
-		opt.TIG_GET = SPSGET;
+		opt.TIG_GET = GC->rtcc->med_k20.ThresholdTime;
 		opt.dLAN = GMPNodeShiftAngle;
 		opt.dW = GMPWedgeAngle;
 		opt.long_D = GMPManeuverLongitude;
@@ -2871,7 +2775,6 @@ int ARCore::subThread()
 		opt.Yaw = GMPYaw;
 		opt.dLOA = GMPApseLineRotAngle;
 		opt.N = GMPRevs;
-		opt.sv_in = sv0;
 
 		VECTOR3 OrbAdjDVX;
 		double GPM_TIG;
@@ -3073,41 +2976,16 @@ int ARCore::subThread()
 	break;
 	case 5: //LOI Targeting
 	{
+		std::string StationID;
 		EphemerisData sv0;
 
-		if (GC->MissionPlanningActive)
+		if (VectorFetch(RTCC_MPT_CSM, GC->rtcc->med_k18.VectorTime, GC->rtcc->med_k18.VectorID, sv0, StationID))
 		{
-			double gmt;
-			if (GC->rtcc->med_k18.VectorTime != 0.0)
-			{
-				gmt = GC->rtcc->GMTfromGET(GC->rtcc->med_k18.VectorTime);
-			}
-			else
-			{
-				gmt = GC->rtcc->RTCCPresentTimeGMT();
-				GC->rtcc->med_k18.VectorTime = GC->rtcc->GETfromGMT(gmt);
-			}
-
-			if (GC->rtcc->EMSFFV(gmt, RTCC_MPT_CSM, sv0))
-			{
-				Result = DONE;
-				break;
-			}
-		}
-		else
-		{
-			VESSEL *v = GC->rtcc->pCSM;
-
-			if (v == NULL)
-			{
-				Result = DONE;
-				break;
-			}
-
-			sv0 =  GC->rtcc->StateVectorCalcEphem(v);
+			Result = DONE;
+			break;
 		}
 
-		GC->rtcc->PMMLRBTI(sv0);
+		GC->rtcc->PMMLRBTI(sv0, StationID);
 
 		Result = DONE;
 	}
@@ -3381,49 +3259,31 @@ int ARCore::subThread()
 	break;
 	case 10: //Lunar Descent Planning Processor
 	{
+		std::string StationID;
 		EphemerisData sv;
 		double W_LM;
 
+		//Get the state vector
+		if (VectorFetch(GC->rtcc->med_k16.Vehicle, GC->rtcc->med_k16.VectorTime, GC->rtcc->med_k16.VectorID, sv, StationID))
+		{
+			Result = DONE;
+			break;
+		}
+		//Get LM weight
 		if (GC->MissionPlanningActive)
 		{
-			double gmt;
+			PLAWDTInput pin;
+			PLAWDTOutput pout;
 
-			if (GC->rtcc->med_k16.VectorTime != 0.0)
-			{
-				gmt = GC->rtcc->GMTfromGET(GC->rtcc->med_k16.VectorTime);
-			}
-			else
-			{
-				gmt = GC->rtcc->RTCCPresentTimeGMT();
-			}
+			pin.T_UP = sv.GMT;
+			pin.TableCode = GC->rtcc->med_k16.Vehicle;
 
-			if (GC->rtcc->EMSFFV(gmt, GC->rtcc->med_k16.Vehicle, sv))
-			{
-				Result = DONE;
-				break;
-			}
-			W_LM = 0.0; //TBD
+			GC->rtcc->PLAWDT(pin, pout);
+
+			W_LM = pout.LMAscWeight + pout.LMDscWeight;
 		}
 		else
 		{
-			VESSEL *v;
-
-			if (GC->rtcc->med_k16.Vehicle == RTCC_MPT_CSM)
-			{
-				v = GC->rtcc->pCSM;
-			}
-			else
-			{
-				v = GC->rtcc->pLM;
-			}
-
-			if (v == NULL)
-			{
-				Result = DONE;
-				break;
-			}
-
-			sv = GC->rtcc->StateVectorCalcEphem(v);
 			if (GC->rtcc->pLM)
 			{
 				W_LM = GC->rtcc->pLM->GetMass();
@@ -3543,24 +3403,22 @@ int ARCore::subThread()
 	break;
 	case 14: //MCC Targeting
 	{
+		std::string StationID;
 		EphemerisData sv0;
 		double CSMmass, LMmass;
 
+		//Get the state vector
+		if (VectorFetch(RTCC_MPT_CSM, GC->rtcc->PZMCCPLN.VectorGET, GC->rtcc->PZMCCPLN.VectorID, sv0, StationID))
+		{
+			Result = DONE;
+			break;
+		}
+		//Get CSM and LM masses
 		if (GC->MissionPlanningActive)
 		{
-			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->PZMCCPLN.VectorGET);
-			EphemerisData EPHEM;
-			if (GC->rtcc->EMSFFV(GMT, RTCC_MPT_CSM, EPHEM))
-			{
-				Result = DONE;
-				break;
-			}
-
-			sv0 = EPHEM;
-
 			PLAWDTInput pin;
 			PLAWDTOutput pout;
-			pin.T_UP = GMT;
+			pin.T_UP = sv0.GMT;
 			pin.TableCode = RTCC_MPT_CSM;
 			GC->rtcc->PLAWDT(pin, pout);
 
@@ -3576,8 +3434,6 @@ int ARCore::subThread()
 				Result = DONE;
 				break;
 			}
-
-			sv0 = GC->rtcc->StateVectorCalcEphem(v);
 
 			CSMmass = v->GetMass();
 			//Assume pre CSM separation from the S-IVB
@@ -3603,33 +3459,12 @@ int ARCore::subThread()
 	case 15:	//Lunar Launch Window Processor
 	{
 		LunarLiftoffTimeOpt opt;
-		SV sv_CSM;
+		std::string StationID;
 
-		if (GC->MissionPlanningActive)
+		if (GetVehicleDataBlock(RTCC_MPT_CSM, GC->rtcc->med_k15.CSMVectorTime, GC->rtcc->med_k15.VectorID, opt.sv_CSM, StationID))
 		{
-			double GMT = GC->rtcc->GMTfromGET(GC->rtcc->med_k15.CSMVectorTime);
-			EphemerisData EPHEM;
-			if (GC->rtcc->EMSFFV(GMT, RTCC_MPT_CSM, EPHEM))
-			{
-				Result = DONE;
-				break;
-			}
-			sv_CSM.R = EPHEM.R;
-			sv_CSM.V = EPHEM.V;
-			sv_CSM.MJD = OrbMech::MJDfromGET(EPHEM.GMT, GC->rtcc->GetGMTBase());
-			sv_CSM.gravref = GC->rtcc->GetGravref(EPHEM.RBI);
-		}
-		else
-		{
-			VESSEL *v = GC->rtcc->pCSM;
-
-			if (v == NULL)
-			{
-				Result = DONE;
-				break;
-			}
-
-			sv_CSM = GC->rtcc->StateVectorCalc(v);
+			Result = DONE;
+			break;
 		}
 
 		if (GC->rtcc->med_k15.CSI_Flag == 0)
@@ -3682,7 +3517,6 @@ int ARCore::subThread()
 		opt.lng = GC->rtcc->BZLAND.lng[RTCC_LMPOS_BEST];
 		opt.R_LLS = GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST];
 		opt.lng_TPI = GC->rtcc->med_k15.TPIValue;
-		opt.sv_CSM = sv_CSM;
 		if (GC->rtcc->med_k15.Chaser == 1)
 		{
 			opt.M = 1;
@@ -3693,6 +3527,7 @@ int ARCore::subThread()
 			opt.M = 2;
 			opt.P = 1;
 		}
+		opt.CSMStationID = StationID;
 
 		GC->rtcc->LunarLaunchWindowProcessor(opt);
 
@@ -3813,23 +3648,35 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			EphemerisData EPHEM;
+			VehicleDataBlock sv_chaser, sv_target;
+			std::string StaID;
+			int err;
 
-			int err = GC->rtcc->EMSFFV(GMT, RTCC_MPT_CSM, EPHEM);
+			//Get chaser state vector and weight
+			err = GC->rtcc->PMSVEC(GC->rtcc->med_k00.ChaserVehicle, true, GMT, GC->rtcc->med_k10.ChaserVectorID, sv_chaser, StaID);
 			if (err)
 			{
 				Result = DONE;
 				break;
 			}
-			opt.sv_CSM = EPHEM;
-
-			err = GC->rtcc->EMSFFV(GMT, RTCC_MPT_LM, EPHEM);
+			//Get target state vector and weight
+			err = GC->rtcc->PMSVEC(GC->rtcc->med_k00.ChaserVehicle, false, GMT, GC->rtcc->med_k10.TargetVectorID, sv_target, StaID);
 			if (err)
 			{
 				Result = DONE;
 				break;
 			}
-			opt.sv_LM = EPHEM;
+
+			if (GC->rtcc->med_k00.ChaserVehicle == RTCC_MPT_CSM)
+			{
+				opt.sv_CSM = sv_chaser.sv;
+				opt.sv_LM = sv_target.sv;
+			}
+			else
+			{
+				opt.sv_CSM = sv_target.sv;
+				opt.sv_LM = sv_chaser.sv;
+			}
 		}
 		else
 		{
@@ -4014,7 +3861,7 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->GMTfromGET(GC->PDAP_CSM_VectorTime);
 			}
-			if (GC->rtcc->PMSVEC(RTCC_MPT_CSM, GMT, sv_CSM, StaID))
+			if (GC->rtcc->PMSVEC(RTCC_MPT_CSM, true, GMT, "", sv_CSM, StaID))
 			{
 				Result = DONE;
 				break;
@@ -4029,7 +3876,7 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->GMTfromGET(GC->PDAP_LM_VectorTime);
 			}
-			if (GC->rtcc->PMSVEC(RTCC_MPT_LM, GMT, sv_LM, StaID))
+			if (GC->rtcc->PMSVEC(RTCC_MPT_LM, true, GMT, "", sv_LM, StaID))
 			{
 				Result = DONE;
 				break;
@@ -4793,7 +4640,7 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
-			if (GC->rtcc->PMSVEC(GC->rtcc->med_k32.Vehicle, GMT, opt.sv_C, opt.ChaserStationID))
+			if (GC->rtcc->PMSVEC(GC->rtcc->med_k32.Vehicle, true, GMT, GC->rtcc->med_k32.ChaserVectorID, opt.sv_C, opt.ChaserStationID))
 			{
 				Result = DONE;
 				break;
@@ -4807,7 +4654,7 @@ int ARCore::subThread()
 			{
 				GMT = GC->rtcc->RTCCPresentTimeGMT();
 			}
-			if (GC->rtcc->PMSVEC(4 - GC->rtcc->med_k32.Vehicle, GMT, opt.sv_T, opt.TargetStationID))
+			if (GC->rtcc->PMSVEC(GC->rtcc->med_k32.Vehicle, false, GMT, GC->rtcc->med_k32.ChaserVectorID, opt.sv_T, opt.TargetStationID))
 			{
 				Result = DONE;
 				break;
@@ -5563,7 +5410,7 @@ int ARCore::subThread()
 				GMT = GC->rtcc->GMTfromGET(GC->rtcc->PZSLVCON.TargetVectorTime);
 			}
 
-			if (GC->rtcc->PMSVEC(L, GMT, block, StaID))
+			if (GC->rtcc->PMSVEC(L, true, GMT, "", block, StaID))
 			{
 				Result = DONE;
 				break;
@@ -5652,36 +5499,15 @@ int ARCore::subThread()
 	break;
 	case 56: //Perigee Adjust
 	{
-		EphemerisData sv0;
-		double mass, THT, dt, H_P, DPSScaleFactor;
+		std::string StationID;
+		VehicleDataBlock sv0;
+		double THT, dt, H_P, DPSScaleFactor;
 		int Thruster;
 
-		if (GC->MissionPlanningActive)
+		if (GetVehicleDataBlock(GC->rtcc->med_k28.VEH, GC->rtcc->med_k28.VectorTime, GC->rtcc->med_k28.VectorID, sv0, StationID))
 		{
-			//TBD
 			Result = DONE;
 			break;
-		}
-		else
-		{
-			VESSEL *v;
-			if (GC->rtcc->med_k28.VEH == RTCC_MPT_CSM)
-			{
-				v = GC->rtcc->pCSM;
-			}
-			else
-			{
-				v = GC->rtcc->pLM;
-			}
-
-			if (v == NULL)
-			{
-				Result = DONE;
-				break;
-			}
-
-			sv0 = GC->rtcc->StateVectorCalcEphem(v);
-			mass = v->GetMass();
 		}
 
 		THT = GC->rtcc->GMTfromGET(GC->rtcc->med_k28.ThresholdTime);
@@ -5690,9 +5516,9 @@ int ARCore::subThread()
 		Thruster = GC->rtcc->med_k28.Thruster;
 		DPSScaleFactor = GC->rtcc->med_k28.DPSScaleFactor;
 
-		AEGBlock sv1 = GC->rtcc->SVToAEG(sv0, 0.0, 1.0, 1.0); //TBD
+		AEGBlock sv1 = GC->rtcc->SVToAEG(sv0.sv, sv0.Area, sv0.Weight, sv0.KFactor);
 
-		GC->rtcc->PMMPAD(sv1, mass, THT, dt, H_P, Thruster, DPSScaleFactor);
+		GC->rtcc->PMMPAD(sv1, THT, dt, H_P, Thruster, DPSScaleFactor);
 		GC->rtcc->PMDPAD();
 
 		Result = DONE;
@@ -6323,4 +6149,138 @@ void ARCore::menuCalculateIMUParkingAngles(agc_t* agc)
 	OG = fmod(atan2(GravVecDec[1] / cos(MG), (-GravVecDec[2]) / cos(MG)) + 2 * PI, 2 * PI); //fmod needed to keep range between 0 and 360 deg
 
 	IMUParkingAngles = _V(OG, IG, MG);
+}
+
+int ARCore::GetVehicleDataBlock(int L, double VectorTimeGET, std::string VectorID, VehicleDataBlock &sv, std::string &StationID)
+{
+	//This function works like the internal logic of K-type MEDs to get AEG data blocks
+	//It works for both for MPT and non-MPT mode. Vector from VPS is supported in both modes
+	//Return value other than 0 is an error
+	if (GC->MissionPlanningActive)
+	{
+		double GMT;
+
+		//Convert time to GMT, or use current time
+		//Get chaser state vector
+		if (VectorTimeGET > 0)
+		{
+			GMT = GC->rtcc->GMTfromGET(VectorTimeGET);
+		}
+		else
+		{
+			GMT = GC->rtcc->RTCCPresentTimeGMT();
+		}
+		//Call PMSVEC
+		if (GC->rtcc->PMSVEC(L, true, GMT, VectorID, sv, StationID))
+		{
+			return 1;
+		}
+	}
+	else
+	{
+		//First get whole vehicle data block
+		VESSEL *v = (L == RTCC_MPT_CSM ? GC->rtcc->pCSM : GC->rtcc->pLM);
+		if (v == NULL) return 1;
+		sv = GC->rtcc->StateVectorCalcDataBlock(v);
+
+		//Was a VectorID input?
+		if (VectorID.empty() == false)
+		{
+			//Get vector from VPS
+			if (GC->rtcc->BMSVPSVectorFetch(VectorID, sv.sv))
+			{
+				return 1;
+			}
+			StationID = VectorID;
+		}
+		else
+		{
+			//Just a default name
+			if (L == RTCC_MPT_CSM)
+			{
+				StationID = "APIC999";
+			}
+			else
+			{
+				StationID = "APIL999";
+			}
+		}
+	}
+	return 0;
+}
+
+int ARCore::VectorFetch(int L, double VectorTimeGET, std::string VectorID, EphemerisData &sv, std::string &StationID)
+{
+	//This function is like GetVehicleDataBlock when no masses are reqired. Works with both MPT and non-MPT. Takes optional vector ID into account. Otherwise, if vector time is zero, use present time.
+
+	//Was a VectorID input?
+	if (VectorID.empty() == false)
+	{
+		//Yes
+		if (GC->rtcc->BMSVPSVectorFetch(VectorID, sv))
+		{
+			return 1;
+		}
+		StationID = VectorID;
+	}
+	else
+	{
+		//No. Now the logic differs between MPT and non-MPT mode
+		if (GC->MissionPlanningActive)
+		{
+			double gmt;
+			if (VectorTimeGET != 0.0)
+			{
+				gmt = GC->rtcc->GMTfromGET(VectorTimeGET);
+			}
+			else
+			{
+				gmt = GC->rtcc->RTCCPresentTimeGMT();
+			}
+
+			if (GC->rtcc->EMSFFV(gmt, L, sv))
+			{
+				return 1;
+			}
+
+			if (L == RTCC_MPT_CSM)
+			{
+				StationID = GC->rtcc->PZMPTCSM.StationID;
+			}
+			else
+			{
+				StationID = GC->rtcc->PZMPTLEM.StationID;
+			}
+		}
+		else
+		{
+			VESSEL *v;
+
+			if (L == RTCC_MPT_CSM)
+			{
+				v = GC->rtcc->pCSM;
+			}
+			else
+			{
+				v = GC->rtcc->pLM;
+			}
+
+			if (v == NULL)
+			{
+				return 1;
+			}
+
+			sv = GC->rtcc->StateVectorCalcEphem(v);
+			//Just a default name
+			if (L == RTCC_MPT_CSM)
+			{
+				StationID = "APIC999";
+			}
+			else
+			{
+				StationID = "APIL999";
+			}
+		}
+	}
+	return 0;
 }
