@@ -1162,6 +1162,8 @@ void ApolloRTCCMFD::menuSetLSUpdateMenu()
 
 void ApolloRTCCMFD::menuSetTITransferPage()
 {
+	marker = 0;
+	markermax = 11;
 	SelectPage(54);
 }
 
