@@ -3135,14 +3135,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu92[] =
 	{
-		{ "Set CSM", 0, 'T' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Set vessel", 0, 'T' },
+		{ "Cycle mode", 0, 'Q' },
+		{ "Enter DT", 0, 'V' },
+		{ "Enter estimated time", 0, 'L' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 
-		{ "", 0, ' ' },
+		{ "Calculate TPI time", 0, 'C' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -3152,7 +3152,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterPage(mnu92, sizeof(mnu92) / sizeof(MFDBUTTONMENU));
 
-	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_TargetVessel);
+	RegisterFunction("TGT", OAPI_KEY_T, &ApolloRTCCMFD::set_TargetVesselTable);
 	RegisterFunction("MOD", OAPI_KEY_Q, &ApolloRTCCMFD::menuCycleTPIMode);
 	RegisterFunction("DT", OAPI_KEY_V, &ApolloRTCCMFD::TPIDTDialogue);
 	RegisterFunction("TPI", OAPI_KEY_L, &ApolloRTCCMFD::menuSetTPIguess);

@@ -116,6 +116,7 @@ public:
 	void set_LMVessel();
 	void set_IUVessel();
 	void set_TargetVessel();
+	void set_TargetVesselTable();
 	void CycleThroughVessels(VESSEL **v) const;
 	void menuSLVLaunchTargeting();
 	void menuSLVInsertionSVtoMPT();

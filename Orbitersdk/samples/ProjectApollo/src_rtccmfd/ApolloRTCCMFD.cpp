@@ -5662,6 +5662,18 @@ void ApolloRTCCMFD::set_TargetVessel()
 	CycleThroughVessels(&G->Rendezvous_Target);
 }
 
+void ApolloRTCCMFD::set_TargetVesselTable()
+{
+	if (GC->MissionPlanningActive)
+	{
+		G->Rendezvous_Target_Table = 4 - G->Rendezvous_Target_Table;
+	}
+	else
+	{
+		set_TargetVessel();
+	}
+}
+
 void ApolloRTCCMFD::CycleThroughVessels(VESSEL **v) const
 {
 	VESSEL *pVessel;

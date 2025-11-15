@@ -708,6 +708,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GSLOSGET = 0.0;
 	PADSolGood = true;
 	Rendezvous_Target = NULL;
+	Rendezvous_Target_Table = RTCC_MPT_CSM;
 	iuvessel = NULL;
 	TLCCSolGood = true;
 
@@ -3541,7 +3542,13 @@ int ARCore::subThread()
 
 		if (GC->MissionPlanningActive)
 		{
-			if (GC->rtcc->NewMPTTrajectory(RTCC_MPT_LM, opt.sv0))
+			std::string StaID;
+			double GMTV;
+
+			//Use landing time minus 20 minutes as vector time
+			GMTV = GC->rtcc->GMTfromGET(GC->rtcc->CZTDTGTU.GETTD) - 20.0*60.0;
+
+			if (GC->rtcc->PMSVEC(RTCC_MPT_LM, true, GMTV, "", opt.sv0, StaID))
 			{
 				Result = DONE;
 				break;
@@ -4009,13 +4016,27 @@ int ARCore::subThread()
 	break;
 	case 23: //Calculate TPI times
 	{
-		if (Rendezvous_Target == NULL)
+		VehicleDataBlock sv0;
+		if (GC->MissionPlanningActive)
 		{
-			Result = DONE;
-			break;
+			std::string StaID;
+			if (GC->rtcc->PMSVEC(Rendezvous_Target_Table, true, GC->rtcc->GMTfromGET(t_TPIguess), "", sv0, StaID))
+			{
+				Result = DONE;
+				break;
+			}
 		}
-		SV sv0 = GC->rtcc->StateVectorCalc(Rendezvous_Target);
-		GC->t_TPI = GC->rtcc->CalculateTPITimes(sv0, TPI_Mode, t_TPIguess, dt_TPI_sunrise);
+		else
+		{
+			if (Rendezvous_Target == NULL)
+			{
+				Result = DONE;
+				break;
+			}
+			sv0 = GC->rtcc->StateVectorCalcDataBlock(Rendezvous_Target);
+		}
+		SV sv1 = GC->rtcc->ConvertEphemDatatoSV(sv0.sv, sv0.Weight);
+		GC->t_TPI = GC->rtcc->CalculateTPITimes(sv1, TPI_Mode, t_TPIguess, dt_TPI_sunrise);
 
 		Result = DONE;
 	}

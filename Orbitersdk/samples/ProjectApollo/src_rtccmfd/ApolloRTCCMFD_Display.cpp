@@ -310,6 +310,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				{
 					GET_Display(Buffer, GC->rtcc->med_k01.ChaserThresholdGET);
 				}
+				Text(skp, x + dx, y, Buffer);
 			}
 			else
 			{
@@ -321,8 +322,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				{
 					PrintLMVessel(Buffer);
 				}
+				Text(skp, x, y, Buffer);
 			}
-			Text(skp, x, y, Buffer);
 			y++;
 			if (GC->MissionPlanningActive)
 			{
@@ -335,6 +336,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				{
 					GET_Display(Buffer, GC->rtcc->med_k01.TargetThresholdGET);
 				}
+				Text(skp, x + dx, y, Buffer);
 			}
 			else
 			{
@@ -346,8 +348,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				{
 					PrintCSMVessel(Buffer);
 				}
+				Text(skp, x, y, Buffer);
 			}
-			Text(skp, x, y, Buffer);
 			y++;
 			Text(skp, x, y, "MOD:");
 			if (GC->rtcc->med_k01.CSIMode == 0) Text(skp, x + dx, y, "CSI");
@@ -1773,14 +1775,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 			sprintf(Buffer, "O: %+07.2lf°", G->VECBodyVector.z*DEG);
 			skp->Text(CW, 12 * H / 14, Buffer, strlen(Buffer));
-			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-			sprintf(Buffer, "%+07.2f R", G->VECangles.x*DEG);
-			skp->Text(W - CW, 10 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.2f P", G->VECangles.y*DEG);
-			skp->Text(W - CW, 11 * H / 14, Buffer, strlen(Buffer));
-			sprintf(Buffer, "%+07.2f Y", G->VECangles.z*DEG);
-			skp->Text(W - CW, 12 * H / 14, Buffer, strlen(Buffer));
 		}
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+		sprintf(Buffer, "%+07.2f R", G->VECangles.x*DEG);
+		skp->Text(W - CW, 10 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.2f P", G->VECangles.y*DEG);
+		skp->Text(W - CW, 11 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%+07.2f Y", G->VECangles.z*DEG);
+		skp->Text(W - CW, 12 * H / 14, Buffer, strlen(Buffer));
 		break;
 	case 16:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
@@ -6547,13 +6549,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text_Double(skp, W - CW * x, y * H / 28, "HPLOI1 %.1lf", GC->rtcc->PZMCCPLN.H_P_LPO1 / 1852.0); y++;
 		Text_Double(skp, W - CW * x, y * H / 28, "HALOI2 %.1lf", GC->rtcc->PZMCCPLN.H_A_LPO2 / 1852.0); y++;
 		Text_Double(skp, W - CW * x, y * H / 28, "HPLOI2 %.2lf", GC->rtcc->PZMCCPLN.H_P_LPO2 / 1852.0); y++;
-		Text_Double(skp, W - CW * x, y * H / 28, "REVS1 %.2lf", GC->rtcc->PZMCCPLN.REVS1); y++;
+		Text_Double(skp, W - CW * x, y * H / 28, "REVS1 %.3lf", GC->rtcc->PZMCCPLN.REVS1); y++;
 		Text_Int(skp, W - CW * x, y * H / 28, "REVS2 %d", GC->rtcc->PZMCCPLN.REVS2); y++;
 		Text_Double(skp, W - CW * x, y * H / 28, "SITEROT %.1lf°", GC->rtcc->PZMCCPLN.SITEROT*DEG); y++;
 		Text_Double(skp, W - CW * x, y * H / 28, "ETA1 %.3lf°", GC->rtcc->PZMCCPLN.ETA1*DEG); y++; y++;
 		skp->Text(W - CW * 27, y * H / 28, "Mission Constants", 17); y++;
-		Text_Double(skp, W - CW * x, y * H / 28, "M %d", GC->rtcc->PZMCCPLN.LOPC_M); y++;
-		Text_Double(skp, W - CW * x, y * H / 28, "N %d", GC->rtcc->PZMCCPLN.LOPC_N); y++;
+		Text_Int(skp, W - CW * x, y * H / 28, "M %d", GC->rtcc->PZMCCPLN.LOPC_M); y++;
+		Text_Int(skp, W - CW * x, y * H / 28, "N %d", GC->rtcc->PZMCCPLN.LOPC_N); y++;
 		Text_Double(skp, W - CW * x, y * H / 28, "I PR MAX %.3lf°", GC->rtcc->PZMCCPLN.INCL_PR_MAX*DEG);
 		break;
 	case 81:
@@ -6584,7 +6586,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text_Double(skp, CW, 2 * H / 14, "%.1lf NM", GC->rtcc->PZLOIPLN.HA_LLS);
 		Text_Double(skp, CW, 4 * H / 14, "%.2lf NM", GC->rtcc->PZLOIPLN.HP_LLS);
 		Text_Double(skp, CW, 6 * H / 14, "%.1lf°", GC->rtcc->PZLOIPLN.DW);
-		Text_Double(skp, CW, 8 * H / 14, "%.2lf", GC->rtcc->PZLOIPLN.REVS1);
+		Text_Double(skp, CW, 8 * H / 14, "%.3lf", GC->rtcc->PZLOIPLN.REVS1);
 		Text_Int(skp, CW, 10 * H / 14, "%d", GC->rtcc->PZLOIPLN.REVS2);
 		Text_Double(skp, CW, 12 * H / 14, "%.1lf°", GC->rtcc->PZLOIPLN.eta_1);
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
@@ -7150,7 +7152,21 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);
 		skp->Text(W / 2, CH / 2, "TPI TIMES", 9);
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
-		PrintTargetVessel(Buffer);
+		if (GC->MissionPlanningActive)
+		{
+			if (G->Rendezvous_Target_Table == RTCC_MPT_CSM)
+			{
+				sprintf(Buffer, "CSM");
+			}
+			else
+			{
+				sprintf(Buffer, "LEM");
+			}
+		}
+		else
+		{
+			PrintTargetVessel(Buffer);
+		}
 		skp->Text(CW, 2 * H / 14, Buffer, strlen(Buffer));
 		if (G->TPI_Mode == 0)
 		{
