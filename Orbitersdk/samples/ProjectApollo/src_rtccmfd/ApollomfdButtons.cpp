@@ -150,7 +150,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 
 		{ "Calculate", 0, 'C' },
-		{ "Set vessel", 0, 'E' },
+		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Choose engine", 0, 'T' },
@@ -167,7 +167,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::GPMPCalc);
-	RegisterFunction("VES", OAPI_KEY_E, &ApolloRTCCMFD::menuGPMCycleVessel);
+	RegisterFunction("", OAPI_KEY_E, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("TRA", OAPI_KEY_T, &ApolloRTCCMFD::menuSetGPMTransferPage);
