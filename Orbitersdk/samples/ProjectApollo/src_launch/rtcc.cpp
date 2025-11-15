@@ -6569,8 +6569,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	oapiWriteScenario_string(scn, "MED_K30", Buffer);
 	sprintf(Buffer, "%d %d %d %d %lf %lf", med_k31.TableIndicator, med_k31.PlanNumber, med_k31.UllageQuads, med_k31.LOSMode, med_k31.DeltaPitch, med_k31.TimeStep);
 	oapiWriteScenario_string(scn, "MED_K31", Buffer);
-	sprintf(Buffer, "%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", med_k32.Vehicle, med_k32.RequestIndicator, med_k32.ChaserVectorTime, med_k32.TargetVectorTime, med_k32.T_NCC, med_k32.DH_min,
-		med_k32.DH_max, med_k32.DH_inc, med_k32.T2_min, med_k32.T2_max, med_k32.TimeStep, med_k32.dt_TPI_slip);
+	sprintf(Buffer, "%d %d %lf %lf %lf %lf %lf %lf %lf %lf %lf %lf", med_k32.Vehicle, med_k32.RequestIndicator, med_k32.ChaserVectorTime, med_k32.TargetVectorTime,
+		med_k32.T_NCC, med_k32.DH_min, med_k32.DH_max, med_k32.DH_inc, med_k32.T2_min, med_k32.T2_max, med_k32.TimeStep, med_k32.dt_TPI_slip);
 	oapiWriteScenario_string(scn, "MED_K32", Buffer);
 
 	oapiWriteLine(scn, RTCC_END_STRING);
@@ -8661,9 +8661,9 @@ void RTCC::LunarLaunchWindowProcessor(const LunarLiftoffTimeOpt &opt)
 	Header.AEGInd = 1;
 	Header.ErrorInd = 0;
 	Header.NumBlocks = 1;
-	sv[0].coe_osc = OrbMech::GIMIKC(opt.sv_CSM.R, opt.sv_CSM.V, mu);
+	sv[0].coe_osc = OrbMech::GIMIKC(opt.sv_CSM.sv.R, opt.sv_CSM.sv.V, mu);
 	sv[0].Item7 =SystemParameters.GMTBASE;
-	sv[0].TE = sv[0].TS = OrbMech::GETfromMJD(opt.sv_CSM.MJD,SystemParameters.GMTBASE);
+	sv[0].TE = sv[0].TS = opt.sv_CSM.sv.GMT;
 	//Initialize
 	pmmlaeg.CALL(Header, sv[0], sv_temp[0]);
 
@@ -9191,8 +9191,8 @@ RTCC_PMMLLWP_20_16:
 RTCC_PMMLLWP_22_19:
 	//Set up RET and RPT
 	PZLRPT.plans = I_LOOP;
-	PZLRPT.CSMSTAID = "";
-	PZLRPT.CSM_GMTV = OrbMech::GETfromMJD(opt.sv_CSM.MJD,SystemParameters.GMTBASE);
+	PZLRPT.CSMSTAID = opt.CSMStationID;
+	PZLRPT.CSM_GMTV = opt.sv_CSM.sv.GMT;
 	PZLRPT.CSM_GETV = GETfromGMT(PZLRPT.CSM_GMTV);
 	if (opt.M == 2)
 	{
@@ -16703,7 +16703,7 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 			PMXSPT("PMMFUD", 42);
 			return;
 		}
-
+		//Compute and store new number of the TLI (TBD), the deorbit (TBD), last executed, last frozen, and remaining maneuvers
 		if (mpt->LastExecutedManeuver > 0)
 		{
 			mpt->LastExecutedManeuver -= man;
@@ -16712,7 +16712,7 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 		{
 			mpt->LastFrozenManeuver -= man;
 		}
-
+		//Move up the area, weight, begin time, end time sets in header to their proper place
 		for (unsigned i = man;i < mpt->ManeuverNum;i++)
 		{
 			mpt->TimeToBeginManeuver[i - man] = mpt->TimeToBeginManeuver[i];
@@ -16722,9 +16722,13 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 		}
 
 		mpt->ManeuverNum -= man;
+		//Store in header the configuration code, docking angle, areas, vehicle weights, and fuel weights from descriptive block of last maneuver to be deleted
 		mpt->DeltaDockingAngle = mpt->mantable[man - 1].DockingAngle;
 		mpt->ConfigurationArea = mpt->mantable[man - 1].TotalAreaAfter;
+		//Leave TUP intact
+		int TUP = mpt->CommonBlock.TUP;
 		mpt->CommonBlock = mpt->mantable[man - 1].CommonBlock;
+		mpt->CommonBlock.TUP = TUP;
 		//TBD: Compute and store new GET to begin venting
 
 		for (unsigned i = 0;i < man;i++)
@@ -17147,6 +17151,7 @@ void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGM
 	{
 		table->EPHEM.table.clear();
 		table->MANTIMES.Table.clear();
+		table->LUNRSTAY.LunarStayBeginGMT = table->LUNRSTAY.LunarStayEndGMT = -1.0;
 	}
 
 	RTCCNIAuxOutputTable aux;
@@ -18519,10 +18524,47 @@ RTCC_PMSVCT_15:
 	EMSTRAJ(sv1, L);
 }
 
-int RTCC::PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID)
+int RTCC::PMSVEC(int MV, bool chaser, double GMT, std::string VectorID, VehicleDataBlock &block, std::string &StaID)
 {
-	MissionPlanTable *mpt = GetMPTPointer(L);
+	//INPUTS:
+	//MV: Maneuver vehicle code (1 = CSM, 3 = LEM)
+	//chaser: true = get chaser vehicle data, false = get target vehicle data
+	//GMT: Requested vector time (not used of StaID is set)
+	//VectorID: If set then GMT is ignored and a vector from the Vector Panel Summary is requested
+	//OUTPUTS:
+	//block: vehicle data block for requested vehicle
+	//StaID: Station ID associated with the output state vector
+	int L;
+	MissionPlanTable *mpt;
 	EphemerisData sv;
+	bool StaIDInput;
+
+	//Initialize
+	StaIDInput = false;
+	if (chaser)
+	{
+		L = MV;
+	}
+	else
+	{
+		L = 4 - MV;
+	}
+	mpt = GetMPTPointer(L);
+
+	//StaID input?
+	if (VectorID.empty() == false)
+	{
+		if (BMSVPSVectorFetch(VectorID, block.sv))
+		{
+			PMXSPT("PMSVEC", 49);
+			return 1;
+		}
+		GMT = block.sv.GMT;
+		StaID = VectorID;
+		StaIDInput = true;
+	}
+	//Get K-Factor
+	block.KFactor = mpt->KFactor;
 
 	//Are there any maneuvers?
 	if (mpt->mantable.size() == 0)
@@ -18530,6 +18572,8 @@ int RTCC::PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID)
 		//No
 		block.Area = mpt->ConfigurationArea;
 		block.Weight = mpt->TotalInitMass;
+		//If station ID was input then we are done
+		if (StaIDInput) return 0;
 	}
 	else
 	{
@@ -18569,6 +18613,8 @@ int RTCC::PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID)
 			block.Area = mpt->mantable[num - 1].TotalAreaAfter;
 			block.Weight = mpt->mantable[num - 1].TotalMassAfter;
 		}
+		//If station ID was input then  we are done
+		if (StaIDInput) return 0;
 		//Is vector time within 3 minutes of last maneuver time?
 		if (num > 0U && GMT < mpt->mantable[num - 1].GMT_BO + 3.0*60.0)
 		{
@@ -18579,14 +18625,13 @@ int RTCC::PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID)
 			goto PMSVEC_2_2;
 		}
 	}
-
+	//Get state vector from ephemeris
 	if (EMSFFV(GMT, L, block.sv))
 	{
 		PMXSPT("PMSVEC", 49);
 		return 1;
 	}
 PMSVEC_2_2:
-	block.KFactor = mpt->KFactor;
 	StaID = mpt->StationID;
 	return 0;
 }
@@ -18732,7 +18777,7 @@ RTCC_PMSEXE_B:
 	EMSNAP(L, 7);
 }
 
-void RTCC::PMMPAD(AEGBlock sv, double mass, double THT, double dt, double H_P, int Thruster, double DPSScaleFactor)
+void RTCC::PMMPAD(AEGBlock sv, double THT, double dt, double H_P, int Thruster, double DPSScaleFactor)
 {
 	AEGDataBlock sv_temp, sv_a, sv_apo, sv_peri;
 	double INFO[10], T_next, R_PD, beta, rho0, R_E, A, B, C, D, rho, R, r, rr, RR, DV1, DV2, DV, mu, V_b, X, r_dot_b, V_H_b, r_dot_a, V_H_a, V_a2, eacosEa, easinEa;
@@ -18763,7 +18808,7 @@ void RTCC::PMMPAD(AEGBlock sv, double mass, double THT, double dt, double H_P, i
 	eps1 = 185.2;
 	iter_max = 10;
 
-	W_E = mass;
+	W_E = sv.Data.Item7;
 	if (Thruster == RTCC_ENGINETYPE_CSMSPS)
 	{
 		F = SystemParameters.MCTST1;
@@ -24721,6 +24766,7 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 	int ASTCode = i;
 
 	//Convert MED, fetch state vector, propagate to TIG
+	ASTData AST;
 	EphemerisData sv0, sv_abort;
 
 	if (sv)
@@ -24729,9 +24775,46 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 	}
 	else
 	{
-		if (EMSFFV(PZREAP.RTEVectorTime*3600.0, RTCC_MPT_CSM, sv0))
+		StateVectorTableEntry entry;
+		if (PZREAP.VECTYPE < 6)
 		{
-			return;
+			//Useable Vector Table
+			entry = BZUSEVEC.data[PZREAP.VECTYPE + PZREAP.VECID * 6];
+			if (entry.ID == -1) return;
+			sv0 = entry.Vector;
+			AST.StationID = entry.VectorCode;
+		}
+		else if (PZREAP.VECTYPE == 6)
+		{
+			//Anchor vector
+			if (PZREAP.VECID == 0)
+			{
+				entry = EZANCHR1.AnchorVectors[9];
+			}
+			else
+			{
+				entry = EZANCHR3.AnchorVectors[9];
+			}
+			if (entry.ID == -1) return;
+			sv0 = entry.Vector;
+			AST.StationID = entry.VectorCode;
+		}
+		else
+		{
+			//Ephemeris
+			int L = PZREAP.VECID == 0 ? RTCC_MPT_CSM : RTCC_MPT_LM;
+			if (EMSFFV(PZREAP.RTEVectorTime*3600.0, L, sv0))
+			{
+				return;
+			}
+			if (L == RTCC_MPT_CSM)
+			{
+				AST.StationID = PZMPTCSM.StationID;
+			}
+			else
+			{
+				AST.StationID = PZMPTLEM.StationID;
+			}
 		}
 	}
 
@@ -24762,7 +24845,6 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 	}
 
 	EphemerisData sv_ig, sv_r;
-	ASTData AST;
 	char typname[8];
 
 	//Here the logic diverts between Earth vs. Moon centered state vectors
@@ -25029,7 +25111,6 @@ void RTCC::PMMREAST(int med, EphemerisData *sv)
 		AST.ASTCode = PZREAP.LastASTCode + 1;
 	}
 	PZREAP.LastASTCode = AST.ASTCode;
-	AST.StationID = PZMPTCSM.StationID; //TBD
 	AST.AbortGMT = sv_ig.GMT;
 
 	EphemerisData sv_r_ECT;
@@ -26526,7 +26607,7 @@ RTCC_PCRENT_3D:
 	goto RTCC_PCRENT_1A;
 }
 
-bool RTCC::PMMLRBTI(EphemerisData sv)
+bool RTCC::PMMLRBTI(EphemerisData sv, std::string StationID)
 {
 	EMMENIInputTable in;
 	in.StopParamRefFrame = 1;
@@ -26567,6 +26648,8 @@ bool RTCC::PMMLRBTI(EphemerisData sv)
 	opt.REVS2 = PZLOIPLN.REVS2;
 	opt.R_LLS = BZLAND.rad[RTCC_LMPOS_BEST];
 	opt.usePlaneSolnForInterSoln = PZLOIPLN.PlaneSolnForInterSoln;
+	opt.VectorTime = sv.GMT;
+	opt.StationID = StationID;
 
 	double h_pc = length(opt.SPH.R) - opt.R_LLS;
 
@@ -26609,7 +26692,8 @@ bool RTCC::PMMLRBTI(EphemerisData sv)
 
 void RTCC::PMDLRBTI(const rtcc::LOIOptions &opt, const rtcc::LOIOutputData &out)
 {
-	PZLRBTI.VectorGET = med_k18.VectorTime;
+	PZLRBTI.VectorGET = GETfromGMT(opt.VectorTime);
+	PZLRBTI.StaID = opt.StationID;
 	PZLRBTI.lat_lls = BZLAND.lat[0] * DEG;
 	PZLRBTI.lng_lls = BZLAND.lng[0] * DEG;
 	PZLRBTI.R_lls = BZLAND.rad[RTCC_LMPOS_BEST] / 1852.0;
@@ -28996,67 +29080,112 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 	//Update return to Earth constraints
 	else if (med == "86")
 	{
-		if (med_f86.Constraint == "DVMAX")
+		if (data.size() < 2)
 		{
-			PZREAP.DVMAX = med_f86.Value;
+			return 1;
 		}
-		else if (med_f86.Constraint == "TZMIN")
+		double Value;
+		if (sscanf(data[1].c_str(), "%lf", &Value) != 1)
 		{
-			PZREAP.TZMIN = med_f86.Value;
+			return 2;
 		}
-		else if (med_f86.Constraint == "TZMAX")
+
+		if (data[0] == "DVMAX")
 		{
-			PZREAP.TZMAX = med_f86.Value;
+			PZREAP.DVMAX = Value;
 		}
-		else if (med_f86.Constraint == "GMAX")
+		else if (data[0] == "TZMIN")
 		{
-			PZREAP.GMAX = med_f86.Value;
+			PZREAP.TZMIN = Value;
 		}
-		else if (med_f86.Constraint == "HMINMC")
+		else if (data[0] == "TZMAX")
 		{
-			PZREAP.HMINMC = med_f86.Value;
+			PZREAP.TZMAX = Value;
 		}
-		else if (med_f86.Constraint == "IRMAX")
+		else if (data[0] == "GMAX")
 		{
-			PZREAP.IRMAX = med_f86.Value;
+			PZREAP.GMAX = Value;
 		}
-		else if (med_f86.Constraint == "RRBIAS")
+		else if (data[0] == "HMINMC")
 		{
-			PZREAP.RRBIAS = med_f86.Value;
+			PZREAP.HMINMC = Value;
 		}
-		else if (med_f86.Constraint == "VRMAX")
+		else if (data[0] == "IRMAX")
 		{
-			PZREAP.VRMAX = med_f86.Value;
+			PZREAP.IRMAX = Value;
+		}
+		else if (data[0] == "RRBIAS")
+		{
+			PZREAP.RRBIAS = Value;
+		}
+		else if (data[0] == "VRMAX")
+		{
+			PZREAP.VRMAX = Value;
+		}
+		else
+		{
+			return 2;
 		}
 	}
 	//Update return to Earth constraints
 	else if (med == "87")
 	{
-		if (med_f87.Constraint == "TGTLN")
+		if (data.size() < 2)
 		{
-			if (med_f87.Value == "SHALLOW")
+			return 1;
+		}
+
+		if (data[0] == "TGTLN")
+		{
+			if (data[1] == "SHALLOW")
 			{
 				PZREAP.TGTLN = 0;
 			}
-			else if (med_f87.Value == "STEEP")
+			else if (data[1] == "STEEP")
 			{
 				PZREAP.TGTLN = 1;
 			}
+			else
+			{
+				return 2;
+			}
 		}
-		else if (med_f87.Constraint == "MOTION")
+		else if (data[0] == "MOTION")
 		{
-			if (med_f87.Value == "EITHER")
+			if (data[1] == "EITHER")
 			{
 				PZREAP.MOTION = 0;
 			}
-			else if (med_f87.Value == "DIRECT")
+			else if (data[1] == "DIRECT")
 			{
 				PZREAP.MOTION = 1;
 			}
-			else if (med_f87.Value == "CIRCUM")
+			else if (data[1] == "CIRCUM")
 			{
 				PZREAP.MOTION = 2;
 			}
+			else
+			{
+				return 2;
+			}
+		}
+		else if (data[0] == "VECID")
+		{
+			if (data.size() < 3) return 1;
+
+			if (data[1] == "CSM") PZREAP.VECID = 0;
+			else if (data[1] == "LEM") PZREAP.VECID = 1;
+			else return 2;
+
+			if (data[2] == "CMC") PZREAP.VECTYPE = 0;
+			else if (data[2] == "LGC") PZREAP.VECTYPE = 1;
+			else if (data[2] == "AGS") PZREAP.VECTYPE = 2;
+			else if (data[2] == "IU") PZREAP.VECTYPE = 3;
+			else if (data[2] == "HSR") PZREAP.VECTYPE = 4;
+			else if (data[2] == "DC") PZREAP.VECTYPE = 5;
+			else if (data[2] == "ANC") PZREAP.VECTYPE = 6;
+			else if (data[2] == "EPH") PZREAP.VECTYPE = 7;
+			else return 2;
 		}
 	}
 
