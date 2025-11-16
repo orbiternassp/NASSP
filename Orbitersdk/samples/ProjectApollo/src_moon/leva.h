@@ -145,7 +145,6 @@ protected:
 
 	bool GoEquip;
 	bool TvPlanted;
-	bool ColorTvPlanted;
 	bool EasepSwcPlanted;
 	bool EasepPsepPlanted;
 	bool EasepLr3Planted;
