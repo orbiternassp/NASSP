@@ -4070,7 +4070,7 @@ void Saturn::DefineVCAnimations()
 
 	MainPanelVC.AddSwitch(&HighGainAntennaPitchMeter);
 	HighGainAntennaPitchMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
-	HighGainAntennaPitchMeter.SetRotationRange(RAD * 180);
+	HighGainAntennaPitchMeter.SetRotationRange(RAD * 226);
 	HighGainAntennaPitchMeter.DefineMeshGroup(VC_GRP_Needle_P2_30);
 
 	NEEDLE_POS = { 0.3663, 0.4568, 0.2790 };
