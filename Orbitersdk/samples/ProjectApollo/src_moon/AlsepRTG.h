@@ -1,8 +1,8 @@
 /***************************************************************************
   This file is part of Project Apollo - NASSP
-  Copyright 2024
+  Copyright 2025
 
-  ORBITER vessel module: EASEP LR3
+  ORBITER vessel module: ALSEP RTG
 
   Project Apollo is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -25,10 +25,10 @@
 static const DWORD ntdvtx = 3;
 static TOUCHDOWNVTX tdvtx[ntdvtx];
 
-class EasepLR3 : public VESSEL2 {
+class AlsepRTG : public VESSEL2 {
 public:
-	EasepLR3(OBJHANDLE hObj, int fmodel);
-	virtual ~EasepLR3();
+	AlsepRTG(OBJHANDLE hObj, int fmodel);
+	virtual ~AlsepRTG();
 	void clbkPreStep(double SimT, double SimDT, double mjd);
 	void clbkPostCreation();
 	void clbkSetClassCaps(FILEHANDLE cfg);
@@ -41,8 +41,6 @@ private:
 	bool spawned;
 
 protected:
-	VECTOR3 GetEarthPos();
-	void RotateToFaceEarth(VECTOR3 rearthloc);
 	OBJHANDLE hMaster;
 
 };
