@@ -1,8 +1,8 @@
 /***************************************************************************
   This file is part of Project Apollo - NASSP
-  Copyright 2024
+  Copyright 2025
 
-  ORBITER vessel module: EASEP LR3
+  ORBITER vessel module: ALSEP PSE
 
   Project Apollo is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -27,22 +27,22 @@
   // To force Orbitersdk.h to use <fstream> in any compiler version
 #pragma include_alias( <fstream.h>, <fstream> )
 #include "Orbitersdk.h"
-#include "EasepLR3.h"
+#include "AlsepPSE.h"
 
 static 	int refcount = 0;
-static MESHHANDLE hEasepLR3;
+static MESHHANDLE hAlsepPSE;
 
-EasepLR3::EasepLR3(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
+AlsepPSE::AlsepPSE(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
 {
 	hMaster = hObj;
 }
 
-EasepLR3::~EasepLR3()
+AlsepPSE::~AlsepPSE()
 {
 
 }
 
-void EasepLR3::clbkSetClassCaps(FILEHANDLE cfg)
+void AlsepPSE::clbkSetClassCaps(FILEHANDLE cfg)
 {
 	SetEmptyMass(2);
 	SetSize(1);
@@ -59,7 +59,7 @@ void EasepLR3::clbkSetClassCaps(FILEHANDLE cfg)
 	ClearExhaustRefs();
 	ClearAttExhaustRefs();
 	VECTOR3 mesh_adjust = _V(0.0, 0.0, 0.0);
-	AddMesh(hEasepLR3, &mesh_adjust);
+	AddMesh(hAlsepPSE, &mesh_adjust);
 	SetMeshVisibilityMode(0, MESHVIS_ALWAYS);
 
 	double x_target = -0.001;
@@ -73,13 +73,13 @@ void EasepLR3::clbkSetClassCaps(FILEHANDLE cfg)
 		tdvtx[i].stiffness = stiffness;
 	}
 	tdvtx[0].pos.x = cos(30 * RAD) * 0.1;
-	tdvtx[0].pos.y = -0.774;
+	tdvtx[0].pos.y = -0.339;
 	tdvtx[0].pos.z = -sin(30 * RAD) * 0.1;
 	tdvtx[1].pos.x = 0;
-	tdvtx[1].pos.y = -0.774;
+	tdvtx[1].pos.y = -0.339;
 	tdvtx[1].pos.z = 1.55;
 	tdvtx[2].pos.x = -cos(30 * RAD) * 0.1;
-	tdvtx[2].pos.y = -0.774;
+	tdvtx[2].pos.y = -0.339;
 	tdvtx[2].pos.z = -sin(30 * RAD) * 0.1;
 
 	SetTouchdownPoints(tdvtx, ntdvtx);
@@ -87,36 +87,46 @@ void EasepLR3::clbkSetClassCaps(FILEHANDLE cfg)
 	spawned = true;
 }
 
-void EasepLR3::DoFirstTimestep()
+void AlsepPSE::DoFirstTimestep()
 {
 	if (spawned) {
-		RotateToFaceEarth(GetEarthPos());
+		RotateToFaceSun(GetSunPos());
 		spawned = false;
 	}
 }
 
-VECTOR3 EasepLR3::GetEarthPos()
+VECTOR3 AlsepPSE::GetSunPos()
 {
-	VECTOR3 rearth;
-	VECTOR3 rearthinv;
-	VECTOR3 rearthloc;
-	GetGlobalPos(rearth);
-	rearthinv = _V(-rearth.x, -rearth.y, -rearth.z);
-	Global2Local(rearthinv, rearthloc);
+	VECTOR3 rsun;
+	VECTOR3 rsuninv;
+	VECTOR3 rsunloc;
+	GetGlobalPos(rsun);
+	rsuninv = _V(-rsun.x, -rsun.y, -rsun.z);
+	Global2Local(rsuninv, rsunloc);
 
-	return rearthloc;
+	return rsunloc;
 }
 
-void EasepLR3::RotateToFaceEarth(VECTOR3 rearthloc)
+void AlsepPSE::RotateToFaceSun(VECTOR3 rsunloc)
 {
 	double heading = 0;
 	oapiGetHeading(hMaster, &heading);
 	if (heading >= PI2) heading -= PI2; //range always 0-2pi
 	else if (heading < 0) heading += PI2;
 
-	double earthangle = atan2(rearthloc.x, rearthloc.z); //current angle of earth on XY plane relative to z axis
+	double sunangle = atan2(rsunloc.x, rsunloc.z); //current angle of sun on XY plane relative to z axis
 
-	heading += earthangle;
+	double heading1 = heading;
+	double heading2 = heading;
+	heading1 += sunangle;
+	heading2 += (sunangle - PI);
+
+	if ((heading >= PI05) && (heading <= (PI05 * 3))) {
+		heading = heading1;
+	}
+	else {
+		heading = heading2;
+	}
 
 	VESSELSTATUS vs1;
 	GetStatus(vs1);
@@ -124,7 +134,7 @@ void EasepLR3::RotateToFaceEarth(VECTOR3 rearthloc)
 	DefSetState(&vs1);
 }
 
-void EasepLR3::clbkPreStep(double SimT, double SimDT, double mjd)
+void AlsepPSE::clbkPreStep(double SimT, double SimDT, double mjd)
 {
 	if (spawned) {
 		DoFirstTimestep();
@@ -132,12 +142,12 @@ void EasepLR3::clbkPreStep(double SimT, double SimDT, double mjd)
 	}
 }
 
-void EasepLR3::clbkPostCreation()
+void AlsepPSE::clbkPostCreation()
 {
 
 }
 
-void EasepLR3::clbkLoadStateEx(FILEHANDLE scn, void* vs)
+void AlsepPSE::clbkLoadStateEx(FILEHANDLE scn, void* vs)
 {
 	char* line;
 	while (oapiReadScenario_nextline(scn, line))
@@ -148,12 +158,12 @@ void EasepLR3::clbkLoadStateEx(FILEHANDLE scn, void* vs)
 	spawned = false;
 }
 
-void EasepLR3::clbkVisualCreated(VISHANDLE vis, int refcount)
+void AlsepPSE::clbkVisualCreated(VISHANDLE vis, int refcount)
 {
 
 }
 
-void EasepLR3::clbkVisualDestroyed(VISHANDLE vis, int refcount)
+void AlsepPSE::clbkVisualDestroyed(VISHANDLE vis, int refcount)
 {
 
 }
@@ -161,15 +171,15 @@ void EasepLR3::clbkVisualDestroyed(VISHANDLE vis, int refcount)
 DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel)
 {
 	if (!refcount++) {
-		hEasepLR3 = oapiLoadMeshGlobal("ProjectApollo/EASEP_LR3");
+		hAlsepPSE = oapiLoadMeshGlobal("ProjectApollo/ALSEP_PSE");
 	}
 
-	return new EasepLR3(hvessel, flightmodel);
+	return new AlsepPSE(hvessel, flightmodel);
 }
 
 DLLCLBK void ovcExit(VESSEL* vessel)
 {
-	EasepLR3* sv = (EasepLR3*)vessel;
+	AlsepPSE* sv = (AlsepPSE*)vessel;
 
 	if (sv)
 		delete sv;
