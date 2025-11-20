@@ -135,7 +135,8 @@ struct MED_K16
 	double GETTH3 = 0.0;
 	double GETTH4 = 0.0;
 	double DesiredHeight = 60.0*1852.0;
-	int Vehicle = RTCC_MPT_CSM; //1 = CSM, 3 = LEM (Instead of Vector ID)
+	int Vehicle = RTCC_MPT_CSM; //1 = CSM, 3 = LEM
+	std::string VectorID;
 };
 
 //Fuel Remaining
@@ -188,19 +189,25 @@ struct MED_M68
 	int Opportunity = 1; //1-2
 };
 
+// Common data of MED inputs for thruster data
+struct MED_Thruster_Data
+{
+	int Thruster = RTCC_ENGINETYPE_CSMRCSPLUS4; // Thruster for the maneuver
+	int Attitude = 4;							// Attitude option (1 = Inertial, 2 = Manual, 3 = Lambert, 4 = PGNS External DV, 5 = AGS External DV)
+	double UllageDT = 0.0;						// Delta T of Ullage
+	bool UllageQuads = true;					// false = 2 thrusters, true = 4 thrusters
+	bool Iteration = false;						// false = do not iterate, true = iterate
+	double TenPercentDT = 26.0;					// Delta T of 10% thrust for the DPS
+	double DPSThrustFactor = 0.925;				// Main DPS thrust scaling factor
+	bool TimeFlag = false;						// false = use optimum time, true = start at impulsive time
+};
+
 //Transfer a DKI, SPQ, or a Descent Plan to the MPT
 struct MED_M70
 {
 	int Plan = 0; //-1 = Descent Plan, 0 = SPQ, 1-7 = DKI plans 1-7
 	double DeleteGET = 0.0;
-	int Thruster = RTCC_ENGINETYPE_CSMRCSPLUS2; //Thruster for the maneuver
-	int Attitude = 4;		//Attitude option (1 = Inertial, 2 = Manual, 3 = Lambert, 4 = PGNS External DV, 5 = AGS External DV)
-	double UllageDT = 0.0;	//Delta T of Ullage
-	bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
-	bool Iteration = false; //false = do not iterate, true = iterate
-	double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
-	double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
-	bool TimeFlag = false;	//false = use optimum time, true = start at impulsive time
+	MED_Thruster_Data ManData[7];
 };
 
 //Transfer a Two Impulse Maneuver to the MPT
@@ -209,14 +216,7 @@ struct MED_M72
 	int Table = 1; //1 = multiple solution, 2 = corrective solution
 	int Plan = 1; // Plan number to be transferred
 	double DeleteGET = 0.0; //Deletes all maneuvers in both tables occurring after the input GET (no delete if 0)
-	int Thruster = RTCC_ENGINETYPE_CSMRCSPLUS4; //Thruster for the maneuver
-	int Attitude = RTCC_ATTITUDE_PGNS_EXDV;		//Attitude option
-	double UllageDT = 0.0;	//Delta T of Ullage
-	bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
-	bool Iteration = false; //false = do not iterate, true = iterate
-	double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
-	double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
-	bool TimeFlag = false;	//false = use optimum time, true = start at impulsive time
+	MED_Thruster_Data ManData[2];
 };
 
 struct AP7ManPADOpt
@@ -582,7 +582,8 @@ struct LunarLiftoffTimeOpt
 	double R_LLS;
 	//Longitude at which TPI is to be scheduled
 	double lng_TPI;
-	SV sv_CSM;			//CSM State vector
+	VehicleDataBlock sv_CSM; //CSM State vector
+	std::string CSMStationID;
 };
 
 struct LLTPOpt
@@ -776,9 +777,9 @@ struct DKICommon
 	double theta_init;
 	//Number of maneuvers scheduled
 	int NOM;
-	AEGDataBlock sv_before[5];
-	AEGDataBlock sv_after[5];
-	std::string ID[5];
+	AEGDataBlock sv_before[2][7];
+	AEGDataBlock sv_after[2][7];
+	std::string ID[7];
 
 	//Delta height at TPI
 	double DHSR;
@@ -791,7 +792,9 @@ struct DKICommon
 struct SPQOpt //Coelliptic Sequence Processor
 {
 	VehicleDataBlock sv_A;
+	std::string ChaserStationID;
 	VehicleDataBlock sv_P;
+	std::string TargetStationID;
 	//GMT of CSI maneuver (<= 0 if not scheduled)
 	double GMT_CSI;
 	//GMT of CDH maneuver
@@ -1570,21 +1573,26 @@ struct PMMXFRDirectInput
 	int TrimAngleIndicator;
 };
 
-struct PMMXFR_Impulsive_Input
+struct PMMXFR_Impulsive_Input_Maneuver
 {
-	int Table;
-	int Plan;
+	int Thruster = 0; // Thruster code
+	int Attitude = 0; // Guidance mode
+	double dt_ullage = 0.0;
+	bool UllageThrusterOption = false;
+	bool IterationFlag = false;
+	double DT10P = 0.0; // For DPS, time at 10% thrust
+	double DPSScaleFactor = 0.0; // For DPS, maximum throttle setting
+	bool TimeFlag = false;
+};
+
+struct PMMXFR_Impulsive_Input // Used for MEDs M65 (GPM), M70 (LDPP, SPQ, DKI), M72 (Two Impulse), M78 (MCC and LOI)
+{
+	int Table = 1; // 1 = CSM, 3 = LEM
+	int Plan = 0; // Plan number depending on option
 	double DeleteGMT;
-	int Thruster[4];
-	int Attitude[4];
-	double dt_ullage[4];
-	bool UllageThrusterOption[4];
-	bool IterationFlag[4];
-	double DT10P[4];
-	double DPSScaleFactor[4];
-	bool TimeFlag[4];
-	unsigned ReplaceCode = 0;
-	int Type;
+	PMMXFR_Impulsive_Input_Maneuver ManData[7];
+	unsigned ReplaceCode = 0U; // Maneuver number to replace
+	int Type = 0; // Used for M72 and M78 to decide the data source
 };
 
 struct PMMMCDInput
@@ -2467,7 +2475,7 @@ public:
 	void AP11LMManeuverPAD(const AP11LMManPADOpt &opt, AP11LMMNV &pad);
 	void AP11ManeuverPAD(const AP11ManPADOpt &opt, AP11MNV &pad);
 	void AP10CSIPAD(const AP10CSIPADOpt &opt, AP10CSI &pad);
-	void CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool docked);
+	void CSMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool docked, bool asc = false);
 	void LMDAPUpdate(VESSEL *v, AP10DAPDATA &pad, bool docked, bool asc = false);
 	void RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res);
 	void LunarOrbitMapUpdate(EphemerisData sv0, AP10MAPUPDATE &pad, double pm = -150.0*RAD);
@@ -2642,7 +2650,7 @@ public:
 	//RTE Digital Reentry Subroutine
 	void PCRENT(PCMATCArray &FD, const RTEDMEDData &IMD, const RTEDSPMData &SPS, double PHIMP, double LIMP, RTEDigitalSolutionTable &RED, int &ICC);
 	//Lunar Orbit Insertion Computational Unit
-	bool PMMLRBTI(EphemerisData sv);
+	bool PMMLRBTI(EphemerisData sv, std::string StationID = "");
 	//Lunar Orbit Insertion Display
 	void PMDLRBTI(const rtcc::LOIOptions &opt, const rtcc::LOIOutputData &out);
 	//Central Manual Entry Device Decoder
@@ -2711,7 +2719,7 @@ public:
 	void PMSVCT(int QUEID, int L);
 	void PMSVCT(int QUEID, int L, StateVectorTableEntry sv0);
 	//Vector Fetch Load Module
-	int PMSVEC(int L, double GMT, VehicleDataBlock &block, std::string &StaID);
+	int PMSVEC(int MV, bool chaser, double GMT, std::string VectorID, VehicleDataBlock &block, std::string &StaID);
 	//Maneuver Execution Program
 	void PMSEXE(int L, double gmt);
 	//Earth Orbit Insertion Processor
@@ -2719,7 +2727,7 @@ public:
 	//SLV Targeting Load Module
 	void PMMPAR(VECTOR3 RT, VECTOR3 VT, double TT);
 	//Perigee Adjust
-	void PMMPAD(AEGBlock sv, double mass, double THT, double dt, double H_P, int Thruster, double DPSScaleFactor);
+	void PMMPAD(AEGBlock sv, double THT, double dt, double H_P, int Thruster, double DPSScaleFactor);
 	//Perigee Adjust Display
 	void PMDPAD();
 	//Mission Planning Print Load Module
@@ -2775,10 +2783,11 @@ public:
 	void BMGPRIME(std::string source, int n);
 	void BMGPRIME(std::string source, std::vector<std::string> message);
 	//D.C. MED Decoder
-	int BMQDCMED(std::string med, std::vector<std::string> data);
+	void BMQDCMED(std::string med, std::vector<std::string> data, int &err, unsigned &param);
 	//Vector Comparison Control
 	void BMSVEC();
 	//Vector Panel Summary Control
+	void BMSVPS(int queid, const StateVectorTableEntry &sv);
 	void BMSVPS(int queid, int PBIID);
 	int BMSVPSVectorFetch(const std::string &vecid, EphemerisData &sv_out);
 	int GetStateVectorTableEntry(std::string VectorType, int mpt);
@@ -2981,7 +2990,7 @@ public:
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
 	//Gimbal, Thrust and Weight Loss Rate Subroutine
-	void GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned IC, int IA, int IJ, double D);
+	int GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned IC, int IA, double D);
 	// MISSION PLANNING (P)
 	//LM AGS External DV Coordinate Transformation Subroutine
 	VECTOR3 PIAEDV(VECTOR3 DV, VECTOR3 R_CSM, VECTOR3 V_CSM, VECTOR3 R_LM, bool i);
@@ -3157,20 +3166,6 @@ public:
 		double BackupLongT = 9999.9;
 	} med_f82;
 
-	//Update return to Earth constraints
-	struct MED_F86
-	{
-		std::string Constraint;
-		double Value;
-	} med_f86;
-
-	//Update return to Earth constraints
-	struct MED_F87
-	{
-		std::string Constraint;
-		std::string Value;
-	} med_f87;
-
 	//Generate DKI
 	struct MED_K00
 	{
@@ -3204,6 +3199,8 @@ public:
 		int ChaserVehicle = 1; //1 = CSM, 3 = LEM
 		double ChaserThresholdGET = -1.0;
 		double TargetThresholdGET = -1.0;
+		//0 = CSI on time, 1 = CDH (Delete CSI), 2 = optimum CSI
+		int CSIMode = 0;
 		//CSI time (GET)
 		double t_CSI = 0.0;
 		//1 = CDH at upcoming apsis (AEG), 2 = CDH on time, 3 = angle from CSI, 4 = CDH at upcoming apsis (Keplerian), 5 = Number of half revs
@@ -3214,6 +3211,12 @@ public:
 		double CDH_Time = 0.0;
 		//For option 3
 		double CDH_Angle = PI;
+		//Optimum CSI range in minutes
+		double dt_CSI_Range = 15.0;
+		//0 = CSI and CDH in-plane, 1 = CSI and CDH parallel to target
+		bool ParallelDVInd = false;
+		std::string ChaserVectorID;
+		std::string TargetVectorID;
 	} med_k01;
 
 	//Maneuver Line Definition Initialization
@@ -3245,6 +3248,7 @@ public:
 		double DH1 = 10.0*1852.0;
 		double DH2 = 15.0*1852.0;
 		double DH3 = 20.0*1852.0;
+		std::string VectorID;
 	} med_k15;
 
 	//LOI Computation
@@ -3258,6 +3262,7 @@ public:
 		double psi_MX = 271.0;
 		double psi_MN = 269.0;
 		double VectorTime = 0.0;
+		std::string VectorID;
 	} med_k18;
 
 	//GPM Maneuver Computation
@@ -3266,6 +3271,7 @@ public:
 		int Vehicle = 1; //1 = CSM, 3 = LM
 		double VectorTime = 0.0;
 		double ThresholdTime = 0.0;
+		std::string VectorID;
 	} med_k20;
 
 	//Perifocus Adjust Computation
@@ -3278,6 +3284,7 @@ public:
 		double H_P = 0.0;
 		int Thruster = RTCC_ENGINETYPE_CSMSPS;
 		double DPSScaleFactor = 0.0;
+		std::string VectorID;
 	} med_k28;
 
 	//Two Impulse Multiple Solution
@@ -3291,6 +3298,8 @@ public:
 		double EndTime = 0.0;
 		double TimeStep = 60.0;
 		double TimeRange = 600.0;
+		std::string ChaserVectorID;
+		std::string TargetVectorID;
 	} med_k30;
 
 	//Two Impulse Single Solution
@@ -3375,14 +3384,7 @@ public:
 		unsigned ReplaceCode = 0; //1-15
 		bool Type = false; //false = MCC, true = LOI
 		unsigned ManeuverNumber = 1; //Maneuver number in LOI or MCC table
-		int Thruster = RTCC_ENGINETYPE_CSMSPS; //Thruster for maneuver
-		int Attitude = RTCC_ATTITUDE_PGNS_EXDV; //Attitude option
-		double UllageDT = 0.0;	//Delta T of Ullage
-		bool UllageQuads = true;//false = 2 thrusters, true = 4 thrusters
-		bool Iteration = false; //false = do not iterate, true = iterate
-		double TenPercentDT = 26.0;	//Delta T of 10% thrust for the DPS
-		double DPSThrustFactor = 0.925; //Main DPS thrust scaling factor
-		bool TimeFlag = false;	//false = use optimum time, true = start at impulsive time
+		MED_Thruster_Data ManData;
 	} med_m78;
 
 	//Transfer ascent maneuver to MPT from Lunar Targeting
@@ -3816,6 +3818,8 @@ public:
 		bool IsPacficWindow = true;
 		//Available DV, for mode 3, feet per second
 		double dv_available = 5000.0;
+		//Delta V vector for mode 6
+		VECTOR3 dV_LVLH = _V(0, 0, 0);
 
 		//CONSTANTS - THESE SHOULD BE SYSTEM PARAMETERS
 		double DELTA = 0.0;
@@ -4415,8 +4419,8 @@ public:
 
 	struct DKIElementsBlock
 	{
-		VehicleDataBlock SV_before[5];
-		VECTOR3 V_after[5];
+		VehicleDataBlock SV_before[7];
+		VECTOR3 V_after[7];
 	};
 
 	struct DKIElementsTable
@@ -4446,7 +4450,7 @@ public:
 	struct DKIDataBlock
 	{
 		int Plan_M = 0;
-		DKIDisplayBlock Display[5];
+		DKIDisplayBlock Display[7];
 		int NumMan = 0;
 		//0 = No plan, 1 = DKI, 2 = SPQ
 		int PlanStatus = 0;
@@ -4478,18 +4482,18 @@ public:
 		int ID;
 		int M;
 		int NumMans;
-		double GET[5];
-		double DT[4];
-		double DV[5];
-		std::string VEH[5];
-		std::string PURP[5];
-		double CODE[5];
-		double PHASE[5];
-		double HEIGHT[5];
-		double HA[5];
-		double HP[5];
-		double Pitch[5], Yaw[5];
-		VECTOR3 DVVector[5];
+		double GET[7];
+		double DT[6];
+		double DV[7];
+		std::string VEH[7];
+		std::string PURP[7];
+		double CODE[7];
+		double PHASE[7];
+		double HEIGHT[7];
+		double HA[7];
+		double HP[7];
+		double Pitch[7], Yaw[7];
+		VECTOR3 DVVector[7];
 		bool isDKI;
 		std::string ErrorMessage;
 	} PZREDT;
@@ -4609,6 +4613,7 @@ public:
 	{
 		//Block 1
 		double VectorGET = 0.0;
+		std::string VectorID;
 		int Column = 1;
 		int Mode = 1;
 		double MidcourseGET = 0.0;
@@ -5085,8 +5090,10 @@ private:
 	double CapeCrossingFirst(int L);
 	double CapeCrossingLast(int L);
 	void ECMPAY(EphemerisDataTable2 &EPH, ManeuverTimesTable &MANTIMES, double GMT, bool sun, double &Pitch, double &Yaw);
+public:
 	//PMMMPT Begin Burn Time Computation Subroutine
 	void PCBBT(double *DELT, double *WDI, double *TU, double W, double TIMP, double DELV, int NPHASE, double &T, double &GMTBB, double &GMTI, double &WA);
+private:
 	//PMMMPT Matrix Utility Subroutine
 	void PCMATO(double **A, double *Y, double **B, double *X, int M, int N, double *W1, double lambda, double *W2);
 	//PMMMPT Gaussian Elimination Subroutine

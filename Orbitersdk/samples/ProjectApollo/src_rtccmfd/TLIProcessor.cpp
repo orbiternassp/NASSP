@@ -672,6 +672,12 @@ double TLIFirstGuess::ANGLE(VECTOR3 VEC1, VECTOR3 VEC2, VECTOR3 VEC3) const
 	return XR;
 }
 
+TLIMEDQuantities::TLIMEDQuantities()
+{
+	mpt = 1;
+	dV_LVLH = _V(0, 0, 0);
+}
+
 TLIProcessor::TLIProcessor(RTCC *r) : TLTrajectoryComputers(r)
 {
 
@@ -727,6 +733,9 @@ void TLIProcessor::Main(TLIOutputData &out)
 		break;
 	case 5:
 		Option2_5(false);
+		break;
+	case 6:
+		Option6();
 		break;
 	default:
 		out.ErrorIndicator = 1;
@@ -845,10 +854,11 @@ void TLIProcessor::Option3()
 
 	in.AnchorVector = MEDQuantities.state;
 	in.MaxIntegTime = MEDQuantities.GMT_TIG - MEDQuantities.state.GMT;
+	in.IsForwardIntegration = 1.0;
 	if (in.MaxIntegTime < 0)
 	{
 		in.MaxIntegTime = abs(in.MaxIntegTime);
-		in.IsForwardIntegration = false;
+		in.IsForwardIntegration = -1.0;
 	}
 	in.VehicleCode = RTCC_MPT_CSM;
 	in.useInputWeights = true;
@@ -886,10 +896,11 @@ void TLIProcessor::Option4()
 
 	in.AnchorVector = MEDQuantities.state;
 	in.MaxIntegTime = MEDQuantities.GMT_TIG - MEDQuantities.state.GMT;
+	in.IsForwardIntegration = 1.0;
 	if (in.MaxIntegTime < 0)
 	{
 		in.MaxIntegTime = abs(in.MaxIntegTime);
-		in.IsForwardIntegration = false;
+		in.IsForwardIntegration = -1.0;
 	}
 	in.VehicleCode = RTCC_MPT_CSM;
 	in.useInputWeights = true;
@@ -940,10 +951,11 @@ void TLIProcessor::Option2_5(bool freereturn)
 
 	in.AnchorVector = MEDQuantities.state;
 	in.MaxIntegTime = MEDQuantities.GMT_TIG - MEDQuantities.state.GMT;
+	in.IsForwardIntegration = 1.0;
 	if (in.MaxIntegTime < 0)
 	{
 		in.MaxIntegTime = abs(in.MaxIntegTime);
-		in.IsForwardIntegration = false;
+		in.IsForwardIntegration = -1.0;
 	}
 	in.VehicleCode = RTCC_MPT_CSM;
 	in.useInputWeights = true;
@@ -1016,6 +1028,107 @@ void TLIProcessor::Option2_5(bool freereturn)
 			return;
 		}
 	}
+}
+
+void TLIProcessor::Option6()
+{
+	//Put output parameters in: sv_tli_ign, sv_tli_cut and dv_TLI
+
+	//Propagate input state vector to impulsive TIG
+	EMSMISSInputTable in;
+
+	in.AnchorVector = MEDQuantities.state;
+	in.MaxIntegTime = MEDQuantities.GMT_TIG - MEDQuantities.state.GMT;
+	in.IsForwardIntegration = 1.0;
+	if (in.MaxIntegTime < 0)
+	{
+		in.MaxIntegTime = abs(in.MaxIntegTime);
+		in.IsForwardIntegration = -1.0;
+	}
+	in.VehicleCode = RTCC_MPT_CSM;
+	in.useInputWeights = true;
+	in.WeightsTable = &MEDQuantities.WeightsTable;
+
+	pRTCC->EMSMISS(&in);
+
+	if (in.NIAuxOutputTable.ErrorCode)
+	{
+		ErrorIndicator = 1;
+		return;
+	}
+
+	EphemerisData sv_imp_ign, sv_imp_cut;
+
+	sv_imp_ign = in.NIAuxOutputTable.sv_cutoff;
+
+	//Predict burn time using MPT routine
+	
+	double DELT[2], WDI[2], TU[2], W, TIMP, DELV, T, GMTBB, GMTI, WA;
+	int NPHASE;
+
+	DELT[0] = T_MRS_SIVB * 3600.0; //Burn time to MRS
+	DELT[1] = 0.0; //Not required
+	WDI[0] = WDOT_SIVB * 0.45359237 / 3600.0; //TBD: Same one twice?
+	WDI[1] = WDOT_SIVB * 0.45359237 / 3600.0; //TBD: Same one twice?
+	TU[0] = F_I_SIVB / 0.2248089431;
+	TU[1] = F_SIVB / 0.2248089431;
+	W = in.NIAuxOutputTable.CutoffWeight;
+	TIMP = sv_imp_ign.GMT;
+	DELV = length(MEDQuantities.dV_LVLH);
+	NPHASE = 2;
+
+	pRTCC->PCBBT(DELT, WDI, TU, W, TIMP, DELV, NPHASE, T, GMTBB, GMTI, WA);
+	
+	//Calculate actual ignition state vector
+	in.AnchorVector = sv_imp_ign;
+	in.MaxIntegTime = GMTBB - sv_imp_ign.GMT;
+	in.IsForwardIntegration = 1.0;
+	if (in.MaxIntegTime < 0)
+	{
+		in.MaxIntegTime = abs(in.MaxIntegTime);
+		in.IsForwardIntegration = -1.0;
+	}
+	in.VehicleCode = RTCC_MPT_CSM;
+	in.useInputWeights = true;
+	in.WeightsTable = &MEDQuantities.WeightsTable;
+
+	pRTCC->EMSMISS(&in);
+
+	if (in.NIAuxOutputTable.ErrorCode)
+	{
+		ErrorIndicator = 1;
+		return;
+	}
+
+	outarray.sv_tli_ign = in.NIAuxOutputTable.sv_cutoff;
+
+	//Calculate impulsive postburn SV
+	sv_imp_cut = sv_imp_ign;
+	sv_imp_cut.V += tmul(OrbMech::LVLH_Matrix(sv_imp_ign.R, sv_imp_ign.V), MEDQuantities.dV_LVLH);
+
+	//Calculate actual cutoff state vector
+	in.AnchorVector = sv_imp_cut;
+	in.MaxIntegTime = GMTBB + T - sv_imp_cut.GMT;
+	in.IsForwardIntegration = 1.0;
+	if (in.MaxIntegTime < 0)
+	{
+		in.MaxIntegTime = abs(in.MaxIntegTime);
+		in.IsForwardIntegration = -1.0;
+	}
+	in.VehicleCode = RTCC_MPT_CSM;
+	in.useInputWeights = true;
+	in.WeightsTable = &MEDQuantities.WeightsTable;
+
+	pRTCC->EMSMISS(&in);
+
+	if (in.NIAuxOutputTable.ErrorCode)
+	{
+		ErrorIndicator = 1;
+		return;
+	}
+
+	outarray.sv_tli_cut = in.NIAuxOutputTable.sv_cutoff;
+	outarray.dv_TLI = DELV;
 }
 
 bool TLIProcessor::HybridMission(double C3_guess, double dv_TLI)

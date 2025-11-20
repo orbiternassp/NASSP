@@ -342,6 +342,7 @@ double SPSPropellantSource::GetOxidUnbalanceLB() {
 
 bool SPSPropellantSource::IsGaugingPowered() {
 
+	if (our_vessel->GetStage() > CSM_LEM_STAGE) return false;
 	if (DCPower.Voltage() < SP_MIN_DCVOLTAGE) return false;
 
 	if (!ACPower) return false;

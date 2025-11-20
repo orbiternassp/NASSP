@@ -2273,7 +2273,7 @@ void RetrofirePlanning::RMMATT_LVLH(VECTOR3 LVLH_Att, VECTOR3 R, VECTOR3 V, int 
 		{
 			double T, WDOT;
 			unsigned int IC = 1;
-			pRTCC->GIMGBL(mass, 0.0, P_G, Y_G, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 1, 0.0);
+			pRTCC->GIMGBL(mass, 0.0, P_G, Y_G, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 0.0);
 		}
 		else
 		{
@@ -2379,7 +2379,7 @@ MATRIX3 RetrofirePlanning::RMMATT_REFSMMAT(VECTOR3 U_T, VECTOR3 R, int thruster,
 		{
 			double T, WDOT;
 			unsigned int IC = 1;
-			pRTCC->GIMGBL(mass, 0.0, P_G, Y_G, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 1, 0.0);
+			pRTCC->GIMGBL(mass, 0.0, P_G, Y_G, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 0.0);
 		}
 		else
 		{

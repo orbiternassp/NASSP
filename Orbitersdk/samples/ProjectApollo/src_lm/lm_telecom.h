@@ -332,6 +332,7 @@ class LEM_SteerableAnt: public LM_SBandAntenna {
 public:
 	LEM_SteerableAnt();
 	void Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad *anthtld);
+	void AngleInit(int LMNumber);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	void Timestep(double simdt);
@@ -363,6 +364,7 @@ protected:
 	double	sband_proc_last[2];
 
 	bool moving;
+	double driverateratio;
 	double hpbw_factor;
 
 	const MATRIX3 NBSA = _M(cos(45.0*RAD), -sin(45.0*RAD), 0.0, sin(45.0*RAD), cos(45.0*RAD), 0.0, 0.0, 0.0, 1.0);

@@ -63,23 +63,29 @@ RTCC_GIMGB2_2:
 	return XI;
 }
 
-void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned IC, int IA, int IJ, double D)
+int RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned IC, int IA, double D)
 {
 	//INPUTS:
 	//CSMWT and LMWT, CSM and LM weights
-	//ITC: 33 = SPS, 34 = APS, 35 = DPS, 36 = J2
-	//IC: 1 = CSM, 5 = CSM + LM Ascent, 12 = LM, 13 = CSM and LM (docked)
+	//ITC: 33 = SPS, 34 = APS, 35 = DPS
+	//IC: 1 = CSM, 4 = LM Ascent, 5 = CSM + LM Ascent, 12 = LM, 13 = CSM and LM (docked)
 	//IA: -1: trim angles, thrust and weight loss rate desired outputs, 0: thrust and weight loss rate desired outputs, 1: trim angles desired outputs
-	//IJ: LM descent stage included in configuration at beginning of this maneuver (only applicable if ITC=33 and IC=13). 0 = included, 1 = not included
+	//D: Docking angle, radians
+	//OUTPUTS:
+	//RY: Rotation about the y-body axis, radians (not changed if ITC = 34 or IA = 0)
+	//RZ: Rotation about the z-body axis, radians (not changed if ITC = 34 or IA = 0)
+	//T: Thrust, Newtons (not changed if IA = 1)
+	//WDOT: Weight loss rate, kg/s (not changed if IA = 1)
 
 	if (ITC < 33)
 	{
 		RY = 0.0;
 		RZ = 0.0;
-		return;
+		return 0;
 	}
 
 	int IND;
+	bool docked = false;
 	double R, W[3], K;
 	VECTOR3 XCG[2], XI;
 
@@ -90,7 +96,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 		W[1] = 0.0;
 	}
 	//LM only
-	else if (IC == 12)
+	else if (IC == 4 || IC == 12)
 	{
 		W[0] = 0.0;
 		W[1] = LMWT;
@@ -100,15 +106,18 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 	{
 		W[0] = CSMWT;
 		W[1] = LMWT;
+		docked = true;
 	}
 	W[2] = W[0] + W[1];
 
 	if (ITC == 34)
 	{
+		//APS
 		goto RTCC_GIMGBL_LABEL_3_3;
 	}
 	else if (ITC > 34)
 	{
+		//DPS
 		if (IA == 0)
 		{
 			goto RTCC_GIMGBL_LABEL_3_5;
@@ -120,6 +129,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 	}
 	else
 	{
+		//SPS
 		if (IA == 0)
 		{
 			goto RTCC_GIMGBL_LABEL_3_4;
@@ -142,7 +152,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 	XCG[IND - 1].z = XI.z;
 
 	//CSM or LM, but not docked?
-	if (IC <= 12 && IC != 5)
+	if (docked == false)
 	{
 		goto RTCC_GIMGBL_LABEL_3_2;
 	}
@@ -155,7 +165,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 	}
 	else
 	{
-		if (IJ != 0)
+		if (IC == 4 || IC == 5)
 		{
 			//Use LM w/o descent CG table
 			XI = GIMGB2(SystemParameters.MHVACG.Weight, SystemParameters.MHVACG.CG, SystemParameters.MHVACG.N, W[1]);
@@ -171,7 +181,7 @@ void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, 
 
 	XI.x = XI.x - K;
 
-	XCG[IND - 1] = mul(_M(-1.0, 0.0, 0.0, 0.0, -cos(240.0*RAD - D), -sin(240.0*RAD - D), 0.0, -sin(240.0*RAD - D), cos(240.0*RAD - D)), XI);
+	XCG[IND - 1] = mul(_M(-1.0, 0.0, 0.0, 0.0, -cos(SystemParameters.MCVDKA - D), -sin(SystemParameters.MCVDKA - D), 0.0, -sin(SystemParameters.MCVDKA - D), cos(SystemParameters.MCVDKA - D)), XI);
 
 	XCG[1] = (XCG[0] * W[0] + XCG[1] * W[1]) / W[2];
 
@@ -196,7 +206,7 @@ RTCC_GIMGBL_LABEL_3_2:
 	}
 	if (IA == 1)
 	{
-		return;
+		return 0;
 	}
 	//Thrust tables
 	if (ITC == 34) //APS
@@ -216,6 +226,7 @@ RTCC_GIMGBL_LABEL_3_2:
 	}
 	T = XI.x;
 	WDOT = XI.y;
+	return 0;
 }
 
 //LM AGS External DV Coordinate Transformation Subroutine

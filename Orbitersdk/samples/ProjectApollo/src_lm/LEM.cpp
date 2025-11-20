@@ -183,8 +183,7 @@ void cbLMVesim(int inputID, int eventType, int newValue, void *pdata) {
 			break;
 		case LM_BUTTON_ENG_START:
 			//Engine Start Button
-			pLM->ManualEngineStart.Push();
-			pLM->ButtonClick();
+			pLM->ManualEngineStart.SetState(PUSHBUTTON_PUSHED);
 			break;
 		case LM_BUTTON_ENG_STOP:
 			//Engine Stop Button
@@ -533,7 +532,6 @@ void LEM::Init()
 	status = 0;
 	CDRinPLSS = 0;
 	LMPinPLSS = 0;
-	EVAAntHandleStatus = false;
 
 	CMPowerToCDRBusRelayA = false;
 	CMPowerToCDRBusRelayB = false;
@@ -1215,9 +1213,31 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 	if ((down) && (key == OAPI_KEY_F)) {
 		ToggleFlashlight();
 	}
-
-	if (KEYMOD_SHIFT(keystate) || KEYMOD_CONTROL(keystate) || !down) {
+	//No Shift or Ctrl processing below here
+	if (KEYMOD_SHIFT(keystate) || KEYMOD_CONTROL(keystate)) {
 		return 0; 
+	}
+	//Engine Start Button
+	if (key == OAPI_KEY_ADD)
+	{
+		if (down)
+		{
+			ManualEngineStart.SetHeld(true);
+			ManualEngineStart.SetState(PUSHBUTTON_PUSHED);
+		}
+		else
+		{
+			// Doing SwitchTo instead of SetState prevents a second click on key up.
+			ManualEngineStart.SetHeld(false);
+			ManualEngineStart.SwitchTo(PUSHBUTTON_UNPUSHED);
+		}
+		return 1;
+	}
+
+	//No key releases below here
+	if (!down)
+	{
+		return 0;
 	}
 
 	// MCC CAPCOM interface key handling                                                                                                
@@ -1292,11 +1312,6 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 	// Engine start and stop
 	//
 
-	case OAPI_KEY_ADD:
-		//Engine Start Button
-		ManualEngineStart.Push();
-		ButtonClick();
-		return 1;
 	case OAPI_KEY_SUBTRACT:
 		//Engine Stop Button
 		CDRManualEngineStop.Push();
@@ -1311,25 +1326,7 @@ void LEM::SetAnimations(double simdt) {
 	//
 	//EVA Antenna
 	//
-	if (EVAAntHandleState.action == AnimState::CLOSING || EVAAntHandleState.action == AnimState::OPENING) {
-		double speed = 1.0; // Anim length in Seconds
-		double dp = simdt / speed;
-		if (EVAAntHandleState.action == AnimState::CLOSING) {
-			if (EVAAntHandleState.pos > 0.0) {
-				EVAAntHandleState.pos = max(0.0, EVAAntHandleState.pos - dp);
-			}
-			else
-				EVAAntHandleState.action = AnimState::CLOSED;
-		}
-		else { // opening
-			if (EVAAntHandleState.pos < 1.0)
-				EVAAntHandleState.pos = min(1.0, EVAAntHandleState.pos + dp);
-			else
-				EVAAntHandleState.action = AnimState::OPEN;
-		}
-		SetAnimation(EVAAntHandleAnim, EVAAntHandleState.pos);
-		LEM::VHF.SetAnimation(EVAAntHandleState.pos);
-	}
+	VHF.SetAnimation(EvaAntennaHandle.GetAnimState());
 }
 
 //
@@ -1417,25 +1414,51 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	// Debug string for displaying descent flight info from VC view
 	if (VcInfoEnabled && !Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL && viewpos == LMVIEW_LPD) {
 
-		char pgnssw[256];
-		char thrsw[256];
+		char pgnssw[32];
+		char thrsw[32];
+		char fwddir[32];
+		char latdir[32];
 
 		if (ModeControlPGNSSwitch.GetState() == 2) {
 			sprintf(pgnssw, "AUTO");
-		} else if (ModeControlPGNSSwitch.GetState() == 1) {
+		}
+		else if (ModeControlPGNSSwitch.GetState() == 1) {
 			sprintf(pgnssw, "ATT HOLD");
-		} else {
+		}
+		else {
 			sprintf(pgnssw, "OFF");
 		}
 
 		if (THRContSwitch.GetState() == 1) {
 			sprintf(thrsw, "AUTO");
-		} else {
+		}
+		else {
 			sprintf(thrsw, "MAN");
 		}
 
-		sprintf(oapiDebugString(), "PROG %s | V%s N%s | R1 %s | R2 %s | R3 %s | Alt: %.0lf ft | Alt Rate: %.1lf ft/s | PGNS Mode Control: %s | Throttle: %s | Fuel: %.0lf %% |", dsky.GetProg(),
-			dsky.GetVerb(), dsky.GetNoun(), dsky.GetR1(), dsky.GetR2(), dsky.GetR3(), RadarTape.GetLGCAltitude() * 3.2808399, RadarTape.GetLGCAltitudeRate() * 3.2808399,
+		if (crossPointerLeft.GetFwdVel() > 0) {
+			sprintf(fwddir, "FWD");
+		}
+		else if (crossPointerLeft.GetFwdVel() < 0) {
+			sprintf(fwddir, "AFT");
+		}
+		else {
+			sprintf(fwddir, "");
+		}
+
+		if (crossPointerLeft.GetLatVel() > 0) {
+			sprintf(latdir, "R");
+		}
+		else if (crossPointerLeft.GetFwdVel() < 0) {
+			sprintf(latdir, "L");
+		}
+		else {
+			sprintf(latdir, "");
+		}
+
+		sprintf(oapiDebugString(), "PROG %s | V%s N%s | R1 %s | R2 %s | R3 %s | Alt: %.0lf ft | Alt Rt: %.1lf ft/s | Fwd Vel: %.1lf ft/s %s | Lat Vel: %.1lf ft/s %s | PGNS Mode Cont: %s | Throt: %s | Fuel: %.0lf %% |", dsky.GetProg(),
+			dsky.GetVerb(), dsky.GetNoun(), dsky.GetR1(), dsky.GetR2(), dsky.GetR3(), RadarTape.GetTapeAltitude(), RadarTape.GetTapeAltitudeRate(),
+			crossPointerLeft.GetFwdVel(), fwddir, crossPointerLeft.GetLatVel(), latdir,
 			pgnssw, thrsw, DPSFuelPercentMeter.QueryValue() * 100);
 		if (!VcInfoActive) VcInfoActive = true;
 
@@ -1479,10 +1502,7 @@ void LEM::clbkPostStep(double simt, double simdt, double mjd)
 	inertialData.Timestep(simdt);
 
 	// Update VC animations
-	if (oapiCameraInternal() && oapiCockpitMode() == COCKPIT_VIRTUAL)
-	{
-		MainPanelVC.OnPostStep(simt, simdt, mjd);
-	}
+	MainPanelVC.OnPostStep(simt, simdt, mjd);
 
 	//
 	// Camera jostle.
@@ -1649,24 +1669,9 @@ void LEM::PostLoadSetup(bool define_anims)
 	// Realism Mode Settings
 	//
 
-	// Enable Orbiter's attitude control for unmanned missions
-	// as long as they rely on Orbiter's navmodes (killrot etc.)
-
-	if (!Crewed) {
-		checkControl.autoExecute(true);
-		checkControl.autoExecuteSlow(false);
-		checkControl.autoExecuteAllItemsAutomatic(true);
-	}
-
-	// Disable it and do some other settings when not in
-	// Quickstart mode
-
-	else {
-		checkControl.autoExecute(VAGCChecklistAutoEnabled);
-		checkControl.autoExecuteSlow(VAGCChecklistAutoSlow);
-		checkControl.autoExecuteAllItemsAutomatic(false);
-
-	}
+	checkControl.autoExecute(VAGCChecklistAutoEnabled);
+	checkControl.autoExecuteSlow(VAGCChecklistAutoSlow);
+	checkControl.autoExecuteAllItemsAutomatic(false);
 
 	// Also cause the AC busses to wire up
 	switch (EPSInverterSwitch.GetState()) {
@@ -2026,17 +2031,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "EVENTTIMER_START", sizeof("EVENTTIMER_START"))) {
 			EventTimerDisplay.LoadState(scn, EVENTTIMER_END_STRING);
 		}
-		else if (!strnicmp(line, "EVAANTENNAHANDLE", 16)) {
-			sscanf(line + 16, "%i", &EVAAntHandleStatus);
-			if (EVAAntHandleStatus) {
-				EVAAntHandleState.pos = 1.0;    // This is for the Handle
-
-				// Maybe you need to add here the ".pos" for the Antenna too.
-				// One more thing. The antenna can be seen for one frame when
-				// the simulation is started in pause mode.
-
-			}
-			}
 		else if (!strnicmp(line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
@@ -2101,6 +2095,9 @@ void LEM::clbkPostCreation()
 	soundlib.InitSoundLib(this, SOUND_DIRECTORY);
 	LoadDefaultSounds();
 	this->CWEA.LoadSounds();
+
+	// Switches
+	MainPanelVC.OnPostCreation();
 }
 
 void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
@@ -2127,8 +2124,6 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 		vcmesh = GetDevMesh(vis, vcidx);
 		SetCOAS();
 	}
-
-	AnimEVAAntHandle();
 }
 
 void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
@@ -2367,7 +2362,6 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_int(scn, "COASRETICLEVISIBLE", COASreticlevisible);
 
 	oapiWriteScenario_int(scn, "WINDOWSHADESENABLED", LEMWindowShades);
-	oapiWriteScenario_int(scn, "EVAANTENNAHANDLE", EVAAntHandleStatus);
 
 	oapiWriteScenario_float (scn, "DSCFUEL", DescentFuelMassKg);
 	oapiWriteScenario_float (scn, "ASCFUEL", AscentFuelMassKg);

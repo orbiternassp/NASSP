@@ -2090,7 +2090,7 @@ void Saturn::JoystickTimestep()
 
 		int rhc_pos[3] = { rhc_x_pos, rhc_y_pos, rhc_rot_pos };
 
-		rhc1.Timestep(rhc_pos, rhc_voltage1 > SP_MIN_DCVOLTAGE, eca.IsAC1Powered(), rhc_directv1 > SP_MIN_DCVOLTAGE, rhc_directv1 > SP_MIN_DCVOLTAGE);
+		rhc2.Timestep(rhc_pos, rhc_voltage2 > SP_MIN_DCVOLTAGE, eca.IsAC2Powered(), rhc_directv2 > SP_MIN_DCVOLTAGE, rhc_directv2 > SP_MIN_DCVOLTAGE);
 
 		// X and Y are well-duh kinda things. X=0 for full-left, Y = 0 for full-down
 		// Set bits according to joystick state. 32768 is center, so 16384 is the left half.
@@ -2098,22 +2098,22 @@ void Saturn::JoystickTimestep()
 		// The RHC breakout switches trigger at 1.5 degrees deflection and soft stop at 10.
 		if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
 			// CMC
-			if (rhc1.GetMinusRollBreakoutSwitch()) {
+			if (rhc2.GetMinusRollBreakoutSwitch()) {
 				val31[MinusRollManualRotation] = 1;
 			}					
-			if (rhc1.GetMinusPitchBreakoutSwitch()) {
+			if (rhc2.GetMinusPitchBreakoutSwitch()) {
 				val31[MinusPitchManualRotation] = 1;
 			}
-			if (rhc1.GetPlusRollBreakoutSwitch()) {
+			if (rhc2.GetPlusRollBreakoutSwitch()) {
 				val31[PlusRollManualRotation] = 1;
 			}
-			if (rhc1.GetPlusPitchBreakoutSwitch()) {
+			if (rhc2.GetPlusPitchBreakoutSwitch()) {
 				val31[PlusPitchManualRotation] = 1;
 			}
-			if (rhc1.GetMinusYawBreakoutSwitch()) {
+			if (rhc2.GetMinusYawBreakoutSwitch()) {
 				val31[MinusYawManualRotation] = 1;
 			}
-			if (rhc1.GetPlusYawBreakoutSwitch()) {
+			if (rhc2.GetPlusYawBreakoutSwitch()) {
 				val31[PlusYawManualRotation] = 1;
 			}
 		}
@@ -2129,7 +2129,7 @@ void Saturn::JoystickTimestep()
 		if (secs.rcsc.GetCMTransferMotor1() || secs.rcsc.GetCMTransferMotor2()) sm_sep = true;
 
 		if ((rhc_directv1 > SP_MIN_DCVOLTAGE || rhc_directv2 > SP_MIN_DCVOLTAGE)) {
-			if (rhc1.GetMinusRollHardStopSwitch()) {
+			if (rhc2.GetMinusRollHardStopSwitch()) {
 				// MINUS ROLL
 				if (!sm_sep) {						
 					SetRCSState(RCS_SM_QUAD_A, 2, 1);
@@ -2177,7 +2177,7 @@ void Saturn::JoystickTimestep()
 				rjec.SetDirectRollActive(true); 
 				rflag = 1;
 			}
-			if (rhc1.GetPlusRollHardStopSwitch()) {
+			if (rhc2.GetPlusRollHardStopSwitch()) {
 				// PLUS ROLL
 				if (!sm_sep) {
 					SetRCSState(RCS_SM_QUAD_A, 2, 0); 
@@ -2225,7 +2225,7 @@ void Saturn::JoystickTimestep()
 				rjec.SetDirectRollActive(true); 
 				rflag = 1;
 			}
-			if (rhc1.GetMinusPitchHardStopSwitch()) {
+			if (rhc2.GetMinusPitchHardStopSwitch()) {
 				// MINUS PITCH
 				if (!sm_sep) {
 					SetRCSState(RCS_SM_QUAD_C, 4, 1);
@@ -2265,7 +2265,7 @@ void Saturn::JoystickTimestep()
 				rjec.SetDirectPitchActive(true); 
 				pflag = 1;
 			}
-			if (rhc1.GetPlusPitchHardStopSwitch()) {
+			if (rhc2.GetPlusPitchHardStopSwitch()) {
 				// PLUS PITCH
 				if (!sm_sep) {
 					SetRCSState(RCS_SM_QUAD_C, 4, 0);
@@ -2305,7 +2305,7 @@ void Saturn::JoystickTimestep()
 				rjec.SetDirectPitchActive(true); 
 				pflag = 1;
 			}
-			if (rhc1.GetMinusYawHardStopSwitch()) {
+			if (rhc2.GetMinusYawHardStopSwitch()) {
 				// MINUS YAW
 				if (!sm_sep) {
 					SetRCSState(RCS_SM_QUAD_B, 4, 1);
@@ -2345,7 +2345,7 @@ void Saturn::JoystickTimestep()
 				rjec.SetDirectYawActive(true);
 				yflag = 1;
 			}
-			if (rhc1.GetPlusYawHardStopSwitch()) {
+			if (rhc2.GetPlusYawHardStopSwitch()) {
 				// PLUS YAW
 				if (!sm_sep) {
 					SetRCSState(RCS_SM_QUAD_D, 3, 1);
