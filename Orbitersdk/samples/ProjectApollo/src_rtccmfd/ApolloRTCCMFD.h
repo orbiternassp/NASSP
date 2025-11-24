@@ -116,6 +116,7 @@ public:
 	void set_LMVessel();
 	void set_IUVessel();
 	void set_TargetVessel();
+	void set_TargetVesselTable();
 	void CycleThroughVessels(VESSEL **v) const;
 	void menuSLVLaunchTargeting();
 	void menuSLVInsertionSVtoMPT();
@@ -147,16 +148,13 @@ public:
 	void set_GMPInput3(double val);
 	void GMPInput4Dialogue();
 	void set_GMPInput4(double val);
-	void OrbAdjGETDialogue();
 	void OrbAdjRevDialogue();
 	void GPMPCalc();
-	void menuCycleGMPManeuverVehicle();
 	void menuCycleGMPManeuverPoint();
 	void menuCycleGMPManeuverType();
 	void menuCycleMarkerUp();
 	void menuCycleMarkerDown();
 	void menuSetGMPInput();
-	void menuGPMCycleVessel();
 	void SPQcalc();
 	void lambertcalc();
 	void FormatDeclination(char *Buff, double angle);

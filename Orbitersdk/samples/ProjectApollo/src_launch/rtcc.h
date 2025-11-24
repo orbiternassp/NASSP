@@ -3655,7 +3655,7 @@ public:
 
 	struct VectorPanelSummaryDisplay
 	{
-		double gmt = 0.0;
+		double gmt = -10000000000000.0;
 		//0 = CSM, 1 = LM
 		std::string AnchorVectorID[2];
 		std::string AnchorVectorGMT[2];

@@ -387,6 +387,7 @@ public:
 
 	//SATURN IB LAUNCH TARGETING
 	VESSEL* Rendezvous_Target; //Target vessel in orbit
+	int Rendezvous_Target_Table; //1 = CSM, 3 = LEM
 
 	//UPLINK
 	double AGCClockTime[2];

@@ -917,7 +917,7 @@ void ApolloRTCCMFD::menuSetSPQPage()
 void ApolloRTCCMFD::menuSetOrbAdjPage()
 {
 	marker = 0;
-	markermax = 8;
+	markermax = 9;
 	SelectPage(4);
 }
 
@@ -3446,18 +3446,6 @@ void ApolloRTCCMFD::menuMPTDirectInputTrimAngleInd()
 	}
 }
 
-void ApolloRTCCMFD::menuCycleGMPManeuverVehicle()
-{
-	if (GC->rtcc->med_k20.Vehicle == 1)
-	{
-		GC->rtcc->med_k20.Vehicle = 3;
-	}
-	else
-	{
-		GC->rtcc->med_k20.Vehicle = 1;
-	}
-}
-
 void ApolloRTCCMFD::menuCycleGMPManeuverPoint()
 {
 	if (G->GMPManeuverPoint >= 6)
@@ -3512,53 +3500,59 @@ void ApolloRTCCMFD::menuCycleMarkerDown()
 
 void ApolloRTCCMFD::menuSetGMPInput()
 {
-	if (marker == 0)
+	switch (marker)
 	{
-		menuCycleGMPManeuverVehicle();
-	}
-	else if (marker == 1)
-	{
+	case 0:
 		menuCycleGMPManeuverType();
-	}
-	else if (marker == 2)
-	{
+		break;
+	case 1:
+		if (GC->rtcc->med_k20.Vehicle == 1)
+		{
+			GC->rtcc->med_k20.Vehicle = 3;
+		}
+		else
+		{
+			GC->rtcc->med_k20.Vehicle = 1;
+		}
+		break;
+	case 2:
+		if (GC->MissionPlanningActive)
+		{
+			GenericGETInput(&GC->rtcc->med_k20.VectorTime, "Choose the vector GET (Format: hhh:mm:ss), 0 or smaller for present time");
+		}
+		else
+		{
+			if (GC->rtcc->med_k20.Vehicle == 1)
+			{
+				set_CSMVessel();
+			}
+			else
+			{
+				set_LMVessel();
+			}
+		}
+		break;
+	case 3:
+		GenericGETInput(&GC->rtcc->med_k20.ThresholdTime, "Choose the GET for the maneuver (Format: hhh:mm:ss)");
+		break;
+	case 4:
 		menuCycleGMPManeuverPoint();
-	}
-	else if (marker == 3)
-	{
-		OrbAdjGETDialogue();
-	}
-	else if (marker == 4)
-	{
+		break;
+	case 5:
 		GMPInput1Dialogue();
-	}
-	else if (marker == 5)
-	{
+		break;
+	case 6:
 		GMPInput2Dialogue();
-	}
-	else if (marker == 6)
-	{
+		break;
+	case 7:
 		GMPInput3Dialogue();
-	}
-	else if (marker == 7)
-	{
+		break;
+	case 8:
 		GMPInput4Dialogue();
-	}
-	else if (marker == 8)
-	{
+		break;
+	case 9:
 		GenericStringInput(&GC->rtcc->med_k20.VectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
-	}
-}
-
-void ApolloRTCCMFD::menuGPMCycleVessel()
-{
-	if (GC->rtcc->med_k20.Vehicle == 1)
-	{
-		set_CSMVessel();
-	}
-	else
-	{
-		set_LMVessel();
+		break;
 	}
 }
 
@@ -3698,11 +3692,6 @@ void ApolloRTCCMFD::menuSetTIMultipleSolutionInput()
 		GenericStringInput(&GC->rtcc->med_k30.TargetVectorID, "Enter Vector ID for target if desired (otherwise leave blank):");
 		break;
 	}
-}
-
-void ApolloRTCCMFD::OrbAdjGETDialogue()
-{
-	GenericGETInput(&GC->rtcc->med_k20.ThresholdTime, "Choose the GET for the maneuver (Format: hhh:mm:ss)");
 }
 
 void ApolloRTCCMFD::OrbAdjRevDialogue()
@@ -5660,6 +5649,18 @@ void ApolloRTCCMFD::set_IUVessel()
 void ApolloRTCCMFD::set_TargetVessel()
 {
 	CycleThroughVessels(&G->Rendezvous_Target);
+}
+
+void ApolloRTCCMFD::set_TargetVesselTable()
+{
+	if (GC->MissionPlanningActive)
+	{
+		G->Rendezvous_Target_Table = 4 - G->Rendezvous_Target_Table;
+	}
+	else
+	{
+		set_TargetVessel();
+	}
 }
 
 void ApolloRTCCMFD::CycleThroughVessels(VESSEL **v) const
