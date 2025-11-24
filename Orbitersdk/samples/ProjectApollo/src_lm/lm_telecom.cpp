@@ -1968,7 +1968,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 151: // RCS PROP A QTY
 					return(scale_data(lem->RCSA.GetRCSPropellantQuantity(), 0.0, 1.0));
 				case 152: // S-BND RCVR SIG
-					return(scale_scea(lem->scera1.GetVoltage(5, 5)));
+					return(scale_scea(lem->scera1.GetVoltage(5, 4)));
 				case 153: // APS HE 1 PRESS
 					return(scale_scea(lem->scera1.GetVoltage(8, 4)));
 				case 154: // "PRI W/B H20 TEMP" = Main Sublimator Inlet Water Temp
@@ -1986,7 +1986,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 160: // RCS A HE PRESS
 					return(scale_scea(lem->scera1.GetVoltage(6, 1)));
 				case 161: //S-BND RCVR SIG
-					return(scale_scea(lem->scera1.GetVoltage(5, 5)));
+					return(scale_scea(lem->scera1.GetVoltage(5, 4)));
 				case 162: // RCS PROP A QTY
 					return(scale_data(lem->RCSA.GetRCSPropellantQuantity(), 0.0, 1.0));
 				case 163: // "PRI W/B H20 TEMP" = Main Sublimator Inlet Water Temp
