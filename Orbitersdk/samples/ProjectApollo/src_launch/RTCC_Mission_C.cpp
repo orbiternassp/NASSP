@@ -1848,7 +1848,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 		sv_1 = coast(sv, NavGMT - sv.sv.GMT); //Time tag to Nav Check time + 30m
 
-		if (fcn == 90)
+		if (fcn == 92)
 		{
 			AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_1.sv);
 			AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_1.sv);
