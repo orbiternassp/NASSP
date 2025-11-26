@@ -1967,6 +1967,7 @@ protected:
 	LEM_SteerableAnt SBandSteerable;
 	LM_OMNI omni_fwd;
 	LM_OMNI omni_aft;
+	LM_ErectableAnt SBandErectable;
 	LM_VHF VHF;
 	LM_SBAND SBand;
 	LM_DSEA DSEA;

@@ -388,6 +388,21 @@ protected:
 	double hpbw_factor;			//Beamwidth factor
 };
 
+//Interface for Erectable Antenna
+class LM_ErectableAnt : public LM_SBandAntenna
+{
+public:
+	LM_ErectableAnt();
+	void Init(LEM *vessel);
+	void Timestep();
+
+	RFCALC_RFProperties GroundTransmitterRFProperties;
+protected:
+	LEM *lem;
+	double AntGain;
+	double AntWavelength;
+};
+
 ///
 /// LM DSE holds 5,400 inches of tape (4 tracks, 2.5 hours each at 0.6 inches/second, making 21,600 inches of recordable tape)
 ///
