@@ -3847,14 +3847,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu113[] =
 	{
-		{ "", 0, ' ' },
+		{ "Calculate estim. Delta T", 0, 'D' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Update liftoff time", 0, 'L' },
 		{ "", 0, ' ' },
 
-		{ "", 0, ' ' },
+		{ "Input Delta T", 0, 'C' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -3881,14 +3881,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu114[] =
 	{
-		{ "", 0, ' ' },
+		{ "Calculate estim. Delta T", 0, 'D' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "Update liftoff time", 0, 'L' },
 		{ "", 0, ' ' },
 
-		{ "", 0, ' ' },
+		{ "Input Delta T", 0, 'C' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },

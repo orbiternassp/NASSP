@@ -3434,6 +3434,15 @@ void AGCSignedValue(int &val)
 		val = -(077777 - val);
 }
 
+void DoubleToAGCTriple(double val, int* oct)
+{
+	oct[0] = (int)(val * pow(2, -28));
+	val = val - pow(2, 28) * oct[0];
+	oct[1] = (int)(val * pow(2, -14));
+	val = val - pow(2, 14) * oct[1];
+	oct[2] = (int)(round(val));
+}
+
 int DoubleToBuffer(double x, double q, int m)
 {
 	int c = 0, out = 0, f = 1;
