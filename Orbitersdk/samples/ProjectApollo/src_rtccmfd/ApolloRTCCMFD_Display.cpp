@@ -8203,9 +8203,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(CW, 7 * H / 14, "DELTA T:", 8);
 		GET_Display2(Buffer, G->DesiredRTCCLiftoffTime[blocknum] - lotime);
 		skp->Text(CW, 8 * H / 14, Buffer, strlen(Buffer));
-		skp->Text(CW, 10 * H / 14, "RTCC LIFTOFF:", 15);
-		GET_Display2(Buffer, GC->rtcc->GetGMTLO()*3600.0);
-		skp->Text(CW, 11 * H / 14, Buffer, strlen(Buffer));
+		skp->Text(CW, 10 * H / 14, "Update From AGC", 15);
+		skp->Text(CW, H - CH * 4, "TEPHEM:", 15);
+		double val = GC->rtcc->CalcTEPHEM(lotime);
+		int oct[3];
+		OrbMech::DoubleToAGCTriple(val * 100.0, oct);
+		sprintf(Buffer, "%05o %05o %05o", oct[0], oct[1], oct[2]);
+		skp->Text(CW, H - CH * 2, Buffer, strlen(Buffer));
 		x = 20;
 		skp->Text(W - CW * x, H - CH * 12, "OID FCT   DSKY V70", 18);
 		skp->Text(W - CW * x, H - CH * 10, "1", 1);

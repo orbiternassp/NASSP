@@ -4412,6 +4412,13 @@ double RTCC::CalcGETBase()
 	return SystemParameters.GMTBASE + SystemParameters.MCGMTL / 24.0;
 }
 
+double RTCC::CalcTEPHEM(double GMTLO) const
+{
+	// Input and output in seconds
+	double MJD = SystemParameters.GMTBASE + GMTLO / 24.0 / 3600.0;
+	return (MJD - SystemParameters.TEPHEM0) * 24.0 * 3600.0;
+}
+
 double RTCC::GETfromGMT(double GMT) const
 {
 	return GMT - SystemParameters.MCGMTL * 3600.0;
