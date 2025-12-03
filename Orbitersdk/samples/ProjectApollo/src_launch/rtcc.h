@@ -2685,6 +2685,7 @@ public:
 	double GetGMTLO() { return SystemParameters.MCGMTL; }
 	void SetGMTLO(double gmt) { SystemParameters.MCGMTL = gmt; }
 	double CalcGETBase();
+	double CalcTEPHEM(double GMTLO) const;
 	double GetGMTBase() { return SystemParameters.GMTBASE; }
 	void SetGMTBase(double gmt) { SystemParameters.GMTBASE = gmt; }
 	double GETfromGMT(double GMT) const;
