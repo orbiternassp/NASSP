@@ -1314,6 +1314,8 @@ public:
 	void UpdateSideHatchClickspots(const VECTOR3 &ofs);
 	void UpdateForwardHatchClickspots(const VECTOR3 &ofs);
 
+	void HideMeshGroup(int, int, bool);
+
 	//
 	// Flashlight for VC
 	//
@@ -1643,6 +1645,8 @@ protected:
 	/// Ordeal
 	UINT ordealMeshAnim;
 	AnimState ordealState;
+	UINT ordealDummyMeshAnim[7];
+	MGROUP_ROTATE *ordealSw01_rot[7];
 
 	/// DSKY_Glareshade
 	UINT DSKY_GlareshadeAnim;

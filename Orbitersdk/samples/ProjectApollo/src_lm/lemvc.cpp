@@ -1605,6 +1605,21 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 {
 	switch (id) {
 
+	// First hide all the texts
+	HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT,true);
+	HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT_2,true);
+	HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_BUS_FAULT,true);
+
+	if (pMission->GetLMNumber()<6){												// up to Apollo 11
+		HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_BUS_FAULT,false);
+	}
+	else if (pMission->GetLMNumber()>5 && (pMission->GetLMNumber()<9)) {		// Apollo 12 to 14
+		HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT,false);
+	}
+	else {
+		HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT_2,false);			// Apollo 15 to 17
+	}
+
 	case AID_LMVC_LIGHTING:
  	{
 		std::vector<DWORD> DSKY_CW_Lights;
@@ -1641,22 +1656,6 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 				if (dsky.NoDAPLit())	{ DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_NO_DAP); }
 			}
 		}
-
-		// First hide all the texts
-		HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT,true);
-		HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT_2,true);
-		HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_BUS_FAULT,true);
-
-		if (pMission->GetLMNumber()<6){												// up to Apollo 11
-			HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_BUS_FAULT,false);
-		}
-		else if (pMission->GetLMNumber()>5 && (pMission->GetLMNumber()<9)) {		// Apollo 12 to 14
-			HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT,false);
-		}
-		else {
-			HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT_2,false);			// Apollo 15 to 17
-		}
-
 		
 //		sprintf(oapiDebugString(), "Integral Voltage = %lf", lca.GetNumericVoltage());
 
@@ -3846,10 +3845,10 @@ void LEM::UpdatePointingArrow()
 	GetMeshOffset(vcidx, ofs);
 
 	DEVMESHHANDLE hArrowMesh = GetDevMesh (vis, hLMPointingArrowidx);
-	
 	static bool first = true;
 	static VECTOR3* arrowData;
 	static VECTOR3* circleData;
+	static VECTOR3* circleDataOrig;
 	static int arrowVertsCnt, circleVertsCnt;
 	if (first) {											// Run this once for retrieving the Arrow data
 		MESHGROUP* arrow_group = oapiMeshGroup(GetMeshTemplate(hLMPointingArrowidx), 0);
@@ -3863,12 +3862,36 @@ void LEM::UpdatePointingArrow()
 		MESHGROUP* circle_group = oapiMeshGroup(GetMeshTemplate(hLMPointingArrowidx), 1);
 		circleVertsCnt = circle_group->nVtx;
 		circleData = new VECTOR3[circleVertsCnt];
+		circleDataOrig = new VECTOR3[circleVertsCnt];
 		for (int i = 0; i < circleVertsCnt; i++) {			// Make a copy of the Circle data
-			circleData[i].x = (double)circle_group->Vtx[i].x;
-			circleData[i].y = (double)circle_group->Vtx[i].y;
-			circleData[i].z = (double)circle_group->Vtx[i].z;
+			circleDataOrig[i].x = (double)circle_group->Vtx[i].x;
+			circleDataOrig[i].y = (double)circle_group->Vtx[i].y;
+			circleDataOrig[i].z = (double)circle_group->Vtx[i].z;
 		}
 		first = false;
+	}
+
+	if (!oapiGetPause()){
+		static double rotationangle;
+		rotationangle += oapiGetSimStep() / oapiGetTimeAcceleration() * 90;  // Rotate 360° every 4 Second
+		if (rotationangle > 360) rotationangle = 0;
+		double rad = rotationangle * PI / 180.0;
+		double cos_a = std::cos(rad);
+		double sin_a = std::sin(rad);	
+
+		//Rotate Circle
+		for (int i = 0; i < circleVertsCnt; i++) {
+			circleData[i].x = circleDataOrig[i].x * cos_a - circleDataOrig[i].y * sin_a;
+			circleData[i].y = circleDataOrig[i].x * sin_a + circleDataOrig[i].y * cos_a;
+			circleData[i].z = circleDataOrig[i].z;
+		}
+
+/*		// Rotate Arrow
+		for (int i = 0; i < arrowVertsCnt; i++) {
+			arrowData[i].x = arrowData[i].x * cos_a - arrowData[i].y * sin_a;
+			arrowData[i].y = arrowData[i].x * sin_a + arrowData[i].y * cos_a;
+		}
+*/
 	}
 	GROUPREQUESTSPEC arrow_grp;
 	memset (&arrow_grp, 0, sizeof(GROUPREQUESTSPEC));

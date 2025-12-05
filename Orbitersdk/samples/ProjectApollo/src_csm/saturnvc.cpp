@@ -482,7 +482,7 @@ const VECTOR3 P326_ROT_POS[P326_ROTCOUNT] = {
 // LEB Right Rotaries
 
 const VECTOR3 LEB_R_ROT_POS[LEB_R_ROTCOUNT] = {
-	{1.0811, -0.5597, -0.4702}, {1.0811, -0.5536, -0.6556}, {1.0811, -0.4765, -0.6556}
+	{1.08230, -0.55963, -0.47033}, {1.08230, -0.55352, -0.65567}, {1.08230, -0.47646, -0.65567}
 };
 
 // LEB Right wall 1 circuit breakers
@@ -1943,6 +1943,41 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	TRACESETUP("Saturn::clbkVCRedrawEvent");
 	//int i;
 	SetCameraCatchAngle(5.0*RAD);
+
+	if (ordealState.pos <= 0) {
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_01_d, true);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_02_d, true);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_03_d, true);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_04_d, true);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_05_d, true);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_06_d, true);
+		HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot_d, true);
+
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_01, false);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_02, false);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_03, false);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_04, false);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_05, false);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_06, false);
+		HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot, false);
+	}
+	else {
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_01, true);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_02, true);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_03, true);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_04, true);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_05, true);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_06, true);
+		HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot, true);
+
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_01_d, false);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_02_d, false);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_03_d, false);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_04_d, false);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_05_d, false);
+		HideMeshGroup(vcidx, VC_GRP_Sw_P13_06_d, false);
+		HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot_d, false);
+	}
 
 	switch (id) {
 	//case areaidentifier
@@ -5685,22 +5720,50 @@ void Saturn::DefineVCAnimations()
 
 // Ordeal Animation
 
-#define ORDEALMESHCNT 12
+	// Extra Testing Code for the ORDEAL Floating switches bug by Jordan
+	static UINT ordealSw01 = VC_GRP_Sw_P13_01_d;
+	static UINT ordealSw02 = VC_GRP_Sw_P13_02_d;
+	static UINT ordealSw03 = VC_GRP_Sw_P13_03_d;
+	static UINT ordealSw04 = VC_GRP_Sw_P13_04_d;
+	static UINT ordealSw05 = VC_GRP_Sw_P13_05_d;
+	static UINT ordealSw06 = VC_GRP_Sw_P13_06_d;
+	static UINT ordealRot1 = VC_GRP_ORDEAL_Rot_d;
+
+	ordealSw01_rot[0] = new MGROUP_ROTATE (0, &ordealSw01, 1, ORDEALFDAI1Switch.GetReference(),    ORDEALFDAI1Switch.GetDirection(),    (float)PI / 4);
+	ordealSw01_rot[1] = new MGROUP_ROTATE (0, &ordealSw02, 1, ORDEALFDAI2Switch.GetReference(),    ORDEALFDAI2Switch.GetDirection(),    (float)PI / 4);
+	ordealSw01_rot[2] = new MGROUP_ROTATE (0, &ordealSw03, 1, ORDEALEarthSwitch.GetReference(),    ORDEALEarthSwitch.GetDirection(),    (float)PI / 4);
+	ordealSw01_rot[3] = new MGROUP_ROTATE (0, &ordealSw04, 1, ORDEALLightingSwitch.GetReference(), ORDEALLightingSwitch.GetDirection(), (float)PI / 4);
+	ordealSw01_rot[4] = new MGROUP_ROTATE (0, &ordealSw05, 1, ORDEALModeSwitch.GetReference(),     ORDEALModeSwitch.GetDirection(),     (float)PI / 4);
+	ordealSw01_rot[5] = new MGROUP_ROTATE (0, &ordealSw06, 1, ORDEALSlewSwitch.GetReference(),     ORDEALSlewSwitch.GetDirection(),     (float)PI / 4);
+	ordealSw01_rot[6] = new MGROUP_ROTATE (0, &ordealRot1, 1, ORDEALAltSetRotary.GetReference(),   ORDEALAltSetRotary.GetDirection(),   (float)(285.0*RAD));
+
+	ordealDummyMeshAnim[0] = CreateAnimation(0.5);
+	ordealDummyMeshAnim[1] = CreateAnimation(0.5);
+	ordealDummyMeshAnim[2] = CreateAnimation(0.5);
+	ordealDummyMeshAnim[3] = CreateAnimation(0.5);
+	ordealDummyMeshAnim[4] = CreateAnimation(0.5);
+	ordealDummyMeshAnim[5] = CreateAnimation(0.5);
+	ordealDummyMeshAnim[6] = CreateAnimation(133.0 / 285.0);
+
+	for (unsigned int i = 0; i < std::size(ordealSw01_rot); i++) {
+		AddAnimationComponent(ordealDummyMeshAnim[i], 0.0f, 1.0f, ordealSw01_rot[i]);
+	}
+
+#define ORDEALMESHCNT 12  // 5 or 12
 	static UINT ordealMesh[ORDEALMESHCNT] = { 
 		VC_GRP_Group_78,
 		VC_GRP_Group_78_OrdealLighting,
 		VC_GRP_SwitchGuard_P13,
 		VC_GRP_SwitchBody_P13,
 		VC_GRP_Screws_Panel13,
-		VC_GRP_ORDEAL_Rot,
-		VC_GRP_Sw_P13_01,
-		VC_GRP_Sw_P13_02,
-		VC_GRP_Sw_P13_03,
-		VC_GRP_Sw_P13_04,
-		VC_GRP_Sw_P13_05,
-		VC_GRP_Sw_P13_06
+		VC_GRP_Sw_P13_01_d,
+		VC_GRP_Sw_P13_02_d,
+		VC_GRP_Sw_P13_03_d,
+		VC_GRP_Sw_P13_04_d,
+		VC_GRP_Sw_P13_05_d,
+		VC_GRP_Sw_P13_06_d,
+		VC_GRP_ORDEAL_Rot_d
 	};
-
 
 	static MGROUP_ROTATE ordealMesh_R01(0, ordealMesh, ORDEALMESHCNT, _V( -0.931150,  0.988850, -0.002250), _V(0.766797, 0.641818, -0.00956), (float)(-35.0 * RAD));
 	static MGROUP_ROTATE ordealMesh_R02(0, ordealMesh, ORDEALMESHCNT, _V( -0.931150,  0.988850, -0.002250), _V(0.64024, -0.763676,  0.083015), (float)(-87.0 * RAD));
@@ -5730,7 +5793,6 @@ void Saturn::DefineVCAnimations()
 	AddAnimationComponent(ordealMeshAnim, 0.50,  0.80, &ordealMesh_S01); // Scale it to 70%
 
 	/// END TEST by JORDAN
-
 }
 
 void Saturn::InitFDAI(UINT mesh)
@@ -6004,6 +6066,7 @@ void Saturn::UpdatePointingArrow()
 	static bool first = true;
 	static VECTOR3* arrowData;
 	static VECTOR3* circleData;
+	static VECTOR3* circleDataOrig;
 	static int arrowVertsCnt, circleVertsCnt;
 	if (first) {											// Run this once for retrieving the Arrow data
 		MESHGROUP* arrow_group = oapiMeshGroup(GetMeshTemplate(hcmPointingArrowidx), 0);
@@ -6017,12 +6080,36 @@ void Saturn::UpdatePointingArrow()
 		MESHGROUP* circle_group = oapiMeshGroup(GetMeshTemplate(hcmPointingArrowidx), 1);
 		circleVertsCnt = circle_group->nVtx;
 		circleData = new VECTOR3[circleVertsCnt];
+		circleDataOrig = new VECTOR3[circleVertsCnt];
 		for (int i = 0; i < circleVertsCnt; i++) {			// Make a copy of the Circle data
-			circleData[i].x = (double)circle_group->Vtx[i].x;
-			circleData[i].y = (double)circle_group->Vtx[i].y;
-			circleData[i].z = (double)circle_group->Vtx[i].z;
+			circleDataOrig[i].x = (double)circle_group->Vtx[i].x;
+			circleDataOrig[i].y = (double)circle_group->Vtx[i].y;
+			circleDataOrig[i].z = (double)circle_group->Vtx[i].z;
 		}
 		first = false;
+	}
+
+	if (!oapiGetPause()) {
+		static double rotationangle;
+		rotationangle += oapiGetSimStep() / oapiGetTimeAcceleration() * 90;  // Rotate 360° every 4 Second
+		if (rotationangle > 360) rotationangle = 0;
+		double rad = rotationangle * PI / 180.0;
+		double cos_a = std::cos(rad);
+		double sin_a = std::sin(rad);
+
+		//Rotate Circle
+		for (int i = 0; i < circleVertsCnt; i++) {
+			circleData[i].x = circleDataOrig[i].x * cos_a - circleDataOrig[i].y * sin_a;
+			circleData[i].y = circleDataOrig[i].x * sin_a + circleDataOrig[i].y * cos_a;
+			circleData[i].z = circleDataOrig[i].z;
+		}
+
+/*		// Rotate Arrow
+			for (int i = 0; i < arrowVertsCnt; i++) {
+				arrowData[i].x = arrowData[i].x * cos_a - arrowData[i].y * sin_a;
+				arrowData[i].y = arrowData[i].x * sin_a + arrowData[i].y * cos_a;
+			}
+*/
 	}
 	GROUPREQUESTSPEC arrow_grp;
 	memset (&arrow_grp, 0, sizeof(GROUPREQUESTSPEC));
@@ -6188,4 +6275,20 @@ void Saturn::UpdateForwardHatchClickspots(const VECTOR3 &ofs)
 	//Disable clickspot if hatch is open
 	double rad = (ForwardHatch.IsOpen() ? 0.0 : ROT);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_PRESS_EQU_VLV, FwdHatch_Equal_ValveLocation + ofs, rad);
+}
+
+void Saturn::HideMeshGroup(int meshidx, int meshgrp, bool hide){
+	DEVMESHHANDLE hmesh = GetDevMesh (vis, meshidx);	
+	if (hmesh){
+		GROUPEDITSPEC grpSpec;
+		memset(&grpSpec, 0, sizeof(GROUPEDITSPEC));
+		grpSpec.UsrFlag = 3;  						// flag for hide the group and shadow
+
+		if (hide) {
+			grpSpec.flags = GRPEDIT_ADDUSERFLAG;
+		} else {
+			grpSpec.flags = GRPEDIT_DELUSERFLAG;
+		}
+		oapiEditMeshGroup(hmesh, meshgrp, &grpSpec);
+	}
 }
