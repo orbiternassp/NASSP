@@ -484,7 +484,6 @@ public:
 		SRF_ORDEAL_ROTARY,
 		SRF_LV_ENG_S1B,
 		SRF_SPSMININDICATOR,
-		SRF_SPS_INJ_VLV,
 		SRF_SM_RCS_MODE,
 		SRF_THUMBWHEEL_GPI_PITCH,
 		SRF_THUMBWHEEL_GPI_YAW,
@@ -605,7 +604,6 @@ public:
 		SRF_VC_LVENGLIGHTS_S1B,
 		SRF_VC_SPS_FONT_BLACK,
 		SRF_VC_SPS_FONT_WHITE,
-		SRF_VC_SPS_INJ_VLV,
 		SRF_VC_SPSMAXINDICATOR,
 		SRF_VC_SPSMININDICATOR,
 		SRF_VC_THUMBWHEEL_LARGEFONTSINV,
@@ -1213,6 +1211,11 @@ public:
 	void SetSideHatchMesh();
 
 	///
+	/// \brief Set boost protective cover mesh
+	///
+	void SetBPCMesh(UINT idx);
+
+	///
 	/// \brief Set fwd hatch mesh
 	///
 	void SetFwdHatchMesh();
@@ -1308,7 +1311,10 @@ public:
 	void DoMeshAnimation(AnimState &, UINT &, double, double);
 
 	void UpdatePointingArrow();
-	PanelSwitchItem *nextActiveSwitch = nullptr;
+	void UpdateSideHatchClickspots(const VECTOR3 &ofs);
+	void UpdateForwardHatchClickspots(const VECTOR3 &ofs);
+
+	void HideMeshGroup(int, int, bool);
 
 	//
 	// Flashlight for VC
@@ -1639,6 +1645,8 @@ protected:
 	/// Ordeal
 	UINT ordealMeshAnim;
 	AnimState ordealState;
+	UINT ordealDummyMeshAnim[7];
+	MGROUP_ROTATE *ordealSw01_rot[7];
 
 	/// DSKY_Glareshade
 	UINT DSKY_GlareshadeAnim;
@@ -1988,10 +1996,10 @@ protected:
 	//
 
 	SwitchRow SPSInjectorValveIndicatorsRow;
-	IndicatorSwitch SPSInjectorValve1Indicator;
-	IndicatorSwitch SPSInjectorValve2Indicator;
-	IndicatorSwitch SPSInjectorValve3Indicator;
-	IndicatorSwitch SPSInjectorValve4Indicator;
+	SaturnSPSInjectorValveIndicator SPSInjectorValve1Indicator;
+	SaturnSPSInjectorValveIndicator SPSInjectorValve2Indicator;
+	SaturnSPSInjectorValveIndicator SPSInjectorValve3Indicator;
+	SaturnSPSInjectorValveIndicator SPSInjectorValve4Indicator;
 
 	SwitchRow SPSTestSwitchRow;
 	ThreePosSwitch SPSTestSwitch;
@@ -3884,6 +3892,7 @@ protected:
 	O2SMSupply O2SMSupply;
 	CrewStatus CrewStatus;
 	SaturnSideHatch SideHatch;
+	BoostProtectiveCover BPC;
 	SaturnWaterController WaterController;
 	SaturnGlycolCoolingController GlycolCoolingController;
 	SaturnLMTunnelVent LMTunnelVent;
@@ -4032,7 +4041,6 @@ protected:
 	int hcmPointingArrowidx;
 
 	DEVMESHHANDLE vcmesh;
-
 	bool ViewCueCardArrows;
 
 	double DockAngle;
@@ -4267,7 +4275,7 @@ protected:
 #endif
 
 //	CAMERAHANDLE hFDAICam = NULL;
-	SURFHANDLE srfFDAICamTexture;
+//	SURFHANDLE srfFDAICamTexture;
 //	SURFHANDLE hFDAISurf;
 
 //	void InitFDAICustomCamera(void);

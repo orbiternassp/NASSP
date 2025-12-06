@@ -1656,11 +1656,6 @@ void LEMSteerableAntennaPitchMeter::DoDrawSwitch(double v, SURFHANDLE drawSurfac
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
 }
 
-void LEMSteerableAntennaPitchMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
-	double v = (GetDisplayValue() + 75) / 330;
-	lem->SetAnimation(anim_switch, v);
-}
-
 void LEMSteerableAntennaYawMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
 {
 	LEMRoundMeter::Init(p0, p1, row, s);
@@ -1675,11 +1670,6 @@ void LEMSteerableAntennaYawMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 	v = (120.0 - v) * 0.75;
 	DrawNeedle(drawSurface, 91 / 2, 90 / 2, 25.0, v * RAD);
 	oapiBlt(drawSurface, FrameSurface, 0, 0, 0, 0, 91, 90, SURF_PREDEF_CK);
-}
-
-void LEMSteerableAntennaYawMeter::OnPostStep(double SimT, double DeltaT, double MJD){
-	double v = (GetDisplayValue() + 75) / 150;
-	lem->SetAnimation(anim_switch, (v + 0.56) * 0.47);
 }
 
 void LEMSBandAntennaStrengthMeter::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, LEM *s, SURFHANDLE frameSurface)
@@ -2228,7 +2218,7 @@ LEMEvaAntennaHandle::~LEMEvaAntennaHandle()
 
 void LEMEvaAntennaHandle::DefineVCAnimations(UINT vc_idx)
 {
-	if (bHasDirection && !bHasAnimations)
+	if (bHasDirection && bHasMeshGroup && !bHasAnimations)
 	{
 		mshEVAAntHandleDown = new MGROUP_TRANSLATE(vc_idx, &grpIndex, 1, GetDirection());
 		mshEVAAntHandleRotate = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), _V(0, 1, 0), (float)(300 * RAD));
@@ -2240,6 +2230,14 @@ void LEMEvaAntennaHandle::DefineVCAnimations(UINT vc_idx)
 		OurVessel->AddAnimationComponent(anim_switch, 0.9, 1.0, mshEVAAntHandleUp);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 void LEMEvaAntennaHandle::OnPostStep(double SimT, double DeltaT, double MJD)

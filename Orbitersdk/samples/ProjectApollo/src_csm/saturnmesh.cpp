@@ -1042,7 +1042,7 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 		TowerOffset += 2.1; //Additional offset for CSM stage
 
 		meshidx = AddMesh(hsat5tower, &mesh_dir_tower);
-		SetMeshVisibilityMode(meshidx, MESHVIS_VCEXTERNAL);
+		SetBPCMesh(meshidx);
 	}
 
 	// And the Crew
@@ -1282,6 +1282,13 @@ void Saturn::SetSideHatchMesh() {
 		SetMeshVisibilityMode(sidehatchburnedidx, MESHVIS_EXTERNAL);
 		SetMeshVisibilityMode(sidehatchburnedopenidx, MESHVIS_NEVER);
 	}
+}
+
+void Saturn::SetBPCMesh(UINT idx)
+{
+	if (idx == -1) return;
+	SetMeshVisibilityMode(idx, MESHVIS_VCEXTERNAL);
+	BPC.DefineAnimations(idx);
 }
 
 void Saturn::SetFwdHatchMesh() {
@@ -1570,7 +1577,7 @@ void Saturn::SetReentryMeshes() {
 		VECTOR3 mesh_dir_tower = mesh_dir + _V(0, 0, TowerOffset);
 
 		meshidx = AddMesh (hsat5tower, &mesh_dir_tower);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetBPCMesh(meshidx);
 	}
 
 	// And the Crew

@@ -1090,6 +1090,7 @@
 #define AID_VC_PANEL8_TALKBACKS 3830
 
 #define AID_LMVC_LIGHTING      3831
+#define AID_LMVC_POINTINGARROW 3832
 
 // VC Active Areas (Panel 11)
 #define AID_VC_PANEL_11			((id >= 4100) && (id <= 4199))

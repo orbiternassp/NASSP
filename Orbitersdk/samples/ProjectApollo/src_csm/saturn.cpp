@@ -635,7 +635,13 @@ Saturn::~Saturn()
 	}
 	delete[] ReticlePoint;
 
+	// Waste Disposal animation
 	if (wasteDisposalKnob) delete wasteDisposalKnob;
+
+	// Ordeal animation
+	for (int i = 0; i < std::size(ordealSw01_rot); i++) {
+		if (ordealSw01_rot[i]) delete ordealSw01_rot[i];
+	}
 
 	//fclose(PanelsdkLogFile);
 }
@@ -1147,6 +1153,7 @@ void Saturn::initSaturn()
 	coascdridx = -1;
 	coascdrreticleidx = -1;
 	cmvccuecardsarrowsidx = -1;
+	hcmPointingArrowidx = -1;
 
 	vcmesh = NULL;
 	vis = NULL;
@@ -1195,6 +1202,7 @@ void Saturn::initSaturn()
 	VCSeatsfolded = false;
 
 	COASreticlevisible = false;
+	ViewCueCardArrows = false;
 
 	CurrentFuelWeight = 0;
 	LastFuelWeight = numeric_limits<double>::infinity(); // Ensure update at first opportunity
@@ -1209,13 +1217,15 @@ void Saturn::initSaturn()
 	wasteDisposalState.Set(AnimState::CLOSING, 0.0);
 	panel382CoverState.Set(AnimState::CLOSING, 0.0);
 	altimeterCoverState.Set(AnimState::OPENING, 1.0);
-	ordealState.Set(AnimState::CLOSING, 0.0);	//In reality the ORDEAL should be stowed for launch
+	ordealState.Set(AnimState::OPENING, 1.0);
 	DSKY_GlareshadeState.Set(AnimState::OPENING, 1.0);
 	EMSDV_GlareshadeState.Set(AnimState::OPENING, 1.0);
 	AccelerometerCoverState.Set(AnimState::OPENING, 1.0);
 	MissionTimer_GlareshadeState.Set(AnimState::OPENING, 1.0);
 	Sextant_EyepieceState.Set(AnimState::OPENING, 1.0);
 	Telescope_EyepieceState.Set(AnimState::OPENING, 1.0);
+
+	wasteDisposalKnob = NULL;
 
 	// call only once 
 	if (!InitSaturnCalled) {
@@ -1535,6 +1545,29 @@ void Saturn::SetAnimations(double simdt)
 	// By Jordan
 	// ANIMATED MESHES
 
+	if (ORDEALFDAI1Switch.IsUp())			SetAnimation(ordealDummyMeshAnim[0], 1.0);
+	if (ORDEALFDAI1Switch.IsDown())			SetAnimation(ordealDummyMeshAnim[0], 0.0);
+
+	if (ORDEALFDAI2Switch.IsUp())			SetAnimation(ordealDummyMeshAnim[1], 1.0);
+	if (ORDEALFDAI2Switch.IsDown())			SetAnimation(ordealDummyMeshAnim[1], 0.0);
+
+	if (ORDEALEarthSwitch.IsUp())			SetAnimation(ordealDummyMeshAnim[2], 1.0);
+	if (ORDEALEarthSwitch.IsCenter())		SetAnimation(ordealDummyMeshAnim[2], 0.5);
+	if (ORDEALEarthSwitch.IsDown())			SetAnimation(ordealDummyMeshAnim[2], 0.0);
+
+	if (ORDEALLightingSwitch.IsUp())		SetAnimation(ordealDummyMeshAnim[3], 1.0);
+	if (ORDEALLightingSwitch.IsCenter())	SetAnimation(ordealDummyMeshAnim[3], 0.5);
+	if (ORDEALLightingSwitch.IsDown())		SetAnimation(ordealDummyMeshAnim[3], 0.0);
+
+	if (ORDEALModeSwitch.IsUp())			SetAnimation(ordealDummyMeshAnim[4], 1.0);
+	if (ORDEALModeSwitch.IsDown())			SetAnimation(ordealDummyMeshAnim[4], 0.0);
+
+	if (ORDEALSlewSwitch.IsUp())			SetAnimation(ordealDummyMeshAnim[5], 1.0);
+	if (ORDEALSlewSwitch.IsCenter())		SetAnimation(ordealDummyMeshAnim[5], 0.5);
+	if (ORDEALSlewSwitch.IsDown())			SetAnimation(ordealDummyMeshAnim[5], 0.0);
+
+	SetAnimation(ordealDummyMeshAnim[6], ORDEALAltSetRotary.GetOutput());
+
 	DoMeshAnimation(panel382CoverState, panel382CoverAnim, 0.5, simdt);
 	DoMeshAnimation(altimeterCoverState, altimeterCoverAnim, 2.0, simdt);
 	DoMeshAnimation(wasteDisposalState, wasteDisposalAnim, 1.0, simdt);
@@ -1559,7 +1592,6 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	SetAnimations(simdt);
 //	UpdatePointingArrow();
 //	InitFDAICustomCamera();
-	SetVCCueCardsArrows();
 
 	//
 	// We die horribly if you set 100x or higher acceleration during launch.
@@ -3681,7 +3713,9 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	if (KEYMOD_LCONTROL(kstate)) {
 		if (down) {
 			switch (key) {
-				case OAPI_KEY_H:
+			case OAPI_KEY_H:
+				if (InVC && oapiCameraInternal())
+				{
 					if (ViewCueCardArrows == true) {
 						ViewCueCardArrows = false;
 					}
@@ -3690,7 +3724,7 @@ int Saturn::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 					}
 					return 1;
 				}
-				return 0;
+			}
 		}
 	}
 

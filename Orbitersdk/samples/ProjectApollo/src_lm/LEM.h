@@ -555,7 +555,6 @@ public:
 	void SetAnimations(double);
 
 	void UpdatePointingArrow();
-	PanelSwitchItem *nextActiveSwitch = nullptr;
 
 	//
 	// VISHANDLE
@@ -699,6 +698,9 @@ public:
 
 	// Custom quicksave behaviour
 	void QuicksaveScenario();
+
+	// Hide or Show mesh group
+	void HideMeshGroup(int, int, bool);
 
 protected:
 

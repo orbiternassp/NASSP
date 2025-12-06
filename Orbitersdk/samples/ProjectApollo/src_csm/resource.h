@@ -566,7 +566,6 @@
 #define IDB_CSM_MAIN_LEFT_PANEL                             851
 #define IDB_CSM_MAIN_RIGHT_PANEL                            852
 #define IDB_CSM_MAIN_MIDDLE_PANEL                           853
-#define IDB_SPS_INJ_VLV                                     854
 #define IDB_TELESCOPE_WIDE                                  855
 #define IDB_SEXTANT_WIDE                                    856
 #define IDB_THUMBWHEEL_GPI_PITCH                            857
@@ -1141,7 +1140,6 @@
 #define AID_VC_SPS_OXID_PCT     3388
 #define AID_VC_SPS_FUEL_PCT     3389
 #define AID_VC_SPSOXIDFLOWIND   3390
-#define AID_VC_SPS_INJ_VLV      3391
 
 // VC Active Areas (Panel 4)
 #define AID_VC_PANEL_4			((id >= 3400) && (id <= 3499))
