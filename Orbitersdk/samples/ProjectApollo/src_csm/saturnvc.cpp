@@ -1944,41 +1944,6 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//int i;
 	SetCameraCatchAngle(5.0*RAD);
 
-	if (ordealState.pos <= 0) {
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_01_d, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_02_d, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_03_d, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_04_d, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_05_d, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_06_d, true);
-		HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot_d, true);
-
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_01, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_02, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_03, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_04, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_05, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_06, false);
-		HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot, false);
-	}
-	else {
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_01, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_02, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_03, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_04, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_05, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_06, true);
-		HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot, true);
-
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_01_d, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_02_d, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_03_d, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_04_d, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_05_d, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_06_d, false);
-		HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot_d, false);
-	}
-
 	switch (id) {
 	//case areaidentifier
 	//	Redraw Panel stuff
@@ -2224,14 +2189,49 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, EMSPoint05GLight, MAT_LIGHT, 1.0, 1);
 		}
 
+		// Temporary place
+		if (ordealState.pos <= 0) {
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_01_d, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_02_d, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_03_d, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_04_d, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_05_d, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_06_d, true);
+			HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot_d, true);
+
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_01, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_02, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_03, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_04, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_05, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_06, false);
+			HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot, false);
+		}
+		else {
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_01, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_02, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_03, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_04, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_05, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_06, true);
+			HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot, true);
+
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_01_d, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_02_d, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_03_d, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_04_d, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_05_d, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_06_d, false);
+			HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot_d, false);
+		}
+
 		return true;
 	}
 
 	case AID_CMVC_POINTINGARROW:
-	{
 		UpdatePointingArrow();
 		SetVCCueCardsArrows();
-	}
+		return true;
 
 	case AID_VC_CUE_CARDS_LIGHTING:
 	{
