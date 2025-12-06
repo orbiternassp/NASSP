@@ -295,10 +295,7 @@ SICSystems::SICSystems(VESSEL *v, THRUSTER_HANDLE *f1, PROPELLANT_HANDLE &f1prop
 
 SICSystems::~SICSystems()
 {
-	if (TSMUmb)
-	{
-		TSMUmb->AbortDisconnect();
-	}
+	DisconnectUmbilical();
 }
 
 void SICSystems::SaveState(FILEHANDLE scn) {
@@ -600,19 +597,18 @@ bool SICSystems::GetEngineStop()
 	return false;
 }
 
-void SICSystems::ConnectUmbilical(TSMUmbilical *umb)
-{
-	TSMUmb = umb;
-}
-
 void SICSystems::DisconnectUmbilical()
 {
-	TSMUmb = NULL;
+	if (TSMUmb)
+	{
+		TSMUmb->sic = NULL;
+		TSMUmb = NULL;
+	}
 }
 
 bool SICSystems::IsUmbilicalConnected()
 {
-	if (TSMUmb && TSMUmb->IsUmbilicalConnected()) return true;
+	if (TSMUmb) return true;
 
 	return false;
 }

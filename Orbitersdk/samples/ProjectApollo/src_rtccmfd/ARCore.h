@@ -26,6 +26,22 @@ struct ApolloRTCCMFDData {  // global data storage
 	double uplinkBufferSimt;
 };
 
+struct MEDInput
+{
+	std::string Label;			//Short description on MFD page
+	std::string Description;	//Detailed description in MFD input box
+	std::string Unit;			//Unit displayed on MFD page
+	std::string Data;
+};
+
+struct MEDInputPage
+{
+	std::string Title;			//Title displayed on MFD page
+	std::string MEDCode;
+	std::vector<MEDInput> table;
+	int display = -1;
+};
+
 class AR_GCore
 {
 public:
@@ -102,6 +118,9 @@ public:
 
 	//GENERAL PARAMETERS
 	double t_TPI;				// Generally used TPI time
+
+	//MANUAL ENTRY DEVICE
+	std::vector<MEDInputPage> MEDInputData;
 
 	//MOCR DISPLAY
 	void DFLBackgroundSlide(oapi::Sketchpad *skp, DWORD W, DWORD H, unsigned display);
@@ -211,6 +230,8 @@ public:
 	int GetVesselParameters(bool IsCSM, int docked, int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass);
 	int menuCalculateAttitudeComparison(bool IsCSM, bool IsAGC);
 	void menuCalculateIMUParkingAngles(agc_t* agc);
+	int GetVehicleDataBlock(int L, double VectorTimeGET, std::string VectorID, VehicleDataBlock &sv, std::string &StationID);
+	int VectorFetch(int L, double VectorTimeGET, std::string VectorID, EphemerisData &sv, std::string &StationID);
 
 	int startSubthread(int fcn, bool IsCSM = true);
 	int subThread();
@@ -238,8 +259,6 @@ public:
 	double t_TPIguess;
 
 	//CONCENTRIC RENDEZVOUS PAGE
-	int SPQMode;	//0 = CSI on time, 1 = CDH, 2 = optimum CSI
-	double CDHtime;	//Time of the CDH maneuver
 	int CDHtimemode; //CSI: 0 = fixed TIG at TPI, 1 = fixed DH at CDH. CDH: 0=Fixed, 1 = Find GETI
 
 	//ORBIT ADJUSTMENT PAGE
@@ -256,7 +275,6 @@ public:
 	double GMPYaw;
 	double GMPApseLineRotAngle;
 	int GMPRevs;
-	double SPSGET;		//Maneuver GET
 	//0 = Apogee
 	//1 = Equatorial crossing
 	//2 = Perigee
@@ -369,6 +387,7 @@ public:
 
 	//SATURN IB LAUNCH TARGETING
 	VESSEL* Rendezvous_Target; //Target vessel in orbit
+	int Rendezvous_Target_Table; //1 = CSM, 3 = LEM
 
 	//UPLINK
 	double AGCClockTime[2];

@@ -3434,6 +3434,15 @@ void AGCSignedValue(int &val)
 		val = -(077777 - val);
 }
 
+void DoubleToAGCTriple(double val, int* oct)
+{
+	oct[0] = (int)(val * pow(2, -28));
+	val = val - pow(2, 28) * oct[0];
+	oct[1] = (int)(val * pow(2, -14));
+	val = val - pow(2, 14) * oct[1];
+	oct[2] = (int)(round(val));
+}
+
 int DoubleToBuffer(double x, double q, int m)
 {
 	int c = 0, out = 0, f = 1;
@@ -5227,6 +5236,16 @@ double GetSemiMajorAxis(VECTOR3 R, VECTOR3 V, double mu)
 double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu)
 {
 	return sqrt(mu / pow(GetSemiMajorAxis(R, V, mu), 3));
+}
+
+double GetTrueMotion(VECTOR3 R, VECTOR3 V, double mu)
+{
+	double h, r;
+
+	h = length(crossp(R, V));
+	r = length(R);
+
+	return h / (r*r);
 }
 
 double CMCEMSRangeToGo(MATRIX3 Rot_J_B, VECTOR3 R05G, double MJD05G, double lat, double lng)

@@ -1968,7 +1968,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 151: // RCS PROP A QTY
 					return(scale_data(lem->RCSA.GetRCSPropellantQuantity(), 0.0, 1.0));
 				case 152: // S-BND RCVR SIG
-					return(scale_scea(lem->scera1.GetVoltage(5, 5)));
+					return(scale_scea(lem->scera1.GetVoltage(5, 4)));
 				case 153: // APS HE 1 PRESS
 					return(scale_scea(lem->scera1.GetVoltage(8, 4)));
 				case 154: // "PRI W/B H20 TEMP" = Main Sublimator Inlet Water Temp
@@ -1986,7 +1986,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 160: // RCS A HE PRESS
 					return(scale_scea(lem->scera1.GetVoltage(6, 1)));
 				case 161: //S-BND RCVR SIG
-					return(scale_scea(lem->scera1.GetVoltage(5, 5)));
+					return(scale_scea(lem->scera1.GetVoltage(5, 4)));
 				case 162: // RCS PROP A QTY
 					return(scale_data(lem->RCSA.GetRCSPropellantQuantity(), 0.0, 1.0));
 				case 163: // "PRI W/B H20 TEMP" = Main Sublimator Inlet Water Temp
@@ -2479,9 +2479,13 @@ void LM_SBAND::Timestep(double simt){
 	{
 		ant = &lem->omni_aft;
 	}
-	if (lem->Panel12SBandAntSelKnob.GetState() == 2)
+	else if (lem->Panel12SBandAntSelKnob.GetState() == 2)
 	{
 		ant = &lem->SBandSteerable;
+	}
+	else
+	{
+		ant = &lem->SBandErectable;
 	}
 	
 	switch(tc_mode_1){
@@ -2701,6 +2705,7 @@ LEM_SteerableAnt::LEM_SteerableAnt()
 	pitch = 0.0;
 	yaw = 0.0;
 	moving = false;
+	driverateratio = 0.0;
 	hpbw_factor = 0.0;
 	SignalStrength = 0.0;
 
@@ -2722,12 +2727,13 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad* 
 	antheatload = anthtld;
 	antenna->isolation = 0.000001; 
 	antenna->Area = 10783.0112; // Surface area of reflecting dish, probably good enough
-	if(lem != NULL){
+
+	if (lem != NULL) {
 		antheater->WireTo(&lem->HTR_SBD_ANT_CB);
 	}
 
-	pitch = -75.0*RAD;
-	yaw = -12.0*RAD;
+	pitch = -75.0 * RAD;
+	yaw = -12.0 * RAD;
 
 	double beamwidth = 12.5*RAD;
 	hpbw_factor = acos(sqrt(sqrt(0.5))) / (beamwidth / 2.0);
@@ -2735,6 +2741,15 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad* 
 	LEM_SteerableAntGain = pow(10, (16.5 / 10));
 	LEM_SteerableAntFrequency = 2119; //MHz. Should this get set somewhere else?
 	LEM_SteerableAntWavelength = C0 / (LEM_SteerableAntFrequency * 1000000); //meters
+}
+
+void LEM_SteerableAnt::AngleInit(int LMNumber)
+{
+	if (LMNumber < 6)
+	{
+		pitch = 225.0 * RAD;
+		yaw = 0.0 * RAD;
+	}
 }
 
 void LEM_SteerableAnt::Timestep(double simdt){
@@ -2756,112 +2771,110 @@ void LEM_SteerableAnt::Timestep(double simdt){
 
 	moving = false;
 
-	if (!IsPowered())
+	if (IsPowered())
 	{
-		SignalStrength = 0.0;
-		return;
-	}
+		double AzimuthErrorSignal, ElevationErrorSignal;
+		double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
 
-	double AzimuthErrorSignal, ElevationErrorSignal;
-	double AzimuthErrorSignalNorm, ElevationErrorSignalNorm;
+		//actual Azimuth and Elevation error signals came from phase differences not signal strength
+		//both are be a function of tracking error though so this works
+		AzimuthErrorSignal = (HornSignalStrength[1] - HornSignalStrength[0]) * 0.25;
+		ElevationErrorSignal = (HornSignalStrength[3] - HornSignalStrength[2]) * 0.25;
 
-	//actual Azimuth and Elevation error signals came from phase differences not signal strength
-	//both are be a function of tracking error though so this works
-	AzimuthErrorSignal = (HornSignalStrength[1] - HornSignalStrength[0])*0.25;
-	ElevationErrorSignal = (HornSignalStrength[3] - HornSignalStrength[2])*0.25;
-
-	//normalize Azimuth and Elevation error signals
-	if (SignalStrength > 0.0)
-	{
-		AzimuthErrorSignalNorm = AzimuthErrorSignal / SignalStrength;
-		ElevationErrorSignalNorm = ElevationErrorSignal / SignalStrength;
-	}
-	else //prevent division by zero
-	{
-		AzimuthErrorSignalNorm = 0;
-		ElevationErrorSignalNorm = 0;
-	}
-
-	double pitchrate = 0.0;
-	double yawrate = 0.0;
-
-	double PitchSlew, YawSlew;
-
-	const double TrkngCtrlGain = 270; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
-	const double TrkngRatelGain = 4.0; //
-	const double MaxServoRate = 20 * RAD;
-
-	//sprintf(oapiDebugString(), "AzimuthErrorSignal: %f, ElevationErrorSignal: %f", AzimuthErrorSignal, ElevationErrorSignal);
-
-	//Slew Mode
-	if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_DOWN)
-	{
-		PitchSlew = (lem->Panel12AntPitchKnob.GetValue()*15.0 - 75.0)*RAD;
-		YawSlew = (lem->Panel12AntYawKnob.GetValue()*15.0 - 90.0)*RAD;
-	}
-	//Auto Tracking
-	else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
-	{
-		PitchSlew = pitch + (TrkngCtrlGain*ElevationErrorSignalNorm*exp(-simdt*10));
-		YawSlew = yaw + (TrkngCtrlGain*AzimuthErrorSignalNorm*exp(-simdt*10));
-	}
-	else
-	{
-		PitchSlew = pitch;
-		YawSlew = yaw;
-	}
-
-	
-	//sprintf(oapiDebugString(), "PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
-
-	//set antenna slew-rates
-	if (abs(PitchSlew - pitch) > 0.0001)
-	{
-		pitchrate = (PitchSlew - pitch)*TrkngRatelGain;
-		if (abs(pitchrate) > MaxServoRate)
+		//normalize Azimuth and Elevation error signals
+		if (SignalStrength > 0.0)
 		{
-			pitchrate = MaxServoRate *pitchrate / abs(pitchrate);
+			AzimuthErrorSignalNorm = AzimuthErrorSignal / SignalStrength;
+			ElevationErrorSignalNorm = ElevationErrorSignal / SignalStrength;
 		}
-		moving = true;
-	}
-
-	if (abs(YawSlew - yaw) > 0.0001)
-	{
-		yawrate = (YawSlew - yaw)*TrkngRatelGain;
-		if (abs(yawrate) > MaxServoRate)
+		else //prevent division by zero
 		{
-			yawrate = MaxServoRate *yawrate / abs(yawrate);
+			AzimuthErrorSignalNorm = 0;
+			ElevationErrorSignalNorm = 0;
 		}
-		moving = true;
+
+		double pitchrate = 0.0;
+		double yawrate = 0.0;
+
+		double PitchSlew, YawSlew;
+
+		const double TrkngCtrlGain = 270; //arbitrary; tuned high enough maintain track during maneuvers up to slew rate, but not cause osculation.
+		const double TrkngRatelGain = 4.0; //
+		const double MaxServoRate = 20 * RAD;
+
+		//sprintf(oapiDebugString(), "AzimuthErrorSignal: %f, ElevationErrorSignal: %f", AzimuthErrorSignal, ElevationErrorSignal);
+
+		//Slew Mode
+		if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_DOWN)
+		{
+			PitchSlew = (lem->Panel12AntPitchKnob.GetValue() * 15.0 - 75.0) * RAD;
+			YawSlew = (lem->Panel12AntYawKnob.GetValue() * 15.0 - 90.0) * RAD;
+		}
+		//Auto Tracking
+		else if (lem->Panel12AntTrackModeSwitch.GetState() == THREEPOSSWITCH_UP)
+		{
+			PitchSlew = pitch + (TrkngCtrlGain * ElevationErrorSignalNorm * exp(-simdt * 10));
+			YawSlew = yaw + (TrkngCtrlGain * AzimuthErrorSignalNorm * exp(-simdt * 10));
+		}
+		else
+		{
+			PitchSlew = pitch;
+			YawSlew = yaw;
+		}
+
+
+		//sprintf(oapiDebugString(), "PitchSlew: %f, YawSlew: %f", PitchSlew*DEG, YawSlew*DEG);
+
+		//set antenna slew-rates
+		if (abs(PitchSlew - pitch) > 0.0001)
+		{
+			pitchrate = (PitchSlew - pitch) * TrkngRatelGain;
+			if (abs(pitchrate) > MaxServoRate)
+			{
+				pitchrate = MaxServoRate * pitchrate / abs(pitchrate);
+			}
+			moving = true;
+		}
+
+		if (abs(YawSlew - yaw) > 0.0001)
+		{
+			yawrate = (YawSlew - yaw) * TrkngRatelGain;
+			if (abs(yawrate) > MaxServoRate)
+			{
+				yawrate = MaxServoRate * yawrate / abs(yawrate);
+			}
+			moving = true;
+		}
+
+		driverateratio = ((abs(pitchrate) / MaxServoRate) + (abs(yawrate) / MaxServoRate)) / 2.0;  //allows power draw based on drive rates
+
+		//sprintf(oapiDebugString(), "pitchrate: %f deg/sec, yawrate: %f deg/sec", pitchrate*DEG, yawrate*DEG);
+
+		//Drive Antenna
+		pitch += pitchrate * simdt;
+		yaw += yawrate * simdt;
+
+		//sprintf(oapiDebugString(), "pitch: %f pitchrate %f, yaw: %f yawrate %f %d", pitch*DEG, pitchrate*DEG, yaw*DEG, yawrate*DEG, moving);
+
+		//Antenna Limits
+		if (pitch > 255.0 * RAD)
+		{
+			pitch = 255.0 * RAD;
+		}
+		else if (pitch < -75.0 * RAD)
+		{
+			pitch = -75.0 * RAD;
+		}
+
+		if (yaw > 87.0 * RAD)
+		{
+			yaw = 87.0 * RAD;
+		}
+		else if (yaw < -87.0 * RAD)
+		{
+			yaw = -87.0 * RAD;
+		}
 	}
-
-	//sprintf(oapiDebugString(), "pitchrate: %f deg/sec, yawrate: %f deg/sec", pitchrate*DEG, yawrate*DEG);
-
-	//Drive Antenna
-	pitch += pitchrate*simdt;
-	yaw += yawrate*simdt;
-
-	//sprintf(oapiDebugString(), "pitch: %f pitchrate %f, yaw: %f yawrate %f %d", pitch*DEG, pitchrate*DEG, yaw*DEG, yawrate*DEG, moving);
-
-	//Antenna Limits
-	if (pitch > 255.0*RAD)
-	{
-		pitch = 255.0*RAD;
-	}
-	else if (pitch < -75.0*RAD)
-	{
-		pitch = -75.0*RAD;
-	}
-
-	if (yaw > 87.0*RAD)
-	{
-		yaw = 87.0*RAD;
-	}
-	else if (yaw < -87.0*RAD)
-	{
-		yaw = -87.0*RAD;
-	}
-
 	//Signal Strength
 
 	double relang[4];
@@ -2928,20 +2941,21 @@ void LEM_SteerableAnt::Timestep(double simdt){
 void LEM_SteerableAnt::SystemTimestep(double simdt)
 {
 	// Do we have power?
-	if (IsPowered()) {
-
-		lem->SBD_ANT_AC_CB.DrawPower(4); 	
+	if (IsPowered())
+	{
+		lem->SBD_ANT_AC_CB.DrawPower(4);
 		lem->COMM_SBAND_ANT_CB.DrawPower(0.83);
 		antheatload->GenerateHeat(4 + 0.83);
-
 	}
 
 	if (moving)
 	{
-		lem->SBD_ANT_AC_CB.DrawPower(27.9); 	//Need a source on this moving draw
-		lem->COMM_SBAND_ANT_CB.DrawPower(7.6);  //Need a source on this moving draw
-		//antheatload->GenerateHeat(0);		//Will add this once loads above are checked and sourced
+		lem->SBD_ANT_AC_CB.DrawPower(27.9 * driverateratio); 			//Need a source on this moving draw (currently AOH performance summary)
+		lem->COMM_SBAND_ANT_CB.DrawPower(7.6 * driverateratio);			//Need a source on this moving draw (currently AOH performance summary)
+		antheatload->GenerateHeat((27.9 + 7.6) * driverateratio);
 	}
+
+	//sprintf(oapiDebugString(),"Drive Rate Ratio %.01f", driverateratio);
 }
 
 bool LEM_SteerableAnt::IsPowered()
@@ -3093,6 +3107,55 @@ void LM_OMNI::Timestep()
 	{
 		SignalStrength = 0.0;
 	}
+}
+
+LM_ErectableAnt::LM_ErectableAnt()
+{
+	lem = NULL;
+	AntGain = pow(10, (33.2 / 10));
+	double AntFrequency = 2119.0;
+	AntWavelength = C0 / (AntFrequency * 1000000.0); //meters
+}
+
+void LM_ErectableAnt::Init(LEM *vessel)
+{
+	lem = vessel;
+}
+
+void LM_ErectableAnt::Timestep()
+{
+	//Default to 0 signal strength
+	SignalStrength = 0.0;
+
+	//Try to find vessel
+	OBJHANDLE Ant = oapiGetVesselByName("S-Band");
+	if (Ant == NULL) return;
+
+	//Use stage condition to see if the antenna can still be connected
+	if (lem->GetStage() > 1) return;
+
+	//Get pointer to MCC
+	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
+	if (MCCV == NULL) return;
+
+	VECTOR3 pos;
+	double EarthSignalDist, RecvdOMNIPower, RecvdOMNIPower_dBm;
+
+	//Global position of the spacecraft
+	lem->GetGlobalPos(pos);
+
+	//Get properties
+	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV);
+	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetLM, &GroundTransmitterRFProperties);
+
+	//Distance from active ground station
+	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition);
+
+	//Signal strength
+	RecvdOMNIPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain * AntGain * pow(AntWavelength / (4.0 * PI*EarthSignalDist), 2); //maximum received power in watts
+	RecvdOMNIPower_dBm = RFCALC_W2dBm(RecvdOMNIPower);
+	SignalStrength = LM_SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 }
 
 LM_DSEA::LM_DSEA() :

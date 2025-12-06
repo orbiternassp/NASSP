@@ -126,6 +126,8 @@ struct LWPInputTable
 {
 	LWPInputTable();
 
+	//Target vector time (GET). Use present time if set to a negative value
+	double TargetVectorTime;
 	//Position/velocity input state vector for target vehicle
 	VECTOR3 RT, VT;
 	double TT;

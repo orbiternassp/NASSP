@@ -861,7 +861,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		refsopt.REFSMMATTime = CZTDTGTU.GETTD;
 
 		REFSMMAT = REFSMMATCalc(&refsopt);
-		
+
 		//Store as LM LLD matrix
 		EMGSTSTM(RTCC_MPT_LM, REFSMMAT, RTCC_REFSMMAT_TYPE_LLD, RTCCPresentTimeGMT());
 		//Also move to CSM LCV
@@ -1164,6 +1164,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		landmarkopt.sv0 = ConvertSVtoEphemData(sv);
 		landmarkopt.entries = 1;
 
+		form->type = 0;
 		LandmarkTrackingPAD(landmarkopt, *form);
 
 		AGCStateVectorUpdate(buffer1, sv, true);
@@ -1198,7 +1199,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP10DAPDATA dap;
 
 		LMDAPUpdate(calcParams.tgt, dap, false);
-		
+
 		LEM *lem = (LEM *)calcParams.tgt;
 
 		VECTOR3 lmn20, csmn20, V42angles;
@@ -1576,7 +1577,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)pad;
 
 		sv0 = StateVectorCalcEphem(calcParams.src);
-
+		form->type = 0;
 		opt.sv0 = sv0;
 
 		if (fcn == 61)
@@ -1763,9 +1764,9 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		GETbase = CalcGETBase();
 		sv_CSM = StateVectorCalc(calcParams.src);
-		
+
 		LEM *l = (LEM*)calcParams.tgt;
-		
+
 		//T2
 		T2 = calcParams.PDI + 21.0*60.0 + 24.0;
 
@@ -1834,7 +1835,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.lat = BZLAND.lat[0];
 		opt.lng = BZLAND.lng[0];
 		opt.R_LLS = BZLAND.rad[0];
-		opt.sv_CSM = sv_CSM;
+		opt.sv_CSM.sv = ConvertSVtoEphemData(sv_CSM);
+		opt.sv_CSM.Weight = sv_CSM.mass;
 		opt.theta_1 = 9.9588*RAD;
 		opt.dt_1 = 447.0;
 
@@ -1995,7 +1997,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.lat = BZLAND.lat[0];
 		opt.lng = BZLAND.lng[0];
 		opt.R_LLS = BZLAND.rad[0];
-		opt.sv_CSM = sv_CSM;
+		opt.sv_CSM.sv = ConvertSVtoEphemData(sv_CSM);
+		opt.sv_CSM.Weight = sv_CSM.mass;
 		opt.theta_1 = 9.9588*RAD;
 		opt.dt_1 = 447.0;
 
@@ -2110,7 +2113,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.lat = BZLAND.lat[0];
 		opt.lng = BZLAND.lng[0];
 		opt.R_LLS = BZLAND.rad[0];
-		opt.sv_CSM = sv_CSM;
+		opt.sv_CSM.sv = ConvertSVtoEphemData(sv_CSM);
+		opt.sv_CSM.Weight = sv_CSM.mass;
 		opt.theta_1 = 9.9588*RAD;
 		opt.dt_1 = 447.0;
 
@@ -2155,7 +2159,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.theta_1 = asc_out.theta;
 		opt.dt_1 = asc_out.dt_asc;
 
-		for (int i = 0;i < form->entries;i++)
+		for (int i = 0; i < form->entries; i++)
 		{
 			LunarLaunchWindowProcessor(opt);
 			form->TIG[i] = PZLRPT.data[1].GETLO;
@@ -2236,7 +2240,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			if (upString != NULL) {
 				// give to mcc
 				strncpy(upString, uplinkdata, 1024 * 3);
-				sprintf(upDesc, "PC REFSMMAT");
+				sprintf(upDesc, "Plane Change REFSMMAT");
 			}
 		}
 		else
@@ -2345,7 +2349,8 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		opt.lat = BZLAND.lat[0];
 		opt.lng = BZLAND.lng[0];
 		opt.R_LLS = BZLAND.rad[0];
-		opt.sv_CSM = sv_CSM;
+		opt.sv_CSM.sv = ConvertSVtoEphemData(sv_CSM);
+		opt.sv_CSM.Weight = sv_CSM.mass;
 		opt.theta_1 = 9.9588*RAD;
 		opt.dt_1 = 447.0;
 		opt.t_hole = GMTfromGET(t_TPI);
