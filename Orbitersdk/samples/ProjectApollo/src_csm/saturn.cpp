@@ -639,7 +639,7 @@ Saturn::~Saturn()
 	if (wasteDisposalKnob) delete wasteDisposalKnob;
 
 	// Ordeal animation
-	for (int i = 0; i < std::size(ordealSw01_rot); i++) {
+	for (unsigned int i = 0; i < std::size(ordealSw01_rot); i++) {
 		if (ordealSw01_rot[i]) delete ordealSw01_rot[i];
 	}
 

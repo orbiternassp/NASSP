@@ -47,6 +47,7 @@
 
 #include "connector.h"
 #include "nassputils.h"
+#include "LM_VC_Resource.h"
 
 using namespace nassp;
 
@@ -1663,6 +1664,22 @@ void LEM::SetGenericStageState(int stat)
 
 void LEM::PostLoadSetup(bool define_anims)
 {
+	// This is Mission Specific code to change for now only the Panel 14 DC FEEDER text.
+	// First hide all the texts
+	HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT,true);
+	HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT_2,true);
+	HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_BUS_FAULT,true);
+
+	if (pMission->GetLMNumber()<6){												// up to Apollo 11
+		HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_BUS_FAULT,false);
+	}
+	else if (pMission->GetLMNumber()>5 && (pMission->GetLMNumber()<9)) {		// Apollo 12 to 14
+		HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT,false);
+	}
+	else {
+		HideMeshGroup(vcidx,VC_GRP_Panel12_16_DC_FEEDER_FAULT_2,false);			// Apollo 15 to 17
+	}
+
 	CheckDescentStageSystems();
 	if (define_anims) DefineAnimations();
 
