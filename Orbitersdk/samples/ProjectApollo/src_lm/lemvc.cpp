@@ -1799,9 +1799,8 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 	}
 
 	case AID_LMVC_POINTINGARROW:
-	{
 		UpdatePointingArrow();
-	}
+		return true;
 
 	case AID_VC_LM_CWS_LEFT:
 		CWEA.RedrawLeft(surf, srf[SFR_VC_CW_LIGHTS], TexMul);
