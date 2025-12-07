@@ -437,8 +437,7 @@ void LMOptics::Init(LEM* vessel) {
 
 void LMOptics::AOTDetentToggle() {
 
-	if (ZeroDetent == false && abs(OpticsReticle) < (1.0 * DEG)) {
-		//if (ZeroDetent == false) {
+	if (ZeroDetent == false) {
 		ZeroDetent = true;
 		sprintf(oapiDebugString(), "AOT DETENT ENABLED");
 	}
