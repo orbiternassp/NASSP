@@ -89,10 +89,11 @@ protected:
 /// \ingroup AGC
 /// \brief LM Optics.
 ///
-class LMOptics {	
-public: 
+class LMOptics {
+public:
 	LMOptics();													// Cons
-	void Init(LEM *vessel);										// Initialization
+	void Init(LEM* vessel);										// Initialization
+	void AOTDetentToggle();
 	void Timestep(double simdt);                                // Timestep
 	void SystemTimestep(double simdt);
 	bool PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits);	// Update panel image
@@ -103,13 +104,14 @@ public:
 	// These should really be protected variables.
 	//
 
-	LEM *lem; 										 			// Our Ship
+	LEM* lem; 										 			// Our Ship
 
 	int OpticsShaft;											// Shaft Position (can be 0=0, 1=60, 2=120, 3=180, 4=-120, 5=-60 degrees)
 	double OpticsReticle;										// AOT Reticle rotation
 	double ReticleMoved;										// 0 is no movement detected, - is clockwise, + is counterclockwise
 	int RetDimmer;
 	int KnobTurning;
+	bool ZeroDetent;
 };
 
 //
