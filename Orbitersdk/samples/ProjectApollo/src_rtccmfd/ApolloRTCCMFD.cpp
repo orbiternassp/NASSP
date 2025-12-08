@@ -252,7 +252,6 @@ void ApolloRTCCMFD::WriteStatus(FILEHANDLE scn) const
 	//oapiWriteScenario_int(scn, "SCREEN", G->screen);
 	papiWriteScenario_bool(scn, "VESSELISDOCKED", G->vesselisdocked);
 	papiWriteScenario_double(scn, "SXTSTARDTIME", G->sxtstardtime);
-	oapiWriteScenario_int(scn, "REFSMMATcur", G->REFSMMATcur);
 	oapiWriteScenario_int(scn, "REFSMMATopt", G->REFSMMATopt);
 	papiWriteScenario_double(scn, "REFSMMAT_LVLH_Time", G->REFSMMAT_LVLH_Time);
 	papiWriteScenario_bool(scn, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
@@ -305,7 +304,6 @@ void ApolloRTCCMFD::ReadStatus(FILEHANDLE scn)
 		//papiReadScenario_int(line, "SCREEN", G->screen);
 		papiReadScenario_bool(line, "VESSELISDOCKED", G->vesselisdocked);
 		papiReadScenario_double(line, "SXTSTARDTIME", G->sxtstardtime);
-		papiReadScenario_int(line, "REFSMMATcur", G->REFSMMATcur);
 		papiReadScenario_int(line, "REFSMMATopt", G->REFSMMATopt);
 		papiReadScenario_double(line, "REFSMMAT_LVLH_Time", G->REFSMMAT_LVLH_Time);
 		papiReadScenario_bool(line, "REFSMMATHeadsUp", G->REFSMMATHeadsUp);
@@ -4025,7 +4023,14 @@ void ApolloRTCCMFD::menuCyclePreferredGDCStarSet()
 
 void ApolloRTCCMFD::REFSMMATTimeDialogue()
 {
-	if (G->REFSMMATopt == 2)
+	if (G->REFSMMATopt == 0)
+	{
+		if (GC->MissionPlanningActive)
+		{
+			GenericIntInput(&G->REFSMMAT_ManNum, "Enter maneuver number (1-15):", NULL, 1, 15);
+		}
+	}
+	else if (G->REFSMMATopt == 2)
 	{
 		bool REFSMMATGETInput(void *id, char *str, void *data);
 		oapiOpenInputBox("Choose the GET (Format: hhh:mm:ss)", REFSMMATGETInput, 0, 20, (void*)this);
@@ -6782,8 +6787,6 @@ void ApolloRTCCMFD::GetREFSMMATfromAGC()
 		GC->rtcc->EMSLSUPP(1, 1);
 		GeneralMEDRequest("G00,LEM,TLM,LEM,CUR;");
 	}
-
-	G->REFSMMATcur = G->REFSMMATopt;
 
 	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", G->REFSMMAT.m11, G->REFSMMAT.m12, G->REFSMMAT.m13, G->REFSMMAT.m21, G->REFSMMAT.m22, G->REFSMMAT.m23, G->REFSMMAT.m31, G->REFSMMAT.m32, G->REFSMMAT.m33);
 }
