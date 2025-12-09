@@ -390,7 +390,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		MATRIX3 REFSMMAT;
 		VECTOR3 dV_LVLH, dv;
 		char manname[32];
-		char ullage[10];
+		char ullage[32];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
