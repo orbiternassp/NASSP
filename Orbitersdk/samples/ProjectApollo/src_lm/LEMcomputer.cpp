@@ -422,6 +422,7 @@ void LEMcomputer::GetRadarData(int radarBits)
 LMOptics::LMOptics() {
 
 	lem = NULL;
+
 	OpticsShaft = 3;
 	OpticsReticle = 0.0;
 	ZeroDetent = true;
@@ -430,21 +431,32 @@ LMOptics::LMOptics() {
 	KnobTurning = 0;
 }
 
-void LMOptics::Init(LEM* vessel) {
+void LMOptics::Init(LEM *vessel) {
 
 	lem = vessel;
 }
 
+bool LMOptics::ReticlePush() {
+	if (((360.0 - OpticsReticle / RAD) < 1.0) || ((360.0 - OpticsReticle / RAD > 359.0)))
+	{
+		return true;
+	}
+	else
+		return false;
+}
+
 void LMOptics::AOTDetentToggle() {
 
-	if (ZeroDetent == false) {
+	if (lem->AOTReticleDetent.GetState() == 0 && ReticlePush() == true) 
+	{
+		lem->AOTReticleDetent.SetState(1);
 		ZeroDetent = true;
-		sprintf(oapiDebugString(), "AOT DETENT ENABLED");
 	}
 
-	else {
+	else 
+	{
+		lem->AOTReticleDetent.SetState(0);
 		ZeroDetent = false;
-		sprintf(oapiDebugString(), "AOT DETENT RELEASED");
 	}
 	return;
 }
@@ -508,6 +520,8 @@ void LMOptics::Timestep(double simdt) {
 		{
 			sprintf(oapiDebugString(), "Optics Shaft %d, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft, 360.0 - OpticsReticle / RAD, ReticleMoved, KnobTurning);
 		}*/
+
+		//sprintf(oapiDebugString(), "Optics Reticle %.2f", 360.0 - OpticsReticle / RAD);
 
 		if (OpticsReticle > 2 * PI) OpticsReticle -= 2 * PI;
 		if (OpticsReticle < 0) OpticsReticle += 2 * PI;

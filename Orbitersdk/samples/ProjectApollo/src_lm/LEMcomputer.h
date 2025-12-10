@@ -92,8 +92,9 @@ protected:
 class LMOptics {
 public:
 	LMOptics();													// Cons
-	void Init(LEM* vessel);										// Initialization
-	void AOTDetentToggle();
+	void Init(LEM* vessel);			// Initialization
+	bool ReticlePush();											// Checks If Reticle Can Pe Pushed In
+	void AOTDetentToggle();										// Toggles Reticle Detent
 	void Timestep(double simdt);                                // Timestep
 	void SystemTimestep(double simdt);
 	bool PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits);	// Update panel image
@@ -112,6 +113,7 @@ public:
 	int RetDimmer;
 	int KnobTurning;
 	bool ZeroDetent;
+
 };
 
 //
