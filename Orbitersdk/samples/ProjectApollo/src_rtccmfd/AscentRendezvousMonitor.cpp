@@ -367,7 +367,7 @@ int ShortAscentRendezvousMonitor::Calc(const ShortARMInputs &in, ShortARMDisplay
 		}
 		else
 		{
-			TPI = TWEAK + in.DTPI;
+			TPI = in.t_Ins + in.DTPI;
 		}
 
 		//Compute two-impulse solution to TPI offsets

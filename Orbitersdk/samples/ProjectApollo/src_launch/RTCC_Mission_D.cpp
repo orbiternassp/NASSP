@@ -155,18 +155,17 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	case 96: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (90:00:00)
 	case 97: //CSM STATE VECTOR UPDATE, V66 (92:30:00)
 	case 98: //CSM STATE VECTOR UPDATE AND NAV CHECK PAD (103:30:00)
-	case 99: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (120:30:00)
+	//case 99: Unused
 	case 100: //CSM STATE VECTOR UPDATE (127:30:00)
 	case 101: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (149:45:00)
 	case 102: //CSM STATE VECTOR UPDATE, V66, AND NAV CHECK PAD (174:55:00)
 	case 103: //CSM STATE VECTOR UPDATE (199:30:00)
 	case 104: //CSM STATE VECTOR UPDATE (LM SLOT) (218:00:00)
 	{
-		AP7NAV * form = (AP7NAV *)pad;
-
 		VehicleDataBlock sv, sv1;
 		double NavGET, SVGMT;
 		bool V66Flag = true; //V66 flag
+		bool PADFlag = true; //PAD flag
 		int slot = RTCC_MPT_CSM;
 		char buffer1[1000];
 
@@ -209,20 +208,18 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else if (fcn == 97)
 		{
 			NavGET = OrbMech::HHMMSSToSS(92, 30, 0);  //Nav Check GET
+			PADFlag = false;
 		}
 		else if (fcn == 98)
 		{
 			NavGET = OrbMech::HHMMSSToSS(103, 30, 0);  //Nav Check GET
 			V66Flag = false;
 		}
-		else if (fcn == 99)
-		{
-			NavGET = OrbMech::HHMMSSToSS(120, 30, 0);  //Nav Check GET
-		}
 		else if (fcn == 100)
 		{
 			NavGET = OrbMech::HHMMSSToSS(127, 30, 0);  //Nav Check GET
 			V66Flag = false;
+			PADFlag = false;
 		}
 		else if (fcn == 101)
 		{
@@ -236,11 +233,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			NavGET = OrbMech::HHMMSSToSS(199, 30, 0);  //Nav Check GET
 			V66Flag = false;
+			PADFlag = false;
 		}
 		else if (fcn == 104)
 		{
 			NavGET = OrbMech::HHMMSSToSS(218, 0, 0);  //Nav Check GET
 			V66Flag = false;
+			PADFlag = false;
 			slot = RTCC_MPT_LM;
 		}
 
@@ -255,7 +254,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		sv1 = coast(sv, SVGMT - sv.sv.GMT); //Time tag SV
 
-		NavCheckPAD(sv1, *form, NavGET);
+		if (PADFlag == true)
+		{
+			AP7NAV* form = (AP7NAV*)pad;
+			NavCheckPAD(sv1, *form, NavGET);
+		}
 
 		AGCStateVectorUpdate(buffer1, 1, slot, sv1.sv, V66Flag);
 
@@ -476,10 +479,10 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		WeightsTable = GetWeightsTable(calcParams.src, true, true);
 		CurrentREFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 
-		gmpopt.sv_in = sv0;
-		gmpopt.Area = WeightsTable.ConfigArea;
-		gmpopt.Weight = WeightsTable.ConfigWeight;
-		gmpopt.KFactor = PZMPTCSM.KFactor;
+		gmpopt.sv_in.sv = sv0;
+		gmpopt.sv_in.Area = WeightsTable.ConfigArea;
+		gmpopt.sv_in.Weight = WeightsTable.ConfigWeight;
+		gmpopt.sv_in.KFactor = PZMPTCSM.KFactor;
 
 		if (fcn == 13)
 		{
@@ -722,11 +725,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		gmpopt.dLAN = 6.9*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_NSO; //Gives TIG at northernmost latitude
-		gmpopt.sv_in = sv0.sv;
+		gmpopt.sv_in = sv0;
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(49, 10, 0);
-		gmpopt.Area = PZMPTCSM.ConfigurationArea;
-		gmpopt.Weight = med_m50.CSMWT + med_m50.LMWT;
-		gmpopt.KFactor = PZMPTCSM.KFactor;
+		gmpopt.sv_in.Area = PZMPTCSM.ConfigurationArea;
+		gmpopt.sv_in.Weight = med_m50.CSMWT + med_m50.LMWT;
+		gmpopt.sv_in.KFactor = PZMPTCSM.KFactor;
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
 
@@ -1479,7 +1482,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.long_D = -95.0*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_FCL;
 		gmpopt.Pitch = 0.0;
-		gmpopt.sv_in = sv0.sv;
+		gmpopt.sv_in = sv0;
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(101, 30, 0);
 		gmpopt.Yaw = -45.0*RAD;
 
@@ -1706,8 +1709,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalcEphem(calcParams.src); //State vector for uplink
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
-		gmpopt.Area = WeightsTable.ConfigArea;
-		gmpopt.Weight = WeightsTable.ConfigWeight;
+		gmpopt.sv_in.Area = WeightsTable.ConfigArea;
+		gmpopt.sv_in.Weight = WeightsTable.ConfigWeight;
+		gmpopt.sv_in.KFactor = PZMPTCSM.KFactor;
 
 		if (fcn == 45)
 		{
@@ -1715,7 +1719,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			gmpopt.H_P = 97.0*1852.0;	//Should be 95, but ensures that even with residuals and drag the perigee won't fall below 95 at SPS-7, which makes the calculation much more reliable
 			gmpopt.long_D = 122.3*RAD;
 			gmpopt.ManeuverCode = RTCC_GMP_HBL;
-			gmpopt.sv_in = sv0;
+			gmpopt.sv_in.sv = sv0;
 			gmpopt.TIG_GET = OrbMech::HHMMSSToSS(121, 30, 0);
 		}
 		else
@@ -1724,7 +1728,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			gmpopt.H_P = 95.0*1852.0;	//Should be 97, but, see above
 			gmpopt.long_D = -45.0*RAD;
 			gmpopt.ManeuverCode = RTCC_GMP_HAS;
-			gmpopt.sv_in = sv0;
+			gmpopt.sv_in.sv = sv0;
 			gmpopt.TIG_GET = OrbMech::HHMMSSToSS(169, 10, 0);
 			gmpopt.N = 46;
 		}
@@ -2236,13 +2240,13 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		else if (fcn == 77)
 		{
 			sprintf(form->LmkID[0], "005"); //Santa Catalina Island (SW US)
-			opt.LmkTime[0] = OrbMech::HHMMSSToSS(217, 50, 0);
+			opt.LmkTime[0] = OrbMech::HHMMSSToSS(217, 30, 0);
 			opt.alt[0] = -0.01*1852.0;
 			opt.lat[0] = 33.479*RAD;
 			opt.lng[0] = -118.606*RAD;
 
 			sprintf(form->LmkID[1], "065"); //Tortue Island, Haiti (Caribbean)
-			opt.LmkTime[1] = OrbMech::HHMMSSToSS(218, 0, 0);
+			opt.LmkTime[1] = OrbMech::HHMMSSToSS(217, 45, 0);
 			opt.alt[1] = -0.01*1852.0;
 			opt.lat[1] = 20.065*RAD;
 			opt.lng[1] = -72.971*RAD;

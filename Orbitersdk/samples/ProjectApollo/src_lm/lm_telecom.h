@@ -364,6 +364,7 @@ protected:
 	double	sband_proc_last[2];
 
 	bool moving;
+	double driverateratio;
 	double hpbw_factor;
 
 	const MATRIX3 NBSA = _M(cos(45.0*RAD), -sin(45.0*RAD), 0.0, sin(45.0*RAD), cos(45.0*RAD), 0.0, 0.0, 0.0, 1.0);
@@ -385,6 +386,21 @@ protected:
 	LEM *lem;					// Ship we're installed in
 	VECTOR3 direction;
 	double hpbw_factor;			//Beamwidth factor
+};
+
+//Interface for Erectable Antenna
+class LM_ErectableAnt : public LM_SBandAntenna
+{
+public:
+	LM_ErectableAnt();
+	void Init(LEM *vessel);
+	void Timestep();
+
+	RFCALC_RFProperties GroundTransmitterRFProperties;
+protected:
+	LEM *lem;
+	double AntGain;
+	double AntWavelength;
 };
 
 ///

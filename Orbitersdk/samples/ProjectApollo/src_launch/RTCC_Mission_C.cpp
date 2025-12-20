@@ -1078,7 +1078,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 		//Iterate on TIG to find solution that gives us the desired apsidal shift
 		orbopt.ManeuverCode = RTCC_GMP_HBT;
-		orbopt.sv_in = sv;
+		orbopt.sv_in.sv = sv;
 		orbopt.H_A = H_A;
 		orbopt.H_P = 90.0*1852.0;
 		orbopt.TIG_GET = GET_TH;
@@ -1617,7 +1617,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		orbopt.long_D = -88.455*RAD;
 		orbopt.dLAN = -6.7*RAD;
 		orbopt.ManeuverCode = RTCC_GMP_NHL;
-		orbopt.sv_in = sv.sv;
+		orbopt.sv_in.sv = sv.sv;
 		orbopt.TIG_GET = OrbMech::HHMMSSToSS(164, 30, 0);
 
 		GeneralManeuverProcessor(&orbopt, dV_imp, TIG_imp);
@@ -1848,7 +1848,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 
 		sv_1 = coast(sv, NavGMT - sv.sv.GMT); //Time tag to Nav Check time + 30m
 
-		if (fcn == 90)
+		if (fcn == 92)
 		{
 			AGCStateVectorUpdate(buffer1, 1, RTCC_MPT_CSM, sv_1.sv);
 			AGCStateVectorUpdate(buffer2, 1, RTCC_MPT_LM, sv_1.sv);
@@ -1935,7 +1935,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		orbopt.dLOA = 0.0;
 		orbopt.TIG_GET = OrbMech::HHMMSSToSS(238, 40, 0);
 		orbopt.ManeuverCode = RTCC_GMP_SAO;
-		orbopt.sv_in = sv.sv;
+		orbopt.sv_in = sv;
 
 		//Do this three times to converge properly
 		for (int i = 0; i < 3; i++)

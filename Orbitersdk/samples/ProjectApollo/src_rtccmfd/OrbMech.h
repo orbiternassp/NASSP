@@ -326,6 +326,7 @@ namespace OrbMech {
 	template <typename T> int sign(T val);
 	int DoubleToBuffer(double x, double q, int m);
 	void AGCSignedValue(int &val);
+	void DoubleToAGCTriple(double val, int* oct);
 	int AEAToSigned(int val);
 	double AEAToDouble(int val, int SF);
 	int AEAToDEDA(int val);

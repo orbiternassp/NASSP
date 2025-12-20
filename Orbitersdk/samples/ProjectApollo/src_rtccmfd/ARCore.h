@@ -230,6 +230,8 @@ public:
 	int GetVesselParameters(bool IsCSM, int docked, int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass);
 	int menuCalculateAttitudeComparison(bool IsCSM, bool IsAGC);
 	void menuCalculateIMUParkingAngles(agc_t* agc);
+	int GetVehicleDataBlock(int L, double VectorTimeGET, std::string VectorID, VehicleDataBlock &sv, std::string &StationID);
+	int VectorFetch(int L, double VectorTimeGET, std::string VectorID, EphemerisData &sv, std::string &StationID);
 
 	int startSubthread(int fcn, bool IsCSM = true);
 	int subThread();
@@ -257,8 +259,6 @@ public:
 	double t_TPIguess;
 
 	//CONCENTRIC RENDEZVOUS PAGE
-	int SPQMode;	//0 = CSI on time, 1 = CDH, 2 = optimum CSI
-	double CDHtime;	//Time of the CDH maneuver
 	int CDHtimemode; //CSI: 0 = fixed TIG at TPI, 1 = fixed DH at CDH. CDH: 0=Fixed, 1 = Find GETI
 
 	//ORBIT ADJUSTMENT PAGE
@@ -275,7 +275,6 @@ public:
 	double GMPYaw;
 	double GMPApseLineRotAngle;
 	int GMPRevs;
-	double SPSGET;		//Maneuver GET
 	//0 = Apogee
 	//1 = Equatorial crossing
 	//2 = Perigee
@@ -301,8 +300,8 @@ public:
 
 	//REFSMMAT PAGE
 	double REFSMMAT_LVLH_Time;
+	int REFSMMAT_ManNum;	//Maneuver number for P30 REFSMMAT
 	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2 = LVLH, 3 = Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
-	int REFSMMATcur; //Currently saved REFSMMAT
 	bool REFSMMATHeadsUp;
 
 	//ENTRY PAGE
@@ -388,6 +387,7 @@ public:
 
 	//SATURN IB LAUNCH TARGETING
 	VESSEL* Rendezvous_Target; //Target vessel in orbit
+	int Rendezvous_Target_Table; //1 = CSM, 3 = LEM
 
 	//UPLINK
 	double AGCClockTime[2];

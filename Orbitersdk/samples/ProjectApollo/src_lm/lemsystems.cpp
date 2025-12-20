@@ -459,6 +459,8 @@ void LEM::SystemsInit()
 	omni_aft.Init(this);
 	// S-Band Steerable Ant
 	SBandSteerable.Init(this, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-SBand-Steerable-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-SBand-Steerable-Antenna-Heater"), (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:SBDANTHEAT"));
+	// Erectable Ant
+	SBandErectable.Init(this);
 	// SBand System
 	SBand.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBPHEAT"));
 	// VHF System
@@ -1545,6 +1547,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	crossPointerLeft.Timestep(simdt);
 	crossPointerRight.Timestep(simdt);
 	SBandSteerable.Timestep(simdt);
+	SBandErectable.Timestep();
 	omni_fwd.Timestep();
 	omni_aft.Timestep();
 	SBand.Timestep(simt);

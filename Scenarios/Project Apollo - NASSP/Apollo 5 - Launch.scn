@@ -1,5 +1,5 @@
 BEGIN_DESC
-Apollo 5 was an unmanned flight used to test the LM in Earth orbit. The scenario starts on the pad at T-1min40s. (AS-204)
+Apollo 5 was an unmanned flight used to test the LM in Earth orbit. The scenario starts on the pad at T-1 hour. (AS-204)
 END_DESC
 
 BEGIN_ENVIRONMENT
@@ -13,11 +13,12 @@ END_FOCUS
 
 BEGIN_CAMERA
   TARGET LM-1
-  MODE Extern
-  POS 2.44 0.0 -90.0
-  TRACKMODE TargetRelative
+  MODE Cockpit
   FOV 60.00
 END_CAMERA
+
+BEGIN_VC
+END_VC
 
 BEGIN_SHIPS
 S-IB-4:ProjectApollo/nsat1stg1
@@ -242,6 +243,9 @@ LM-1:ProjectApollo/LEM
   EMEM3776 4466
   EMEM3777 0
   AGC_END
+  <Checklist>
+    FILE Doc\Project Apollo - NASSP\Checklists\Apollo 5 LM Checklists.xls
+  </Checklist>
 END
 AS-204-Nosecap:ProjectApollo/Sat1Aerocap
   STATUS Landed Earth
