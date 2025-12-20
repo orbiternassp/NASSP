@@ -4031,74 +4031,74 @@ void Saturn::DefineVCAnimations()
 	RightO2FlowMeter.SetRotationRange(RAD * 110);
 	RightO2FlowMeter.DefineMeshGroup(VC_GRP_Needle_P2_19);
 
-	NEEDLE_POS = { 0.1030, 0.6457, 0.3416 };
+	NEEDLE_POS = { 0.09840, 0.64644, 0.34044 };
 
 	MainPanelVC.AddSwitch(&EcsRadTempInletMeter);
 	EcsRadTempInletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
-	EcsRadTempInletMeter.SetRotationRange(RAD * 110);
+	EcsRadTempInletMeter.SetRotationRange(RAD * 90);
 	EcsRadTempInletMeter.DefineMeshGroup(VC_GRP_Needle_P2_20);
 
-	NEEDLE_POS = { 0.1294, 0.6457, 0.3416 };
+	NEEDLE_POS = { 0.13328, 0.64644, 0.34044 };
 
 	MainPanelVC.AddSwitch(&EcsRadTempPrimOutletMeter);
 	EcsRadTempPrimOutletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	EcsRadTempPrimOutletMeter.SetRotationRange(RAD * 110);
+	EcsRadTempPrimOutletMeter.SetRotationRange(RAD * 90);
 	EcsRadTempPrimOutletMeter.DefineMeshGroup(VC_GRP_Needle_P2_21);
 
-	NEEDLE_POS = { 0.1740, 0.6457, 0.3416 };
+	NEEDLE_POS = { 0.16903, 0.64637, 0.34053 };
 
 	MainPanelVC.AddSwitch(&EcsRadTempSecOutletMeter);
 	EcsRadTempSecOutletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
-	EcsRadTempSecOutletMeter.SetRotationRange(RAD * 110);
+	EcsRadTempSecOutletMeter.SetRotationRange(RAD * 90);
 	EcsRadTempSecOutletMeter.DefineMeshGroup(VC_GRP_Needle_P2_22);
 
-	NEEDLE_POS = { 0.2004, 0.6457, 0.3416 };
+	NEEDLE_POS = { 0.20390, 0.64637, 0.34054 };
 
 	MainPanelVC.AddSwitch(&GlyEvapTempOutletMeter);
 	GlyEvapTempOutletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	GlyEvapTempOutletMeter.SetRotationRange(RAD * 110);
+	GlyEvapTempOutletMeter.SetRotationRange(RAD * 90);
 	GlyEvapTempOutletMeter.DefineMeshGroup(VC_GRP_Needle_P2_23);
 
-	NEEDLE_POS = { 0.2438, 0.6457, 0.3416 };
+	NEEDLE_POS = { 0.23942, 0.64647, 0.34056 };
 
 	MainPanelVC.AddSwitch(&GlyEvapSteamPressMeter);
 	GlyEvapSteamPressMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
-	GlyEvapSteamPressMeter.SetRotationRange(RAD * 110);
+	GlyEvapSteamPressMeter.SetRotationRange(RAD * 90);
 	GlyEvapSteamPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_24);
 
-	NEEDLE_POS = { 0.2702, 0.6457, 0.3416 };
+	NEEDLE_POS = { 0.27413, 0.64647, 0.34057 };
 
 	MainPanelVC.AddSwitch(&GlycolDischPressMeter);
 	GlycolDischPressMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	GlycolDischPressMeter.SetRotationRange(RAD * 110);
+	GlycolDischPressMeter.SetRotationRange(RAD * 90);
 	GlycolDischPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_25);
 
-	NEEDLE_POS = { 0.1737, 0.5763, 0.3183 };
+	NEEDLE_POS = { 0.16904, 0.57688, 0.31725 };
 
 	MainPanelVC.AddSwitch(&LeftO2FlowMeter);
 	LeftO2FlowMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
-	LeftO2FlowMeter.SetRotationRange(RAD * 110);
+	LeftO2FlowMeter.SetRotationRange(RAD * 90);
 	LeftO2FlowMeter.DefineMeshGroup(VC_GRP_Needle_P2_26);
 
-	NEEDLE_POS = { 0.2000, 0.5763, 0.3183 };
+	NEEDLE_POS = { 0.20402, 0.57688, 0.31726 };
 
 	MainPanelVC.AddSwitch(&SuitComprDeltaPMeter);
 	SuitComprDeltaPMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	SuitComprDeltaPMeter.SetRotationRange(RAD * 110);
+	SuitComprDeltaPMeter.SetRotationRange(RAD * 90);
 	SuitComprDeltaPMeter.DefineMeshGroup(VC_GRP_Needle_P2_27);
 
-	NEEDLE_POS = { 0.2439, 0.5763, 0.3183 };
+	NEEDLE_POS = { 0.23949, 0.57692, 0.31727 };
 
 	MainPanelVC.AddSwitch(&AccumQuantityMeter);
 	AccumQuantityMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
-	AccumQuantityMeter.SetRotationRange(RAD * 110);
+	AccumQuantityMeter.SetRotationRange(RAD * 90);
 	AccumQuantityMeter.DefineMeshGroup(VC_GRP_Needle_P2_28);
 
-	NEEDLE_POS = { 0.2702, 0.5763, 0.3183 };
+	NEEDLE_POS = { 0.27429, 0.57692, 0.31728 };
 
 	MainPanelVC.AddSwitch(&H2oQuantityMeter);
 	H2oQuantityMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	H2oQuantityMeter.SetRotationRange(RAD * 110);
+	H2oQuantityMeter.SetRotationRange(RAD * 90);
 	H2oQuantityMeter.DefineMeshGroup(VC_GRP_Needle_P2_29);
 
 	NEEDLE_POS = { 0.3197, 0.4567, 0.2790 };
