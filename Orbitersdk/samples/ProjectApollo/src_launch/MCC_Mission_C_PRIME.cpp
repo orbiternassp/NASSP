@@ -51,7 +51,7 @@ void MCC::MissionSequence_C_Prime()
 	case MST_CP_EPO4: //TLI PAD to TLI Evaluation
 		UpdateMacro(UTP_PADONLY, PT_TLIPAD, mcc_calcs.GETEval(rtcc->calcParams.TLI + 18.0), 5, MST_CP_TRANSLUNAR1);
 		break;
-	case MST_CP_TRANSLUNAR1: //TLI Evaluation to Block Data 1
+	case MST_CP_TRANSLUNAR1: //TLI Evaluation to MCC1
 		UpdateMacro(UTP_NONE, PT_NONE, true, 6, MST_CP_TRANSLUNAR2, scrubbed, mcc_calcs.GETEval(3.0*3600.0 + 10.0*60.0), MST_CP_EPO1);
 		break;
 	case MST_CP_TRANSLUNAR2:
@@ -73,7 +73,7 @@ void MCC::MissionSequence_C_Prime()
 		break;
 		case 2:
 		{
-			if (mcc_calcs.GETEval(rtcc->calcParams.TLI + 2.0*3600.0 + 5.0*60.0))
+			if (mcc_calcs.GETEval(rtcc->calcParams.TLI + 5.0*3600.0))
 			{
 				SlowIfDesired();
 				setState(MST_CP_TRANSLUNAR3);
@@ -82,11 +82,11 @@ void MCC::MissionSequence_C_Prime()
 		break;
 		}
 		break;
-	case MST_CP_TRANSLUNAR3: //Block Data 1 to MCC1
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.TLI + 5.0*3600.0), 10, MST_CP_TRANSLUNAR4);
+	case MST_CP_TRANSLUNAR3: //MCC1 to TLI+11 Block Data
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 5.0*60.0, 20, MST_CP_TRANSLUNAR4);
 		break;
-	case MST_CP_TRANSLUNAR4: //MCC1 to TLI+25 Block Data
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.TLI + 9.0*3600.0), 20, MST_CP_TRANSLUNAR5);
+	case MST_CP_TRANSLUNAR4: //TLI+11 Block Data to TLI+25 Block Data
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.TLI + 9.0*3600.0), 10, MST_CP_TRANSLUNAR5);
 		break;
 	case MST_CP_TRANSLUNAR5: //TLI+25 Block Data to Flyby PAD
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 3.0 * 60.0, 11, MST_CP_TRANSLUNAR6);
