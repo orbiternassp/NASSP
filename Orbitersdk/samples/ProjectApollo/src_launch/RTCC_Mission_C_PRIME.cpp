@@ -294,6 +294,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 	}
 	break;
+	case 9:  //MISSION CP BLOCK DATA 1 (Prelim)
 	case 10: //MISSION CP BLOCK DATA 1
 	case 11: //MISSION CP BLOCK DATA 2
 	case 12: //MISSION CP BLOCK DATA 3
@@ -309,7 +310,15 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		if (fcn == 10)
+		if (fcn == 9)
+		{
+			TLIplus = calcParams.TLI + 11.0*3600.0;
+			sprintf(manname, "TLI+11");
+			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd, Assumes no MCC-1");
+			entopt.t_Z = OrbMech::HHMMSSToSS(50.0, 4.0, 0.0);
+			opt.PrefGDCStars = 1; //Navi,Polaris
+		}
+		else if (fcn == 10)
 		{
 			TLIplus = calcParams.TLI + 11.0*3600.0;
 			sprintf(manname, "TLI+11");
