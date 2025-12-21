@@ -356,16 +356,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sv0 = StateVectorCalc(calcParams.src);
 		}
 
-		if (fcn == 10 && scrubbed)
-		{
-			sv0 = calcParams.SVSTORE1;
-		}
-
-		else
-		{
-			sv0 = StateVectorCalc(calcParams.src);
-		}
-
 		entopt.entrylongmanual = true;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
 		entopt.lng = -165.0*RAD;
