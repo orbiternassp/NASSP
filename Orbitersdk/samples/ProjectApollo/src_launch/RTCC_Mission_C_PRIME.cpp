@@ -326,16 +326,6 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				sprintf(mcc1scrub, "Assumes no MCC-1");
 				sv0 = StateVectorCalc(calcParams.src);
 			}
-			if (length(DeltaV_LVLH) != 0.0)
-			{
-
-				sv0 = StateVectorCalc(calcParams.src);
-			}
-			else
-			{
-				sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd, %s", mcc1scrub);
-				sv0 = calcParams.SVSTORE1;
-			}
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd, %s", mcc1scrub);
 		}
 		else if (fcn == 11)
