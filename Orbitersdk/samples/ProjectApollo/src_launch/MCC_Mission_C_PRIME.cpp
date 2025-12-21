@@ -89,7 +89,7 @@ void MCC::MissionSequence_C_Prime()
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, StateTime > 5.0 * 60.0, 20, MST_CP_TRANSLUNARBLOCKUPDATE);
 		break;
 	case MST_CP_TRANSLUNARBLOCKUPDATE: //TLI+11 Block Data to TLI+25 Block Data
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.TLI + 9.0*3600.0), 10, MST_CP_TRANSLUNAR5);
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.TLI + 9.0*3600.0), 10, MST_CP_TRANSLUNAR5);
 		break;
 	case MST_CP_TRANSLUNAR5: //TLI+25 Block Data to Flyby PAD
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, StateTime > 3.0 * 60.0, 11, MST_CP_TRANSLUNAR6);
