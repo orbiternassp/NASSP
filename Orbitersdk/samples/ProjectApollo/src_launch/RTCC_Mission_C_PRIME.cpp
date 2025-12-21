@@ -294,7 +294,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 	}
 	break;
-	case 10: //MISSION CP BLOCK DATA 1 **TLI+11 needs a burnout vector from MCC1 if burned**
+	case 10: //MISSION CP BLOCK DATA 1
 	case 11: //MISSION CP BLOCK DATA 2
 	case 12: //MISSION CP BLOCK DATA 3
 	case 13: //MISSION CP BLOCK DATA 4
