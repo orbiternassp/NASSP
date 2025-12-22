@@ -317,6 +317,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd, Assumes no MCC-1");
 			entopt.t_Z = OrbMech::HHMMSSToSS(50.0, 4.0, 0.0);
 			opt.PrefGDCStars = 1; //Navi,Polaris
+			sv0 = StateVectorCalc(calcParams.src);
 		}
 		else if (fcn == 10)
 		{
