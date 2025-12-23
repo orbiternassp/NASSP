@@ -4031,7 +4031,7 @@ void Saturn::DefineVCAnimations()
 	RightO2FlowMeter.SetRotationRange(RAD * 90);
 	RightO2FlowMeter.DefineMeshGroup(VC_GRP_Needle_P2_19);
 
-	NEEDLE_POS = { 0.098140, 0.64636, 0.34041 };
+	NEEDLE_POS = { 0.09840, 0.64636, 0.34041 };
 
 	MainPanelVC.AddSwitch(&EcsRadTempInletMeter);
 	EcsRadTempInletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
