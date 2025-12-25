@@ -3796,28 +3796,44 @@ void LEM::ToggleFlashlight()
 
 void LEM::UpdatePointingArrow()
 {
+	static bool first = true;
+	static bool arrowVisible;
+	static VECTOR3 activeSwitchPos;
+	static VECTOR3 camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs;	
+	static VECTOR3* arrowData;
+	static VECTOR3* circleData;
+	static VECTOR3* circleDataOrig;
+	static VECTOR3 arrowCurPos, circleCurPos;
+	static VECTOR3 pointing_dir;
+	static VECTOR3 rot_axis, circle_dir, rot_axis_circle, final_vertex;
+	static MATRIX3 rotation, rotation_circle;
+	static int arrowVertsCnt, circleVertsCnt;
+	static double rotationangle, rad, cos_a, sin_a;
+	static double dot, angle;
+	static double dot_circle, angle_circle;
+	static PanelSwitchItem* nextActiveSwitch;
+	static DEVMESHHANDLE hArrowMesh;
+	static MESHGROUP* arrow_group;
+	static MESHGROUP* circle_group;
+	static GROUPREQUESTSPEC arrow_grp, circle_grp;
+	static GROUPEDITSPEC ges;
+
 	if (!vcmesh) return;
 
-	bool arrowVisible = checkControl.getFlashing();
+	arrowVisible = checkControl.getFlashing();
 	if (!arrowVisible) {		// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
 		SetMeshVisibilityMode(hLMPointingArrowidx, MESHVIS_NEVER);
 		return;
 	};
 
-	PanelSwitchItem *nextActiveSwitch = MainPanelVC.GetFlashingItem();
+	nextActiveSwitch = MainPanelVC.GetFlashingItem();
 
-	// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
 	if (nextActiveSwitch == nullptr) {	
 		SetMeshVisibilityMode(hLMPointingArrowidx, MESHVIS_NEVER);
 		return;
 	}
 
-//	SetMeshVisibilityMode(hLMPointingArrowidx, MESHVIS_VC);
-//	return;
-
-	VECTOR3 activeSwitchPos = nextActiveSwitch->GetChecklistReference();
-
-	VECTOR3 camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs;	
+	activeSwitchPos = nextActiveSwitch->GetChecklistReference();
 
 	oapiCameraGlobalPos(&camPosGlobal);					// Get camera (in global co-ords)
 	Global2Local(camPosGlobal, camPos);					// Translate from global to local co-ordinates.
@@ -3828,26 +3844,21 @@ void LEM::UpdatePointingArrow()
 
 	GetMeshOffset(vcidx, ofs);
 
-	DEVMESHHANDLE hArrowMesh = GetDevMesh (vis, hLMPointingArrowidx);
-	static bool first = true;
-	static VECTOR3* arrowData;
-	static VECTOR3* circleData;
-	static VECTOR3* circleDataOrig;
-	static int arrowVertsCnt, circleVertsCnt;
-	if (first) {											// Run this once for retrieving the Arrow data
-		MESHGROUP* arrow_group = oapiMeshGroup(GetMeshTemplate(hLMPointingArrowidx), 0);
+	hArrowMesh = GetDevMesh (vis, hLMPointingArrowidx);
+	if (first) {															// Run this once for retrieving the Arrow data
+		arrow_group = oapiMeshGroup(GetMeshTemplate(hLMPointingArrowidx), 0);
 		arrowVertsCnt = arrow_group->nVtx;
 		arrowData = new VECTOR3[arrowVertsCnt];
-		for (int i = 0; i < arrowVertsCnt; i++) {			// Make a copy of the Arrow data
+		for (int i = 0; i < arrowVertsCnt; i++) {							// Make a copy of the Arrow data
 			arrowData[i].x = (double)arrow_group->Vtx[i].x;
 			arrowData[i].y = (double)arrow_group->Vtx[i].y;
 			arrowData[i].z = (double)arrow_group->Vtx[i].z;
 		}
-		MESHGROUP* circle_group = oapiMeshGroup(GetMeshTemplate(hLMPointingArrowidx), 1);
+		circle_group = oapiMeshGroup(GetMeshTemplate(hLMPointingArrowidx), 1);
 		circleVertsCnt = circle_group->nVtx;
 		circleData = new VECTOR3[circleVertsCnt];
 		circleDataOrig = new VECTOR3[circleVertsCnt];
-		for (int i = 0; i < circleVertsCnt; i++) {			// Make a copy of the Circle data
+		for (int i = 0; i < circleVertsCnt; i++) {							// Make a copy of the Circle data
 			circleDataOrig[i].x = (double)circle_group->Vtx[i].x;
 			circleDataOrig[i].y = (double)circle_group->Vtx[i].y;
 			circleDataOrig[i].z = (double)circle_group->Vtx[i].z;
@@ -3856,12 +3867,11 @@ void LEM::UpdatePointingArrow()
 	}
 
 	if (!oapiGetPause()){
-		static double rotationangle;
-		rotationangle += oapiGetSimStep() / oapiGetTimeAcceleration() * 90;  // Rotate 360° every 4 Second
+		rotationangle += oapiGetSimStep() / oapiGetTimeAcceleration() * -90;  // Rotate 360° every 4 Second
 		if (rotationangle > 360) rotationangle = 0;
-		double rad = rotationangle * PI / 180.0;
-		double cos_a = std::cos(rad);
-		double sin_a = std::sin(rad);	
+		rad = rotationangle * PI / 180.0;
+		cos_a = std::cos(rad);
+		sin_a = std::sin(rad);
 
 		//Rotate Circle
 		for (int i = 0; i < circleVertsCnt; i++) {
@@ -3877,61 +3887,59 @@ void LEM::UpdatePointingArrow()
 		}
 */
 	}
-	GROUPREQUESTSPEC arrow_grp;
 	memset (&arrow_grp, 0, sizeof(GROUPREQUESTSPEC));
 	if (arrow_grp.Vtx) delete []arrow_grp.Vtx;
 	arrow_grp.nVtx = arrowVertsCnt;
 
 	if (!arrow_grp.Vtx) arrow_grp.Vtx = new NTVERTEX[arrow_grp.nVtx];
-	if (oapiGetMeshGroup (hArrowMesh, 0, &arrow_grp) != 0) { // problems
+	if (oapiGetMeshGroup (hArrowMesh, 0, &arrow_grp) != 0) {	// problems
 		delete []arrow_grp.Vtx;
 		arrow_grp.Vtx = 0;
 	}
 //	NTVERTEX *Vtx = arrow_grp.Vtx;
 
-	GROUPREQUESTSPEC circle_grp;
 	memset (&circle_grp, 0, sizeof(GROUPREQUESTSPEC));
 	if (circle_grp.Vtx) delete []circle_grp.Vtx;
 	circle_grp.nVtx = circleVertsCnt;
 
 	if (!circle_grp.Vtx) circle_grp.Vtx = new NTVERTEX[circle_grp.nVtx];
-	if (oapiGetMeshGroup (hArrowMesh, 1, &circle_grp) != 0) { // problems
+	if (oapiGetMeshGroup (hArrowMesh, 1, &circle_grp) != 0) {	// problems
 		delete []circle_grp.Vtx;
 		circle_grp.Vtx = 0;
 	}
 //	NTVERTEX *Vtx2 = circle_grp.Vtx;
 
-	VECTOR3 arrowCurPos = camPos - ofs + (camPointing * 0.15);			// Move the Arrow to this Position
-	VECTOR3 circleCurPos = activeSwitchPos;								// Move the Circle to this Position
+	arrowCurPos = camPos - ofs + (camPointing * 0.15);			// Move the Arrow to this Position
+	circleCurPos = activeSwitchPos;								// Move the Circle to this Position
 
 	// Rotation calculation to align the Arrow
-	const VECTOR3 init_dir = {0, 0, 1};									// Direction of the arrow (initially along the positive Z-axis)
-	VECTOR3 pointing_dir = activeSwitchPos - arrowCurPos;				// Target direction (vector from the target location to the viewing direction)
+	const VECTOR3 init_dir = {0, 0, 1};							// Direction of the arrow (initially along the positive Z-axis)
+	pointing_dir = activeSwitchPos - arrowCurPos;				// Target direction (vector from the target location to the viewing direction)
 	normalise(pointing_dir);
 
-	VECTOR3 rot_axis = crossp(init_dir, pointing_dir);					// Rotation axis (cross product of the initial and target directions)
+	rot_axis = crossp(init_dir, pointing_dir);					// Rotation axis (cross product of the initial and target directions)
 	normalise(rot_axis);
 
-	double dot = dotp(init_dir, pointing_dir);							// Rotation angle (angle between the initial and target direction)
-    double angle = std::acos(max(-1.0, min(1.0, dot)));					// Clamp to avoid NaN
+	dot = dotp(init_dir, pointing_dir);							// Rotation angle (angle between the initial and target direction)
+    angle = std::acos(max(-1.0, min(1.0, dot)));				// Clamp to avoid NaN
 
-    MATRIX3 rotation = rotm(rot_axis, angle);
+    rotation = rotm(rot_axis, angle);
 
 	// *** Do the same from above for the Circle ** //
-	VECTOR3 circle_dir =  (camPos - ofs) - activeSwitchPos;
+	circle_dir = activeSwitchPos - (camPos - ofs);
 	normalise(circle_dir);
 	
-	VECTOR3 rot_axis_circle = crossp(init_dir, circle_dir);
+	rot_axis_circle = crossp(init_dir, circle_dir);
 	normalise(rot_axis_circle);
 
-	double dot_circle = dotp(init_dir, circle_dir);
-    double angle_circle = std::acos(max(-1.0, min(1.0, dot_circle)));
+	dot_circle = dotp(init_dir, circle_dir);
+    angle_circle = std::acos(max(-1.0, min(1.0, dot_circle)));
 
-    MATRIX3 rotation_circle = rotm(rot_axis_circle, angle_circle);
+    rotation_circle = rotm(rot_axis_circle, angle_circle);
 
 	for (int i = 0; i < arrowVertsCnt; i++) {
 		// Rotate, Translate and Scale the Arrow(Scale depends on Camera FOV)
-		VECTOR3 final_vertex = mul(rotation, arrowData[i] * oapiCameraAperture()) + arrowCurPos;
+		final_vertex = mul(rotation, arrowData[i] * oapiCameraAperture()) + arrowCurPos;
 
 		arrow_grp.Vtx[i].x = (float)final_vertex.x;		// Copy Transformed Arrow Vertices
 		arrow_grp.Vtx[i].y = (float)final_vertex.y;
@@ -3940,7 +3948,7 @@ void LEM::UpdatePointingArrow()
 
 	for (int i = 0; i < circleVertsCnt; i++) {
 		// Rotate and Translate the Circle
-		VECTOR3 final_vertex = mul(rotation_circle, circleData[i]) + circleCurPos;
+		final_vertex = mul(rotation_circle, circleData[i]) + circleCurPos;
 
 		circle_grp.Vtx[i].x = (float)final_vertex.x;	// Copy Transformed Circle Vertices
 		circle_grp.Vtx[i].y = (float)final_vertex.y;
@@ -3949,7 +3957,6 @@ void LEM::UpdatePointingArrow()
 
 //	sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ** %.3f  %.3f  %.3f", camPos.x, camPos.y, camPos.z, camPointing.x, camPointing.y, camPointing.z, arrow_grp.Vtx[0].x, arrow_grp.Vtx[0].y, arrow_grp.Vtx[0].z);
 
-	GROUPEDITSPEC ges;
 	ges.flags = GRPEDIT_VTXCRD;
 	ges.nVtx = arrow_grp.nVtx;
 	ges.Vtx  = arrow_grp.Vtx;
