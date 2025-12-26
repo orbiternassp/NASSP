@@ -294,6 +294,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 	}
 	break;
+	case 9:  //MISSION CP BLOCK DATA 1 (Prelim)
 	case 10: //MISSION CP BLOCK DATA 1
 	case 11: //MISSION CP BLOCK DATA 2
 	case 12: //MISSION CP BLOCK DATA 3
@@ -305,16 +306,37 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		SV sv0;
 		double TLIplus;
 		char manname[32];
+		char mcc1scrub[100];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		if (fcn == 10)
+		if (fcn == 9)
 		{
 			TLIplus = calcParams.TLI + 11.0*3600.0;
 			sprintf(manname, "TLI+11");
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd, Assumes no MCC-1");
 			entopt.t_Z = OrbMech::HHMMSSToSS(50.0, 4.0, 0.0);
 			opt.PrefGDCStars = 1; //Navi,Polaris
+			sv0 = StateVectorCalc(calcParams.src);
+		}
+		else if (fcn == 10)
+		{
+			TLIplus = calcParams.TLI + 11.0*3600.0;
+			sprintf(manname, "TLI+11");
+			entopt.t_Z = OrbMech::HHMMSSToSS(50.0, 4.0, 0.0);
+			opt.PrefGDCStars = 1; //Navi,Polaris
+
+			if (length(DeltaV_LVLH) != 0.0)
+			{
+				sprintf(mcc1scrub, "Assumes MCC-1");
+				sv0 = calcParams.SVSTORE1;
+			}
+			else
+			{
+				sprintf(mcc1scrub, "Assumes no MCC-1");
+				sv0 = StateVectorCalc(calcParams.src);
+			}
+			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd, %s", mcc1scrub);
 		}
 		else if (fcn == 11)
 		{
@@ -323,6 +345,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd");
 			entopt.t_Z = OrbMech::HHMMSSToSS(74.0, 38.0, 0.0);
 			opt.PrefGDCStars = 1; //Navi,Polaris
+			sv0 = StateVectorCalc(calcParams.src);
 		}
 		else if (fcn == 12)
 		{
@@ -331,6 +354,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,821 for Mid-Pacific landing,  High-speed procedure not req'd");
 			entopt.t_Z = OrbMech::HHMMSSToSS(98.0, 12.0, 0.0);
 			opt.PrefGDCStars = 3; //Sirius,Rigel
+			sv0 = StateVectorCalc(calcParams.src);
 		}
 		else if (fcn == 13)
 		{
@@ -339,9 +363,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 8,750 for Indian Ocean,  High-speed procedure (-MA) req'd");
 			entopt.t_Z = OrbMech::HHMMSSToSS(98.0, 12.0, 0.0);
 			opt.PrefGDCStars = 3; //Sirius,Rigel
+			sv0 = StateVectorCalc(calcParams.src);
 		}
-
-		sv0 = StateVectorCalc(calcParams.src);
 
 		entopt.entrylongmanual = true;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
@@ -449,7 +472,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			dv = PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V;
 
 			engine = mcc->mcc_calcs.SPSRCSDecision(SPS_THRUST / sv.mass, dv);
-			PoweredFlightProcessor(sv, tig, engine, 0.0, dv, false, P30TIG, dV_LVLH);
+			PoweredFlightProcessor(sv, tig, engine, 0.0, dv, false, P30TIG, dV_LVLH, sv_ig1, sv_cut1);
 		}
 		else //Nodal Targeting
 		{
@@ -468,10 +491,16 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			scrubbed = true;
 		}
 
-		//Message for scrubbed maneuvers
+		//If maneuver scrubbed
 		if (scrubbed)
 		{
 			sprintf(upMessage, "%s has been scrubbed.", manname);
+			DeltaV_LVLH = _V(0, 0, 0);
+		}
+		else
+		{
+			DeltaV_LVLH = dV_LVLH;
+			calcParams.SVSTORE1 = sv_cut1; //Stores SV for TLI+11
 		}
 
 		char buffer1[1000];
