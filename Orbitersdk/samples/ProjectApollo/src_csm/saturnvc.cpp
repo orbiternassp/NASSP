@@ -40,6 +40,7 @@
 #include <gcConst.h>
 #endif
 
+#include "Mission.h"
 #include "nasspsound.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -53,6 +54,7 @@
 #include "CM-VC-SeatsFolded_Resource.h"
 #include "CM-VC-SeatsUnfolded_Resource.h"
 #include "EmissionListCMVC.h"
+#include "MissionSpecificPanels.h"
 
 // ==============================================================
 // VC Constants
@@ -1008,6 +1010,23 @@ void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
 //		seatsfoldedmesh = GetDevMesh(vis, seatsfoldedidx);
 
 //		InitFDAICustomCamera();
+	}
+
+	if ((pMission->GetPanel278Version() >1) && (pMission->GetPanel278Version() <4)){
+		for (int i=0; i<NUM_ELEMENTS(Mission16MshGroups); i++){
+			HideMeshGroup(vcidx, Mission16MshGroups[i], false);
+		}
+		for (int i=0; i<NUM_ELEMENTS(Mission11MshGroups); i++){
+			HideMeshGroup(vcidx, Mission11MshGroups[i], true);
+		}
+	}
+	else {
+		for (int i=0; i<NUM_ELEMENTS(Mission16MshGroups); i++){
+			HideMeshGroup(vcidx, Mission16MshGroups[i], true);
+		}
+		for (int i=0; i<NUM_ELEMENTS(Mission11MshGroups); i++){
+			HideMeshGroup(vcidx, Mission11MshGroups[i], false);
+		}
 	}
 }
 
