@@ -7046,7 +7046,7 @@ MCC_BEGIN
   MCC_scrubbed 0
   MCC_MissionType 3
   MCC_MissionPhase 3
-  MCC_MissionState 35
+  MCC_MissionState 36
   MCC_SubState 2
   MCC_EarthRev 5
   MCC_MoonRev 0
