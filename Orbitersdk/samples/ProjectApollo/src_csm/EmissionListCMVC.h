@@ -251,7 +251,8 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_Panel305WaterPipe,
 
 	// Panel 230
-	VC_MAT_csm_right_LEB_panel_230
+	VC_MAT_csm_right_LEB_panel_230_A15,
+	VC_MAT_csm_right_LEB_panel_230_A17
 };
 
 //

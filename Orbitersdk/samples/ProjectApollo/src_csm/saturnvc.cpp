@@ -80,6 +80,8 @@ const int	P16_SWITCHCOUNT = 3;
 const int	P100_SWITCHCOUNT = 6;
 const int	P101_SWITCHCOUNT = 4;
 const int	P122_SWITCHCOUNT = 7;
+const int	P230A15_SWITCHCOUNT = 24;
+const int	P230A17_SWITCHCOUNT = 20;
 const int	P30x_SWITCHCOUNT = 6;
 const int	P306_SWITCHCOUNT = 8;
 
@@ -449,6 +451,23 @@ const VECTOR3 P122_PUSHB_POS[P122_PUSHBCOUNT] = {
 {0.3349, -0.6997, 0.0630}, {0.3576, -0.6998, 0.0630}, {0.3805, -0.6998, 0.0630}, {0.3349, -0.6997, 0.0853}, {0.3576, -0.6998, 0.0853},
 {0.3805, -0.6998, 0.0853}, {0.3349, -0.6997, 0.1073}, {0.3576, -0.6998, 0.1073}, {0.3805, -0.6998, 0.1073}, {0.4032, -0.6998, 0.1073},
 {0.4032, -0.6998, 0.0853}, {0.4032, -0.6998, 0.0630}, {0.4260, -0.6998, 0.0961}, {0.4260, -0.6998, 0.0739}
+};
+
+// Panel 230 Apollo 15-16 switches
+const VECTOR3 P230A15_TOGGLE_POS[P230A15_SWITCHCOUNT] = {
+{1.09588, -0.13771, -0.03036}, {1.09588, -0.11498, -0.03036}, {1.09588, -0.09225, -0.03036}, {1.09588, -0.06951, -0.03036}, {1.09588, -0.04678, -0.03036},
+{1.09588, -0.02405, -0.03036}, {1.09588, -0.13096, -0.07374}, {1.09588, -0.09884, -0.07374}, {1.09588, -0.07330, -0.07374}, {1.09588, -0.05026, -0.07374},
+{1.09588, -0.02727, -0.07374}, {1.09588, -0.13096, -0.11322}, {1.09588, -0.09884, -0.11322}, {1.09588, -0.07330, -0.11322}, {1.09588, -0.05026, -0.11322},
+{1.09588, -0.02727, -0.11322}, {1.09588, -0.07330, -0.15285}, {1.09588, -0.05026, -0.15285}, {1.09588, -0.02727, -0.15285}, {1.09588, -0.13096, -0.19228},
+{1.09588, -0.09884, -0.19228}, {1.09588, -0.07330, -0.19228}, {1.09588, -0.05026, -0.19228}, {1.09588, -0.02727, -0.19228}
+};
+
+// Panel 230 Apollo 17 switches
+const VECTOR3 P230A17_TOGGLE_POS[P230A17_SWITCHCOUNT] = {
+{1.09588, -0.13695, -0.03149}, {1.09588, -0.11498, -0.03149}, {1.09588, -0.09239, -0.03149}, {1.09588, -0.07026, -0.03149}, {1.09588, -0.04678, -0.03149},
+{1.09588, -0.02374, -0.03149}, {1.09588, -0.13127, -0.07514}, {1.09588, -0.09846, -0.07514}, {1.09588, -0.07370, -0.07514}, {1.09588, -0.04955, -0.07514},
+{1.09588, -0.02692, -0.07514}, {1.09588, -0.13104, -0.11361}, {1.09588, -0.09871, -0.11381}, {1.09588, -0.07319, -0.11400}, {1.09588, -0.07281, -0.15343},
+{1.09588, -0.04811, -0.15363}, {1.09588, -0.10029, -0.19101}, {1.09588, -0.07456, -0.19121}, {1.09588, -0.04989, -0.19140}, {1.09588, -0.02672, -0.19160}
 };
 
 // Panel 300/301/302/303/305 Levers etc.
@@ -1012,22 +1031,15 @@ void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
 //		InitFDAICustomCamera();
 	}
 
-	if ((pMission->GetPanel278Version() >1) && (pMission->GetPanel278Version() <4)){
-		for (int i=0; i<NUM_ELEMENTS(Mission16MshGroups); i++){
-			HideMeshGroup(vcidx, Mission16MshGroups[i], false);
-		}
-		for (int i=0; i<NUM_ELEMENTS(Mission11MshGroups); i++){
-			HideMeshGroup(vcidx, Mission11MshGroups[i], true);
-		}
-	}
-	else {
-		for (int i=0; i<NUM_ELEMENTS(Mission16MshGroups); i++){
-			HideMeshGroup(vcidx, Mission16MshGroups[i], true);
-		}
-		for (int i=0; i<NUM_ELEMENTS(Mission11MshGroups); i++){
-			HideMeshGroup(vcidx, Mission11MshGroups[i], false);
-		}
-	}
+	bool A15Mission = true, A17Mission = true, OtherMission = true;
+	
+	if (pMission->GetPanel278Version() == 2) A15Mission = false;		// Apollo 15 & 16 mission
+	else if (pMission->GetPanel278Version() == 3) A17Mission = false;	// Apollo 17 mission
+	else OtherMission = false;											// All other missions
+
+	for (int i=0; i<NUM_ELEMENTS(Mission11MshGroups); i++) HideMeshGroup(vcidx, Mission11MshGroups[i], OtherMission);
+	for (int i=0; i<NUM_ELEMENTS(Mission15MshGroups); i++) HideMeshGroup(vcidx, Mission15MshGroups[i], A15Mission);
+	for (int i=0; i<NUM_ELEMENTS(Mission17MshGroups); i++) HideMeshGroup(vcidx, Mission17MshGroups[i], A17Mission);
 }
 
 void Saturn::clbkVisualDestroyed(VISHANDLE vis, int refcount) {
