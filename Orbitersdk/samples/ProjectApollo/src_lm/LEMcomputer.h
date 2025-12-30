@@ -112,8 +112,6 @@ public:
 	double ReticleMoved;										// 0 is no movement detected, - is clockwise, + is counterclockwise
 	int RetDimmer;
 	int KnobTurning;
-	bool ZeroDetent;
-
 };
 
 //

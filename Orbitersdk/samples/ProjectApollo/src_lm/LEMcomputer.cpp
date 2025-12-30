@@ -425,7 +425,6 @@ LMOptics::LMOptics() {
 
 	OpticsShaft = 3;
 	OpticsReticle = 0.0;
-	ZeroDetent = true;
 	ReticleMoved = 0;
 	RetDimmer = 255;
 	KnobTurning = 0;
@@ -450,13 +449,11 @@ void LMOptics::AOTDetentToggle() {
 	if (lem->AOTReticleDetent.GetState() == 0 && ReticlePush() == true) 
 	{
 		lem->AOTReticleDetent.SetState(1);
-		ZeroDetent = true;
 	}
 
 	else 
 	{
 		lem->AOTReticleDetent.SetState(0);
-		ZeroDetent = false;
 	}
 	return;
 }
@@ -506,7 +503,7 @@ bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits) {
 }
 
 void LMOptics::Timestep(double simdt) {
-	if (ZeroDetent)
+	if (lem->AOTReticleDetent.GetState() == 1)
 	{
 		OpticsReticle = 0.0;
 		ReticleMoved = 0.0;
@@ -526,6 +523,7 @@ void LMOptics::Timestep(double simdt) {
 		if (OpticsReticle > 2 * PI) OpticsReticle -= 2 * PI;
 		if (OpticsReticle < 0) OpticsReticle += 2 * PI;
 	}
+	//sprintf(oapiDebugString(), "Detent %d", lem->AOTReticleDetent.GetState());
 }
 
 void LMOptics::SaveState(FILEHANDLE scn) {
@@ -534,7 +532,6 @@ void LMOptics::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "OPTICSSHAFT", OpticsShaft);
 	papiWriteScenario_double(scn, "OPTICSRETICLE", OpticsReticle);
 	papiWriteScenario_double(scn, "RETDIMMER", RetDimmer);
-	papiWriteScenario_bool(scn, "AOTZERODETENT", ZeroDetent);
 	oapiWriteLine(scn, LMOPTICS_END_STRING);
 }
 
@@ -554,6 +551,5 @@ void LMOptics::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp (line, "RETDIMMER", 11)) {
 			sscanf (line+11, "%d", &RetDimmer);
 		}
-		papiReadScenario_bool(line, "AOTZERODETENT", ZeroDetent);
 	}
 }
