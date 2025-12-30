@@ -792,7 +792,6 @@ protected:
 
 	LMAbortButton AbortSwitch;
 	LMAbortStageButton AbortStageSwitch;
-
 	
 	SwitchRow RRGyroSelSwitchRow;
 	ThreePosSwitch RRGyroSelSwitch;

@@ -426,6 +426,7 @@ const VECTOR3 UtilityLights_LMPLocation = { 0.1030, 1.0318, 0.8908 };
 // AOT
 const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
 const VECTOR3 AOT_ShaftSelectorLocation = { 0.0640, 0.8800, 1.4792 };
+const VECTOR3 AOTReticleDetentLocation ={ 0.066068, 0.743351, 1.38436 };
 
 // Flood lights
 const VECTOR3 floodLightPos_Right = { 0.238, 0.89, 1.2 };
@@ -1476,6 +1477,10 @@ void LEM::RegisterActiveAreas()
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_SW_RRGYRO, Sw_RRGyroLocation + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + RRGYRO_CLICK + ofs);
 
 	oapiVCRegisterArea(AID_VC_RETICLEDISP, _R(1068*TexMul, 1891*TexMul, 1188*TexMul, 1927*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
+
+	// AOT Reticle
+	oapiVCRegisterArea(AID_VC_AOTRETICLEDETENT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_AOTRETICLEDETENT, AOTReticleDetentLocation + ofs, 0.05);
 
 	// COAS FWD
 	const VECTOR3 COAS2Location = { -0.5612, 0.7323, 1.6805 };
@@ -3307,6 +3312,12 @@ void LEM::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&RRGyroSelSwitch, AID_VC_SW_RRGYRO);
 	RRGyroSelSwitch.SetReference(Sw_RRGyroLocation, _V(-0.048633374944462, -0.519162328382934, 0.853290848204481));
 	RRGyroSelSwitch.DefineMeshGroup(VC_GRP_Sw_RRGyro);
+
+	// AOT Reticle Knob
+	MainPanelVC.AddSwitch(&AOTReticleDetent, AID_VC_AOTRETICLEDETENT);
+	AOTReticleDetent.SetReference(AOTReticleDetentLocation);
+	AOTReticleDetent.SetDirection(_V(-0.003, 0, 0));
+	AOTReticleDetent.DefineMeshGroup(VC_GRP_AOT_ReticleKnob);
 
 	// EVA Antenna Handle
 	MainPanelVC.AddSwitch(&EvaAntennaHandle, AID_VC_EVA_Ant_Handle);
