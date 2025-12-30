@@ -2646,7 +2646,8 @@ void LEM::SetSwitches(int panel) {
 	// LM Panel AOTVIEW
 	RRGyroSelSwitchRow.Init(AID_RR_GYRO_SEL_SWITCH, MainPanel);
 	RRGyroSelSwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], RRGyroSelSwitchRow);
-	//AOTReticleDetent.Init(NULL,NULL,NULL,NULL,NULL,NULL,RRGyroSelSwitchRow);
+
+	AOTReticleDetent.Init(0,0,0,0,0,0,RRGyroSelSwitchRow);  // dummy switch/display for checklist controller
 
 	// ECS Panel
 	ECSSuitGasDiverterSwitchRow.Init(IDB_LEM_SGD_LEVER, MainPanel);

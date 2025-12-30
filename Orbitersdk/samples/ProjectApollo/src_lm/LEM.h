@@ -796,7 +796,7 @@ protected:
 	
 	SwitchRow RRGyroSelSwitchRow;
 	ThreePosSwitch RRGyroSelSwitch;
-	CircuitBrakerSwitch AOTReticleDetent;
+	ToggledPushSwitch AOTReticleDetent;
 	
 	/////////////////
 	// LEM panel 1 //
