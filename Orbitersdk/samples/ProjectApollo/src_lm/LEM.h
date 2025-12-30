@@ -795,6 +795,8 @@ protected:
 	
 	SwitchRow RRGyroSelSwitchRow;
 	ThreePosSwitch RRGyroSelSwitch;
+
+	SwitchRow AOTReticleSwitchRow;
 	ToggledPushSwitch AOTReticleDetent;
 	
 	/////////////////
