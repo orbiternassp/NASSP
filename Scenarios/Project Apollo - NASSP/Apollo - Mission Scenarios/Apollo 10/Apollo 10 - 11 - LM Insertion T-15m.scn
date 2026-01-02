@@ -4033,7 +4033,7 @@ PANELSWITCHES_END
   FILE Doc\Project Apollo - NASSP\Checklists\Apollo 10 Checklists.xls
   COMPLETE 0
   FLASHING 0
-  LASTITEMTIME 369052.309144
+  LASTITEMTIME 369173.635
   AUTOEXECUTESLOWDELAY 2.0
   WAITFORCOMPLETION 0
   <container> 
@@ -7260,19 +7260,15 @@ PANELSWITCHES_END
   </item> 
   <item> 
   INDEX 805
-  STATUS 1
   </item> 
   <item> 
   INDEX 806
-  STATUS 1
   </item> 
   <item> 
   INDEX 807
-  STATUS 1
   </item> 
   <item> 
   INDEX 808
-  STATUS 1
   </item> 
   <item> 
   INDEX 809
@@ -9395,7 +9391,7 @@ PANELSWITCHES_END
   <item> 
   INDEX 1515
   </item> 
-  SEQUENCE 809
+  SEQUENCE 804
   TIME 15001.378906
   </container> 
   <group> 
@@ -9630,7 +9626,7 @@ PANELSWITCHES_END
   INDEX 109
   CALLED 1
   </group> 
-  </checklist> 
+  </checklist>
   SaturnEvents 
   BACKUP_CREW_PRELAUNCH -14399.980469
   PRIME_CREW_PRELAUNCH -9599.933594
