@@ -15407,7 +15407,7 @@ RTCC_PMMMCD_B:
 RTCC_PMMMCD_6_1:
 	Thrust = GetOnboardComputerThrust(in.Thruster);
 	Ind = 0;
-	ExtDV = PIEXDV(sv_GMTI.R, sv_GMTI.V, in.WTMI, Thrust, _V(in.BurnParm75, in.BurnParm76, in.BurnParm77), EXDVIND);
+	ExtDV = PIEXDV(sv_GMTI.R, sv_GMTI.V, in.WTMI, Thrust, ExtDV, EXDVIND);
 	goto RTCC_PMMMCD_7_3;
 RTCC_PMMMCD_6_2:
 	PMMMCDCallEMSMISS(in.sv_anchor, GMT_begin, sv_GMTI);
@@ -15425,8 +15425,8 @@ RTCC_PMMMCD_7_3:
 	if (J != 0)
 	{
 		man.dV_inertial = ExtDV;
+		goto RTCC_PMMMCD_12_1;
 	}
-	goto RTCC_PMMMCD_12_1;
 RTCC_PMMMCD_7_2:
 	man.dV_LVLH = ExtDV;
 	goto RTCC_PMMMCD_12_1;
@@ -15509,8 +15509,8 @@ RTCC_PMMMCD_11_4:
 		}
 		goto RTCC_PMMMCD_B;
 	}
-	double dv = length(DV_A);
-	if (dv > 1e-10)
+	in.BurnParm72 = length(DV_A);
+	if (in.BurnParm72 > 1e-10)
 	{
 		man.A_T = unit(DV_A);
 	}
@@ -21691,6 +21691,18 @@ int RTCC::PMMXFR(int id, void *data)
 				BurnParm76 = PZBURN.P2_DV.y;
 				BurnParm77 = PZBURN.P2_DV.z;
 			}
+			else if (inp->BurnParameterNumber == 3)
+			{
+				BurnParm75 = PZBURN.P3_DV.x;
+				BurnParm76 = PZBURN.P3_DV.y;
+				BurnParm77 = PZBURN.P3_DV.z;
+			}
+			else if (inp->BurnParameterNumber == 4)
+			{
+				BurnParm75 = PZBURN.P4_DV.x;
+				BurnParm76 = PZBURN.P4_DV.y;
+				BurnParm77 = PZBURN.P4_DV.z;
+			}
 			BPIND = inp->BurnParameterNumber;
 		}
 		//TLI
@@ -21800,6 +21812,30 @@ int RTCC::PMMXFR(int id, void *data)
 		man.code = code;
 
 		//TBD: Is this a TLI maneuver?
+		//Check weight at maneuver initiation
+		double WTMI;
+		unsigned int prevman;
+		//Set weight at maneuver initiation = weight prior to maneuver
+		if (inp->ReplaceCode > 0)
+		{
+			prevman = inp->ReplaceCode - 1;
+		}
+		else
+		{
+			prevman = mpt->ManeuverNum;
+		}
+		if (prevman > 0)
+		{
+			WTMI = mpt->mantable[prevman - 1].TotalMassAfter;
+		}
+		else
+		{
+			WTMI = mpt->TotalInitMass;
+		}
+		if (inp->ConfigurationChangeIndicator == RTCC_CONFIGCHANGE_UNDOCKING)
+		{
+			// TBD: Load weight of remaining S/C and store as weight at maneuver initiation
+		}
 
 		if (inp->AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
 		{
@@ -21889,6 +21925,7 @@ int RTCC::PMMXFR(int id, void *data)
 			in.Pitch = inp->Pitch;
 			in.Yaw = inp->Yaw;
 			in.Roll = inp->Roll;
+			in.WTMI = WTMI;
 
 			err = PMMMCD(in, man);
 		}
