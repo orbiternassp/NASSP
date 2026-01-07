@@ -1165,6 +1165,9 @@ namespace AnalyticEphemerisGenerator
 		double i_CB, g_CB, h_CB, u_CB, Z, DELTA, lambda_V, w_CB, dlambda, DELTADOT, dt, u_CB_dot, mu_CB, l_dot, g_dot, h_dot;
 		int coord_true, K, AEGERR;
 
+		//Normalize input longitude
+		OrbMech::normalizeAngle(DESLAM, true);
+
 		if (AEGIN.sv.RBI == BODY_EARTH)
 		{
 			w_CB = OrbMech::w_Earth;

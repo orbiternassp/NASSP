@@ -459,6 +459,8 @@ void LEM::SystemsInit()
 	omni_aft.Init(this);
 	// S-Band Steerable Ant
 	SBandSteerable.Init(this, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-SBand-Steerable-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-SBand-Steerable-Antenna-Heater"), (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:SBDANTHEAT"));
+	// Erectable Ant
+	SBandErectable.Init(this);
 	// SBand System
 	SBand.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBPHEAT"));
 	// VHF System
@@ -1545,6 +1547,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	crossPointerLeft.Timestep(simdt);
 	crossPointerRight.Timestep(simdt);
 	SBandSteerable.Timestep(simdt);
+	SBandErectable.Timestep();
 	omni_fwd.Timestep();
 	omni_aft.Timestep();
 	SBand.Timestep(simt);
@@ -2866,8 +2869,8 @@ CrossPointer::CrossPointer()
 	rateErrMonSw = NULL;
 	scaleSwitch = NULL;
 	dc_source = NULL;
-	vel_x = display_vel_x = 0;
-	vel_y = display_vel_y = 0;
+	vel_x = display_vel_x = callout_x = 0;
+	vel_y = display_vel_y = callout_y = 0;
 	lgc_forward = 0;
 	lgc_lateral = 0;
 	anim_xpointerx = -1;
@@ -2972,8 +2975,8 @@ void CrossPointer::Timestep(double simdt)
 			vx = 0;
 			vy = lem->aea.GetLateralVelocity()*0.3048;
 		}
-		vel_x = vx / 0.3048 * 20.0 / 200.0;
-		vel_y = vy / 0.3048 * 20.0 / 200.0;
+		vel_x = callout_x = vx / 0.3048 * 20.0 / 200.0;
+		vel_y = callout_y = vy / 0.3048 * 20.0 / 200.0;
 	}
 
 	//10 times finer scale
