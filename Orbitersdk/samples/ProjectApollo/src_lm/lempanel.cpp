@@ -1822,7 +1822,7 @@ bool LEM::clbkLoadPanel (int id) {
 	case LMPANEL_AOTVIEW: // LEM Alignment Optical Telescope View
 		oapiRegisterPanelBackground(hBmp, PANEL_ATTACH_TOP | PANEL_ATTACH_BOTTOM | PANEL_ATTACH_LEFT | PANEL_MOVEOUT_RIGHT, g_Param.col[4]);
 
-		oapiRegisterPanelArea(AID_AOT_RETICLE_KNOB,				_R(1427,  694, 1502, 1021), PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN,					  PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea(AID_AOT_RETICLE_KNOB,				_R(1427,  694, 1502, 1021), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					  PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_AOT_SHAFT_KNOB,				_R(1433,    0, 1496,  156), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,				      PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_RR_GYRO_SEL_SWITCH,			_R( 300,   66,  335,   96), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,                    PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea(AID_AOT_RETICLEDISPLAY,           _R( 341,  824,  461,  860), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE,                  PANEL_MAP_BACKGROUND);
@@ -2648,7 +2648,7 @@ void LEM::SetSwitches(int panel) {
 	RRGyroSelSwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], RRGyroSelSwitchRow);
 
 	AOTReticleSwitchRow.Init(AID_AOT_RETICLE_KNOB, MainPanel);
-	AOTReticleDetent.Init(0, 0, 74, 326, 0, 0, AOTReticleSwitchRow);
+	AOTReticleDetent.Init(0, 0, 74, 326, srf[SRF_AOTRETICLEKNOB], srf[SRF_BORDER_30x144], AOTReticleSwitchRow);
 
 	// ECS Panel
 	ECSSuitGasDiverterSwitchRow.Init(IDB_LEM_SGD_LEVER, MainPanel);
