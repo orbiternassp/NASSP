@@ -65,6 +65,7 @@ public:
 	double GetPlus43VDCSupplyVoltage();
 	double GetPlus6VDCSupplyVoltage();
 	double GetMinus6VDCSupplyVoltage();
+	double Get28VAC800HzSinglePhaseVoltage();
 	void Timestep(double simt, double simdt);			// Timestep
 	void SystemTimestep(double simdt);
 	void ProcessLGC(int ch, int val);   // To process LGC commands

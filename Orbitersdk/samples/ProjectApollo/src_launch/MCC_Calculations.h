@@ -41,12 +41,27 @@ public:
 	double Sunrise(EphemerisDataTable2 &ephem, double gmt_estimate);
 	double TerminatorRise(EphemerisDataTable2 &ephem, double gmt_estimate);
 	bool LongitudeCrossing(EphemerisDataTable2 &ephem, double lng, double gmt_estimate, double &gmt_cross);
+	//Find orbital sunrise with initial guess
+	double FindOrbitalSunrise(VehicleDataBlock sv, double t_sunrise_guess);
+	//Find orbital sunrise with initial guess (for backwards compatibility)
 	double FindOrbitalSunrise(SV sv, double t_sunrise_guess);
+	//Find orbital sunset with initial guess
+	double FindOrbitalSunset(VehicleDataBlock sv, double t_sunset_guess);
+	//Find orbital sunset with initial guess (for backwards compatibility)
+	double FindOrbitalSunset(SV sv, double t_sunset_guess);
 	double FindOrbitalMidnight(SV sv, double t_TPI_guess);
 	void FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS);
+	double ComputeDVTO(double mass); //Computes SPS Tail-off
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS
 	bool REFSMMATDecision(VECTOR3 Att); //true = everything ok, false = Preferred REFSMMAT necessary
+
+	//ALIGNMENTS
+	//Calculates backup GDC alignment angles and star set
+	void BackupGDCAlignment(VehicleDataBlock sv, double GET, MATRIX3 REFSMMAT, int PrefGDCStars, VECTOR3 &GDCangles, char *SetStars);
+
 	void PrelaunchMissionInitialization();
+	//Returns the time in GET that the LVDC saved as the orbital insertion time
+	double GetLVDCOrbitalInsertionTime(VESSEL *v);
 
 	//Mission specific rendezvous plans
 	void DMissionRendezvousPlan(SV sv_A0, double &t_TPI0);
@@ -54,4 +69,12 @@ public:
 
 	//Returns true if the current Ground Elapsed Time is greater than the input value
 	bool GETEval(double get);
+
+	//Stores a state vector for later user
+	void StoreStateVector(VehicleDataBlock sv);
+	void StoreStateVector(SV sv);
+	void StoreStateVector(EphemerisData sv, double Weight);
+	//Restores the state vector that was stored earlier
+	void RestoreStateVector(VehicleDataBlock &sv);
+	void RestoreStateVector(SV &sv);
 };

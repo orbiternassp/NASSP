@@ -208,7 +208,23 @@ double SaturnCryoQuantityMeter::QueryValue()
 		if (Index == 1)
 			return Sat->O2Tank1QuantitySensor.Voltage();
 		else
-			return Sat->O2Tank2QuantitySensor.Voltage();
+		{
+			//
+			// Apollo 13 O2 tank 2 quantity display failed offscale high around 46:45.
+			//
+#define O2FAILURETIME	(46.0 * 3600.0 + 45.0 * 60.0)
+			double v = Sat->O2Tank2QuantitySensor.Voltage();
+			if (Sat->GetMission()->DoApollo13Failures())
+			{
+				if (Sat->GetMissionTime() >= (O2FAILURETIME + 5.0)) {
+					v = 5.05;
+				}
+				else if (Sat->GetMissionTime() >= O2FAILURETIME) {
+					v += (5.05 - value) * ((Sat->GetMissionTime() - O2FAILURETIME) / 5.0);
+				}
+			}
+			return v;
+		}
 	}
 }
 
@@ -224,20 +240,6 @@ void SaturnCryoQuantityMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 		if (Index == 1)
 			oapiBlt(drawSurface, NeedleSurface, 258, (129 - (int)(v * 20.6)), 0, 0, 10, 10, SURF_PREDEF_CK);
 		else {
-			//
-			// Apollo 13 O2 tank 2 quantity display failed offscale high around 46:45.
-			//
-
-#define O2FAILURETIME	(46.0 * 3600.0 + 45.0 * 60.0)
-
-			if (Sat->GetMission()->DoApollo13Failures()) {
-				if (Sat->GetMissionTime() >= (O2FAILURETIME + 5.0)) {
-					v = 1.05;
-				}
-				else if (Sat->GetMissionTime() >= O2FAILURETIME) {
-					v += (1.05 - value) * ((Sat->GetMissionTime() - O2FAILURETIME) / 5.0);
-				}
-			}
 			oapiBlt(drawSurface, NeedleSurface, 311, (129 - (int)(v * 20.6)), 10, 0, 10, 10, SURF_PREDEF_CK);
 		}
 	}

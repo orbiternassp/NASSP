@@ -1294,57 +1294,14 @@ double LEMVoltCB::Current()
 	return Amperes;
 }
 
-void EngineStartButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, ToggleSwitch* stopbutton, LEM *l) {
+void EngineStartButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l) {
 	SimplePushSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	lem = l;
-	this->stopbutton = stopbutton;
-}
-
-bool EngineStartButton::CheckMouseClick(int event, int mx, int my) {
-
-	int OldState = state;
-
-	if (!visible) return false;
-	if (mx < x || my < y) return false;
-	if (mx >(x + width) || my >(y + height)) return false;
-
-	if (event & PANEL_MOUSE_LBDOWN)
-	{
-		Push();
-	}
-	return true;
-}
-
-bool EngineStartButton::CheckMouseClickVC(int event, VECTOR3 &p) {
-
-	int OldState = state;
-
-	if (event & PANEL_MOUSE_LBDOWN)
-	{
-		Push();
-	}
-	return true;
-}
-
-bool EngineStartButton::Push()
-
-{
-	//Can only be switched when off and engine stop button is also off
-	if (stopbutton->GetState() == 0 && state == 0)
-	{
-		if (SimplePushSwitch::SwitchTo(1)) {
-
-			Sclick.play();
-			return true;
-		}
-	}
-
-	return false;
 }
 
 void EngineStartButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 
-	if (lem->lca.GetAnnunVoltage() > 2.25 && (lem->LampToneTestRotary.GetState() == 3 || IsUp())) {
+	if (LightLogic()) {
 		if (IsUp())
 		{
 			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset + height, width, height, SURF_PREDEF_CK);
@@ -1368,7 +1325,7 @@ void EngineStartButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 
 void EngineStartButton::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface, int TexMul) {
 
-	if (lem->lca.GetAnnunVoltage() > 2.25 && (lem->LampToneTestRotary.GetState() == 3 || IsUp())) {
+	if (LightLogic()) {
 		if (IsUp())
 		{
 			oapiBlt(surf, DrawSurface, 0, 0, xOffset*TexMul, yOffset*TexMul + height*TexMul, width*TexMul, height*TexMul, SURF_PREDEF_CK);
@@ -1390,10 +1347,14 @@ void EngineStartButton::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface, 
 	}
 }
 
-void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, SimplePushSwitch* startbutton, LEM *l) {
+bool EngineStartButton::LightLogic()
+{
+	return (lem->lca.GetAnnunVoltage() > 2.25 && (lem->LampToneTestRotary.GetState() == 3 || lem->scca2.GetK15()));
+}
+
+void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l) {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	lem = l;
-	this->startbutton = startbutton;
 }
 
 bool EngineStopButton::CheckMouseClick(int event, int mx, int my) {
@@ -1427,14 +1388,6 @@ bool EngineStopButton::Push()
 {
 	int newstate = !state;
 	if (ToggleSwitch::SwitchTo(newstate)) {
-		
-		if (newstate == 1)
-		{
-			if (startbutton)
-			{
-				startbutton->SwitchTo(0);
-			}
-		}
 		Sclick.play();
 		return true;
 	}
@@ -2252,4 +2205,73 @@ void LEMMasterAlarmSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 void LEMMasterAlarmSwitch::InitVC(SURFHANDLE surf)
 {
 	switchsurfacevc = surf;
+}
+
+LEMEvaAntennaHandle::LEMEvaAntennaHandle()
+{
+	mshEVAAntHandleRotate = NULL;
+	mshEVAAntHandleDown = NULL;
+	mshEVAAntHandleUp = NULL;
+}
+
+LEMEvaAntennaHandle::~LEMEvaAntennaHandle()
+{
+	if (mshEVAAntHandleRotate)
+		delete mshEVAAntHandleRotate;
+
+	if (mshEVAAntHandleDown)
+		delete mshEVAAntHandleDown;
+
+	if (mshEVAAntHandleUp)
+		delete mshEVAAntHandleUp;
+}
+
+void LEMEvaAntennaHandle::DefineVCAnimations(UINT vc_idx)
+{
+	if (bHasDirection && !bHasAnimations)
+	{
+		mshEVAAntHandleDown = new MGROUP_TRANSLATE(vc_idx, &grpIndex, 1, GetDirection());
+		mshEVAAntHandleRotate = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), _V(0, 1, 0), (float)(300 * RAD));
+		mshEVAAntHandleUp = new MGROUP_TRANSLATE(vc_idx, &grpIndex, 1, GetDirection() * -1);
+
+		anim_switch = OurVessel->CreateAnimation(InitialAnimState());
+		OurVessel->AddAnimationComponent(anim_switch, 0.0, 0.1, mshEVAAntHandleDown);
+		OurVessel->AddAnimationComponent(anim_switch, 0.1, 0.9, mshEVAAntHandleRotate);
+		OurVessel->AddAnimationComponent(anim_switch, 0.9, 1.0, mshEVAAntHandleUp);
+		VerifyAnimations();
+	}
+}
+
+void LEMEvaAntennaHandle::OnPostStep(double SimT, double DeltaT, double MJD)
+{
+	animState.Move(1.0*DeltaT); // 1.0 is speed
+}
+
+void LEMEvaAntennaHandle::DrawSwitchVC(int id, int event, SURFHANDLE surf)
+{
+	if (!bHasAnimations) return;
+	OurVessel->SetAnimation(anim_switch, animState.pos);
+}
+
+bool LEMEvaAntennaHandle::SwitchTo(int newState, bool dontspring)
+{
+	if (ToggledPushSwitch::SwitchTo(newState, dontspring))
+	{
+		// Set animation state
+		if (state == TOGGLESWITCH_UP && !animState.Open()) animState.action = AnimState::OPENING;
+		else if (state == TOGGLESWITCH_DOWN && !animState.Closed()) animState.action = AnimState::CLOSING;
+		return true;
+	}
+	return false;
+}
+
+void LEMEvaAntennaHandle::OnPostCreation()
+{
+	if (state == TOGGLESWITCH_UP) animState.Set(AnimState::OPEN, 1.0);
+	else animState.Set(AnimState::CLOSED, 0.0);
+}
+
+double LEMEvaAntennaHandle::GetAnimState()
+{
+	return animState.pos;
 }

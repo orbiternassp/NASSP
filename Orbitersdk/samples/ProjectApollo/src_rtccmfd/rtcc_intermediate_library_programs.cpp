@@ -24,161 +24,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "rtcc.h"
 
 //Gimbal, Thrust, and Weight Loss Rate Subroutine
-void RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned &IC, int IA, int IJ, double D)
-{
-	//INPUTS:
-	//CSMWT and LMWT, CSM and LM weights
-	//ITC: 33 = SPS, 34 = APS, 35 = DPS, 36 = J2
-	//IC: 1 = CSM, 5 = CSM + LM Ascent, 12 = LM, 13 = CSM and LM (docked)
-	//IA: -1: trim angles, thrust and weight loss rate desired outputs, 0: thrust and weight loss rate desired outputs, 1: trim angles desired outputs
-	//IJ: LM descent stage included in configuration at beginning of this maneuver (only applicable if ITC=33 and IC=2). 0 = included, 1 = not included
-
-	if (ITC < 33)
-	{
-		RY = 0.0;
-		RZ = 0.0;
-		return;
-	}
-
-	int IND;
-	double R, W[3], K;
-	VECTOR3 XCG[2], XI;
-
-	//CSM only
-	if (IC == 1)
-	{
-		W[0] = CSMWT;
-		W[1] = 0.0;
-	}
-	//LM only
-	else if (IC == 12)
-	{
-		W[0] = 0.0;
-		W[1] = LMWT;
-	}
-	//Both
-	else
-	{
-		W[0] = CSMWT;
-		W[1] = LMWT;
-	}
-	W[2] = W[0] + W[1];
-
-	if (ITC == 34)
-	{
-		goto RTCC_GIMGBL_LABEL_3_3;
-	}
-	else if (ITC > 34)
-	{
-		if (IA == 0)
-		{
-			goto RTCC_GIMGBL_LABEL_3_5;
-		}
-		IND = 2;
-		K = SystemParameters.MGVDGD;
-		//Use LM DSC CG Table
-		XI = GIMGB2(SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG, SystemParameters.MHVLCG.N, W[1]);
-	}
-	else
-	{
-		if (IA == 0)
-		{
-			goto RTCC_GIMGBL_LABEL_3_4;
-		}
-		if (IC == 1)
-		{
-			IND = 2;
-		}
-		else
-		{
-			IND = 1;
-		}
-		K = SystemParameters.MGVSGD;
-		//Use CSM CG Table
-		XI = GIMGB2(SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG, SystemParameters.MHVCCG.N, W[0]);
-	}
-
-	XCG[IND - 1].x = XI.x - K;
-	XCG[IND - 1].y = XI.y;
-	XCG[IND - 1].z = XI.z;
-
-	//CSM or LM, but not docked?
-	if (IC <= 12 && IC != 5)
-	{
-		goto RTCC_GIMGBL_LABEL_3_2;
-	}
-	if (IND > 1)
-	{
-		//Use CSM CG Table
-		XI = GIMGB2(SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG, SystemParameters.MHVCCG.N, W[0]);
-		IND = 1;
-		K = SystemParameters.MGVSGD + SystemParameters.MGVSTD;
-	}
-	else
-	{
-		if (IJ != 0)
-		{
-			//Use LM w/o descent CG table
-			XI = GIMGB2(SystemParameters.MHVACG.Weight, SystemParameters.MHVACG.CG, SystemParameters.MHVACG.N, W[1]);
-		}
-		else
-		{
-			//Use LM w/ descent CG table
-			XI = GIMGB2(SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG, SystemParameters.MHVLCG.N, W[1]);
-		}
-		IND = 2;
-		K = SystemParameters.MGVDGD + SystemParameters.MGVSTD;
-	}
-
-	XI.x = XI.x - K;
-
-	XCG[IND - 1] = mul(_M(-1.0, 0.0, 0.0, 0.0, -cos(240.0*RAD - D), -sin(240.0*RAD - D), 0.0, -sin(240.0*RAD - D), cos(240.0*RAD - D)), XI);
-
-	XCG[1] = (XCG[0] * W[0] + XCG[1] * W[1]) / W[2];
-
-RTCC_GIMGBL_LABEL_3_2:
-	R = length(XCG[1]);
-	if (R > 10e-6)
-	{
-		RZ = asin(XCG[1].y / R);
-		if (XCG[1].x > 10e-6)
-		{
-			RY = atan(-XCG[1].z / XCG[1].x);
-		}
-		else
-		{
-			RY = 0.0;
-		}
-	}
-	else
-	{
-		RZ = 0.0;
-		RY = 0.0;
-	}
-	if (IA == 1)
-	{
-		return;
-	}
-	if (ITC == 34)
-	{
-	RTCC_GIMGBL_LABEL_3_3:;
-		//GIMGB2();
-	}
-	else if (ITC < 34)
-	{
-	RTCC_GIMGBL_LABEL_3_4:;
-		//GIMGB2();
-	}
-	else
-	{
-	RTCC_GIMGBL_LABEL_3_5:;
-		//GIMGB2();
-	}
-	//T = XI.x;
-	//WDOT = XI.y;
-}
-
-VECTOR3 RTCC::GIMGB2(const double *WArr, const VECTOR3 *VecArr, int N, double W)
+VECTOR3 GIMGB2(const double *WArr, const VECTOR3 *VecArr, int N, double W)
 {
 	VECTOR3 XI;
 	int I;
@@ -215,6 +61,172 @@ RTCC_GIMGB2_1:
 	goto RTCC_GIMGB2_4;
 RTCC_GIMGB2_2:
 	return XI;
+}
+
+int RTCC::GIMGBL(double CSMWT, double LMWT, double &RY, double &RZ, double &T, double &WDOT, int ITC, unsigned IC, int IA, double D)
+{
+	//INPUTS:
+	//CSMWT and LMWT, CSM and LM weights
+	//ITC: 33 = SPS, 34 = APS, 35 = DPS
+	//IC: 1 = CSM, 4 = LM Ascent, 5 = CSM + LM Ascent, 12 = LM, 13 = CSM and LM (docked)
+	//IA: -1: trim angles, thrust and weight loss rate desired outputs, 0: thrust and weight loss rate desired outputs, 1: trim angles desired outputs
+	//D: Docking angle, radians
+	//OUTPUTS:
+	//RY: Rotation about the y-body axis, radians (not changed if ITC = 34 or IA = 0)
+	//RZ: Rotation about the z-body axis, radians (not changed if ITC = 34 or IA = 0)
+	//T: Thrust, Newtons (not changed if IA = 1)
+	//WDOT: Weight loss rate, kg/s (not changed if IA = 1)
+
+	if (ITC < 33)
+	{
+		RY = 0.0;
+		RZ = 0.0;
+		return 0;
+	}
+
+	int IND;
+	bool docked = false;
+	double R, W[3], K;
+	VECTOR3 XCG[2], XI;
+
+	//CSM only
+	if (IC == 1)
+	{
+		W[0] = CSMWT;
+		W[1] = 0.0;
+	}
+	//LM only
+	else if (IC == 4 || IC == 12)
+	{
+		W[0] = 0.0;
+		W[1] = LMWT;
+	}
+	//Both
+	else
+	{
+		W[0] = CSMWT;
+		W[1] = LMWT;
+		docked = true;
+	}
+	W[2] = W[0] + W[1];
+
+	if (ITC == 34)
+	{
+		//APS
+		goto RTCC_GIMGBL_LABEL_3_3;
+	}
+	else if (ITC > 34)
+	{
+		//DPS
+		if (IA == 0)
+		{
+			goto RTCC_GIMGBL_LABEL_3_5;
+		}
+		IND = 2;
+		K = SystemParameters.MGVDGD;
+		//Use LM DSC CG Table
+		XI = GIMGB2(SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG, SystemParameters.MHVLCG.N, W[1]);
+	}
+	else
+	{
+		//SPS
+		if (IA == 0)
+		{
+			goto RTCC_GIMGBL_LABEL_3_4;
+		}
+		if (IC == 1)
+		{
+			IND = 2;
+		}
+		else
+		{
+			IND = 1;
+		}
+		K = SystemParameters.MGVSGD;
+		//Use CSM CG Table
+		XI = GIMGB2(SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG, SystemParameters.MHVCCG.N, W[0]);
+	}
+
+	XCG[IND - 1].x = XI.x - K;
+	XCG[IND - 1].y = XI.y;
+	XCG[IND - 1].z = XI.z;
+
+	//CSM or LM, but not docked?
+	if (docked == false)
+	{
+		goto RTCC_GIMGBL_LABEL_3_2;
+	}
+	if (IND > 1)
+	{
+		//Use CSM CG Table
+		XI = GIMGB2(SystemParameters.MHVCCG.Weight, SystemParameters.MHVCCG.CG, SystemParameters.MHVCCG.N, W[0]);
+		IND = 1;
+		K = SystemParameters.MGVSGD + SystemParameters.MGVSTD;
+	}
+	else
+	{
+		if (IC == 4 || IC == 5)
+		{
+			//Use LM w/o descent CG table
+			XI = GIMGB2(SystemParameters.MHVACG.Weight, SystemParameters.MHVACG.CG, SystemParameters.MHVACG.N, W[1]);
+		}
+		else
+		{
+			//Use LM w/ descent CG table
+			XI = GIMGB2(SystemParameters.MHVLCG.Weight, SystemParameters.MHVLCG.CG, SystemParameters.MHVLCG.N, W[1]);
+		}
+		IND = 2;
+		K = SystemParameters.MGVDGD + SystemParameters.MGVSTD;
+	}
+
+	XI.x = XI.x - K;
+
+	XCG[IND - 1] = mul(_M(-1.0, 0.0, 0.0, 0.0, -cos(SystemParameters.MCVDKA - D), -sin(SystemParameters.MCVDKA - D), 0.0, -sin(SystemParameters.MCVDKA - D), cos(SystemParameters.MCVDKA - D)), XI);
+
+	XCG[1] = (XCG[0] * W[0] + XCG[1] * W[1]) / W[2];
+
+RTCC_GIMGBL_LABEL_3_2:
+	R = length(XCG[1]);
+	if (R > 10e-6)
+	{
+		RZ = asin(XCG[1].y / R);
+		if (XCG[1].x > 10e-6)
+		{
+			RY = atan(-XCG[1].z / XCG[1].x);
+		}
+		else
+		{
+			RY = 0.0;
+		}
+	}
+	else
+	{
+		RZ = 0.0;
+		RY = 0.0;
+	}
+	if (IA == 1)
+	{
+		return 0;
+	}
+	//Thrust tables
+	if (ITC == 34) //APS
+	{
+	RTCC_GIMGBL_LABEL_3_3:
+		XI = GIMGB2(SystemParameters.MHTATC.Weight, SystemParameters.MHTATC.Thrust, SystemParameters.MHTATC.N, W[1]);
+	}
+	else if (ITC < 34) //SPS
+	{
+	RTCC_GIMGBL_LABEL_3_4:
+		XI = GIMGB2(SystemParameters.MHTSTC.Weight, SystemParameters.MHTSTC.Thrust, SystemParameters.MHTSTC.N, W[1]);
+	}
+	else //DPS
+	{
+	RTCC_GIMGBL_LABEL_3_5:
+		XI = GIMGB2(SystemParameters.MHTDTC.Weight, SystemParameters.MHTDTC.Thrust, SystemParameters.MHTDTC.N, W[1]);
+	}
+	T = XI.x;
+	WDOT = XI.y;
+	return 0;
 }
 
 //LM AGS External DV Coordinate Transformation Subroutine
@@ -541,11 +553,11 @@ VECTOR3 RTCC::PIEXDV(VECTOR3 R_ig, VECTOR3 V_ig, double WT, double T, VECTOR3 DV
 	return DV_out;
 }
 
-void RTCC::PIFAAP(double a, double e, double i, double f, double u, double r, double &r_apo, double &r_peri)
+void RTCC::PIFAAP(double a, double e, double i, double f, double u, double r, double R_E, double J2, double &r_apo, double &r_peri)
 {
 	double a_ref, e_ref, p_ref, p, K1, K2, df, r1, r2;
 
-	a_ref = r + 1.5*OrbMech::J2_Earth * OrbMech::R_Earth*(1.0 - 3.0 / 2.0*pow(sin(i), 2) + 5.0 / 6.0*pow(sin(i), 2)*cos(2.0*u));
+	a_ref = r + 1.5*J2 * R_E*(1.0 - 3.0 / 2.0*pow(sin(i), 2) + 5.0 / 6.0*pow(sin(i), 2)*cos(2.0*u));
 	e_ref = 1.0 - r / a_ref;
 	p_ref = a_ref * (1.0 - e_ref * e_ref);
 	p = a * (1.0 - e * e);

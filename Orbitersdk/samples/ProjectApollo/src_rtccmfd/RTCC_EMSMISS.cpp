@@ -630,8 +630,16 @@ void RTCC_EMSMISS::WriteEphemerisHeaders()
 			EphemerisTableIndicatorList[ii]->Header.NumVec = EphemerisTableIndicatorList[ii]->table.size();
 			EphemerisTableIndicatorList[ii]->Header.Offset = 0;
 			EphemerisTableIndicatorList[ii]->Header.Status = 0;
-			EphemerisTableIndicatorList[ii]->Header.TL = EphemerisTableIndicatorList[ii]->table.front().GMT;
-			EphemerisTableIndicatorList[ii]->Header.TR = EphemerisTableIndicatorList[ii]->table.back().GMT;
+			if (EphemerisTableIndicatorList[ii]->table.size() == 0U)
+			{
+				EphemerisTableIndicatorList[ii]->Header.TL = 0.0;
+				EphemerisTableIndicatorList[ii]->Header.TR = 0.0;
+			}
+			else
+			{
+				EphemerisTableIndicatorList[ii]->Header.TL = EphemerisTableIndicatorList[ii]->table.front().GMT;
+				EphemerisTableIndicatorList[ii]->Header.TR = EphemerisTableIndicatorList[ii]->table.back().GMT;
+			}
 			EphemerisTableIndicatorList[ii]->Header.TUP = mpt->CommonBlock.TUP;
 			EphemerisTableIndicatorList[ii]->Header.VEH = intab->VehicleCode;
 		}
@@ -837,14 +845,6 @@ void RTCC_EMSMISS::CallCSMLMIntegrator()
 		integin.KEPHOP = 0;
 	}
 	integin.KTRIMOP = mpt->mantable[i].TrimAngleInd;
-	if (state.WeightsTable.CC[RTCC_CONFIG_D] == true)
-	{
-		integin.LMDESCJETT = 1e70;
-	}
-	else
-	{
-		integin.LMDESCJETT = 0;
-	}
 
 	if (mpt->mantable[i].AttitudesInput)
 	{
@@ -1021,7 +1021,7 @@ void RTCC_EMSMISS::CallAscentIntegrator()
 		{
 			gmt_sv = state.StateVector.GMT;
 		}
-		if (pRTCC->ELFECH(gmt_sv, RTCC_MPT_CSM, SV))
+		if (pRTCC->EMSFFV(gmt_sv, RTCC_MPT_CSM, SV))
 		{
 			nierror = 1;
 			return;
@@ -1034,6 +1034,5 @@ void RTCC_EMSMISS::CallAscentIntegrator()
 	integin.v_LH = mpt->mantable[i].dV_LVLH.z;
 	integin.v_LV = mpt->mantable[i].dV_LVLH.x;
 
-	nierror = 0;
-	pRTCC->PMMLAI(integin, AuxTableIndicator, &tempephemtable);
+	nierror = pRTCC->PMMLAI(integin, AuxTableIndicator, &tempephemtable);
 }

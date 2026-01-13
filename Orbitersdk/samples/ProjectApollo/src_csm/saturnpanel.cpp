@@ -5538,13 +5538,15 @@ void Saturn::InitSwitches() {
 	TowerJett2Switch.SetDelayTime(2);
 
 	CmSmSep1Switch.Register(PSH, "CmSmSep1Switch", 0, 0, SPRINGLOADEDSWITCH_DOWN);
-	CmSmSep1Switch.SetDelayTime(1);
+	CmSmSep1Switch.SetDelayTime(2);
 	CmSmSep2Switch.Register(PSH, "CmSmSep2Switch", 0, 0, SPRINGLOADEDSWITCH_DOWN);
-	CmSmSep2Switch.SetDelayTime(1);
+	CmSmSep2Switch.SetDelayTime(2);
 
 	EDSSwitch.Register(PSH, "EDSSwitch", 0, SPRINGLOADEDSWITCH_NONE, "EDS Auto switch");
 	CsmLmFinalSep1Switch.Register(PSH, "CsmLmFinalSep1Switch",  THREEPOSSWITCH_DOWN, false, SPRINGLOADEDSWITCH_DOWN);
+	CsmLmFinalSep1Switch.SetDelayTime(2);
 	CsmLmFinalSep2Switch.Register(PSH, "CsmLmFinalSep2Switch",  THREEPOSSWITCH_DOWN, false, SPRINGLOADEDSWITCH_DOWN);
+	CsmLmFinalSep2Switch.SetDelayTime(2);
 
 	RotPowerNormal1Switch.Register(PSH, "RotPowerNormal1Switch", THREEPOSSWITCH_CENTER);
 	RotPowerNormal2Switch.Register(PSH, "RotPowerNormal2Switch", THREEPOSSWITCH_CENTER);

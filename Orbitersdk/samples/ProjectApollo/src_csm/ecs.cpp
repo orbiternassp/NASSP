@@ -1026,16 +1026,18 @@ void SaturnSideHatch::DefineAnimationsVC(UINT idx)
 	saturn->SetAnimation(anim_ventvalve, 0.5);
 }
 
+
 SaturnWaterController::SaturnWaterController() {
 }
 
 SaturnWaterController::~SaturnWaterController() {
 }
 
-void SaturnWaterController::Init(Saturn *s, h_Tank *pt, h_Tank *wt, h_Tank *pit, h_Tank *wit, 
-								 h_Pipe *wvp, h_Pipe *wivp) {
+void SaturnWaterController::Init(Saturn *s, h_Tank *pt, h_Tank *wt, h_Tank *pit, h_Tank *wit,
+	h_Pipe *wvp, h_Pipe *wivp, h_Tank *ucdt, h_Pipe *odp, h_Pipe *hdp) {
 	wasteWaterDumpLevel = 0;
 	urineDumpLevel = 0;
+	hatchUrineDumpLevel = 0;
 
 	saturn = s;
 	potableTank = pt;
@@ -1044,20 +1046,25 @@ void SaturnWaterController::Init(Saturn *s, h_Tank *pt, h_Tank *wt, h_Tank *pit,
 	wasteInletTank = wit;
 	wasteVentPipe = wvp;
 	wasteInletVentPipe = wivp;
+	UCDTank = ucdt;
+	OVBDDumpPipe = odp;
+	hatchDumpPipe = hdp;
 }
 
 void SaturnWaterController::SystemTimestep(double simdt) {
 
 	// Is something moving?
-	if (potableInletTank->OUT_valve.pz || potableInletTank->OUT2_valve.pz || 
+	if (potableInletTank->OUT_valve.pz || potableInletTank->OUT2_valve.pz ||
 		wasteInletTank->OUT_valve.pz || potableTank->OUT_valve.pz ||
-		wasteTank->OUT_valve.pz || wasteInletTank->OUT2_valve.pz) return;
+		wasteTank->OUT_valve.pz || wasteInletTank->OUT2_valve.pz ||
+		UCDTank->OUT_valve.pz || UCDTank->OUT2_valve.pz) return;
 
 	// Potable tank inlet
 	if (saturn->PotableTankInletRotary.GetState() == 0) {	// open
 		potableInletTank->OUT_valve.Open();
 		potableInletTank->OUT2_valve.Close();
-	} else {										// close
+	}
+	else {										// close
 		potableInletTank->OUT_valve.Close();
 		potableInletTank->OUT2_valve.Open();
 	}
@@ -1067,64 +1074,90 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 		wasteInletTank->OUT_valve.Open();
 		if (potableTank->space.Press - wasteTank->space.Press < 4.5 / PSI) {
 			potableTank->OUT_valve.Close();
-		} else if (potableTank->space.Press - wasteTank->space.Press > 6.5 / PSI) {
+		}
+		else if (potableTank->space.Press - wasteTank->space.Press > 6.5 / PSI) {
 			potableTank->OUT_valve.Open();
 		}
-	} else {										// closed
-		wasteInletTank->OUT_valve.Close();			
+	}
+	else {										// closed
+		wasteInletTank->OUT_valve.Close();
 		potableTank->OUT_valve.Open();
 	}
+
+	// OVBD dump valve
+	if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3 && saturn->UrineDumpHeater.IsFrozen() == false)
+	{
+		UCDTank->OUT_valve.Open();
+	}
+	else
+	{
+		UCDTank->OUT_valve.Close();
+	}
+
+	// Hatch dump valve
+	//TBD//
 
 	// Pressure relief
 	if ((saturn->PressureReliefRotary.GetState() == 0 || saturn->PressureReliefRotary.GetState() == 3) && saturn->WasteH2ODumpHeater.IsFrozen() == false) {	// dump a/b
 		wasteTank->OUT_valve.Open();
 		if (wasteInletTank->OUT_valve.open) {
 			wasteInletTank->OUT2_valve.Close();
-		} else {
+		}
+		else {
 			wasteInletTank->OUT2_valve.Open();
 		}
-	} else if (saturn->PressureReliefRotary.GetState() == 1 && saturn->WasteH2ODumpHeater.IsFrozen() == false) {	// "2"
+	}
+	else if (saturn->PressureReliefRotary.GetState() == 1 && saturn->WasteH2ODumpHeater.IsFrozen() == false) {	// "2"
 		if (wasteTank->space.Press < 40.0 / PSI) {
 			wasteTank->OUT_valve.Close();
-		} else if (wasteTank->space.Press > 48.0 / PSI) {
+		}
+		else if (wasteTank->space.Press > 48.0 / PSI) {
 			wasteTank->OUT_valve.Open();
 		}
 		if (wasteInletTank->OUT_valve.open) {
 			wasteInletTank->OUT2_valve.Close();
-		} else {
+		}
+		else {
 			if (wasteInletTank->space.Press < 40.0 / PSI) {
 				wasteInletTank->OUT2_valve.Close();
-			} else if (wasteInletTank->space.Press > 48.0 / PSI) {
+			}
+			else if (wasteInletTank->space.Press > 48.0 / PSI) {
 				wasteInletTank->OUT2_valve.Open();
 			}
-		}		
-	} else {	// off
+		}
+	}
+	else {	// off
 		wasteTank->OUT_valve.Close();
 		wasteInletTank->OUT2_valve.Close();
 	}
 
-	// water dump
+	// Waste water dump
 	wasteWaterDumpLevel = wasteVentPipe->flow / wasteVentPipe->flowMax;
-	if (wasteInletTank->OUT2_valve.open) {
+	if (wasteInletTank->OUT2_valve.open)
+	{
 		wasteWaterDumpLevel = 0.5 * (wasteWaterDumpLevel + (wasteInletVentPipe->flow / wasteInletVentPipe->flowMax));
 	}
 
-	// Urine dump
-	urineDumpLevel = 0;
+	// Overboard urine dump
+	urineDumpLevel = OVBDDumpPipe->flow / OVBDDumpPipe->flowMax;
+	if (UCDTank->OUT_valve.open)
+	{
+		urineDumpLevel = 0.5 * (urineDumpLevel + (OVBDDumpPipe->flow / OVBDDumpPipe->flowMax));
+	}
 
-	if (saturn->WasteMGMTOvbdDrainDumpRotary.GetState() == 3 && saturn->UrineDumpHeater.IsFrozen() == false) {
-			urineDumpLevel = 1;
-		}
+	// Hatch urine dump
+	//TBD//
 
-	// potable h2o heaters
+	// Potable H2O heaters
 	if (saturn->PotH2oHtrSwitch.IsUp() && saturn->ECSPOTH2OHTRMnACircuitBraker.IsPowered()) {
 		saturn->ECSPOTH2OHTRMnACircuitBraker.DrawPower(45.0);
 	}
 	if (saturn->PotH2oHtrSwitch.IsDown() && saturn->ECSPOTH2OHTRMnBCircuitBraker.IsPowered()) {
 		saturn->ECSPOTH2OHTRMnBCircuitBraker.DrawPower(45.0);
 	}
-	
+
 	//sprintf(oapiDebugString(), "wasteWaterDumpLevel %f", wasteWaterDumpLevel);
+	//sprintf(oapiDebugString(), "urineDumpLevel %f", urineDumpLevel);
 }
 
 void SaturnWaterController::FoodPreparationWaterSwitchToggled(PanelSwitchItem *s) {

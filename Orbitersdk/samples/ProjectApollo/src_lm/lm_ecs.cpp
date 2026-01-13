@@ -430,10 +430,12 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 	OpenSound(opensound), CloseSound(closesound)
 {
 	open = false;
+	jettComplete = false;
 	ForwardHatchHandle = NULL;
 	ForwardHatchReliefValve = NULL;
 	lem = NULL;
 	cabin = NULL;
+	UCDTank = NULL;
 
 	hatch_state.SetOperatingSpeed(0.2);
 	anim_Hatch = -1;
@@ -442,12 +444,28 @@ LEMForwardHatch::LEMForwardHatch(Sound &opensound, Sound &closesound) :
 	anim_FwdHatchReliefValve = -1;
 }
 
-void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab)
+void LEMForwardHatch::Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab, h_Tank *ucdt)
 {
 	lem = l;
 	ForwardHatchHandle = fhh;
 	ForwardHatchReliefValve = fhr;
 	cabin = cab;
+	UCDTank = ucdt;
+}
+
+void LEMForwardHatch::JettisonEquipment()
+{
+	if (IsOpen() && !jettComplete)
+	{
+		double ucdTemp = UCDTank->GetTemp();
+		UCDTank->space.composition[SUBSTANCE_H2O].mass -= (UCDTank->space.composition[SUBSTANCE_H2O].mass * 0.999);
+		UCDTank->space.composition[SUBSTANCE_H2O].SetTemp(ucdTemp);
+
+		UCDTank->space.GetQ();
+		UCDTank->space.GetMass();
+
+		jettComplete = true;
+	}
 }
 
 void LEMForwardHatch::DefineAnimations(UINT idx)
@@ -540,18 +558,20 @@ void LEMForwardHatch::Toggle()
 void LEMForwardHatch::LoadState(char *line) {
 
 	int i1;
+	int j = 0;
 	double a, b;
 
-	sscanf(line + 13, "%d %lf %lf", &i1, &a, &b);
+	sscanf(line + 13, "%d %lf %lf %i", &i1, &a, &b, &j);
 	open = (i1 != 0);
 	hatch_state.SetState(a, b);
+	jettComplete = (j != 0);
 }
 
 void LEMForwardHatch::SaveState(FILEHANDLE scn) {
 
 	char buffer[100];
 
-	sprintf(buffer, "%i %lf %lf", (open ? 1 : 0), hatch_state.State(), hatch_state.Speed());
+	sprintf(buffer, "%i %lf %lf %d", (open ? 1 : 0), hatch_state.State(), hatch_state.Speed(), jettComplete);
 	oapiWriteScenario_string(scn, "FORWARDHATCH", buffer);
 }
 
@@ -1080,7 +1100,7 @@ LEMWaterSeparationSelector::LEMWaterSeparationSelector()
 	WaterSeparationSelectorSwitch = NULL;
 }
 
-void LEMWaterSeparationSelector::Init(h_Tank *wssv, CircuitBrakerSwitch* wsss)
+void LEMWaterSeparationSelector::Init(h_Tank *wssv, ToggledPushSwitch* wsss)
 {
 	WaterSeparationSelectorValve = wssv;
 	WaterSeparationSelectorSwitch = wsss;
@@ -1468,7 +1488,7 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	// For simplicity's sake, we'll use a docked LM as it would be at IVT, at first docking the LM is empty!
 	Cabin_Press = 0; Cabin_Temp = 0;
 	Suit_Press = 0; Suit_Temp = 0;
-	SuitCircuit_CO2 = 0; HX_CO2 = 0;
+	SuitCircuit_CO2 = 0; SGD_CO2 = 0;
 	Water_Sep1_RPM = 0; Water_Sep2_RPM = 0;
 	Suit_Circuit_Relief = 0;
 	Cabin_Gas_Return = 0;
@@ -1594,10 +1614,10 @@ double LEM_ECS::GetSensorCO2MMHg() {
 	if (!SuitCircuit_CO2) {
 		SuitCircuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
 	}
-	if (!HX_CO2) {
-		HX_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:CO2_PPRESS");
+	if (!SGD_CO2) {
+		SGD_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:CO2_PPRESS");
 	}
-	return ((*SuitCircuit_CO2 + *HX_CO2) / 2.0) * MMHG;
+	return ((*SuitCircuit_CO2 + *SGD_CO2) / 2.0) * MMHG;
 }
 
 double LEM_ECS::DescentWaterTankQuantity() {
@@ -1949,8 +1969,8 @@ double LEM_ECS::GetECSSensorCO2MMHg() {
 	if (!SuitCircuit_CO2) {
 		SuitCircuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
 	}
-	if (!HX_CO2) {
-		HX_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUITHEATEXCHANGERHEATING:CO2_PPRESS");
+	if (!SGD_CO2) {
+		SGD_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:CO2_PPRESS");
 	}
-	return ((*SuitCircuit_CO2 + *HX_CO2) / 2.0) * MMHG;
+	return ((*SuitCircuit_CO2 + *SGD_CO2) / 2.0) * MMHG;
 }

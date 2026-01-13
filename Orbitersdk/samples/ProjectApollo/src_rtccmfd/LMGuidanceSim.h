@@ -29,16 +29,16 @@ class AscentGuidance
 public:
 	AscentGuidance();
 	void Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double rls, double v_hor, double v_rad, bool aps = true);
-	void Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECTOR3 &U_FDP, double &ttgo, double &Thrust, double &isp);
-	void SetThrustParams(bool aps);
+	void Guidance(VECTOR3 R, VECTOR3 V, double M, double Thrust, double t_cur, VECTOR3 &U_FDP, double &ttgo);
+	void SetThrustParams(double m0, bool aps);
 	void SetTGO(double tgo);
 protected:
-	//Thrust magnitude of DPS and APS
-	static const double F_DPS, F_APS;
-	//Specific Impulse
-	static const double Isp_APS, Isp_DPS;
-	//Lunar gravitational constant
-	static const double mu_M;
+	//DPS exhaust velocity
+	static const double v_e_DPS;
+	//APS exhaust velocity
+	static const double v_e_APS;
+	//DPS mass loss rate (P70)
+	static const double m_dot_DPS;
 	//Time to go at which guidance parameters are maintained at last computed value
 	static const double t_2;
 	//Time to go at which spacecraft loses position control at injection
@@ -63,7 +63,6 @@ protected:
 	//Cutoff time
 	double t_cut;
 
-	double m_dot;
 	double a_T;
 	double v_e;
 	double tau;

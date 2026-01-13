@@ -148,6 +148,13 @@ protected:
 	bool EasepSwcPlanted;
 	bool EasepPsepPlanted;
 	bool EasepLr3Planted;
+	bool AlsepStationPlanted;
+	bool AlsepRTGPlanted;
+	bool AlsepSBndPlanted;
+	bool AlsepSWSPlanted;
+	bool AlsepPSEPlanted;
+	bool AlsepLSMPlanted;
+	bool AlsepSIDEPlanted;
 
 	ATTACHMENTHANDLE lrvSeat;
 

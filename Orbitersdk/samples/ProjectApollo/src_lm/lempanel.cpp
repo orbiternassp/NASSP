@@ -511,11 +511,11 @@ void LEM::InitSwitches() {
 	Panel12SBandAntSelKnob.AddPosition(3, 30);
 	Panel12SBandAntSelKnob.Register(PSH, "Panel12SBandAntSelKnob", 1);
 
-	Panel12AntPitchKnob.Register(PSH, "Panel12AntPitchKnob", 22.0, 0.0, 22.0); //For now retain the 0-22 scaling of the bitmaps for checklist backwards compatibility
+	Panel12AntPitchKnob.Register(PSH, "Panel12AntPitchKnob", 0.0, 0.0, 22.0); //For now retain the 0-22 scaling of the bitmaps for checklist backwards compatibility
 	Panel12AntPitchKnob.SetRotationRange(330.0*RAD);
 	Panel12AntPitchKnob.SetOffset(-165.0*RAD);
 
-	Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 6.0, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
+	Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 5.2, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
 	Panel12AntYawKnob.SetRotationRange(PI);
 	Panel12AntYawKnob.SetOffset(-90.0*RAD);
 
@@ -2464,7 +2464,7 @@ void LEM::SetSwitches(int panel) {
 	Panel12AntYawKnob.Init(0, 0, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel12AntYawSwitchRow);
 
 	LMPManualEngineStopSwitchRow.Init(AID_LMP_MANUAL_ENGINE_STOP_SWITCH, MainPanel);
-	LMPManualEngineStop.Init(0, 0, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_68x69], LMPManualEngineStopSwitchRow, 0, 0, NULL, this);
+	LMPManualEngineStop.Init(0, 0, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_68x69], LMPManualEngineStopSwitchRow, 0, 0, this);
 
 	AGSOperateSwitchRow.Init(AID_LM_AGS_OPERATE_SWITCH, MainPanel);
 	AGSOperateSwitch.Init(0, 0, 34, 39, srf[SRF_LMTHREEPOSLEVER], srf[SRF_BORDER_34x39], AGSOperateSwitchRow);
@@ -2586,8 +2586,9 @@ void LEM::SetSwitches(int panel) {
 	LtgAnunNumKnob.Init(333, 243, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 	LtgIntegralKnob.Init(457, 243, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 	PlusXTranslationButton.Init(46, 256, 79, 68, srf[SRF_LMTRANSLBUTTON], srf[SRF_BORDER_84x84], Panel5SwitchRow);
-	ManualEngineStart.Init(32, 114, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_68x69], Panel5SwitchRow, 0, 138, &CDRManualEngineStop, this);
-	CDRManualEngineStop.Init(32, 0, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_68x69], Panel5SwitchRow, 0, 0, &ManualEngineStart, this);
+	ManualEngineStart.Init(32, 114, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_68x69], Panel5SwitchRow, 0, 138, this);
+	ManualEngineStart.SetDelayTime(1);
+	CDRManualEngineStop.Init(32, 0, 68, 69, srf[SRF_LMENGINE_START_STOP_BUTTONS], srf[SRF_BORDER_68x69], Panel5SwitchRow, 0, 0, this);
 
 	// Panel 8 is  431,916 to 1574,1258
 	Panel8SwitchRow.Init(AID_LEM_PANEL_8, MainPanel);
@@ -2707,6 +2708,9 @@ void LEM::SetSwitches(int panel) {
 
 	ForwardHatchValveSwitchRow.Init(AID_LEM_FWD_HATCH_VALVE, MainPanel);
 	ForwardHatchReliefValve.Init(0, 0, 178, 187, srf[SRF_LEM_F_HATCH_REL_VLV], srf[SRF_BORDER_178x187], ForwardHatchValveSwitchRow);
+
+	// EVA antenna handle
+	EvaAntennaHandle.Init(0, 0, 0, 0, 0, 0, UpperHatchValveSwitchRow); // Dummy, not functional on the 2D panel
 
 	// Radar Tape
 	// Used to be in lemsystems, but placed here for proper loading of both tape bitmaps

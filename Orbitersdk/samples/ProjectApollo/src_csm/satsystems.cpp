@@ -438,6 +438,9 @@ void Saturn::SystemsInit() {
 	SetPipeMaxFlow("HYDRAULIC:WASTEH2OVENTPIPE", 150./ LBH);
 	SetPipeMaxFlow("HYDRAULIC:WASTEH2OINLETVENTPIPE", 100./ LBH);
 
+	SetPipeMaxFlow("HYDRAULIC:OVBDDUMPPIPE", 50./ LBH);
+	SetPipeMaxFlow("HYDRAULIC:HATCHDUMPPIPE", 50./ LBH);
+
 	CrewStatus.Init(this);
 
 	//
@@ -683,12 +686,15 @@ void Saturn::SystemsInit() {
 	SideHatch.Init(this, &HatchGearBoxSelector, &HatchActuatorHandleSelector, &HatchActuatorHandleSelectorOpen, &HatchVentValveRotary);
 	ForwardHatch.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"), &PressEqualValve);
 
-	WaterController.Init(this, (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK"),
-		                 (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK"),
-		                 (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OINLET"),
-						 (h_Tank *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLET"),
-						 (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OVENTPIPE"),
-						 (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLETVENTPIPE"));
+	WaterController.Init(this, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK"),
+							(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK"),
+							(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OINLET"),
+							(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLET"),
+							(h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OVENTPIPE"),
+							(h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OINLETVENTPIPE"),
+							(h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK"),
+							(h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:OVBDDUMPPIPE"),
+							(h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:HATCHDUMPPIPE"));
 	
 	GlycolCoolingController.Init(this);
 	LMTunnelVent.Init((h_Valve *)Panelsdk.GetPointerByString("HYDRAULIC:CSMTUNNEL:OUT2"),
@@ -1265,7 +1271,15 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	double *WasteH2OTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:TEMP");
 	double *WasteH2OPress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:WASTEH2OTANK:PRESS");
 
-	sprintf(oapiDebugString(), "Mass: %lf VapMass: %.5f Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *PotH2OMass, *PotH2OVapMass, KelvinToFahrenheit(*PotH2OTemp), *PotH2OPress *PSI, *DrinkPipeFlow, *DrinkPipeFlowmax, *PotH2OLeakVlv, *NumCrew);
+	double *UrineMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK:MASS");
+	double *UrineTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK:TEMP");
+	double *UrinePress = (double *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK:PRESS");
+	double *OVBDPipeFlow = (double *)Panelsdk.GetPointerByString("HYDRAULIC:OVBDDUMPPIPE:FLOW");
+	double *OVBDPipeFlowmax = (double *)Panelsdk.GetPointerByString("HYDRAULIC:OVBDDUMPPIPE:FLOWMAX");
+	int *OVBDvlv = (int *)Panelsdk.GetPointerByString("HYDRAULIC:UCDTANK:OUT:ISOPEN");
+
+	//sprintf(oapiDebugString(), "Mass: %lf VapMass: %.5f Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *PotH2OMass, *PotH2OVapMass, KelvinToFahrenheit(*PotH2OTemp), *PotH2OPress *PSI, *DrinkPipeFlow, *DrinkPipeFlowmax, *PotH2OLeakVlv, *NumCrew);
+	//sprintf(oapiDebugString(), "Mass: %lf Temp: %.3f Press %.3f Flow %.5f Max %.5f PVlv %d Crew %d", *UrineMass, KelvinToFahrenheit(*UrineTemp), *UrinePress *PSI, *OVBDPipeFlow, *OVBDPipeFlowmax, *OVBDvlv, *NumCrew);
 	*/
 
 //GSE Oxygen Purge Debug Lines	
@@ -2079,7 +2093,7 @@ void Saturn::JoystickTimestep()
 
 		int rhc_pos[3] = { rhc_x_pos, rhc_y_pos, rhc_rot_pos };
 
-		rhc1.Timestep(rhc_pos, rhc_voltage1 > SP_MIN_DCVOLTAGE, eca.IsAC1Powered(), rhc_directv1 > SP_MIN_DCVOLTAGE, rhc_directv1 > SP_MIN_DCVOLTAGE);
+		rhc2.Timestep(rhc_pos, rhc_voltage2 > SP_MIN_DCVOLTAGE, eca.IsAC2Powered(), rhc_directv2 > SP_MIN_DCVOLTAGE, rhc_directv2 > SP_MIN_DCVOLTAGE);
 
 		// X and Y are well-duh kinda things. X=0 for full-left, Y = 0 for full-down
 		// Set bits according to joystick state. 32768 is center, so 16384 is the left half.
@@ -2087,22 +2101,22 @@ void Saturn::JoystickTimestep()
 		// The RHC breakout switches trigger at 1.5 degrees deflection and soft stop at 10.
 		if (rhc_voltage1 > SP_MIN_DCVOLTAGE || rhc_voltage2 > SP_MIN_DCVOLTAGE) { // NORMAL
 			// CMC
-			if (rhc1.GetMinusRollBreakoutSwitch()) {
+			if (rhc2.GetMinusRollBreakoutSwitch()) {
 				val31[MinusRollManualRotation] = 1;
 			}					
-			if (rhc1.GetMinusPitchBreakoutSwitch()) {
+			if (rhc2.GetMinusPitchBreakoutSwitch()) {
 				val31[MinusPitchManualRotation] = 1;
 			}
-			if (rhc1.GetPlusRollBreakoutSwitch()) {
+			if (rhc2.GetPlusRollBreakoutSwitch()) {
 				val31[PlusRollManualRotation] = 1;
 			}
-			if (rhc1.GetPlusPitchBreakoutSwitch()) {
+			if (rhc2.GetPlusPitchBreakoutSwitch()) {
 				val31[PlusPitchManualRotation] = 1;
 			}
-			if (rhc1.GetMinusYawBreakoutSwitch()) {
+			if (rhc2.GetMinusYawBreakoutSwitch()) {
 				val31[MinusYawManualRotation] = 1;
 			}
-			if (rhc1.GetPlusYawBreakoutSwitch()) {
+			if (rhc2.GetPlusYawBreakoutSwitch()) {
 				val31[PlusYawManualRotation] = 1;
 			}
 		}
@@ -2118,7 +2132,7 @@ void Saturn::JoystickTimestep()
 		if (secs.rcsc.GetCMTransferMotor1() || secs.rcsc.GetCMTransferMotor2()) sm_sep = true;
 
 		if ((rhc_directv1 > SP_MIN_DCVOLTAGE || rhc_directv2 > SP_MIN_DCVOLTAGE)) {
-			if (rhc1.GetMinusRollHardStopSwitch()) {
+			if (rhc2.GetMinusRollHardStopSwitch()) {
 				// MINUS ROLL
 				if (!sm_sep) {						
 					SetRCSState(RCS_SM_QUAD_A, 2, 1);
@@ -2166,7 +2180,7 @@ void Saturn::JoystickTimestep()
 				rjec.SetDirectRollActive(true); 
 				rflag = 1;
 			}
-			if (rhc1.GetPlusRollHardStopSwitch()) {
+			if (rhc2.GetPlusRollHardStopSwitch()) {
 				// PLUS ROLL
 				if (!sm_sep) {
 					SetRCSState(RCS_SM_QUAD_A, 2, 0); 
@@ -2214,7 +2228,7 @@ void Saturn::JoystickTimestep()
 				rjec.SetDirectRollActive(true); 
 				rflag = 1;
 			}
-			if (rhc1.GetMinusPitchHardStopSwitch()) {
+			if (rhc2.GetMinusPitchHardStopSwitch()) {
 				// MINUS PITCH
 				if (!sm_sep) {
 					SetRCSState(RCS_SM_QUAD_C, 4, 1);
@@ -2254,7 +2268,7 @@ void Saturn::JoystickTimestep()
 				rjec.SetDirectPitchActive(true); 
 				pflag = 1;
 			}
-			if (rhc1.GetPlusPitchHardStopSwitch()) {
+			if (rhc2.GetPlusPitchHardStopSwitch()) {
 				// PLUS PITCH
 				if (!sm_sep) {
 					SetRCSState(RCS_SM_QUAD_C, 4, 0);
@@ -2294,7 +2308,7 @@ void Saturn::JoystickTimestep()
 				rjec.SetDirectPitchActive(true); 
 				pflag = 1;
 			}
-			if (rhc1.GetMinusYawHardStopSwitch()) {
+			if (rhc2.GetMinusYawHardStopSwitch()) {
 				// MINUS YAW
 				if (!sm_sep) {
 					SetRCSState(RCS_SM_QUAD_B, 4, 1);
@@ -2334,7 +2348,7 @@ void Saturn::JoystickTimestep()
 				rjec.SetDirectYawActive(true);
 				yflag = 1;
 			}
-			if (rhc1.GetPlusYawHardStopSwitch()) {
+			if (rhc2.GetPlusYawHardStopSwitch()) {
 				// PLUS YAW
 				if (!sm_sep) {
 					SetRCSState(RCS_SM_QUAD_D, 3, 1);
@@ -3668,6 +3682,8 @@ void Saturn::GetECSStatus(ECSStatus &ecs)
 		ecs.SecECSTestHeating += SecECSTestHeater->max_boiler_power;
 
 	ecs.CSMO2HoseConnected = GetCSMO2Hose()->out != NULL;
+
+	ecs.UCTAStatus = WaterController.GetCMUCDPct();
 }
 
 void Saturn::SetCrewNumber(int number) {

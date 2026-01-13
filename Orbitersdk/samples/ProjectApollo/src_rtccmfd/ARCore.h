@@ -26,6 +26,22 @@ struct ApolloRTCCMFDData {  // global data storage
 	double uplinkBufferSimt;
 };
 
+struct MEDInput
+{
+	std::string Label;			//Short description on MFD page
+	std::string Description;	//Detailed description in MFD input box
+	std::string Unit;			//Unit displayed on MFD page
+	std::string Data;
+};
+
+struct MEDInputPage
+{
+	std::string Title;			//Title displayed on MFD page
+	std::string MEDCode;
+	std::vector<MEDInput> table;
+	int display = -1;
+};
+
 class AR_GCore
 {
 public:
@@ -90,6 +106,21 @@ public:
 	std::string AGOP_Error;
 	MATRIX3 AGOP_REFSMMAT;
 	int AGOP_REFSMMAT_Vehicle;
+
+	//POWERED DESCENT ABORT PROGRAM
+	PDAPOpt PDAPOptions;
+	int PDAPVersion; //0 = Apollo 11, 1 = Apollo 12, 2 = Apollo 13+
+	double PDAP_CSM_VectorTime, PDAP_LM_VectorTime;
+	double PDAPABTCOF[8];	//Luminary099 abort coefficients
+	int PDAP_UplinkData[18];
+	int DEDA224, DEDA225, DEDA226, DEDA227, DEDA305, DEDA662, DEDA673, PDAP_ErrorCode;
+	double PDAP_J1, PDAP_K1, PDAP_J2, PDAP_K2, PDAP_Theta_LIM, PDAP_R_amin, PDAP_V_hmin, PDAP_A_min, PDAP_A_max;
+
+	//GENERAL PARAMETERS
+	double t_TPI;				// Generally used TPI time
+
+	//MANUAL ENTRY DEVICE
+	std::vector<MEDInputPage> MEDInputData;
 
 	//MOCR DISPLAY
 	void DFLBackgroundSlide(oapi::Sketchpad *skp, DWORD W, DWORD H, unsigned display);
@@ -197,8 +228,10 @@ public:
 	void TLIProcessorCalc();
 	void SaturnVTLITargetUplink();
 	int GetVesselParameters(bool IsCSM, int docked, int Thruster, int &Config, int &TVC, double &CSMMass, double &LMMass);
-	int menuCalculateIMUComparison(bool IsCSM);
+	int menuCalculateAttitudeComparison(bool IsCSM, bool IsAGC);
 	void menuCalculateIMUParkingAngles(agc_t* agc);
+	int GetVehicleDataBlock(int L, double VectorTimeGET, std::string VectorID, VehicleDataBlock &sv, std::string &StationID);
+	int VectorFetch(int L, double VectorTimeGET, std::string VectorID, EphemerisData &sv, std::string &StationID);
 
 	int startSubthread(int fcn, bool IsCSM = true);
 	int subThread();
@@ -218,7 +251,6 @@ public:
 	bool lemdescentstage;		//0 = ascent stage, 1 = descent stage
 	bool PADSolGood;
 	int manpadenginetype;
-	double t_TPI;				// Generally used TPI time
 	int mptinitmode;			//0 = MED M49, 1 = MED M50, 2 = MED M51, 3 = MED M55
 
 	//DOCKING INITIATION
@@ -227,12 +259,7 @@ public:
 	double t_TPIguess;
 
 	//CONCENTRIC RENDEZVOUS PAGE
-	int SPQMode;	//0 = CSI on time, 1 = CDH, 2 = optimum CSI
-	double CSItime;	//Time of the CSI maneuver
-	double CDHtime;	//Time of the CDH maneuver
-	double SPQTIG;	//Time of ignition for concentric rendezvous maneuver
 	int CDHtimemode; //CSI: 0 = fixed TIG at TPI, 1 = fixed DH at CDH. CDH: 0=Fixed, 1 = Find GETI
-	VECTOR3 SPQDeltaV;
 
 	//ORBIT ADJUSTMENT PAGE
 	int GMPManeuverCode; //Maneuver code
@@ -248,7 +275,6 @@ public:
 	double GMPYaw;
 	double GMPApseLineRotAngle;
 	int GMPRevs;
-	double SPSGET;		//Maneuver GET
 	//0 = Apogee
 	//1 = Equatorial crossing
 	//2 = Perigee
@@ -274,8 +300,8 @@ public:
 
 	//REFSMMAT PAGE
 	double REFSMMAT_LVLH_Time;
+	int REFSMMAT_ManNum;	//Maneuver number for P30 REFSMMAT
 	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2 = LVLH, 3 = Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
-	int REFSMMATcur; //Currently saved REFSMMAT
 	bool REFSMMATHeadsUp;
 
 	//ENTRY PAGE
@@ -301,6 +327,7 @@ public:
 	double sxtstardtime;
 	double manpad_ullage_dt;
 	bool manpad_ullage_opt; //true = 4 jets, false = 2 jets
+	int manpad_pref_GDC_stars; // Preferred star set for the GDC backup alignment. 0 = Deneb, Vega, 1 = Navi, Polaris, 2 = Acrux, Atria, 3 = Sirius, Rigel
 	int ManPADMPT; //1 = CSM, 3 = LEM
 	int ManPADMPTManeuver; //1-15
 	bool TLIPAD_StudyAid; //False = nominal TLI, true = study aid
@@ -331,14 +358,6 @@ public:
 	int AscentPADVersion; //0 = Apollo 11-13, 1 = Apollo 14-17
 	double LAP_Phase, LAP_CR;
 
-	//Powered Descent Abort Program
-	int PDAPEngine;	//0 = DPS/APS, 1 = APS
-	bool PDAPTwoSegment;	//false = One Segment (Luminary099, FP6), true = Two Segment (Luminary116 and later, FP7 and later)
-	double PDAPABTCOF[8];	//Luminary099 abort coefficients
-	double DEDA224, DEDA225, DEDA226;
-	int DEDA227;
-	double PDAP_J1, PDAP_K1, PDAP_J2, PDAP_K2, PDAP_Theta_LIM, PDAP_R_amin;
-
 	//Erasable Memory Programs
 	std::string EMPFile;
 	int EMPUplinkNumber, EMPUplinkMaxNumber;
@@ -368,6 +387,7 @@ public:
 
 	//SATURN IB LAUNCH TARGETING
 	VESSEL* Rendezvous_Target; //Target vessel in orbit
+	int Rendezvous_Target_Table; //1 = CSM, 3 = LEM
 
 	//UPLINK
 	double AGCClockTime[2];
@@ -379,15 +399,11 @@ public:
 	int iuUplinkResult; //0 = no uplink, 1 = uplink accepted, 2 = vessel has no IU, 3 = uplink rejected, 4 = No targeting parameters
 
 	//LUNAR TARGETING PROGRAM
-	double LUNTAR_lat;
-	double LUNTAR_lng;
-	double LUNTAR_bt_guess;
-	double LUNTAR_pitch_guess;
-	double LUNTAR_yaw_guess;
-	double LUNTAR_TIG;
+	LunarTargetingProgramInput LUNTAR_Input;
 	LunarTargetingProgramOutput LUNTAR_Output;
 
 	//DEBUG
+	bool DebugLMComputer; //true = LGC, false = AGS
 	VECTOR3 DebugIMUTorquingAngles;
 
 	//IMU PARKING ANGLES

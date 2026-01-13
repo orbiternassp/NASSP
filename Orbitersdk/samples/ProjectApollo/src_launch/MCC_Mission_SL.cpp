@@ -45,10 +45,13 @@ void MCC::MissionSequence_SL()
 		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(1.0 * 3600.0 + 55.0*60.0), 12, MST_SL_FINAL_NC1);
 		break;
 	case MST_SL_FINAL_NC1: //NC1 final update to NC2 preliminary update
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(3.0 * 3600.0 + 5.0*60.0), 13, MST_SL_PRELIM_NC2);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP7MNV, mcc_calcs.GETEval(3.0 * 3600.0 + 5*60.0), 13, MST_SL_PRELIM_NC2);
 		break;
-	case MST_SL_PRELIM_NC2: //NC2 preliminary update to NC2 final update
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(4.0 * 3600.0 + 12.0*60.0), 14, MST_SL_FINAL_NC2);
+	case MST_SL_PRELIM_NC2: //NC2 preliminary update to SV uplink
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(3.0 * 3600.0 + 27.0*60.0), 14, MST_SL_NC2_SVs);
+		break;
+	case MST_SL_NC2_SVs: //SV uplink to NC2 final update
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(4.0*3600.0 + 12 * 60.0), 24, MST_SL_FINAL_NC2);
 		break;
 	case MST_SL_FINAL_NC2: //NC2 final update to NCC preliminary update
 		UpdateMacro(UTP_PADONLY, PT_AP7MNV, SubStateTime > 2.0*60.0, 15, MST_SL_PRELIM_NCC);
@@ -63,16 +66,16 @@ void MCC::MissionSequence_SL()
 		UpdateMacro(UTP_PADONLY, PT_AP7MNV, SubStateTime > 2.0*60.0, 17, MST_SL_FINAL_NSR);
 		break;
 	case MST_SL_FINAL_NSR: //NSR final update to TPI preliminary update
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(rtcc->calcParams.TPI - 32.0*60.0), 19, MST_SL_PRELIM_TPI);
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(rtcc->calcParams.TPI - 34.0*60.0), 19, MST_SL_PRELIM_TPI);
 		break;
 	case MST_SL_PRELIM_TPI: //TPI preliminary update to docking attitude PAD
 		UpdateMacro(UTP_PADONLY, PT_AP7MNV, SubStateTime > 2.0*60.0, 20, MST_DOCKING_ATTITUDE_PAD);
 		break;
 	case MST_DOCKING_ATTITUDE_PAD: //Docking attitude PAD to TPI final update
-		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(rtcc->calcParams.TPI - 24.0*60.0), 22, MST_SL_FINAL_TPI);
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(rtcc->calcParams.TPI - 26.0*60.0), 22, MST_SL_FINAL_TPI);
 		break;
 	case MST_SL_FINAL_TPI: //TPI final update to Skylab Solar Inertial Command
-		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(rtcc->calcParams.TPI + 3.0*60.0), 21, MST_SL_SOLAR_INERTIAL);
+		UpdateMacro(UTP_PADONLY, PT_AP7MNV, mcc_calcs.GETEval(rtcc->calcParams.TPI + 21.0*60.0), 21, MST_SL_SOLAR_INERTIAL);
 		break;
 	case MST_SL_SOLAR_INERTIAL: //Skylab Solar Inertial Command to
 		UpdateMacro(UTP_NONE, PT_NONE, false, 23, MST_ENTRY);

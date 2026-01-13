@@ -40,15 +40,15 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 	DetermineManeuverType();
 
 	//Coast to threshold time
-	EphemerisData sv1;
+	VehicleDataBlock sv1;
 	double TIG_GMT, dt1;
 
 	TIG_GMT = pRTCC->GMTfromGET(opt->TIG_GET);
-	dt1 = TIG_GMT - opt->sv_in.GMT;
-	sv1 = pRTCC->coast(opt->sv_in, dt1, opt->Weight, opt->Area, opt->KFactor, false);
+	dt1 = TIG_GMT - opt->sv_in.sv.GMT;
+	sv1 = pRTCC->coast(opt->sv_in, dt1);
 
 	//Convert to AEG
-	aeg = pRTCC->SVToAEG(sv1, opt->Area, opt->Weight, opt->KFactor);
+	aeg = pRTCC->SVToAEG(sv1.sv, sv1.Area, sv1.Weight, sv1.KFactor);
 
 	//Initialize AEG
 	pRTCC->PMMAEGS(aeg.Header, aeg.Data, aeg.Data);
@@ -63,7 +63,7 @@ int RTCCGeneralPurposeManeuverProcessor::PCMGPM(const GMPOpt &IOPT)
 		return 4;
 	}
 
-	if (sv1.RBI == BODY_EARTH)
+	if (sv1.sv.RBI == BODY_EARTH)
 	{
 		R_E = pRTCC->SystemParameters.MCECAP;
 		mu = OrbMech::mu_Earth;
@@ -460,7 +460,10 @@ void RTCCGeneralPurposeManeuverProcessor::PCGPMP()
 	if (ManeuverType == 0)
 	{
 		FlightControllerInput();
-		PlaneChange();
+		if (ErrorIndicator == 0)
+		{
+			PlaneChange();
+		}
 	}
 	//Plane change
 	else if (ManeuverType == 1)
@@ -704,6 +707,12 @@ void RTCCGeneralPurposeManeuverProcessor::FlightControllerInput()
 	r_a_dot = r_b_dot + dr_dot;
 	V_a2 = r_a_dot * r_a_dot + v_H_a2;
 	sv_a.coe_osc.a = mu * sv_b.R / (2.0*mu - sv_b.R*V_a2);
+	//Orbit not-elliptical
+	if (sv_a.coe_osc.a <= 0.0)
+	{
+		ErrorIndicator = 9;
+		return;
+	}
 	e_a2 = 1.0 - (sv_b.R*sv_b.R*v_H_a2) / mu / sv_a.coe_osc.a;
 	sv_a.coe_osc.e = sqrt(e_a2);
 	E_a = pRTCC->GLQATN(sv_b.R*r_a_dot*sqrt(sv_a.coe_osc.a), (sv_a.coe_osc.a - sv_b.R)*sqrt(mu));

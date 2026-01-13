@@ -7,7 +7,7 @@
 #define VC_NGRP 1085
 
 // Number of materials:
-#define VC_NMAT 178
+#define VC_NMAT 181
 
 // Number of textures:
 #define VC_NTEX 35
@@ -1274,10 +1274,13 @@
 #define VC_MAT_LMVC_t 171
 #define VC_MAT_SwitchCover_t 172
 #define VC_MAT_HolderRahmen_t 173
-#define VC_MAT_Talkbacks_Frame_t 174
-#define VC_MAT_Talkbacks_P2_t 175
-#define VC_MAT_Talkbacks_P3_t 176
-#define VC_MAT_csm_waste_disposal_rotary 177
+#define VC_MAT_TW_Switches_LEB 174
+#define VC_MAT_TW_Switches_CMP 175
+#define VC_MAT_TW_Switches_LMP 176
+#define VC_MAT_Talkbacks_Frame_t 177
+#define VC_MAT_Talkbacks_P2_t 178
+#define VC_MAT_Talkbacks_P3_t 179
+#define VC_MAT_csm_waste_disposal_rotary 180
 
 // Named Textures:
 #define VC_TEX_CMVCTex2_dds 1

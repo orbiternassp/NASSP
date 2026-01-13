@@ -26,11 +26,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "OrbMech.h"
 #include "LMGuidanceSim.h"
 
-const double AscentGuidance::F_APS = 15297.43;
-const double AscentGuidance::F_DPS = 43203.3275;
-const double AscentGuidance::Isp_APS = (308.8 * G);
-const double AscentGuidance::Isp_DPS = 3107.0;
-const double AscentGuidance::mu_M = GGRAV * 7.34763862e+22;
+const double AscentGuidance::v_e_DPS = 2955.889;
+const double AscentGuidance::v_e_APS = 9942.0*0.3048;
+const double AscentGuidance::m_dot_DPS = 32.62*0.45359237;
 const double AscentGuidance::t_2 = 2.0;
 const double AscentGuidance::t_3 = 10.0;
 const double AscentGuidance::PRLIMIT = -0.1*0.3048;
@@ -51,14 +49,11 @@ AscentGuidance::AscentGuidance()
 
 void AscentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double rls, double v_hor, double v_rad, bool aps)
 {
+	SetThrustParams(m0, aps);
+
+	//Define Target Coordinate Vector Q
 	Q = unit(crossp(V_C, R_C));
 
-	SetThrustParams(aps);
-
-	m_dot = F / Isp;
-	a_T = F / m0;
-	v_e = F / m_dot;
-	tau = m0 / m_dot;
 	r_LS = rls;
 	R_D = r_LS + 60000.0*0.3048;
 	Z_D_dot = v_hor;
@@ -69,20 +64,20 @@ void AscentGuidance::Init(VECTOR3 R_C, VECTOR3 V_C, double m0, double rls, doubl
 	FLENG2 = false;
 }
 
-void AscentGuidance::SetThrustParams(bool aps)
+void AscentGuidance::SetThrustParams(double m0, bool aps)
 {
 	if (aps)
 	{
-		F = F_APS;
-		Isp = Isp_APS;
+		a_T = 3.2883;
+		tau = 919.02;
+		v_e = v_e_APS;
 	}
 	else
 	{
-		F = F_DPS;
-		Isp = Isp_DPS;
+		a_T = m_dot_DPS * v_e_DPS / m0;
+		tau = m0 / m_dot_DPS;
+		v_e = v_e_DPS;
 	}
-	m_dot = F / Isp;
-	v_e = F / m_dot;
 }
 
 void AscentGuidance::SetTGO(double tgo)
@@ -90,10 +85,10 @@ void AscentGuidance::SetTGO(double tgo)
 	t_go = tgo;
 }
 
-void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECTOR3 &U_FDP, double &ttgo, double &Thrust, double &isp)
+void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double Thrust, double t_cur, VECTOR3 &U_FDP, double &ttgo)
 {
-	tau = M / m_dot;
-	a_T = v_e / tau;
+	a_T = Thrust / M;
+	tau = v_e / a_T;
 
 	r = length(R);
 	h = r - r_LS;
@@ -106,7 +101,7 @@ void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECT
 	Y = r * asin(dotp(U_R, Q));
 	V_G = U_R * (R_D_dot - R_dot) + U_Y * (Y_D_dot - Y_dot) + U_Z * (Z_D_dot - Z_dot);
 
-	g_eff = pow(length(crossp(R, V)), 2) / pow(r, 3) - mu_M / r / r;
+	g_eff = pow(length(crossp(R, V)), 2) / pow(r, 3) - OrbMech::mu_Moon / r / r;
 	t_go -= 2.0;
 	V_G = V_G - U_R * 0.5*t_go*g_eff;
 	t_go = tau * length(V_G) / v_e * (1.0 - 0.5*length(V_G) / v_e);
@@ -193,8 +188,6 @@ void AscentGuidance::Guidance(VECTOR3 R, VECTOR3 V, double M, double t_cur, VECT
 			U_FDP = unit(R);
 		}
 	}
-	Thrust = F;
-	isp = Isp;
 }
 
 LGCDescentConstants::LGCDescentConstants()

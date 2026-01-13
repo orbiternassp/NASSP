@@ -22,6 +22,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 **************************************************************************/
 
 #include "RTCCDisplayFormatting.h"
+#include "OrbMech.h"
 
 namespace rtcc
 {
@@ -183,19 +184,8 @@ namespace rtcc
 	void RTCCDynamicDisplayData::DFLTime(RTCCDisplay &disp, double val, int x, int y, oapi::Sketchpad::TAlign_horizontal align) const
 	{
 		char Buff[64];
-		format_time_rtcc(Buff, val);
+		OrbMech::format_time_HHHMMSS(Buff, val);
 
 		DisplayFormatting(disp, Buff, x, y, align);
-	}
-
-	void RTCCDynamicDisplayData::format_time_rtcc(char *buf, double time) const
-	{
-		buf[0] = 0; // Clobber
-		int hours, minutes, seconds;
-		if (time < 0) { return; } // don't do that
-		hours = (int)(time / 3600);
-		minutes = (int)((time / 60) - (hours * 60));
-		seconds = (int)((time - (hours * 3600)) - (minutes * 60));
-		sprintf_s(buf, 64, "%03d:%02d:%02d", hours, minutes, seconds);
 	}
 }

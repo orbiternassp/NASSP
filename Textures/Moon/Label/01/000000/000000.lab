@@ -5,6 +5,7 @@ G	-16.45		-31.45		-1405		"The Helmet"
 G	0.9671		29.2203		-2119		"Wash Basin"
 G	1.4581		27.2714		-2013		"Diamondback Rille"
 G	0.0503		28.0769		-2133		"Sidewinder Rille"
+G	27.60		-34.30		-1433		LDMK 5 (Apollo 7)
 G	-5.993		-162.1855	2981		CP-1 504 (Apollo 8)
 G	-9.804		154.485		-833		CP-2 526 (Apollo 8)
 G	-8.882		97.367		709			CP-3 334 (Apollo 8)
@@ -47,6 +48,7 @@ G	-8.783		14.947		57			DE-3 (Apollo 12)
 G	-3.220		-17.33		-906		FM-1 (Apollo 12)
 G	-4.178		-16.873		-1003		FM-2 (Apollo 12)
 G	-4.636		-17.510		-1433		FM-3 (Apollo 12)
+c	27.60		-34.30		-3658		LDMK 5
 H	0.5856		30.2456		-1730		"Boot Hill"
 H	0.0469		29.5956		-1838		"Duke Island"
 H	1.2255		40.0065		-48			"Mount Marilyn"
