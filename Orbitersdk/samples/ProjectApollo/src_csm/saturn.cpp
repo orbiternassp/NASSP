@@ -1144,6 +1144,7 @@ void Saturn::initSaturn()
 	seatsunfoldedidx = -1;
 	coascdridx = -1;
 	coascdrreticleidx = -1;
+	smidx = -1;
 
 	vcmesh = NULL;
 	vis = NULL;
@@ -1241,6 +1242,13 @@ void Saturn::initSaturn()
 		// Switch to compatible dock mode 
 		SetDockMode(0);
 	}
+
+	for (int i = 0;i < 8;i++)
+	{
+		runningLightsPos[i] = _V(0, 0, 0);
+	}
+	evaLightPos = _V(0, 0, 0);
+
 	InitSaturnCalled = true;
 }
 
@@ -5223,6 +5231,13 @@ void Saturn::UpdateMassAndCoG()
 		//lights
 		SpotLight->UpdatePosition(CoGShift);
 		RndzLight->UpdatePosition(CoGShift);
+
+		//Running Lights
+		for (int i = 0;i < 8;i++)
+		{
+			runningLightsPos[i] -= CoGShift;
+		}
+		evaLightPos -= CoGShift;
 
 		// All done!
 		LastFuelWeight = CurrentFuelWeight;

@@ -219,6 +219,14 @@ void ExteriorLighting::Init(Saturn *s, CircuitBrakerSwitch *MNB, ThreeSourceTwoD
 	RDZSPOTsw = RDZSPOT;
 }
 
+bool ExteriorLighting::IsPowered()
+{
+	if (saturn->RunEVALightSwitch.GetState() == TOGGLESWITCH_UP && saturn->stage == CSM_LEM_STAGE) {
+		return true;
+	}
+	return false;
+}
+
 void ExteriorLighting::SystemTimestep(double simdt)
 {
 	if (!saturn->LETAttached())
@@ -229,6 +237,34 @@ void ExteriorLighting::SystemTimestep(double simdt)
 	if (RDZSPOTsw->IsDown() && RNDZSPOTMNBcb->IsPowered())
 	{
 		SpotDeployed = true;
+	}
+
+	//Running Lights
+	int i;
+
+	if (IsPowered()) {
+		for (i = 0; i < 8; i++) saturn->runningLights[i].active = true;
+	}
+	else {
+		for (i = 0; i < 8; i++) saturn->runningLights[i].active = false;
+	}
+
+	//EVA Light
+	if (IsPowered() && EVALtDeployed)
+	{
+		saturn->evaLight.active = true;
+	}
+	else
+	{
+		saturn->evaLight.active = false;
+	}
+
+	//EVA Pole Lt execute Animation
+	if (anim_EVALt != 0) {
+		if (EVALtDeployed)
+			saturn->SetAnimation(anim_EVALt, 1.0); // deployed
+		else
+			saturn->SetAnimation(anim_EVALt, 0.0); // stowed
 	}
 }
 
@@ -248,4 +284,17 @@ void ExteriorLighting::SaveState(FILEHANDLE scn, char *name_str)
 
 	sprintf(buffer, "%d %d", SpotDeployed, EVALtDeployed);
 	oapiWriteScenario_string(scn, name_str, buffer);
+}
+
+void ExteriorLighting::DefineAnimations(UINT idx)
+{
+	ANIMATIONCOMPONENT_HANDLE ach_EVALtDeployedX;
+	ANIMATIONCOMPONENT_HANDLE ach_EVALtDeployedY;
+	static UINT EVALtDeployedGrp10[1] = { 10 };
+	const VECTOR3 EVALtDeployedPivot = { 1.66741, 0.99237, 3.14599 };    //EVA Lt Pole Pivot Point
+	static MGROUP_ROTATE mgr_EVALtDeployedGrp10X(idx, EVALtDeployedGrp10, 1, EVALtDeployedPivot, _V(1, 0, 0), (float)(RAD * 30));
+	static MGROUP_ROTATE mgr_EVALtDeployedGrp10Y(idx, EVALtDeployedGrp10, 1, EVALtDeployedPivot, _V(0, 1, 0), (float)(RAD * -120));
+	anim_EVALt = saturn->CreateAnimation(0.0);
+	ach_EVALtDeployedX = saturn->AddAnimationComponent(anim_EVALt, 0.0, 1.0, &mgr_EVALtDeployedGrp10X);
+	ach_EVALtDeployedY = saturn->AddAnimationComponent(anim_EVALt, 0.0, 1.0, &mgr_EVALtDeployedGrp10Y);
 }

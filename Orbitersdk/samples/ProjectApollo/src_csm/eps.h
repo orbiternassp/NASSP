@@ -39,6 +39,8 @@ public:
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *name_str);
 	void LoadState(char *line, int strlen);
+	bool IsPowered();
+	void DefineAnimations(UINT idx);
 
 protected:
 	Saturn *saturn;
@@ -50,6 +52,9 @@ protected:
 	bool PressureSwitch2;
 	double lowpress;
 	double highpress;
+	bool SpotDeployed;
+	bool EVALtDeployed;
+	UINT anim_EVALt;
 };
 
 
