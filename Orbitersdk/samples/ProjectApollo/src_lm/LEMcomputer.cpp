@@ -440,6 +440,7 @@ bool LMOptics::ReticlePush() {
 	{
 		return true;
 	}
+
 	else
 		return false;
 }
@@ -523,7 +524,8 @@ void LMOptics::Timestep(double simdt) {
 		if (OpticsReticle > 2 * PI) OpticsReticle -= 2 * PI;
 		if (OpticsReticle < 0) OpticsReticle += 2 * PI;
 	}
-	//sprintf(oapiDebugString(), "Detent %d", lem->AOTReticleDetent.GetState());
+
+	//sprintf(oapiDebugString(), "Detent %d ReticlePush %d", lem->AOTReticleDetent.GetState(), ReticlePush());
 }
 
 void LMOptics::SaveState(FILEHANDLE scn) {
