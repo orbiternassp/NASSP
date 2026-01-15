@@ -219,7 +219,7 @@ void ExteriorLighting::Init(Saturn *s, CircuitBrakerSwitch *MNB, ThreeSourceTwoD
 	RDZSPOTsw = RDZSPOT;
 }
 
-bool ExteriorLighting::IsPowered()
+bool ExteriorLighting::IsRunEVAOn()
 {
 	if (saturn->RunEVALightSwitch.GetState() == TOGGLESWITCH_UP && saturn->stage == CSM_LEM_STAGE) {
 		return true;
@@ -242,7 +242,7 @@ void ExteriorLighting::SystemTimestep(double simdt)
 	//Running Lights
 	int i;
 
-	if (IsPowered()) {
+	if (IsRunEVAOn()) {
 		for (i = 0; i < 8; i++) saturn->runningLights[i].active = true;
 	}
 	else {
@@ -250,7 +250,7 @@ void ExteriorLighting::SystemTimestep(double simdt)
 	}
 
 	//EVA Light
-	if (IsPowered() && EVALtDeployed)
+	if (IsRunEVAOn() && EVALtDeployed)
 	{
 		saturn->evaLight.active = true;
 	}
