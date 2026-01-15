@@ -1338,7 +1338,7 @@ public:
 	BEACONLIGHTSPEC runningLights[8];             // running lights
 
 	//CSM EVA Light
-	void SetEVALight();
+	//void SetEVALight();
 
 	VECTOR3 evaLightPos;
 	BEACONLIGHTSPEC evaLight;             // eva light
@@ -1920,7 +1920,7 @@ protected:
 	ThreePosSwitch TVCGimbalDriveYawSwitch;
 
 	SwitchRow CSMLightSwitchesRow;
-	TwoSourceSwitch RunEVALightSwitch;
+	ThreeSourceTwoDestSwitch RunEVALightSwitch;
 	ThreeSourceTwoDestSwitch RndzLightSwitch;
 	TwoSourceSwitch TunnelLightSwitch;
 
@@ -3747,6 +3747,7 @@ protected:
 	// Electric Lights
 	ElectricLight* SpotLight;
 	ElectricLight* RndzLight;
+	ElectricLight* EVALight;
 
 	// O2 Tanks
 	h_Tank *O2Tanks[2];

@@ -914,7 +914,7 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	agc.SetInputChannelBit(030, UllageThrust, false);
 
 	SetRunningLights();
-	SetEVALight();
+	//SetEVALight();
 
 	// Because all meshes are getting reloaded, we have to shift CG back to the center of the mesh, and then re-apply the offset CG on the next timestep
 	// Only necessary because of LET jettison function reloading all meshes.
@@ -2303,22 +2303,22 @@ void Saturn::SetRunningLights() {
 	}
 }
 
-void Saturn::SetEVALight() {
-
-	evaLightPos = _V(2.22023, 1.46377, 1.54381);
-
-	static VECTOR3 beaconCol[1] = {
-		{ 1.0, 1.0, 1.0 }, //White
-	};
-
-	evaLight.shape = BEACONSHAPE_DIFFUSE;
-	evaLight.pos = &evaLightPos;
-	evaLight.col = beaconCol;
-	evaLight.size = 0.06;
-	evaLight.falloff = 0.8;
-	evaLight.period = 0.0;
-	evaLight.duration = 1.0;
-	evaLight.tofs = 0;
-	evaLight.active = false;
-	AddBeacon(&evaLight);
-}
+//void Saturn::SetEVALight() {
+//
+//	evaLightPos = _V(2.22023, 1.46377, 1.54381);
+//
+//	static VECTOR3 beaconCol[1] = {
+//		{ 1.0, 1.0, 1.0 }, //White
+//	};
+//
+//	evaLight.shape = BEACONSHAPE_DIFFUSE;
+//	evaLight.pos = &evaLightPos;
+//	evaLight.col = beaconCol;
+//	evaLight.size = 0.06;
+//	evaLight.falloff = 0.8;
+//	evaLight.period = 0.0;
+//	evaLight.duration = 1.0;
+//	evaLight.tofs = 0;
+//	evaLight.active = false;
+//	AddBeacon(&evaLight);
+//}

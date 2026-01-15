@@ -212,7 +212,7 @@ ExteriorLighting::~ExteriorLighting()
 
 }
 
-void ExteriorLighting::Init(Saturn *s, CircuitBrakerSwitch *MNB, ThreeSourceTwoDestSwitch *RDZSPOT, TwoSourceSwitch *RUNEVA)
+void ExteriorLighting::Init(Saturn *s, CircuitBrakerSwitch *MNB, ThreeSourceTwoDestSwitch *RDZSPOT, ThreeSourceTwoDestSwitch *RUNEVA)
 {
 	saturn = s;
 	RNDZSPOTMNBcb = MNB;
