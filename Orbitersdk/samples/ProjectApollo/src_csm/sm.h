@@ -471,4 +471,7 @@ protected:
 
 	SMJC *SMJCA;
 	SMJC *SMJCB;
+
+    /// \brief EVA Lt pole animation ID.
+	UINT anim_EVALt;
 };

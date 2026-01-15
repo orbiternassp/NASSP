@@ -1331,6 +1331,18 @@ public:
 	//
 	void QuicksaveScenario();
 
+	//CSM Running Lights
+	void SetRunningLights();
+
+	VECTOR3 runningLightsPos[8];
+	BEACONLIGHTSPEC runningLights[8];             // running lights
+
+	//CSM EVA Light
+	void SetEVALight();
+
+	VECTOR3 evaLightPos;
+	BEACONLIGHTSPEC evaLight;             // eva light
+
 protected:
 
 	///
@@ -4027,6 +4039,7 @@ protected:
 	int coascdridx;
 	int coascdrreticleidx;
 	DEVMESHHANDLE vcmesh;
+	int smidx;
 
 	double DockAngle;
 
@@ -4724,6 +4737,7 @@ protected:
 	friend class AR_GCore;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
+	friend class ExteriorLighting;
 
 	friend void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
 };
