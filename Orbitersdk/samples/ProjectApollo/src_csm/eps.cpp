@@ -212,19 +212,24 @@ ExteriorLighting::~ExteriorLighting()
 
 }
 
-void ExteriorLighting::Init(Saturn *s, CircuitBrakerSwitch *MNB, ThreeSourceTwoDestSwitch *RDZSPOT)
+void ExteriorLighting::Init(Saturn *s, CircuitBrakerSwitch *MNB, ThreeSourceTwoDestSwitch *RDZSPOT, TwoSourceSwitch *RUNEVA)
 {
 	saturn = s;
 	RNDZSPOTMNBcb = MNB;
 	RDZSPOTsw = RDZSPOT;
+	RUNEVAsw = RUNEVA;
 }
 
 bool ExteriorLighting::IsRunEVAOn()
 {
-	if (saturn->RunEVALightSwitch.GetState() == TOGGLESWITCH_UP && saturn->stage == CSM_LEM_STAGE) {
+	if (saturn->stage == CSM_LEM_STAGE && RUNEVAsw->IsPowered() && RUNEVAsw->IsUp())  //stage check prevents ghost lighting after SM sep
+	{
 		return true;
 	}
-	return false;
+	else
+	{
+		return false;
+	}
 }
 
 void ExteriorLighting::SystemTimestep(double simdt)
@@ -252,7 +257,7 @@ void ExteriorLighting::SystemTimestep(double simdt)
 	//EVA Light
 	if (IsRunEVAOn() && EVALtDeployed)
 	{
-		saturn->evaLight.active = true;
+		saturn->evaLight.active = true; //eva light does not illuminate the CM yet
 	}
 	else
 	{
