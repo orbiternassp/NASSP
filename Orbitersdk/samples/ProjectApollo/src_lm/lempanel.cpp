@@ -3047,10 +3047,14 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			return false;
 	}
 
+	if (id == AID_AOT_RETICLE_KNOB)
+	{
+		optics.AOTDetentToggle();
+		return true;
+	}
 
 	if (MainPanel.CheckMouseClick(id, event, mx, my))
 		return true;
-
 
 	switch (id) {
 	// panel 0 events:
@@ -3117,10 +3121,6 @@ bool LEM::clbkPanelMouseEvent (int id, int event, int mx, int my)
 			}
 
 		}
-		return true;
-
-	case AID_AOT_RETICLE_KNOB:
-		optics.AOTDetentToggle();
 		return true;
 
 	case AID_AOT_SHAFT_KNOB:
