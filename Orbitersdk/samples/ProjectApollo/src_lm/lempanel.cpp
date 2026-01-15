@@ -1361,7 +1361,7 @@ void LEM::InitPanel (int panel)
 		oapiSetSurfaceColourKey(srf[SRF_LEM_F_HATCH_REL_VLV],   g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LEM_INTLK_OVRD],        g_Param.col[4]);
 		oapiSetSurfaceColourKey(srf[SRF_LEM_MASTERALARM],		g_Param.col[4]);
-		oapiSetSurfaceColourKey(srf[SRF_AOTRETICLEKNOB],		g_Param.col[4]);
+		//oapiSetSurfaceColourKey(srf[SRF_AOTRETICLEKNOB],		g_Param.col[4]);
 
 		//
 		// Borders need to set the center color to transparent so only the outline
