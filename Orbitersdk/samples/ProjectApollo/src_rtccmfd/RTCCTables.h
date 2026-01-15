@@ -181,7 +181,7 @@ struct RTCCNIAuxOutputTable
 	double DV_U;
 	//Words 40-41: Open (CSM and LM weight?)
 	double W_CSM, W_LMA, W_LMD;
-	//Word 42: S-IVB weighr at maneuver initiation
+	//Word 42: S-IVB weight at maneuver initiation
 	double W_SIVB;
 	//Word 43, total configuration weight at maneuver initiation
 	double WTINIT;
