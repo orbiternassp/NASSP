@@ -1920,7 +1920,7 @@ protected:
 	ThreePosSwitch TVCGimbalDriveYawSwitch;
 
 	SwitchRow CSMLightSwitchesRow;
-	ThreeSourceTwoDestSwitch RunEVALightSwitch;
+	ToggleSwitch RunEVALightSwitch;
 	ThreeSourceTwoDestSwitch RndzLightSwitch;
 	TwoSourceSwitch TunnelLightSwitch;
 
@@ -3856,6 +3856,7 @@ protected:
 
 	// Exterior Lighting
 	ExteriorLighting ExteriorLighting;
+	PowerMerge RunEVAFeeder;
 
 	// GSE
 	Pump* GSEGlycolPump;

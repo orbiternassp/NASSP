@@ -59,7 +59,7 @@ class ExteriorLighting
 public:
 	ExteriorLighting();
 	virtual ~ExteriorLighting();
-	void Init(Saturn *s, CircuitBrakerSwitch *MNB, ThreeSourceTwoDestSwitch *RDZSPOT, ThreeSourceTwoDestSwitch*RUNEVA);
+	void Init(Saturn *s, CircuitBrakerSwitch *RDVMNB, ThreeSourceTwoDestSwitch *RDZSPOT, PowerMerge *AC, ToggleSwitch *RUNEVA, ElectricLight *EVALT);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *name_str);
 	void LoadState(char *line, int strlen);
@@ -70,7 +70,9 @@ protected:
 	Saturn *saturn;
 	CircuitBrakerSwitch *RNDZSPOTMNBcb;
 	ThreeSourceTwoDestSwitch *RDZSPOTsw;
-	ThreeSourceTwoDestSwitch *RUNEVAsw;
+	PowerMerge *ACPower;
+	ToggleSwitch *RUNEVAsw;
+	ElectricLight *EVALight;
 	bool SpotDeployed;
 	bool EVALtDeployed;
 	UINT anim_EVALt;

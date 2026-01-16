@@ -212,17 +212,19 @@ ExteriorLighting::~ExteriorLighting()
 
 }
 
-void ExteriorLighting::Init(Saturn *s, CircuitBrakerSwitch *MNB, ThreeSourceTwoDestSwitch *RDZSPOT, ThreeSourceTwoDestSwitch *RUNEVA)
+void ExteriorLighting::Init(Saturn *s, CircuitBrakerSwitch *RDVMNB, ThreeSourceTwoDestSwitch *RDZSPOT, PowerMerge *RUNEVAAC, ToggleSwitch *RUNEVA, ElectricLight *EVALT)
 {
 	saturn = s;
-	RNDZSPOTMNBcb = MNB;
+	RNDZSPOTMNBcb = RDVMNB;
 	RDZSPOTsw = RDZSPOT;
+	ACPower = RUNEVAAC;
 	RUNEVAsw = RUNEVA;
+	EVALight = EVALT;
 }
 
 bool ExteriorLighting::IsRunEVAOn()
 {
-	if (saturn->stage == CSM_LEM_STAGE && RUNEVAsw->IsPowered() && RUNEVAsw->IsUp())  //stage check prevents ghost lighting after SM sep
+	if (saturn->stage == CSM_LEM_STAGE && ACPower->Voltage() > SP_MIN_ACVOLTAGE && RUNEVAsw->IsUp())  //stage check prevents ghost lighting after SM sep
 	{
 		return true;
 	}
@@ -257,11 +259,13 @@ void ExteriorLighting::SystemTimestep(double simdt)
 	//EVA Light
 	if (IsRunEVAOn() && EVALtDeployed)
 	{
-		saturn->evaLight.active = true; //eva light does not illuminate the CM yet
+		//saturn->evaLight.active = true; //eva light does not illuminate the CM yet
+		EVALight->Enable();
 	}
 	else
 	{
-		saturn->evaLight.active = false;
+		//saturn->evaLight.active = false;
+		EVALight->Disable();
 	}
 
 	//EVA Pole Lt execute Animation

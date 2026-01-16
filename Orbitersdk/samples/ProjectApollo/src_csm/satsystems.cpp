@@ -146,7 +146,9 @@ void Saturn::SystemsInit() {
 	RndzLight = (ElectricLight *)Panelsdk.GetPointerByString("ELECTRIC:RNDZLIGHT");
 	EVALight = (ElectricLight*)Panelsdk.GetPointerByString("ELECTRIC:EVALIGHT");
 
-	ExteriorLighting.Init(this, &LightingRndzMNBCB, &RndzLightSwitch, &RunEVALightSwitch);
+	RunEVAFeeder.WireToBuses(&RunEVATRGTAC1CB, &RunEVATRGTAC2CB);
+
+	ExteriorLighting.Init(this, &LightingRndzMNBCB, &RndzLightSwitch, &RunEVAFeeder, &RunEVALightSwitch, (ElectricLight*)Panelsdk.GetPointerByString("ELECTRIC:EVALIGHT"));
 
 	//
 	// EPS/Cryo devices
