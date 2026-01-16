@@ -1922,7 +1922,7 @@ protected:
 	SwitchRow CSMLightSwitchesRow;
 	ToggleSwitch RunEVALightSwitch;
 	ThreeSourceTwoDestSwitch RndzLightSwitch;
-	TwoSourceSwitch TunnelLightSwitch;
+	ToggleSwitch TunnelLightSwitch;
 
 	SwitchRow LMPowerSwitchRow;
 	CSMLMPowerSwitch LMPowerSwitch;
