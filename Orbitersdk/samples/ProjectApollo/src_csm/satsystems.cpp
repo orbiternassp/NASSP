@@ -147,6 +147,7 @@ void Saturn::SystemsInit() {
 	EVALight = (ElectricLight*)Panelsdk.GetPointerByString("ELECTRIC:EVALIGHT");
 
 	RunEVAFeeder.WireToBuses(&RunEVATRGTAC1CB, &RunEVATRGTAC2CB);
+	EVALight->WireTo(&RunEVAFeeder);
 
 	ExteriorLighting.Init(this, &LightingRndzMNBCB, &RndzLightSwitch, &RunEVAFeeder, &RunEVALightSwitch, (ElectricLight*)Panelsdk.GetPointerByString("ELECTRIC:EVALIGHT"));
 
