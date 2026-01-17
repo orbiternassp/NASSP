@@ -1337,10 +1337,6 @@ public:
 	VECTOR3 runningLightsPos[8];
 	BEACONLIGHTSPEC runningLights[8];             // running lights
 
-	//CSM EVA Light
-	VECTOR3 evaLightPos;
-	BEACONLIGHTSPEC evaLight;             // eva light
-
 protected:
 
 	///

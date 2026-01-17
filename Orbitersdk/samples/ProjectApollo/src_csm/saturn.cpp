@@ -1248,7 +1248,6 @@ void Saturn::initSaturn()
 	{
 		runningLightsPos[i] = _V(0, 0, 0);
 	}
-	evaLightPos = _V(0, 0, 0);
 
 	InitSaturnCalled = true;
 }
@@ -5239,7 +5238,6 @@ void Saturn::UpdateMassAndCoG()
 		{
 			runningLightsPos[i] -= CoGShift;
 		}
-		evaLightPos -= CoGShift;
 
 		// All done!
 		LastFuelWeight = CurrentFuelWeight;
