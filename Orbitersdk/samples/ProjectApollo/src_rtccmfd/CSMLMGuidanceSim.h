@@ -36,8 +36,6 @@ struct PMMRKJInputArray
 	double DTOUT;
 	//Weight loss rate multiplier
 	double WDMULT = 1.0;
-	//Time of LM jettison of descent stage
-	double LMDESCJETT = 1e10;
 	//Density multiplier
 	double DENSMULT = 1.0;
 	//Vehicle Cross Section
@@ -57,7 +55,7 @@ struct PMMRKJInputArray
 	int ThrusterCode;
 	//0 = two thrusters, 1 = four thrusters
 	bool UllageOption;
-	//Configuration code at maneuver initiation (1 for CSM, 12 for LM, 13 for CSM and LM)
+	//Configuration code at maneuver initiation (1 for CSM, 4 for LM Ascent, 5 for CSM + LM Ascent, 12 for LM, 13 for CSM and LM)
 	unsigned IC;
 	//DT of ullage (=0 for RCS)
 	double DTU = 0.0;
@@ -143,9 +141,9 @@ private:
 	//3 = Mainstage thrust during ullage (SPS, APS), Buildup to 10% from ullage end (DPS)
 	//4 = 10% FTP (DPS)
 	//5 = Buildup from 10% to FTP (DPS)
-	//6 = Max thrust phase
-	//7 = Tailoff
-	//8 = Ending
+	//6 = Spare (DPS intermediate throttle maybe)
+	//7 = Max thrust phase
+	//8 = Tailoff
 	int MPHASE;
 	//Short maneuver test
 	int KGN;
@@ -182,7 +180,7 @@ private:
 	double P_G = 0.0;
 	double Y_G = 0.0;
 	double WC, WL, WS;
-	int IA, IJ;
+	int IA;
 	double DTUL;
 	double SIGN;
 	//Area over mass ratio

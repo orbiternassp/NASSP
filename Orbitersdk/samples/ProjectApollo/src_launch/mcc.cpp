@@ -1527,6 +1527,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 				SAVE_DOUBLE(tmpbuf, form->Lng[i]);
 				sprintf(tmpbuf, "MCC_AP7BLK_Wx[%d]", i);
 				SAVE_STRING(tmpbuf, form->Wx[i]);
+				SAVE_INT("MCC_AP7BLK_Num", form->Num);
 			}
 		}
 		else if (padNumber == 2)
@@ -1556,6 +1557,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_DOUBLE("MCC_AP7NAV_lat", form->lat[0]);
 			SAVE_DOUBLE("MCC_AP7NAV_lng", form->lng[0]);
 			SAVE_DOUBLE("MCC_AP7NAV_NavChk", form->NavChk[0]);
+			SAVE_STRING("MCC_AP7NAV_remarks", form->remarks);
 		}
 		else if (padNumber == 4)
 		{
@@ -1761,6 +1763,7 @@ void MCC::SaveState(FILEHANDLE scn) {
 			AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
 
 			SAVE_INT("MCC_AP11LMARKTRKPAD_entries", form->entries);
+			SAVE_INT("MCC_AP11LMARKTRKPAD_type", form->type);
 
 			for (int i = 0;i < form->entries;i++)
 			{
@@ -1783,11 +1786,14 @@ void MCC::SaveState(FILEHANDLE scn) {
 		else if (padNumber == PT_AP10DAPDATA)
 		{
 			AP10DAPDATA * form = (AP10DAPDATA *)padForm;
-
 			SAVE_DOUBLE("MCC_AP10DAPDATA_OtherVehicleWeight", form->OtherVehicleWeight);
-			SAVE_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			SAVE_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			SAVE_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_LMPitchTrim", form->LMPitchTrim);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_LMRollTrim", form->LMRollTrim);
+			SAVE_DOUBLE("MCC_AP10DAPDATA_DVTO", form->DVTO);
+			SAVE_INT("MCC_AP10DAPDATA_type", form->type);
 		}
 		else if (padNumber == PT_AP11LMMNV)
 		{
@@ -2053,6 +2059,63 @@ void MCC::SaveState(FILEHANDLE scn) {
 			SAVE_V3("MCC_AP12SEPPAD_Att_Undock", form->Att_Undock);
 			SAVE_DOUBLE("MCC_AP12SEPPAD_t_Separation", form->t_Separation);
 		}
+		else if (padNumber == PT_AP7STRCNTPAD)
+		{
+		AP7STRCNTPAD * form = (AP7STRCNTPAD *)padForm;
+
+		SAVE_STRING("MCC_AP7STRCNTPAD_MODE", form->Mode);
+		SAVE_DOUBLE("MCC_AP7STRCNTPAD_GETSR", form->GETSR);
+		SAVE_DOUBLE("MCC_AP7STRCNTPAD_GETSS_12", form->GETSS_12);
+		SAVE_V3("MCC_AP7STRCNTPAD_AttSR", form->AttSR);
+		SAVE_V3("MCC_AP7STRCNTPAD_AttSS_12", form->AttSS_12);
+		SAVE_DOUBLE("MCC_AP7STRCNTPAD_TAlign", form->TAlign);
+		SAVE_INT("MCC_AP7STRCNTPAD_Type", form->type);
+		SAVE_INT("MCC_AP7STRCNTPAD_Star1", form->Star1);
+		SAVE_INT("MCC_AP7STRCNTPAD_Star2", form->Star2);
+		}
+		else if (padNumber == PT_AP7WSMRPAD)
+		{
+		AP7WSMRPAD * form = (AP7WSMRPAD *)padForm;
+
+		SAVE_DOUBLE("MCC_AP7WSMRPAD_GETAOS", form->GETAOS);
+		SAVE_DOUBLE("MCC_AP7WSMRPAD_GETRR", form->GETRR);
+		SAVE_V3("MCC_AP7WSMRPAD_AttAOS", form->AttAOS);
+		SAVE_DOUBLE("MCC_AP7WSMRPAD_TAlign", form->TAlign);
+		}
+		else if (padNumber == PT_AP7P23PAD)
+		{
+		char tmpbuf[64];
+		AP7P23PAD * form = (AP7P23PAD *)padForm;
+
+		SAVE_INT("MCC_AP7P23PAD_entries", form->entries);
+
+		for (int i = 0; i < form->entries; i++)
+			{
+				sprintf(tmpbuf, "MCC_AP7P23PAD_GET[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->GET[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_LDMK[%d]", i);
+				SAVE_INT(tmpbuf, form->Ldmk[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_STAR[%d]", i);
+				SAVE_INT(tmpbuf, form->Star[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_Att[%d]", i);
+				SAVE_V3(tmpbuf, form->Att[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_SHAFT[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->Shaft[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_TRUN[%d]", i);
+				SAVE_DOUBLE(tmpbuf, form->Trun[i]);
+			}
+		}
+
+		else if (padNumber == PT_AP7PTCPAD)
+		{
+		AP7PTCPAD * form = (AP7PTCPAD *)padForm;
+
+		SAVE_DOUBLE("MCC_AP7PTCPAD_GET", form->GET);
+		SAVE_V3("MCC_AP7PTCPAD_Att", form->Att);
+		SAVE_DOUBLE("MCC_AP7PTCPAD_TAlign", form->TAlign);
+		SAVE_INT("MCC_AP7PTCPAD_Type", form->type);
+		}
+
 	}
 	// Write uplink buffer here!
 	if (upString[0] != 0 && uplink_size > 0) { SAVE_STRING("MCC_upString", upString); }
@@ -2146,6 +2209,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 				LOAD_DOUBLE(tmpbuf, form->Lng[i]);
 				sprintf(tmpbuf, "MCC_AP7BLK_Wx[%d]", i);
 				LOAD_STRING(tmpbuf, form->Wx[i], 10);
+				LOAD_INT("MCC_AP7BLK_Num", form->Num);
 			}
 		}
 		else if (padNumber == 2)
@@ -2174,6 +2238,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP7NAV_lat", form->lat[0]);
 			LOAD_DOUBLE("MCC_AP7NAV_lng", form->lng[0]);
 			LOAD_DOUBLE("MCC_AP7NAV_NavChk", form->NavChk[0]);
+			LOAD_STRING("MCC_AP7NAV_remarks", form->remarks, 256);
 		}
 		else if (padNumber == 4)
 		{
@@ -2191,7 +2256,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_DOUBLE("MCC_AP7MNV_NavChk", form->NavChk);
 			LOAD_DOUBLE("MCC_AP7MNV_pTrim", form->pTrim);
 			LOAD_STRING("MCC_AP7MNV_purpose", form->purpose, 64);
-			LOAD_STRING("MCC_AP7MNV_remarks", form->remarks, 128);
+			LOAD_STRING("MCC_AP7MNV_remarks", form->remarks, 256);
 			LOAD_DOUBLE("MCC_AP7MNV_Shaft", form->Shaft);
 			LOAD_INT("MCC_AP7MNV_Star", form->Star);
 			LOAD_DOUBLE("MCC_AP7MNV_Trun", form->Trun);
@@ -2377,6 +2442,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 			AP11LMARKTRKPAD * form = (AP11LMARKTRKPAD *)padForm;
 
 			LOAD_INT("MCC_AP11LMARKTRKPAD_entries", form->entries);
+			LOAD_INT("MCC_AP11LMARKTRKPAD_type", form->type);
 
 			for (int i = 0;i < form->entries;i++)
 			{
@@ -2401,9 +2467,13 @@ void MCC::LoadState(FILEHANDLE scn) {
 			AP10DAPDATA * form = (AP10DAPDATA *)padForm;
 
 			LOAD_DOUBLE("MCC_AP10DAPDATA_OtherVehicleWeight", form->OtherVehicleWeight);
-			LOAD_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			LOAD_DOUBLE("MCC_AP10DAPDATA_ThisVehicleWeight", form->ThisVehicleWeight);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_PitchTrim", form->PitchTrim);
 			LOAD_DOUBLE("MCC_AP10DAPDATA_YawTrim", form->YawTrim);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_LMPitchTrim", form->LMPitchTrim);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_LMRollTrim", form->LMRollTrim);
+			LOAD_DOUBLE("MCC_AP10DAPDATA_DVTO", form->DVTO);
+			LOAD_INT("MCC_AP10DAPDATA_type", form->type);
 		}
 		else if (padNumber == PT_AP11LMMNV)
 		{
@@ -2659,6 +2729,61 @@ void MCC::LoadState(FILEHANDLE scn) {
 			LOAD_V3("MCC_AP12SEPPAD_Att_Undock", form->Att_Undock);
 			LOAD_DOUBLE("MCC_AP12SEPPAD_t_Separation", form->t_Separation);
 		}
+		else if (padNumber == PT_AP7STRCNTPAD)
+		{
+		AP7STRCNTPAD * form = (AP7STRCNTPAD *)padForm;
+
+		LOAD_STRING("MCC_AP7STRCNTPAD_MODE", form->Mode, 2);
+		LOAD_DOUBLE("MCC_AP7STRCNTPAD_GETSR", form->GETSR);
+		LOAD_DOUBLE("MCC_AP7STRCNTPAD_GETSS_12", form->GETSS_12);
+		LOAD_V3("MCC_AP7STRCNTPAD_AttSR", form->AttSR);
+		LOAD_V3("MCC_AP7STRCNTPAD_AttSS_12", form->AttSS_12);
+		LOAD_DOUBLE("MCC_AP7STRCNTPAD_TAlign", form->TAlign);
+		LOAD_INT("MCC_AP7STRCNTPAD_Type", form->type);
+		LOAD_INT("MCC_AP7STRCNTPAD_Star1", form->Star1);
+		LOAD_INT("MCC_AP7STRCNTPAD_Star2", form->Star2);
+		}
+		else if (padNumber == PT_AP7WSMRPAD)
+		{
+		AP7WSMRPAD * form = (AP7WSMRPAD *)padForm;
+
+		LOAD_DOUBLE("MCC_AP7WSMRPAD_GETAOS", form->GETAOS);
+		LOAD_DOUBLE("MCC_AP7WSMRPAD_GETRR", form->GETRR);
+		LOAD_V3("MCC_AP7WSMRPAD_AttAOS", form->AttAOS);
+		LOAD_DOUBLE("MCC_AP7WSMRPAD_TAlign", form->TAlign);
+		}
+
+		else if (padNumber == PT_AP7P23PAD)
+		{
+		AP7P23PAD * form = (AP7P23PAD *)padForm;
+
+		LOAD_INT("AP7P23PAD_entries", form->entries);
+		for (int i = 0; i < form->entries; i++)
+			{
+				sprintf(tmpbuf, "MCC_AP7P23PAD_GET[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->GET[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_LDMK[%d]", i);
+				LOAD_INT(tmpbuf, form->Ldmk[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_STAR[%d]", i);
+				LOAD_INT(tmpbuf, form->Star[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_Att[%d]", i);
+				LOAD_V3(tmpbuf, form->Att[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_SHAFT[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->Shaft[i]);
+				sprintf(tmpbuf, "MCC_AP7P23PAD_TRUN[%d]", i);
+				LOAD_DOUBLE(tmpbuf, form->Trun[i]);
+			}
+		}
+
+		else if (padNumber == PT_AP7PTCPAD)
+		{
+		AP7PTCPAD * form = (AP7PTCPAD *)padForm;
+
+		LOAD_DOUBLE("MCC_AP7PTCPAD_GET", form->GET);
+		LOAD_V3("MCC_AP7PTCPAD_Att", form->Att);
+		LOAD_DOUBLE("MCC_AP7PTCPAD_TAlign", form->TAlign);
+		LOAD_INT("MCC_AP7PTCPAD_Type", form->type);
+		}
 
 		LOAD_STRING("MCC_upString", upString, 3072);
 		LOAD_INT("MCC_upType", upType);
@@ -2698,7 +2823,7 @@ void MCC::drawPad(bool writetofile){
 		{
 			AP7BLK * form = (AP7BLK *)padForm;
 			int length = 0;
-			length += sprintf(buffer + length, "BLOCK DATA");
+			length += sprintf(buffer + length, "BLOCK DATA %d", form->Num);
 
 			for (int i = 0;i < 4;i++)
 			{
@@ -2727,7 +2852,7 @@ void MCC::drawPad(bool writetofile){
 		{
 			AP7NAV * form = (AP7NAV *)padForm;
 			OrbMech::format_time_prec(tmpbuf, form->NavChk[0]);
-			sprintf(buffer, "NAV CHECK\nGET (N34):\n%s\n %+07.2f LAT\n %+07.2f LNG\n %+07.1f ALT\n", tmpbuf, form->lat[0], form->lng[0], form->alt[0]);
+			sprintf(buffer, "NAV CHECK\nGET (N34):\n%s\n %+07.2f LAT\n %+07.2f LNG\n %+07.1f ALT\n  %s", tmpbuf, form->lat[0], form->lng[0], form->alt[0], form->remarks);
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
@@ -3018,8 +3143,8 @@ void MCC::drawPad(bool writetofile){
 		double ss, ss2;
 
 		sprintf(buffer, "CSM STAR CHECK UPDATE");
-		OrbMech::SStoHHMMSS(form->GET[0], hh, mm, ss, 0.01);
-		OrbMech::SStoHHMMSS(form->TAlign[0], hh2, mm2, ss2, 0.01);
+		OrbMech::SStoHHMMSS(form->GET[0], hh, mm, ss, 1.0);
+		OrbMech::SStoHHMMSS(form->TAlign[0], hh2, mm2, ss2, 1.0);
 
 		sprintf(buffer, "%s\nXX%03d HR GET\nXXX%02d MIN SR\nX%05.2f SEC\n%+06.1f R FDAI\n%+06.1f P\n%+06.1f Y\nXX%03d HR T ALIGN\nXXX%02d MIN\nX%05.2f SEC\n", buffer, hh, mm, ss, form->Att[0].x, form->Att[0].y, form->Att[0].z, hh2, mm2, ss2);
 
@@ -3124,16 +3249,27 @@ void MCC::drawPad(bool writetofile){
 
 		int hh, mm;
 		double ss;
-
+		LMARKTRKPADOpt opt;
 		sprintf(buffer, "P22 AUTO OPTICS\n");
 
-		for (int i = 0;i < form->entries;i++)
+		for (int i = 0; i < form->entries; i++)
 		{
 			sprintf(buffer, "%sLMK ID %s\n", buffer, form->LmkID[i]);
 			OrbMech::SStoHHMMSS(form->T1[i], hh, mm, ss);
 			sprintf(buffer, "%sT1 %03d:%02d:%02.f (HOR)\n", buffer, hh, mm, ss);
-			OrbMech::SStoHHMMSS(form->T2[i], hh, mm, ss);
-			sprintf(buffer, "%sT2 %03d:%02d:%02.f (35°)\n", buffer, hh, mm, ss);
+
+			if (form->type == 1)
+			{
+				opt.Elevation = 90.0*RAD;
+				OrbMech::SStoHHMMSS(form->T2[i], hh, mm, ss);
+				sprintf(buffer, "%sT2 %03d:%02d:%02.f (TCA)\n", buffer, hh, mm, ss);
+			}
+			else
+			{
+				OrbMech::SStoHHMMSS(form->T2[i], hh, mm, ss);
+				sprintf(buffer, "%sT2 %03d:%02d:%02.f (35°)\n", buffer, hh, mm, ss);
+			}
+
 
 			if (form->CRDist[i] > 0)
 			{
@@ -3144,7 +3280,7 @@ void MCC::drawPad(bool writetofile){
 				sprintf(buffer, "%s%02.f NM South\n", buffer, abs(form->CRDist[i]));
 			}
 
-			sprintf(buffer, "%sN 89\nLAT %+07.3f\nLONG/2 %+07.3f\nALTITUDE %+07.2f NM\n", buffer, form->Lat[i], form->Lng05[i], form->Alt[i]);
+			sprintf(buffer, "%sN 89\nLAT %+07.3f\nLONG/2 %+07.3f\nALTITUDE %+07.2f NM\n \n", buffer, form->Lat[i], form->Lng05[i], form->Alt[i]);
 		}
 
 		oapiAnnotationSetText(NHpad, buffer);
@@ -3154,7 +3290,14 @@ void MCC::drawPad(bool writetofile){
 	{
 		AP10DAPDATA * form = (AP10DAPDATA *)padForm;
 
-		sprintf(buffer, "DAP PAD\n%+06.0f\n%+06.0f\n%+07.2f\n%+07.2f", form->ThisVehicleWeight, form->OtherVehicleWeight, form->PitchTrim, form->YawTrim);
+		if (form->type == 1)
+		{
+			sprintf(buffer, "RENDEZVOUS DAP PAD\n%+06.0f CSM WT\n%+06.0f LM WT\n%+07.2f GDA\n%+07.2f TRIM\n%+07.2f SPS\n%+07.2f TRIM\n%+03.1f SPS TAIL-OFF", form->ThisVehicleWeight, form->OtherVehicleWeight, form->LMPitchTrim, form->LMRollTrim, form->PitchTrim, form->YawTrim, form->DVTO);
+		}
+		else
+		{
+			sprintf(buffer, "DAP PAD\n%+06.0f\n%+06.0f\n%+07.2f\n%+07.2f", form->ThisVehicleWeight, form->OtherVehicleWeight, form->PitchTrim, form->YawTrim);
+		}
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -3272,7 +3415,7 @@ void MCC::drawPad(bool writetofile){
 		sprintf(buffer, "LM AOT STAR OBSERVATION");
 		OrbMech::SStoHHMMSS(form->GET, hh, mm, ss);
 
-		sprintf(buffer, "%s\n%03d HR\n%02d MIN\n%02.0f SEC\n%d AOT DETENT\n%02o NAV STAR\n%03.0f R\n%03.0f P\n%03.0f Y", buffer, hh, mm, ss, form->Detent, form->Star, form->CSMAtt.x, form->CSMAtt.y, form->CSMAtt.z);
+		sprintf(buffer, "%s\n%03d HR GET\n%02d MIN\n%02.0f SEC\n%d AOT DETENT\n%02o NAV STAR\n%03.1f R\n%03.1f P\n%03.1f Y", buffer, hh, mm, ss, form->Detent, form->Star, form->CSMAtt.x, form->CSMAtt.y, form->CSMAtt.z);
 
 		oapiAnnotationSetText(NHpad, buffer);
 	}
@@ -3596,6 +3739,147 @@ void MCC::drawPad(bool writetofile){
 		oapiAnnotationSetText(NHpad, buffer);
 	}
 	break;
+	case PT_AP7STRCNTPAD:
+	{
+		AP7STRCNTPAD * form = (AP7STRCNTPAD *)padForm;
+
+		int hh, mm, hh2, mm2, hh3, mm3;
+		double ss, ss2, ss3;
+		char mode[2];
+
+		OrbMech::SStoHHMMSS(form->TAlign, hh, mm, ss, 0.01);
+		OrbMech::SStoHHMMSS(form->GETSR, hh2, mm2, ss2, 0.01);
+		OrbMech::SStoHHMMSS(form->GETSS_12, hh3, mm3, ss3, 0.01);
+
+		if (form->type == 0)
+		{
+			sprintf(buffer, "SCT STAR COUNT");
+			sprintf(mode, form->Mode);
+
+			sprintf(buffer, "%s\nMode %s\nXX%03d HR GET\nXXX%02d MIN ALIGN\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN SR\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\nXX%03d HR GET\nXXX%02d MIN SS-12\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n",
+				buffer, mode, hh, mm, ss, hh2, mm2, ss2, form->AttSR.x, form->AttSR.y, form->AttSR.z, hh3, mm3, ss3, form->AttSS_12.x, form->AttSS_12.y, form->AttSS_12.z);
+		}
+		else
+		{
+			sprintf(buffer, "SXT STAR COUNT");
+
+			sprintf(buffer, "%s\nXX%03d HR GET\nXXX%02d MIN START\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n%d STAR A\n%d STAR B\n",
+				buffer, hh, mm, ss, form->AttSR.x, form->AttSR.y, form->AttSR.z, form->Star1, form->Star2);
+		}
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_AP7WSMRPAD:
+	{
+		AP7WSMRPAD * form = (AP7WSMRPAD *)padForm;
+
+		int hh, mm, hh2, mm2, hh3, mm3;
+		double ss, ss2, ss3;
+
+		sprintf(buffer, "WSMR Update");
+
+		OrbMech::SStoHHMMSS(form->TAlign, hh, mm, ss, 0.01);
+		OrbMech::SStoHHMMSS(form->GETAOS, hh2, mm2, ss2, 0.01);
+		OrbMech::SStoHHMMSS(form->GETRR, hh3, mm3, ss3, 0.01);
+
+		sprintf(buffer, "%s\nXX%03d HR GET\nXXX%02d MIN ALIGN\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN WSMR\nX%05.2f SEC\nXX%03d HR GET\nXXX%02d MIN RR\nX%05.2f SEC\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n",
+			buffer, hh, mm, ss, hh2, mm2, ss2, hh3, mm3, ss3, form->AttAOS.x, form->AttAOS.y, form->AttAOS.z);
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_AP7P23PAD:	//TBD compute times and angles from star/ldmk inputs
+	{
+		AP7P23PAD * form = (AP7P23PAD *)padForm;
+
+		int hh, mm;
+		double ss;
+
+		sprintf(buffer, "MIDCOURSE NAVIGATION\n");
+
+		for (int i = 0; i < form->entries; i++)
+		{
+			OrbMech::SStoHHMMSS(form->GET[i], hh, mm, ss, 0.01);
+			sprintf(buffer, "%sXX%03d HRS GET START\nXXX%02d MIN\nX%05.2f SEC\n", buffer, hh, mm, ss);
+			if (form->Ldmk[i] == NULL)
+			{
+				sprintf(buffer, "%sXXX LMK DATA\n", buffer);
+			}
+			else
+			{
+				sprintf(buffer, "%s%d LMK DATA\n", buffer, form->Ldmk[i]);
+			}
+
+			if (form->Star[i] == NULL)
+			{
+				sprintf(buffer, "%sXX STAR DATA\n", buffer);
+			}
+			else
+			{
+				sprintf(buffer, "%s%d STAR DATA\n", buffer, form->Star[i]);
+			}
+
+			sprintf(buffer, "%s%+06.1f R\n%+06.1f P\n%+06.1f Y\n", buffer, form->Att[i].x, form->Att[i].y, form->Att[i].z);
+
+			if (form->Shaft[i] == NULL)
+			{
+				sprintf(buffer, "%s+XXX.XX SHAFT OPTICS\n", buffer);
+			}
+			else
+			{
+				sprintf(buffer, "%s%+07.2f SHAFT OPTICS\n", buffer, form->Shaft[i]);
+			}
+
+			if (form->Trun[i] == NULL)
+			{
+				sprintf(buffer, "%s+XXX.XX TRUNNION ANGLE\n", buffer);
+			}
+			else
+			{
+				sprintf(buffer, "%s%+07.3f TRUNNION ANGLE\n", buffer, form->Trun[i]);
+			}
+		}
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
+	case PT_AP7PTCPAD:
+	{
+		AP7PTCPAD * form = (AP7PTCPAD *)padForm;
+
+		int hh, mm, hh2, mm2;
+		double ss, ss2;
+
+		if (form->type == 0)
+		{
+			sprintf(buffer, "PASSIVE THERMAL CONTROL TEST\n");
+			OrbMech::SStoHHMMSS(abs(form->GET), hh, mm, ss, 60.0);
+			OrbMech::SStoHHMMSS(abs(form->TAlign), hh2, mm2, ss2, 60.0);
+
+			sprintf(buffer, "%sXX%03d HR GET\nXXX%02d MIN T0\nXX%03d HR T ALIGN\nXXX%02d MIN\n%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\n", buffer, hh, mm, hh2, mm2, form->Att.x, form->Att.y, form->Att.z);
+		}
+		else
+		{
+			sprintf(buffer, "SPS COLD SOAK TEST\n");
+			OrbMech::SStoHHMMSS(abs(form->GET), hh, mm, ss, 60.0);
+
+			if (form->TAlign == NULL)
+			{
+				sprintf(buffer, "%s+N/A T ALIGN\n", buffer);
+			}
+			else
+			{
+				OrbMech::SStoHHMMSS(abs(form->TAlign), hh2, mm2, ss2, 60.0);
+				sprintf(buffer, "%sXX%03d HR T ALIGN\nXXX%02d MIN\n", buffer, hh2, mm2);
+			}
+
+			sprintf(buffer, "%s%+06.1f R CDU\n%+06.1f P\n%+06.1f Y\nXX%03d HR GET\nXXX%02d MIN\n", buffer, form->Att.x, form->Att.y, form->Att.z, hh, mm);
+		}
+
+		oapiAnnotationSetText(NHpad, buffer);
+	}
+	break;
 	case PT_GENERIC:
 	{
 		GENERICPAD * form = (GENERICPAD *)padForm;
@@ -3749,6 +4033,18 @@ void MCC::allocPad(int Number){
 		break;
 	case PT_AP12SEPPAD: // AP12SEPPAD
 		padForm = calloc(1, sizeof(AP12SEPPAD));
+		break;
+	case PT_AP7STRCNTPAD: // AP7STARCNTPAD
+		padForm = calloc(1, sizeof(AP7STRCNTPAD));
+		break;
+	case PT_AP7WSMRPAD: // AP7WSMRPAD
+		padForm = calloc(1, sizeof(AP7WSMRPAD));
+		break;
+	case PT_AP7P23PAD: // AP7P23PAD
+		padForm = calloc(1, sizeof(AP7P23PAD));
+		break;
+	case PT_AP7PTCPAD: // AP7PTCPAD
+		padForm = calloc(1, sizeof(AP7PTCPAD));
 		break;
 	case PT_GENERIC: // GENERICPAD
 		padForm = calloc(1, sizeof(GENERICPAD));

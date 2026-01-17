@@ -73,5 +73,8 @@
     <ClInclude Include="..\..\src_sys\PanelSDK\VSMGMT.H">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_sys\PanelSDK\Internals\DataTables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

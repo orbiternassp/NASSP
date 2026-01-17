@@ -6,11 +6,11 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	static const MFDBUTTONMENU mnuNone[12] = {
 		{ "Guidance, Navigation & Control", 0, 'G' },
 		{ "Environmental Control System", 0, 'E' },
-		{ "IMFD Support", 0, 'I' },
+		{ "IU Support", 0, 'I' },
 		{ "Telemetry",0,'T' },
 		{ "LGC Initialization Data",0,'L' },
-		{ 0,0,0 },
-		{ 0,0,0 },
+		{ "Failures",0,'A' },
+		{ "Skylab",0,'S' },
 		{ 0,0,0 },
 		{ 0,0,0 },
 		{ 0,0,0 },
@@ -27,11 +27,11 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("LGC", OAPI_KEY_L, &ProjectApolloMFD::menuSetLGCPage);
 	RegisterFunction("FAIL", OAPI_KEY_A, &ProjectApolloMFD::menuSetFailuresPage);
 
-	RegisterFunction("", OAPI_KEY_B, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("SL", OAPI_KEY_S, &ProjectApolloMFD::menuSetSLPage);
 	RegisterFunction("", OAPI_KEY_C, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_F, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_H, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_S, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_B, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("DBG", OAPI_KEY_D, &ProjectApolloMFD::menuSetDebugPage);
 
 
@@ -130,7 +130,7 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("IN2", OAPI_KEY_C, &ProjectApolloMFD::menuSetIUUplinkInp2);
 	RegisterFunction("IN3", OAPI_KEY_D, &ProjectApolloMFD::menuSetIUUplinkInp3);
 	RegisterFunction("IN4", OAPI_KEY_R, &ProjectApolloMFD::menuSetIUUplinkInp4);
-	RegisterFunction("SRC", OAPI_KEY_S, &ProjectApolloMFD::menuSetIUSource);
+	RegisterFunction("SRC", OAPI_KEY_S, &ProjectApolloMFD::menuSetUplinkVessel);
 
 	RegisterFunction("TYP", OAPI_KEY_T, &ProjectApolloMFD::menuCycleIUUplinkType);
 	RegisterFunction("UPL", OAPI_KEY_U, &ProjectApolloMFD::menuIUUplink);
@@ -252,6 +252,39 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("CLR", OAPI_KEY_C, &ProjectApolloMFD::menuClearAllFailures);
 	RegisterFunction("RAN", OAPI_KEY_R, &ProjectApolloMFD::menuSetRandomFailures);
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
+
+
+	static const MFDBUTTONMENU mnuSL[12] = {
+	{ "Back", 0, 'B' },
+	{ 0,0,0 },
+	{ 0,0,0 },
+	{ 0,0,0 },
+	{ "Select Uplink", 0, 'T' },
+	{ "Cycle Uplink Option", 0, 'O' },
+
+	{ "Uplink",0,'U' },
+	{ 0,0,0 },
+	{ 0,0,0 },
+	{ 0,0,0 },
+	{ 0,0,0 },
+	{ "Change Source",0,'S' },
+	};
+
+	page.SL = RegisterPage(mnuSL, sizeof(mnuSL) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
+	RegisterFunction("", OAPI_KEY_D, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_E, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_G, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("TYP", OAPI_KEY_T, &ProjectApolloMFD::menuSLUplinkType);
+	RegisterFunction("OPT", OAPI_KEY_O, &ProjectApolloMFD::menuSLUplinkOption);
+
+	RegisterFunction("UPL", OAPI_KEY_U, &ProjectApolloMFD::menuSendSLUplink);
+	RegisterFunction("", OAPI_KEY_Y, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_X, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_W, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_D, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("SRC", OAPI_KEY_I, &ProjectApolloMFD::menuSetUplinkVessel);
 }
 
 bool ProjectApolloMFDButtons::SearchForKeysInOtherPages() const

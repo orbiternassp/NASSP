@@ -64,7 +64,7 @@ public:
 	void InitThermals(h_HeatLoad *imuht, h_Radiator *cas, h_HeatLoad *ptaht, h_HeatLoad *psaht, h_HeatLoad *cduht);
 
 	bool IsCaged();
-	bool IsPowered();
+	virtual bool IsPowered();
 	void SetCaged(bool val);
 	Boiler *GetHeater() { return IMUHeater; };
 	double GetPIPATempF();

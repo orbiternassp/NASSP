@@ -18,6 +18,7 @@ public:
 		int Debug;
 		int LGC;
 		int Failures;
+		int SL;
 	} page;
 
 	ProjectApolloMFDButtons();
