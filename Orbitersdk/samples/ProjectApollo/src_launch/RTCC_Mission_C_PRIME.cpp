@@ -654,6 +654,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				{
 					manopt.PrefGDCStars = 3; //Sirius,Rigel
 				}
+
 				manopt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 				manopt.TIG = P30TIG;
 				manopt.dV_LVLH = dV_LVLH;
