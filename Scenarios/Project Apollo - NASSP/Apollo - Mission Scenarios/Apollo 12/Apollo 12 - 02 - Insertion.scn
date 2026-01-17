@@ -3830,7 +3830,7 @@ PANELSWITCHES_BEGIN
   GlycolReservoirOutletRotary 0
   GlycolReservoirBypassRotary 1
   GlycolReservoirInletRotary 0
-  DirectO2RotarySwitch 5
+  DirectO2RotarySwitch 4
   BMAGPowerRotary2Switch 2
   BMAGPowerRotary1Switch 2
   SCSElectronicsPowerRotarySwitch 2
