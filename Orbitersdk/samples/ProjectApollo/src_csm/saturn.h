@@ -1338,8 +1338,6 @@ public:
 	BEACONLIGHTSPEC runningLights[8];             // running lights
 
 	//CSM EVA Light
-	//void SetEVALight();
-
 	VECTOR3 evaLightPos;
 	BEACONLIGHTSPEC evaLight;             // eva light
 

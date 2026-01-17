@@ -259,12 +259,10 @@ void ExteriorLighting::SystemTimestep(double simdt)
 	//EVA Light
 	if (IsRunEVAOn() && EVALtDeployed)
 	{
-		//saturn->evaLight.active = true; //eva light does not illuminate the CM yet
 		EVALight->Enable();
 	}
 	else
 	{
-		//saturn->evaLight.active = false;
 		EVALight->Disable();
 	}
 
@@ -298,12 +296,15 @@ void ExteriorLighting::SaveState(FILEHANDLE scn, char *name_str)
 void ExteriorLighting::DefineAnimations(UINT idx)
 {
 	ANIMATIONCOMPONENT_HANDLE ach_EVALtDeployedX;
+	ANIMATIONCOMPONENT_HANDLE ach_EVALtDeployedZ;
 	ANIMATIONCOMPONENT_HANDLE ach_EVALtDeployedY;
 	static UINT EVALtDeployedGrp10[1] = { 10 };
-	const VECTOR3 EVALtDeployedPivot = { 1.66741, 0.99237, 3.14599 };    //EVA Lt Pole Pivot Point
-	static MGROUP_ROTATE mgr_EVALtDeployedGrp10X(idx, EVALtDeployedGrp10, 1, EVALtDeployedPivot, _V(1, 0, 0), (float)(RAD * 30));
-	static MGROUP_ROTATE mgr_EVALtDeployedGrp10Y(idx, EVALtDeployedGrp10, 1, EVALtDeployedPivot, _V(0, 1, 0), (float)(RAD * -120));
+	const VECTOR3 EVALtDeployedPivot = { 1.67261, 0.996135, 3.146 };    //EVA Lt Pole Pivot Point
+	static MGROUP_ROTATE mgr_EVALtDeployedGrp10X(idx, EVALtDeployedGrp10, 1, EVALtDeployedPivot, _V(1, 0, 0), (float)(RAD * -8.15));
+	static MGROUP_ROTATE mgr_EVALtDeployedGrp10Z(idx, EVALtDeployedGrp10, 1, EVALtDeployedPivot, _V(0, 0, 1), (float)(RAD * 30)); //inverse sign in Blender
+	static MGROUP_ROTATE mgr_EVALtDeployedGrp10Y(idx, EVALtDeployedGrp10, 1, EVALtDeployedPivot, _V(0, 1, 0), (float)(RAD * -124.32)); //inverse sign in Blender
 	anim_EVALt = saturn->CreateAnimation(0.0);
-	ach_EVALtDeployedX = saturn->AddAnimationComponent(anim_EVALt, 0.0, 1.0, &mgr_EVALtDeployedGrp10X);
 	ach_EVALtDeployedY = saturn->AddAnimationComponent(anim_EVALt, 0.0, 1.0, &mgr_EVALtDeployedGrp10Y);
+	ach_EVALtDeployedZ = saturn->AddAnimationComponent(anim_EVALt, 0.0, 1.0, &mgr_EVALtDeployedGrp10Z);
+	ach_EVALtDeployedX = saturn->AddAnimationComponent(anim_EVALt, 0.0, 1.0, &mgr_EVALtDeployedGrp10X);
 }
