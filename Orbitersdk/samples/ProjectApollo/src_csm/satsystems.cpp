@@ -149,7 +149,7 @@ void Saturn::SystemsInit() {
 	RunEVAFeeder.WireToBuses(&RunEVATRGTAC1CB, &RunEVATRGTAC2CB);
 	EVALight->WireTo(&RunEVAFeeder);
 
-	ExteriorLighting.Init(this, &LightingRndzMNBCB, &RndzLightSwitch, &RunEVAFeeder, &RunEVALightSwitch, (ElectricLight*)Panelsdk.GetPointerByString("ELECTRIC:EVALIGHT"));
+	ExteriorLighting.Init(this, &LightingRndzMNBCB, &RndzLightSwitch, &RunEVAFeeder, &RunEVALightSwitch, EVALight);
 
 	//
 	// EPS/Cryo devices
@@ -869,7 +869,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		// Switches MAYBE THIS SHOULD GO SOMEWHERE ELSE? They only need to be updated every timestep, not every substep
 		///
 		RndzLightSwitch.refresh(simdt);
-		RunEVALightSwitch.refresh(simdt);
 
 		//
 		// Systems state handling
@@ -2937,9 +2936,9 @@ void Saturn::CheckSMSystemsState()
 		}
 
 		// Disconnect Exterior SM lights
-		RndzLight->WireTo(NULL);
-		SpotLight->WireTo(NULL);
-		EVALight->WireTo(NULL);
+		RndzLight->Disable();
+		SpotLight->Disable();
+		EVALight->Disable();
 	}
 }
 
