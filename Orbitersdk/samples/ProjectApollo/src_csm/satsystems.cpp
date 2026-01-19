@@ -146,6 +146,15 @@ void Saturn::SystemsInit() {
 	RndzLight = (ElectricLight *)Panelsdk.GetPointerByString("ELECTRIC:RNDZLIGHT");
 
 	//
+	// Interior Lights
+	//
+
+	FloodLights.Init(this, &LightingFloodMNACB, &LightingFloodMNBCB, &LightingFloodFLTPLCB,
+		&FloodDimSwitch, &FloodFixedSwitch, &FloodRotarySwitch,
+		&InteriorLightsFloodDimSwitch, &InteriorLightsFloodFixedSwitch, &RightFloodRotarySwitch,
+		&Panel100FloodDimSwitch, &Panel100FloodFixedSwitch, &Panel100FloodRotarySwitch);
+
+	//
 	// EPS/Cryo devices
 	//
 

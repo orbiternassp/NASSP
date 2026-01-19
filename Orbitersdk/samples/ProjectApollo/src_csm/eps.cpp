@@ -199,3 +199,146 @@ void CryoPressureSwitch::SaveState(FILEHANDLE scn, char *name_str)
 	sprintf(buffer, "%d %d", PressureSwitch1, PressureSwitch2);
 	oapiWriteScenario_string(scn, name_str, buffer);
 }
+
+//Flood Lights
+FloodLights::FloodLights()
+{
+	saturn = NULL;
+	FloodMNAcb = NULL;
+	FloodMNBcb = NULL;
+	FloodPLcb = NULL;
+	PNL8_DIMsw = NULL;
+	PNL8_FIXEDsw = NULL;
+	PNL8_Rotary = NULL;
+	PNL5_DIMsw = NULL;
+	PNL5_FIXEDsw = NULL;
+	PNL5_Rotary = NULL;
+	PNL100_DIMsw = NULL;
+	PNL100_FIXEDsw = NULL;
+	PNL100_Rotary = NULL;
+}
+
+FloodLights::~FloodLights()
+{
+
+}
+
+void FloodLights::Init(Saturn *s, e_object *flood_mna, e_object *flood_mnb, e_object *flood_pl,
+	ToggleSwitch *pnl8_dim, ThreePosSwitch *pnl8_fixed, ContinuousRotationalSwitch *pnl8_rty,
+	ToggleSwitch *pnl5_dim, ToggleSwitch *pnl5_fixed, ContinuousRotationalSwitch *pnl5_rty,
+	ToggleSwitch *pnl100_dim, ToggleSwitch *pnl100_fixed, ContinuousRotationalSwitch *pnl100_rty)
+{
+	saturn = s;
+	FloodMNAcb = flood_mna;
+	FloodMNBcb = flood_mnb;
+	FloodPLcb = flood_pl;
+	PNL8_DIMsw = pnl8_dim;
+	PNL8_FIXEDsw = pnl8_fixed;
+	PNL8_Rotary = pnl8_rty;
+	PNL5_DIMsw = pnl5_dim;
+	PNL5_FIXEDsw = pnl5_fixed;
+	PNL5_Rotary = pnl5_rty;
+	PNL100_DIMsw = pnl100_dim;
+	PNL100_FIXEDsw = pnl100_fixed;
+	PNL100_Rotary = pnl100_rty;
+}
+
+double FloodLights::GetLHPrimVoltage() //Primary flood bulb voltage
+{
+	if (FloodMNAcb->Voltage() > SP_MIN_DCVOLTAGE && PNL8_DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
+	{
+		return FloodMNAcb->Voltage() * PNL8_Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
+	}
+	else if (FloodMNBcb->Voltage() > SP_MIN_DCVOLTAGE && PNL8_DIMsw->GetState() == TOGGLESWITCH_DOWN && PNL8_FIXEDsw->GetState() == THREEPOSSWITCH_UP) //Dim 2 Fixed
+	{
+		return FloodMNBcb->Voltage(); //returns bus voltage
+	}
+	else if (FloodPLcb->Voltage() > SP_MIN_DCVOLTAGE && PNL8_DIMsw->GetState() == TOGGLESWITCH_DOWN && PNL8_FIXEDsw->GetState() == THREEPOSSWITCH_DOWN) //Dim 2 PL
+	{
+		return FloodPLcb->Voltage(); //returns bus voltage
+	}
+	return 0.0;
+}
+
+double FloodLights::GetLHSecVoltage() //Secondary flood bulb voltage
+{
+	if (FloodMNAcb->Voltage() > SP_MIN_DCVOLTAGE && PNL8_DIMsw->GetState() == TOGGLESWITCH_DOWN)  //Dim 2
+	{
+		return FloodMNAcb->Voltage() * PNL8_Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
+	}
+	else if (FloodMNBcb->Voltage() > SP_MIN_DCVOLTAGE && PNL8_DIMsw->GetState() == TOGGLESWITCH_UP && PNL8_FIXEDsw->GetState() == THREEPOSSWITCH_UP) //Dim 1 Fixed
+	{
+		return FloodMNBcb->Voltage(); //returns bus voltage
+	}
+	else if (FloodPLcb->Voltage() > SP_MIN_DCVOLTAGE && PNL8_DIMsw->GetState() == TOGGLESWITCH_UP && PNL8_FIXEDsw->GetState() == THREEPOSSWITCH_DOWN) //Dim 1 PL
+	{
+		return FloodPLcb->Voltage(); //returns bus voltage
+	}
+	return 0.0;
+}
+
+double FloodLights::GetRHPrimVoltage() //Primary flood bulb voltage
+{
+	if (FloodMNBcb->Voltage() > SP_MIN_DCVOLTAGE && PNL5_DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
+	{
+		return FloodMNBcb->Voltage() * PNL5_Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
+	}
+	else if (FloodMNAcb->Voltage() > SP_MIN_DCVOLTAGE && PNL5_DIMsw->GetState() == TOGGLESWITCH_DOWN && PNL5_FIXEDsw->GetState() == TOGGLESWITCH_UP) //Dim 2 Fixed
+	{
+		return FloodMNAcb->Voltage(); //returns bus voltage
+	}
+	return 0.0;
+}
+
+double FloodLights::GetRHSecVoltage() //Secondary flood bulb voltage
+{
+	if (FloodMNBcb->Voltage() > SP_MIN_DCVOLTAGE && PNL5_DIMsw->GetState() == TOGGLESWITCH_DOWN)  //Dim 2
+	{
+		return FloodMNBcb->Voltage() * PNL5_Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
+	}
+	else if (FloodMNAcb->Voltage() > SP_MIN_DCVOLTAGE && PNL5_DIMsw->GetState() == TOGGLESWITCH_UP && PNL5_FIXEDsw->GetState() == TOGGLESWITCH_UP) //Dim 1 Fixed
+	{
+		return FloodMNAcb->Voltage(); //returns bus voltage
+	}
+	return 0.0;
+}
+
+double FloodLights::GetLEBPrimVoltage() //Primary flood bulb voltage
+{
+	if (FloodMNAcb->Voltage() > SP_MIN_DCVOLTAGE && PNL100_DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
+	{
+		return FloodMNAcb->Voltage() * PNL100_Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
+	}
+	else if (FloodMNBcb->Voltage() > SP_MIN_DCVOLTAGE && PNL100_DIMsw->GetState() == TOGGLESWITCH_DOWN && PNL100_FIXEDsw->GetState() == TOGGLESWITCH_UP) //Dim 2 Fixed
+	{
+		return FloodMNBcb->Voltage(); //returns bus voltage
+	}
+	return 0.0;
+}
+
+double FloodLights::GetLEBSecVoltage() //Secondary flood bulb voltage
+{
+	if (FloodMNAcb->Voltage() > SP_MIN_DCVOLTAGE && PNL100_DIMsw->GetState() == TOGGLESWITCH_DOWN)  //Dim 2
+	{
+		return FloodMNAcb->Voltage() * PNL100_Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
+	}
+	else if (FloodMNBcb->Voltage() > SP_MIN_DCVOLTAGE && PNL100_DIMsw->GetState() == TOGGLESWITCH_UP && PNL100_FIXEDsw->GetState() == TOGGLESWITCH_UP) //Dim 1 Fixed
+	{
+		return FloodMNBcb->Voltage(); //returns bus voltage
+	}
+	return 0.0;
+}
+
+void FloodLights::Timestep(double simdt)
+{
+	//Can be used to light floods
+}
+
+void FloodLights::SystemTimestep(double simdt)
+{
+
+	FloodCB->DrawPower(GetPowerDraw());
+
+	//LM8 Handbook Flood heat listed at 24.4W, this needs to be checked
+	FloodHeat->GenerateHeat(GetPowerDraw()*0.356);	//Assumes linear relationship between heat and power draw based on maximum at 28V.
+}

@@ -3841,6 +3841,9 @@ protected:
 	ThreePhasePowerMerge SuitCompressor1Feeder;
 	ThreePhasePowerMerge SuitCompressor2Feeder;
 
+	// Interior Lighting
+	FloodLights FloodLights;
+
 	// GSE
 	Pump* GSEGlycolPump;
 	h_Radiator* GSERadiator;
@@ -4721,6 +4724,7 @@ protected:
 	friend class AR_GCore;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
+	friend class FloodLights;
 
 	friend void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
 };
