@@ -203,6 +203,11 @@ void CryoPressureSwitch::SaveState(FILEHANDLE scn, char *name_str)
 ExteriorLighting::ExteriorLighting()
 {
 	saturn = NULL;
+	RNDZSPOTMNBcb = NULL;
+	RDZSPOTsw = NULL;
+	ACPower = NULL;
+	RUNEVAsw = NULL;
+	EVALight = NULL;
 	SpotDeployed = false;
 	EVALtDeployed = false;
 }
