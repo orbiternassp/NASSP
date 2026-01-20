@@ -253,11 +253,19 @@ double FloodLights::GetSecVoltage() //Secondary flood bulb voltage
 
 double FloodLights::GetPrimOutput() //Provides scaling for VC lighting and power draw
 {
+	if ((GetPrimVoltage()) / 28.0 > 1.0)
+	{
+		return 1.0;
+	}
 	return GetPrimVoltage() / 28.0;
 }
 
 double FloodLights::GetSecOutput() //Provides scaling for VC lighting and power draw
 {
+	if ((GetSecVoltage()) / 28.0 > 1.0)
+	{
+		return 1.0;
+	}
 	return GetSecVoltage() / 28.0;
 }
 
