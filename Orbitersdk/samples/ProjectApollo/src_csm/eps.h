@@ -57,38 +57,21 @@ class FloodLights
 {
 public:
 	FloodLights();
-	void FloodLights::Init(Saturn *s, e_object *flood_mna, e_object *flood_mnb, e_object *flood_pl,
-		ToggleSwitch *pnl8_dim, ThreePosSwitch *pnl8_fixed, ContinuousRotationalSwitch *pnl8_rty,
-		ToggleSwitch *pnl5_dim, ToggleSwitch *pnl5_fixed, ContinuousRotationalSwitch *pnl5_rty,
-		ToggleSwitch *pnl100_dim, ToggleSwitch *pnl100_fixed, ContinuousRotationalSwitch *pnl100_rty);
+	virtual ~FloodLights();
+	void FloodLights::Init(Saturn *s, e_object *flood_src1, e_object *flood_src2, e_object *flood_pl,
+		ThreePosSwitch *pnl8_fixed, ToggleSwitch *fixed, ToggleSwitch *dim, ContinuousRotationalSwitch *rty);
+	double GetPrimVoltage();
+	double GetSecVoltage();
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
-	double GetLHPrimVoltage();
-	double GetLHSecVoltage();
-	double GetRHPrimVoltage();
-	double GetRHSecVoltage();
-	double GetLEBPrimVoltage();
-	double GetLEBSecVoltage();
-	//bool IsPowered();
-	//bool IsHatchOpen();
-	//double GetLMPRotaryVoltage();
-	//double GetCDRRotaryVoltage();
-	//double GetALLPowerDraw();
-	//double GetOVHDFWDPowerDraw();
-	//double GetPowerDraw();
 protected:
 	Saturn *saturn;
-	e_object *FloodMNAcb;
-	e_object *FloodMNBcb;
+	e_object *Flood1cb;
+	e_object *Flood2cb;
 	e_object *FloodPLcb;
-	ToggleSwitch *PNL8_DIMsw;
 	ThreePosSwitch *PNL8_FIXEDsw;
-	ContinuousRotationalSwitch *PNL8_Rotary;
-	ToggleSwitch *PNL5_DIMsw;
-	ToggleSwitch *PNL5_FIXEDsw;
-	ContinuousRotationalSwitch *PNL5_Rotary;
-	ToggleSwitch *PNL100_DIMsw;
-	ToggleSwitch *PNL100_FIXEDsw;
-	ContinuousRotationalSwitch *PNL100_Rotary;
+	ToggleSwitch *FIXEDsw;
+	ToggleSwitch *DIMsw;
+	ContinuousRotationalSwitch *Rotary;
 };

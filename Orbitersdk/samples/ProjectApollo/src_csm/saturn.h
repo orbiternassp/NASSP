@@ -3842,7 +3842,9 @@ protected:
 	ThreePhasePowerMerge SuitCompressor2Feeder;
 
 	// Interior Lighting
-	FloodLights FloodLights;
+	FloodLights LeftFloodLights;
+	FloodLights RightFloodLights;
+	FloodLights LEBFloodLights;
 
 	// GSE
 	Pump* GSEGlycolPump;

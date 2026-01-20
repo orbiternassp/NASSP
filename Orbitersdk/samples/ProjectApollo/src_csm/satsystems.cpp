@@ -149,10 +149,14 @@ void Saturn::SystemsInit() {
 	// Interior Lights
 	//
 
-	FloodLights.Init(this, &LightingFloodMNACB, &LightingFloodMNBCB, &LightingFloodFLTPLCB,
-		&FloodDimSwitch, &FloodFixedSwitch, &FloodRotarySwitch,
-		&InteriorLightsFloodDimSwitch, &InteriorLightsFloodFixedSwitch, &RightFloodRotarySwitch,
-		&Panel100FloodDimSwitch, &Panel100FloodFixedSwitch, &Panel100FloodRotarySwitch);
+	LeftFloodLights.Init(this, &LightingFloodMNACB, &LightingFloodMNBCB, &LightingFloodFLTPLCB,
+		&FloodFixedSwitch, NULL, &FloodDimSwitch, &FloodRotarySwitch);
+
+	RightFloodLights.Init(this, &LightingFloodMNBCB, &LightingFloodMNACB, &LightingFloodFLTPLCB,
+		NULL, &InteriorLightsFloodFixedSwitch, &InteriorLightsFloodDimSwitch, &RightFloodRotarySwitch);
+
+	LEBFloodLights.Init(this, &LightingFloodMNACB, &LightingFloodMNBCB, &LightingFloodFLTPLCB,
+		NULL, &Panel100FloodFixedSwitch, &Panel100FloodDimSwitch, &Panel100FloodRotarySwitch);
 
 	//
 	// EPS/Cryo devices
@@ -1885,6 +1889,9 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		EventTimer306Display.SystemTimestep(tFactor);
 		H2CryoPressureSwitch.SystemTimestep(tFactor);
 		O2CryoPressureSwitch.SystemTimestep(tFactor);
+		LeftFloodLights.Timestep(tFactor);
+		RightFloodLights.Timestep(tFactor);
+		LEBFloodLights.Timestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
