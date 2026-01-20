@@ -2844,11 +2844,11 @@ void Saturn::SetSwitches(int panel) {
 	CryogenicFanMotorsAC2ACB.Init(297, 188, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &ACBus2PhaseA, 2.0);
 	CryogenicFanMotorsAC2BCB.Init(297, 121, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &ACBus2PhaseB, 2.0);
 	CryogenicFanMotorsAC2CCB.Init(297,  82, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &ACBus2PhaseC, 2.0);
-	LightingRndzMNACB.Init		 (297,  43, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, MainBusA, 5.);
-	LightingRndzMNBCB.Init		 (297,   4, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
-	LightingFloodMNACB.Init		 (393, 311, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
-	LightingFloodMNBCB.Init		 (393, 268, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
-	LightingFloodFLTPLCB.Init	 (393, 225, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	LightingRndzMNACB.Init		 (297,  43, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, MainBusA, 5.0);
+	LightingRndzMNBCB.Init		 (297,   4, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, MainBusB, 5.0);
+	LightingFloodMNACB.Init		 (393, 311, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, MainBusA, 7.5);
+	LightingFloodMNBCB.Init		 (393, 268, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, MainBusB, 7.5);
+	LightingFloodFLTPLCB.Init	 (393, 225, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &FlightPostLandingBus, 5.0);
 	LightingNumIntLEBCB.Init	 (393, 182, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &ACBus2PhaseA, 2.0);
 	LightingNumIntLMDCCB.Init	 (393, 129, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &ACBus1PhaseA, 2.0);
 	LightingNumIntRMDCCB.Init	 (393,  86, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &ACBus1PhaseB, 2.0);

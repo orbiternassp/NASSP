@@ -1173,6 +1173,16 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //------------------------------------------------------------------------------------
 // Various debug prints
 //------------------------------------------------------------------------------------
+
+//Lighting Debug Lines   
+	/*
+	//sprintf(oapiDebugString(), "LH Prim %.2f LH Sec %.2f RH Prim %.2f RH Sec %.2f LEB Prim %.2f LEB Sec %.2f", LeftFloodLights.GetPrimOutput(), LeftFloodLights.GetSecOutput(), 
+		//RightFloodLights.GetPrimOutput(), RightFloodLights.GetSecOutput(), LEBFloodLights.GetPrimOutput(), LEBFloodLights.GetSecOutput());
+
+	sprintf(oapiDebugString(), "LH Prim %.2f LH Sec %.2f RH Prim %.2f RH Sec %.2f LEB Prim %.2f LEB Sec %.2f", LeftFloodLights.GetPrimVoltage(), LeftFloodLights.GetSecVoltage(),
+		RightFloodLights.GetPrimVoltage(), RightFloodLights.GetSecVoltage(), LEBFloodLights.GetPrimVoltage(), LEBFloodLights.GetSecVoltage());
+	*/
+
 //Scaling Debug Lines
 	/*
 	//double *pressCO2 = (double *)Panelsdk.GetPointerByString("HYDRAULIC:SUIT:CO2_PPRESS");
@@ -1182,7 +1192,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//sprintf(oapiDebugString(), "Pixel %.2f MeterValue: %.2f XducerV %.2f", (129 - (O2Pressure1Meter.QueryValue()) * 20.6), O2Pressure1Meter.QueryValue(), O2Tank1PressSensor.Voltage());
 	*/
 
-	// Structure Temperature Debug Lines
+// Structure Temperature Debug Lines
 	/*
 	h_Radiator *DockProbe = (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:DOCKPROBE");
 	double *DockProbeTemp = (double *)Panelsdk.GetPointerByString("HYDRAULIC:DOCKPROBE:TEMP");
