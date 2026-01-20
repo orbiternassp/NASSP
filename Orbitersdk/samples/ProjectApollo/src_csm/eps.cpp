@@ -311,8 +311,4 @@ void FloodLights::Timestep(double simdt)
 void FloodLights::SystemTimestep(double simdt)
 {
 	//Power draw 
-	GetPrimVoltage()
-	GetSecVoltage(voltage2, )
-	Flood1cb->DrawPower()
-
 }
