@@ -1179,9 +1179,11 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//sprintf(oapiDebugString(), "LH Prim %.2f LH Sec %.2f RH Prim %.2f RH Sec %.2f LEB Prim %.2f LEB Sec %.2f", LeftFloodLights.GetPrimOutput(), LeftFloodLights.GetSecOutput(), 
 		//RightFloodLights.GetPrimOutput(), RightFloodLights.GetSecOutput(), LEBFloodLights.GetPrimOutput(), LEBFloodLights.GetSecOutput());
 
-	sprintf(oapiDebugString(), "LH Prim %.2f LH Sec %.2f RH Prim %.2f RH Sec %.2f LEB Prim %.2f LEB Sec %.2f", LeftFloodLights.GetPrimVoltage(), LeftFloodLights.GetSecVoltage(),
-		RightFloodLights.GetPrimVoltage(), RightFloodLights.GetSecVoltage(), LEBFloodLights.GetPrimVoltage(), LEBFloodLights.GetSecVoltage());
-	*/
+	//sprintf(oapiDebugString(), "LH Prim %.2f LH Sec %.2f RH Prim %.2f RH Sec %.2f LEB Prim %.2f LEB Sec %.2f", LeftFloodLights.GetPrimVoltage(), LeftFloodLights.GetSecVoltage(),
+		//RightFloodLights.GetPrimVoltage(), RightFloodLights.GetSecVoltage(), LEBFloodLights.GetPrimVoltage(), LEBFloodLights.GetSecVoltage());
+
+	sprintf(oapiDebugString(), "MNA %.2f MNB %.2f FPL %.2f", LightingFloodMNACB.PowerLoad(), LightingFloodMNBCB.PowerLoad(), LightingFloodFLTPLCB.PowerLoad());
+		*/
 
 //Scaling Debug Lines
 	/*
