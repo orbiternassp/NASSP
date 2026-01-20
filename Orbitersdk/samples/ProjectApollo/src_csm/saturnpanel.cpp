@@ -2741,7 +2741,7 @@ void Saturn::SetSwitches(int panel) {
 
 	InteriorLightsFloodSwitchesRow.Init(AID_INTERIORLIGHTSFLOODSSWITCHES, MainPanel);
 	InteriorLightsFloodDimSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], InteriorLightsFloodSwitchesRow);
-	InteriorLightsFloodFixedSwitch.Init(45, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], InteriorLightsFloodSwitchesRow);
+	InteriorLightsFloodFixedSwitch.Init(45, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], InteriorLightsFloodSwitchesRow, &LightingFloodMNACB, NULL);
 
 	SPSGaugingSwitchRow.Init(AID_SPSGAUGINGSWITCH, MainPanel);
 	SPSGaugingSwitch.Init(0, 0, 34, 33, srf[SRF_THREEPOSSWITCH305], srf[SRF_BORDER_34x33], SPSGaugingSwitchRow, &GaugingAc1CircuitBraker, NULL, &GaugingAc2CircuitBraker);
@@ -2774,7 +2774,7 @@ void Saturn::SetSwitches(int panel) {
 	Panel100SwitchesRow.Init(AID_PANEL100SWITCHES, MainPanel);
 	UtilityPowerSwitch.Init      (  0, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);
 	Panel100FloodDimSwitch.Init  ( 48, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);	
-	Panel100FloodFixedSwitch.Init(113, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);
+	Panel100FloodFixedSwitch.Init(113, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow, &LightingFloodMNBCB, NULL);
 	GNPowerOpticsSwitch.Init     (200, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);
 	GNPowerIMUSwitch.Init        (260, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);
 	GNPowerIMUSwitch.InitGuard   (259,  0, 36, 69, srf[SRF_SWITCHGUARDS], 0, 180);
@@ -3104,7 +3104,7 @@ void Saturn::SetSwitches(int panel) {
 	FloodDimSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], FloodDimSwitchRow);
 
 	FloodFixedSwitchRow.Init(AID_FLOODFIXEDSWITCH, MainPanel);
-	FloodFixedSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FloodFixedSwitchRow);
+	FloodFixedSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FloodFixedSwitchRow, &LightingFloodMNBCB, NULL, &LightingFloodFLTPLCB);
 
 	ReactionControlSystemCircuitBrakerRow.Init(AID_REACTIONCONTROLSYSTEMCIRCUITBREAKERS, MainPanel);
 	CMHeater1MnACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnAGroup5CircuitBraker, 20.0);

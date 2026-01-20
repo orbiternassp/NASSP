@@ -2588,7 +2588,7 @@ protected:
 
 	SwitchRow InteriorLightsFloodSwitchesRow;
 	ToggleSwitch InteriorLightsFloodDimSwitch;
-	ToggleSwitch InteriorLightsFloodFixedSwitch;
+	TwoSourceSwitch InteriorLightsFloodFixedSwitch;
 
 	//////////////////////
 	// Panel 5 rotaries //
@@ -2680,7 +2680,7 @@ protected:
 	SwitchRow Panel100SwitchesRow;
 	ToggleSwitch UtilityPowerSwitch;
 	ToggleSwitch Panel100FloodDimSwitch;	
-	ToggleSwitch Panel100FloodFixedSwitch;
+	TwoSourceSwitch Panel100FloodFixedSwitch;
 	ToggleSwitch GNPowerOpticsSwitch;
 	GuardedToggleSwitch GNPowerIMUSwitch;
 	ThreePosSwitch Panel100RNDZXPDRSwitch;
@@ -2919,7 +2919,7 @@ protected:
 	ToggleSwitch FloodDimSwitch;
 
 	SwitchRow FloodFixedSwitchRow;
-	ThreePosSwitch FloodFixedSwitch;
+	ThreeSourceSwitch FloodFixedSwitch;
 
 	//////////////////////
 	// Panel 7 switches //

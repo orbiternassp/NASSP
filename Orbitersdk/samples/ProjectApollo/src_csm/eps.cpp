@@ -205,9 +205,6 @@ FloodLights::FloodLights()
 {
 	saturn = NULL;
 	Flood1cb = NULL;
-	Flood2cb = NULL;
-	FloodPLcb = NULL;
-	PNL8_FIXEDsw = NULL;
 	FIXEDsw = NULL;
 	DIMsw = NULL;
 	Rotary = NULL;
@@ -218,14 +215,11 @@ FloodLights::~FloodLights()
 
 }
 
-void FloodLights::Init(Saturn *s, e_object *flood_src1, e_object *flood_src2, e_object *flood_pl,
-	ThreePosSwitch *pnl8_fixed, ToggleSwitch *fixed, ToggleSwitch *dim, ContinuousRotationalSwitch *rty)
+void FloodLights::Init(Saturn *s, e_object *flood_src1,
+	e_object *fixed, ToggleSwitch *dim, ContinuousRotationalSwitch *rty)
 {
 	saturn = s;
 	Flood1cb = flood_src1;
-	Flood2cb = flood_src2;
-	FloodPLcb = flood_pl;
-	PNL8_FIXEDsw = pnl8_fixed;
 	FIXEDsw = fixed;
 	DIMsw = dim;
 	Rotary = rty;
@@ -233,74 +227,38 @@ void FloodLights::Init(Saturn *s, e_object *flood_src1, e_object *flood_src2, e_
 
 double FloodLights::GetPrimVoltage() //Primary flood bulb voltage and power
 {
-	if (FIXEDsw == NULL) //checks if LH panel is being used to use correct pointers
+	if (Flood1cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
 	{
-		if (Flood1cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
-		{
-			return Flood1cb->Voltage() * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
-			//watts1 = (volts / 28.0) * 14.0; //returns power draw
-		}
-		else if (Flood2cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN && PNL8_FIXEDsw->GetState() == THREEPOSSWITCH_UP) //Dim 2 Fixed
-		{
-			return Flood2cb->Voltage(); //returns bus voltage
-			//watts2 = (volts / 28.0) * 14.0; //returns power draw
-		}
-		else if (FloodPLcb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN && PNL8_FIXEDsw->GetState() == THREEPOSSWITCH_DOWN) //Dim 2 PL
-		{
-			return  FloodPLcb->Voltage(); //returns bus voltage
-			//wattsPL = (volts / 28.0) * 14.0; //returns power draw
-		}
+		return Flood1cb->Voltage() * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
 	}
-	else if (PNL8_FIXEDsw == NULL)
+	else if (FIXEDsw->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN) //Dim 2 Fixed
 	{
-		if (Flood1cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
-		{
-			return  Flood1cb->Voltage() * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
-			//watts1 = (volts / 28.0) * 14.0; //returns power draw
-		}
-		else if (Flood2cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN && FIXEDsw->GetState() == TOGGLESWITCH_UP) //Dim 2 Fixed
-		{
-			return Flood2cb->Voltage(); //returns bus voltage
-			//watts2 = (volts / 28.0) * 14.0; //returns power draw
-		}
+		return FIXEDsw->Voltage(); //returns bus voltage
 	}
 	return 0.0;
 }
 
 double FloodLights::GetSecVoltage() //Secondary flood bulb voltage and power
 {
-	if (FIXEDsw = NULL) //checks if LH panel is being used to use correct pointers
+	if (Flood1cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN)  //Dim 2
 	{
-		if (Flood1cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN)  //Dim 2
-		{
-			return Flood1cb->Voltage() * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
-			//watts1 = (volts / 28.0) * 14.0; //returns power draw
-		}
-		else if (Flood2cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP && PNL8_FIXEDsw->GetState() == THREEPOSSWITCH_UP) //Dim 1 Fixed
-		{
-			return Flood2cb->Voltage(); //returns bus voltage
-			//watts2 = (volts / 28.0) * 14.0; //returns power draw
-		}
-		else if (FloodPLcb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP && PNL8_FIXEDsw->GetState() == THREEPOSSWITCH_DOWN) //Dim 1 PL
-		{
-			return FloodPLcb->Voltage(); //returns bus voltage
-			//wattsPL = (volts / 28.0) * 14.0; //returns power draw
-		}
+		return Flood1cb->Voltage() * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
 	}
-	else if (PNL8_FIXEDsw == NULL)
+	else if (FIXEDsw->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP) //Dim 1 Fixed
 	{
-		if (Flood1cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN)  //Dim 2
-		{
-			return Flood1cb->Voltage() * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
-			//watts1 = (volts / 28.0) * 14.0; //returns power draw
-		}
-		else if (Flood2cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP && FIXEDsw->GetState() == TOGGLESWITCH_UP) //Dim 1 Fixed
-		{
-			return Flood2cb->Voltage(); //returns bus voltage
-			//watts2 = (volts / 28.0) * 14.0; //returns power draw
-		}
+		return FIXEDsw->Voltage(); //returns bus voltage
 	}
 	return 0.0;
+}
+
+double FloodLights::GetPrimOutput() //Provides scaling for VC lighting
+{
+	return GetPrimVoltage() / 28.0;
+}
+
+double FloodLights::GetSecOutput() //Provides scaling for VC lighting
+{
+	return GetSecVoltage() / 28.0;
 }
 
 void FloodLights::Timestep(double simdt)
@@ -310,5 +268,23 @@ void FloodLights::Timestep(double simdt)
 
 void FloodLights::SystemTimestep(double simdt)
 {
-	//Power draw 
+	//Primary Flood Power Draw
+	if (Flood1cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
+	{
+		Flood1cb->DrawPower(GetPrimOutput() * 14.0);
+	}
+	else if (FIXEDsw->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN) //Dim 2 Fixed
+	{
+		FIXEDsw->DrawPower(GetPrimOutput() * 14.0);
+	}
+
+	//Secondary Flood Power Draw
+	if (Flood1cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN)  //Dim 2
+	{
+		Flood1cb->DrawPower(GetSecOutput() * 14.0);
+	}
+	else if (FIXEDsw->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP) //Dim 1 Fixed
+	{
+		FIXEDsw->DrawPower(GetPrimOutput() * 14.0);
+	}
 }

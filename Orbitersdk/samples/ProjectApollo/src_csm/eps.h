@@ -58,20 +58,19 @@ class FloodLights
 public:
 	FloodLights();
 	virtual ~FloodLights();
-	void FloodLights::Init(Saturn *s, e_object *flood_src1, e_object *flood_src2, e_object *flood_pl,
-		ThreePosSwitch *pnl8_fixed, ToggleSwitch *fixed, ToggleSwitch *dim, ContinuousRotationalSwitch *rty);
+	void FloodLights::Init(Saturn *s, e_object *flood_src1,
+		e_object *fixed, ToggleSwitch *dim, ContinuousRotationalSwitch *rty);
 	double GetPrimVoltage();
 	double GetSecVoltage();
+	double GetPrimOutput();
+	double GetSecOutput();
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
 protected:
 	Saturn *saturn;
 	e_object *Flood1cb;
-	e_object *Flood2cb;
-	e_object *FloodPLcb;
-	ThreePosSwitch *PNL8_FIXEDsw;
-	ToggleSwitch *FIXEDsw;
+	e_object *FIXEDsw;
 	ToggleSwitch *DIMsw;
 	ContinuousRotationalSwitch *Rotary;
 };

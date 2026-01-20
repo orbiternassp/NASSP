@@ -149,14 +149,9 @@ void Saturn::SystemsInit() {
 	// Interior Lights
 	//
 
-	LeftFloodLights.Init(this, &LightingFloodMNACB, &LightingFloodMNBCB, &LightingFloodFLTPLCB,
-		&FloodFixedSwitch, NULL, &FloodDimSwitch, &FloodRotarySwitch);
-
-	RightFloodLights.Init(this, &LightingFloodMNBCB, &LightingFloodMNACB, &LightingFloodFLTPLCB,
-		NULL, &InteriorLightsFloodFixedSwitch, &InteriorLightsFloodDimSwitch, &RightFloodRotarySwitch);
-
-	LEBFloodLights.Init(this, &LightingFloodMNACB, &LightingFloodMNBCB, &LightingFloodFLTPLCB,
-		NULL, &Panel100FloodFixedSwitch, &Panel100FloodDimSwitch, &Panel100FloodRotarySwitch);
+	LeftFloodLights.Init(this, &LightingFloodMNACB, &FloodFixedSwitch, &FloodDimSwitch, &FloodRotarySwitch);
+	RightFloodLights.Init(this, &LightingFloodMNBCB, &InteriorLightsFloodFixedSwitch, &InteriorLightsFloodDimSwitch, &RightFloodRotarySwitch);
+	LEBFloodLights.Init(this, &LightingFloodMNACB, &Panel100FloodFixedSwitch, &Panel100FloodDimSwitch, &Panel100FloodRotarySwitch);
 
 	//
 	// EPS/Cryo devices
