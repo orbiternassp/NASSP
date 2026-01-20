@@ -336,9 +336,5 @@ void FloodLights::Timestep(double simdt)
 
 void FloodLights::SystemTimestep(double simdt)
 {
-
-	FloodCB->DrawPower(GetPowerDraw());
-
-	//LM8 Handbook Flood heat listed at 24.4W, this needs to be checked
-	FloodHeat->GenerateHeat(GetPowerDraw()*0.356);	//Assumes linear relationship between heat and power draw based on maximum at 28V.
+	//Power draw
 }
