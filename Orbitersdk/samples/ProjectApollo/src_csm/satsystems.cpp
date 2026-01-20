@@ -851,6 +851,9 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		CMRCS2.Timestep(simt, simdt);
 		SideHatch.Timestep(simdt);
 		ForwardHatch.Timestep(simdt);
+		LeftFloodLights.Timestep(simdt);
+		RightFloodLights.Timestep(simdt);
+		LEBFloodLights.Timestep(simdt);
 
 		//Telecom update is last so telemetry reflects the current state
 		udl.Timestep();
@@ -1884,9 +1887,9 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		EventTimer306Display.SystemTimestep(tFactor);
 		H2CryoPressureSwitch.SystemTimestep(tFactor);
 		O2CryoPressureSwitch.SystemTimestep(tFactor);
-		LeftFloodLights.Timestep(tFactor);
-		RightFloodLights.Timestep(tFactor);
-		LEBFloodLights.Timestep(tFactor);
+		LeftFloodLights.SystemTimestep(tFactor);
+		RightFloodLights.SystemTimestep(tFactor);
+		LEBFloodLights.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
