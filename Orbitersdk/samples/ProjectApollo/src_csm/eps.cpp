@@ -301,6 +301,12 @@ void ExteriorLighting::SaveState(FILEHANDLE scn, char *name_str)
 
 void ExteriorLighting::DefineAnimations(UINT idx)
 {
+	if (anim_EVALt != NULL)
+	{
+		saturn->DelAnimation(anim_EVALt);
+		anim_EVALt = NULL;
+	}
+
 	ANIMATIONCOMPONENT_HANDLE ach_EVALtDeployedX;
 	ANIMATIONCOMPONENT_HANDLE ach_EVALtDeployedZ;
 	ANIMATIONCOMPONENT_HANDLE ach_EVALtDeployedY;
