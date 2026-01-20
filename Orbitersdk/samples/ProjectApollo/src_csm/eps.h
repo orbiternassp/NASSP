@@ -58,7 +58,7 @@ class FloodLights
 public:
 	FloodLights();
 	virtual ~FloodLights();
-	void FloodLights::Init(Saturn *s, e_object *flood_src1,
+	void FloodLights::Init(Saturn *s, e_object *flood_rty_src,
 		e_object *fixed, ToggleSwitch *dim, ContinuousRotationalSwitch *rty);
 	double GetPrimVoltage();
 	double GetSecVoltage();
@@ -69,7 +69,7 @@ public:
 
 protected:
 	Saturn *saturn;
-	e_object *Flood1cb;
+	e_object *FloodRtycb;
 	e_object *FIXEDsw;
 	ToggleSwitch *DIMsw;
 	ContinuousRotationalSwitch *Rotary;

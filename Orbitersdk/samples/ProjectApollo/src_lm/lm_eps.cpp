@@ -1553,7 +1553,7 @@ double LEM_FloodLights::GetPowerDraw()
 
 void LEM_FloodLights::Timestep(double simdt)
 {
-	//Can be used to light floods
+	//Can be used to light floods?
 }
 
 void LEM_FloodLights::SystemTimestep(double simdt)

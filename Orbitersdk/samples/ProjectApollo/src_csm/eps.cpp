@@ -204,7 +204,7 @@ void CryoPressureSwitch::SaveState(FILEHANDLE scn, char *name_str)
 FloodLights::FloodLights()
 {
 	saturn = NULL;
-	Flood1cb = NULL;
+	FloodRtycb = NULL;
 	FIXEDsw = NULL;
 	DIMsw = NULL;
 	Rotary = NULL;
@@ -215,21 +215,21 @@ FloodLights::~FloodLights()
 
 }
 
-void FloodLights::Init(Saturn *s, e_object *flood_src1,
+void FloodLights::Init(Saturn *s, e_object *flood_rty_src,
 	e_object *fixed, ToggleSwitch *dim, ContinuousRotationalSwitch *rty)
 {
 	saturn = s;
-	Flood1cb = flood_src1;
+	FloodRtycb = flood_rty_src; //circuit breaker providing power to the rotary switch
 	FIXEDsw = fixed;
 	DIMsw = dim;
 	Rotary = rty;
 }
 
-double FloodLights::GetPrimVoltage() //Primary flood bulb voltage and power
+double FloodLights::GetPrimVoltage() //Primary flood bulb voltage
 {
-	if (Flood1cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
+	if (FloodRtycb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
 	{
-		return Flood1cb->Voltage() * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
+		return FloodRtycb->Voltage() * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
 	}
 	else if (FIXEDsw->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN) //Dim 2 Fixed
 	{
@@ -238,11 +238,11 @@ double FloodLights::GetPrimVoltage() //Primary flood bulb voltage and power
 	return 0.0;
 }
 
-double FloodLights::GetSecVoltage() //Secondary flood bulb voltage and power
+double FloodLights::GetSecVoltage() //Secondary flood bulb voltage
 {
-	if (Flood1cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN)  //Dim 2
+	if (FloodRtycb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN)  //Dim 2
 	{
-		return Flood1cb->Voltage() * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
+		return FloodRtycb->Voltage() * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
 	}
 	else if (FIXEDsw->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP) //Dim 1 Fixed
 	{
@@ -251,27 +251,27 @@ double FloodLights::GetSecVoltage() //Secondary flood bulb voltage and power
 	return 0.0;
 }
 
-double FloodLights::GetPrimOutput() //Provides scaling for VC lighting
+double FloodLights::GetPrimOutput() //Provides scaling for VC lighting and power draw
 {
 	return GetPrimVoltage() / 28.0;
 }
 
-double FloodLights::GetSecOutput() //Provides scaling for VC lighting
+double FloodLights::GetSecOutput() //Provides scaling for VC lighting and power draw
 {
 	return GetSecVoltage() / 28.0;
 }
 
 void FloodLights::Timestep(double simdt)
 {
-	//Can be used to light floods
+	//Can be used to light floods?
 }
 
 void FloodLights::SystemTimestep(double simdt)
 {
 	//Primary Flood Power Draw
-	if (Flood1cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
+	if (FloodRtycb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
 	{
-		Flood1cb->DrawPower(GetPrimOutput() * 14.0);
+		FloodRtycb->DrawPower(GetPrimOutput() * 14.0);
 	}
 	else if (FIXEDsw->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN) //Dim 2 Fixed
 	{
@@ -279,9 +279,9 @@ void FloodLights::SystemTimestep(double simdt)
 	}
 
 	//Secondary Flood Power Draw
-	if (Flood1cb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN)  //Dim 2
+	if (FloodRtycb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN)  //Dim 2
 	{
-		Flood1cb->DrawPower(GetSecOutput() * 14.0);
+		FloodRtycb->DrawPower(GetSecOutput() * 14.0);
 	}
 	else if (FIXEDsw->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP) //Dim 1 Fixed
 	{
