@@ -210,6 +210,7 @@ ExteriorLighting::ExteriorLighting()
 	EVALight = NULL;
 	SpotDeployed = false;
 	EVALtDeployed = false;
+	anim_EVALt = -1;
 }
 
 ExteriorLighting::~ExteriorLighting()
