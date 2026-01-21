@@ -279,20 +279,20 @@ void FloodLights::SystemTimestep(double simdt)
 	//Primary Flood Power Draw
 	if (FloodRtycb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
 	{
-		FloodRtycb->DrawPower(GetPrimOutput() * 14.0);
+		FloodRtycb->DrawPower(GetPrimOutput() * 28.0); //2 floods at 14W each 
 	}
 	else if (FIXEDsw->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN) //Dim 2 Fixed
 	{
-		FIXEDsw->DrawPower(GetPrimOutput() * 14.0);
+		FIXEDsw->DrawPower(GetPrimOutput() * 28.0);  //2 floods at 14W each 
 	}
 
 	//Secondary Flood Power Draw
 	if (FloodRtycb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_DOWN)  //Dim 2
 	{
-		FloodRtycb->DrawPower(GetSecOutput() * 14.0);
+		FloodRtycb->DrawPower(GetSecOutput() * 28.0);  //2 floods at 14W each 
 	}
 	else if (FIXEDsw->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP) //Dim 1 Fixed
 	{
-		FIXEDsw->DrawPower(GetPrimOutput() * 14.0);
+		FIXEDsw->DrawPower(GetPrimOutput() * 28.0);  //2 floods at 14W each 
 	}
 }
