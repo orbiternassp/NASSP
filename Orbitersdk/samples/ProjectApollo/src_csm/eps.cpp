@@ -51,6 +51,11 @@ CryoPressureSwitch::CryoPressureSwitch()
 	heater2 = NULL;
 	fan1 = NULL;
 	fan2 = NULL;
+
+	htrswitch1 = NULL;
+	htrswitch2 = NULL;
+	fanswitch1 = NULL;
+	fanswitch2 = NULL;
 }
 
 CryoPressureSwitch::~CryoPressureSwitch() 
