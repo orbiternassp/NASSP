@@ -269,9 +269,9 @@ double FloodLights::GetSecOutput() //Provides scaling for VC lighting and power 
 	return GetSecVoltage() / 28.0;
 }
 
-void FloodLights::Timestep(double simdt)
+double FloodLights::GetCombinedOutput() //Provides scaling for VC lighting until two bulbs are created
 {
-	//Can be used to light floods?
+	return GetPrimOutput() + GetSecOutput();
 }
 
 void FloodLights::SystemTimestep(double simdt)

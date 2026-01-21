@@ -851,9 +851,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		CMRCS2.Timestep(simt, simdt);
 		SideHatch.Timestep(simdt);
 		ForwardHatch.Timestep(simdt);
-		LeftFloodLights.Timestep(simdt);
-		RightFloodLights.Timestep(simdt);
-		LEBFloodLights.Timestep(simdt);
 
 		//Telecom update is last so telemetry reflects the current state
 		udl.Timestep();
@@ -1183,7 +1180,8 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		//RightFloodLights.GetPrimVoltage(), RightFloodLights.GetSecVoltage(), LEBFloodLights.GetPrimVoltage(), LEBFloodLights.GetSecVoltage());
 
 	//sprintf(oapiDebugString(), "MNA %.2f MNB %.2f FPL %.2f", LightingFloodMNACB.PowerLoad(), LightingFloodMNBCB.PowerLoad(), LightingFloodFLTPLCB.PowerLoad());
-	*/
+	//sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f", LeftFloodLights.GetCombinedOutput(), RightFloodLights.GetCombinedOutput(), LEBFloodLights.GetCombinedOutput());
+	 */
 
 //Scaling Debug Lines
 	/*

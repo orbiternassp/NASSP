@@ -64,7 +64,7 @@ public:
 	double GetSecVoltage();
 	double GetPrimOutput();
 	double GetSecOutput();
-	void Timestep(double simdt);
+	double GetCombinedOutput();
 	void SystemTimestep(double simdt);
 
 protected:
