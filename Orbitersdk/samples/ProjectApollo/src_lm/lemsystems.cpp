@@ -386,6 +386,9 @@ void LEM::SystemsInit()
 	dsky.Init(&NumDockCompLTGFeeder, &LGC_DSKY_CB, &LtgAnunNumKnob, &LtgIntegralKnob, &LtgORideAnunSwitch, &LtgORideIntegralSwitch);
 	agc.InitHeat((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT"));
 
+	//Optics
+	optics.Init(this);
+
 	// AGS stuff
 	asa.Init(this, &AGSOperateSwitch, (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FastHeater"),
 									  (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FineHeater"),
