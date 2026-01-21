@@ -257,7 +257,7 @@ void ExteriorLighting::SystemTimestep(double simdt)
 
 	if (IsRunEVAOn()) {
 		for (i = 0; i < 8; i++) saturn->runningLights[i].active = true;
-		ACPower->DrawPower(7.0);
+		ACPower->DrawPower(28.0); // 8 lights at 3.5W each
 	}
 	else {
 		for (i = 0; i < 8; i++) saturn->runningLights[i].active = false;
