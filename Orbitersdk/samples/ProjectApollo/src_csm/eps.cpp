@@ -215,8 +215,7 @@ FloodLights::~FloodLights()
 
 }
 
-void FloodLights::Init(Saturn *s, e_object *flood_rty_src,
-	e_object *fixed, ToggleSwitch *dim, ContinuousRotationalSwitch *rty)
+void FloodLights::Init(Saturn *s, e_object *flood_rty_src, e_object *fixed, ToggleSwitch *dim, ContinuousRotationalSwitch *rty)
 {
 	saturn = s;
 	FloodRtycb = flood_rty_src; //circuit breaker providing power to the rotary switch
@@ -296,3 +295,45 @@ void FloodLights::SystemTimestep(double simdt)
 		FIXEDsw->DrawPower(GetPrimOutput() * 28.0);  //2 floods at 14W each 
 	}
 }
+
+//Tunnel Lights
+TunnelLights::TunnelLights()
+{
+	saturn = NULL;
+	MNcb = NULL;
+	TunnelLtsw = NULL;
+}
+
+TunnelLights::~TunnelLights()
+{
+
+}
+
+void TunnelLights::Init(Saturn *s, e_object *cb, ToggleSwitch *lt_sw)
+{
+	saturn = s;
+	MNcb = cb;
+	TunnelLtsw = lt_sw;
+}
+
+double TunnelLights::GetOutput() //Provides scaling for VC lighting and power draw
+{
+	if (MNcb->Voltage() > SP_MIN_DCVOLTAGE && TunnelLtsw->GetState() == TOGGLESWITCH_UP)
+	{
+		if (MNcb->Voltage() > 28.0)
+		{
+			return 1.0;
+		}
+		else
+		{
+			return MNcb->Voltage() / 28.0;
+		}
+	}
+	return 0.0;
+}
+
+void TunnelLights::SystemTimestep(double simdt)
+{
+	MNcb->DrawPower(GetOutput() * 9.0);
+}
+

@@ -3846,6 +3846,9 @@ protected:
 	FloodLights RightFloodLights;
 	FloodLights LEBFloodLights;
 
+	TunnelLights MNATunnelLights;
+	TunnelLights MNBTunnelLights;
+
 	// GSE
 	Pump* GSEGlycolPump;
 	h_Radiator* GSERadiator;
@@ -4727,6 +4730,7 @@ protected:
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
 	friend class FloodLights;
+	friend class TunnelLights;
 
 	friend void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
 };

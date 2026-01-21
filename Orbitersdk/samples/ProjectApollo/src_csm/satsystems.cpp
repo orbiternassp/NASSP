@@ -153,6 +153,9 @@ void Saturn::SystemsInit() {
 	RightFloodLights.Init(this, &LightingFloodMNBCB, &InteriorLightsFloodFixedSwitch, &InteriorLightsFloodDimSwitch, &RightFloodRotarySwitch);
 	LEBFloodLights.Init(this, &LightingFloodMNACB, &Panel100FloodFixedSwitch, &Panel100FloodDimSwitch, &Panel100FloodRotarySwitch);
 
+	MNATunnelLights.Init(this, &LightingRndzMNACB, &TunnelLightSwitch);
+	MNBTunnelLights.Init(this, &LightingRndzMNBCB, &TunnelLightSwitch);
+
 	//
 	// EPS/Cryo devices
 	//
@@ -1900,6 +1903,8 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		LeftFloodLights.SystemTimestep(tFactor);
 		RightFloodLights.SystemTimestep(tFactor);
 		LEBFloodLights.SystemTimestep(tFactor);
+		MNATunnelLights.SystemTimestep(tFactor);
+		MNBTunnelLights.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
