@@ -1184,7 +1184,9 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 	//sprintf(oapiDebugString(), "MNA %.2f MNB %.2f FPL %.2f", LightingFloodMNACB.PowerLoad(), LightingFloodMNBCB.PowerLoad(), LightingFloodFLTPLCB.PowerLoad());
 	//sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f", LeftFloodLights.GetCombinedOutput(), RightFloodLights.GetCombinedOutput(), LEBFloodLights.GetCombinedOutput());
-	 */
+	
+	//sprintf(oapiDebugString(), "MNA %.2f MNB %.2f", MNATunnelLights.GetOutput(), MNBTunnelLights.GetOutput());
+	*/
 
 //Scaling Debug Lines
 	/*

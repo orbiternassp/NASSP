@@ -334,6 +334,6 @@ double TunnelLights::GetOutput() //Provides scaling for VC lighting and power dr
 
 void TunnelLights::SystemTimestep(double simdt)
 {
-	MNcb->DrawPower(GetOutput() * 9.0);
+	MNcb->DrawPower(GetOutput() * 9.0); //Each tunnel segment consists of 3 lights at 3W each 
 }
 
