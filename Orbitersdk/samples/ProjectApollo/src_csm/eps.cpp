@@ -320,14 +320,7 @@ double TunnelLights::GetOutput() //Provides scaling for VC lighting and power dr
 {
 	if (MNcb->Voltage() > SP_MIN_DCVOLTAGE && TunnelLtsw->GetState() == TOGGLESWITCH_UP)
 	{
-		if (MNcb->Voltage() > 28.0)
-		{
-			return 1.0;
-		}
-		else
-		{
-			return MNcb->Voltage() / 28.0;
-		}
+		return MNcb->Voltage() / 28.0;
 	}
 	return 0.0;
 }
