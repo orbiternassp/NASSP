@@ -5776,7 +5776,7 @@ void Saturn::InitSwitches() {
 	NumericRotarySwitch.SetRotationRange(300.0*RAD);
 	NumericRotarySwitch.SetOffset(-150.0*RAD);
 
-	FloodRotarySwitch.Register(PSH, "FloodRotarySwitch", 4.0, 0.0, 10.0);
+	FloodRotarySwitch.Register(PSH, "FloodRotarySwitch", 10.0, 0.0, 10.0);
 	FloodRotarySwitch.SetRotationRange(300.0*RAD);
 	FloodRotarySwitch.SetOffset(-150.0*RAD);
 
