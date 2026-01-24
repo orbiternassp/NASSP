@@ -84,6 +84,8 @@ namespace mission
 		virtual int GetSMJCVersion() const;
 		//false = any other CSM, true = J-type mission CSM (for all systems and panels common to CSM-112 to 114)
 		virtual bool IsJMission() const;
+		//1 = Apollo 15/16, 2 = Apollo 17
+		virtual int GetPanel230Version() const;
 		//0 = none, 1 = J-type mission, 2 = Skylab
 		virtual int GetPanel277Version() const;
 		//1 = pre Apollo 15, 2 = Apollo 15-16, 3 = Apollo 17, 4 = Skylab, 5 = ASTP
@@ -200,6 +202,7 @@ namespace mission
 
 		int iSMJCVersion;
 		bool bJMission;
+		int iPanel230Version;
 		int iPanel277Version;
 		int iPanel278Version;
 		int iLMDSKYVersion;

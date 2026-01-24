@@ -54,6 +54,9 @@
     <ClCompile Include="..\..\src_csm\dockingprobe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src_csm\SIMBay.cpp">
+	  <Filter>Source Files</Filter>
+	</ClCompile>
     <ClCompile Include="..\..\src_sys\dsky.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -293,6 +296,9 @@
     <ClInclude Include="..\..\src_csm\dockingprobe.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+	<ClInclude Include="..\..\src_csm\SIMBay.h">
+      <Filter>Header Files</Filter>
+	</ClInclude>
     <ClInclude Include="..\..\src_sys\dsky.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -485,6 +491,7 @@
     <ClInclude Include="..\..\src_csm\eps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_sys\timingequipment.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\abort.bmp">

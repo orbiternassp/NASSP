@@ -434,6 +434,8 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_CRYO_SWITCHES_J]                        = oapiCreateSurface (LOADBMP (IDB_CRYO_SWITCHES_J));
 	srf[SRF_CRYO_IND_J]                             = oapiCreateSurface (LOADBMP (IDB_CRYO_IND_J));
 	srf[SRF_SWITCHGUARDS90_RIGHT]                   = oapiCreateSurface (LOADBMP (IDB_SWITCHGUARDS90_RIGHT));
+	srf[SRF_CSM_PANEL_230_CSM112]                   = oapiCreateSurface(LOADBMP(IDB_CSM_PANEL_230_CSM112));
+	srf[SRF_CSM_PANEL_230_CSM114]                   = oapiCreateSurface(LOADBMP(IDB_CSM_PANEL_230_CSM114));
 
 
 	//
@@ -610,6 +612,8 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey (srf[SRF_CRYO_SWITCHES_J],                      g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_CRYO_IND_J],                           g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_SWITCHGUARDS90_RIGHT],                 g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CSM_PANEL_230_CSM112],                 g_Param.col[4]);
+	oapiSetSurfaceColourKey (srf[SRF_CSM_PANEL_230_CSM114],                 g_Param.col[4]);
 
 	//
 	// Borders need to set the center color to transparent so only the outline
@@ -1373,6 +1377,7 @@ bool Saturn::clbkLoadPanel (int id) {
 		oapiRegisterPanelArea (AID_WASTE_MGMT_BATT_VENT,			_R(1920, 1470, 2036, 1586), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_WASTE_MGMT_STOAGE_VENT,			_R(1920, 1304, 2036, 1420), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
 		oapiRegisterPanelArea (AID_CSM_WASTE_DISPOSAL,			    _R( 765,  738, 1063, 1008), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN,					PANEL_MAP_BACKGROUND);
+		oapiRegisterPanelArea (AID_CSM_PANEL_230J,                  _R(483, 301, 1064, 730),    PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP, PANEL_MAP_BACKGROUND);
 		
 		SetCameraDefaultDirection(_V(0.0, 0.0, 1.0));
 		oapiCameraSetCockpitDir(0,0);
@@ -2886,6 +2891,91 @@ void Saturn::SetSwitches(int panel) {
 		EPSBatBusACircuitBraker.Init      (489, 123, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel229CircuitBreakersRow, &BatteryBusA, 20.0);
 	}
 
+	if (Panel230CSM112)
+	{
+		Panel230CSM112->Panel230CSM112SwitchesRow.Init(AID_CSM_PANEL_230J, MainPanel);
+		//TalkBacks
+		MappingCamera1Indicator.Init(64, 324, 23, 23, srf[SRF_INDICATOR90], Panel230CSM112->Panel230CSM112SwitchesRow);
+		MappingCamera2Indicator.Init(64, 275, 23, 23, srf[SRF_INDICATOR90], Panel230CSM112->Panel230CSM112SwitchesRow);
+		GammaBay1Indicator.Init(64, 226, 23, 23, srf[SRF_INDICATOR90], Panel230CSM112->Panel230CSM112SwitchesRow);
+		GammaBay2Indicator.Init(64, 177, 23, 23, srf[SRF_INDICATOR90], Panel230CSM112->Panel230CSM112SwitchesRow);
+		MassSpectrometer1Indicator.Init(64, 128, 23, 23, srf[SRF_INDICATOR90], Panel230CSM112->Panel230CSM112SwitchesRow);
+		MassSpectrometer2Indicator.Init(64, 79, 23, 23, srf[SRF_INDICATOR90], Panel230CSM112->Panel230CSM112SwitchesRow);
+		SubSatIndicator.Init(402, 311, 23, 23, srf[SRF_INDICATOR90], Panel230CSM112->Panel230CSM112SwitchesRow);
+		PanoramicCameraIndicator.Init(402, 248, 23, 23, srf[SRF_INDICATOR90], Panel230CSM112->Panel230CSM112SwitchesRow);
+		//Switches
+		//First Row
+		Panel230CSM112->MappingCamera1Switch.Init(133, 322, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->MappingCamera2Switch.Init(133, 272, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->GammaBay1Switch.Init(133, 222, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->GammaBay2Switch.Init(133, 172, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->MassSpectrometer1Switch.Init(133, 122, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->MassSpectrometer2Switch.Init(133, 72, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		//Second Row
+		Panel230CSM112->ImageMtnSwitch.Init(228, 309, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->LaserAltmSwitch.Init(228, 237, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->Exp1Switch.Init(228, 187, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->Exp2Switch.Init(228, 137, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->IonSourceSwitch.Init(228, 87, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		//Third Row
+		Panel230CSM112->DataSys1Switch.Init(312, 309, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->DataSys2Switch.Init(312, 237, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->GainStepSwitch.Init(312, 187, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->MultSwitch.Init(312, 137, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->DsCamSwitch.Init(312, 87, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		//Fourth Row
+		Panel230CSM112->PanoramicCamera1Switch.Init(399, 187, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->PanoramicCamera2Switch.Init(399, 137, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->AlphaRaySwitch.Init(399, 87, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		//Fifth Row
+		Panel230CSM112->SubSatSwitch.Init(481, 309, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->PanoramicCameraModeSwitch.Init(481, 237, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->PanoramicCameraPWRSwitch.Init(481, 187, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->PanoramicCameraExposureSwitch.Init(481, 137, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+		Panel230CSM112->XRaySwitch.Init(481, 87, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM112->Panel230CSM112SwitchesRow);
+
+	}
+
+	if (Panel230CSM114)
+	{
+		Panel230CSM114->Panel230CSM114SwitchesRow.Init(AID_CSM_PANEL_230J, MainPanel);
+		//TalkBacks
+		MappingCamera1Indicator.Init(64, 324, 23, 23, srf[SRF_INDICATOR90], Panel230CSM114->Panel230CSM114SwitchesRow);
+		MappingCamera2Indicator.Init(64, 275, 23, 23, srf[SRF_INDICATOR90], Panel230CSM114->Panel230CSM114SwitchesRow);
+		LunarSounderIndicator.Init(64, 226, 23, 23, srf[SRF_INDICATOR90], Panel230CSM114->Panel230CSM114SwitchesRow);
+		HFAntenna1Indicator.Init(64, 177, 23, 23, srf[SRF_INDICATOR90], Panel230CSM114->Panel230CSM114SwitchesRow);
+		HFAntenna2Indicator.Init(64, 128, 23, 23, srf[SRF_INDICATOR90], Panel230CSM114->Panel230CSM114SwitchesRow);
+		HFAntennaJettIndicator.Init(64, 79, 23, 23, srf[SRF_INDICATOR90], Panel230CSM114->Panel230CSM114SwitchesRow);
+		PanoramicCameraIndicator.Init(402, 248, 23, 23, srf[SRF_INDICATOR90], Panel230CSM114->Panel230CSM114SwitchesRow);
+		//Switches
+		//First Row
+		Panel230CSM114->MappingCamera1Switch.Init(133, 322, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->MappingCamera2Switch.Init(133, 272, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->LunarSounderSwitch.Init(133, 222, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->HFAntenna1Switch.Init(133, 172, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->HFAntenna2Switch.Init(133, 122, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->HFAntennaJettSwitch.Init(133, 72, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		//Second Row
+		Panel230CSM114->ImageMtnSwitch.Init(228, 309, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->LaserAltmSwitch.Init(228, 237, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->RCDRSwitch.Init(228, 187, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->RadarSwitch.Init(228, 137, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->ModeSwitch.Init(228, 87, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		//Third Row
+		Panel230CSM114->DataSys1Switch.Init(312, 309, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->DataSys2Switch.Init(312, 237, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->IRSwitch.Init(312, 187, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		//Fourth Row
+		Panel230CSM114->PanoramicCamera1Switch.Init(399, 187, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->PanoramicCamera2Switch.Init(399, 137, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		//Fifth Row
+		Panel230CSM114->PanoramicCameraModeSwitch.Init(481, 237, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->PanoramicCameraPWRSwitch.Init(481, 187, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->PanoramicCameraVHOVRDSwitch.Init(481, 137, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->UVSpectSwitch.Init(481, 87, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+
+	}
+
 	Panel250CircuitBreakersRow.Init(AID_PANEL250CIRCUITBRAKERS, MainPanel);
 	BatBusAToPyroBusTieCircuitBraker.Init	(  0, 0, 29, 29, srf[SRF_CIRCUITBRAKER_YELLOW], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatteryBusA, 20.0);
 	PyroASeqACircuitBraker.Init				( 55, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, PyroBatteryA, 20.0);
@@ -2978,6 +3068,12 @@ void Saturn::SetSwitches(int panel) {
 		Panel278J->ExperimentCovers2Indicator.Init(36, 297, 23, 23, srf[SRF_INDICATOR90], Panel278J->Panel278JSwitchesRow);
 		Panel278J->O2Tank3IsolIndicator.Init(37, 57, 23, 23, srf[SRF_INDICATOR90], Panel278J->Panel278JSwitchesRow);
 		Panel278J->ExperimentCoversDeployBraker.Init(124, 395, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel278J->Panel278JSwitchesRow);
+
+		if (pMission->GetPanel230Version() == 2)
+		{
+			Panel278J->ExperimentCovers3Switch.Init(125, 249, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel278J->Panel278JSwitchesRow);
+			Panel278J->ExperimentCovers3Indicator.Init(36, 253, 23, 23, srf[SRF_INDICATOR90], Panel278J->Panel278JSwitchesRow);
+		}
 	}
 
 	SCIInstSwitchRow.Init(AID_PANEL227, MainPanel);
@@ -4470,10 +4566,22 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 	}
 
 	//
-	// Special handling panels 181,277,278,cryo (Apollo 15 and later)
+	// Special handling panels 181,230,277,278,cryo (Apollo 15 and later)
 	//
 	if (id == AID_CSM_PANEL_181)
 		oapiBlt(surf, srf[SRF_CSM_PANEL_181], 0, 0, 0, 0, 432, 251, SURF_PREDEF_CK);
+
+	if (id == AID_CSM_PANEL_230J)
+	{
+		if (pMission->GetPanel230Version() == 1)
+		{
+			oapiBlt(surf, srf[SRF_CSM_PANEL_230_CSM112], 0, 0, 0, 0, 581, 429, SURF_PREDEF_CK);
+		}
+		else if (pMission->GetPanel230Version() == 2)
+		{
+			oapiBlt(surf, srf[SRF_CSM_PANEL_230_CSM114], 0, 0, 0, 0, 581, 429, SURF_PREDEF_CK);
+		}
+	}
 
 	if (id == AID_CSM_PANEL_277)
 		oapiBlt(surf, srf[SRF_CSM_PANEL_277], 0, 0, 0, 0, 155, 195, SURF_PREDEF_CK);
@@ -6564,4 +6672,22 @@ void Saturn::InitSwitches() {
 	ASCPRollSwitch.Register(PSH, "ASCPRollSwitch", 0, 0, 0, 0);	// dummy switch/display for checklist controller
 	ASCPPitchSwitch.Register(PSH, "ASCPPitchSwitch", 0, 0, 0, 0);
 	ASCPYawSwitch.Register(PSH, "ASCPYawSwitch", 0, 0, 0, 0);
+
+	//CSM 112&114 TalkBacks
+	MappingCamera1Indicator.Register(PSH, "MappingCamera1Indicator", true);
+	MappingCamera2Indicator.Register(PSH, "MappingCamera2Indicator", true);
+	PanoramicCameraIndicator.Register(PSH, "PanoramicCameraIndicator", true);
+
+	//CSM 112 TalkBacks
+	GammaBay1Indicator.Register(PSH, "GammaBay1Indicator", true);
+	GammaBay2Indicator.Register(PSH, "GammaBay2Indicator", true);
+	MassSpectrometer1Indicator.Register(PSH, "MassSpec1Indicator", true);
+	MassSpectrometer2Indicator.Register(PSH, "MassSpec2Indicator", true);
+	SubSatIndicator.Register(PSH, "SubSatIndicator", true);
+
+	//CSM 114 TalkBacks
+	LunarSounderIndicator.Register(PSH, "LunarSounderIndicator", true);
+	HFAntenna1Indicator.Register(PSH, "HFAntenna1Indicator", true);
+	HFAntenna2Indicator.Register(PSH, "HFAntenna2Indicator", true);
+	HFAntennaJettIndicator.Register(PSH, "HFAntennaJettIndicator", true);
 }

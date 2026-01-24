@@ -90,6 +90,7 @@ namespace mission {
 	{
 		iSMJCVersion = 1;
 		bJMission = false;
+		iPanel230Version = 0;
 		iPanel277Version = 0;
 		iPanel278Version = 1;
 		iLMDSKYVersion = 2;
@@ -204,6 +205,9 @@ namespace mission {
 			else if (!_strnicmp(line, "JMission=", 9)) {
 				strncpy(buffer, line + 9, 255);
 				bJMission = !_strnicmp(buffer, "TRUE", 4);
+			}
+			else if (!_strnicmp(line, "Panel230Version=", 16)) {
+				sscanf(line + 16, "%d", &iPanel230Version);
 			}
 			else if (!_strnicmp(line, "Panel277Version=", 16)) {
 				sscanf(line + 16, "%d", &iPanel277Version);
@@ -489,6 +493,11 @@ namespace mission {
 	bool Mission::IsJMission() const
 	{
 		return bJMission;
+	}
+
+	int Mission::GetPanel230Version() const
+	{
+		return iPanel230Version;
 	}
 
 	int Mission::GetPanel277Version() const

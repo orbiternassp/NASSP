@@ -1336,6 +1336,8 @@ LDEC::LDEC():
 	DockingRingFinalSeparation = false;
 	CSM_LEM_LockRingSepRelaySignal = false;
 	SIMPyroArmRelay = false;
+	SIMLogicPower = false;
+	SMACPower = false;
 
 	SMSector1LogicPowerBreaker = NULL;
 }
@@ -1427,6 +1429,566 @@ void LDEC::Timestep(double simdt)
 			else
 			{
 				SIMPyroArmRelay = false;
+			}
+			if (SMSector1LogicPowerBreaker->IsPowered() && (Sat->Panel181->SMSector1LogicPower1Switch.IsDown() || Sat->Panel181->SMSector1LogicPower2Switch.IsDown()))
+			{
+				SIMLogicPower = true;
+			}
+			else
+			{
+				SIMLogicPower = false;
+			}
+		}
+
+		if (Sat->Panel181->SMSector1AC2ASystemBraker.IsPowered() &&
+			Sat->Panel181->SMSector1AC2BSystemBraker.IsPowered() &&
+			Sat->Panel181->SMSector1AC2CSystemBraker.IsPowered() &&
+			Sat->Panel181->SMSector1SMACPowerSwitch.IsUp())
+		{
+			SMACPower = true;
+		}
+		else
+		{
+			SMACPower = false;
+		}
+	}
+
+	///CSM 112 (Apollo 15/16) Specific Panel 230 Logic
+	if (Sat->Panel230CSM112)
+	{
+		//Mapping Camera ON/OFF Logic
+		if (SMACPower && Sat->Panel230CSM112->MappingCamera1Switch.IsDown() && (Sat->Panel230CSM112->ImageMtnSwitch.IsDown() || Sat->Panel230CSM112->ImageMtnSwitch.IsCenter()))
+		{
+			// Init
+			if (Sat->MappingCamera1Indicator.GetState() == 1 &&
+				Sat->Panel230CSM112->MappingCamera1IndicatorDelay < 0.0)
+			{
+				Sat->Panel230CSM112->MappingCamera1IndicatorDelay = 0.0;
+				Sat->MappingCamera1Indicator.SetState(0);
+			}
+			else if (Sat->Panel230CSM112->MappingCamera1IndicatorDelay >= 0.0)
+			{
+				Sat->Panel230CSM112->MappingCamera1IndicatorDelay += simdt;
+
+				if (Sat->Panel230CSM112->MappingCamera1IndicatorDelay >= 4.0)
+				{
+					Sat->MappingCamera1Indicator.SetState(1);
+					Sat->Panel230CSM112->MappingCamera1IndicatorDelay = 4.0; // latch
+				}
+			}
+		}
+		else
+		{
+			Sat->Panel230CSM112->MappingCamera1IndicatorDelay = -1.0;
+			Sat->MappingCamera1Indicator.SetState(1);
+		}
+
+		//Mapping Camera Ext/Retr Logic
+		if (SIMLogicPower && Sat->Panel230CSM112->MappingCamera2Switch.IsUp())
+		{
+			Sat->MappingCameraExtended = true;
+			if (Sat->simbay.GetMappingCameraAnimState() == 1)
+			{
+				Sat->MappingCamera2Indicator.SetState(1);
+			}
+		}
+		else if (SIMLogicPower && Sat->Panel230CSM112->MappingCamera2Switch.IsDown())
+		{
+			Sat->MappingCameraExtended = false;
+		}
+
+		//Gamma Bay Deploy/Retract Logic
+		if (SIMLogicPower && Sat->Panel230CSM112->GammaBay1Switch.IsUp() && !Sat->GammaBayJett)
+		{
+			Sat->GammaBayDeployed = true;
+
+			if (Sat->simbay.GetGammaBayAnimState() == 1)
+			{
+				Sat->GammaBay1Indicator.SetState(1);
+			}
+		}
+		else if (Sat->GammaBayDeployed && SIMLogicPower && Sat->Panel230CSM112->GammaBay1Switch.IsDown() && !Sat->GammaBayJett)
+		{
+			Sat->GammaBayDeployed = false;
+		}
+
+		//Gamma Bay Jett Logic
+		if (SIMPyroArmRelay && Sat->Panel230CSM112->GammaBay2Switch.IsDown())
+		{
+			Sat->GammaBayJett = true;
+
+			// Init
+			if (Sat->GammaBay2Indicator.GetState() == 1 &&
+				Sat->Panel230CSM112->GammaBay2IndicatorDelay < 0.0)
+			{
+				Sat->Panel230CSM112->GammaBay2IndicatorDelay = 0.0;
+				Sat->GammaBay2Indicator.SetState(0);
+			}
+			else if (Sat->Panel230CSM112->GammaBay2IndicatorDelay >= 0.0)
+			{
+				Sat->Panel230CSM112->GammaBay2IndicatorDelay += simdt;
+
+				if (Sat->Panel230CSM112->GammaBay2IndicatorDelay >= 4.0)
+				{
+					Sat->GammaBay2Indicator.SetState(1);
+					Sat->Panel230CSM112->GammaBay2IndicatorDelay = 4.0; // latch
+				}
+			}
+		}
+		else
+		{
+			Sat->Panel230CSM112->GammaBay2IndicatorDelay = -1.0;
+			Sat->GammaBay2Indicator.SetState(1);
+		}
+
+		//Mass Spectrometer Deploy/Retract Logic
+		if (SIMLogicPower && Sat->Panel230CSM112->MassSpectrometer1Switch.IsUp() && !Sat->MassSpectrometerJett)
+		{
+			Sat->MassSpectrometerDeployed = true;
+
+			if (Sat->simbay.GetMassSpectrometerAnimState() == 1)
+			{
+				Sat->MassSpectrometer1Indicator.SetState(1);
+			}
+		}
+		else if (Sat->MassSpectrometerDeployed && SIMLogicPower && Sat->Panel230CSM112->MassSpectrometer1Switch.IsDown() && !Sat->MassSpectrometerJett)
+		{
+			Sat->MassSpectrometerDeployed = false;
+		}
+
+		//Mass Spectrometer Jett Logic
+		if (SIMPyroArmRelay && Sat->Panel230CSM112->MassSpectrometer2Switch.IsDown())
+		{
+			Sat->MassSpectrometerJett = true;
+
+			// Init
+			if (Sat->MassSpectrometer2Indicator.GetState() == 1 &&
+				Sat->Panel230CSM112->MassSpectrometer2IndicatorDelay < 0.0)
+			{
+				Sat->Panel230CSM112->MassSpectrometer2IndicatorDelay = 0.0;
+				Sat->MassSpectrometer2Indicator.SetState(0);
+			}
+			else if (Sat->Panel230CSM112->MassSpectrometer2IndicatorDelay >= 0.0)
+			{
+				Sat->Panel230CSM112->MassSpectrometer2IndicatorDelay += simdt;
+
+				if (Sat->Panel230CSM112->MassSpectrometer2IndicatorDelay >= 4.0)
+				{
+					Sat->MassSpectrometer2Indicator.SetState(1);
+					Sat->Panel230CSM112->MassSpectrometer2IndicatorDelay = 4.0; // latch
+				}
+			}
+		}
+		else
+		{
+			Sat->Panel230CSM112->MassSpectrometer2IndicatorDelay = -1.0;
+			Sat->MassSpectrometer2Indicator.SetState(1);
+		}
+
+		///Subsatellite Launch Logic
+		if (SIMPyroArmRelay && Sat->Panel230CSM112->SubSatSwitch.IsUp())
+		{
+			Sat->SubSatRetracted = false;
+			if (!Sat->SubSatLaunched)
+			{
+				Sat->SubSatLaunched = true;
+				Sat->SubSatDelay = 7.0;
+			}
+
+			if (Sat->SubSatDelay >= 0.0)
+			{
+				Sat->SubSatDelay -= simdt;
+
+				if (Sat->SubSatDelay <= 0.0)
+				{
+					Sat->SubSatDelay = -1.0;
+
+					Sat->LaunchSubSatellite();
+					Sat->SubSatelliteMesh();
+				}
+			}
+
+			// Init
+			if (Sat->SubSatIndicator.GetState() == 1 &&
+				Sat->Panel230CSM112->SubSatIndicatorDelay < 0.0)
+			{
+				Sat->Panel230CSM112->SubSatIndicatorDelay = 0.0;
+				Sat->SubSatIndicator.SetState(0);
+			}
+			else if (Sat->Panel230CSM112->SubSatIndicatorDelay >= 0.0)
+			{
+				Sat->Panel230CSM112->SubSatIndicatorDelay += simdt;
+
+				if (Sat->Panel230CSM112->SubSatIndicatorDelay >= 9.0)
+				{
+					Sat->SubSatIndicator.SetState(1);
+					Sat->Panel230CSM112->SubSatIndicatorDelay = 9.0; // latch
+				}
+			}
+		}
+		else if (SIMPyroArmRelay && Sat->Panel230CSM112->SubSatSwitch.IsDown())
+		{
+			Sat->SubSatRetracted = true;
+			// Init
+			if (Sat->SubSatIndicator.GetState() == 1 &&
+				Sat->Panel230CSM112->SubSatIndicatorDelay < 0.0)
+			{
+				Sat->Panel230CSM112->SubSatIndicatorDelay = 0.0;
+				Sat->SubSatIndicator.SetState(0);
+			}
+			else if (Sat->Panel230CSM112->SubSatIndicatorDelay >= 0.0)
+			{
+				Sat->Panel230CSM112->SubSatIndicatorDelay += simdt;
+
+				if (Sat->Panel230CSM112->SubSatIndicatorDelay >= 9.0)
+				{
+					Sat->SubSatIndicator.SetState(1);
+					Sat->Panel230CSM112->SubSatIndicatorDelay = 9.0; // latch
+				}
+			}
+		}
+		else
+		{
+			Sat->Panel230CSM112->SubSatIndicatorDelay = -1.0;
+			Sat->SubSatIndicator.SetState(1);
+		}
+
+		//Panoramic Camera Logic
+		if (SMACPower && Sat->Panel230CSM112->PanoramicCameraPWRSwitch.IsUp())
+		{
+			if (Sat->PanoramicCameraIndicator.GetState() == 1 &&
+				Sat->Panel230CSM112->PanoramicCameraIndicatorDelay < 0.0)
+			{
+				Sat->Panel230CSM112->PanoramicCameraIndicatorDelay = 0.0;
+				Sat->PanoramicCameraIndicator.SetState(0);
+			}
+			else if (Sat->Panel230CSM112->PanoramicCameraIndicatorDelay >= 0.0)
+			{
+				Sat->Panel230CSM112->PanoramicCameraIndicatorDelay += simdt;
+
+				if (Sat->Panel230CSM112->PanoramicCameraIndicatorDelay >= 4.0)
+				{
+					Sat->PanoramicCameraIndicator.SetState(1);
+					Sat->Panel230CSM112->PanoramicCameraIndicatorDelay = 4.0; // latch
+				}
+			}
+
+			if (SMACPower && Sat->Panel230CSM112->PanoramicCameraModeSwitch.IsDown())
+			{
+				Sat->PanoramicCameraON = true;
+
+			}
+			else if (SMACPower && Sat->Panel230CSM112->PanoramicCameraModeSwitch.IsUp())
+			{
+				Sat->PanoramicCameraON = false;
+			}
+		}
+		else
+		{
+			Sat->Panel230CSM112->PanoramicCameraIndicatorDelay = -1.0;
+			Sat->PanoramicCameraIndicator.SetState(1);
+		}
+	}
+
+	///CSM 114 (Apollo 17) Specific Panel 230 Logic
+	if (Sat->Panel230CSM114)
+	{
+		//Mapping Camera ON/OFF Logic
+		if (SMACPower && Sat->Panel230CSM114->MappingCamera1Switch.IsDown() && (Sat->Panel230CSM114->ImageMtnSwitch.IsDown() || Sat->Panel230CSM114->ImageMtnSwitch.IsCenter()))
+		{
+			// Init
+			if (Sat->MappingCamera1Indicator.GetState() == 1 &&
+				Sat->Panel230CSM114->MappingCamera1IndicatorDelay < 0.0)
+			{
+				Sat->Panel230CSM114->MappingCamera1IndicatorDelay = 0.0;
+				Sat->MappingCamera1Indicator.SetState(0);
+			}
+			else if (Sat->Panel230CSM114->MappingCamera1IndicatorDelay >= 0.0)
+			{
+				Sat->Panel230CSM114->MappingCamera1IndicatorDelay += simdt;
+
+				if (Sat->Panel230CSM114->MappingCamera1IndicatorDelay >= 4.0)
+				{
+					Sat->MappingCamera1Indicator.SetState(1);
+					Sat->Panel230CSM114->MappingCamera1IndicatorDelay = 4.0; // latch
+				}
+			}
+		}
+		else
+		{
+			Sat->Panel230CSM114->MappingCamera1IndicatorDelay = -1.0;
+			Sat->MappingCamera1Indicator.SetState(1);
+		}
+
+		//Mapping Camera Ext/Retr Logic
+		if (SIMLogicPower && Sat->Panel230CSM114->MappingCamera2Switch.IsUp())
+		{
+			Sat->MappingCameraExtended = true;
+			if (Sat->simbay.GetMappingCameraAnimState() == 1)
+			{
+				Sat->MappingCamera2Indicator.SetState(1);
+			}
+		}
+		else if (SIMLogicPower && Sat->Panel230CSM114->MappingCamera2Switch.IsDown())
+		{
+			Sat->MappingCameraExtended = false;
+		}
+
+		//Lunar Sounder Logic
+		if (SMACPower && Sat->Panel230CSM114->LunarSounderSwitch.IsDown() && Sat->Panel230CSM114->RCDRSwitch.IsDown() && Sat->Panel230CSM114->RadarSwitch.IsDown())
+		{
+			// Init
+			if (Sat->LunarSounderIndicator.GetState() == 1 &&
+				Sat->Panel230CSM114->LunarSounderIndicatorDelay < 0.0)
+			{
+				Sat->Panel230CSM114->LunarSounderIndicatorDelay = 0.0;
+				Sat->LunarSounderIndicator.SetState(0);
+			}
+			else if (Sat->Panel230CSM114->LunarSounderIndicatorDelay >= 0.0)
+			{
+				Sat->Panel230CSM114->LunarSounderIndicatorDelay += simdt;
+
+				if (Sat->Panel230CSM114->LunarSounderIndicatorDelay >= 4.0)
+				{
+					Sat->LunarSounderIndicator.SetState(1);
+					Sat->Panel230CSM114->LunarSounderIndicatorDelay = 4.0; // latch
+				}
+			}
+		}
+		else
+		{
+			Sat->Panel230CSM114->LunarSounderIndicatorDelay = -1.0;
+			Sat->LunarSounderIndicator.SetState(1);
+		}
+
+		//HF Dipole Antenna 1 Logic
+		if (SIMLogicPower && Sat->Panel230CSM114->HFAntenna1Switch.IsUp() && !Sat->DipoleAntennasJett)
+		{
+			Sat->DipoleAntenna1Deployed = true;
+			Sat->SetDipoleAntennasMesh();
+
+			if (Sat->hf_antenna_1.GetAnimState() == 1)
+			{
+				Sat->HFAntenna1Indicator.SetState(1);
+			}
+		}
+		else if (Sat->DipoleAntenna1Deployed && SIMLogicPower && Sat->Panel230CSM114->HFAntenna1Switch.IsDown() && !Sat->DipoleAntennasJett)
+		{
+			Sat->DipoleAntenna1Deployed = false;
+			Sat->SetDipoleAntennasMesh();
+		}
+
+		//HF Dipole Antenna 2 Logic
+		if (SIMLogicPower && Sat->Panel230CSM114->HFAntenna2Switch.IsUp() && !Sat->DipoleAntennasJett)
+		{
+			Sat->DipoleAntenna2Deployed = true;
+
+			if (Sat->hf_antenna_2.GetAnimState() == 1)
+			{
+				Sat->HFAntenna2Indicator.SetState(1);
+			}
+		}
+		else if (Sat->DipoleAntenna2Deployed && SIMLogicPower && Sat->Panel230CSM114->HFAntenna2Switch.IsDown() && !Sat->DipoleAntennasJett)
+		{
+			Sat->DipoleAntenna2Deployed = false;
+
+		}
+
+		//HF Dipole Antennas Jett Logic
+		if (SIMPyroArmRelay && Sat->Panel230CSM114->HFAntennaJettSwitch.IsDown())
+		{
+			Sat->DipoleAntennasJett = true;
+			Sat->SetDipoleAntennasMesh();
+			// Init
+			if (Sat->HFAntennaJettIndicator.GetState() == 1 &&
+				Sat->Panel230CSM114->HFAntennaJettIndicatorDelay < 0.0)
+			{
+				Sat->Panel230CSM114->HFAntennaJettIndicatorDelay = 0.0;
+				Sat->HFAntennaJettIndicator.SetState(0);
+			}
+			else if (Sat->Panel230CSM114->HFAntennaJettIndicatorDelay >= 0.0)
+			{
+				Sat->Panel230CSM114->HFAntennaJettIndicatorDelay += simdt;
+
+				if (Sat->Panel230CSM114->HFAntennaJettIndicatorDelay >= 4.0)
+				{
+					Sat->HFAntennaJettIndicator.SetState(1);
+					Sat->Panel230CSM114->HFAntennaJettIndicatorDelay = 4.0; // latch
+				}
+			}
+		}
+		else
+		{
+			Sat->Panel230CSM114->HFAntennaJettIndicatorDelay = -1.0;
+			Sat->HFAntennaJettIndicator.SetState(1);
+		}
+
+		//Panoramic Camera Logic
+		if (SMACPower && Sat->Panel230CSM114->PanoramicCameraPWRSwitch.IsUp())
+		{
+			if (Sat->PanoramicCameraIndicator.GetState() == 1 &&
+				Sat->Panel230CSM114->PanoramicCameraIndicatorDelay < 0.0)
+			{
+				Sat->Panel230CSM114->PanoramicCameraIndicatorDelay = 0.0;
+				Sat->PanoramicCameraIndicator.SetState(0);
+			}
+			else if (Sat->Panel230CSM114->PanoramicCameraIndicatorDelay >= 0.0)
+			{
+				Sat->Panel230CSM114->PanoramicCameraIndicatorDelay += simdt;
+
+				if (Sat->Panel230CSM114->PanoramicCameraIndicatorDelay >= 4.0)
+				{
+					Sat->PanoramicCameraIndicator.SetState(1);
+					Sat->Panel230CSM114->PanoramicCameraIndicatorDelay = 4.0; // latch
+				}
+			}
+
+			if (SMACPower && Sat->Panel230CSM114->PanoramicCameraModeSwitch.IsDown())
+			{
+				Sat->PanoramicCameraON = true;
+
+			}
+			else if (SMACPower && Sat->Panel230CSM114->PanoramicCameraModeSwitch.IsUp())
+			{
+				Sat->PanoramicCameraON = false;
+			}
+		}
+		else
+		{
+			Sat->Panel230CSM114->PanoramicCameraIndicatorDelay = -1.0;
+			Sat->PanoramicCameraIndicator.SetState(1);
+		}
+	}
+
+	///SIMBay Covers
+	if (Sat->Panel278J)
+	{
+		///Experiment Cover 1 Logic - Switch & TB (Apollo 15/16/17)
+
+		if (SIMLogicPower && Sat->Panel278J->ExperimentCovers1Switch.IsUp())
+		{
+			Sat->MappingCameraCoverDeployed = true;
+		}
+		else if (SIMLogicPower && Sat->Panel278J->ExperimentCovers1Switch.IsDown())
+		{
+			Sat->MappingCameraCoverDeployed = false;
+		}
+
+		if (SIMLogicPower && (Sat->Panel278J->ExperimentCovers1Switch.IsUp() || Sat->Panel278J->ExperimentCovers1Switch.IsDown()))
+		{
+			if (Sat->Panel278J->ExperimentCovers1Indicator.GetState() == 1 &&
+				Sat->Panel278J->ExperimentCovers1IndicatorDelay < 0.0)
+			{
+				Sat->Panel278J->ExperimentCovers1IndicatorDelay = 0.0;
+				Sat->Panel278J->ExperimentCovers1Indicator.SetState(0);
+			}
+			else if (Sat->Panel278J->ExperimentCovers1IndicatorDelay >= 0.0)
+			{
+				Sat->Panel278J->ExperimentCovers1IndicatorDelay += simdt;
+
+				if (Sat->Panel278J->ExperimentCovers1IndicatorDelay >= 4.0)
+				{
+					Sat->Panel278J->ExperimentCovers1Indicator.SetState(1);
+					Sat->Panel278J->ExperimentCovers1IndicatorDelay = 4.0; // latch
+				}
+			}
+		}
+		else
+		{
+			Sat->Panel278J->ExperimentCovers1IndicatorDelay = -1.0;
+			Sat->Panel278J->ExperimentCovers1Indicator.SetState(1);
+		}
+
+		//Experiment Cover 2 Logic - TB (Apollo 15/16/17)
+		if (SIMLogicPower && (Sat->Panel278J->ExperimentCovers2Switch.IsUp() || Sat->Panel278J->ExperimentCovers2Switch.IsDown()))
+		{
+			if (Sat->Panel278J->ExperimentCovers2Indicator.GetState() == 1 &&
+				Sat->Panel278J->ExperimentCovers2IndicatorDelay < 0.0)
+			{
+				Sat->Panel278J->ExperimentCovers2IndicatorDelay = 0.0;
+				Sat->Panel278J->ExperimentCovers2Indicator.SetState(0);
+			}
+			else if (Sat->Panel278J->ExperimentCovers2IndicatorDelay >= 0.0)
+			{
+				Sat->Panel278J->ExperimentCovers2IndicatorDelay += simdt;
+
+				if (Sat->Panel278J->ExperimentCovers2IndicatorDelay >= 4.0)
+				{
+					Sat->Panel278J->ExperimentCovers2Indicator.SetState(1);
+					Sat->Panel278J->ExperimentCovers2IndicatorDelay = 4.0; // latch
+				}
+			}
+		}
+		else
+		{
+			Sat->Panel278J->ExperimentCovers2IndicatorDelay = -1.0;
+			Sat->Panel278J->ExperimentCovers2Indicator.SetState(1);
+		}
+
+		///CSM 112 Panel 278 Specific
+		if (Sat->Panel230CSM112)
+		{
+			///XRay Cover Logic
+			if (SIMLogicPower && Sat->Panel278J->ExperimentCovers2Switch.IsUp())
+			{
+				Sat->XRayCoverDeployed = true;
+			}
+			else if (SIMLogicPower && Sat->XRayCoverDeployed && Sat->Panel278J->ExperimentCovers2Switch.IsDown())
+			{
+				Sat->XRayCoverDeployed = false;
+
+			}
+		}
+
+		///CSM 114 Panel 278 Specific
+		if (Sat->Panel230CSM114)
+		{
+			///IR Cover Logic
+			if (SIMLogicPower && Sat->Panel278J->ExperimentCovers2Switch.IsUp())
+			{
+				Sat->IRCoverDeployed = true;
+			}
+			else if (SIMLogicPower && Sat->IRCoverDeployed && Sat->Panel278J->ExperimentCovers2Switch.IsDown())
+			{
+				Sat->IRCoverDeployed = false;
+
+			}
+
+			//UV Spect - Experiment Cover 3 Logic - TB (Apollo 17)
+			if (SIMLogicPower && (Sat->Panel278J->ExperimentCovers3Switch.IsUp() || Sat->Panel278J->ExperimentCovers3Switch.IsDown()))
+			{
+				if (Sat->Panel278J->ExperimentCovers3Indicator.GetState() == 1 &&
+					Sat->Panel278J->ExperimentCovers3IndicatorDelay < 0.0)
+				{
+					Sat->Panel278J->ExperimentCovers3IndicatorDelay = 0.0;
+					Sat->Panel278J->ExperimentCovers3Indicator.SetState(0);
+				}
+				else if (Sat->Panel278J->ExperimentCovers3IndicatorDelay >= 0.0)
+				{
+					Sat->Panel278J->ExperimentCovers3IndicatorDelay += simdt;
+
+					if (Sat->Panel278J->ExperimentCovers3IndicatorDelay >= 4.0)
+					{
+						Sat->Panel278J->ExperimentCovers3Indicator.SetState(1);
+						Sat->Panel278J->ExperimentCovers3IndicatorDelay = 4.0; // latch
+					}
+				}
+			}
+			else
+			{
+				Sat->Panel278J->ExperimentCovers3IndicatorDelay = -1.0;
+				Sat->Panel278J->ExperimentCovers3Indicator.SetState(1);
+			}
+
+			///UV Spect Cover Switch Logic
+			if (SIMLogicPower && Sat->Panel278J->ExperimentCovers3Switch.IsUp())
+			{
+				Sat->UVCoverDeployed = true;
+			}
+			else if (SIMLogicPower && Sat->UVCoverDeployed && Sat->Panel278J->ExperimentCovers3Switch.IsDown())
+			{
+				Sat->UVCoverDeployed = false;
+
 			}
 		}
 	}
