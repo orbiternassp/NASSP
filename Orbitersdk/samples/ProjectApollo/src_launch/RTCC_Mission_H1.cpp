@@ -2461,14 +2461,14 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 
 		if (fcn == 400)
 		{
-			t_Tag = calcParams.DOI - 10.0 * 60.0;
+			t_Tag = calcParams.DOI - 10.0 * 60.0;  //SV Time tag DOI - 10 minutes
 		}
 		else
 		{
-			t_Tag = calcParams.LunarLiftoff;
+			t_Tag = calcParams.LunarLiftoff;  //SV Time tag lunar liftoff
 		}
 
-		sv_upl = coast(sv, t_Tag - sv.sv.GMT); //Time tag SV
+		sv_upl = coast(sv, GMTfromGET(t_Tag) - sv.sv.GMT); //Time tag SV
 
 		AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_CSM, sv_upl.sv);
 		LandingSiteUplink(buffer2, RTCC_MPT_LM);

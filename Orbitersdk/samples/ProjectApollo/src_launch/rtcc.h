@@ -1242,31 +1242,40 @@ struct DetailedManeuverTable
 
 struct MPTVehicleDataBlock
 {
+	MPTVehicleDataBlock();
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line, int &inttemp);
 
 	//Word 12 (Bytes 1, 2)
 	std::bitset<4> ConfigCode;
 	//Word 12 (Bytes 3, 4)
-	int ConfigChangeInd = 0;
+	int ConfigChangeInd;
 	//Word 12 (Bytes 5, 6)
-	int TUP = 0;
-	//Word 13
-	double CSMArea = 0.0;
-	//Word 14
-	double SIVBArea = 0.0;
-	//Word 15
-	double LMAscentArea = 0.0;
-	//Word 16
-	double LMDescentArea = 0.0;
-	//Word 17
-	double CSMMass = 0.0;
-	//Word 18
-	double SIVBMass = 0.0;
-	//Word 19
-	double LMAscentMass = 0.0;
-	//Word 20
-	double LMDescentMass = 0.0;
+	int TUP;
+	//Words 13-16
+	union
+	{
+		double Areas[4];
+		struct
+		{
+			double CSMArea;
+			double SIVBArea;
+			double LMAscentArea;
+			double LMDescentArea;
+		};
+	};
+	//Words 17-20
+	union
+	{
+		double Masses[4];
+		struct
+		{
+			double CSMMass;
+			double SIVBMass;
+			double LMAscentMass;
+			double LMDescentMass;
+		};
+	};
 	//Word 21
 	double CSMRCSFuelRemaining = 0.0;
 	//Word 22
@@ -5141,12 +5150,13 @@ public:
 	void MPTGetConfigFromString(const std::string &str, std::bitset<4> &cfg);
 	void MPTGetStringFromConfig(const std::bitset<4> &cfg, char *str);
 	MissionPlanTable *GetMPTPointer(int L);
+	MPTVehicleDataBlock *MPTDockingManeuver(int L, double GMT_BO, PLAWDTOutput &plawdtout);
 protected:
 
 	//Auxiliary subroutines
 	int PMMXFRGroundRules(MissionPlanTable * mpt, double GMTI, unsigned ReplaceMan, bool &LastManReplaceFlag, double &LowerLimit, double &UpperLimit, unsigned &CurMan, double &VectorFetchTime);
 	int PMMXFRFormatManeuverCode(int Table, int Thruster, int Attitude, unsigned Maneuver, std::string ID, int &TVC, std::string &code);
-	int PMMXFRCheckConfigThruster(bool CheckConfig, int CCI, const std::bitset<4> &CCP, int TVC, int Thruster, std::bitset<4> &CC, std::bitset<4> &CCMI);
+	int PMMXFRCheckConfigThruster(bool CheckConfig, double GMT, int L, int CCI, const std::bitset<4> &CCP, int TVC, int Thruster, std::bitset<4> &CC, std::bitset<4> &CCMI);
 	int PMMXFRFetchVector(double GMTI, int L, EphemerisData &sv);
 	int PMMXFRFetchAnchorVector(int L, EphemerisData &sv);
 	void PMMXFRWeightAtInitiation(int CCI, int CCMI, double &weight);
