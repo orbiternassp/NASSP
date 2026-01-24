@@ -1324,11 +1324,22 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 	return 0;
 }
 
+void LEM::DoMeshAnimation(AnimState &state, UINT &anim, double speed, double simdt)
+{
+	if (state.Moving()) {
+		state.Move(simdt / speed);
+		SetAnimation(anim, state.pos);
+	}
+}
+
 void LEM::SetAnimations(double simdt) {
 	//
 	//EVA Antenna
 	//
 	VHF.SetAnimation(EvaAntennaHandle.GetAnimState());
+	DoMeshAnimation(AOT_ReticleKnobState, AOT_ReticleKnobAnimTrans, 0.1, simdt);
+//	DoMeshAnimation(AOT_ReticleKnobRotState, AOT_ReticleKnobAnimRot, 3.0, simdt);
+
 }
 
 //

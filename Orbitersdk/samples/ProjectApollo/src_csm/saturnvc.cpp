@@ -633,7 +633,8 @@ void Saturn::InitVC()
 	srf[SRF_VC_EMS_SCROLL_BORDER] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_border.dds");
 	srf[SRF_VC_EMS_SCROLL_BUG] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_bug.dds");
 	srf[SRF_VC_EMS_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/ems_lights.dds");
-	srf[SRF_VC_INDICATOR] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
+	srf[SRF_VC_INDICATOR] = oapiLoadTexture("ProjectApollo/VC/Indicator_cm.dds");
+	srf[SRF_VC_INDICATOR_LM] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
 	srf[SRF_VC_ECSINDICATOR] = oapiLoadTexture("ProjectApollo/VC/ECSIndicator.dds");
 	srf[SRF_VC_SEQUENCERSWITCHES] = oapiLoadTexture("ProjectApollo/VC/SequencerSwitches.dds");
 	srf[SRF_VC_LVENGLIGHTS_S1B] = oapiLoadTexture("ProjectApollo/VC/lv_eng_s1b.dds");
@@ -1031,15 +1032,15 @@ void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
 //		InitFDAICustomCamera();
 	}
 
-	bool A15Mission = true, A17Mission = true, OtherMission = true;
+	bool A15Pan230Msh = true, A17Pan230Msh = true, OtherPan230Msh = true;	// First Set all Panel 230 meshes to TRUE (hide) -> HideMeshGroup
 	
-	if (pMission->GetPanel278Version() == 2) A15Mission = false;		// Apollo 15 & 16 mission
-	else if (pMission->GetPanel278Version() == 3) A17Mission = false;	// Apollo 17 mission
-	else OtherMission = false;											// All other missions
+	if (pMission->GetPanel278Version() == 2) A15Pan230Msh = false;		// Do not Hide Panel 230 for Apollo 15 & 16 missions
+	else if (pMission->GetPanel278Version() == 3) A17Pan230Msh = false;	// Do not Hide Panel 230 for Apollo 17 mission
+	else OtherPan230Msh = false;										// Do not Hide Panel 230 for all other missions
 
-	for (int i=0; i<NUM_ELEMENTS(Mission11MshGroups); i++) HideMeshGroup(vcidx, Mission11MshGroups[i], OtherMission);
-	for (int i=0; i<NUM_ELEMENTS(Mission15MshGroups); i++) HideMeshGroup(vcidx, Mission15MshGroups[i], A15Mission);
-	for (int i=0; i<NUM_ELEMENTS(Mission17MshGroups); i++) HideMeshGroup(vcidx, Mission17MshGroups[i], A17Mission);
+	for (int i=0; i<NUM_ELEMENTS(Mission11MshGroups); i++) HideMeshGroup(vcidx, Mission11MshGroups[i], OtherPan230Msh);
+	for (int i=0; i<NUM_ELEMENTS(Mission15MshGroups); i++) HideMeshGroup(vcidx, Mission15MshGroups[i], A15Pan230Msh);
+	for (int i=0; i<NUM_ELEMENTS(Mission17MshGroups); i++) HideMeshGroup(vcidx, Mission17MshGroups[i], A17Pan230Msh);
 }
 
 void Saturn::clbkVisualDestroyed(VISHANDLE vis, int refcount) {
@@ -2503,10 +2504,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		skp->Polyline(ems.ScribePntArrayVC, ems.ScribePntCnt);
 
 		oapiReleaseSketchpad(skp);
+		SURFHANDLE SRF_EMS_Tex = oapiGetTextureHandle(hCMVC, VC_TEX_EMS_Scroll_dds);
 
-		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_LEO], 5*TexMul, 4*TexMul, ems.GetScrollOffset()*TexMul, 0, 132*TexMul, 143*TexMul);
-		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BUG], 42*TexMul, (ems.GetGScribe() + 2)*TexMul, 0, 0, 5*TexMul, 5*TexMul, SURF_PREDEF_CK);
-		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142*TexMul, 150*TexMul, SURF_PREDEF_CK);
+		oapiBlt(SRF_EMS_Tex, srf[SRF_VC_EMS_SCROLL_LEO], 5*TexMul, 4*TexMul, ems.GetScrollOffset()*TexMul, 0, 132*TexMul, 143*TexMul);
+		oapiBlt(SRF_EMS_Tex, srf[SRF_VC_EMS_SCROLL_BUG], 42*TexMul, (ems.GetGScribe() + 2)*TexMul, 0, 0, 5*TexMul, 5*TexMul, SURF_PREDEF_CK);
+		oapiBlt(SRF_EMS_Tex, srf[SRF_VC_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142*TexMul, 150*TexMul, SURF_PREDEF_CK);
 		return true;
 	}
 

@@ -553,7 +553,6 @@ public:
 	void StopSeparationPyros();
 
 	void SetAnimations(double);
-
 	void UpdatePointingArrow();
 
 	//
@@ -751,6 +750,8 @@ protected:
 	void SetCompLight(int m, bool state);
 	void SetContactLight(int m, bool state);
 	void SetPowerFailureLight(int m, bool state);
+
+	void DoMeshAnimation(AnimState &, UINT &, double, double);
 
 #ifdef _OPENORBITER
 	void SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
@@ -1798,6 +1799,14 @@ protected:
 	double vcFreeCamz;
 	double vcFreeCamSpeed;
 	double vcFreeCamMaxOffset;
+
+	//
+	// AOT ReticleKnob
+	//
+	UINT AOT_ReticleKnobAnimTrans;
+	AnimState AOT_ReticleKnobState;
+	UINT AOT_ReticleKnobAnimRot;
+	AnimState AOT_ReticleKnobRotState;
 
 	//
 	// Failures.

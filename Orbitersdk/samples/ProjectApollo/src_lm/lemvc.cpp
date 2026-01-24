@@ -1031,6 +1031,19 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_EVA_Ant_Handle, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);		// Area ...
 	oapiVCSetAreaClickmode_Spherical(AID_VC_EVA_Ant_Handle, EVAAntHandleLoc + ofs, 0.05);	// Area Mode of the Click point
 
+	// AOT_ReticleKnob
+	const VECTOR3 AOTReticleDetentLocation ={ 0.066068, 0.743351, 1.38436 };
+	oapiVCRegisterArea(AID_VC_AOT_ReticleKnob, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_AOT_ReticleKnob, AOTReticleDetentLocation + ofs, 0.01);
+
+	const VECTOR3 AOTReticleDetentLocationRotTop ={ 0.072334, 0.768783, 1.38451 };
+	oapiVCRegisterArea(AID_VC_AOT_ReticleKnobRotTop, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_AOT_ReticleKnobRotTop, AOTReticleDetentLocationRotTop + ofs, 0.01);
+
+	const VECTOR3 AOTReticleDetentLocationRotBottom ={ 0.072334, 0.717842, 1.38451 };
+	oapiVCRegisterArea(AID_VC_AOT_ReticleKnobRotBottom, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_AOT_ReticleKnobRotBottom, AOTReticleDetentLocationRotBottom + ofs, 0.01);
+
 	// LMVC Lighting
 	oapiVCRegisterArea(AID_LMVC_LIGHTING,  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
@@ -1547,6 +1560,37 @@ void LEM::RegisterActiveAreas()
 bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 {
 	switch (id) {
+		case AID_VC_AOT_ReticleKnob:
+			if (AOT_ReticleKnobState.Closed()) {
+				AOT_ReticleKnobState.action = AnimState::OPENING;
+				SetAnimation(AOT_ReticleKnobAnimTrans, 1.0);
+			}
+			else {
+				AOT_ReticleKnobState.action = AnimState::CLOSING;
+				SetAnimation(AOT_ReticleKnobAnimTrans, 0.0);
+			}
+			return true;
+
+		case AID_VC_AOT_ReticleKnobRotTop:
+			if (AOT_ReticleKnobState.Closed()) {
+				if (event & PANEL_MOUSE_RBPRESSED) 	optics.ReticleMoved = -0.01;
+				else if (event & PANEL_MOUSE_LBPRESSED) optics.ReticleMoved = -0.52;
+				SetAnimation(AOT_ReticleKnobAnimRot, AOT_ReticleKnobRotState.pos -= optics.ReticleMoved /200.0);
+				if (AOT_ReticleKnobRotState.pos > 1.0) AOT_ReticleKnobRotState.pos = 0.0;
+				if (event & PANEL_MOUSE_UP) optics.ReticleMoved = 0;
+			}
+			return true;
+
+		case AID_VC_AOT_ReticleKnobRotBottom:
+			if (AOT_ReticleKnobState.Closed()) {
+				if (event & PANEL_MOUSE_RBPRESSED) 	optics.ReticleMoved = 0.01;
+				else if (event & PANEL_MOUSE_LBPRESSED) optics.ReticleMoved = 0.52;
+				SetAnimation(AOT_ReticleKnobAnimRot, AOT_ReticleKnobRotState.pos -= optics.ReticleMoved /200.0);
+				if (AOT_ReticleKnobRotState.pos < 0.0) AOT_ReticleKnobRotState.pos = 1.0;
+				if (event & PANEL_MOUSE_UP) optics.ReticleMoved = 0;
+			}
+			return true;
+
 		case AID_VC_OVERHEADHATCH:
 			OverheadHatch.Toggle();
 			return true;
@@ -2172,7 +2216,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_RETICLEDISP:
-		optics.PaintReticleAngle(surf, srf[SRF_AOTFONT_VC]);
+		optics.PaintReticleAngle(surf, srf[SRF_AOTFONT_VC], TexMul);
 		return true;
 
 	case AID_VC_START_BUTTON_RED:
@@ -2200,6 +2244,18 @@ void LEM::InitVCAnimations() {
 void LEM::DefineVCAnimations()
 {
 	MainPanelVC.ClearSwitches();
+
+	// AOT_ReticleKnob Translation
+	static UINT AOT_ReticleKnob[1] = { VC_GRP_AOT_ReticleKnob };
+	static MGROUP_TRANSLATE AOT_ReticleKnobMeshTrans(vcidx, AOT_ReticleKnob, 1, _V( -0.01,  -0.0,  -0.0));
+	AOT_ReticleKnobAnimTrans = CreateAnimation(0.0);
+	AddAnimationComponent(AOT_ReticleKnobAnimTrans, 0.0,  1.0, &AOT_ReticleKnobMeshTrans);
+	
+	// AOT_ReticleKnob Rotation
+	const VECTOR3 AOTReticleDetentLocation ={ 0.066068, 0.743313, 1.38451 };
+	static MGROUP_ROTATE AOT_ReticleKnobMeshRot(vcidx, AOT_ReticleKnob, 1, AOTReticleDetentLocation, _V(-1, 0, 0), (float)(-360.0 * RAD));
+	AOT_ReticleKnobAnimRot = CreateAnimation(1.0);
+	AddAnimationComponent(AOT_ReticleKnobAnimRot, 0.0,  1.0, &AOT_ReticleKnobMeshRot);
 
 	//Panel 1
 

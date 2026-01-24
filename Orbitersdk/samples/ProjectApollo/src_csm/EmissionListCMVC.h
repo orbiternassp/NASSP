@@ -30,7 +30,8 @@ DWORD IntergralLights_P8_NTex[] = {
 
 	// TODO Material List
 //	VC_MAT_CWLights_P8_t,
-	VC_MAT_EMS_Scroll_Timer_P1_t,
+	VC_MAT_EMS_Scroll,
+	VC_MAT_Timer_P1,
 	VC_MAT_FDAI_Ball_t,
 	VC_MAT_AttitudeSetNumbers
 
@@ -57,8 +58,7 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_AdditionalParts_t,
 //	VC_MAT_AttitudeSetNumbers,
 	VC_MAT_Altimeter_Cover,
-	VC_MAT_Sextant_Eyepiece,
-	VC_MAT_Telescope_Eyepiece,
+	VC_MAT_Optics,
 //	VC_MAT_CM_Switches,
 	VC_MAT_Accelerometer_Cover,
 	VC_MAT_DSKY_Glareshade,
@@ -298,6 +298,8 @@ DWORD IntegralLights_P100[] = {
 	VC_MAT_DSKY_Keys_LEB_t,
 	VC_MAT_Rotarys_P100_t,
 	VC_MAT_Panel306,
+	VC_MAT_csm_right_LEB_panel_230_A15,
+	VC_MAT_csm_right_LEB_panel_230_A17
 //	VC_MAT_TW_Switches_LEB
 };
 

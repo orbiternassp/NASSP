@@ -3824,10 +3824,10 @@ void IndicatorSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface) {
 	}
 
 	if (drawState && displayState < 3.0)
-		displayState += oapiGetSimStep() * 4.0;
+		displayState += oapiGetSimStep() * 64.0;
 
 	if (!drawState && displayState > 0.0)
-		displayState -= oapiGetSimStep() * 4.0;
+		displayState -= oapiGetSimStep() * 64.0;
 
 	if (displayState > 3.0) displayState = 3.0;
 	if (displayState < 0.0) displayState = 0.0;
