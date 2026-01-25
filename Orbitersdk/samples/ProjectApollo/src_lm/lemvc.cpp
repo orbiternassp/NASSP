@@ -1561,17 +1561,7 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 {
 	switch (id) {
 		case AID_VC_AOTRETICLEDETENT:
-			if (optics.ReticlePush() == true) {
-				if (AOTReticleDetent.GetState() == 0) {
-					AOT_ReticleKnobState.action = AnimState::OPENING;
-					SetAnimation(AOT_ReticleKnobAnimTrans, 1.0);
-				}
-				else {
-					AOT_ReticleKnobState.action = AnimState::CLOSING;
-					SetAnimation(AOT_ReticleKnobAnimTrans, 0.0);
-				}
 			optics.AOTDetentToggle();
-			}
 			return true;
 
 		case AID_VC_AOT_ReticleKnobRotTop:

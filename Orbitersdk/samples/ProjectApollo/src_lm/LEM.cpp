@@ -1345,9 +1345,10 @@ void LEM::SetAnimations(double simdt) {
 	//EVA Antenna
 	//
 	VHF.SetAnimation(EvaAntennaHandle.GetAnimState());
-	DoMeshAnimation(AOT_ReticleKnobState, AOT_ReticleKnobAnimTrans, 0.1, simdt);
-//	DoMeshAnimation(AOT_ReticleKnobRotState, AOT_ReticleKnobAnimRot, 3.0, simdt);
 
+	if (AOTReticleDetent.GetState() == 0) AOT_ReticleKnobState.action = AnimState::CLOSING;
+	else AOT_ReticleKnobState.action = AnimState::OPENING;
+	DoMeshAnimation(AOT_ReticleKnobState, AOT_ReticleKnobAnimTrans, 0.1, simdt);
 }
 
 //
