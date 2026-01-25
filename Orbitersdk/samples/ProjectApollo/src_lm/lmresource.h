@@ -1359,7 +1359,7 @@
 
 #define AID_VC_EVA_Ant_Handle			5100
 
-#define AID_VC_AOT_ReticleKnob			5101
+#define AID_VC_AOTRETICLEDETENT			5101
 #define AID_VC_AOT_ReticleKnobRotTop	5102
 #define AID_VC_AOT_ReticleKnobRotBottom	5103
 

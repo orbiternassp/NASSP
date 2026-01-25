@@ -1033,8 +1033,8 @@ void LEM::RegisterActiveAreas()
 
 	// AOT_ReticleKnob
 	const VECTOR3 AOTReticleDetentLocation ={ 0.066068, 0.743351, 1.38436 };
-	oapiVCRegisterArea(AID_VC_AOT_ReticleKnob, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_AOT_ReticleKnob, AOTReticleDetentLocation + ofs, 0.01);
+	oapiVCRegisterArea(AID_VC_AOTRETICLEDETENT, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_AOTRETICLEDETENT, AOTReticleDetentLocation + ofs, 0.01);
 
 	const VECTOR3 AOTReticleDetentLocationRotTop ={ 0.072334, 0.768783, 1.38451 };
 	oapiVCRegisterArea(AID_VC_AOT_ReticleKnobRotTop, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP);
@@ -1560,32 +1560,35 @@ void LEM::RegisterActiveAreas()
 bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 {
 	switch (id) {
-		case AID_VC_AOT_ReticleKnob:
-			if (AOT_ReticleKnobState.Closed()) {
-				AOT_ReticleKnobState.action = AnimState::OPENING;
-				SetAnimation(AOT_ReticleKnobAnimTrans, 1.0);
-			}
-			else {
-				AOT_ReticleKnobState.action = AnimState::CLOSING;
-				SetAnimation(AOT_ReticleKnobAnimTrans, 0.0);
+		case AID_VC_AOTRETICLEDETENT:
+			if (optics.ReticlePush() == true) {
+				if (AOTReticleDetent.GetState() == 0) {
+					AOT_ReticleKnobState.action = AnimState::OPENING;
+					SetAnimation(AOT_ReticleKnobAnimTrans, 1.0);
+				}
+				else {
+					AOT_ReticleKnobState.action = AnimState::CLOSING;
+					SetAnimation(AOT_ReticleKnobAnimTrans, 0.0);
+				}
+			optics.AOTDetentToggle();
 			}
 			return true;
 
 		case AID_VC_AOT_ReticleKnobRotTop:
-			if (AOT_ReticleKnobState.Closed()) {
+			if (AOTReticleDetent.GetState() == 0) {
 				if (event & PANEL_MOUSE_RBPRESSED) 	optics.ReticleMoved = -0.01;
 				else if (event & PANEL_MOUSE_LBPRESSED) optics.ReticleMoved = -0.52;
-				SetAnimation(AOT_ReticleKnobAnimRot, AOT_ReticleKnobRotState.pos -= optics.ReticleMoved /200.0);
+				SetAnimation(AOT_ReticleKnobAnimRot, AOT_ReticleKnobRotState.pos -= optics.ReticleMoved / 200.0);
 				if (AOT_ReticleKnobRotState.pos > 1.0) AOT_ReticleKnobRotState.pos = 0.0;
 				if (event & PANEL_MOUSE_UP) optics.ReticleMoved = 0;
 			}
 			return true;
 
 		case AID_VC_AOT_ReticleKnobRotBottom:
-			if (AOT_ReticleKnobState.Closed()) {
+			if (AOTReticleDetent.GetState() == 0) {
 				if (event & PANEL_MOUSE_RBPRESSED) 	optics.ReticleMoved = 0.01;
 				else if (event & PANEL_MOUSE_LBPRESSED) optics.ReticleMoved = 0.52;
-				SetAnimation(AOT_ReticleKnobAnimRot, AOT_ReticleKnobRotState.pos -= optics.ReticleMoved /200.0);
+				SetAnimation(AOT_ReticleKnobAnimRot, AOT_ReticleKnobRotState.pos -= optics.ReticleMoved / 200.0);
 				if (AOT_ReticleKnobRotState.pos < 0.0) AOT_ReticleKnobRotState.pos = 1.0;
 				if (event & PANEL_MOUSE_UP) optics.ReticleMoved = 0;
 			}
@@ -3306,6 +3309,12 @@ void LEM::DefineVCAnimations()
 	MainPanelVC.AddSwitch(&ASCBattery6ATB, AID_VC_ASC_BATTERY_TALKBACKS);
 	MainPanelVC.AddSwitch(&ASCBattery6BTB, AID_VC_ASC_BATTERY_TALKBACKS);
 
+/*	// AOT Reticle Knob
+	MainPanelVC.AddSwitch(&AOTReticleDetent, AID_VC_AOTRETICLEDETENT);
+	AOTReticleDetent.SetReference(AOTReticleDetentLocation);
+	AOTReticleDetent.SetDirection(_V(-0.003, 0, 0));
+	AOTReticleDetent.DefineMeshGroup(VC_GRP_AOT_ReticleKnob);
+*/
 	//Panel 16
 
 	const VECTOR3 p16row1_vector = { 0.003 * -sin(P16R1_TILT - (90.0 * RAD)), 0.003 * cos(P16R1_TILT - (90.0 * RAD)), 0.0 };
