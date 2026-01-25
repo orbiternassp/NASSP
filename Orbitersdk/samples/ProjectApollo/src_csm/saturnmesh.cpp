@@ -2270,8 +2270,8 @@ void Saturn::SetRunningLights() {
 
 	int i;
 
-	runningLightsPos[0] = { 1.42451, 1.42569, 0.809995 }; //+Y Fwd Green
-	runningLightsPos[1] = { 1.42451, 1.42569, -3.22576 }; //+Y Tail Green
+	runningLightsPos[0] = { 1.7929, 0.920507, 0.809995 }; //+Y Fwd Green
+	runningLightsPos[1] = { 1.7929, 0.920507, -3.22576 }; //+Y Tail Green
 
 	runningLightsPos[2] = { -1.42451, 1.42569, 0.809995 }; //-Y Fwd Red
 	runningLightsPos[3] = { -1.42451, 1.42569, -3.22576 }; //-Y Tail Red
