@@ -92,6 +92,8 @@ MESHHANDLE hcmseatsfolded;
 MESHHANDLE hcmseatsunfolded;
 MESHHANDLE hcmCOAScdr;
 MESHHANDLE hcmCOAScdrreticle;
+
+
 MESHHANDLE hSMSIMBAY1; //Apollo 15/16 SIMBAY
 MESHHANDLE hSMSIMBAY2; //Apollo 17 SIMBAY
 MESHHANDLE hYAGI;
@@ -671,6 +673,8 @@ void SaturnInitMeshes()
 	LOAD_MESH(hcmseatsunfolded, "ProjectApollo/CM-VC-SeatsUnfolded");
 	LOAD_MESH(hcmCOAScdr, "ProjectApollo/CM-COAS-CDR");
 	LOAD_MESH(hcmCOAScdrreticle, "ProjectApollo/CM-COAS-CDR_Reticle");
+
+
 	LOAD_MESH(hSMSIMBAY1, "ProjectApollo/SM-SIMBAY1");
 	LOAD_MESH(hSMSIMBAY2, "ProjectApollo/SM-SIMBAY2");
 	LOAD_MESH(hYAGI, "ProjectApollo/Yagi");
@@ -719,14 +723,12 @@ void Saturn::AddSM(double offset, bool showSPS)
 	}
 
 	if (pMission->GetPanel230Version() == 1) {
-		UINT simbay1idx;
 		mesh_dir = _V(0, SMVO, offset);
 		simbay1idx = AddMesh(hSMSIMBAY1, &mesh_dir);
 		simbay.DefineAnimations(simbay1idx);
 	}
 
 	if (pMission->GetPanel230Version() == 2) {
-		UINT simbay2idx;
 		mesh_dir = _V(0, SMVO, offset);
 		simbay2idx = AddMesh(hSMSIMBAY2, &mesh_dir);
 		simbay.DefineAnimations(simbay2idx);
@@ -1079,13 +1081,11 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
     // Apollo 7-16 and Skylab have no Yagi and Dipole antennas.
     //
 	if (pMission->GetPanel230Version() == 2) {
-		UINT yagiidx;
 		mesh_dir = _V(0, 0, 28.9578 - CGOffset);
 		yagiidx = AddMesh(hYAGI, &mesh_dir);
 	}
 	// Dipole Antenna boxes.
 	if (pMission->GetPanel230Version() == 2) {
-		UINT dipoleboxesidx;
 		mesh_dir = _V(0, 0, 28.8078 - CGOffset);
 		dipoleboxesidx = AddMesh(hDIPOLEBOXES, &mesh_dir);
 	}

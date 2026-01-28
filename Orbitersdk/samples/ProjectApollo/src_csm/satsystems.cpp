@@ -483,6 +483,9 @@ void Saturn::SystemsInit() {
 	RRTsystem.Init(this, &RNDZXPNDRFLTBusCB, &RNDZXPDRSwitch, &Panel100RNDZXPDRSwitch, &LeftSystemTestRotarySwitch, &RightSystemTestRotarySwitch);
 	cte.Init(&CentralTimingEquipMNACB, &CentralTimingEquipMNBCB);
 
+	//SIMBay instruments init
+	simbay.Init(this);
+
 	//HF Dipole Antennas init (only CSM 114)
 	hf_antenna_1.Init(this);
 	hf_antenna_2.Init(this);
@@ -1880,6 +1883,10 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		EventTimer306Display.SystemTimestep(tFactor);
 		H2CryoPressureSwitch.SystemTimestep(tFactor);
 		O2CryoPressureSwitch.SystemTimestep(tFactor);
+
+		simbay.SystemTimestep(tFactor);
+		hf_antenna_1.SystemTimestep(tFactor);
+		hf_antenna_2.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);

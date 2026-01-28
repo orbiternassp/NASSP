@@ -1735,7 +1735,7 @@ void LDEC::Timestep(double simdt)
 		}
 
 		//Lunar Sounder Logic
-		if (SMACPower && Sat->Panel230CSM114->LunarSounderSwitch.IsDown() && Sat->Panel230CSM114->RCDRSwitch.IsDown() && Sat->Panel230CSM114->RadarSwitch.IsDown())
+		if (SMACPower && Sat->Panel230CSM114->LunarSounderSwitch.IsDown() && Sat->Panel230CSM114->RCDRSwitch.IsUp() && Sat->Panel230CSM114->RadarSwitch.IsDown())
 		{
 			// Init
 			if (Sat->LunarSounderIndicator.GetState() == 1 &&

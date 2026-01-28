@@ -42,7 +42,6 @@
 #include "tracer.h"
 #include "Mission.h"
 #include "papi.h"
-#include "SIMBay.h"
 
 using namespace nassp;
 
@@ -50,31 +49,31 @@ SIMBay::SIMBay() {
 	sat = NULL;
 
 	//CSM 112&114 Common animations
-	MappingCameraCoverAnim = 0;
+	MappingCameraCoverAnim = -1;
 	MappingCameraCoverAnimState = 0;
-	PanoramicCameraAnim = 0;
+	PanoramicCameraAnim = -1;
 	PanoramicCameraAnimState = 0;
-	MappingCameraAnim = 0;
+	MappingCameraAnim = -1;
 	MappingCameraAnimState = 0;
 
 	//CSM 112 Specific Animations
-	GammaBayAnim = 0;
+	GammaBayAnim = -1;
 	GammaBayAnimState = 0;
-	GammaBayJettAnim = 0;
+	GammaBayJettAnim = -1;
 	GammaBayJettAnimState = 0;
-	MassSpectrometerAnim = 0;
+	MassSpectrometerAnim = -1;
 	MassSpectrometerAnimState = 0;
-	MassSpectrometerJettAnim = 0;
+	MassSpectrometerJettAnim = -1;
 	MassSpectrometerJettAnimState = 0;
-	SubSatCoverAnim = 0;
+	SubSatCoverAnim = -1;
 	SubSatCoverAnimState = 0;
-	XRayCoverAnim = 0;
+	XRayCoverAnim = -1;
 	XRayCoverAnimState = 0;
 
 	//CSM 114 Specific Animations
-	IRCoverAnim = 0;
+	IRCoverAnim = -1;
 	IRCoverAnimState = 0;
-	UVCoverAnim = 0;
+	UVCoverAnim = -1;
 	UVCoverAnimState = 0;
 }
 
@@ -84,48 +83,52 @@ void SIMBay::Init(Saturn* vessel) {
 
 void SIMBay::DefineAnimations(UINT idx)
 {
-	///CSM112-114 Common Animations:
-	///Mapping Camera Cover
-	ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedXfr1;
-	ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedYfr1;
-	ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedZfr1;
-	ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedXfr2;
-	ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedYfr2;
-	ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedZfr2;
-	static UINT SIMBAYGrp16[1] = { 14 };
-	const VECTOR3 COVER_PIVOT = { 1.08675, 1.51867, 1.29618 };    //Cover Pivot Point
-	MGROUP_ROTATE* mgr_SIMBAYGrp16Xfr1 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(1, 0, 0), (float)(RAD * -43.1));
-	MGROUP_ROTATE* mgr_SIMBAYGrp16Yfr1 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 1, 0), (float)(RAD * 26));
-	MGROUP_ROTATE* mgr_SIMBAYGrp16Zfr1 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 7.92));
-	MGROUP_ROTATE* mgr_SIMBAYGrp16Xfr2 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(1, 0, 0), (float)(RAD * -31.5));
-	MGROUP_ROTATE* mgr_SIMBAYGrp16Yfr2 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 1, 0), (float)(RAD * 23.6));
-	MGROUP_ROTATE* mgr_SIMBAYGrp16Zfr2 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 0, 1), (float)(RAD * -5));
-	MappingCameraCoverAnim = sat->CreateAnimation(0.0);
-	ach_SIMBAYGrp16DeployedXfr1 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.0, 0.5, mgr_SIMBAYGrp16Yfr1);
-	ach_SIMBAYGrp16DeployedZfr1 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.0, 0.5, mgr_SIMBAYGrp16Zfr1);
-	ach_SIMBAYGrp16DeployedYfr1 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.0, 0.5, mgr_SIMBAYGrp16Xfr1);
-	ach_SIMBAYGrp16DeployedXfr2 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.5, 1.0, mgr_SIMBAYGrp16Xfr2);
-	ach_SIMBAYGrp16DeployedZfr2 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.5, 1.0, mgr_SIMBAYGrp16Yfr2);
-	ach_SIMBAYGrp16DeployedYfr2 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.5, 1.0, mgr_SIMBAYGrp16Zfr2);
+	if (sat->pMission->GetPanel230Version() == 1 || sat->pMission->GetPanel230Version() == 2)
+	{
+		///CSM112-114 Common Animations:
+		///Mapping Camera Cover
+		ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedXfr1;
+		ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedYfr1;
+		ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedZfr1;
+		ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedXfr2;
+		ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedYfr2;
+		ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp16DeployedZfr2;
+		static UINT SIMBAYGrp16[1] = { 14 };
+		const VECTOR3 COVER_PIVOT = { 1.08675, 1.51867, 1.29618 };    //Cover Pivot Point
+		MGROUP_ROTATE* mgr_SIMBAYGrp16Xfr1 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(1, 0, 0), (float)(RAD * -43.1));
+		MGROUP_ROTATE* mgr_SIMBAYGrp16Yfr1 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 1, 0), (float)(RAD * 26));
+		MGROUP_ROTATE* mgr_SIMBAYGrp16Zfr1 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 0, 1), (float)(RAD * 7.92));
+		MGROUP_ROTATE* mgr_SIMBAYGrp16Xfr2 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(1, 0, 0), (float)(RAD * -31.5));
+		MGROUP_ROTATE* mgr_SIMBAYGrp16Yfr2 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 1, 0), (float)(RAD * 23.6));
+		MGROUP_ROTATE* mgr_SIMBAYGrp16Zfr2 = new MGROUP_ROTATE(idx, SIMBAYGrp16, 1, COVER_PIVOT, _V(0, 0, 1), (float)(RAD * -5));
+		MappingCameraCoverAnim = sat->CreateAnimation(0.0);
+		ach_SIMBAYGrp16DeployedXfr1 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.0, 0.5, mgr_SIMBAYGrp16Yfr1);
+		ach_SIMBAYGrp16DeployedZfr1 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.0, 0.5, mgr_SIMBAYGrp16Zfr1);
+		ach_SIMBAYGrp16DeployedYfr1 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.0, 0.5, mgr_SIMBAYGrp16Xfr1);
+		ach_SIMBAYGrp16DeployedXfr2 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.5, 1.0, mgr_SIMBAYGrp16Xfr2);
+		ach_SIMBAYGrp16DeployedZfr2 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.5, 1.0, mgr_SIMBAYGrp16Yfr2);
+		ach_SIMBAYGrp16DeployedYfr2 = sat->AddAnimationComponent(MappingCameraCoverAnim, 0.5, 1.0, mgr_SIMBAYGrp16Zfr2);
 
-	//Mapping Camera extend
-	ANIMATIONCOMPONENT_HANDLE ach_MappingGrp;
-	ANIMATIONCOMPONENT_HANDLE ach_ShadeGrp;
-	static UINT MappingGrp[9] = { 1,2,3,4,14,18,19,20,21 };
-	static UINT ShadeGrp[1] = { 21 };
-	MGROUP_TRANSLATE* mgt_MappingGrp = new MGROUP_TRANSLATE(idx, MappingGrp, 9, _V(0.161347, 0.234723, 0));
-	MGROUP_TRANSLATE* mgt_ShadeGrp = new MGROUP_TRANSLATE(idx, ShadeGrp, 1, _V(-0.119963, 0.084116, 0));
-	MappingCameraAnim = sat->CreateAnimation(0.0);
-	ach_MappingGrp = sat->AddAnimationComponent(MappingCameraAnim, 0.0, 0.5, mgt_MappingGrp);
-	ach_ShadeGrp = sat->AddAnimationComponent(MappingCameraAnim, 0.5, 1.0, mgt_ShadeGrp);
+		//Mapping Camera extend
+		ANIMATIONCOMPONENT_HANDLE ach_MappingGrp;
+		ANIMATIONCOMPONENT_HANDLE ach_ShadeGrp;
+		static UINT MappingGrp[9] = { 1,2,3,4,14,18,19,20,21 };
+		static UINT ShadeGrp[1] = { 21 };
+		MGROUP_TRANSLATE* mgt_MappingGrp = new MGROUP_TRANSLATE(idx, MappingGrp, 9, _V(0.161347, 0.234723, 0));
+		MGROUP_TRANSLATE* mgt_ShadeGrp = new MGROUP_TRANSLATE(idx, ShadeGrp, 1, _V(-0.119963, 0.084116, 0));
+		MappingCameraAnim = sat->CreateAnimation(0.0);
+		ach_MappingGrp = sat->AddAnimationComponent(MappingCameraAnim, 0.0, 0.5, mgt_MappingGrp);
+		ach_ShadeGrp = sat->AddAnimationComponent(MappingCameraAnim, 0.5, 1.0, mgt_ShadeGrp);
 
-	//Panoramic Camera
-	ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp9and10Z;
-	static UINT SIMBAYGrp9and10[2] = { 9,10 };
-	const VECTOR3 PAN_PIVOT = { 1.17471, 1.08905, 0.934385 };    //Camera Pivot Point
-	MGROUP_ROTATE* mgr_SIMBAYGrp9and10Z = new MGROUP_ROTATE(idx, SIMBAYGrp9and10, 2, PAN_PIVOT, _V(0, 0, 1), (float)(RAD * 141));
-	PanoramicCameraAnim = sat->CreateAnimation(0.0);
-	ach_SIMBAYGrp9and10Z = sat->AddAnimationComponent(PanoramicCameraAnim, 0.0, 1.0, mgr_SIMBAYGrp9and10Z);
+		//Panoramic Camera
+		ANIMATIONCOMPONENT_HANDLE ach_SIMBAYGrp9and10Z;
+		static UINT SIMBAYGrp9and10[2] = { 9,10 };
+		const VECTOR3 PAN_PIVOT = { 1.17471, 1.08905, 0.934385 };    //Camera Pivot Point
+		MGROUP_ROTATE* mgr_SIMBAYGrp9and10Z = new MGROUP_ROTATE(idx, SIMBAYGrp9and10, 2, PAN_PIVOT, _V(0, 0, 1), (float)(RAD * 141));
+		PanoramicCameraAnim = sat->CreateAnimation(0.0);
+		ach_SIMBAYGrp9and10Z = sat->AddAnimationComponent(PanoramicCameraAnim, 0.0, 1.0, mgr_SIMBAYGrp9and10Z);
+
+	}
 
 	///CSM 112 Specific Animations
 	if (sat->pMission->GetPanel230Version() == 1)
@@ -271,7 +274,7 @@ void SIMBay::DefineAnimations(UINT idx)
 		ach_SIMBAYGrp7and31Y = sat->AddAnimationComponent(SubSatCoverAnim, 0.0, 1.0, mgr_SIMBAYGrp7and31Y);
 		ach_SIMBAYGrp7and31Z = sat->AddAnimationComponent(SubSatCoverAnim, 0.5, 1.0, mgr_SIMBAYGrp7and31Z);
 	}
-		
+
 	///CSM 114 Specific Animations:
 	if (sat->pMission->GetPanel230Version() == 2)
 	{
@@ -303,201 +306,210 @@ void SIMBay::DefineAnimations(UINT idx)
 }
 
 
-void SIMBay::TimeStep(double simt, double simdt)
+void SIMBay::SystemTimestep(double simdt)
 {
 	double speed = 0.33; // anim duration: 3 sec
 	double mappingspeed = 1.0 / 80; // mapping camera extend anim duration: 1m 20sec
 	double spectspeed = 1.0 / 160; // spectrometers deploy anim duration: 2m 40sec
 
-	//CSM 112&114 Common Animations
-	//MappingCameraCover Deploying
-	if (sat->MappingCameraCoverDeployed)
+	if (sat->pMission->GetPanel230Version() == 1 || sat->pMission->GetPanel230Version() == 2)
 	{
-		MappingCameraCoverAnimState += simdt * speed;
-		if (MappingCameraCoverAnimState > 1.0)
-			MappingCameraCoverAnimState = 1.0;
-	}
-	else
-	{
-		MappingCameraCoverAnimState -= simdt * speed;
-		if (MappingCameraCoverAnimState < 0.0)
-			MappingCameraCoverAnimState = 0.0;
-	}
-	sat->SetAnimation(MappingCameraCoverAnim, MappingCameraCoverAnimState);
-
-	//Panoramic Camera
-	if (sat->PanoramicCameraON)
-	{
-		PanoramicCameraAnimState += simdt * speed;
-		if (PanoramicCameraAnimState > 1.0)
-			PanoramicCameraAnimState = 1.0;
-	}
-	else
-	{
-		PanoramicCameraAnimState -= simdt * speed;
-		if (PanoramicCameraAnimState < 0.0)
-			PanoramicCameraAnimState = 0.0;
-	}
-	sat->SetAnimation(PanoramicCameraAnim, PanoramicCameraAnimState);
-
-	//Mapping Camera Extend
-	if (sat->MappingCameraExtended)
-	{
-		MappingCameraAnimState += simdt * mappingspeed;
-		if (MappingCameraAnimState > 1.0)
-			MappingCameraAnimState = 1.0;
-	}
-	else
-	{
-		MappingCameraAnimState -= simdt * mappingspeed;
-		if (MappingCameraAnimState < 0.0)
-			MappingCameraAnimState = 0.0;
-	}
-	sat->SetAnimation(MappingCameraAnim, MappingCameraAnimState);
-
-	if (MappingCameraAnimState < 1)
-	{
-		sat->MappingCamera2Indicator.SetState(0);
-
-		if (MappingCameraAnimState == 0)
+		//CSM 112&114 Common Animations
+		//MappingCameraCover Deploying
+		if (sat->MappingCameraCoverDeployed)
 		{
-			sat->MappingCamera2Indicator.SetState(1);
+			MappingCameraCoverAnimState += simdt * speed;
+			if (MappingCameraCoverAnimState > 1.0)
+				MappingCameraCoverAnimState = 1.0;
+		}
+		else
+		{
+			MappingCameraCoverAnimState -= simdt * speed;
+			if (MappingCameraCoverAnimState < 0.0)
+				MappingCameraCoverAnimState = 0.0;
+		}
+		sat->SetAnimation(MappingCameraCoverAnim, MappingCameraCoverAnimState);
+
+		//Panoramic Camera
+		if (sat->PanoramicCameraON)
+		{
+			PanoramicCameraAnimState += simdt * speed;
+			if (PanoramicCameraAnimState > 1.0)
+				PanoramicCameraAnimState = 1.0;
+		}
+		else
+		{
+			PanoramicCameraAnimState -= simdt * speed;
+			if (PanoramicCameraAnimState < 0.0)
+				PanoramicCameraAnimState = 0.0;
+		}
+		sat->SetAnimation(PanoramicCameraAnim, PanoramicCameraAnimState);
+
+		//Mapping Camera Extend
+		if (sat->MappingCameraExtended)
+		{
+			MappingCameraAnimState += simdt * mappingspeed;
+			if (MappingCameraAnimState > 1.0)
+				MappingCameraAnimState = 1.0;
+		}
+		else
+		{
+			MappingCameraAnimState -= simdt * mappingspeed;
+			if (MappingCameraAnimState < 0.0)
+				MappingCameraAnimState = 0.0;
+		}
+		sat->SetAnimation(MappingCameraAnim, MappingCameraAnimState);
+
+		if (MappingCameraAnimState < 1)
+		{
+			sat->MappingCamera2Indicator.SetState(0);
+
+			if (MappingCameraAnimState == 0)
+			{
+				sat->MappingCamera2Indicator.SetState(1);
+			}
 		}
 	}
 
-	//CSM 112 Specific Animations
-	//Gamma Bay animaton
-	if (sat->GammaBayDeployed)
+	if (sat->pMission->GetPanel230Version() == 1)
 	{
-		GammaBayAnimState += simdt * spectspeed;
-		if (GammaBayAnimState > 1.0)
-			GammaBayAnimState = 1.0;
-	}
-	else
-	{
-		GammaBayAnimState -= simdt * spectspeed;
-		if (GammaBayAnimState < 0.0)
-			GammaBayAnimState = 0.0;
-	}
-	sat->SetAnimation(GammaBayAnim, GammaBayAnimState);
-
-	if (GammaBayAnimState < 1)
-	{
-		sat->GammaBay1Indicator.SetState(0);
-
-		if (GammaBayAnimState == 0)
+		//CSM 112 Specific Animations
+		//Gamma Bay animaton
+		if (sat->GammaBayDeployed)
 		{
-			sat->GammaBay1Indicator.SetState(1);
+			GammaBayAnimState += simdt * spectspeed;
+			if (GammaBayAnimState > 1.0)
+				GammaBayAnimState = 1.0;
 		}
-	}
-
-	//Gamma Bay Spectrometer Jett Animation
-	if (sat->GammaBayJett)
-	{
-		GammaBayJettAnimState = 1;
-	}
-	else
-	{
-		GammaBayJettAnimState = 0;
-	}
-	sat->SetAnimation(GammaBayJettAnim, GammaBayJettAnimState);
-
-	//Mass Spectrometer animaton
-	if (sat->MassSpectrometerDeployed)
-	{
-		MassSpectrometerAnimState += simdt * spectspeed;
-		if (MassSpectrometerAnimState > 1.0)
-			MassSpectrometerAnimState = 1.0;
-	}
-	else
-	{
-		MassSpectrometerAnimState -= simdt * spectspeed;
-		if (MassSpectrometerAnimState < 0.0)
-			MassSpectrometerAnimState = 0.0;
-	}
-	sat->SetAnimation(MassSpectrometerAnim, MassSpectrometerAnimState);
-
-	if (MassSpectrometerAnimState < 1)
-	{
-		sat->MassSpectrometer1Indicator.SetState(0);
-
-		if (MassSpectrometerAnimState == 0)
+		else
 		{
-			sat->MassSpectrometer1Indicator.SetState(1);
+			GammaBayAnimState -= simdt * spectspeed;
+			if (GammaBayAnimState < 0.0)
+				GammaBayAnimState = 0.0;
 		}
+		sat->SetAnimation(GammaBayAnim, GammaBayAnimState);
+
+		if (GammaBayAnimState < 1)
+		{
+			sat->GammaBay1Indicator.SetState(0);
+
+			if (GammaBayAnimState == 0)
+			{
+				sat->GammaBay1Indicator.SetState(1);
+			}
+		}
+
+		//Gamma Bay Spectrometer Jett Animation
+		if (sat->GammaBayJett)
+		{
+			GammaBayJettAnimState = 1;
+		}
+		else
+		{
+			GammaBayJettAnimState = 0;
+		}
+		sat->SetAnimation(GammaBayJettAnim, GammaBayJettAnimState);
+
+		//Mass Spectrometer animaton
+		if (sat->MassSpectrometerDeployed)
+		{
+			MassSpectrometerAnimState += simdt * spectspeed;
+			if (MassSpectrometerAnimState > 1.0)
+				MassSpectrometerAnimState = 1.0;
+		}
+		else
+		{
+			MassSpectrometerAnimState -= simdt * spectspeed;
+			if (MassSpectrometerAnimState < 0.0)
+				MassSpectrometerAnimState = 0.0;
+		}
+		sat->SetAnimation(MassSpectrometerAnim, MassSpectrometerAnimState);
+
+		if (MassSpectrometerAnimState < 1)
+		{
+			sat->MassSpectrometer1Indicator.SetState(0);
+
+			if (MassSpectrometerAnimState == 0)
+			{
+				sat->MassSpectrometer1Indicator.SetState(1);
+			}
+		}
+
+		//Gamma Bay Spectrometer Jett Animation
+		if (sat->MassSpectrometerJett)
+		{
+			MassSpectrometerJettAnimState = 1;
+		}
+		else
+		{
+			MassSpectrometerJettAnimState = 0;
+		}
+		sat->SetAnimation(MassSpectrometerJettAnim, MassSpectrometerJettAnimState);
+
+		//XRay Cover animation
+		if (sat->XRayCoverDeployed)
+		{
+			XRayCoverAnimState += simdt * speed;
+			if (XRayCoverAnimState > 1.0)
+				XRayCoverAnimState = 1.0;
+		}
+		else
+		{
+			XRayCoverAnimState -= simdt * speed;
+			if (XRayCoverAnimState < 0.0)
+				XRayCoverAnimState = 0.0;
+		}
+		sat->SetAnimation(XRayCoverAnim, XRayCoverAnimState);
+
+		//SubSat Launch Animation
+		if (sat->SubSatLaunched && !sat->SubSatRetracted)
+		{
+			SubSatCoverAnimState += simdt * speed;
+			if (SubSatCoverAnimState > 1.0)
+				SubSatCoverAnimState = 1.0;
+		}
+		else if (sat->SubSatLaunched && sat->SubSatRetracted)
+		{
+			SubSatCoverAnimState -= simdt * speed;
+			if (SubSatCoverAnimState < 0.0)
+				SubSatCoverAnimState = 0.0;
+		}
+		sat->SetAnimation(SubSatCoverAnim, SubSatCoverAnimState);
 	}
 
-	//Gamma Bay Spectrometer Jett Animation
-	if (sat->MassSpectrometerJett)
+	if (sat->pMission->GetPanel230Version() == 2)
 	{
-		MassSpectrometerJettAnimState = 1;
-	}
-	else
-	{
-		MassSpectrometerJettAnimState = 0;
-	}
-	sat->SetAnimation(MassSpectrometerJettAnim, MassSpectrometerJettAnimState);
+		//CSM 114 Specific Animations
+		//IRCover Deploying
+		if (sat->IRCoverDeployed)
+		{
+			IRCoverAnimState += simdt * speed;
+			if (IRCoverAnimState > 1.0)
+				IRCoverAnimState = 1.0;
+		}
+		else
+		{
+			IRCoverAnimState -= simdt * speed;
+			if (IRCoverAnimState < 0.0)
+				IRCoverAnimState = 0.0;
+		}
+		sat->SetAnimation(IRCoverAnim, IRCoverAnimState);
 
-	//XRay Cover animation
-	if (sat->XRayCoverDeployed)
-	{
-		XRayCoverAnimState += simdt * speed;
-		if (XRayCoverAnimState > 1.0)
-			XRayCoverAnimState = 1.0;
+		//UVCover Deploying
+		if (sat->UVCoverDeployed)
+		{
+			UVCoverAnimState += simdt * speed;
+			if (UVCoverAnimState > 1.0)
+				UVCoverAnimState = 1.0;
+		}
+		else
+		{
+			UVCoverAnimState -= simdt * speed;
+			if (UVCoverAnimState < 0.0)
+				UVCoverAnimState = 0.0;
+		}
+		sat->SetAnimation(UVCoverAnim, UVCoverAnimState);
 	}
-	else
-	{
-		XRayCoverAnimState -= simdt * speed;
-		if (XRayCoverAnimState < 0.0)
-			XRayCoverAnimState = 0.0;
-	}
-	sat->SetAnimation(XRayCoverAnim, XRayCoverAnimState);
-
-	//SubSat Launch Animation
-	if (sat->SubSatLaunched && !sat->SubSatRetracted)
-	{
-		SubSatCoverAnimState += simdt * speed;
-		if (SubSatCoverAnimState > 1.0)
-			SubSatCoverAnimState = 1.0;
-	}
-	else if (sat->SubSatLaunched && sat->SubSatRetracted)
-	{
-		SubSatCoverAnimState -= simdt * speed;
-		if (SubSatCoverAnimState < 0.0)
-			SubSatCoverAnimState = 0.0;
-	}
-	sat->SetAnimation(SubSatCoverAnim, SubSatCoverAnimState);
-
-	//CSM 114 Specific Animations
-	//IRCover Deploying
-	if (sat->IRCoverDeployed)
-	{
-		IRCoverAnimState += simdt * speed;
-		if (IRCoverAnimState > 1.0)
-			IRCoverAnimState = 1.0;
-	}
-	else
-	{
-		IRCoverAnimState -= simdt * speed;
-		if (IRCoverAnimState < 0.0)
-			IRCoverAnimState = 0.0;
-	}
-	sat->SetAnimation(IRCoverAnim, IRCoverAnimState);
-
-	//UVCover Deploying
-	if (sat->UVCoverDeployed)
-	{
-		UVCoverAnimState += simdt * speed;
-		if (UVCoverAnimState > 1.0)
-			UVCoverAnimState = 1.0;
-	}
-	else
-	{
-		UVCoverAnimState -= simdt * speed;
-		if (UVCoverAnimState < 0.0)
-			UVCoverAnimState = 0.0;
-	}
-	sat->SetAnimation(UVCoverAnim, UVCoverAnimState);
 }
 
 // Load

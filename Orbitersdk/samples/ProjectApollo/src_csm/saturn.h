@@ -1261,11 +1261,11 @@ public:
 
 	void SetSIMBayPanelMesh();
 
+	void AddCMMeshes(const VECTOR3 &mesh_dir);
+
 	void SetDipoleAntennasMesh(); //Dipole Antennas mesh visibility (Jett or No Jett)
 
 	void SubSatelliteMesh(); //Subsatellite (stored) mesh visibility (at cover deploy)
-
-	void AddCMMeshes(const VECTOR3 &mesh_dir);
 
 	///
 	/// Check whether the Launch Escape Tower is attached.
@@ -1727,10 +1727,6 @@ protected:
 	FDAI fdaiLeft;
 	int fdaiDisabled;
 	int fdaiSmooth;
-
-	///SIMBay Animations
-	UINT DipoleAntenna1Anim;
-	UINT DipoleAntenna2Anim;
 
 	//Panels
 
@@ -4116,11 +4112,7 @@ protected:
 	int coascdridx;
 	int coascdrreticleidx;
 	DEVMESHHANDLE vcmesh;
-	int yagiidx;
-	int dipoleboxesidx;
-	int dipoleantenna1idx;
-	int dipoleantenna2idx;
-	int subsatellitestoredidx;
+
 
 	double DockAngle;
 
@@ -4134,6 +4126,14 @@ protected:
 	double LastFuelWeight;
 	double CurrentFuelWeight;
 	VECTOR3 currentCoG;
+
+	int yagiidx;
+	int simbay1idx;
+	int simbay2idx;
+	int dipoleboxesidx;
+	int dipoleantenna1idx;
+	int dipoleantenna2idx;
+	int subsatellitestoredidx;
 
 	//
 	// Panels
@@ -4819,6 +4819,7 @@ protected:
 	friend class AR_GCore;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
+
 	// Friend class Simbay equipment
 	friend class HF_Antenna_1;
 	friend class HF_Antenna_2;
@@ -4855,7 +4856,11 @@ extern MESHHANDLE hcmseatsfolded;
 extern MESHHANDLE hcmseatsunfolded;
 extern MESHHANDLE hcmCOAScdr;
 extern MESHHANDLE hcmCOAScdrreticle;
+
+
 extern MESHHANDLE hYAGI;
+extern MESHHANDLE hSMSIMBAY1;
+extern MESHHANDLE hSMSIMBAY2;
 extern MESHHANDLE hDIPOLEBOXES;
 extern MESHHANDLE hDIPOLEANTENNA1;
 extern MESHHANDLE hDIPOLEANTENNA2;

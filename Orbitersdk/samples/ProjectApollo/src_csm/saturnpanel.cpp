@@ -2958,7 +2958,7 @@ void Saturn::SetSwitches(int panel) {
 		//Second Row
 		Panel230CSM114->ImageMtnSwitch.Init(228, 309, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
 		Panel230CSM114->LaserAltmSwitch.Init(228, 237, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
-		Panel230CSM114->RCDRSwitch.Init(228, 187, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
+		Panel230CSM114->RCDRSwitch.Init(228, 187, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
 		Panel230CSM114->RadarSwitch.Init(228, 137, 29, 30, srf[SRF_SWITCH90], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
 		Panel230CSM114->ModeSwitch.Init(228, 87, 29, 30, srf[SRF_THREEPOSSWITCH90_RIGHT], srf[SRF_BORDER_29x30], Panel230CSM114->Panel230CSM114SwitchesRow);
 		//Third Row

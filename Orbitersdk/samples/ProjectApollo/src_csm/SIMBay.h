@@ -24,8 +24,6 @@
 #pragma once
 
 #include "RF_calc.h"
-#include "paCBGmessageID.h"
-#include "timingequipment.h"
 
 class Saturn;
 
@@ -35,7 +33,7 @@ public:
 	SIMBay();
 	void Init(Saturn* vessel);					// Initialization
 	void DefineAnimations(UINT idx);
-	void TimeStep(double simt, double simdt);   // TimeStep
+	void SystemTimestep(double simdt);   // TimeStep
 	void MappingCameraLoadState(char* line);
 	void MappingCameraSaveState(FILEHANDLE scn);
 	void GammaBayLoadState(char* line);

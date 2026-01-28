@@ -728,7 +728,6 @@ public:
 	void SetAnimation(double state);
 	void UpdateAnimation(double simdt);
 	void DeleteAnimations();
-	void TimeStep(double simt, double simdt);   // TimeStep
 	void SystemTimestep(double simdt);			// System Timestep
 	void LoadState(char* line);
 	void SaveState(FILEHANDLE scn);
@@ -752,7 +751,6 @@ public:
 	void SetAnimation(double state);
 	void UpdateAnimation(double simdt);
 	void DeleteAnimations();
-	void TimeStep(double simt, double simdt);   // TimeStep
 	void SystemTimestep(double simdt);			// System Timestep
 	void LoadState(char* line);
 	void SaveState(FILEHANDLE scn);

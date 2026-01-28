@@ -1023,7 +1023,7 @@ public:
 	//
 	ThreePosSwitch ImageMtnSwitch;
 	ToggleSwitch LaserAltmSwitch;
-	ToggleSwitch RCDRSwitch;
+	ThreePosSwitch RCDRSwitch;
 	ToggleSwitch RadarSwitch;
 	ThreePosSwitch ModeSwitch;
 	//
