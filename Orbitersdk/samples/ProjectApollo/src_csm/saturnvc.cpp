@@ -40,6 +40,7 @@
 #include <gcConst.h>
 #endif
 
+#include "Mission.h"
 #include "nasspsound.h"
 #include "toggleswitch.h"
 #include "apolloguidance.h"
@@ -53,6 +54,7 @@
 #include "CM-VC-SeatsFolded_Resource.h"
 #include "CM-VC-SeatsUnfolded_Resource.h"
 #include "EmissionListCMVC.h"
+#include "MissionSpecificPanels.h"
 
 // ==============================================================
 // VC Constants
@@ -78,6 +80,8 @@ const int	P16_SWITCHCOUNT = 3;
 const int	P100_SWITCHCOUNT = 6;
 const int	P101_SWITCHCOUNT = 4;
 const int	P122_SWITCHCOUNT = 7;
+const int	P230A15_SWITCHCOUNT = 24;
+const int	P230A17_SWITCHCOUNT = 20;
 const int	P30x_SWITCHCOUNT = 6;
 const int	P306_SWITCHCOUNT = 8;
 
@@ -449,6 +453,23 @@ const VECTOR3 P122_PUSHB_POS[P122_PUSHBCOUNT] = {
 {0.4032, -0.6998, 0.0853}, {0.4032, -0.6998, 0.0630}, {0.4260, -0.6998, 0.0961}, {0.4260, -0.6998, 0.0739}
 };
 
+// Panel 230 Apollo 15-16 switches
+const VECTOR3 P230A15_TOGGLE_POS[P230A15_SWITCHCOUNT] = {
+{1.09588, -0.13771, -0.03036}, {1.09588, -0.11498, -0.03036}, {1.09588, -0.09225, -0.03036}, {1.09588, -0.06951, -0.03036}, {1.09588, -0.04678, -0.03036},
+{1.09588, -0.02405, -0.03036}, {1.09588, -0.13096, -0.07374}, {1.09588, -0.09884, -0.07374}, {1.09588, -0.07330, -0.07374}, {1.09588, -0.05026, -0.07374},
+{1.09588, -0.02727, -0.07374}, {1.09588, -0.13096, -0.11322}, {1.09588, -0.09884, -0.11322}, {1.09588, -0.07330, -0.11322}, {1.09588, -0.05026, -0.11322},
+{1.09588, -0.02727, -0.11322}, {1.09588, -0.07330, -0.15285}, {1.09588, -0.05026, -0.15285}, {1.09588, -0.02727, -0.15285}, {1.09588, -0.13096, -0.19228},
+{1.09588, -0.09884, -0.19228}, {1.09588, -0.07330, -0.19228}, {1.09588, -0.05026, -0.19228}, {1.09588, -0.02727, -0.19228}
+};
+
+// Panel 230 Apollo 17 switches
+const VECTOR3 P230A17_TOGGLE_POS[P230A17_SWITCHCOUNT] = {
+{1.09588, -0.13695, -0.03149}, {1.09588, -0.11498, -0.03149}, {1.09588, -0.09239, -0.03149}, {1.09588, -0.07026, -0.03149}, {1.09588, -0.04678, -0.03149},
+{1.09588, -0.02374, -0.03149}, {1.09588, -0.13127, -0.07514}, {1.09588, -0.09846, -0.07514}, {1.09588, -0.07370, -0.07514}, {1.09588, -0.04955, -0.07514},
+{1.09588, -0.02692, -0.07514}, {1.09588, -0.13104, -0.11361}, {1.09588, -0.09871, -0.11381}, {1.09588, -0.07319, -0.11400}, {1.09588, -0.07281, -0.15343},
+{1.09588, -0.04811, -0.15363}, {1.09588, -0.10029, -0.19101}, {1.09588, -0.07456, -0.19121}, {1.09588, -0.04989, -0.19140}, {1.09588, -0.02672, -0.19160}
+};
+
 // Panel 300/301/302/303/305 Levers etc.
 const VECTOR3 Panel300_SuitFlowValve_HandleLocation =	{-0.6429,  0.0393, 0.4842};
 const VECTOR3 Panel301_SuitFlowValve_HandleLocation =	{-0.6495,  0.0409, 0.3251};
@@ -612,7 +633,8 @@ void Saturn::InitVC()
 	srf[SRF_VC_EMS_SCROLL_BORDER] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_border.dds");
 	srf[SRF_VC_EMS_SCROLL_BUG] = oapiLoadTexture("ProjectApollo/VC/EMSscroll_bug.dds");
 	srf[SRF_VC_EMS_LIGHTS] = oapiLoadTexture("ProjectApollo/VC/ems_lights.dds");
-	srf[SRF_VC_INDICATOR] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
+	srf[SRF_VC_INDICATOR] = oapiLoadTexture("ProjectApollo/VC/Indicator_cm.dds");
+	srf[SRF_VC_INDICATOR_LM] = oapiLoadTexture("ProjectApollo/VC/Indicator.dds");
 	srf[SRF_VC_ECSINDICATOR] = oapiLoadTexture("ProjectApollo/VC/ECSIndicator.dds");
 	srf[SRF_VC_SEQUENCERSWITCHES] = oapiLoadTexture("ProjectApollo/VC/SequencerSwitches.dds");
 	srf[SRF_VC_LVENGLIGHTS_S1B] = oapiLoadTexture("ProjectApollo/VC/lv_eng_s1b.dds");
@@ -1009,6 +1031,16 @@ void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
 
 //		InitFDAICustomCamera();
 	}
+
+	bool A15Pan230Msh = true, A17Pan230Msh = true, OtherPan230Msh = true;	// First Set all Panel 230 meshes to TRUE (hide) -> HideMeshGroup
+	
+	if (pMission->GetPanel278Version() == 2) A15Pan230Msh = false;		// Do not Hide Panel 230 for Apollo 15 & 16 missions
+	else if (pMission->GetPanel278Version() == 3) A17Pan230Msh = false;	// Do not Hide Panel 230 for Apollo 17 mission
+	else OtherPan230Msh = false;										// Do not Hide Panel 230 for all other missions
+
+	for (int i=0; i<NUM_ELEMENTS(Mission11MshGroups); i++) HideMeshGroup(vcidx, Mission11MshGroups[i], OtherPan230Msh);
+	for (int i=0; i<NUM_ELEMENTS(Mission15MshGroups); i++) HideMeshGroup(vcidx, Mission15MshGroups[i], A15Pan230Msh);
+	for (int i=0; i<NUM_ELEMENTS(Mission17MshGroups); i++) HideMeshGroup(vcidx, Mission17MshGroups[i], A17Pan230Msh);
 }
 
 void Saturn::clbkVisualDestroyed(VISHANDLE vis, int refcount) {
@@ -1944,41 +1976,6 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	//int i;
 	SetCameraCatchAngle(5.0*RAD);
 
-	if (ordealState.pos <= 0) {
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_01_d, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_02_d, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_03_d, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_04_d, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_05_d, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_06_d, true);
-		HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot_d, true);
-
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_01, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_02, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_03, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_04, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_05, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_06, false);
-		HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot, false);
-	}
-	else {
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_01, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_02, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_03, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_04, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_05, true);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_06, true);
-		HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot, true);
-
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_01_d, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_02_d, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_03_d, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_04_d, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_05_d, false);
-		HideMeshGroup(vcidx, VC_GRP_Sw_P13_06_d, false);
-		HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot_d, false);
-	}
-
 	switch (id) {
 	//case areaidentifier
 	//	Redraw Panel stuff
@@ -2224,14 +2221,49 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, EMSPoint05GLight, MAT_LIGHT, 1.0, 1);
 		}
 
+		// Temporary place
+		if (ordealState.pos <= 0) {
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_01_d, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_02_d, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_03_d, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_04_d, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_05_d, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_06_d, true);
+			HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot_d, true);
+
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_01, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_02, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_03, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_04, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_05, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_06, false);
+			HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot, false);
+		}
+		else {
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_01, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_02, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_03, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_04, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_05, true);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_06, true);
+			HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot, true);
+
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_01_d, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_02_d, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_03_d, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_04_d, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_05_d, false);
+			HideMeshGroup(vcidx, VC_GRP_Sw_P13_06_d, false);
+			HideMeshGroup(vcidx, VC_GRP_ORDEAL_Rot_d, false);
+		}
+
 		return true;
 	}
 
 	case AID_CMVC_POINTINGARROW:
-	{
 		UpdatePointingArrow();
 		SetVCCueCardsArrows();
-	}
+		return true;
 
 	case AID_VC_CUE_CARDS_LIGHTING:
 	{
@@ -2472,10 +2504,11 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		skp->Polyline(ems.ScribePntArrayVC, ems.ScribePntCnt);
 
 		oapiReleaseSketchpad(skp);
+		SURFHANDLE SRF_EMS_Tex = oapiGetTextureHandle(hCMVC, VC_TEX_EMS_Scroll_dds);
 
-		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_LEO], 5*TexMul, 4*TexMul, ems.GetScrollOffset()*TexMul, 0, 132*TexMul, 143*TexMul);
-		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BUG], 42*TexMul, (ems.GetGScribe() + 2)*TexMul, 0, 0, 5*TexMul, 5*TexMul, SURF_PREDEF_CK);
-		oapiBlt(surf, srf[SRF_VC_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142*TexMul, 150*TexMul, SURF_PREDEF_CK);
+		oapiBlt(SRF_EMS_Tex, srf[SRF_VC_EMS_SCROLL_LEO], 5*TexMul, 4*TexMul, ems.GetScrollOffset()*TexMul, 0, 132*TexMul, 143*TexMul);
+		oapiBlt(SRF_EMS_Tex, srf[SRF_VC_EMS_SCROLL_BUG], 42*TexMul, (ems.GetGScribe() + 2)*TexMul, 0, 0, 5*TexMul, 5*TexMul, SURF_PREDEF_CK);
+		oapiBlt(SRF_EMS_Tex, srf[SRF_VC_EMS_SCROLL_BORDER], 0, 0, 0, 0, 142*TexMul, 150*TexMul, SURF_PREDEF_CK);
 		return true;
 	}
 
@@ -4017,88 +4050,88 @@ void Saturn::DefineVCAnimations()
 	PartPressCO2Meter.SetRotationRange(RAD * 38.67);
 	PartPressCO2Meter.DefineMeshGroup(VC_GRP_Needle_P2_17);
 
-	NEEDLE_POS = { -0.2005, 0.9289, 0.4364 };
+	NEEDLE_POS = { -0.20503, 0.92950, 0.43544 };
 
 	MainPanelVC.AddSwitch(&SuitCabinDeltaPMeter);
 	SuitCabinDeltaPMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
-	SuitCabinDeltaPMeter.SetRotationRange(RAD * 110);
+	SuitCabinDeltaPMeter.SetRotationRange(RAD * 90);
 	SuitCabinDeltaPMeter.DefineMeshGroup(VC_GRP_Needle_P2_18);
 
-	NEEDLE_POS = { -0.1741, 0.9289, 0.4364 };
+	NEEDLE_POS = { -0.17009, 0.92953, 0.43544 };
 
 	MainPanelVC.AddSwitch(&RightO2FlowMeter);
 	RightO2FlowMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	RightO2FlowMeter.SetRotationRange(RAD * 110);
+	RightO2FlowMeter.SetRotationRange(RAD * 90);
 	RightO2FlowMeter.DefineMeshGroup(VC_GRP_Needle_P2_19);
 
-	NEEDLE_POS = { 0.1030, 0.6457, 0.3416 };
+	NEEDLE_POS = { 0.09840, 0.64636, 0.34041 };
 
 	MainPanelVC.AddSwitch(&EcsRadTempInletMeter);
 	EcsRadTempInletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
-	EcsRadTempInletMeter.SetRotationRange(RAD * 110);
+	EcsRadTempInletMeter.SetRotationRange(RAD * 90);
 	EcsRadTempInletMeter.DefineMeshGroup(VC_GRP_Needle_P2_20);
 
-	NEEDLE_POS = { 0.1294, 0.6457, 0.3416 };
+	NEEDLE_POS = { 0.13328, 0.64636, 0.34042 };
 
 	MainPanelVC.AddSwitch(&EcsRadTempPrimOutletMeter);
 	EcsRadTempPrimOutletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	EcsRadTempPrimOutletMeter.SetRotationRange(RAD * 110);
+	EcsRadTempPrimOutletMeter.SetRotationRange(RAD * 90);
 	EcsRadTempPrimOutletMeter.DefineMeshGroup(VC_GRP_Needle_P2_21);
 
-	NEEDLE_POS = { 0.1740, 0.6457, 0.3416 };
+	NEEDLE_POS = { 0.16903, 0.64633, 0.34052 };
 
 	MainPanelVC.AddSwitch(&EcsRadTempSecOutletMeter);
 	EcsRadTempSecOutletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
-	EcsRadTempSecOutletMeter.SetRotationRange(RAD * 110);
+	EcsRadTempSecOutletMeter.SetRotationRange(RAD * 90);
 	EcsRadTempSecOutletMeter.DefineMeshGroup(VC_GRP_Needle_P2_22);
 
-	NEEDLE_POS = { 0.2004, 0.6457, 0.3416 };
+	NEEDLE_POS = { 0.20390, 0.64633, 0.34052 };
 
 	MainPanelVC.AddSwitch(&GlyEvapTempOutletMeter);
 	GlyEvapTempOutletMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	GlyEvapTempOutletMeter.SetRotationRange(RAD * 110);
+	GlyEvapTempOutletMeter.SetRotationRange(RAD * 90);
 	GlyEvapTempOutletMeter.DefineMeshGroup(VC_GRP_Needle_P2_23);
 
-	NEEDLE_POS = { 0.2438, 0.6457, 0.3416 };
+	NEEDLE_POS = { 0.23942, 0.64642, 0.34055 };
 
 	MainPanelVC.AddSwitch(&GlyEvapSteamPressMeter);
 	GlyEvapSteamPressMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
-	GlyEvapSteamPressMeter.SetRotationRange(RAD * 110);
+	GlyEvapSteamPressMeter.SetRotationRange(RAD * 90);
 	GlyEvapSteamPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_24);
 
-	NEEDLE_POS = { 0.2702, 0.6457, 0.3416 };
+	NEEDLE_POS = { 0.27413, 0.64642, 0.34055 };
 
 	MainPanelVC.AddSwitch(&GlycolDischPressMeter);
 	GlycolDischPressMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	GlycolDischPressMeter.SetRotationRange(RAD * 110);
+	GlycolDischPressMeter.SetRotationRange(RAD * 90);
 	GlycolDischPressMeter.DefineMeshGroup(VC_GRP_Needle_P2_25);
 
-	NEEDLE_POS = { 0.1737, 0.5763, 0.3183 };
+	NEEDLE_POS = { 0.16904, 0.57689, 0.31726 };
 
 	MainPanelVC.AddSwitch(&LeftO2FlowMeter);
 	LeftO2FlowMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
-	LeftO2FlowMeter.SetRotationRange(RAD * 110);
+	LeftO2FlowMeter.SetRotationRange(RAD * 90);
 	LeftO2FlowMeter.DefineMeshGroup(VC_GRP_Needle_P2_26);
 
-	NEEDLE_POS = { 0.2000, 0.5763, 0.3183 };
+	NEEDLE_POS = { 0.20402, 0.57689, 0.31727 };
 
 	MainPanelVC.AddSwitch(&SuitComprDeltaPMeter);
 	SuitComprDeltaPMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	SuitComprDeltaPMeter.SetRotationRange(RAD * 110);
+	SuitComprDeltaPMeter.SetRotationRange(RAD * 90);
 	SuitComprDeltaPMeter.DefineMeshGroup(VC_GRP_Needle_P2_27);
 
-	NEEDLE_POS = { 0.2439, 0.5763, 0.3183 };
+	NEEDLE_POS = { 0.23949, 0.57675, 0.31721 };
 
 	MainPanelVC.AddSwitch(&AccumQuantityMeter);
 	AccumQuantityMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS_NEG);
-	AccumQuantityMeter.SetRotationRange(RAD * 110);
+	AccumQuantityMeter.SetRotationRange(RAD * 90);
 	AccumQuantityMeter.DefineMeshGroup(VC_GRP_Needle_P2_28);
 
-	NEEDLE_POS = { 0.2702, 0.5763, 0.3183 };
+	NEEDLE_POS = { 0.27429, 0.57675, 0.31722 };
 
 	MainPanelVC.AddSwitch(&H2oQuantityMeter);
 	H2oQuantityMeter.SetReference(NEEDLE_POS, P1_3_ROT_AXIS);
-	H2oQuantityMeter.SetRotationRange(RAD * 110);
+	H2oQuantityMeter.SetRotationRange(RAD * 90);
 	H2oQuantityMeter.DefineMeshGroup(VC_GRP_Needle_P2_29);
 
 	NEEDLE_POS = { 0.3197, 0.4567, 0.2790 };
@@ -6033,25 +6066,44 @@ void Saturn::ToggleFlashlight()
 
 void Saturn::UpdatePointingArrow()
 {
+	static bool first = true;
+	static bool arrowVisible;
+	static VECTOR3 activeSwitchPos;
+	static VECTOR3 camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs;	
+	static VECTOR3* arrowData;
+	static VECTOR3* circleData;
+	static VECTOR3* circleDataOrig;
+	static VECTOR3 arrowCurPos, circleCurPos;
+	static VECTOR3 pointing_dir;
+	static VECTOR3 rot_axis, circle_dir, rot_axis_circle, final_vertex;
+	static MATRIX3 rotation, rotation_circle;
+	static int arrowVertsCnt, circleVertsCnt;
+	static double rotationangle, rad, cos_a, sin_a;
+	static double dot, angle;
+	static double dot_circle, angle_circle;
+	static PanelSwitchItem* nextActiveSwitch;
+	static DEVMESHHANDLE hArrowMesh;
+	static MESHGROUP* arrow_group;
+	static MESHGROUP* circle_group;
+	static GROUPREQUESTSPEC arrow_grp, circle_grp;
+	static GROUPEDITSPEC ges;
+
 	if (!vcmesh) return;
 
-	bool arrowVisible = checkControl.getFlashing();
+	arrowVisible = checkControl.getFlashing();
 	if (!arrowVisible) {		// is FLASH enabled in ChecklistMFD? if no hide the Arrow and do no transformation
 		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_NEVER);
 		return;
 	};
 
-	PanelSwitchItem *nextActiveSwitch = MainPanelVC.GetFlashingItem();
+	nextActiveSwitch = MainPanelVC.GetFlashingItem();
 	
 	if (nextActiveSwitch == nullptr) {
 		SetMeshVisibilityMode(hcmPointingArrowidx, MESHVIS_NEVER);
 		return;
 	}
-	VECTOR3 activeSwitchPos;
 
 	activeSwitchPos = nextActiveSwitch->GetChecklistReference();
-
-	VECTOR3 camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs;	
 
 	oapiCameraGlobalPos(&camPosGlobal);					// Get camera (in global co-ords)
 	Global2Local(camPosGlobal, camPos);					// Translate from global to local co-ordinates.
@@ -6062,14 +6114,9 @@ void Saturn::UpdatePointingArrow()
 
 	GetMeshOffset(vcidx, ofs);
 
-	DEVMESHHANDLE hArrowMesh = GetDevMesh (vis, hcmPointingArrowidx);
-	static bool first = true;
-	static VECTOR3* arrowData;
-	static VECTOR3* circleData;
-	static VECTOR3* circleDataOrig;
-	static int arrowVertsCnt, circleVertsCnt;
+	hArrowMesh = GetDevMesh (vis, hcmPointingArrowidx);
 	if (first) {											// Run this once for retrieving the Arrow data
-		MESHGROUP* arrow_group = oapiMeshGroup(GetMeshTemplate(hcmPointingArrowidx), 0);
+		arrow_group = oapiMeshGroup(GetMeshTemplate(hcmPointingArrowidx), 0);
 		arrowVertsCnt = arrow_group->nVtx;
 		arrowData = new VECTOR3[arrowVertsCnt];
 		for (int i = 0; i < arrowVertsCnt; i++) {			// Make a copy of the Arrow data
@@ -6077,7 +6124,7 @@ void Saturn::UpdatePointingArrow()
 			arrowData[i].y = (double)arrow_group->Vtx[i].y;
 			arrowData[i].z = (double)arrow_group->Vtx[i].z;
 		}
-		MESHGROUP* circle_group = oapiMeshGroup(GetMeshTemplate(hcmPointingArrowidx), 1);
+		circle_group = oapiMeshGroup(GetMeshTemplate(hcmPointingArrowidx), 1);
 		circleVertsCnt = circle_group->nVtx;
 		circleData = new VECTOR3[circleVertsCnt];
 		circleDataOrig = new VECTOR3[circleVertsCnt];
@@ -6089,13 +6136,12 @@ void Saturn::UpdatePointingArrow()
 		first = false;
 	}
 
-	if (!oapiGetPause()) {
-		static double rotationangle;
-		rotationangle += oapiGetSimStep() / oapiGetTimeAcceleration() * 90;  // Rotate 360° every 4 Second
+	if (!oapiGetPause()){
+		rotationangle += oapiGetSimStep() / oapiGetTimeAcceleration() * -90;  // Rotate 360° every 4 Second
 		if (rotationangle > 360) rotationangle = 0;
-		double rad = rotationangle * PI / 180.0;
-		double cos_a = std::cos(rad);
-		double sin_a = std::sin(rad);
+		rad = rotationangle * PI / 180.0;
+		cos_a = std::cos(rad);
+		sin_a = std::sin(rad);
 
 		//Rotate Circle
 		for (int i = 0; i < circleVertsCnt; i++) {
@@ -6105,67 +6151,65 @@ void Saturn::UpdatePointingArrow()
 		}
 
 /*		// Rotate Arrow
-			for (int i = 0; i < arrowVertsCnt; i++) {
-				arrowData[i].x = arrowData[i].x * cos_a - arrowData[i].y * sin_a;
-				arrowData[i].y = arrowData[i].x * sin_a + arrowData[i].y * cos_a;
-			}
+		for (int i = 0; i < arrowVertsCnt; i++) {
+			arrowData[i].x = arrowData[i].x * cos_a - arrowData[i].y * sin_a;
+			arrowData[i].y = arrowData[i].x * sin_a + arrowData[i].y * cos_a;
+		}
 */
 	}
-	GROUPREQUESTSPEC arrow_grp;
 	memset (&arrow_grp, 0, sizeof(GROUPREQUESTSPEC));
 	if (arrow_grp.Vtx) delete []arrow_grp.Vtx;
 	arrow_grp.nVtx = arrowVertsCnt;
 
 	if (!arrow_grp.Vtx) arrow_grp.Vtx = new NTVERTEX[arrow_grp.nVtx];
-	if (oapiGetMeshGroup (hArrowMesh, 0, &arrow_grp) != 0) { // problems
+	if (oapiGetMeshGroup (hArrowMesh, 0, &arrow_grp) != 0) {	// problems
 		delete []arrow_grp.Vtx;
 		arrow_grp.Vtx = 0;
 	}
 //	NTVERTEX *Vtx = arrow_grp.Vtx;
 
-	GROUPREQUESTSPEC circle_grp;
 	memset (&circle_grp, 0, sizeof(GROUPREQUESTSPEC));
 	if (circle_grp.Vtx) delete []circle_grp.Vtx;
 	circle_grp.nVtx = circleVertsCnt;
 
 	if (!circle_grp.Vtx) circle_grp.Vtx = new NTVERTEX[circle_grp.nVtx];
-	if (oapiGetMeshGroup (hArrowMesh, 1, &circle_grp) != 0) { // problems
+	if (oapiGetMeshGroup (hArrowMesh, 1, &circle_grp) != 0) {	// problems
 		delete []circle_grp.Vtx;
 		circle_grp.Vtx = 0;
 	}
 //	NTVERTEX *Vtx2 = circle_grp.Vtx;
 
-	VECTOR3 arrowCurPos = camPos - ofs + (camPointing * 0.15);			// Move the Arrow to this Position
-	VECTOR3 circleCurPos = activeSwitchPos;								// Move the Circle to this Position
+	arrowCurPos = camPos - ofs + (camPointing * 0.15);			// Move the Arrow to this Position
+	circleCurPos = activeSwitchPos;								// Move the Circle to this Position
 
 	// Rotation calculation to align the Arrow
-	const VECTOR3 init_dir = {0, 0, 1};									// Direction of the arrow (initially along the positive Z-axis)
-	VECTOR3 pointing_dir = activeSwitchPos - arrowCurPos;				// Target direction (vector from the target location to the viewing direction)
+	const VECTOR3 init_dir = {0, 0, 1};							// Direction of the arrow (initially along the positive Z-axis)
+	pointing_dir = activeSwitchPos - arrowCurPos;				// Target direction (vector from the target location to the viewing direction)
 	normalise(pointing_dir);
 
-	VECTOR3 rot_axis = crossp(init_dir, pointing_dir);					// Rotation axis (cross product of the initial and target directions)
+	rot_axis = crossp(init_dir, pointing_dir);					// Rotation axis (cross product of the initial and target directions)
 	normalise(rot_axis);
 
-	double dot = dotp(init_dir, pointing_dir);							// Rotation angle (angle between the initial and target direction)
-    double angle = std::acos(max(-1.0, min(1.0, dot)));					// Clamp to avoid NaN
+	dot = dotp(init_dir, pointing_dir);							// Rotation angle (angle between the initial and target direction)
+    angle = std::acos(max(-1.0, min(1.0, dot)));				// Clamp to avoid NaN
 
-    MATRIX3 rotation = rotm(rot_axis, angle);
+    rotation = rotm(rot_axis, angle);
 
 	// *** Do the same from above for the Circle ** //
-	VECTOR3 circle_dir =  (camPos - ofs) - activeSwitchPos;
+	circle_dir = activeSwitchPos - (camPos - ofs);
 	normalise(circle_dir);
 	
-	VECTOR3 rot_axis_circle = crossp(init_dir, circle_dir);
+	rot_axis_circle = crossp(init_dir, circle_dir);
 	normalise(rot_axis_circle);
 
-	double dot_circle = dotp(init_dir, circle_dir);
-    double angle_circle = std::acos(max(-1.0, min(1.0, dot_circle)));
+	dot_circle = dotp(init_dir, circle_dir);
+    angle_circle = std::acos(max(-1.0, min(1.0, dot_circle)));
 
-    MATRIX3 rotation_circle = rotm(rot_axis_circle, angle_circle);
+    rotation_circle = rotm(rot_axis_circle, angle_circle);
 
 	for (int i = 0; i < arrowVertsCnt; i++) {
 		// Rotate, Translate and Scale the Arrow(Scale depends on Camera FOV)
-		VECTOR3 final_vertex = mul(rotation, arrowData[i] * oapiCameraAperture()) + arrowCurPos;
+		final_vertex = mul(rotation, arrowData[i] * oapiCameraAperture()) + arrowCurPos;
 
 		arrow_grp.Vtx[i].x = (float)final_vertex.x;		// Copy Transformed Arrow Vertices
 		arrow_grp.Vtx[i].y = (float)final_vertex.y;
@@ -6174,7 +6218,7 @@ void Saturn::UpdatePointingArrow()
 
 	for (int i = 0; i < circleVertsCnt; i++) {
 		// Rotate and Translate the Circle
-		VECTOR3 final_vertex = mul(rotation_circle, circleData[i]) + circleCurPos;
+		final_vertex = mul(rotation_circle, circleData[i]) + circleCurPos;
 
 		circle_grp.Vtx[i].x = (float)final_vertex.x;	// Copy Transformed Circle Vertices
 		circle_grp.Vtx[i].y = (float)final_vertex.y;
@@ -6184,7 +6228,6 @@ void Saturn::UpdatePointingArrow()
 // ** View in debug line the Camera Position, direction and the First Vertex of the Pointing Arrow **
 //	sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ** %.3f  %.3f  %.3f", camPos.x, camPos.y, camPos.z, camPointing.x, camPointing.y, camPointing.z, arrow_grp.Vtx[0].x, arrow_grp.Vtx[0].y, arrow_grp.Vtx[0].z);
 
-	GROUPEDITSPEC ges;
 	ges.flags = GRPEDIT_VTXCRD;
 	ges.nVtx = arrow_grp.nVtx;
 	ges.Vtx  = arrow_grp.Vtx;

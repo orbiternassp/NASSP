@@ -701,17 +701,24 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			{
 				skp->Text(CW, 4 * H / 14, "P30 Retro", 9);
 			}
-
-			GET_Display(Buffer, G->P30TIG);
-			skp->Text(CW, 6 * H / 14, Buffer, strlen(Buffer));
-			skp->SetTextAlign(oapi::Sketchpad::RIGHT);
-			skp->Text(W - CW, 4 * H / 14, "DV Vector", 9);
-			AGC_Display(Buffer, G->dV_LVLH.x / 0.3048);
-			skp->Text(W - CW, 5 * H / 14, Buffer, strlen(Buffer));
-			AGC_Display(Buffer, G->dV_LVLH.y / 0.3048);
-			skp->Text(W - CW, 6 * H / 14, Buffer, strlen(Buffer));
-			AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
-			skp->Text(W - CW, 7 * H / 14, Buffer, strlen(Buffer));
+			if (GC->MissionPlanningActive && G->REFSMMATopt == 0)
+			{
+				sprintf(Buffer, "Maneuver: %d", G->REFSMMAT_ManNum);
+				skp->Text(CW, 6 * H / 14, Buffer, strlen(Buffer));
+			}
+			else
+			{
+				GET_Display(Buffer, G->P30TIG);
+				skp->Text(CW, 6 * H / 14, Buffer, strlen(Buffer));
+				skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+				skp->Text(W - CW, 4 * H / 14, "DV Vector", 9);
+				AGC_Display(Buffer, G->dV_LVLH.x / 0.3048);
+				skp->Text(W - CW, 5 * H / 14, Buffer, strlen(Buffer));
+				AGC_Display(Buffer, G->dV_LVLH.y / 0.3048);
+				skp->Text(W - CW, 6 * H / 14, Buffer, strlen(Buffer));
+				AGC_Display(Buffer, G->dV_LVLH.z / 0.3048);
+				skp->Text(W - CW, 7 * H / 14, Buffer, strlen(Buffer));
+			}
 		}
 		else if (G->REFSMMATopt == 2)
 		{
@@ -773,10 +780,6 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		else if (G->REFSMMATopt == 7)
 		{
 			skp->Text(CW, 4 * H / 14, "REFS from Att", 13);
-
-			skp->Text(CW, 9 * H / 21, "Cur REFSMMAT:", 13);
-			REFSMMATName(Buffer, G->REFSMMATcur);
-			skp->Text(CW, 10 * H / 21, Buffer, strlen(Buffer));
 
 			skp->Text(CW, 12 * H / 21, "Attitude:", 9);
 			sprintf(Buffer, "%+07.2f R", G->VECangles.x*DEG);
