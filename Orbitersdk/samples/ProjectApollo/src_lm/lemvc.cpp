@@ -3739,17 +3739,23 @@ void LEM::SetPowerFailureLight(int m, bool state) {
 
 	if (state == true)
 	{   // ON
+		mat->diffuse.r = 1;
+		mat->diffuse.g = 0;
+		mat->diffuse.b = 0;
 		mat->emissive.r = 1;
 		mat->emissive.g = 0;
 		mat->emissive.b = 0;
-		mat->emissive.a = 1;
+		//mat->power = 2;
 	}
 	else
 	{   // OFF
-		mat->emissive.r = 0.125f;
+		mat->diffuse.r = 0.125f;
+		mat->diffuse.g = 0;
+		mat->diffuse.b = 0;
+		mat->emissive.r = 0;
 		mat->emissive.g = 0;
 		mat->emissive.b = 0;
-		mat->emissive.a = 1;
+		//mat->power = 1;
 	}
 
 	oapiSetMaterial(vcmesh, m, mat);
