@@ -381,14 +381,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	static const MFDBUTTONMENU mnu11[] =
 	{
+		{ "CSM or LM", 0, 'P' },
 		{ "GET for anchor vector", 0, 'G' },
 		{ "Prime meridian", 0, 'D' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
 
-		{ "Select CSM or LM", 0, 'E' },
+		{ "Select vessel", 0, 'E' },
 		{ "Earth or Moon", 0, 'V' },
 		{ "Calc Map Update", 0, 'C' },
 		{ "", 0, ' ' },
