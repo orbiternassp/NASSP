@@ -2503,7 +2503,7 @@ bool RTCC::CalculationMTP_C(int fcn, LPVOID &pad, char *upString, char *upDesc, 
 		{
 			AP7NAV *form = (AP7NAV *)pad;
 
-			NavGET = GETfromGMT(sv_A.sv.GMT) - 30.0 * 60.0; //Nav Check GET as SV time - 30m
+			NavGET = GETfromGMT(sv_A.sv.GMT) + 30.0 * 60.0; //Nav Check GET as SV time + 30m
 
 			//Use SV for Nav Check
 			NavCheckPAD(sv_A, *form, NavGET);

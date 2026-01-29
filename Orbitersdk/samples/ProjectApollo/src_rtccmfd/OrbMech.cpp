@@ -4966,13 +4966,15 @@ VECTOR3 imulimit(VECTOR3 a)
 
 double imulimit(double a)
 {
+	//Input in degrees. Round and limit output to 0-359.
 	if (a < 0)
 	{
 		a += 360.0;
 	}
-	if (a > 359.5)
+	a = round(a);
+	if (a >= 359.5)
 	{
-		return a - 359.5;
+		a = 0.0;
 	}
 	return a;
 }
