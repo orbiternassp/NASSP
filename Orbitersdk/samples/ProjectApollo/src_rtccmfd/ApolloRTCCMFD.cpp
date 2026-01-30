@@ -1552,6 +1552,15 @@ void ApolloRTCCMFD::menuSetRTCCTimesPage()
 	SelectPage(133);
 }
 
+void ApolloRTCCMFD::menuSetStarSightingTablePage()
+{
+	marker = 0;
+	markermax = 14;
+	subscreen = 0;
+	subscreenmax = 1;
+	SelectPage(134);
+}
+
 void ApolloRTCCMFD::menuPerigeeAdjustCalc()
 {
 	G->PerigeeAdjustCalc();
@@ -2135,10 +2144,11 @@ void ApolloRTCCMFD::menuRetroSepAtt()
 	GenericVectorInput(&GC->rtcc->RZJCTTC.R30_Att, "Enter attitude of sep/shaping maneuver:", RAD);
 }
 
-void ApolloRTCCMFD::GenericGETInput(double *get, char *message, void (ApolloRTCCMFD::*func)(void))
+void ApolloRTCCMFD::GenericGETInput(double *get, char *message, void (ApolloRTCCMFD::*func)(void), double factor)
 {
 	void *data2;
 	tempData.dVal = get;
+	tempData.factor = factor;
 	tempData.ptr = this;
 	tempData.func = func;
 	data2 = &tempData;
@@ -2156,8 +2166,9 @@ bool GenericGETInputBox(void *id, char *str, void *data)
 
 	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
 	{
-		get = ss + 60 * (mm + 60 * hh);
-		*arr->dVal = get;
+		get = ss + 60 * (mm + 60 * abs(hh));
+		if (hh < 0.0) get = -get;
+		*arr->dVal = get * arr->factor;
 		//Call function after setting value
 		if (arr->func)
 		{
@@ -2587,6 +2598,71 @@ bool ApolloRTCCMFD::set_RecoveryTarget(int num)
 		}
 	}
 	return false;
+}
+
+void ApolloRTCCMFD::menuSetStarSightingTableInput()
+{
+	switch (marker)
+	{
+	case 0:
+		if (GC->rtcc->EZGSTMED.G30_Mode < 4) GC->rtcc->EZGSTMED.G30_Mode++;
+		else GC->rtcc->EZGSTMED.G30_Mode = 0;
+		break;
+	case 1:
+		GenericStringInput(&GC->rtcc->EZGSTMED.G30_TGTID, "3 character name to be given the target. Third character must specifiy E (Earth) or M (Moon) for modes 0, 1:");
+		break;
+	case 2:
+		GenericGETInput(&GC->rtcc->EZGSTMED.G30_GETT, "Enter threshold time:");
+		break;
+	case 3:
+		if (GC->rtcc->EZGSTMED.G30_Matrix < 9)
+		{
+			GC->rtcc->EZGSTMED.G30_Matrix++;
+		}
+		else
+		{
+			GC->rtcc->EZGSTMED.G30_Matrix = 1;
+		}
+		break;
+	case 4:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Lat, "Enter ground target latitude in degrees:", RAD);
+		break;
+	case 5:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Lng, "Enter ground target longitude in degrees:", RAD);
+		break;
+	case 6:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Alt, "Enter ground target height in feet:", 0.3048);
+		break;
+	case 7:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Elev, "Enter elevation of spacecraft above ground target's local horizontal plane in degrees (0 - 90):", RAD);
+		break;
+	case 8:
+		GenericGETInput(&GC->rtcc->EZGSTMED.G30_RA, "Celestial target right ascension (Format: hr:min:sec)", NULL, PI2 / (24.0 * 3600.0));
+		break;
+	case 9:
+		GenericGETInput(&GC->rtcc->EZGSTMED.G30_DEC, "Celestial target declination (Format: deg:min:sec)", NULL, RAD / (3600.0));
+		break;
+	case 10:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.x, "Enter roll angle in degrees", RAD);
+		break;
+	case 11:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.y, "Enter pitch angle in degrees", RAD);
+		break;
+	case 12:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.z, "Enter yaw angle in degrees", RAD);
+		break;
+	case 13:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_SFT, "Enter sextant shaft angle in degrees", RAD);
+		break;
+	case 14:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_TRN, "Enter sextant trunnion angle in degrees", RAD);
+		break;
+	}
+}
+
+void ApolloRTCCMFD::menuStarSightingTableCalc()
+{
+	GeneralMEDRequest("G30;");
 }
 
 void ApolloRTCCMFD::menuSaveDODREFSMMAT()
@@ -8150,7 +8226,7 @@ void ApolloRTCCMFD::menuSetPDAPInputs()
 		GenericDoubleInput(&GC->PDAPOptions.DH_D, "Desired altitude differential between the LM and CSM orbits at CDH:", 1852.0);
 		break;
 	case 6:
-		GC->PDAPOptions.K4 = !GC->PDAPOptions.K4;
+		GC->PDAPOptions.K4 = 1 - GC->PDAPOptions.K4;
 		break;
 	case 7:
 		GenericDoubleInput(&GC->PDAPOptions.theta_TARG, "Phase angle at insertion used to determine the end of the first segment:", RAD);
@@ -9815,6 +9891,7 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 	case 47: menuSetMPTPage(); break;
 	case 48: menuSetOrbAdjPage(); break;
 	case 50: menuSetPerigeeAdjustDisplayPage(); break;
+	case 53: menuSetStarSightingTablePage(); break;
 	case 54: menuSetDetailedManeuverTableNo1Page(); break;
 	case 55: menuSetPredSiteAcquisitionCSM1Page(); break;
 	case 56: menuSetPredSiteAcquisitionLM1Page(); break;
@@ -10407,11 +10484,11 @@ void ApolloRTCCMFD::DFLBackgroundSlide(oapi::Sketchpad *skp, unsigned display, i
 {
 	SetMOCRFont(skp, fontsize, false);
 	GetCharSize(skp, CW, CH);
-	GC->DFLBackgroundSlide(skp, CW, CH, display);
+	GC->DFLBackgroundSlide(skp, CW, WOFF, CH, HOFF, display);
 }
 
 void ApolloRTCCMFD::DFLDynamicData(oapi::Sketchpad *skp, unsigned display, int fontsize)
 {
 	SetMOCRFont(skp, fontsize, true);
-	GC->rtcc->DynamicDisplayData.Print(skp, CW, CH, display);
+	GC->rtcc->DynamicDisplayData.Print(skp, CW, WOFF, CH, HOFF, display);
 }

@@ -4337,6 +4337,46 @@ MATRIX3 ROTCOMP(VECTOR3 U_R, double A)
 	return R;
 }
 
+MATRIX3 MATRIX(VECTOR3 A, VECTOR3 B, VECTOR3 C)
+{
+	return _M(A.x, A.y, A.z, B.x, B.y, B.z, C.x, C.y, C.z);
+}
+
+MATRIX3 THREEAXISPOINTING(VECTOR3 R, VECTOR3 V, VECTOR3 SCAXIS, VECTOR3 LAMC, double TVR)
+{
+	//INPUTS:
+	//R = Position vector
+	//V = Velocity vector
+	//SCAXIS = Unit body pointing vector
+	//LAMC = Unit inertial pointing vector
+	//TVR = Roll angle. 0 = heads up, 180 = heads down
+	//OUTPUTS:
+	//MTP = Inertial to body matrix
+
+	MATRIX3 MTP;
+	VECTOR3 ROLL_REF, YN, YT;
+	double CBETA;
+
+	ROLL_REF = unit(R);
+	CBETA = dotp(ROLL_REF, LAMC);
+	if (abs(CBETA) > 0.999848)
+	{
+		if (CBETA > 0.0)
+		{
+			ROLL_REF = -V;
+		}
+		else
+		{
+			ROLL_REF = V;
+		}
+	}
+	YN = unit(_V(SCAXIS.z, 0.0, -SCAXIS.x));
+	YT = unit(crossp(LAMC, ROLL_REF)) * sin(TVR) - crossp(LAMC, unit(crossp(LAMC, ROLL_REF))) * cos(TVR);
+	MTP = MATRIX(SCAXIS, crossp(SCAXIS, YN), -YN);
+	MTP = mul(tmat(MTP), MATRIX(LAMC, crossp(LAMC, YT), -YT));
+	return MTP;
+}
+
 void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri)
 {
 	double a, e, epsilon;
@@ -5321,6 +5361,13 @@ double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S, int body)
 	N_dot = V_S / length(R_S);
 
 	return (dotp(rho_dot, N) + dotp(rho_apo, N_dot))*length(rho);
+}
+
+//Calculates station vector in ECT coordinates
+VECTOR3 EMXING_Station_ECT(double GMT, double R_E_sin_lat, double R_E_cos_lat, double stat_lng)
+{
+	double lng = stat_lng + OrbMech::w_Earth * GMT;
+	return _V(R_E_cos_lat * cos(lng), R_E_cos_lat * sin(lng), R_E_sin_lat);
 }
 
 double LongitudeConversion(double lng, double T, double w_E, double lng_0, bool inertial_to_geographic)
