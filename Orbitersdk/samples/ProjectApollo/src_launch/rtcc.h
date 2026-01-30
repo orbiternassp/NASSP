@@ -1608,14 +1608,14 @@ struct PMMMCDInput
 {
 	double GMTI;
 	int Thruster;
-	int Attitude;
+	int Attitude; //1 = Fixed inertial, 2 = manual holding body orientation invariant, 3 = Lambert, 4 = PGNS External DV, 5 = AGS External DV
 	double dt_ullage;
 	int ConfigChangeInd;
 	int ConfigCodeAfter;
 	int TVC;
 	double DockingAngle;
 	std::bitset<4> CCMI;
-	int BPIND;
+	int BPIND; //1 = DV or DT, 2 = External DV, 3 = IMU, 4 = LVLH, 5 = Lambert, 6 = lunar ascent
 	int ID;
 	bool UllageThrusterOpt;
 	double DT_10PCT;

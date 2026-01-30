@@ -4623,7 +4623,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf(Buffer, "%06.2f°P %06.2f°Y %06.2f°R", GC->rtcc->med_m66.Att.x*DEG, GC->rtcc->med_m66.Att.y*DEG, GC->rtcc->med_m66.Att.z*DEG);
 			skp->Text(W - CW, 3 * H / 14, Buffer, strlen(Buffer));
 		}
-		if (GC->rtcc->med_m66.AttitudeOpt >= 3)
+		if (GC->rtcc->med_m66.BurnParamNo > 1)
 		{
 			if (GC->rtcc->med_m66.HeadsUp)
 			{
