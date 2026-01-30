@@ -2614,11 +2614,12 @@ public:
 	//Environment Change Calculations
 	struct EMMENVInputTable
 	{
-		double GMT;			//Threshold GMT for the environment change search
-		int option;			//0 = Sun, 1 = Moon, 2 = star
-		bool terminator;	//Search for terminator of above condition
-		bool present;		//Search for condition being present (e.g. sunshine for sunrise)
-		VECTOR3 u_vec; //Star unit vector for option 2
+		double GMT;				//Threshold GMT for the environment change search
+		int option;				//0 = Sun, 1 = Moon, 2 = star
+		bool terminator = false;//Search for terminator of above condition
+		bool present;			//Search for condition being present (e.g. sunshine for sunrise)
+		bool riseset = true;	//true = search for rise/set, false = search for noon/midnight
+		VECTOR3 u_vec;			//Star unit vector for option 2
 	};
 
 	struct EMMENVOutputTable
@@ -2626,9 +2627,10 @@ public:
 		double T_Change = 0.0; //Time of environment change
 		int err = 0; //Error condition: 0 = no error, 1 = too many iterations, 2 = requested GMT not in ephemeris limits, 3 = ran out of ephemeris, 4 = interpolation error, 5 = fatal ephemeris error (not available or wrong coordinate system)
 		bool IsActualChange = false; //Condition already existed at input GMT
+		EphemerisData2 sv; //State vector at time of environment change
 	};
 
-	bool EMMENVCondition(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, LunarStayTimesTable *LUNRSTAY, double GMT, const EMMENVInputTable& in, int &err);
+	bool EMMENVCondition(EphemerisDataTable2& ephemeris, ManeuverTimesTable& MANTIMES, LunarStayTimesTable* LUNRSTAY, double GMT, const EMMENVInputTable& in, EphemerisData2& sv, int& err);
 	void EMMENV(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, LunarStayTimesTable *LUNRSTAY, const EMMENVInputTable &in, EMMENVOutputTable &out);
 	
 	//Sunrise/Sunset, Moonrise/Moonset Display
@@ -2840,6 +2842,7 @@ public:
 	//GOST REFSMMAT Maintenance
 	void FormatREFSMMATCode(int ID, int num, char *buff);
 	//Sun-Moon-Earth Occultation
+	int EMMGSTCK(VECTOR3 R, double GMT, int body, VECTOR3 u_star, bool only_secondary, bool &IsOcculted);
 	bool EMMGSTCK(VECTOR3 u_star, VECTOR3 R, int body, VECTOR3 R_EM, VECTOR3 R_ES);
 	//Guidance Optics Support Table
 	void EMMGSTMP();
@@ -2876,9 +2879,9 @@ public:
 	//CSM Star Sighting Table Display Formatter
 	void EMDGSING();
 	//CSM Star Sighting Table Mathematics
-	int EMGSTSNG(const MATRIX3 &REFSMMAT, double *data);
+	int EMGSTSNG(const MATRIX3 &REFSMMAT, double *data, bool &HasSecOccult);
 	//Landmark AOS utility function
-	int FindLandmarkAOS(EphemerisDataTable2& ephemeris, double lat, double lng, double alt, int body, double elev, VECTOR3 &u_LOS, EphemerisData2 &sv);
+	int FindLandmarkAOS(EphemerisDataTable2& ephemeris, double GMTT, double lat, double lng, double alt, int body, double elev, VECTOR3 &u_LOS, EphemerisData2 &sv);
 
 	// LAUNCH/HIGH SPEED ABORT (L)
 

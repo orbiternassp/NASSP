@@ -9337,23 +9337,23 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			if (GC->rtcc->EZGSTMED.G30_Mode == 0 || GC->rtcc->EZGSTMED.G30_Mode >= 3)
 			{
 				Text(skp, x, y, "R:");
-				Text(skp, x + dx, y, "%.0lf", GC->rtcc->EZGSTMED.G30_Att.x* DEG);
+				Text(skp, x + dx, y, "%06.2lf", GC->rtcc->EZGSTMED.G30_Att.x* DEG);
 				y++;
 				Text(skp, x, y, "P:");
-				Text(skp, x + dx, y, "%.0lf", GC->rtcc->EZGSTMED.G30_Att.y* DEG);
+				Text(skp, x + dx, y, "%06.2lf", GC->rtcc->EZGSTMED.G30_Att.y* DEG);
 				y++;
 				Text(skp, x, y, "Y:");
-				Text(skp, x + dx, y, "%.0lf", GC->rtcc->EZGSTMED.G30_Att.z* DEG);
+				Text(skp, x + dx, y, "%06.2lf", GC->rtcc->EZGSTMED.G30_Att.z* DEG);
 				y++;
 			}
 			else y += 3;
 			if (GC->rtcc->EZGSTMED.G30_Mode >= 1 && GC->rtcc->EZGSTMED.G30_Mode <= 3)
 			{
 				Text(skp, x, y, "SFT:");
-				Text(skp, x + dx, y, "%.3lf", GC->rtcc->EZGSTMED.G30_SFT* DEG);
+				Text(skp, x + dx, y, "%06.2lf", GC->rtcc->EZGSTMED.G30_SFT* DEG);
 				y++;
 				Text(skp, x, y, "TRN:");
-				Text(skp, x + dx, y, "%.3lf", GC->rtcc->EZGSTMED.G30_TRN * DEG);
+				Text(skp, x + dx, y, "%06.3lf", GC->rtcc->EZGSTMED.G30_TRN * DEG);
 				y++;
 			}
 			else y += 2;

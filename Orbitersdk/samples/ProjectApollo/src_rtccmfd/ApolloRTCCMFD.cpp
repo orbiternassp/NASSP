@@ -2652,10 +2652,10 @@ void ApolloRTCCMFD::menuSetStarSightingTableInput()
 		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.z, "Enter yaw angle in degrees", RAD);
 		break;
 	case 13:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.x, "Enter ground roll angle in degrees", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_SFT, "Enter sextant shaft angle in degrees", RAD);
 		break;
 	case 14:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.x, "Enter ground roll angle in degrees", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_TRN, "Enter sextant trunnion angle in degrees", RAD);
 		break;
 	}
 }

@@ -13979,6 +13979,7 @@ void RTCC::EMSNAP(int L, int ID)
 void RTCC::EMDGSING()
 {
 	double data[20];
+	bool HasSecOccult;
 
 	//Get REFSMMAT
 	REFSMMATData refs = EZJGMTX1.data[EZGSTMED.G30_Matrix - 1];
@@ -13989,7 +13990,7 @@ void RTCC::EMDGSING()
 
 	if (err == 0)
 	{
-		err = EMGSTSNG(refs.REFSMMAT, data);
+		err = EMGSTSNG(refs.REFSMMAT, data, HasSecOccult);
 	}
 
 	rtcc::RTCCDisplay disp;
@@ -14055,7 +14056,7 @@ void RTCC::EMDGSING()
 	}
 	else
 	{
-		sprintf(Buffer, "%07.3lf", data[5] * DEG);
+		sprintf(Buffer, "%06.2lf", data[5] * DEG);
 		strtemp.assign(Buffer);
 	}
 	DynamicDisplayData.DisplayFormatting(disp, 6, strtemp, 34, 9, oapi::Sketchpad::RIGHT);
@@ -14067,7 +14068,7 @@ void RTCC::EMDGSING()
 	}
 	else
 	{
-		sprintf(Buffer, "%07.3lf", data[6] * DEG);
+		sprintf(Buffer, "%06.3lf", data[6] * DEG);
 		strtemp.assign(Buffer);
 	}
 	DynamicDisplayData.DisplayFormatting(disp, 7, strtemp, 34, 10, oapi::Sketchpad::RIGHT);
@@ -14083,7 +14084,7 @@ void RTCC::EMDGSING()
 	}
 	DynamicDisplayData.DisplayFormatting(disp, 8, strtemp, 49, 13, oapi::Sketchpad::RIGHT);
 	//GETCA
-	if (err == 0 && EZGSTMED.G30_Mode >= 2 && data[7] >= 0.0)
+	if (err == 0 && EZGSTMED.G30_Mode >= 2 && data[8] > 0.0)
 	{
 		OrbMech::format_time_HHHMMSS(Buffer, GETfromGMT(data[8]));
 		strtemp.assign(Buffer);
@@ -14098,7 +14099,7 @@ void RTCC::EMDGSING()
 	//REV
 	DynamicDisplayData.DFLInteger(disp, 11, (int)data[9], "%03d", 46, 9);
 	//LON
-	if (err >= 2 && err <= 3)
+	if (err >= 2 && err <= 4)
 	{
 		DynamicDisplayData.DisplayFormatting(disp, 12, "", -1, -1);
 	}
@@ -14107,7 +14108,7 @@ void RTCC::EMDGSING()
 		DynamicDisplayData.DFLDouble(disp, 12, data[10] * DEG, "%+07.2lf", 50, 10);
 	}
 	//LON GET
-	if (err >= 2 && err <= 3)
+	if ((err >= 2 && err <= 4) || data[11] < 0.0)
 	{
 		DynamicDisplayData.DisplayFormatting(disp, 13, "", -1, -1);
 	}
@@ -14158,7 +14159,7 @@ void RTCC::EMDGSING()
 			k = i / 3;
 			j = i - k * 3;
 
-			DynamicDisplayData.DFLDouble(disp, 17 + i, refs.REFSMMAT.data[i], "+.8lf", 23 + j * 14, 20 + k);
+			DynamicDisplayData.DFLDouble(disp, 17 + i, refs.REFSMMAT.data[i], "%+.8lf", 23 + j * 14, 20 + k);
 		}
 	}
 
@@ -14209,7 +14210,14 @@ void RTCC::EMDGSING()
 	switch (err)
 	{
 	case 0:
-		strtemp = "";
+		if (HasSecOccult)
+		{
+			strtemp = "SECONDARY BODY OCCULTATION";
+		}
+		else
+		{
+			strtemp = "";
+		}
 		break;
 	case 1:
 		strtemp = "MED INPUT REQUIRED";
@@ -14224,12 +14232,12 @@ void RTCC::EMDGSING()
 		strtemp = "SOLUTION NOT AVAILABLE";
 		break;
 	}
-	DynamicDisplayData.DisplayFormatting(disp, 34, strtemp, 50, 27, oapi::Sketchpad::RIGHT);
+	DynamicDisplayData.DisplayFormatting(disp, 34, strtemp, 43, 27, oapi::Sketchpad::RIGHT);
 
 	DynamicDisplayData.UpdateDisplay(disp);
 }
 
-int RTCC::EMGSTSNG(const MATRIX3& REFSMMAT, double* data)
+int RTCC::EMGSTSNG(const MATRIX3& REFSMMAT, double* data, bool& HasSecOccult)
 {
 	//Error codes: 0 = no error, 2 = No ephemeris available, 4 = Solution not available
 
@@ -14239,236 +14247,288 @@ int RTCC::EMGSTSNG(const MATRIX3& REFSMMAT, double* data)
 	//2-4: Attitude
 	//5-6: shaft, trunnion
 	//7: CA
-	//8: GETCA
+	//8: GMTCA
 	//9: REV
 	//10: Longitude LOS
 	//11: GMT LOS
 	//12-13: LOS declination, rt ascension
+	HasSecOccult = false;
 	for (int i = 0; i < 20; i++)
 	{
 		data[i] = 0.0;
 	}
 
-	if (EZGSTMED.G30_Mode == 3)
+	EphemerisDataTable2 Ephemeris;
+	ManeuverTimesTable ManTimes;
+	LunarStayTimesTable LUNSTAY;
+	EphemerisData sv_LOS;
+	double GMTT;
+	unsigned NumVec;
+	int TUP, err;
+
+	//Get 10 hour ephemeris
+	GMTT = GMTfromGET(EZGSTMED.G30_GETT);
+	ELNMVC(GMTT, GMTT + 10.0 * 3600.0, RTCC_MPT_CSM, NumVec, TUP);
+	if (NumVec < 9U) return 2;
+	err = ELFECH(GMTT, NumVec, 1, RTCC_MPT_CSM, Ephemeris, ManTimes, LUNSTAY);
+	if (err) return 2;
+
+	if (EZGSTMED.G30_Mode <= 1)
 	{
-		//Unknown celestial target
-		MATRIX3 SMNB;
-		VECTOR3 SXT_NB, dir;
+		//Ground target
 
-		SMNB = OrbMech::CALCSMSC(EZGSTMED.G30_Att);
-		SXT_NB = OrbMech::SXTNB(EZGSTMED.G30_TRN, EZGSTMED.G30_SFT);
+		//Check if TGTID is valid
+		if (EZGSTMED.G30_TGTID.size() != 3U) return 4;
 
-		dir = tmul(REFSMMAT, tmul(SMNB, SXT_NB));
+		int body;
 
-		OrbMech::latlong_from_r(dir, data[12], data[13]);
-		if (data[13] < 0.0) data[13] += PI2;
+		if (EZGSTMED.G30_TGTID[2] == 'E')
+		{
+			body = BODY_EARTH;
+		}
+		else if (EZGSTMED.G30_TGTID[2] == 'M')
+		{
+			body = BODY_MOON;
+		}
+		else return 4;
+
+		EphemerisData2 sv;
+		VECTOR3 u_LOS;
+		err = FindLandmarkAOS(Ephemeris, GMTT, EZGSTMED.G30_Lat, EZGSTMED.G30_Lng, EZGSTMED.G30_Alt, body, EZGSTMED.G30_Elev, u_LOS, sv);
+		if (err) return 4;
+
+		if (EZGSTMED.G30_Mode == 0)
+		{
+			//Fixed attitude
+			data[2] = EZGSTMED.G30_Att.x;
+			data[3] = EZGSTMED.G30_Att.y;
+			data[4] = EZGSTMED.G30_Att.z;
+
+			//Calculate sextant angles
+			MATRIX3 SMNB;
+			VECTOR3 S_SM;
+			double TA, SA;
+
+			SMNB = OrbMech::CALCSMSC(EZGSTMED.G30_Att);
+			S_SM = mul(REFSMMAT, u_LOS);
+			OrbMech::CALCSXA(SMNB, S_SM, TA, SA);
+
+			data[5] = SA;
+			data[6] = TA;
+		}
+		else
+		{
+			//Fixed sextant
+			data[5] = EZGSTMED.G30_SFT;
+			data[6] = EZGSTMED.G30_TRN;
+
+			MATRIX3 RFNB;
+			VECTOR3 SCAXIS, Att;
+
+			SCAXIS = OrbMech::SXTNB(EZGSTMED.G30_TRN, EZGSTMED.G30_SFT);
+
+			//Calculate attitude
+			RFNB = OrbMech::THREEAXISPOINTING(sv.R, sv.V, SCAXIS, u_LOS, 0.0);
+			Att = OrbMech::CALCGAR(REFSMMAT, RFNB);
+
+			data[2] = Att.x;
+			data[3] = Att.y;
+			data[4] = Att.z;
+		}
+		sv_LOS = Eph2ToEph1(sv, body);
 	}
 	else
 	{
-		//Ground or known celestial target
+		//Celestial target
 
-		EphemerisDataTable2 Ephemeris;
-		ManeuverTimesTable ManTimes;
-		LunarStayTimesTable LUNSTAY;
-		EphemerisData sv_LOS;
-		double GMTT;
-		unsigned NumVec;
-		int TUP, err;
+		EphemerisDataTable2 Ephemeris_ref;
+		EMMENVInputTable in;
+		EMMENVOutputTable out;
+		ELVCTRInputTable elin;
+		ELVCTROutputTable2 elout;
+		VECTOR3 u_star;
+		int CSI_ref;
 
-		//Get 10 hour ephemeris
-		GMTT = GMTfromGET(EZGSTMED.G30_GETT);
-		ELNMVC(GMTT, GMTT + 10.0 * 3600.0, RTCC_MPT_CSM, NumVec, TUP);
-		if (NumVec < 9U) return 2;
-		err = ELFECH(GMTT, NumVec, 1, RTCC_MPT_CSM, Ephemeris, ManTimes, LUNSTAY);
+		//Get star vector
+		if (EZGSTMED.G30_Mode == 3)
+		{
+			//Calculate for unknown celestial target
+			MATRIX3 SMNB;
+			VECTOR3 SXT_NB;
+
+			SMNB = OrbMech::CALCSMSC(EZGSTMED.G30_Att);
+			SXT_NB = OrbMech::SXTNB(EZGSTMED.G30_TRN, EZGSTMED.G30_SFT);
+
+			u_star = tmul(REFSMMAT, tmul(SMNB, SXT_NB));
+		}
+		else
+		{
+			//From input RA/DEC
+			u_star = OrbMech::r_from_latlong(EZGSTMED.G30_DEC, EZGSTMED.G30_RA);
+		}
+
+		//Convert ephemeris to reference body at GMTT
+		elin.GMT = GMTT;
+		ELVCTR(elin, elout, Ephemeris, ManTimes, &LUNSTAY);
+		if (elout.ErrorCode) return 2;
+
+		EphemerisData sv2 = Eph2ToEph1(elout.SV, Ephemeris.Header.CSI == 0 ? BODY_EARTH : BODY_MOON);
+		RotateSVToSOI(sv2);
+
+		if (sv2.RBI == BODY_EARTH)
+		{
+			CSI_ref = 0;
+		}
+		else
+		{
+			CSI_ref = 2;
+		}
+
+		Ephemeris_ref = Ephemeris;
+		if (Ephemeris.Header.CSI != CSI_ref)
+		{
+			err = ELVCNV(Ephemeris.table, Ephemeris.Header.CSI, CSI_ref, Ephemeris_ref.table);
+			if (err) return 2;
+			Ephemeris_ref.Header.CSI = CSI_ref;
+		}
+
+		//Find AOS
+		in.GMT = GMTT;
+		in.option = 2;
+		in.present = true;
+		in.u_vec = u_star;
+		in.terminator = false;
+		EMMENV(Ephemeris_ref, ManTimes, NULL, in, out);
+		if (out.err) return 4;
+
+		//State vector (relative to reference body) at time of LOS
+		sv_LOS = Eph2ToEph1(out.sv, Ephemeris_ref.Header.CSI == 0 ? BODY_EARTH : BODY_MOON);
+
+		//Secondary body occultation checks
+		err = EMMGSTCK(sv_LOS.R, sv_LOS.GMT, sv_LOS.RBI, u_star, true, HasSecOccult);
 		if (err) return 2;
 
-		if (EZGSTMED.G30_Mode == 2 || EZGSTMED.G30_Mode == 4)
+		if (EZGSTMED.G30_Mode == 3)
 		{
-			//Celestial target
+			//Input data
+			data[2] = EZGSTMED.G30_Att.x;
+			data[3] = EZGSTMED.G30_Att.y;
+			data[4] = EZGSTMED.G30_Att.z;
+			data[5] = EZGSTMED.G30_SFT;
+			data[6] = EZGSTMED.G30_TRN;
 
-			EphemerisDataTable2 Ephemeris_ref;
-			EMMENVInputTable in;
-			EMMENVOutputTable out;
-			ELVCTRInputTable elin;
-			ELVCTROutputTable2 elout;
-			VECTOR3 u_star;
-			int CSI_ref;
+			//Declination and right ascension
+			double DEC, RA;
 
-			//Get star vector
-			u_star = OrbMech::r_from_latlong(EZGSTMED.G30_DEC, EZGSTMED.G30_RA);
+			OrbMech::latlong_from_r(u_star, DEC, RA);
+			if (RA < 0.0) RA += PI2;
 
-			//Convert ephemeris to reference body at GMTT
-			elin.GMT = GMTT;
-			ELVCTR(elin, elout, Ephemeris, ManTimes, &LUNSTAY);
-			if (elout.ErrorCode) return 2;
+			data[12] = DEC;
+			data[13] = RA;
+		}
+		else if (EZGSTMED.G30_Mode == 2)
+		{
+			//Fixed sextant
+			data[5] = EZGSTMED.G30_SFT;
+			data[6] = EZGSTMED.G30_TRN;
 
-			EphemerisData sv2 = Eph2ToEph1(elout.SV, Ephemeris.Header.CSI == 0 ? BODY_EARTH : BODY_MOON);
-			RotateSVToSOI(sv2);
+			MATRIX3 RFNB;
+			VECTOR3 SCAXIS, Att;
 
-			if (sv2.RBI == BODY_EARTH)
-			{
-				CSI_ref = 0;
-			}
-			else
-			{
-				CSI_ref = 2;
-			}
+			SCAXIS = OrbMech::SXTNB(EZGSTMED.G30_TRN, EZGSTMED.G30_SFT);
 
-			Ephemeris_ref = Ephemeris;
-			if (Ephemeris.Header.CSI != CSI_ref)
-			{
-				err = ELVCNV(Ephemeris.table, Ephemeris.Header.CSI, CSI_ref, Ephemeris_ref.table);
-				if (err) return 2;
-				Ephemeris_ref.Header.CSI = CSI_ref;
-			}
+			//Calculate attitude
+			RFNB = OrbMech::THREEAXISPOINTING(sv_LOS.R, sv_LOS.V, SCAXIS, u_star, 0.0);
+			Att = OrbMech::CALCGAR(REFSMMAT, RFNB);
 
-			//Find AOS
-			in.GMT = GMTT;
-			in.option = 2;
-			in.present = true;
-			in.u_vec = u_star;
-			in.terminator = false;
-			EMMENV(Ephemeris_ref, ManTimes, NULL, in, out);
-			if (out.err) return 4;
-
-			//State vector (relative to reference body) at time of LOS
-			elin.GMT = out.T_Change;
-			ELVCTR(elin, elout, Ephemeris_ref, ManTimes, &LUNSTAY);
-			if (elout.ErrorCode) return 2;
-			sv_LOS = Eph2ToEph1(elout.SV, Ephemeris_ref.Header.CSI == 0 ? BODY_EARTH : BODY_MOON);
-
-			if (EZGSTMED.G30_Mode == 2)
-			{
-				//Fixed sextant
-				data[5] = EZGSTMED.G30_SFT;
-				data[6] = EZGSTMED.G30_TRN;
-
-				MATRIX3 RFNB;
-				VECTOR3 SCAXIS, Att;
-
-				SCAXIS = OrbMech::SXTNB(EZGSTMED.G30_TRN, EZGSTMED.G30_SFT);
-
-				//Calculate attitude
-				RFNB = OrbMech::THREEAXISPOINTING(sv_LOS.R, sv_LOS.V, SCAXIS, u_star, 0.0);
-				Att = OrbMech::CALCGAR(REFSMMAT, RFNB);
-
-				data[2] = Att.x;
-				data[3] = Att.y;
-				data[4] = Att.z;
-			}
-			else
-			{
-				//Fixed attitude
-				data[2] = EZGSTMED.G30_Att.x;
-				data[3] = EZGSTMED.G30_Att.y;
-				data[4] = EZGSTMED.G30_Att.z;
-
-				//Calculate sextant angles
-				MATRIX3 SMNB;
-				VECTOR3 S_SM;
-				double TA, SA;
-
-				SMNB = OrbMech::CALCSMSC(EZGSTMED.G30_Att);
-				S_SM = mul(REFSMMAT, u_star);
-				OrbMech::CALCSXA(SMNB, S_SM, TA, SA);
-
-				data[5] = SA;
-				data[6] = TA;
-			}
+			data[2] = Att.x;
+			data[3] = Att.y;
+			data[4] = Att.z;
 
 			//Target declination and right ascension
 			data[0] = data[12] = EZGSTMED.G30_DEC;
 			data[1] = data[13] = EZGSTMED.G30_RA;
-
-			//Closest approach
-			data[7] = -1.0; //TBD
 		}
 		else
 		{
-			//Ground target
+			//Fixed attitude
+			data[2] = EZGSTMED.G30_Att.x;
+			data[3] = EZGSTMED.G30_Att.y;
+			data[4] = EZGSTMED.G30_Att.z;
 
-			//Check if TGTID is valid
-			if (EZGSTMED.G30_TGTID.size() != 3U) return 4;
-			
-			int body;
+			//Calculate sextant angles
+			MATRIX3 SMNB;
+			VECTOR3 S_SM;
+			double TA, SA;
 
-			if (EZGSTMED.G30_TGTID[2] == 'E')
-			{
-				body = BODY_EARTH;
-			}
-			else if (EZGSTMED.G30_TGTID[2] == 'M')
-			{
-				body = BODY_MOON;
-			}
-			else return 4;
+			SMNB = OrbMech::CALCSMSC(EZGSTMED.G30_Att);
+			S_SM = mul(REFSMMAT, u_star);
+			OrbMech::CALCSXA(SMNB, S_SM, TA, SA);
 
-			EphemerisData2 sv;
-			VECTOR3 u_LOS;
-			err = FindLandmarkAOS(Ephemeris, EZGSTMED.G30_Lat, EZGSTMED.G30_Lng, EZGSTMED.G30_Alt, body, EZGSTMED.G30_Elev, u_LOS, sv);
-			if (err) return 4;
+			data[5] = SA;
+			data[6] = TA;
 
-			if (EZGSTMED.G30_Mode == 0)
-			{
-				//Fixed attitude
-				data[2] = EZGSTMED.G30_Att.x;
-				data[3] = EZGSTMED.G30_Att.y;
-				data[4] = EZGSTMED.G30_Att.z;
-
-				//Calculate sextant angles
-				MATRIX3 SMNB;
-				VECTOR3 S_SM;
-				double TA, SA;
-
-				SMNB = OrbMech::CALCSMSC(EZGSTMED.G30_Att);
-				S_SM = mul(REFSMMAT, u_LOS);
-				OrbMech::CALCSXA(SMNB, S_SM, TA, SA);
-
-				data[5] = SA;
-				data[6] = TA;
-			}
-			else
-			{
-				//Fixed sextant
-				data[5] = EZGSTMED.G30_SFT;
-				data[6] = EZGSTMED.G30_TRN;
-
-				MATRIX3 RFNB;
-				VECTOR3 SCAXIS, Att;
-
-				SCAXIS = OrbMech::SXTNB(EZGSTMED.G30_TRN, EZGSTMED.G30_SFT);
-
-				//Calculate attitude
-				RFNB = OrbMech::THREEAXISPOINTING(sv.R, sv.V, SCAXIS, u_LOS, 0.0);
-				Att = OrbMech::CALCGAR(REFSMMAT, RFNB);
-
-				data[2] = Att.x;
-				data[3] = Att.y;
-				data[4] = Att.z;
-			}
-			sv_LOS = Eph2ToEph1(sv, body);
+			//Target declination and right ascension
+			data[0] = data[12] = EZGSTMED.G30_DEC;
+			data[1] = data[13] = EZGSTMED.G30_RA;
 		}
 
-		//Longitude at LOS
-		RotateSVToSOI(sv_LOS);
-		double lat, lng, alt;
-		GLSSAT(sv_LOS.R, sv_LOS.GMT, sv_LOS.RBI, lat, lng, alt);
+		//Closest approach
+		data[7] = -1.0;
 
-		//Rev at GMT LOS
-		int REV = CapeCrossingRev(RTCC_MPT_CSM, sv_LOS.GMT);
-		data[9] = (double)REV;
-		//Longitude at GMT LOS
-		data[10] = lng;
-		//Time of LOS
+		if (out.T_Change > GMTT)
+		{
+			//Calculate time of closest approach
+			in.GMT = out.T_Change;
+			in.riseset = false;
+			in.present = true;
+			EMMENV(Ephemeris_ref, ManTimes, NULL, in, out);
+			if (out.err == 0)
+			{
+				data[8] = out.T_Change;
+				data[7] = acos(dotp(unit(out.sv.R), in.u_vec));
+			}
+		}
+		else
+		{
+			//Use GMTT
+			data[8] = -1.0;
+			elin.GMT = GMTT;
+			ELVCTR(elin, elout, Ephemeris_ref, ManTimes, &LUNSTAY);
+			if (elout.ErrorCode) return 2;
+			data[7] = acos(dotp(unit(elout.SV.R), in.u_vec));
+		}
+	}
+
+	//Longitude at LOS
+	RotateSVToSOI(sv_LOS);
+	double lat, lng, alt;
+	GLSSAT(sv_LOS.R, sv_LOS.GMT, sv_LOS.RBI, lat, lng, alt);
+
+	//Rev at GMT LOS
+	int REV = CapeCrossingRev(RTCC_MPT_CSM, sv_LOS.GMT);
+	data[9] = (double)REV;
+	//Longitude at GMT LOS
+	data[10] = lng;
+	//Time of LOS
+	if (sv_LOS.GMT > GMTT)
+	{
 		data[11] = sv_LOS.GMT;
+	}
+	else
+	{
+		//Don't display
+		data[11] = -1.0;
 	}
 
 	return 0;
 }
 
-int RTCC::FindLandmarkAOS(EphemerisDataTable2& ephemeris, double lat, double lng, double alt, int body, double elev, VECTOR3& u_LOS, EphemerisData2& sv)
+int RTCC::FindLandmarkAOS(EphemerisDataTable2& ephemeris, double GMTT, double lat, double lng, double alt, int body, double elev, VECTOR3& u_LOS, EphemerisData2& sv)
 {
 	//INPUTS:
 	//ephemeris: Ephemeris data table in any coordinate system
+	//GMTT: Threshold time
 	//OUTPUTS:
 	//u_LOS = inertial line of sight vector from spacecraft to landmark
 	//sv = state vector in reference coordinates at time of sighting
@@ -14562,6 +14622,13 @@ int RTCC::FindLandmarkAOS(EphemerisDataTable2& ephemeris, double lat, double lng
 
 	//Outputs
 	VECTOR3 u_LOS_true;
+
+	//Sighting found before threshold time?
+	if (elin.GMT < GMTT)
+	{
+		//Yes, use threshold time
+		elin.GMT = GMTT;
+	}
 
 	//Get state vector at sighting
 	ELVCTR(elin, elout, ephemeris, mantimes);
@@ -24285,6 +24352,9 @@ int RTCC::RMMASCND(EphemerisDataTable2 &EPHEM, ManeuverTimesTable &MANTIMES, dou
 
 void RTCC::EMMENV(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, LunarStayTimesTable *LUNRSTAY, const EMMENVInputTable &in, EMMENVOutputTable &out)
 {
+	//INPUTS:
+	//ephemeris = Ephemeris in ECI or MCI coordinates. Has to be occulting body reference.
+
 	double GMT, TL, TR;
 	int err, j;
 	unsigned i;
@@ -24334,7 +24404,7 @@ void RTCC::EMMENV(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, 
 	}
 
 	//Check initial condition
-	condition = EMMENVCondition(ephemeris, MANTIMES, LUNRSTAY, GMT, in, err);
+	condition = EMMENVCondition(ephemeris, MANTIMES, LUNRSTAY, GMT, in, out.sv, err);
 
 	if (err)
 	{
@@ -24374,7 +24444,7 @@ void RTCC::EMMENV(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, 
 	do
 	{
 		GMT = ephemeris.table[i].GMT;
-		condition = EMMENVCondition(ephemeris, MANTIMES, LUNRSTAY, GMT, in, err);
+		condition = EMMENVCondition(ephemeris, MANTIMES, LUNRSTAY, GMT, in, out.sv, err);
 
 		if (err)
 		{
@@ -24410,7 +24480,7 @@ void RTCC::EMMENV(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, 
 	{
 		//Try at midpoint
 		GMT = (TL + TR) / 2.0;
-		condition = EMMENVCondition(ephemeris, MANTIMES, LUNRSTAY, GMT, in, err);
+		condition = EMMENVCondition(ephemeris, MANTIMES, LUNRSTAY, GMT, in, out.sv, err);
 
 		if (err)
 		{
@@ -24446,7 +24516,7 @@ void RTCC::EMMENV(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, 
 	out.IsActualChange = true;
 }
 
-bool RTCC::EMMENVCondition(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, LunarStayTimesTable *LUNRSTAY, double GMT, const EMMENVInputTable& in, int &err)
+bool RTCC::EMMENVCondition(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, LunarStayTimesTable *LUNRSTAY, double GMT, const EMMENVInputTable& in, EphemerisData2& sv, int &err)
 {
 	ELVCTRInputTable elin;
 	ELVCTROutputTable2 elout;
@@ -24456,6 +24526,7 @@ bool RTCC::EMMENVCondition(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &M
 	elin.GMT = GMT;
 
 	ELVCTR(elin, elout, ephemeris, MANTIMES, LUNRSTAY);
+	sv = elout.SV;
 
 	if (elout.ErrorCode > 4)
 	{
@@ -24510,37 +24581,51 @@ bool RTCC::EMMENVCondition(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &M
 			RS = in.u_vec;
 		}
 
-		double cos_theta;
-
-		cos_theta = dotp(unit(elout.SV.R), unit(RS));
-
-		//Check condition
-		if (cos_theta > 0.0)
+		if (in.riseset)
 		{
-			//In AOS
-			return true;
-		}
-		else
-		{
-			if (in.terminator)
-			{
-				//No additional checks required
-				return false;
-			}
+			//Rise/set of sun, star etc.
+			double cos_theta;
 
-			double cos_beta;
+			cos_theta = dotp(unit(elout.SV.R), unit(RS));
 
-			cos_beta = sqrt(1.0 - pow(cos_theta, 2));
-			if (length(elout.SV.R)*cos_beta >= R_E)
+			//Check condition
+			if (cos_theta > 0.0)
 			{
 				//In AOS
 				return true;
 			}
 			else
 			{
-				//Not AOS
-				return false;
+				if (in.terminator)
+				{
+					//No additional checks required
+					return false;
+				}
+
+				double cos_beta;
+
+				cos_beta = sqrt(1.0 - pow(cos_theta, 2));
+				if (length(elout.SV.R) * cos_beta >= R_E)
+				{
+					//In AOS
+					return true;
+				}
+				else
+				{
+					//Not AOS
+					return false;
+				}
 			}
+		}
+		else
+		{
+			//Orbital midnight/noon
+			double theta_dot;
+
+			//Slope of angle between spacecraft and celestial object
+			theta_dot = -1.0 / sqrt(1.0 - pow(dotp(unit(elout.SV.R), RS), 2)) * dotp(unit(elout.SV.V), RS);
+
+			return (theta_dot >= 0.0);
 		}
 	}
 	else
@@ -37630,6 +37715,51 @@ void RTCC::EMSLSUPP(int QUEID, int refs, int refs2, unsigned man, bool headsup)
 
 		EMDGLMST();
 	}
+}
+
+int RTCC::EMMGSTCK(VECTOR3 R, double GMT, int body, VECTOR3 u_star, bool only_secondary, bool& IsOcculted)
+{
+	//INPUTS:
+	//only_secondary = only check for secondary body occultation
+
+	VECTOR3 R_EM, V_EM, R_ES;
+	int err;
+
+	IsOcculted = false;
+
+	//Get ephemerides
+	err = PLEFEM(1, GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
+	if (err) return err;
+
+	//Vectors from bodies to spacecraft
+	VECTOR3 R_EV, R_MV, R_SV;
+	if (body == BODY_EARTH)
+	{
+		R_EV = R;
+		R_MV = -R_EM + R;
+		R_SV = -R_ES + R;
+	}
+	else
+	{
+		R_EV = R_EM + R;
+		R_MV = R;
+		R_SV = -R_ES + R_EM + R;
+	}
+
+	//Earth occulation
+	if (!only_secondary || body == BODY_MOON)
+	{
+		if (OrbMech::isnotocculted(u_star, R_EV, OrbMech::R_Earth, 0.0) == false) IsOcculted = true;
+	}
+	//Moon occultation
+	if (!only_secondary || body == BODY_EARTH)
+	{
+		if (OrbMech::isnotocculted(u_star, R_MV, OrbMech::R_Moon, 0.0) == false) IsOcculted = true;
+	}
+	//Sun occultation
+	if (OrbMech::isnotocculted(u_star, R_SV, OrbMech::R_Sun, 0.0) == false) IsOcculted = true;
+
+	return 0;
 }
 
 bool RTCC::EMMGSTCK(VECTOR3 u_star, VECTOR3 R, int body, VECTOR3 R_EM, VECTOR3 R_ES)
