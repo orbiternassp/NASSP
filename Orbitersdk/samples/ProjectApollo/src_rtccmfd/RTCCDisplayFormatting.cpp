@@ -26,7 +26,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 namespace rtcc
 {
-	void RTCCDisplayPrint::Print(oapi::Sketchpad *skp, DWORD CW, DWORD CH, unsigned dispnum) const
+	void RTCCDisplayPrint::Print(oapi::Sketchpad* skp, DWORD CW, DWORD WOFF, DWORD CH, DWORD HOFF, unsigned dispnum) const
 	{
 		for (unsigned i = 0; i < displays.size(); i++)
 		{
@@ -44,7 +44,11 @@ namespace rtcc
 						skp->SetTextAlign(disp->Data[i].align);
 						halign = disp->Data[i].align;
 					}
-					skp->Text(disp->Data[i].x * CW, disp->Data[i].y*CH, disp->Data[i].Text.c_str(), disp->Data[i].Text.size());
+
+					if (disp->Data[i].x >= 0 && disp->Data[i].y >= 0)
+					{
+						skp->Text(disp->Data[i].x * CW + WOFF, disp->Data[i].y * CH + HOFF, disp->Data[i].Text.c_str(), disp->Data[i].Text.size());
+					}
 				}
 			}
 		}		
@@ -153,8 +157,23 @@ namespace rtcc
 		displays.push_back(disp);
 	}
 
-	void RTCCDynamicDisplayData::DisplayFormatting(RTCCDisplay &disp, std::string Text, int x, int y, oapi::Sketchpad::TAlign_horizontal align) const
+	int RTCCDynamicDisplayData::GetDisplayData(int MSK, RTCCDisplay& disp)
 	{
+		for (unsigned i = 0; i < displays.size(); i++)
+		{
+			if (MSK == displays[i].MSKNumber)
+			{
+				disp = displays[i];
+				return 0;
+			}
+		}
+		return 1;
+	}
+
+	void RTCCDynamicDisplayData::DisplayFormatting(RTCCDisplay &disp, unsigned num, std::string Text, int x, int y, oapi::Sketchpad::TAlign_horizontal align) const
+	{
+		if (disp.Data.size() <= num) return;
+
 		DisplayFormatData temp;
 
 		temp.Text = Text;
@@ -162,30 +181,30 @@ namespace rtcc
 		temp.y = y;
 		temp.align = align;
 
-		disp.Data.push_back(temp);
+		disp.Data[num] = temp;
 	}
 
-	void RTCCDynamicDisplayData::DFLDouble(RTCCDisplay &disp, double val, const char* format, int x, int y, oapi::Sketchpad::TAlign_horizontal align) const
+	void RTCCDynamicDisplayData::DFLDouble(RTCCDisplay &disp, unsigned num, double val, const char* format, int x, int y, oapi::Sketchpad::TAlign_horizontal align) const
 	{
 		char Buff[64];
 		sprintf_s(Buff, format, val);
 
-		DisplayFormatting(disp, Buff, x, y, align);
+		DisplayFormatting(disp, num, Buff, x, y, align);
 	}
 
-	void RTCCDynamicDisplayData::DFLInteger(RTCCDisplay &disp, int val, const char* format, int x, int y, oapi::Sketchpad::TAlign_horizontal align) const
+	void RTCCDynamicDisplayData::DFLInteger(RTCCDisplay &disp, unsigned num, int val, const char* format, int x, int y, oapi::Sketchpad::TAlign_horizontal align) const
 	{
 		char Buff[64];
 		sprintf_s(Buff, format, val);
 
-		DisplayFormatting(disp, Buff, x, y, align);
+		DisplayFormatting(disp, num, Buff, x, y, align);
 	}
 
-	void RTCCDynamicDisplayData::DFLTime(RTCCDisplay &disp, double val, int x, int y, oapi::Sketchpad::TAlign_horizontal align) const
+	void RTCCDynamicDisplayData::DFLTime(RTCCDisplay &disp, unsigned num, double val, int x, int y, oapi::Sketchpad::TAlign_horizontal align) const
 	{
 		char Buff[64];
 		OrbMech::format_time_HHHMMSS(Buff, val);
 
-		DisplayFormatting(disp, Buff, x, y, align);
+		DisplayFormatting(disp, num, Buff, x, y, align);
 	}
 }
