@@ -4556,6 +4556,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetConfigPage);
+
+
+	static const MFDBUTTONMENU mnu134[] =
+	{
+		{ "Set item", 0, 'P' },
+		{ "Next item", 0, 'Q' },
+		{ "Previous item", 0, 'V' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+
+		{ "Inputs/Display", 0, 'F' },
+		{ "Calculate", 0, 'C' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu134, sizeof(mnu134) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("SET", OAPI_KEY_O, &ApolloRTCCMFD::menuSetStarSightingTableInput);
+	RegisterFunction("<<", OAPI_KEY_Q, &ApolloRTCCMFD::menuCycleMarkerDown);
+	RegisterFunction(">>", OAPI_KEY_V, &ApolloRTCCMFD::menuCycleMarkerUp);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_M, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_A, &ApolloRTCCMFD::menuVoid);
+
+	RegisterFunction("DIS", OAPI_KEY_F, &ApolloRTCCMFD::menuCycleSubscreen);
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuStarSightingTableCalc);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
 }
 
 bool ApolloRTCCMFDButtons::SearchForKeysInOtherPages() const

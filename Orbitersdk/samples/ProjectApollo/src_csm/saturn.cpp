@@ -52,6 +52,8 @@
 #include "iu.h"
 #include "Mission.h"
 
+#include "eva.h"
+
 #include <crtdbg.h>
 
 extern "C" {
@@ -665,6 +667,8 @@ void Saturn::initSaturn()
 
 	TLISoundsLoaded = false;
 	IUSCContPermanentEnabled = true;
+
+	cmpeva = false;
 
 	//
 	// Do we have the Skylab-type SM and CM?
@@ -1617,6 +1621,8 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 		MoveFlashlight();
 	}
 
+	if (cmpeva)UpdateEVA(); //if cmp eva active (vessel created), enables EVA Timestep
+
 	sprintf(buffer, "End time(0) %lld", time(0)); 
 	TRACE(buffer);
 }
@@ -1975,6 +1981,11 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 
 	checkControl.save(scn);
 	eventControl.save(scn);
+
+	//Save EVA State in scn file
+	char buffer[100];
+	sprintf(buffer, "%d", cmpeva);
+	oapiWriteScenario_string(scn, "CMPEVA", buffer);
 }
 
 void Saturn::QuicksaveScenario()
@@ -2531,6 +2542,11 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, "PAYN", 4)) {
 		strncpy (PayloadName, line + 5, 64);
+	}
+	else if (!strnicmp(line, "CMPEVA", 6)) {
+		//Load EVA State from scn file
+		sscanf(line + 6, "%f", &ftcp);
+		cmpeva = ftcp;
 	}
 	else if (!strnicmp(line, FAILURES_START_STRING, sizeof(FAILURES_START_STRING))) {
 		Failures.LoadState(scn);

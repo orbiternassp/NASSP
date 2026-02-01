@@ -756,6 +756,8 @@ public:
 	void set_RecoveryTargetSelectionCalc(double get, double lng);
 	void menuSelectRecoveryTarget();
 	bool set_RecoveryTarget(int num);
+	void menuSetStarSightingTableInput();
+	void menuStarSightingTableCalc();
 	void menuSaveDODREFSMMAT();
 	void menuSaveRTEREFSMMAT();
 	void menuMakeDODREFSMMATCurrent();
@@ -831,6 +833,7 @@ public:
 	void menuSetThrustCGPage();
 	void menuSetRTCCTimesPage();
 	void menuRTCCTimesInput();
+	void menuSetStarSightingTablePage();
 
 	void SetMEDInputPageM75();
 	void SetMEDInputPageP13();
@@ -843,7 +846,7 @@ public:
 	void menuGenericGoToDisplay();
 	void menuReturnToMEDInput();
 
-	void GenericGETInput(double *get, char *message, void (ApolloRTCCMFD::*func)(void) = NULL);
+	void GenericGETInput(double *get, char *message, void (ApolloRTCCMFD::*func)(void) = NULL, double factor = 1.0);
 	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
 	void GenericDouble2Input(double *val1, double *val2, char* message, double factor1 = 1.0, double factor2 = 1.0);
 	void GenericIntInput(int *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL, int min = 1, int max = 0);

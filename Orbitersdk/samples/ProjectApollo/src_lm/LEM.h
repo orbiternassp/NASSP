@@ -618,6 +618,8 @@ public:
 	virtual void StopEVA(bool isCDR);
 	virtual bool IsForwardHatchOpen() { return ForwardHatch.IsOpen(); }
 
+	virtual void StopSpaceEVA();
+
 	char *getOtherVesselName() { return agc.OtherVesselName;};
 	APSPropellantSource *GetAPSPropellant() { return &APSPropellant; };
 	DPSPropellantSource *GetDPSPropellant() { return &DPSPropellant; };
@@ -747,6 +749,12 @@ protected:
 	void SetContactLight(int m, bool state);
 	void SetPowerFailureLight(int m, bool state);
 	void SetStageSeqRelayLight(int m, bool state);
+
+	void ToggleSpaceEVA();
+
+	void UpdateSpaceEVA(void);
+
+	OBJHANDLE hSPACEEVA;
 
 #ifdef _OPENORBITER
 	void SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
@@ -1612,6 +1620,8 @@ protected:
 
 	int CDRinPLSS;
 	int LMPinPLSS;
+
+	int spaceeva;
 
 #define LMVIEW_CDR		 0
 #define LMVIEW_LMP		 1
