@@ -1610,7 +1610,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	DockLights.Timestep(simdt);
 	UtilLights.Timestep(simdt);
 	COASLights.Timestep(simdt);
-	FloodLights.Timestep(simdt);
 	pfira.Timestep(simdt);
 
 	// Do this toward the end so we can see current system state

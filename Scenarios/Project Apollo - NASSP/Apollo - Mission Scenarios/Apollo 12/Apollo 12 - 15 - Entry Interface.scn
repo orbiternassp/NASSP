@@ -4106,7 +4106,7 @@ PANELSWITCHES_BEGIN
   HighGainAntennaPitchMeter 0.000000 0.000000
   HighGainAntennaYawPositionSwitch 0.753789
   HighGainAntennaPitchPositionSwitch 0.417246
-  RightFloodRotarySwitch 0.548801
+  RightFloodRotarySwitch 1.0
   RightIntegralRotarySwitch 0.691111
   EcsGlycolPumpsSwitch 1
   SPSTestSwitch 1 0
