@@ -265,7 +265,7 @@ double FloodLights::GetCombinedOutput() //Provides scaling for VC lighting until
 	return (GetPrimOutput() + GetSecOutput()) * 1.5;
 }
 
-void FloodLights::SystemTimestep(double simdt)
+void FloodLights::SystemTimestep(double simdt) ///TBD: Generate Heat
 {
 	//Primary Flood Power Draw
 	if (FloodRtycb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
@@ -320,4 +320,95 @@ double TunnelLights::GetOutput() //Provides scaling for VC lighting and power dr
 void TunnelLights::SystemTimestep(double simdt)
 {
 	MNcb->DrawPower(GetOutput() * 9.0); //Each tunnel segment consists of 3 lights at 3W each 
+}
+
+//Integral Lights
+IntegralLights::IntegralLights()
+{
+	saturn = NULL;
+	Integralcb = NULL;
+	Rotary = NULL;
+	powerdraw = 0.0;
+}
+
+IntegralLights::~IntegralLights()
+{
+
+}
+
+void IntegralLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *rty)
+{
+	saturn = s;
+	Integralcb = cb;
+	Rotary = rty;
+}
+
+void IntegralLights::PowerUse(int pnl) //uses correct power draw per selected segment
+{
+	switch (pnl)
+	{
+		case 8:
+		{
+			powerdraw = 11.0;
+		}
+		break;
+		case 5:
+		{
+			powerdraw = 13.1;
+		}
+		break;
+		case 100:
+		{
+			powerdraw = 7.1;
+		}
+		break;
+	}
+}
+
+double IntegralLights::GetOutput() //Provides scaling for VC lighting and power draw
+{
+	if (Integralcb->Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		return (Integralcb->Voltage() / 115.0) * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
+	}
+	return 0.0;
+}
+
+void IntegralLights::SystemTimestep(double simdt)
+{
+	Integralcb->DrawPower(GetOutput() * powerdraw);
+}
+
+//Numeric Lights
+NumericLights::NumericLights()
+{
+	saturn = NULL;
+	Numericscb = NULL;
+	Rotary = NULL;
+}
+
+NumericLights::~NumericLights()
+{
+
+}
+
+void NumericLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *rty)
+{
+	saturn = s;
+	Numericscb = cb;
+	Rotary = rty;
+}
+
+double NumericLights::GetOutput() //Provides scaling for VC lighting and power draw
+{
+	if (Numericscb->Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		return (Numericscb->Voltage() / 115.0) * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
+	}
+	return 0.0;
+}
+
+void NumericLights::SystemTimestep(double simdt)
+{
+	Numericscb->DrawPower(GetOutput() * 9.0); //9W per segment not including mission timer or DSKY which are drawn elsewhere, this needs to be checked!
 }

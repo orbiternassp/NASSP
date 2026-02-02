@@ -156,6 +156,16 @@ void Saturn::SystemsInit() {
 	MNATunnelLights.Init(this, &LightingRndzMNACB, &TunnelLightSwitch);
 	MNBTunnelLights.Init(this, &LightingRndzMNBCB, &TunnelLightSwitch);
 
+	LeftIntegralLights.Init(this, &LightingNumIntLMDCCB, &IntegralRotarySwitch);
+	LeftIntegralLights.PowerUse(8); //Panel 8
+	RightIntegralLights.Init(this, &LightingNumIntRMDCCB, &RightIntegralRotarySwitch);
+	RightIntegralLights.PowerUse(5); //Panel 5
+	LEBIntegralLights.Init(this, &LightingNumIntLEBCB, &Panel100IntegralRotarySwitch);
+	LEBIntegralLights.PowerUse(100); //Panel 100
+
+	LeftNumericLights.Init(this, &LightingNumIntLMDCCB, &NumericRotarySwitch);
+	LEBNumericLights.Init(this, &LightingNumIntLEBCB, &Panel100NumericRotarySwitch);
+
 	//
 	// EPS/Cryo devices
 	//
@@ -1175,7 +1185,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //------------------------------------------------------------------------------------
 
 //Lighting Debug Lines   
-	/*
+	///*
 	//sprintf(oapiDebugString(), "LH Prim %.2f LH Sec %.2f RH Prim %.2f RH Sec %.2f LEB Prim %.2f LEB Sec %.2f", LeftFloodLights.GetPrimOutput(), LeftFloodLights.GetSecOutput(),
 		//RightFloodLights.GetPrimOutput(), RightFloodLights.GetSecOutput(), LEBFloodLights.GetPrimOutput(), LEBFloodLights.GetSecOutput());
 
@@ -1183,7 +1193,11 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		//RightFloodLights.GetPrimVoltage(), RightFloodLights.GetSecVoltage(), LEBFloodLights.GetPrimVoltage(), LEBFloodLights.GetSecVoltage());
 
 	//sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f", LeftFloodLights.GetCombinedOutput(), RightFloodLights.GetCombinedOutput(), LEBFloodLights.GetCombinedOutput());
-	 */
+	
+	sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f PWR: LH %.2f RH %.2f LEB %.2f", LeftIntegralLights.GetOutput(), RightIntegralLights.GetOutput(), LEBIntegralLights.GetOutput(), LightingNumIntLMDCCB.PowerLoad(), LightingNumIntRMDCCB.PowerLoad(), LightingNumIntLEBCB.PowerLoad());
+
+	sprintf(oapiDebugString(), "LH %.2f LEB %.2f PWR: LH %.2f LEB %.2f", LeftNumericLights.GetOutput(), LEBNumericLights.GetOutput(), LightingNumIntLMDCCB.PowerLoad(), LightingNumIntLEBCB.PowerLoad());
+	// */
 
 //Scaling Debug Lines
 	/*
@@ -1904,6 +1918,11 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		LEBFloodLights.SystemTimestep(tFactor);
 		MNATunnelLights.SystemTimestep(tFactor);
 		MNBTunnelLights.SystemTimestep(tFactor);
+		LeftIntegralLights.SystemTimestep(tFactor);
+		RightIntegralLights.SystemTimestep(tFactor);
+		LEBIntegralLights.SystemTimestep(tFactor);
+		LeftNumericLights.SystemTimestep(tFactor);
+		LEBNumericLights.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
