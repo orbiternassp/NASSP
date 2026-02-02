@@ -48,6 +48,14 @@ jobs:
       
     - name: Install
       run: cmake --install ${{github.workspace}}/build
+      
+    - name: Write version file
+      run: |
+        $version = "${{ env.BUILD_NAME }}"
+        @"
+        $version
+        "@ | Out-File -Encoding UTF8 "${{ github.workspace }}/install/NASSP_VERSION.txt"
+
 
     - name: Zip output directory
       run: Compress-Archive -Path ${{github.workspace}}/install/* -DestinationPath ${{github.workspace}}/${{env.BUILD_NAME}}-x64.zip -Force
