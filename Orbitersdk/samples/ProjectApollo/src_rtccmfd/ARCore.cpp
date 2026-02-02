@@ -589,9 +589,9 @@ bool AR_GCore::AGOP_LM_REFSMMAT_Required()
 	return GetLMREFSMMAT;
 }
 
-void AR_GCore::DFLBackgroundSlide(oapi::Sketchpad *skp, DWORD W, DWORD H, unsigned display)
+void AR_GCore::DFLBackgroundSlide(oapi::Sketchpad *skp, DWORD W, DWORD WOFF, DWORD H, DWORD HOFF, unsigned display)
 {
-	BackgroundSlides.Print(skp, W, H, display);
+	BackgroundSlides.Print(skp, W, WOFF, H, HOFF, display);
 }
 
 ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
