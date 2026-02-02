@@ -90,7 +90,6 @@ protected:
 	ToggleSwitch *TunnelLtsw;
 };
 
-
 /// This class simulates exterior lighting behavior in the CSM
 class ExteriorLighting
 {
