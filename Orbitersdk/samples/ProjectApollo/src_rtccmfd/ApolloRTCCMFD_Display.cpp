@@ -3509,6 +3509,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, x, y, "0047 MISSION PLNG"); y++;
 		Text(skp, x, y, "0048 GEN PURP MNV"); y++;
 		Text(skp, x, y, "0050 PERIG ADJUST"); y++;
+		Text(skp, x, y, "0053 STAR SIGHTNG"); y++;
 		Text(skp, x, y, "0054 DET MVR TAB1"); y++;
 		Text(skp, x, y, "0055 CSM PSAT 1"); y++;
 		Text(skp, x, y, "0056 LM PSAT 1"); y++;
@@ -4623,7 +4624,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			sprintf(Buffer, "%06.2f°P %06.2f°Y %06.2f°R", GC->rtcc->med_m66.Att.x*DEG, GC->rtcc->med_m66.Att.y*DEG, GC->rtcc->med_m66.Att.z*DEG);
 			skp->Text(W - CW, 3 * H / 14, Buffer, strlen(Buffer));
 		}
-		if (GC->rtcc->med_m66.AttitudeOpt >= 3)
+		if (GC->rtcc->med_m66.BurnParamNo > 1)
 		{
 			if (GC->rtcc->med_m66.HeadsUp)
 			{
@@ -9278,6 +9279,118 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, x + 13, y, "GET");
 		x = 26;
 		for (y = 5; y < 13; y++) Text(skp, x, y, "GMT");
+		break;
+	case 134:
+		if (subscreen == 0)
+		{
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text(W / 2, CH / 2, "Star Sighting Table Inputs", 26);
+			skp->SetTextAlign(oapi::Sketchpad::LEFT);
+			x = 1;  y = 3; dx = 8;
+			Text(skp, x, marker + y, "*");
+			x++;
+			Text(skp, x, y, "MODE:");
+			if (GC->rtcc->EZGSTMED.G30_Mode == 0) sprintf(Buffer, "0: Ground Target (fixed attitude)");
+			else if (GC->rtcc->EZGSTMED.G30_Mode == 1) sprintf(Buffer, "1: Ground Target (fixed sextant)");
+			else if (GC->rtcc->EZGSTMED.G30_Mode == 2) sprintf(Buffer, "2: Celestial Target (fixed sextant)");
+			else if (GC->rtcc->EZGSTMED.G30_Mode == 3) sprintf(Buffer, "3: Unknown celestial target");
+			else sprintf(Buffer, "4: Celestial Target (fixed attitude)");
+			Text(skp, x + dx, y, Buffer);
+			y++;
+			Text(skp, x, y, "TGTID:");
+			Text(skp, x + dx, y, GC->rtcc->EZGSTMED.G30_TGTID);
+			y++;
+			Text(skp, x, y, "GETT:");
+			Text_GET_HHHMMSSCS(skp, x + dx, y, GC->rtcc->EZGSTMED.G30_GETT);
+			y++;
+			Text(skp, x, y, "MATRIX:");
+			GC->rtcc->EMGSTGENName(GC->rtcc->EZGSTMED.G30_Matrix, Buffer);
+			Text(skp, x + dx, y, Buffer);
+			y++;
+			if (GC->rtcc->EZGSTMED.G30_Mode <= 1)
+			{
+				Text(skp, x, y, "LAT:");
+				Text(skp, x + dx, y, "%+06.2lf", GC->rtcc->EZGSTMED.G30_Lat* DEG);
+				y++;
+				Text(skp, x, y, "LNG:");
+				Text(skp, x + dx, y, "%+05.2lf", GC->rtcc->EZGSTMED.G30_Lng* DEG);
+				y++;
+				Text(skp, x, y, "HEI:");
+				Text(skp, x + dx, y, "%+.0lf", GC->rtcc->EZGSTMED.G30_Alt / 0.3048);
+				y++;
+				Text(skp, x, y, "ELV:");
+				Text(skp, x + dx, y, "%.0lf", GC->rtcc->EZGSTMED.G30_Elev* DEG);
+				y++;
+			}
+			else y += 4;
+			if (GC->rtcc->EZGSTMED.G30_Mode == 2 || GC->rtcc->EZGSTMED.G30_Mode == 4)
+			{
+				Text(skp, x, y, "RA:");
+				Text_GET_HHMMSS(skp, x + dx, y, GC->rtcc->EZGSTMED.G30_RA / PI2 * 24.0 * 3600.0);
+				y++;
+				Text(skp, x, y, "DEC:");
+				FormatDeclination(Buffer, GC->rtcc->EZGSTMED.G30_DEC* DEG * 3600.0);
+				Text(skp, x + dx, y, Buffer);
+				y++;
+			}
+			else y += 2;
+			if (GC->rtcc->EZGSTMED.G30_Mode == 0 || GC->rtcc->EZGSTMED.G30_Mode >= 3)
+			{
+				Text(skp, x, y, "R:");
+				Text(skp, x + dx, y, "%06.2lf", GC->rtcc->EZGSTMED.G30_Att.x* DEG);
+				y++;
+				Text(skp, x, y, "P:");
+				Text(skp, x + dx, y, "%06.2lf", GC->rtcc->EZGSTMED.G30_Att.y* DEG);
+				y++;
+				Text(skp, x, y, "Y:");
+				Text(skp, x + dx, y, "%06.2lf", GC->rtcc->EZGSTMED.G30_Att.z* DEG);
+				y++;
+			}
+			else y += 3;
+			if (GC->rtcc->EZGSTMED.G30_Mode >= 1 && GC->rtcc->EZGSTMED.G30_Mode <= 3)
+			{
+				Text(skp, x, y, "SFT:");
+				Text(skp, x + dx, y, "%06.2lf", GC->rtcc->EZGSTMED.G30_SFT* DEG);
+				y++;
+				Text(skp, x, y, "TRN:");
+				Text(skp, x + dx, y, "%06.3lf", GC->rtcc->EZGSTMED.G30_TRN * DEG);
+				y++;
+			}
+			else y += 2;
+		}
+		else
+		{
+			SetMOCRFont(skp, 3, false);
+			GetCharSize(skp, CW, CH);
+			SetMOCRDisplayCentered(3);
+			Text(skp, 19, 0, "STAR SIGHTING TABLE");
+			Text(skp, 52, 0, "0053");
+			Text(skp, 25, 2, "VEH");
+			Text(skp, 3, 3, "TGT ID");
+			Text(skp, 2, 5, "TGT DEC");
+			Text(skp, 1, 6, "TGT RT ASC");
+			Text(skp, 23, 4, "RO");
+			Text(skp, 23, 5, "PI");
+			Text(skp, 23, 6, "YM");
+			Text(skp, 38, 5, "LOS DEC");
+			Text(skp, 38, 6, "LOS RTASC");
+			Text(skp, 4, 9, "GND PT DATA");
+			Text(skp, 2, 11, "LAT");
+			Text(skp, 2, 12, "LONG");
+			Text(skp, 2, 13, "ALT");
+			Text(skp, 2, 14, "ELV");
+			Text(skp, 23, 9, "SFT");
+			Text(skp, 23, 10, "TRN");
+			Text(skp, 38, 8, "GETT");
+			Text(skp, 38, 9, "REV");
+			Text(skp, 38, 10, "LON");
+			Text(skp, 38, 11, "LON GET");
+			Text(skp, 38, 13, "CA");
+			Text(skp, 38, 14, "GETCA");
+			Text(skp, 27, 18, "REFSMMAT");
+
+			DFLDynamicData(skp, 53, 3);
+		}
 		break;
 	}
 

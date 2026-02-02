@@ -1056,6 +1056,7 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				break;
 			}
 		}
+		return 0;
 	}
 
 	if (!KEYMOD_SHIFT(keystate) && !KEYMOD_CONTROL(keystate) && KEYMOD_ALT(keystate))
@@ -1114,20 +1115,27 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 				break;
 
 			case OAPI_KEY_W:
-				optics.ReticleMoved = 0.52;  //Fast Rate (about 30 deg/sec)
+				if (AOTReticleDetent.GetState() == 0)
+				{
+					optics.ReticleMoved = 0.52;  //Fast Rate (about 30 deg/sec)
 
-				if (KEYMOD_ALT(keystate)) {
-					optics.ReticleMoved = 0.01;  //Slow Rate (about 0.5 deg/sec)
+					if (KEYMOD_ALT(keystate)) {
+						optics.ReticleMoved = 0.01;  //Slow Rate (about 0.5 deg/sec)
+					}
 				}
 				break;
 
 			case OAPI_KEY_S:
-				optics.ReticleMoved = -0.52;  //Fast Rate (about 30 deg/sec)
+				if (AOTReticleDetent.GetState() == 0)
+				{
+					optics.ReticleMoved = -0.52;  //Fast Rate (about 30 deg/sec)
 
-				if (KEYMOD_ALT(keystate)) {
-					optics.ReticleMoved = -0.01;  //Slow Rate (about 0.5 deg/sec)
+					if (KEYMOD_ALT(keystate)) {
+						optics.ReticleMoved = -0.01;  //Slow Rate (about 0.5 deg/sec)
+					}
 				}
 				break;
+
 			case OAPI_KEY_Q:
 				agc.SetInputChannelBit(016, MarkX, 1);  // Mark X
 				break;

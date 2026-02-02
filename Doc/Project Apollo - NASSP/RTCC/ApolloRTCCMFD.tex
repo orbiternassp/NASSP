@@ -2892,10 +2892,59 @@ NV\textsubscript{2}&Number of vectors used in interpolation for base vector for 
 Trajectory Update Number&Update number associated with subject vehicle ephemeris&&(2)\\
 \end{tabular}
 \end{center}
-
+\newpage
 \subsection{Mission Plan Table (MSK 0047)}
 
 \subsubsection{Function}
+TBD
+\newpage
+\subsection{Star Sighting Table (MSK 0053)}
+\subsubsection{Function}
+For input Earth or moon ground targets, this element will compute and display sighting data for the CSM sextant based on the criterion that the first ascending line-of-sight at a specified elevation, which occurs after an input threshold time, is the desired one. For input celestial targets, this element will compute and display sighting data for the CSM sextant based on the criterion that the first ascending line-of-sight to the target not occulted by the Earth or its atmosphere is the desired one.
+\subsubsection{Inputs}
+\textbf{MODE:} Calculation mode of the display. Available options are: Ground target with fixed attitude, ground target in fixed sextant configuration, celestial target in fixed sextant configuration, unknown celestial target and celestial target with fixed attitude.\\
+\textbf{TGTID:} Three character name to be given to the target. For ground targets (modes 0 and 1) the third character must specify E (Earth) or M (Moon). Otherwise the target ID has no functional use.\\
+\textbf{GETT:} Threshold time for acquisition of signal (AOS) search. Used in all modes except mode 3.\\
+\textbf{MATRIX:} Selected REFSMMAT as the attitude reference for the input or calculated attitude. Valid options are: CUR, PCR, TLM, OST, MED, DMT, DOD or LCV.\\
+\textbf{LAT:} Latitude of the ground target in degrees.\\
+\textbf{LNG:} Longitude of the ground target in degrees.\\
+\textbf{HEI:} Height of the ground target in feet.\\
+\textbf{ELV:} Elevation angle from the ground target to the spacecraft in degrees.\\
+\textbf{RA:} Right ascension of the celestial target in hr:min:sec format.\\
+\textbf{DEC:} Declination of the celestial target in deg:min:sec format.\\
+\textbf{R:} Roll angle at the sighting in degrees.\\
+\textbf{P:} Pitch angle at the sighting in degrees.\\
+\textbf{Y:} Yaw angle at the sighting in degrees.\\
+\textbf{SFT:} Sextant shaft angle at the sighting in degrees.\\
+\textbf{TRN:} Sextant trunnion angle at the sighting in degrees.\\
+\newpage
+\subsubsection{Display}
+\begin{center}
+\begin{tabular}{ L{2.4cm} L{7.1cm} L{3cm} }
+\underline{QUANTITY} & \underline{DEFINITION} & \underline{DIMENSIONS} \\
+TGTID&Identification associated with a celestial or ground target&\\
+TGT DEC&The declination of the target point&deg:min:sec\\
+TGT RT ASC&The right ascension of the target point&hr:min:sec\\
+RO&The outer CDU gimbal angle (roll) associated with the required S/C attitude&deg\\
+PI&The inner CDU gimbal angle (pitch) associated with the required S/C attitude&deg\\
+YM&The middle CDU gimbal angle (yaw) associated with the required S/C attitude&deg\\
+SFT&The sextant shaft angle determined for the sighting&deg\\
+TRN&The sextant trunnion angle determined for the sighting&deg\\
+CA&Minimum central angle between the S/C and the celestial point&deg\\
+GETCA&GET of central angle&hr:min:sec\\
+GETT&Threshold time to begin search for target&hr:min:sec\\
+REV&The revolution in which sighting will be performed. Will be displayed as available&\\
+LON&The subsatellite longitude with respect to the reference body when a line of sight is available to the target. For earth reference body and targets other than earth ground targets, the line of sight cannot be occulted by the earth's atmosphere. &deg\\
+LON GET&The time of arrival at LOS&hr:min:sec\\
+LOS DEC&The declination of the LOS defined by the REFSMMAT, shaft and trunnion angles, and S/C attitudes&deg:min:sec\\
+LOS RT ASC&The right ascension of the LOS defined by the REFSMMAT, shaft and trunnion angles, and S/C attitudes&hr:min:sec\\
+REFSMMAT&The 3 by 3 matrix defining the orientation of the IMU coordinate system and its identification code&\\
+LAT&Geodetic latitude of earth ground target or selenographic latitude of lunar ground target&deg\\
+LONG&Longitude of ground target&deg\\
+ALT&Altitude of ground target above Earth or Moon&feet\\
+ELV&Elevation of spacecraft above ground target's local horizontal plane&deg\\
+\end{tabular}
+\end{center}
 \newpage
 \subsection{FDO Detailed Maneuver Table (MSK 0054 and 0069)}
 \subsubsection{Function}
