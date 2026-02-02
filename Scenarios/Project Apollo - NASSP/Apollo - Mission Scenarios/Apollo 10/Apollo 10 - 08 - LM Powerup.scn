@@ -3417,7 +3417,7 @@ PANELSWITCHES_BEGIN
   GlycolToRadiatorsRotary 0
   OxygenSurgeTankValveRotary 8
   Panel100IntegralRotarySwitch 0.4
-  Panel100FloodRotarySwitch 0.483756
+  Panel100FloodRotarySwitch 0.6
   Panel100NumericRotarySwitch 0.4
   RightSystemTestRotarySwitch 1
   LeftSystemTestRotarySwitch 4
@@ -3434,7 +3434,7 @@ PANELSWITCHES_BEGIN
   SCSElectronicsPowerRotarySwitch 2
   FDAIPowerRotarySwitch 3
   IntegralRotarySwitch 0.652277
-  FloodRotarySwitch 0.55988
+  FloodRotarySwitch 1.0
   NumericRotarySwitch 0.4
   DockingProbeBIndicator 1
   DockingProbeAIndicator 1
@@ -3453,7 +3453,7 @@ PANELSWITCHES_BEGIN
   HighGainAntennaPitchMeter -39.182067 -39.174882
   HighGainAntennaYawPositionSwitch 0.616115
   HighGainAntennaPitchPositionSwitch 0.725677
-  RightFloodRotarySwitch 0.512917
+  RightFloodRotarySwitch 1.0
   RightIntegralRotarySwitch 0.542902
   EcsGlycolPumpsSwitch 1
   SPSTestSwitch 1 0

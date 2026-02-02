@@ -3350,7 +3350,7 @@ PANELSWITCHES_BEGIN
   GlycolToRadiatorsRotary 0
   OxygenSurgeTankValveRotary 8
   Panel100IntegralRotarySwitch 1.0
-  Panel100FloodRotarySwitch 0.485417
+  Panel100FloodRotarySwitch 0.6
   Panel100NumericRotarySwitch 1.0
   RightSystemTestRotarySwitch 1
   LeftSystemTestRotarySwitch 4
@@ -3386,7 +3386,7 @@ PANELSWITCHES_BEGIN
   HighGainAntennaPitchMeter -0.649980 -0.649980
   HighGainAntennaYawPositionSwitch 0.96832
   HighGainAntennaPitchPositionSwitch 0.503611
-  RightFloodRotarySwitch 0.499784
+  RightFloodRotarySwitch 1.0
   RightIntegralRotarySwitch 0.628405
   EcsGlycolPumpsSwitch 1
   SPSTestSwitch 1 0

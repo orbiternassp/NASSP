@@ -51,3 +51,41 @@ protected:
 	double lowpress;
 	double highpress;
 };
+
+/// This class simulates flood lighting behavior in the CSM
+class FloodLights
+{
+public:
+	FloodLights();
+	virtual ~FloodLights();
+	void FloodLights::Init(Saturn *s, e_object *flood_rty_src, e_object *fixed, ToggleSwitch *dim, ContinuousRotationalSwitch *rty);
+	double GetPrimVoltage();
+	double GetSecVoltage();
+	double GetPrimOutput();
+	double GetSecOutput();
+	double GetCombinedOutput();
+	void SystemTimestep(double simdt);
+
+protected:
+	Saturn *saturn;
+	e_object *FloodRtycb;
+	e_object *FIXEDsw;
+	ToggleSwitch *DIMsw;
+	ContinuousRotationalSwitch *Rotary;
+};
+
+/// This class simulates tunnel lighting behavior in the CSM
+class TunnelLights
+{
+public:
+	TunnelLights();
+	virtual ~TunnelLights();
+	void TunnelLights::Init(Saturn *s, e_object *cb, ToggleSwitch *lt_sw);
+	double GetOutput();
+	void SystemTimestep(double simdt);
+
+protected:
+	Saturn *saturn;
+	e_object *MNcb;
+	ToggleSwitch *TunnelLtsw;
+};
