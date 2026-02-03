@@ -388,5 +388,5 @@ double NumericLights::GetOutput() //Provides scaling for VC lighting and power d
 
 void NumericLights::SystemTimestep(double simdt)
 {
-	Numericscb->DrawPower(GetOutput() * 9.0); //9W per segment not including mission timer or DSKY which are drawn elsewhere, this needs to be checked!
+	Numericscb->DrawPower(GetOutput() * 9.0); //9W per segment not including mission timer or DSKY which are drawn elsewhere
 }
