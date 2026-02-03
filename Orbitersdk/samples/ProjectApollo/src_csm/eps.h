@@ -94,10 +94,9 @@ protected:
 class IntegralLights
 {
 public:
-	IntegralLights();
+	IntegralLights(double powerdraw);
 	virtual ~IntegralLights();
 	void IntegralLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *rty);
-	void PowerUse(int pnl);
 	double GetOutput();
 	void SystemTimestep(double simdt);
 

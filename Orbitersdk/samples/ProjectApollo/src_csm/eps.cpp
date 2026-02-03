@@ -323,7 +323,7 @@ void TunnelLights::SystemTimestep(double simdt)
 }
 
 //Integral Lights
-IntegralLights::IntegralLights()
+IntegralLights::IntegralLights(double powerdraw)
 {
 	saturn = NULL;
 	Integralcb = NULL;
@@ -341,28 +341,6 @@ void IntegralLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *r
 	saturn = s;
 	Integralcb = cb;
 	Rotary = rty;
-}
-
-void IntegralLights::PowerUse(int pnl) //uses correct power draw per selected segment
-{
-	switch (pnl)
-	{
-		case 8:
-		{
-			powerdraw = 11.0;
-		}
-		break;
-		case 5:
-		{
-			powerdraw = 13.1;
-		}
-		break;
-		case 100:
-		{
-			powerdraw = 7.1;
-		}
-		break;
-	}
 }
 
 double IntegralLights::GetOutput() //Provides scaling for VC lighting and power draw
