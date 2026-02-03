@@ -3541,7 +3541,7 @@ PANELSWITCHES_BEGIN
   GlycolToRadiatorsRotary 0
   OxygenSurgeTankValveRotary 8
   Panel100IntegralRotarySwitch 0.646942
-  Panel100FloodRotarySwitch 0.452633
+  Panel100FloodRotarySwitch 0.6
   Panel100NumericRotarySwitch 0.562031
   RightSystemTestRotarySwitch 1
   LeftSystemTestRotarySwitch 4

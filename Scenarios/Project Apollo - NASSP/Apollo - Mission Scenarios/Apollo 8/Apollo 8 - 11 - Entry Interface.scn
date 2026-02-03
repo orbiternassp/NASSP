@@ -3874,7 +3874,7 @@ PANELSWITCHES_BEGIN
   SCSElectronicsPowerRotarySwitch 2
   FDAIPowerRotarySwitch 3
   IntegralRotarySwitch 0.888747
-  FloodRotarySwitch 0.84981
+  FloodRotarySwitch 1.0
   NumericRotarySwitch 0.881269
   DockingProbeBIndicator 1
   DockingProbeAIndicator 1

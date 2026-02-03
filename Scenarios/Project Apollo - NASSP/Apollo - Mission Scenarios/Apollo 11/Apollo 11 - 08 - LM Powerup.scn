@@ -3432,7 +3432,7 @@ PANELSWITCHES_BEGIN
   SCSElectronicsPowerRotarySwitch 2
   FDAIPowerRotarySwitch 3
   IntegralRotarySwitch 0.658678
-  FloodRotarySwitch 0.400085
+  FloodRotarySwitch 1.0
   NumericRotarySwitch 0.509112
   DockingProbeBIndicator 1
   DockingProbeAIndicator 1
@@ -3451,7 +3451,7 @@ PANELSWITCHES_BEGIN
   HighGainAntennaPitchMeter 8.806140 8.806140
   HighGainAntennaYawPositionSwitch 0.748478
   HighGainAntennaPitchPositionSwitch 0.451077
-  RightFloodRotarySwitch 0.455168
+  RightFloodRotarySwitch 1.0
   RightIntegralRotarySwitch 0.69512
   EcsGlycolPumpsSwitch 1
   SPSTestSwitch 1 0
