@@ -94,7 +94,7 @@ protected:
 class IntegralLights
 {
 public:
-	IntegralLights(double powerdraw);
+	IntegralLights(double watts);
 	virtual ~IntegralLights();
 	void IntegralLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *rty);
 	double GetOutput();

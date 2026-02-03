@@ -323,12 +323,12 @@ void TunnelLights::SystemTimestep(double simdt)
 }
 
 //Integral Lights
-IntegralLights::IntegralLights(double powerdraw)
+IntegralLights::IntegralLights(double watts)
 {
 	saturn = NULL;
 	Integralcb = NULL;
 	Rotary = NULL;
-	powerdraw = 0.0;
+	powerdraw = watts;
 }
 
 IntegralLights::~IntegralLights()
