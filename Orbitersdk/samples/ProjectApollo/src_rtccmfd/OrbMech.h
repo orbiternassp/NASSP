@@ -221,6 +221,10 @@ namespace OrbMech {
 	const MATRIX3 R_ref_Moon = mul(_M(cos(L_ref_Moon), 0, -sin(L_ref_Moon), 0, 1, 0, sin(L_ref_Moon), 0, cos(L_ref_Moon)), _M(1, 0, 0, 0, cos(e_ref_Moon), -sin(e_ref_Moon), 0, sin(e_ref_Moon), cos(e_ref_Moon)));
 	const MATRIX3 R_obl_Moon = _M(1, 0, 0, 0, cos(e_rel_Moon), -sin(e_rel_Moon), 0, sin(e_rel_Moon), cos(e_rel_Moon));
 
+	//Additional conversion factors
+	const double RASEC_TO_RADIANS = PI / 43200.0;	//Seconds of right ascension to radians
+	const double ARCSEC_TO_RADIANS = PI / 648000.0; //Arc seconds to radians
+
 	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, VECTOR3 &R2, VECTOR3 &V2);
 	double kepler_E(double e, double M, double error2 = 1.e-8);
 	double kepler_H(double e, double M);
@@ -242,6 +246,7 @@ namespace OrbMech {
 	double TrueToEccentricAnomaly(double ta, double ecc);
 	void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX);
 	double fischer_ellipsoid(VECTOR3 R);
+	VECTOR3 VectorToHorizon(VECTOR3 r_ZC, VECTOR3 u_S, int body, bool far_horizon);
 	double timetoperi(VECTOR3 R, VECTOR3 V, double mu);
 	double timetoperi_integ(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri);
 	double timetoperi_integ(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri, VECTOR3 &R2, VECTOR3 &V2);

@@ -412,6 +412,79 @@ double fischer_ellipsoid(VECTOR3 R)		//Used in the AGC to calculate the radius o
 	return sqrt(b*b / (1 - (1 - b*b / a / a)*(1 - sinl*sinl)));	//Calculates the radius dependent on the latitude
 }
 
+VECTOR3 VectorToHorizon(VECTOR3 r_ZC, VECTOR3 u_S, int body, bool far_horizon)
+{
+	//INPUTS:
+	//r_ZC: Vector from body to spacecraft
+	//u_S: Star unit vector (line-of-sight)
+	//body: 0 = Earth, 1 = Moon
+	//far_horizon: true = return vector to far horizon, false = return vector to near horizon
+
+	MATRIX3 M;
+	VECTOR3 u0, u1, u2, u_Z, r_H, u_sH, t[2], t_n, t_f, R_L, u_horizon;
+	double a_H, b_H, A, alpha, beta, AA[2];
+
+	u_Z = _V(0, 0, 1);
+
+	u2 = unit(crossp(u_S, r_ZC));
+	u0 = unit(crossp(u_Z, u2));
+	u1 = crossp(u2, u0);
+	M = _M(u0.x, u0.y, u0.z, u1.x, u1.y, u1.z, u2.x, u2.y, u2.z);
+
+	if (body == BODY_EARTH)
+	{
+		double SINL, r_F, h;
+
+		h = 0.0; //TBD
+
+		SINL = dotp(u1, u_Z);
+		r_F = OrbMech::R_Earth; //TBD
+		a_H = r_F + h;
+		b_H = r_F + h;
+	}
+	else
+	{
+		a_H = b_H = R_Moon;
+	}
+	r_H = mul(M, r_ZC);
+	u_sH = mul(M, u_S);
+	A = r_H.x * r_H.x / a_H / a_H + r_H.y * r_H.y / b_H / b_H;
+
+	alpha = a_H / b_H * r_H.y * sqrt(A - 1.0);
+	beta = b_H / a_H * r_H.x * sqrt(A - 1.0);
+
+	t[0] = _V(r_H.x + alpha, r_H.y - beta, 0.0) / A;
+	t[1] = _V(r_H.x - alpha, r_H.y + beta, 0.0) / A;
+
+	AA[0] = dotp(u_sH, unit(t[0] - r_H));
+	AA[1] = dotp(u_sH, unit(t[1] - r_H));
+
+	if (AA[1] > AA[0])
+	{
+		// 1 is near horizon
+		t_n = t[1];
+		t_f = t[0];
+	}
+	else
+	{
+		// 0 is near horizon
+		t_n = t[0];
+		t_f = t[1];
+	}
+
+	if (far_horizon)
+	{
+		R_L = t_f;
+	}
+	else
+	{
+		R_L = t_n;
+	}
+	R_L = tmul(M, R_L);
+	u_horizon = unit(R_L - r_ZC);
+	return u_horizon;
+}
+
 void rv_from_r0v0_ta(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu)
 {
 	double f, g, fdot, gdot;
