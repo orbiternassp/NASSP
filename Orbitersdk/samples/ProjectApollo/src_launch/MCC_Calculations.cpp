@@ -40,8 +40,19 @@ MCC_Calculations::MCC_Calculations(RTCC *r) : RTCCModule(r)
 
 bool MCC_Calculations::CreateEphemeris(EphemerisData sv, double EphemerisLeftLimitGMT, double EphemerisRightLimitGMT, EphemerisDataTable2 &ephem)
 {
-	EMSMISSInputTable in;
 	PLAWDTOutput weights;
+
+	weights.KFactor = 0.0;
+	weights.CC.set(0);
+	weights.CSMWeight = 1.0;
+	weights.CSMArea = 0.0;
+
+	return CreateEphemeris(sv, weights, EphemerisLeftLimitGMT, EphemerisRightLimitGMT, ephem);
+}
+
+bool MCC_Calculations::CreateEphemeris(EphemerisData sv, PLAWDTOutput weights, double EphemerisLeftLimitGMT, double EphemerisRightLimitGMT, EphemerisDataTable2& ephem)
+{
+	EMSMISSInputTable in;
 
 	in.AnchorVector = sv;
 	in.EphemerisLeftLimitGMT = EphemerisLeftLimitGMT;
@@ -59,13 +70,6 @@ bool MCC_Calculations::CreateEphemeris(EphemerisData sv, double EphemerisLeftLim
 		in.MCIEphemTableIndicator = &ephem;
 	}
 	in.useInputWeights = true;
-
-	//TBD
-	weights.KFactor = 0.0;
-	weights.CC.set(0);
-	weights.CSMWeight = 1.0;
-
-	in.DensityMultiplier = 0.0;
 	in.WeightsTable = &weights;
 	in.VehicleCode = RTCC_MPT_CSM; //Not used
 
@@ -75,6 +79,7 @@ bool MCC_Calculations::CreateEphemeris(EphemerisData sv, double EphemerisLeftLim
 
 	return (in.NIAuxOutputTable.ErrorCode != 0);
 }
+
 double MCC_Calculations::EnvironmentChange(EphemerisDataTable2 &ephem, double gmt_estimate, int option, bool present, bool terminator)
 {
 	ManeuverTimesTable MANTIMES;
@@ -208,6 +213,45 @@ double MCC_Calculations::FindOrbitalMidnight(SV sv, double t_TPI_guess)
 
 	ttoMidnight = OrbMech::sunrise(pRTCC->SystemParameters.MAT_J2000_BRCS, sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, 1, 1, false);
 	return t_TPI_guess + ttoMidnight;
+}
+
+int MCC_Calculations::StationContactsGenerator(EphemerisDataTable2& ephem, double lat, double lng, double alt, int RBI, StationContact& contact)
+{
+	//INPUTS:
+	//ephem: Ephemeris data table generated with CreateEphemeris (ECI or MCI coordinates). Does not have to agree with RBI
+	//lat: Latitude of the ground station
+	//lng: Longitude of the ground station
+	//alt: Elevation of the ground station
+	//RBI: Reference body indicator of the ground station (0 = Earth, 1 = Moon)
+	//OUTPUTS:
+	//contact: Station contact data table
+	//return value: Error if non-zero
+	EphemerisDataTable2 ephem_true;
+	std::vector<StationContact> acquisitions;
+	ManeuverTimesTable mantimes;
+	StationData station;
+	int csi, error;
+
+	pRTCC->EMGGPCHR(lat, lng, alt, RBI, 0.0, &station);
+
+	//Convert ephemeris to ECT or MCT
+	if (RBI == BODY_EARTH)
+	{
+		csi = RTCC_COORDINATES_ECT;
+	}
+	else
+	{
+		csi = RTCC_COORDINATES_MCT;
+	}
+	error = pRTCC->ELVCNV(ephem.table, ephem.Header.CSI, csi, ephem_true.table);
+	if (error) return 1;
+
+	//Generate station contact
+	error = pRTCC->EMXING(ephem_true, mantimes, station, RBI, acquisitions, NULL, 1);
+	if (error || (acquisitions.size() == 0U)) return 2;
+
+	contact = acquisitions[0];
+	return 0;
 }
 
 void MCC_Calculations::FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS)

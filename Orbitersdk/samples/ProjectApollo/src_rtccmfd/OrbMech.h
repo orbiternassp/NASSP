@@ -277,9 +277,17 @@ namespace OrbMech {
 	VECTOR3 CALCGTA(MATRIX3 des);
 	void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP);
 	void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA);
+
+	VECTOR3 GetCSMCOASVector(double SPA, double SXP);
+	VECTOR3 GetLMCOASVector(double EL, double SXP, bool IsZAxis);
+
+	void CSMCOASAngles(VECTOR3 u_NB, double& SPA, double& SXP);
+	void LMCOASAngles(bool Axis, VECTOR3 u_NB, double& EL, double& SXP);
+
 	MATRIX3 AXISGEN(VECTOR3 s_NBA, VECTOR3 s_NBB, VECTOR3 s_SMA, VECTOR3 s_SMB);
 	MATRIX3 ROTCOMP(VECTOR3 U_R, double A);
-	MATRIX3 THREEAXISPOINTING(VECTOR3 R, VECTOR3 V ,VECTOR3 SCAXIS, VECTOR3 LAMC, double TVR);
+	MATRIX3 HeadsUpAttitude(VECTOR3 R, VECTOR3 V, VECTOR3 SCAXIS, VECTOR3 TLOS);
+	MATRIX3 THREEAXISPOINTING(VECTOR3 R, VECTOR3 V ,VECTOR3 SCAXIS, VECTOR3 TLOS, double OMICRON);
 	VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int prefset, int &set);
 	MATRIX3 AGSStarAlignment(const VECTOR3 *navstars, VECTOR3 Att1, VECTOR3 Att2, int star1, int star2, int axis, int detent, double AOTCounter);
 	bool oneclickcoast(int Epoch, VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);

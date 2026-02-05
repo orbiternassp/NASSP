@@ -4360,6 +4360,99 @@ void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA)
 	TA = acos(dotp(Z_SB, S_SB));
 }
 
+VECTOR3 GetCSMCOASVector(double SPA, double SXP)
+{
+	//In navigation base coordinates
+	return unit(_V(cos(SPA) * cos(SXP), sin(SXP), sin(SPA) * cos(SXP)));
+}
+
+VECTOR3 GetLMCOASVector(double EL, double SXP, bool IsZAxis)
+{
+	//In navigation base coordinates
+	if (IsZAxis)
+	{
+		return unit(_V(sin(SXP), -sin(EL) * cos(SXP), cos(EL) * cos(SXP)));
+	}
+
+	//X-axis
+	return unit(_V(cos(EL) * cos(SXP), sin(SXP), sin(EL) * cos(SXP)));
+}
+
+void CSMCOASAngles(VECTOR3 u_NB, double& SPA, double& SXP)
+{
+	SPA = -atan(u_NB.z / u_NB.x);
+	SXP = asin(u_NB.y);
+}
+
+void LMCOASAngles(bool Axis, VECTOR3 u_NB, double& EL, double& SXP)
+{
+	//Axis: true = Z-axis, false = X-axis
+	double EPS, GAM, ALP, R, SCV;
+
+	if (Axis)
+	{
+		//Z-axis
+		double HYP;
+
+		EPS = acos(u_NB.z);
+		GAM = acos(u_NB.x);
+		HYP = sqrt(u_NB.x * u_NB.x + u_NB.y * u_NB.y);
+		ALP = atan(HYP / u_NB.z);
+		SCV = PI05 - abs(asin(sin(GAM) * sin(ALP) / sin(EPS)));
+		R = u_NB.x * abs(asin(sin(SCV) * sin(EPS)) / u_NB.x);
+		if (u_NB.x < 0)
+		{
+			SXP = -abs(R);
+		}
+		else
+		{
+			SXP = abs(R);
+		}
+		EL = u_NB.y * abs(acos(cos(EPS) / cos(SXP)) / u_NB.y);
+		if (u_NB.y < 0.0)
+		{
+			EL = abs(EL);
+		}
+		else
+		{
+			EL = -abs(EL);
+		}
+		EL -= 30.0 * RAD;
+	}
+	else
+	{
+		//X-axis
+		double ARG1, ARG2, ARG3;
+
+		EPS = acos(u_NB.x);
+		GAM = acos(u_NB.z);
+		ALP = atan(u_NB.y / u_NB.x);
+		ARG1 = sin(GAM) * sin(ALP) / sin(EPS);
+		SCV = PI05 - abs(asin(ARG1));
+		ARG2 = sin(SCV) * sin(EPS);
+		R = u_NB.z * abs(asin(ARG2) / u_NB.z);
+		ARG3 = cos(EPS) / cos(R);
+		SXP = u_NB.y * abs(acos(ARG3) / u_NB.y);
+		if (u_NB.y < 0)
+		{
+			SXP = -abs(SXP);
+		}
+		else
+		{
+			SXP = abs(SXP);
+		}
+		EL = R;
+		if (u_NB.z < 0)
+		{
+			EL = abs(EL);
+		}
+		else
+		{
+			EL = -abs(EL);
+		}
+	}
+}
+
 void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP) 
 {
 	//Input: Stable member/navigation base matrix, unit star vector
@@ -4415,38 +4508,61 @@ MATRIX3 MATRIX(VECTOR3 A, VECTOR3 B, VECTOR3 C)
 	return _M(A.x, A.y, A.z, B.x, B.y, B.z, C.x, C.y, C.z);
 }
 
-MATRIX3 THREEAXISPOINTING(VECTOR3 R, VECTOR3 V, VECTOR3 SCAXIS, VECTOR3 LAMC, double TVR)
+MATRIX3 HeadsUpAttitude(VECTOR3 R, VECTOR3 V, VECTOR3 SCAXIS, VECTOR3 TLOS)
+{
+	//This is bad, but works
+
+	MATRIX3 RFNB;
+
+	RFNB = THREEAXISPOINTING(R, V, SCAXIS, TLOS, 0.0);
+	//Check if Z axis is closer to radius vector than -Z axis
+	if (dotp(tmul(RFNB, _V(0, 0, 1)), unit(R)) > 0.0)
+	{
+		RFNB = THREEAXISPOINTING(R, V, SCAXIS, TLOS, PI);
+	}
+	return RFNB;
+}
+
+MATRIX3 THREEAXISPOINTING(VECTOR3 R, VECTOR3 V, VECTOR3 SCAXIS, VECTOR3 TLOS, double OMICRON)
 {
 	//INPUTS:
 	//R = Position vector
 	//V = Velocity vector
 	//SCAXIS = Unit body pointing vector
-	//LAMC = Unit inertial pointing vector
-	//TVR = Roll angle. 0 = heads up, 180 = heads down
+	//TLOS = Unit inertial pointing vector
+	//OMICRON = Roll angle
 	//OUTPUTS:
 	//MTP = Inertial to body matrix
 
 	MATRIX3 MTP;
-	VECTOR3 ROLL_REF, YN, YT;
-	double CBETA;
+	VECTOR3 RR_BOD, RR_INER, YN, YT, RRA_INER;
+	double TOL, DOT, ROLL;
 
-	ROLL_REF = unit(R);
-	CBETA = dotp(ROLL_REF, LAMC);
-	if (abs(CBETA) > 0.999848)
+	TOL = cos(1.0 * RAD);
+	RR_BOD = _V(0.0, 1.0, 0.0);
+
+	RR_INER = -unit(crossp(R, V));
+
+	DOT = dotp(SCAXIS, RR_BOD);
+
+	if (abs(DOT) > TOL)
 	{
-		if (CBETA > 0.0)
-		{
-			ROLL_REF = -V;
-		}
-		else
-		{
-			ROLL_REF = V;
-		}
+		RR_BOD = _V(0.0, 0.0, -1.0);
 	}
-	YN = unit(_V(SCAXIS.z, 0.0, -SCAXIS.x));
-	YT = unit(crossp(LAMC, ROLL_REF)) * sin(TVR) - crossp(LAMC, unit(crossp(LAMC, ROLL_REF))) * cos(TVR);
+	RRA_INER = crossp(_V(0.0, 0.0, 1.0), RR_INER);
+	ROLL = OMICRON + PI05;
+
+	DOT = dotp(TLOS, RR_INER);
+
+	if (abs(DOT) > TOL)
+	{
+		RR_INER = RRA_INER * sign(DOT);
+	}
+	YN = unit(crossp(SCAXIS, RR_BOD));
+	YT = unit(crossp(TLOS, RR_INER)) * sin(ROLL) - crossp(TLOS, unit(crossp(TLOS, RR_INER))) * cos(ROLL);
+
 	MTP = MATRIX(SCAXIS, crossp(SCAXIS, YN), -YN);
-	MTP = mul(tmat(MTP), MATRIX(LAMC, crossp(LAMC, YT), -YT));
+	MTP = mul(tmat(MTP), MATRIX(TLOS, crossp(TLOS, YT), -YT));
 	return MTP;
 }
 

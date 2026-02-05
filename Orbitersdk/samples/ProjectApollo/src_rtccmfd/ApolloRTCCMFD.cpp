@@ -2695,10 +2695,26 @@ void ApolloRTCCMFD::menuSetSpacecraftPointingDisplayInput()
 		else GC->rtcc->EZGSTMED.G40_Mode = 1;
 		break;
 	case 1:
-		GenericStringInput(&GC->rtcc->EZGSTMED.G40_InstrID, "Enter desired instrument ID (3-6 characters):", NULL, 3, 6);
+		GenericStringInput(&GC->rtcc->EZGSTMED.G40_InstrID, "Enter desired instrument ID. The last 3 characters must be CSM or LEM (3-6 characters):", NULL, 3, 6);
 		break;
 	case 2:
-		GenericStringInput(&GC->rtcc->EZGSTMED.G40_TargetName, "Enter target ID (5-8 characters):", NULL, 5, 8);
+		if (GC->rtcc->EZGSTMED.G40_Mode == 1)
+		{
+			sprintf(Buffer, "Mode 1: Enter target ID. The last character must be E or M. (5-8 characters):");
+		}
+		else if (GC->rtcc->EZGSTMED.G40_Mode == 2)
+		{
+			sprintf(Buffer, "Mode 2: Enter target ID. (5-8 characters):");
+		}
+		else if (GC->rtcc->EZGSTMED.G40_Mode == 3)
+		{
+			sprintf(Buffer, "Mode 3: Enter target ID. The last 3 characters must be a valid star number. (5-8 characters):");
+		}
+		else
+		{
+			sprintf(Buffer, "Mode 4: Enter target ID. Enter 7 characters. The last 3 must be CSM or LEM:");
+		}
+		GenericStringInput(&GC->rtcc->EZGSTMED.G40_TargetName, Buffer, NULL, 5, 8);
 		break;
 	case 3:
 		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Lat, "Enter ground target latitude in degrees:", RAD);
@@ -2750,9 +2766,9 @@ void ApolloRTCCMFD::menuSpacecraftPointingDisplayCalc()
 {
 	char Buff1[128], Buff2[128], Buff3[128];
 
-	GET_Display2(Buff1, GC->rtcc->EZGSTMED.G42_GET1);
-	GET_Display2(Buff2, GC->rtcc->EZGSTMED.G42_GET5);
-	GET_Display2(Buff3, GC->rtcc->EZGSTMED.G42_GETT);
+	GET_Display(Buff1, GC->rtcc->EZGSTMED.G42_GET1, false);
+	GET_Display(Buff2, GC->rtcc->EZGSTMED.G42_GET5, false);
+	GET_Display(Buff3, GC->rtcc->EZGSTMED.G42_GETT, false);
 	sprintf_s(Buffer, "G42,%s,%s,%s;", Buff1, Buff2, Buff3);
 
 	menuGeneralMEDRequest("Queue S/C point display. Format: G42, GET1, GET5, GETT;", Buffer);

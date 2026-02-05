@@ -36,7 +36,10 @@ class MCC_Calculations : public RTCCModule
 public:
 	MCC_Calculations(RTCC *r);
 
+	//Ephemeris without drag
 	bool CreateEphemeris(EphemerisData sv, double EphemerisLeftLimitGMT, double EphemerisRightLimitGMT, EphemerisDataTable2 &ephem);
+	//Ephemeris with drag
+	bool CreateEphemeris(EphemerisData sv, PLAWDTOutput weights, double EphemerisLeftLimitGMT, double EphemerisRightLimitGMT, EphemerisDataTable2& ephem);
 	double EnvironmentChange(EphemerisDataTable2 &ephem, double gmt_estimate, int option, bool present, bool terminator);
 	double Sunrise(EphemerisDataTable2 &ephem, double gmt_estimate);
 	double TerminatorRise(EphemerisDataTable2 &ephem, double gmt_estimate);
@@ -50,6 +53,8 @@ public:
 	//Find orbital sunset with initial guess (for backwards compatibility)
 	double FindOrbitalSunset(SV sv, double t_sunset_guess);
 	double FindOrbitalMidnight(SV sv, double t_TPI_guess);
+	//Given an ephemeris, find AOS, maximum elevation and LOS
+	int StationContactsGenerator(EphemerisDataTable2& ephem, double lat, double lng, double alt, int RBI, StationContact &contact);
 	void FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS);
 	double ComputeDVTO(double mass); //Computes SPS Tail-off
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS

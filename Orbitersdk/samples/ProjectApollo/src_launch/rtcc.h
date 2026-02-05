@@ -1849,23 +1849,6 @@ struct PCMATCArray
 	double h_a;
 };
 
-struct StationContact
-{
-	StationContact();
-	double GMTAOS;
-	double GMTLOS;
-	double GMTEMAX;
-	double MAXELEV;
-	std::string StationID;
-	bool BestAvailableAOS;
-	bool BestAvailableLOS;
-	bool BestAvailableEMAX;
-	int REV;
-
-	//For sorting
-	bool operator<(const StationContact& rhs) const;
-};
-
 struct OrbitStationContactsTable
 {
 	int Num = 0;
@@ -4842,18 +4825,25 @@ public:
 	struct GMEDSaveTable
 	{
 		GMEDSaveTable();
+		void SaveState(FILEHANDLE scn, char* start_str, char* end_str);
+		void LoadState(FILEHANDLE scn, char* end_str);
 
 		int G01_Type;
 		MATRIX3 G01_REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
-		double GMT = 0.0;
-		unsigned StartingStar = 0;
-		int MTX1 = -1, MTX2 = -1, MTX3 = -1;
+
+		//Blocks 1-4 (GOST)
+		double G10_GMT = 0.0;
+		unsigned G10_StartingStar = 0;
+		int G10_MTX1 = -1, G10_MTX2 = -1, G10_MTX3 = -1;
+
+		//Blocks 91-95 (Special GOST target)
 		int G14_Vehicle = 1;
 		unsigned G14_Star = 0;
 		int G14_RB = 0;
 		double G14_lat = 0.0, G14_lng = 0.0, G14_height = 0.0;
 		double G14_GMT = 0.0;
 
+		//Blocks 6-9 (LOST)
 		double G20_HORIZGET = 0.0;
 		int G20_COAS_Axis = 1;
 		int G20_AOT_Detent = 2;
