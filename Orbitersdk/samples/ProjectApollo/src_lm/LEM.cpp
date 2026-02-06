@@ -706,6 +706,7 @@ void LEM::Init()
 		fdaiSmooth = false;
 
 		InitVCAnimations();
+		pointingArrow.Init(this);
 
 		PanelId = LMPANEL_MAIN;	// default panel
 		InitSwitches();

@@ -5680,3 +5680,171 @@ bool PanelGroup::AddPanel(BasicPanel* pPanel, PanelSwitchScenarioHandler *PSH)
 	pPanel->Register(PSH);
 	return true;
 }
+
+VCPointingArrow::VCPointingArrow()
+{
+	first = true;
+	arrow_group = NULL;
+	arrowVertsCnt = circleVertsCnt = 0;
+	arrowData = NULL;
+	circle_group = NULL;
+	circleData = NULL;
+	circleDataOrig = NULL;
+	rotationangle = rad = cos_a = sin_a = 0.0;
+	camPosGlobal = camPos = camDir = globVesselPos = camPointing = _V(0, 0, 0);
+	arrowCurPos = circleCurPos = _V(0, 0, 0);
+	pointing_dir = _V(0, 0, 0);
+	rot_axis = circle_dir = rot_axis_circle = final_vertex = _V(0, 0, 0);
+	dot = angle = 0.0;
+	rotation = rotation_circle = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+	dot_circle = angle_circle = 0.0;
+
+	memset(&arrow_grp, 0, sizeof(GROUPREQUESTSPEC));
+	memset(&circle_grp, 0, sizeof(GROUPREQUESTSPEC));
+
+	vessel = NULL;
+}
+
+VCPointingArrow::~VCPointingArrow()
+{
+	if (arrowData) delete[] arrowData;
+	if (circleData) delete[] circleData;
+	if (circleDataOrig) delete[] circleDataOrig;
+	if (arrow_grp.Vtx) delete[] arrow_grp.Vtx;
+	if (circle_grp.Vtx) delete[] circle_grp.Vtx;
+}
+
+void VCPointingArrow::Init(VESSEL* v)
+{
+	vessel = v;
+}
+
+void VCPointingArrow::Timestep(int PointingArrowidx, DEVMESHHANDLE hArrowMesh, const VECTOR3& ofs, const VECTOR3& activeSwitchPos)
+{
+	oapiCameraGlobalPos(&camPosGlobal);							// Get camera (in global co-ords)
+	vessel->Global2Local(camPosGlobal, camPos);					// Translate from global to local co-ordinates.
+	oapiCameraGlobalDir(&camDir);								// Get camera direction (in global co-ords)
+	vessel->GetGlobalPos(globVesselPos);						// Get global position of vessel so we can translate
+	vessel->Global2Local(globVesselPos + camDir, camPointing);	// Translate from global to local co-ordinates.
+	//	normalise(camPointing);
+
+	if (first) {											// Run this once for retrieving the Arrow data
+		arrow_group = oapiMeshGroup(vessel->GetMeshTemplate(PointingArrowidx), 0);
+		arrowVertsCnt = arrow_group->nVtx;
+		arrowData = new VECTOR3[arrowVertsCnt];
+		for (int i = 0; i < arrowVertsCnt; i++) {			// Make a copy of the Arrow data
+			arrowData[i].x = (double)arrow_group->Vtx[i].x;
+			arrowData[i].y = (double)arrow_group->Vtx[i].y;
+			arrowData[i].z = (double)arrow_group->Vtx[i].z;
+		}
+		circle_group = oapiMeshGroup(vessel->GetMeshTemplate(PointingArrowidx), 1);
+		circleVertsCnt = circle_group->nVtx;
+		circleData = new VECTOR3[circleVertsCnt];
+		circleDataOrig = new VECTOR3[circleVertsCnt];
+		for (int i = 0; i < circleVertsCnt; i++) {			// Make a copy of the Circle data
+			circleDataOrig[i].x = (double)circle_group->Vtx[i].x;
+			circleDataOrig[i].y = (double)circle_group->Vtx[i].y;
+			circleDataOrig[i].z = (double)circle_group->Vtx[i].z;
+		}
+		first = false;
+	}
+
+	if (!oapiGetPause()) {
+		rotationangle += oapiGetSimStep() / oapiGetTimeAcceleration() * -90;  // Rotate 360° every 4 Second
+		if (rotationangle > 360) rotationangle = 0;
+		rad = rotationangle * PI / 180.0;
+		cos_a = std::cos(rad);
+		sin_a = std::sin(rad);
+
+		//Rotate Circle
+		for (int i = 0; i < circleVertsCnt; i++) {
+			circleData[i].x = circleDataOrig[i].x * cos_a - circleDataOrig[i].y * sin_a;
+			circleData[i].y = circleDataOrig[i].x * sin_a + circleDataOrig[i].y * cos_a;
+			circleData[i].z = circleDataOrig[i].z;
+		}
+
+		/*		// Rotate Arrow
+				for (int i = 0; i < arrowVertsCnt; i++) {
+					arrowData[i].x = arrowData[i].x * cos_a - arrowData[i].y * sin_a;
+					arrowData[i].y = arrowData[i].x * sin_a + arrowData[i].y * cos_a;
+				}
+		*/
+	}
+
+	arrow_grp.nVtx = arrowVertsCnt;
+	if (!arrow_grp.Vtx) arrow_grp.Vtx = new NTVERTEX[arrow_grp.nVtx];
+	if (oapiGetMeshGroup(hArrowMesh, 0, &arrow_grp) != 0) {	// problems
+		delete[]arrow_grp.Vtx;
+		arrow_grp.Vtx = 0;
+	}
+	//	NTVERTEX *Vtx = arrow_grp.Vtx;
+
+	circle_grp.nVtx = circleVertsCnt;
+	if (!circle_grp.Vtx) circle_grp.Vtx = new NTVERTEX[circle_grp.nVtx];
+	if (oapiGetMeshGroup(hArrowMesh, 1, &circle_grp) != 0) {	// problems
+		delete[]circle_grp.Vtx;
+		circle_grp.Vtx = 0;
+	}
+	//	NTVERTEX *Vtx2 = circle_grp.Vtx;
+
+	arrowCurPos = camPos - ofs + (camPointing * 0.15);			// Move the Arrow to this Position
+	circleCurPos = activeSwitchPos;								// Move the Circle to this Position
+
+	// Rotation calculation to align the Arrow
+	const VECTOR3 init_dir = { 0, 0, 1 };							// Direction of the arrow (initially along the positive Z-axis)
+	pointing_dir = activeSwitchPos - arrowCurPos;				// Target direction (vector from the target location to the viewing direction)
+	normalise(pointing_dir);
+
+	rot_axis = crossp(init_dir, pointing_dir);					// Rotation axis (cross product of the initial and target directions)
+	normalise(rot_axis);
+
+	dot = dotp(init_dir, pointing_dir);							// Rotation angle (angle between the initial and target direction)
+	angle = std::acos(max(-1.0, min(1.0, dot)));				// Clamp to avoid NaN
+
+	rotation = rotm(rot_axis, angle);
+
+	// *** Do the same from above for the Circle ** //
+	circle_dir = activeSwitchPos - (camPos - ofs);
+	normalise(circle_dir);
+
+	rot_axis_circle = crossp(init_dir, circle_dir);
+	normalise(rot_axis_circle);
+
+	dot_circle = dotp(init_dir, circle_dir);
+	angle_circle = std::acos(max(-1.0, min(1.0, dot_circle)));
+
+	rotation_circle = rotm(rot_axis_circle, angle_circle);
+
+	for (int i = 0; i < arrowVertsCnt; i++) {
+		// Rotate, Translate and Scale the Arrow(Scale depends on Camera FOV)
+		final_vertex = mul(rotation, arrowData[i] * oapiCameraAperture()) + arrowCurPos;
+
+		arrow_grp.Vtx[i].x = (float)final_vertex.x;		// Copy Transformed Arrow Vertices
+		arrow_grp.Vtx[i].y = (float)final_vertex.y;
+		arrow_grp.Vtx[i].z = (float)final_vertex.z;
+	}
+
+	for (int i = 0; i < circleVertsCnt; i++) {
+		// Rotate and Translate the Circle
+		final_vertex = mul(rotation_circle, circleData[i]) + circleCurPos;
+
+		circle_grp.Vtx[i].x = (float)final_vertex.x;	// Copy Transformed Circle Vertices
+		circle_grp.Vtx[i].y = (float)final_vertex.y;
+		circle_grp.Vtx[i].z = (float)final_vertex.z;
+	}
+
+	// ** View in debug line the Camera Position, direction and the First Vertex of the Pointing Arrow **
+	//	sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ** %.3f  %.3f  %.3f", camPos.x, camPos.y, camPos.z, camPointing.x, camPointing.y, camPointing.z, arrow_grp.Vtx[0].x, arrow_grp.Vtx[0].y, arrow_grp.Vtx[0].z);
+
+	ges.flags = GRPEDIT_VTXCRD;
+	ges.nVtx = arrow_grp.nVtx;
+	ges.Vtx = arrow_grp.Vtx;
+	ges.vIdx = 0;
+	oapiEditMeshGroup(hArrowMesh, 0, &ges);	// Move the Arrow
+
+	ges.nVtx = circle_grp.nVtx;
+	ges.Vtx = circle_grp.Vtx;
+	oapiEditMeshGroup(hArrowMesh, 1, &ges);	// Move the Circle
+
+	vessel->SetMeshVisibilityMode(PointingArrowidx, MESHVIS_VC);
+}

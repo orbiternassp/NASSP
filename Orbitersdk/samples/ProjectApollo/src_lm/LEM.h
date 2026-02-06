@@ -1756,6 +1756,8 @@ protected:
 	VECTOR3 trackLightPos;
 	VECTOR3 dockingLightsPos[5];
 
+	VCPointingArrow pointingArrow;
+
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
 #define LMPANEL_LEFTWINDOW		2
