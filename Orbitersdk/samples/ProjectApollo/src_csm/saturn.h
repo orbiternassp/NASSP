@@ -4044,6 +4044,8 @@ protected:
 	DEVMESHHANDLE vcmesh;
 	bool ViewCueCardArrows;
 
+	VCPointingArrow pointingArrow;
+
 	double DockAngle;
 
 	double 	Offset1st;

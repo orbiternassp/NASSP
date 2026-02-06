@@ -1238,6 +1238,7 @@ void Saturn::initSaturn()
 
 		InitVCAnimations();
 		InitReticle();
+		pointingArrow.Init(this);
 
 		// Initialize the panel
 		fdaiDisabled = false;

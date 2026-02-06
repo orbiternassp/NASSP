@@ -1954,3 +1954,35 @@ public:
 private:
 	std::vector<BasicPanel*> panels;
 };
+
+//Class for generating the pointing arrow and circle in the Virtual Cockpit for checklist items
+class VCPointingArrow
+{
+public:
+	VCPointingArrow();
+	~VCPointingArrow();
+
+	void Init(VESSEL* v);
+
+	void Timestep(int PointingArrowidx, DEVMESHHANDLE hArrowMesh, const VECTOR3& ofs, const VECTOR3& activeSwitchPos);
+protected:
+	bool first;
+	MESHGROUP* arrow_group;
+	int arrowVertsCnt, circleVertsCnt;
+	VECTOR3* arrowData;
+	MESHGROUP* circle_group;
+	GROUPREQUESTSPEC arrow_grp, circle_grp;
+	VECTOR3* circleData;
+	VECTOR3* circleDataOrig;
+	double rotationangle, rad, cos_a, sin_a;
+	VECTOR3 camPosGlobal, camPos, camDir, globVesselPos, camPointing;
+	VECTOR3 arrowCurPos, circleCurPos;
+	VECTOR3 pointing_dir;
+	VECTOR3 rot_axis, circle_dir, rot_axis_circle, final_vertex;
+	double dot, angle;
+	MATRIX3 rotation, rotation_circle;
+	double dot_circle, angle_circle;
+	GROUPEDITSPEC ges;
+
+	VESSEL* vessel;
+};
