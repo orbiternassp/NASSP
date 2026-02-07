@@ -3676,6 +3676,213 @@ void RTCC::AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad)
 	pad.dH_Max = TPIPAD_ddH / 1852.0;
 }
 
+void RTCC::SLManeuverPAD(const AP7ManPADOpt &opt, SLMNV &pad)
+{
+	PMMRKJInputArray integin;
+	int Ierr;
+	RTCCNIAuxOutputTable aux;
+	VECTOR3 IMUangles;
+	double dt, mu, apo, peri, ManPADApo, ManPADPeri, ManPADPTrim, ManPADYTrim, GMT_TIG;
+	double R_E;
+	EphemerisData sv1, sv2;
+
+	GMT_TIG = GMTfromGET(opt.TIG);
+
+	//Calculate time of ullage on for burn simulation
+	if (opt.enginetype == RTCC_ENGINETYPE_CSMSPS)
+	{
+		double dt_ullage_overlap;
+
+		if (opt.UllageDT == 0.0)
+		{
+			dt_ullage_overlap = 0.0;
+		}
+		else
+		{
+			dt_ullage_overlap = SystemParameters.MCTSD9;
+		}
+
+		double gmt_bb = GMT_TIG - opt.UllageDT + dt_ullage_overlap; //GMT of burn begin (ullage)
+		dt = gmt_bb - opt.sv0.GMT;
+
+		integin.DTU = opt.UllageDT;
+	}
+	else
+	{
+		dt = GMT_TIG - opt.sv0.GMT;
+		integin.DTU = 0.0;
+	}
+	sv1 = coast(opt.sv0, dt, opt.WeightsTable.ConfigWeight, opt.WeightsTable.ConfigArea, opt.WeightsTable.KFactor, false);
+
+	//Settings for burn simulation
+	integin.sv0 = sv1;
+	integin.DENSMULT = opt.WeightsTable.KFactor;
+	integin.A = opt.WeightsTable.ConfigArea;
+	integin.CAPWT = opt.WeightsTable.ConfigWeight;
+	integin.KEPHOP = 0;
+	integin.KAUXOP = true;
+	integin.CSMWT = opt.WeightsTable.CSMWeight;
+	integin.LMAWT = opt.WeightsTable.LMAscWeight;
+	integin.LMDWT = opt.WeightsTable.LMDscWeight;
+	integin.MANOP = RTCC_ATTITUDE_PGNS_EXDV;
+	integin.ThrusterCode = opt.enginetype;
+	integin.UllageOption = opt.UllageThrusterOpt;
+	integin.IC = opt.WeightsTable.CC.to_ulong();
+	integin.TVC = 1;
+	integin.KTRIMOP = -1;
+	integin.DOCKANG = 0.0;
+	integin.VG = opt.dV_LVLH;
+	integin.HeadsUpDownInd = opt.HeadsUp;
+	integin.ExtDVCoordInd = true;
+
+	//Burn simulation
+	CSMLMPoweredFlightIntegration numin(this, integin, Ierr, NULL, &aux);
+	numin.PMMRKJ();
+
+	//Store PAD data from inputs
+	pad.GETI = opt.TIG;
+	pad.dV = opt.dV_LVLH / 0.3048;
+	pad.Weight = opt.WeightsTable.CSMWeight / 0.45359237;
+
+	//Store PAD data from burn simulation
+	pad.burntime = aux.DT_B;
+	pad.Vc = aux.DV_C / 0.3048;
+	if (opt.enginetype == RTCC_ENGINETYPE_CSMRCSMINUS2 || opt.enginetype == RTCC_ENGINETYPE_CSMRCSMINUS4)
+	{
+		pad.Vc = -pad.Vc;
+	}
+
+	//Attitude
+	VECTOR3 X_P, Y_P, Z_P;
+	X_P = _V(opt.REFSMMAT.m11, opt.REFSMMAT.m12, opt.REFSMMAT.m13);
+	Y_P = _V(opt.REFSMMAT.m21, opt.REFSMMAT.m22, opt.REFSMMAT.m23);
+	Z_P = _V(opt.REFSMMAT.m31, opt.REFSMMAT.m32, opt.REFSMMAT.m33);
+
+	double MG, OG, IG, C;
+
+	MG = asin(dotp(Y_P, aux.X_B));
+	C = abs(MG);
+
+	if (abs(C - PI05) < 0.0017)
+	{
+		OG = 0.0;
+		IG = atan2(dotp(X_P, aux.Z_B), dotp(Z_P, aux.Z_B));
+	}
+	else
+	{
+		OG = atan2(-dotp(aux.Z_B, Y_P), dotp(aux.Y_B, Y_P));
+		IG = atan2(-dotp(aux.X_B, Z_P), dotp(aux.X_B, X_P));
+	}
+
+	IMUangles = _V(OG, IG, MG);
+
+	//Round IMU attitude to next degree
+	pad.Att = OrbMech::imulimit(IMUangles * DEG);
+
+	//Trim angles
+	if (opt.enginetype == RTCC_ENGINETYPE_CSMSPS)
+	{
+		ManPADPTrim = aux.P_G - SystemParameters.MCTSPP;
+		ManPADYTrim = aux.Y_G - SystemParameters.MCTSYP;
+		pad.pTrim = ManPADPTrim * DEG;
+		pad.yTrim = ManPADYTrim * DEG;
+	}
+	else
+	{
+		pad.pTrim = 0.0;
+		pad.yTrim = 0.0;
+	}
+}
+
+void RTCC::SLTPIPAD(const AP7TPIPADOpt &opt, SLTPI &pad)
+{
+	EphemerisData sv_A2, sv_P2, sv_A3, sv_P3;
+	double dt1, dt2;
+	VECTOR3 u, U_L, UX, UY, UZ, U_R, U_R2, U_P, TPIPAD_BT, TPIPAD_dV_LOS;
+	MATRIX3 Rot1, Rot2;
+	double TPIPAD_AZ, TPIPAD_R, TPIPAD_Rdot, TPIPAD_ELmin5, TPIPAD_dH, TPIPAD_ddH, TIG_GMT;
+	VECTOR3 U_F, LOS, U_LOS, NN;
+
+	TIG_GMT = GMTfromGET(opt.TIG);
+
+	dt1 = TIG_GMT - opt.sv_A.GMT;
+	dt2 = TIG_GMT - opt.sv_P.GMT;
+
+	sv_A3 = coast(opt.sv_A, dt1);
+	sv_P3 = coast(opt.sv_P, dt2);
+
+	UY = unit(crossp(sv_A3.V, sv_A3.R));
+	UZ = unit(-sv_A3.R);
+	UX = crossp(UY, UZ);
+
+	Rot1 = _M(UX.x, UY.x, UZ.x, UX.y, UY.y, UZ.y, UX.z, UY.z, UZ.z);
+
+	u = unit(crossp(sv_A3.R, sv_A3.V));
+	U_L = unit(sv_P3.R - sv_A3.R);
+	UX = U_L;
+	UY = unit(crossp(crossp(u, UX), UX));
+	UZ = crossp(UX, UY);
+
+	Rot2 = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
+
+	TPIPAD_dV_LOS = mul(Rot2, mul(Rot1, opt.dV_LVLH));
+	//TPIPAD_dH = abs(length(RP3) - length(RA3));
+	double F;
+
+	F = 200.0 * 4.448222;
+	TPIPAD_BT = _V(abs(0.5*TPIPAD_dV_LOS.x), abs(TPIPAD_dV_LOS.y), abs(TPIPAD_dV_LOS.z))*opt.mass / F;
+
+	VECTOR3 i, j, k, dr, dv, dr0, dv0, Omega;
+	MATRIX3 Q_Xx;
+	double t1, t2, dxmin, n, dxmax;
+
+	j = unit(sv_P3.V);
+	k = unit(crossp(sv_P3.R, j));
+	i = crossp(j, k);
+	Q_Xx = _M(i.x, i.y, i.z, j.x, j.y, j.z, k.x, k.y, k.z);
+	dr = sv_A3.R - sv_P3.R;
+	n = length(sv_P3.V) / length(sv_P3.R);
+	Omega = k*n;
+	dv = sv_A3.V - sv_P3.V - crossp(Omega, dr);
+	dr0 = mul(Q_Xx, dr);
+	dv0 = mul(Q_Xx, dv);
+	t1 = 1.0 / n*atan(-dv0.x / (3.0*n*dr0.x + 2.0 * dv0.y));
+	t2 = 1.0 / n*(atan(-dv0.x / (3.0*n*dr0.x + 2.0 * dv0.y)) + PI);
+	dxmax = 4.0 * dr0.x + 2.0 / n*dv0.y + dv0.x / n*sin(n*t1) - (3.0 * dr0.x + 2.0 / n*dv0.y)*cos(n*t1);
+	dxmin = 4.0 * dr0.x + 2.0 / n*dv0.y + dv0.x / n*sin(n*t2) - (3.0 * dr0.x + 2.0 / n*dv0.y)*cos(n*t2);
+
+	sv_A2 = coast(sv_A3, -5.0*60.0);
+	sv_P2 = coast(sv_P3, -5.0*60.0);
+
+	U_R2 = unit(sv_P2.R - sv_A2.R);
+
+	TPIPAD_dH = -dr0.x;
+	TPIPAD_ddH = abs(dxmax - dxmin);
+	TPIPAD_R = abs(length(sv_P2.R - sv_A2.R));
+	TPIPAD_Rdot = dotp(sv_P2.V - sv_A2.V, U_R2);
+
+	U_L = unit(sv_P2.R - sv_A2.R);
+	U_P = unit(U_L - sv_A2.R*dotp(U_L, sv_A2.R) / length(sv_A2.R) / length(sv_A2.R));
+
+	TPIPAD_ELmin5 = acos(dotp(U_L, U_P*OrbMech::sign(dotp(U_P, crossp(u, sv_A2.R)))));
+
+	U_F = unit(crossp(crossp(sv_A2.R, sv_A2.V), sv_A2.R));
+	U_R = unit(sv_A2.R);
+	LOS = sv_P2.R - sv_A2.R;
+	U_LOS = unit(LOS - U_R*dotp(LOS, U_R));
+	TPIPAD_AZ = acos(dotp(U_LOS, U_F));//atan2(-TPIPAD_dV_LOS.z, TPIPAD_dV_LOS.x);
+	NN = crossp(U_LOS, U_F);
+	if (dotp(NN, sv_A2.R) < 0)
+	{
+		TPIPAD_AZ = PI2 - TPIPAD_AZ;
+	}
+
+	pad.Backup_bT = TPIPAD_BT;
+	pad.Backup_dV = TPIPAD_dV_LOS / 0.3048;
+	pad.GETI = opt.TIG;
+	pad.Vg = opt.dV_LVLH / 0.3048;
+}
+
 void RTCC::AP9LMTPIPAD(const AP9LMTPIPADOpt &opt, AP9LMTPI &pad)
 {
 	EphemerisData sv_A1, sv_P1;

@@ -2457,6 +2457,7 @@ private:
 	void TimeUpdate();
 public:
 	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);
+	void SLTPIPAD(const AP7TPIPADOpt &opt, SLTPI &pad);
 	void AP9LMTPIPAD(const AP9LMTPIPADOpt &opt, AP9LMTPI &pad);
 	void AP9LMCDHPAD(const AP9LMCDHPADOpt &opt, AP9LMCDH &pad);
 	void TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad);
@@ -5089,6 +5090,7 @@ public:
 
 private:
 	void AP7ManeuverPAD(const AP7ManPADOpt &opt, AP7MNV &pad);
+	void SLManeuverPAD(const AP7ManPADOpt &opt, SLMNV &pad);
 	void navcheck(VECTOR3 R, double GMT, int RBI, double &lat, double &lng, double &alt);
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);

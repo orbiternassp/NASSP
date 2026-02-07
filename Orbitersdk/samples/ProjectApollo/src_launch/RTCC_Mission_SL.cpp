@@ -164,10 +164,9 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 	}
 	break;
 	case 12: //NC1 preliminary update
-		preliminary = true;
 	case 13: //NC1 final update
 	{
-		AP7MNV* form = (AP7MNV*)pad;
+		SLMNV* form = (SLMNV*)pad;
 		AP7ManPADOpt manopt;
 		DKIOpt opt;
 
@@ -210,8 +209,10 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		manopt.sv0 = opt.sv_CSM;
 		manopt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
-		AP7ManeuverPAD(manopt, *form);
-		sprintf(form->purpose, "NC1");
+		SLManeuverPAD(manopt, *form);
+
+		form->type = 1;
+		form->prelim = preliminary;
 
 		if (preliminary == false)
 		{
@@ -231,13 +232,17 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 	}
 	break;
 	case 14: //NC2 preliminary update
-		preliminary = true;
 	case 15: //NC2 final update
 	{
-		AP7MNV* form = (AP7MNV*)pad;
+		SLMNV* form = (SLMNV*)pad;
 		AP7ManPADOpt manopt;
 		DKIOpt opt;
 		double CSMMass;
+
+		if (fcn == 14)
+		{
+			preliminary = true;
+		}
 
 		opt.sv_CSM = StateVectorCalcEphem(calcParams.src);
 		CSMMass = calcParams.src->GetMass();
@@ -280,8 +285,11 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		char Buff1[64];
 		OrbMech::format_time_HHHMMSSCS(Buff1, calcParams.TPI);
 
-		AP7ManeuverPAD(manopt, *form);
-		sprintf(form->purpose, "NC2");
+		SLManeuverPAD(manopt, *form);
+
+		form->type = 3;
+		form->prelim = preliminary;
+
 		if (preliminary)
 		{
 			sprintf(form->remarks, "TPI: %s", Buff1);
@@ -289,14 +297,18 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 	}
 	break;
 	case 16: //NCC preliminary update
-		preliminary = true;
 	case 17: //NCC final update
 	{
-		AP7MNV* form = (AP7MNV*)pad;
+		SLMNV* form = (SLMNV*)pad;
 		AP7ManPADOpt manopt;
 		TwoImpulseOpt opt;
 		TwoImpulseResuls res;
 		double CSMMass;
+
+		if (fcn == 16)
+		{
+			preliminary = true;
+		}
 
 		opt.mode = 5;
 		opt.T1 = GMTfromGET(calcParams.CSI);
@@ -344,16 +356,23 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		manopt.WeightsTable.CC[RTCC_CONFIG_C] = true;
 		manopt.WeightsTable.ConfigWeight = manopt.WeightsTable.CSMWeight = CSMMass;
 
-		AP7ManeuverPAD(manopt, *form);
-		sprintf(form->purpose, "NCC");
+		SLManeuverPAD(manopt, *form);
+
+		form->type = 4;
+		form->prelim = preliminary;
+
 	}
 	break;
 	case 18: //NSR preliminary update
-		preliminary = true;
 	case 19: //NSR final update
 	{
-		AP7MNV* form = (AP7MNV*)pad;
+		SLMNV* form = (SLMNV*)pad;
 		AP7ManPADOpt manopt;
+
+		if (fcn == 18)
+		{
+			preliminary = true;
+		}
 
 		manopt.TIG = calcParams.CDH;
 		manopt.dV_LVLH = calcParams.DVSTORE1; //Was calculated for NCC PAD
@@ -368,24 +387,34 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		manopt.WeightsTable.CC[RTCC_CONFIG_C] = true;
 		manopt.WeightsTable.ConfigWeight = manopt.WeightsTable.CSMWeight = calcParams.SVSTORE1.mass;
 
-		AP7ManeuverPAD(manopt, *form);
-		sprintf(form->purpose, "NSR");
+		SLManeuverPAD(manopt, *form);
+
+		form->type = 5;
+		form->prelim = preliminary;
 	}
 	break;
 	case 20: //TPI preliminary update
-		preliminary = true;
 	case 21: //TPI final update
 	{
-		AP7MNV* form = (AP7MNV*)pad;
-		AP7ManPADOpt manopt;
+		SLTPI* form = (SLTPI*)pad;
+		AP7TPIPADOpt manopt;
 		TwoImpulseOpt opt;
 		TwoImpulseResuls res;
+		VehicleDataBlock sv_A, sv_P;
+
+		sv_A = StateVectorCalcDataBlock(calcParams.src);
+		sv_P = StateVectorCalcDataBlock(calcParams.tgt);
+
+		if (fcn == 20)
+		{
+			preliminary = true;
+		}
 
 		opt.mode = 5;
 		opt.T1 = -1.0;
 		opt.T2 = -1.0;
-		opt.sv_C = StateVectorCalcDataBlock(calcParams.src);
-		opt.sv_T = StateVectorCalcDataBlock(calcParams.tgt);
+		opt.sv_C = sv_A;
+		opt.sv_T = sv_P;
 		opt.DH = opt.PhaseAngle = 0.0;
 		opt.Elev = 27.0 * RAD;
 		opt.WT = 130.0 * RAD;
@@ -394,20 +423,15 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 
 		calcParams.TPI = res.T1; //Update TPI time
 
-		manopt.TIG = res.T1;
 		manopt.dV_LVLH = res.dV_LVLH;
-		manopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
-		manopt.HeadsUp = true;
-		manopt.REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
-		manopt.navcheckGET = 0.0;
-		manopt.sxtstardtime = 0.0;
-		manopt.UllageDT = 15.0;
-		manopt.UllageThrusterOpt = true;
-		manopt.sv0 = opt.sv_C.sv;
-		manopt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
+		manopt.TIG = res.T1;
+		manopt.sv_A = sv_A.sv;
+		manopt.sv_P = sv_P.sv;
+		manopt.mass = calcParams.src->GetMass();
 
-		AP7ManeuverPAD(manopt, *form);
-		sprintf(form->purpose, "TPI");
+		SLTPIPAD(manopt, *form);
+
+		form->prelim = preliminary;
 	}
 	break;
 	case 22: //Docking Attitude PAD
