@@ -1970,7 +1970,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		// Flood Lights Panel 8
 		SetVCLighting(vcidx, FloodLights_P8, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(FloodLights_P8));
-		floodLight_P8->SetIntensity(FloodRotarySwitch.GetOutput()*1.5);
+		floodLight_P8->SetIntensity(LeftFloodLights.GetCombinedOutput());
 
 		// CMVC Ordeal Lighting Switch
 		SetVCLighting(vcidx, IntegralLights_CMVC_Ordeal, MAT_EMISSION, ordeal.LightingPower(), NUM_ELEMENTS(IntegralLights_CMVC_Ordeal));
@@ -1994,7 +1994,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		// Flood Lights Panel 5 *** NOT FUNCTIONALY YET ***
 //		SetVCLighting(vcidx, FloodLights_P5, MAT_LIGHT, RightFloodRotarySwitch.GetOutput(), NUM_ELEMENTS(FloodLights_P5));
-		floodLight_P5->SetIntensity(RightFloodRotarySwitch.GetOutput()*1.5);
+		floodLight_P5->SetIntensity(RightFloodLights.GetCombinedOutput());
 
 		// Integral Lights Panel 100
 		SetVCLighting(vcidx, IntegralLights_P100, MAT_EMISSION, Panel100IntegralRotarySwitch.GetOutput(), NUM_ELEMENTS(IntegralLights_P100));
@@ -2003,7 +2003,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		//// Flood Lights Panel 100 *** NOT FUNCTIONALY YET ***
 //		SetVCLighting(vcidx, FloodLights_P100, MAT_LIGHT, Panel100FloodRotarySwitch.GetOutput(), NUM_ELEMENTS(FloodLights_P100));
-		floodLight_P100->SetIntensity(Panel100FloodRotarySwitch.GetOutput()*1.5);
+		floodLight_P100->SetIntensity(LEBFloodLights.GetCombinedOutput());
 
 		// Numerics Lights Panel 100
 		SetVCLighting(vcidx, NumericLights_P100, MAT_LIGHT, Panel100NumericRotarySwitch.GetOutput() + floodRotaryValue, NUM_ELEMENTS(NumericLights_P100));

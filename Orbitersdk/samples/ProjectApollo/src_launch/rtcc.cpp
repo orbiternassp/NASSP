@@ -41552,7 +41552,7 @@ void RTCC::PMDARM(EphemerisData sv_CSM, EphemerisData sv_LM)
 	}
 
 	//Delete all old data
-	for (unsigned int i = 0; disp.Data.size(); i++)
+	for (unsigned int i = 0; i < disp.Data.size(); i++)
 	{
 		disp.Data[i].Text = "";
 	}
@@ -41646,7 +41646,7 @@ void RTCC::PMDSARM(EphemerisData sv_CSM, EphemerisData sv_LM)
 	}
 
 	//Delete all old data
-	for (unsigned int i = 0; disp.Data.size(); i++)
+	for (unsigned int i = 0; i < disp.Data.size(); i++)
 	{
 		disp.Data[i].Text = "";
 	}

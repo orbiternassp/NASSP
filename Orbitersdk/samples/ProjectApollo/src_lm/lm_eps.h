@@ -400,7 +400,6 @@ class LEM_FloodLights
 public:
 	LEM_FloodLights();
 	void Init(LEM *l, e_object *flood_cb, ThreePosSwitch *flood_sw, ContinuousRotationalSwitch *pnl_3_rty, ContinuousRotationalSwitch *pnl_5_rty, h_HeatLoad *flood_h);
-	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
 	bool IsPowered();
