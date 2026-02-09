@@ -2742,7 +2742,7 @@ void ApolloRTCCMFD::menuSetSpacecraftPointingDisplayInput()
 		}
 		break;
 	case 9:
-		if (GC->rtcc->EZGSTMED.G40_AttRef < 3)
+		if (GC->rtcc->EZGSTMED.G40_AttRef < 2)
 		{
 			GC->rtcc->EZGSTMED.G40_AttRef++;
 		}

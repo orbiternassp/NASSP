@@ -38,7 +38,9 @@ public:
 
 	//Ephemeris without drag
 	bool CreateEphemeris(EphemerisData sv, double EphemerisLeftLimitGMT, double EphemerisRightLimitGMT, EphemerisDataTable2 &ephem);
-	//Ephemeris with drag
+	//Ephemeris with VehicleDataBlock as input
+	bool CreateEphemeris(VehicleDataBlock sv, double EphemerisLeftLimitGMT, double EphemerisRightLimitGMT, EphemerisDataTable2& ephem);
+	//Ephemeris with state vector and weights table as input
 	bool CreateEphemeris(EphemerisData sv, PLAWDTOutput weights, double EphemerisLeftLimitGMT, double EphemerisRightLimitGMT, EphemerisDataTable2& ephem);
 	double EnvironmentChange(EphemerisDataTable2 &ephem, double gmt_estimate, int option, bool present, bool terminator);
 	double Sunrise(EphemerisDataTable2 &ephem, double gmt_estimate);
@@ -55,6 +57,10 @@ public:
 	double FindOrbitalMidnight(SV sv, double t_TPI_guess);
 	//Given an ephemeris, find AOS, maximum elevation and LOS
 	int StationContactsGenerator(EphemerisDataTable2& ephem, double lat, double lng, double alt, int RBI, StationContact &contact);
+	//General ground target pointing utility function
+	int GroundTargetPointing(EphemerisDataTable2& ephem, MATRIX3 REFSMMAT, double gmt, double lat, double lng, double alt, int RBI, double yaw, double pitch, double omicron, VECTOR3 &Att);
+	//General celestial target pointing utility function
+	int CelestialTargetPointing(EphemerisDataTable2& ephem, MATRIX3 REFSMMAT, double gmt, int star, double yaw, double pitch, double omicron, VECTOR3& Att);
 	void FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS);
 	double ComputeDVTO(double mass); //Computes SPS Tail-off
 	int SPSRCSDecision(double a, VECTOR3 dV_LVLH);	//0 = SPS, 1 = RCS

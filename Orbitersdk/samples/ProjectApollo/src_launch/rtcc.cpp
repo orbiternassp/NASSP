@@ -1713,17 +1713,13 @@ RTCC::GMEDSaveTable::GMEDSaveTable()
 	G41_Instruments[0].RX = 0.0;
 	G41_Instruments[0].RY = 147.5 * RAD;
 
+	sprintf(G41_Instruments[1].ID, "SXTCSM");
+	G41_Instruments[1].RX = 0.0;
+	G41_Instruments[1].RY = 32.5 * RAD;
+
 	G42_GET1 = 0.0;
 	G42_GET5 = 0.0;
 	G42_GETT = 0.0;
-
-
-	//For testing
-	G40_InstrID = "HCHCSM";
-	G40_TargetName = "BLAAE";
-	G40_Lat = 1.0 * RAD;
-	G40_Lng = 2.0 * RAD;
-	G40_Ht = 0.1 * 1852.0;
 }
 
 void RTCC::GMEDSaveTable::SaveState(FILEHANDLE scn, char* start_str, char* end_str)
@@ -14761,7 +14757,7 @@ void RTCC::EMDGPING()
 	}
 
 	//Main ephemeris
-	if (EZGSTMED.G40_AttRef <= 1)
+	if (EZGSTMED.G40_AttRef == 0)
 	{
 		MainVessel = RTCC_MPT_CSM;
 	}
@@ -14865,7 +14861,7 @@ void RTCC::EMDGPING()
 
 	//Get REFSMMAT
 	REFSMMATLocker* locker;
-	if (EZGSTMED.G40_AttRef <= 1)
+	if (EZGSTMED.G40_AttRef == 0)
 	{
 		locker = &EZJGMTX1;
 	}
@@ -14921,12 +14917,9 @@ void RTCC::EMDGPING()
 		strtemp = "IMCSM";
 		break;
 	case 1:
-		strtemp = "FDCSM";
-		break;
-	case 2:
 		strtemp = "IMLEM";
 		break;
-	case 3:
+	case 2:
 		strtemp = "FDLEM";
 		break;
 	}
@@ -15015,7 +15008,13 @@ void RTCC::EMDGPING()
 		else strtemp.append(" ");
 		DynamicDisplayData.DisplayFormatting(disp, 36 + i * 14, strtemp, 13, 13 + i * 4, oapi::Sketchpad::RIGHT);
 	}
-
+	//Error
+	strtemp = "";
+	if ((error & 4) == 1)
+	{
+		strtemp = "REFSMMAT NOT AVAILABLE";
+	}
+	DynamicDisplayData.DisplayFormatting(disp, 93, strtemp, 50, 31, oapi::Sketchpad::RIGHT);
 
 	DynamicDisplayData.UpdateDisplay(disp);
 }
@@ -15199,7 +15198,7 @@ int RTCC::EMGSCPNG(RTCC::SCPointingDisplayDataTable& table)
 		//Calculate attitude
 		Att = OrbMech::CALCGAR(table.REFSMMAT, RFNB);
 		//Convert attitude to LM FDAI?
-		if (EZGSTMED.G40_AttRef == 3)
+		if (EZGSTMED.G40_AttRef == 2)
 		{
 			Att = EMMGFDAI(Att, true);
 		}

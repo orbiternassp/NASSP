@@ -9444,8 +9444,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			y++;
 			Text(skp, x, y, "ATREF:");
 			if (GC->rtcc->EZGSTMED.G40_AttRef == 0) Text(skp, x + dx, y, "IMCSM");
-			else if (GC->rtcc->EZGSTMED.G40_AttRef == 1) Text(skp, x + dx, y, "FDCSM");
-			else if (GC->rtcc->EZGSTMED.G40_AttRef == 2) Text(skp, x + dx, y, "IMLEM");
+			else if (GC->rtcc->EZGSTMED.G40_AttRef == 1) Text(skp, x + dx, y, "IMLEM");
 			else Text(skp, x + dx, y, "FDLEM");
 			y++;
 			Text(skp, x, y, "DOKANG:");

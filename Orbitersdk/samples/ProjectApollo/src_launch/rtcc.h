@@ -4875,7 +4875,7 @@ public:
 		double G40_RA;
 		double G40_DEC;
 		int G40_Matrix;
-		int G40_AttRef; //0 = IMCSM, 1 = FDCSM, 2 = IMLEM, 3 = FDLEM
+		int G40_AttRef; //0 = IMCSM, 1 = IMLEM, 2 = FDLEM
 		double G40_DokAngle;
 		//Blocks 38-73 (Instrument Table)
 		SCPointingInstrument G41_Instruments[12];
