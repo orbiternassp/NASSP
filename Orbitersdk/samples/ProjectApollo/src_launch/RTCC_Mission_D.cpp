@@ -1967,8 +1967,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			sprintf(form->Area[2], "Southeast US");
 			form->GETStart[2] = GET;
-			form->ExposureInterval[2] = 6.0;
-			form->ExposureNum[2] = 6;
 
 			mcc->mcc_calcs.StationContactsGenerator(S065Table, 17.0*RAD, -15.61667*RAD, 0, 0, S065Contact);
 			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
