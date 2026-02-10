@@ -1829,7 +1829,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		SV sv0, sv1, sv2;
 		MATRIX3 REFSMMAT, M_R;
 		VECTOR3 Att, UX, UY, UZ;
-		double GETbase, GET_AOS, GET_LOS, dt;
+		double GETbase, GET_AOS, GET_LOS, GET, dt, Exp;
 
 
 		for (int i = 0; i < 4; i++)
@@ -1853,18 +1853,24 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sv1 = coast(sv0, dt);
 
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			Exp = 6.0 * (25 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "SW US");
-			form->GETStart[1] = GET_AOS;
+			form->GETStart[1] = GET;
 			form->ExposureInterval[1] = 6.0;
 			form->ExposureNum[1] = 25;
 
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 29.6667*RAD, -95.1667*RAD, GET_AOS, GET_LOS);
+			Exp = 6.0 * (3 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
 			sprintf(form->Area[2], "Houston");
-			form->GETStart[2] = GET_AOS;
+			form->GETStart[2] = GET;
 			form->ExposureInterval[2] = 6.0;
 			form->ExposureNum[2] = 3;
 		}
@@ -1874,12 +1880,15 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sv1 = coast(sv0, dt);
 
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 19.3*RAD, -99.6667*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			Exp = 6.0 * (15 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "Mexico");
-			form->GETStart[1] = GET_AOS;
+			form->GETStart[1] = GET;
 			form->ExposureInterval[1] = 6.0;
 			form->ExposureNum[1] = 15;
 		}
@@ -1889,12 +1898,15 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sv1 = coast(sv0, dt);
 
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			Exp = 6.0 * (25 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "SW US");
-			form->GETStart[1] = GET_AOS;
+			form->GETStart[1] = GET;
 			form->ExposureInterval[1] = 6.0;
 			form->ExposureNum[1] = 25;
 		}
@@ -1904,18 +1916,24 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sv1 = coast(sv0, dt);
 
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 19.3*RAD, -99.666*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			Exp = 6.0 * (25 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "Mexico");
-			form->GETStart[1] = GET_AOS;
+			form->GETStart[1] = GET;
 			form->ExposureInterval[1] = 6.0;
 			form->ExposureNum[1] = 25;
 
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, -19.81666*RAD, -43.3666*RAD, GET_AOS, GET_LOS);
+			Exp = 6.0 * (3 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
 			sprintf(form->Area[2], "Brazil");
-			form->GETStart[2] = GET_AOS;
+			form->GETStart[2] = GET;
 			form->ExposureInterval[2] = 6.0;
 			form->ExposureNum[2] = 3;
 		}
@@ -1925,24 +1943,33 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sv1 = coast(sv0, dt);
 
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 31.91666*RAD, -105.0*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			Exp = 6.0 * (6 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "North Mexico");
-			form->GETStart[1] = GET_AOS;
+			form->GETStart[1] = GET;
 			form->ExposureInterval[1] = 6.0;
 			form->ExposureNum[1] = 6;
 
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 29.1667*RAD, -89.333*RAD, GET_AOS, GET_LOS);
+			Exp = 6.0 * (6 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
 			sprintf(form->Area[2], "Southeast US");
-			form->GETStart[2] = GET_AOS;
+			form->GETStart[2] = GET;
 			form->ExposureInterval[2] = 6.0;
 			form->ExposureNum[2] = 6;
 
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 17.0*RAD, -15.61667*RAD, GET_AOS, GET_LOS);
+			Exp = 12.0 * (48 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
 			sprintf(form->Area[3], "Africa");
-			form->GETStart[3] = GET_AOS;
+			form->GETStart[3] = GET;
 			form->ExposureInterval[3] = 12.0;
 			form->ExposureNum[3] = 48;
 		}
@@ -1952,12 +1979,15 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sv1 = coast(sv0, dt);
 
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			Exp = 6.0 * (3 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "Southwest US");
-			form->GETStart[1] = GET_AOS;
+			form->GETStart[1] = GET;
 			form->ExposureInterval[1] = 6.0;
 			form->ExposureNum[1] = 3;
 		}
@@ -1968,18 +1998,24 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 			//Wilmington, North Carolina
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 34.22333*RAD, -77.91222*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			Exp = 20.0 * (3 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "Wilmington");
-			form->GETStart[1] = GET_AOS;
-			form->ExposureInterval[1] = 20;
+			form->GETStart[1] = GET;
+			form->ExposureInterval[1] = 20.0;
 			form->ExposureNum[1] = 3;
 
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, -17.3667*RAD, 37.95*RAD, GET_AOS, GET_LOS);
+			Exp = 12.0 * (6 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
 			sprintf(form->Area[2], "Mozambique");
-			form->GETStart[2] = GET_AOS;
+			form->GETStart[2] = GET;
 			form->ExposureInterval[2] = 12.0;
 			form->ExposureNum[2] = 6;
 		}
@@ -1989,13 +2025,16 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sv1 = coast(sv0, dt);
 
 			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 32.333*RAD, -107.667*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			Exp = 20.0 * (6 - 1); // Total exposure time
+			GET = (((GET_LOS - GET_AOS) / 2.0) + GET_AOS) - (Exp / 2.0); // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "New Mexico");
-			form->GETStart[1] = GET_AOS;
-			form->ExposureInterval[1] = 20;
+			form->GETStart[1] = GET;
+			form->ExposureInterval[1] = 20.0;
 			form->ExposureNum[1] = 6;
 		}
 
