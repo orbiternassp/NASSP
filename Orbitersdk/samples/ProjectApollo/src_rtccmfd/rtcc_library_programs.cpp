@@ -807,12 +807,12 @@ void RTCC::ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out, Ephemeris
 	out.VPI = 0;
 	out.ErrorCode = 0;
 
-	if (in.GMT < EPH.table[0].GMT)
+	if (in.GMT < EPH.Header.TL)
 	{
 		out.ErrorCode = 8;
 		return;
 	}
-	if (in.GMT > EPH.table.back().GMT)
+	if (in.GMT > EPH.Header.TR)
 	{
 		out.ErrorCode = 16;
 		return;

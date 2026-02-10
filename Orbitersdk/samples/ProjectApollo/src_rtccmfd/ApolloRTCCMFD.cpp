@@ -499,6 +499,11 @@ void ApolloRTCCMFD::Line(oapi::Sketchpad *skp, int x0, int y0, int x1, int y1)
 	skp->Line(x0 + WOFF, y0 + HOFF, x1 + WOFF, y1 + HOFF);
 }
 
+void ApolloRTCCMFD::Line2(oapi::Sketchpad* skp, int x0, int y0, int x1, int y1)
+{
+	skp->Line((CW * (2 * x0 + 1)) / 2 + WOFF, (CH * (2 * y0 + 1)) / 2 + HOFF, (CW * (2 * x1 + 1)) / 2 + WOFF, (CH * (2 * y1 + 1)) / 2 + HOFF);
+}
+
 void ApolloRTCCMFD::menuEntryUpdateUpload()
 {
 	G->EntryUpdateUplink();
@@ -1561,6 +1566,15 @@ void ApolloRTCCMFD::menuSetStarSightingTablePage()
 	SelectPage(134);
 }
 
+void ApolloRTCCMFD::menuSetSpacecraftPointingDisplayPage()
+{
+	marker = 0;
+	markermax = 10;
+	subscreen = 0;
+	subscreenmax = 2;
+	SelectPage(135);
+}
+
 void ApolloRTCCMFD::menuPerigeeAdjustCalc()
 {
 	G->PerigeeAdjustCalc();
@@ -2361,13 +2375,15 @@ bool GenericVectorInputBox(void *id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::GenericStringInput(std::string *val, char* message, void(ApolloRTCCMFD::*func)(void))
+void ApolloRTCCMFD::GenericStringInput(std::string *val, char* message, void(ApolloRTCCMFD::*func)(void), unsigned int minlen, unsigned int maxlen)
 {
 	void *data2;
 
 	tempData.sVal = val;
 	tempData.ptr = this;
 	tempData.func = func;
+	tempData.min1 = minlen;
+	tempData.max1 = maxlen;
 
 	data2 = &tempData;
 
@@ -2378,6 +2394,11 @@ void ApolloRTCCMFD::GenericStringInput(std::string *val, char* message, void(Apo
 bool GenericStringInputBox(void *id, char *str, void *data)
 {
 	RTCCMFDInputBoxData *arr = static_cast<RTCCMFDInputBoxData*>(data);
+
+	std::string strtemp(str);
+
+	if ((unsigned)(arr->min1) > strtemp.size()) return false;
+	if (strtemp.size() > (unsigned)(arr->max1)) return false;
 
 	arr->sVal->assign(str);
 
@@ -2637,10 +2658,10 @@ void ApolloRTCCMFD::menuSetStarSightingTableInput()
 		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Elev, "Enter elevation of spacecraft above ground target's local horizontal plane in degrees (0 - 90):", RAD);
 		break;
 	case 8:
-		GenericGETInput(&GC->rtcc->EZGSTMED.G30_RA, "Celestial target right ascension (Format: hr:min:sec)", NULL, PI2 / (24.0 * 3600.0));
+		GenericGETInput(&GC->rtcc->EZGSTMED.G30_RA, "Celestial target right ascension (Format: hr:min:sec)", NULL, OrbMech::RASEC_TO_RADIANS);
 		break;
 	case 9:
-		GenericGETInput(&GC->rtcc->EZGSTMED.G30_DEC, "Celestial target declination (Format: deg:min:sec)", NULL, RAD / (3600.0));
+		GenericGETInput(&GC->rtcc->EZGSTMED.G30_DEC, "Celestial target declination (Format: deg:min:sec)", NULL, OrbMech::ARCSEC_TO_RADIANS);
 		break;
 	case 10:
 		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.x, "Enter roll angle in degrees", RAD);
@@ -2663,6 +2684,94 @@ void ApolloRTCCMFD::menuSetStarSightingTableInput()
 void ApolloRTCCMFD::menuStarSightingTableCalc()
 {
 	GeneralMEDRequest("G30;");
+}
+
+void ApolloRTCCMFD::menuSetSpacecraftPointingDisplayInput()
+{
+	switch (marker)
+	{
+	case 0:
+		if (GC->rtcc->EZGSTMED.G40_Mode < 4) GC->rtcc->EZGSTMED.G40_Mode++;
+		else GC->rtcc->EZGSTMED.G40_Mode = 1;
+		break;
+	case 1:
+		GenericStringInput(&GC->rtcc->EZGSTMED.G40_InstrID, "Enter desired instrument ID. The last 3 characters must be CSM or LEM (3-6 characters):", NULL, 3, 6);
+		break;
+	case 2:
+		if (GC->rtcc->EZGSTMED.G40_Mode == 1)
+		{
+			sprintf(Buffer, "Mode 1: Enter target ID. The last character must be E or M. (5-8 characters):");
+		}
+		else if (GC->rtcc->EZGSTMED.G40_Mode == 2)
+		{
+			sprintf(Buffer, "Mode 2: Enter target ID. (5-8 characters):");
+		}
+		else if (GC->rtcc->EZGSTMED.G40_Mode == 3)
+		{
+			sprintf(Buffer, "Mode 3: Enter target ID. The last 3 characters must be a valid star number. (5-8 characters):");
+		}
+		else
+		{
+			sprintf(Buffer, "Mode 4: Enter target ID. Enter 7 characters. The last 3 must be CSM or LEM:");
+		}
+		GenericStringInput(&GC->rtcc->EZGSTMED.G40_TargetName, Buffer, NULL, 5, 8);
+		break;
+	case 3:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Lat, "Enter ground target latitude in degrees:", RAD);
+		break;
+	case 4:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Lng, "Enter ground target longitude in degrees:", RAD);
+		break;
+	case 5:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Ht, "Enter ground target height in nautical miles:", 1852.0);
+		break;
+	case 6:
+		GenericGETInput(&GC->rtcc->EZGSTMED.G40_RA, "Celestial target right ascension (Format: hr:min:sec)", NULL, OrbMech::RASEC_TO_RADIANS);
+		break;
+	case 7:
+		GenericGETInput(&GC->rtcc->EZGSTMED.G40_DEC, "Celestial target declination (Format: deg:min:sec)", NULL, OrbMech::ARCSEC_TO_RADIANS);
+		break;
+	case 8:
+		if (GC->rtcc->EZGSTMED.G40_Matrix < RTCC_REFSMMAT_TYPE_LLD)
+		{
+			GC->rtcc->EZGSTMED.G40_Matrix++;
+		}
+		else
+		{
+			GC->rtcc->EZGSTMED.G40_Matrix = 1;
+		}
+		break;
+	case 9:
+		if (GC->rtcc->EZGSTMED.G40_AttRef < 2)
+		{
+			GC->rtcc->EZGSTMED.G40_AttRef++;
+		}
+		else
+		{
+			GC->rtcc->EZGSTMED.G40_AttRef = 0;
+		}
+		break;
+	case 10:
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_DokAngle, "Enter docking angle in degrees:", RAD);
+		break;
+	}
+}
+
+void ApolloRTCCMFD::menuMEDG41()
+{
+	menuGeneralMEDRequest("Change S/C pointing instrument. Format: Instrument ID (3-6 characters), Action Code (A, D or R), RX, RY;","G41,XXXXXX,A,0.0,0.0;");
+}
+
+void ApolloRTCCMFD::menuSpacecraftPointingDisplayCalc()
+{
+	char Buff1[128], Buff2[128], Buff3[128];
+
+	GET_Display(Buff1, GC->rtcc->EZGSTMED.G42_GET1, false);
+	GET_Display(Buff2, GC->rtcc->EZGSTMED.G42_GET5, false);
+	GET_Display(Buff3, GC->rtcc->EZGSTMED.G42_GETT, false);
+	sprintf_s(Buffer, "G42,%s,%s,%s;", Buff1, Buff2, Buff3);
+
+	menuGeneralMEDRequest("Queue S/C point display. Format: G42, GET1, GET5, GETT;", Buffer);
 }
 
 void ApolloRTCCMFD::menuSaveDODREFSMMAT()
@@ -9917,6 +10026,7 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 	case 1501: menuSetMoonriseMoonsetTablePage(); break;
 	case 1502: menuSetSunriseSunsetTablePage(); break;
 	case 1503: menuSetNextStationContactsPage(); break;
+	case 1504: menuSetSpacecraftPointingDisplayPage(); break;
 	case 1505: menuSetRecoveryAscendingNodeDisplayPage(); break;
 	case 1506: menuSetExpSiteAcqPage(); break;
 	case 1508: menuSetLandmarkAcquisitionDisplayPage(); break;
