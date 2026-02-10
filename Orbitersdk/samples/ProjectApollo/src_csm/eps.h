@@ -90,6 +90,39 @@ protected:
 	ToggleSwitch *TunnelLtsw;
 };
 
+/// This class simulates integral lighting behavior in the CSM
+class IntegralLights
+{
+public:
+	IntegralLights(double watts);
+	virtual ~IntegralLights();
+	void IntegralLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *rty);
+	double GetOutput();
+	void SystemTimestep(double simdt);
+
+protected:
+	Saturn *saturn;
+	e_object *Integralcb;
+	ContinuousRotationalSwitch *Rotary;
+	double powerdraw;
+};
+
+/// This class simulates numeric lighting behavior in the CSM
+class NumericLights
+{
+public:
+	NumericLights();
+	virtual ~NumericLights();
+	void NumericLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *rty);
+	double GetOutput();
+	void SystemTimestep(double simdt);
+
+protected:
+	Saturn *saturn;
+	e_object *Numericscb;
+	ContinuousRotationalSwitch *Rotary;
+};
+
 /// This class simulates exterior lighting behavior in the CSM
 class ExteriorLighting
 {

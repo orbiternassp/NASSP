@@ -162,6 +162,13 @@ void Saturn::SystemsInit() {
 	MNATunnelLights.Init(this, &LightingRndzMNACB, &TunnelLightSwitch);
 	MNBTunnelLights.Init(this, &LightingRndzMNBCB, &TunnelLightSwitch);
 
+	LeftIntegralLights.Init(this, &LightingNumIntLMDCCB, &IntegralRotarySwitch);
+	RightIntegralLights.Init(this, &LightingNumIntRMDCCB, &RightIntegralRotarySwitch);
+	LEBIntegralLights.Init(this, &LightingNumIntLEBCB, &Panel100IntegralRotarySwitch);
+
+	LeftNumericLights.Init(this, &LightingNumIntLMDCCB, &NumericRotarySwitch);
+	LEBNumericLights.Init(this, &LightingNumIntLEBCB, &Panel100NumericRotarySwitch);
+
 	//
 	// EPS/Cryo devices
 	//
@@ -1189,7 +1196,9 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		//RightFloodLights.GetPrimVoltage(), RightFloodLights.GetSecVoltage(), LEBFloodLights.GetPrimVoltage(), LEBFloodLights.GetSecVoltage());
 
 	//sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f", LeftFloodLights.GetCombinedOutput(), RightFloodLights.GetCombinedOutput(), LEBFloodLights.GetCombinedOutput());
-	 */
+	//sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f PWR: LH %.2f RH %.2f LEB %.2f", LeftIntegralLights.GetOutput(), RightIntegralLights.GetOutput(), LEBIntegralLights.GetOutput(), LightingNumIntLMDCCB.PowerLoad(), LightingNumIntRMDCCB.PowerLoad(), LightingNumIntLEBCB.PowerLoad());
+	//sprintf(oapiDebugString(), "LH %.2f LEB %.2f PWR: LH %.2f LEB %.2f", LeftNumericLights.GetOutput(), LEBNumericLights.GetOutput(), LightingNumIntLMDCCB.PowerLoad(), LightingNumIntLEBCB.PowerLoad());
+	*/
 
 //Scaling Debug Lines
 	/*
@@ -1910,6 +1919,11 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		LEBFloodLights.SystemTimestep(tFactor);
 		MNATunnelLights.SystemTimestep(tFactor);
 		MNBTunnelLights.SystemTimestep(tFactor);
+		LeftIntegralLights.SystemTimestep(tFactor);
+		RightIntegralLights.SystemTimestep(tFactor);
+		LEBIntegralLights.SystemTimestep(tFactor);
+		LeftNumericLights.SystemTimestep(tFactor);
+		LEBNumericLights.SystemTimestep(tFactor);
 		ExteriorLighting.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
