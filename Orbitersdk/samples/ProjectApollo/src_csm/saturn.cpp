@@ -370,6 +370,9 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	mechanicalAccelerometer(inertialData),
 	cws(SMasterAlarm, Bclick, Panelsdk),
 	dockingprobe(0, SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
+	LeftIntegralLights(11.0), //LH Integral Power (watts)
+	RightIntegralLights(13.1), //RH Integral Power (watts)
+	LEBIntegralLights(7.1), //LEB Integral Power (watts)
 	MissionTimerDisplay(Panelsdk),
 	MissionTimer306Display(Panelsdk),
 	EventTimerDisplay(Panelsdk),

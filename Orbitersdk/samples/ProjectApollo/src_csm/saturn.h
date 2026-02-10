@@ -3849,6 +3849,13 @@ protected:
 	TunnelLights MNATunnelLights;
 	TunnelLights MNBTunnelLights;
 
+	IntegralLights LeftIntegralLights;
+	IntegralLights RightIntegralLights;
+	IntegralLights LEBIntegralLights;
+
+	NumericLights LeftNumericLights;
+	NumericLights LEBNumericLights;
+
 	// GSE
 	Pump* GSEGlycolPump;
 	h_Radiator* GSERadiator;
@@ -4731,6 +4738,8 @@ protected:
 	friend class RTCC;
 	friend class FloodLights;
 	friend class TunnelLights;
+	friend class IntegralLights;
+	friend class NumericLights;
 
 	friend void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
 };
