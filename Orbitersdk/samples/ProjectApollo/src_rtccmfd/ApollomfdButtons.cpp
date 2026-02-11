@@ -2905,7 +2905,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 
 		{ "Calculate contacts", 0, 'C' },
-		{ "", 0, ' ' },
+		{ "Add ground point", 0, 'A' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
