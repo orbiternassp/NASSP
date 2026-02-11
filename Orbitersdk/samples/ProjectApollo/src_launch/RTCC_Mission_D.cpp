@@ -2042,8 +2042,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(form->Area[1], "New Mexico");
 			form->GETStart[1] = GET;
 		}
+		mcc->mcc_calcs.CelestialBodyPointing(S065Table, REFSMMAT, GMTfromGET(form->GETStart[0]), 0, 0.0, 57.5, 0.0, Att);
 
-		mcc->mcc_calcs.GroundTargetPointing(S065Table, REFSMMAT, GMTfromGET(form->GETStart[0]), 0.0, 0.0, -(OrbMech::R_Earth), 0, 0.0, 57.5, 0.0, Att);
 		form->FDAIAngles[0] = Att * DEG;
 	}
 	break;
