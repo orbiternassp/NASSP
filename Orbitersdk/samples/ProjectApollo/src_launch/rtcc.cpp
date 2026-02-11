@@ -82,22 +82,21 @@ void papiWriteScenario_Station(FILEHANDLE scn, char *item, int i, StationData st
 
 	char buffer[256];
 
-	sprintf(buffer, "  %s %d %s %.12lf %.12lf %.12lf %.12lf", item, i, stat.code.c_str(), stat.H, stat.lat_geod, stat.lng, stat.R_S);
+	sprintf(buffer, "  %s %d %s %.12lf %.12lf %.12lf", item, i, stat.code.c_str(), stat.H, stat.lat_geod, stat.lng);
 	oapiWriteLine(scn, buffer);
 }
 
-bool papiReadScenario_Station(char *line, char *item, StationData *stat)
+bool papiReadScenario_Station(char *line, char *item, StationData *stat, int &num)
 {
 
 	char buffer[256], name[16];
 	StationData v;
-	int i;
 
 	if (sscanf(line, "%s", buffer) == 1) {
 		if (!strcmp(buffer, item)) {
-			if (sscanf(line, "%s %d %s %lf %lf %lf %lf", buffer, &i, name, &v.H, &v.lat_geod, &v.lng, &v.R_S) == 7) {
+			if (sscanf(line, "%s %d %s %lf %lf %lf", buffer, &num, name, &v.H, &v.lat_geod, &v.lng) == 6) {
 				v.code.assign(name);
-				stat[i] = v;
+				stat[num] = v;
 				return true;
 			}
 		}
@@ -6570,6 +6569,17 @@ void RTCC::SaveState(FILEHANDLE scn) {
 			papiWriteScenario_Station(scn, "RTCC_EZLASITE", i, EZLASITE.Data[i]);
 		}
 	}
+	if (EZEXSITE.REF != -1)
+	{
+		SAVE_INT("RTCC_EZEXSITE_REF", EZEXSITE.REF);
+	}
+	for (i = 0; i < 12; i++)
+	{
+		if (EZEXSITE.Data[i].code != "")
+		{
+			papiWriteScenario_Station(scn, "RTCC_EZEXSITE", i, EZEXSITE.Data[i]);
+		}
+	}
 	//CG tables. TBD: Don't save these yet because there is no point to saving them until the actual CG calculations are more complex.
 	//papiSave_CGTable(scn, &SystemParameters.MHVLCG, "MHVLCG");
 	//papiSave_CGTable(scn, &SystemParameters.MHVACG, "MHVACG");
@@ -6884,7 +6894,15 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		}
 
 		LOAD_INT("RTCC_EZLASITE_REF", EZLASITE.REF);
-		papiReadScenario_Station(line, "RTCC_EZLASITE", EZLASITE.Data);
+		if (papiReadScenario_Station(line, "RTCC_EZLASITE", EZLASITE.Data, inttemp))
+		{
+			EMGGPCHR(EZLASITE.Data[inttemp].lat_geod, EZLASITE.Data[inttemp].lng, EZLASITE.Data[inttemp].H, EZLASITE.REF, 0.0, &EZLASITE.Data[inttemp]);
+		}
+		LOAD_INT("RTCC_EZEXSITE_REF", EZEXSITE.REF);
+		if (papiReadScenario_Station(line, "RTCC_EZEXSITE", EZEXSITE.Data, inttemp))
+		{
+			EMGGPCHR(EZEXSITE.Data[inttemp].lat_geod, EZEXSITE.Data[inttemp].lng, EZEXSITE.Data[inttemp].H, EZEXSITE.REF, 0.0, &EZEXSITE.Data[inttemp]);
+		}
 
 		papiReadConfigFile_CGTable(line, "MHVCCG", SystemParameters.MHVCCG);
 		papiReadScenario_int(line, "MHVCCG_N", SystemParameters.MHVCCG.N);
@@ -21351,7 +21369,7 @@ EMXING_LOOP:
 		if (GMT_EMAX >= current.GMTAOS && GMT_EMAX <= current.GMTLOS)
 		{
 			//EMAX within AOS and LOS
-			current.GMTEMAX = current.GMTLOS;
+			current.GMTEMAX = GMT_EMAX;
 			current.MAXELEV = EMAX;
 			current.BestAvailableEMAX = BestAvailableEMAX;
 		}
@@ -21653,19 +21671,19 @@ void RTCC::ECMEXP(EphemerisData2 sv, StationData *stat, int statbody, double &ra
 {
 	//INPUTS:
 	//sv: state vector at maximum elevation, ECT or MCT coordinates
-	VECTOR3 Q, U_R;
+	VECTOR3 Q, R_S;
 
 	if (statbody == BODY_EARTH)
 	{
-		U_R = OrbMech::EMXING_Station_ECT(sv.GMT, stat->R_E_sin_lat, stat->R_E_cos_lat, stat->lng);
+		R_S = OrbMech::EMXING_Station_ECT(sv.GMT, stat->R_E_sin_lat, stat->R_E_cos_lat, stat->lng);
 	}
 	else
 	{
-		U_R = OrbMech::r_from_latlong(stat->lat_geoc, stat->lng);
+		R_S = OrbMech::r_from_latlong(stat->lat_geoc, stat->lng) * stat->R_S;
 	}
 	
 	Q = unit(crossp(sv.V, sv.R));
-	range = dotp(Q, U_R*stat->R_S);
+	range = dotp(Q, R_S);
 	alt = length(sv.R) - stat->R_S;
 }
 

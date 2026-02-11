@@ -300,6 +300,8 @@ int MCC_Calculations::StationContactsGenerator(EphemerisDataTable2& ephem, doubl
 	}
 	error = pRTCC->ELVCNV(ephem.table, ephem.Header.CSI, csi, ephem_true.table);
 	if (error) return 1;
+	ephem_true.Header = ephem.Header;
+	ephem_true.Header.CSI = csi;
 
 	//Generate station contact
 	error = pRTCC->EMXING(ephem_true, mantimes, station, RBI, acquisitions, NULL, 1);
@@ -322,12 +324,14 @@ int MCC_Calculations::GroundTargetPointing(EphemerisDataTable2& ephem, MATRIX3 R
 	//yaw: Yaw angle, radians. Same definition as in P20 universal tracking
 	//pitch: Pitch angle, radians. Same definition as in P20 universal tracking
 	//omicron: Azimuth angle, radians. Same definition as in P20 universal tracking
+	//OUTPUTS:
+	//Att: Attitude for sighting
+	//return value: error if non-zero
 
 	ELVCTRInputTable elin;
 	ELVCTROutputTable2 elout;
 	ManeuverTimesTable mantimes;
-	MATRIX3 RFNB;
-	VECTOR3 R_iner, u_LOS, SCAXIS;
+	VECTOR3 R_iner, u_LOS;
 	double Elev;
 	int err, csi;
 	bool HasLOS;
@@ -353,12 +357,8 @@ int MCC_Calculations::GroundTargetPointing(EphemerisDataTable2& ephem, MATRIX3 R
 	err = pRTCC->EMGSDEMT(elout.SV, RBI, lat, lng, alt, R_iner, u_LOS, HasLOS, Elev);
 	if (err) return 1;
 
-	//Build body pointing vector
-	SCAXIS = _V(cos(yaw) * cos(pitch), sin(yaw) * cos(pitch), -sin(pitch));
-	//Calculate reference to navigation base matrix
-	RFNB = OrbMech::THREEAXISPOINTING(elout.SV.R, elout.SV.V, SCAXIS, u_LOS, omicron);
 	//Calculate attitude
-	Att = OrbMech::CALCGAR(REFSMMAT, RFNB);
+	Att = AttitudeFromPointingDirection(elout.SV.R, elout.SV.V, REFSMMAT, u_LOS, yaw, pitch, omicron);
 
 	return 0;
 }
@@ -366,18 +366,21 @@ int MCC_Calculations::GroundTargetPointing(EphemerisDataTable2& ephem, MATRIX3 R
 int MCC_Calculations::CelestialTargetPointing(EphemerisDataTable2& ephem, MATRIX3 REFSMMAT, double gmt, int star, double yaw, double pitch, double omicron, VECTOR3& Att)
 {
 	//INPUTS:
+	//ephem: Ephemeris data table generated with CreateEphemeris (ECI or MCI coordinates)
 	//REFSMMAT: REFSMMAT of vehicle for which the attitude is to be calculated
 	//gmt: Time of sighting
 	//star: Star from star table (1-400)
 	//yaw: Yaw angle, radians. Same definition as in P20 universal tracking
 	//pitch: Pitch angle, radians. Same definition as in P20 universal tracking
 	//omicron: Azimuth angle, radians. Same definition as in P20 universal tracking
+	//OUTPUTS:
+	//Att: Attitude for sighting
+	//return value: error if non-zero
 
 	ELVCTRInputTable elin;
 	ELVCTROutputTable2 elout;
 	ManeuverTimesTable mantimes;
-	MATRIX3 RFNB;
-	VECTOR3 u_LOS, SCAXIS;
+	VECTOR3 u_LOS;
 
 	//Interpolate for vector
 	elin.GMT = gmt;
@@ -388,14 +391,110 @@ int MCC_Calculations::CelestialTargetPointing(EphemerisDataTable2& ephem, MATRIX
 	if (star < 0 || star > 400) return 1;
 	u_LOS = pRTCC->EZJGSTAR[star - 1];
 
+	//Calculate attitude
+	Att = AttitudeFromPointingDirection(elout.SV.R, elout.SV.V, REFSMMAT, u_LOS, yaw, pitch, omicron);
+
+	return 0;
+}
+
+int MCC_Calculations::CelestialBodyPointing(EphemerisDataTable2& ephem, MATRIX3 REFSMMAT, double gmt, int option, double yaw, double pitch, double omicron, VECTOR3& Att)
+{
+	//INPUTS:
+	//ephem: Ephemeris data table generated with CreateEphemeris (ECI or MCI coordinates)
+	//REFSMMAT: REFSMMAT of vehicle for which the attitude is to be calculated
+	//gmt: Time of sighting
+	//option: 0 = Center of Earth, 1 = center of Moon, 2 = center of Sun
+	//yaw: Yaw angle, radians. Same definition as in P20 universal tracking
+	//pitch: Pitch angle, radians. Same definition as in P20 universal tracking
+	//omicron: Azimuth angle, radians. Same definition as in P20 universal tracking
+	//OUTPUTS:
+	//Att: Attitude for sighting
+	//return value: error if non-zero
+
+	ELVCTRInputTable elin;
+	ELVCTROutputTable2 elout;
+	ManeuverTimesTable mantimes;
+	VECTOR3 u_LOS;
+	int err;
+
+	//Interpolate for vector
+	elin.GMT = gmt;
+	pRTCC->ELVCTR(elin, elout, ephem, mantimes);
+	if (elout.ErrorCode > 2) return 1;
+
+	//Get line-of-sight vector
+	err = CelestialBodyPointingDirection(elout.SV.R, elout.SV.GMT, ephem.Header.CSI, option, u_LOS);
+	if (err) return 1;
+
+	//Calculate attitude
+	Att = AttitudeFromPointingDirection(elout.SV.R, elout.SV.V, REFSMMAT, u_LOS, yaw, pitch, omicron);
+
+	return 0;
+}
+
+int MCC_Calculations::CelestialBodyPointingDirection(VECTOR3 R, double GMT, int CSI, int option, VECTOR3& u_LOS)
+{
+	//INPUTS:
+	//R = Position vector
+	//GMT: Time of sighting
+	//CSI: Coordinate system indicator for position vector
+	//option: 0 = Center of Earth, 1 = center of Moon, 2 = center of Sun
+	//OUTPUTS:
+	//u_LOS: Inertial line-of-sight unit vector from vehicle to body
+	//return value: error if non-zero
+
+	VECTOR3 R_EM, V_EM, R_ES, R_VB;
+	int err;
+
+	//Get ephemerides
+	err = pRTCC->PLEFEM(1, GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
+	if (err) return err;
+
+	if (CSI == RTCC_COORDINATES_ECI)
+	{
+		if (option == 0)
+		{
+			R_VB = -R;
+		}
+		else if (option == 1)
+		{
+			R_VB = R_EM - R;
+		}
+		else
+		{
+			R_VB = R_ES - R;
+		}
+	}
+	else
+	{
+		if (option == 0)
+		{
+			R_VB = -R_EM - R;
+		}
+		else if (option == 1)
+		{
+			R_VB = -R;
+		}
+		else
+		{
+			R_VB = -R_EM + R_ES - R;
+		}
+	}
+	u_LOS = unit(R_VB);
+	return 0;
+}
+
+VECTOR3 MCC_Calculations::AttitudeFromPointingDirection(VECTOR3 R, VECTOR3 V, MATRIX3 REFSMMAT, VECTOR3 u_LOS, double yaw, double pitch, double omicron)
+{
+	MATRIX3 RFNB;
+	VECTOR3 SCAXIS;
+
 	//Build body pointing vector
 	SCAXIS = _V(cos(yaw) * cos(pitch), sin(yaw) * cos(pitch), -sin(pitch));
 	//Calculate reference to navigation base matrix
-	RFNB = OrbMech::THREEAXISPOINTING(elout.SV.R, elout.SV.V, SCAXIS, u_LOS, omicron);
+	RFNB = OrbMech::THREEAXISPOINTING(R, V, SCAXIS, u_LOS, omicron);
 	//Calculate attitude
-	Att = OrbMech::CALCGAR(REFSMMAT, RFNB);
-
-	return 0;
+	return OrbMech::CALCGAR(REFSMMAT, RFNB);
 }
 
 void MCC_Calculations::FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS)
