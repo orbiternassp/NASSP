@@ -1833,7 +1833,6 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		EphemerisDataTable2 S065Table;
 		StationContact S065Contact;
 
-
 		for (int i = 0; i < 4; i++)
 		{
 			strcpy(form->Area[i], "N/A");
@@ -1850,7 +1849,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		if (fcn == 46)
 		{
-			mcc->mcc_calcs.CreateEphemeris(sv0, GMTfromGET(OrbMech::HHMMSSToSS(124, 0, 0)), GMTfromGET(OrbMech::HHMMSSToSS(127, 0, 0)), S065Table);
+			mcc->mcc_calcs.CreateEphemeris(sv0, GMTfromGET(OrbMech::HHMMSSToSS(123, 50, 0)), GMTfromGET(OrbMech::HHMMSSToSS(126, 50, 0)), S065Table);
 
 			mcc->mcc_calcs.StationContactsGenerator(S065Table, 31.0*RAD, -115.5*RAD, 0, 0, S065Contact);
 			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
@@ -2042,9 +2041,8 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			sprintf(form->Area[1], "New Mexico");
 			form->GETStart[1] = GET;
 		}
-		mcc->mcc_calcs.CelestialBodyPointing(S065Table, REFSMMAT, GMTfromGET(form->GETStart[0]), 0, 0.0, 57.5, 0.0, Att);
-
-		form->FDAIAngles[0] = Att * DEG;
+		mcc->mcc_calcs.CelestialBodyPointing(S065Table, REFSMMAT, GMTfromGET(form->GETStart[0]), 0, 0.0*RAD, 57.5*RAD, 180.0*RAD, Att);
+		form->FDAIAngles[0] = OrbMech::round_to((Att * DEG), 0.1);
 	}
 	break;
 	case 48: //BLOCK DATA 14 **Block data needs pitch and yaw trims added**
