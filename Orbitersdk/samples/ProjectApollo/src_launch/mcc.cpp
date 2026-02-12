@@ -3017,52 +3017,53 @@ void MCC::drawPad(bool writetofile){
 	case PT_SLMNV:
 	{
 		SLMNV * form = (SLMNV *)padForm;
-		bool prelim = form->prelim;
 		int hh, hh2, mm, mm2;
 		double ss, ss2;
 		char padprelim[32];
 		OrbMech::SStoHHMMSS(form->GETI, hh, mm, ss, 0.01);
 		OrbMech::SStoHHMMSS(form->burntime, hh2, mm2, ss2);
 
-		if (prelim)
+		if (form->prelim)
 		{
 			sprintf(padprelim, "PRELIMINARY");
+			sprintf(buffer, "");
 		}
 		else
 		{
 			sprintf(padprelim, "FINAL");
+			sprintf(buffer, "%+06.0f WGT\n%+07.2f PTRM\n%+07.2f YTRM\n", form->Weight, form->pTrim, form->yTrim);
 		}
 
 		switch (form->type)
 		{
 		case 1: //NC1
 		{
-			snprintf(buffer, 1024, "NC1 PAD DATA\n%s\n%+06d HR N95\n%+06d MIN TIG NC1\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NC1\n%+07.1f DVZ\nXXX%03.0f R N22\nXXX%03.0f P NC1\nXXX%03.0f Y\n%+07.1f DVC\nXX%d:%04.1f BT\n%+06.0f WGT\n%+07.2f PTRM\n%+07.2f YTRM\nRemarks:\n",
-				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Att.x, form->Att.y, form->Att.z, form->Vc, mm2, ss2, form->Weight, form->pTrim, form->yTrim, form->remarks);
+			snprintf(buffer, 1024, "NC1 PAD DATA\n%s\n%+06d HR N95\n%+06d MIN TIG NC1\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NC1\n%+07.1f DVZ\nXXX%03.0f R N22\nXXX%03.0f P NC1\nXXX%03.0f Y\n%+07.1f DVC\nXX%d:%04.1f BT\n%sRemarks:\n",
+				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Att.x, form->Att.y, form->Att.z, form->Vc, mm2, ss2, buffer, form->remarks);
 		}
 		break;
 		case 2: //NPC
 		{
-			snprintf(buffer, 1024, "NPC PAD DATA\nPLANE CHANGE\n%+06d HR N33\n%+06d MIN TIG NPC\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NPC\n%+07.1f DVZ\n%+07.1f DVC\nXX%d:%04.1f BT\n%+06.0f WGT\n%+07.2f PTRM\n%+07.2f YTRM\nRemarks:\n",
-				hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Vc, mm2, ss2, form->Weight, form->pTrim, form->yTrim, form->remarks);
+			snprintf(buffer, 1024, "NPC PAD DATA\nPLANE CHANGE\n%+06d HR N33\n%+06d MIN TIG NPC\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NPC\n%+07.1f DVZ\n%+07.1f DVC\nXX%d:%04.1f BT\n%s\nRemarks:\n",
+				hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Vc, mm2, ss2, buffer, form->remarks);
 		}
 		break;
 		case 3: //NC2
 		{
-			snprintf(buffer, 1024, "NC2 PAD DATA\n%s\n%+06d HR N28\n%+06d MIN TIG NC2\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NC2\n%+07.1f DVZ\nXXX%03.0f R N22\nXXX%03.0f P NC2\nXXX%03.0f Y\n%+07.1f DVC\nXX%d:%04.1f BT\n%+06.0f WGT\n%+07.2f PTRM\n%+07.2f YTRM\nRemarks:\n",
-				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Att.x, form->Att.y, form->Att.z, form->Vc, mm2, ss2, form->Weight, form->pTrim, form->yTrim, form->remarks);
+			snprintf(buffer, 1024, "NC2 PAD DATA\n%s\n%+06d HR N28\n%+06d MIN TIG NC2\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NC2\n%+07.1f DVZ\nXXX%03.0f R N22\nXXX%03.0f P NC2\nXXX%03.0f Y\n%+07.1f DVC\nXX%d:%04.1f BT\n%sRemarks:\n",
+				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Att.x, form->Att.y, form->Att.z, form->Vc, mm2, ss2, buffer, form->remarks);
 		}
 		break;
 		case 4: //NCC
 		{
-			snprintf(buffer, 1024, "NCC PAD DATA\n%s\n%+06d HR N11\n%+06d MIN TIG NCC\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NCC\n%+07.1f DVZ\n%+07.1f DVC\nXXX%03.0f R N22\nXXX%03.0f P NCC\nXXX%03.0f Y\n%+06.0f WGT\n%+07.2f PTRM\n%+07.2f YTRM\nRemarks:\n",
-				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Vc, form->Att.x, form->Att.y, form->Att.z, form->Weight, form->pTrim, form->yTrim, form->remarks);
+			snprintf(buffer, 1024, "NCC PAD DATA\n%s\n%+06d HR N11\n%+06d MIN TIG NCC\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NCC\n%+07.1f DVZ\n%+07.1f DVC\nXXX%03.0f R N22\nXXX%03.0f P NCC\nXXX%03.0f Y\n%sRemarks:\n",
+				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Vc, form->Att.x, form->Att.y, form->Att.z, buffer, form->remarks);
 		}
 		break;
 		case 5: //NSR
 		{
-			snprintf(buffer, 1024, "NSR PAD DATA\n%s\n%+06d HR N13\n%+06d MIN TIG NSR\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NSR\n%+07.1f DVZ\n%+07.1f DVC\nXXX%03.0f R N22\nXXX%03.0f P NSR\nXXX%03.0f Y\n%+06.0f WGT\n%+07.2f PTRM\n%+07.2f YTRM\nRemarks:\n",
-				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Vc, form->Att.x, form->Att.y, form->Att.z, form->Weight, form->pTrim, form->yTrim, form->remarks);
+			snprintf(buffer, 1024, "NSR PAD DATA\n%s\n%+06d HR N13\n%+06d MIN TIG NSR\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NSR\n%+07.1f DVZ\n%+07.1f DVC\nXXX%03.0f R N22\nXXX%03.0f P NSR\nXXX%03.0f Y\n%sRemarks:\n",
+				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Vc, form->Att.x, form->Att.y, form->Att.z, buffer, form->remarks);
 		}
 		break;
 		}
@@ -3072,13 +3073,13 @@ void MCC::drawPad(bool writetofile){
 	case PT_SLTPI:
 	{
 		SLTPI * form = (SLTPI *)padForm;
-		bool prelim = form->prelim;
+		form->prelim;
 		int hh, mm;
 		double ss;
 		char padprelim[32];
 		OrbMech::SStoHHMMSS(form->GETI, hh, mm, ss, 0.01);
 
-		if (prelim)
+		if (form->prelim)
 		{
 			sprintf(padprelim, "PRELIMINARY");
 		}

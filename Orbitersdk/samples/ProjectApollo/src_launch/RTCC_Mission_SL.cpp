@@ -170,6 +170,15 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		AP7ManPADOpt manopt;
 		DKIOpt opt;
 
+		if (fcn == 12)
+		{
+			preliminary = true;
+		}
+		else
+		{
+			preliminary = false;
+		}
+
 		opt.sv_CSM = StateVectorCalcEphem(calcParams.src);
 		opt.sv_LM = StateVectorCalcEphem(calcParams.tgt);
 		opt.MV = 1; //CSM maneuvers
@@ -243,6 +252,10 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		{
 			preliminary = true;
 		}
+		else
+		{
+			preliminary = false;
+		}
 
 		opt.sv_CSM = StateVectorCalcEphem(calcParams.src);
 		CSMMass = calcParams.src->GetMass();
@@ -309,6 +322,10 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		{
 			preliminary = true;
 		}
+		else
+		{
+			preliminary = false;
+		}
 
 		opt.mode = 5;
 		opt.T1 = GMTfromGET(calcParams.CSI);
@@ -373,6 +390,10 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		{
 			preliminary = true;
 		}
+		else
+		{
+			preliminary = false;
+		}
 
 		manopt.TIG = calcParams.CDH;
 		manopt.dV_LVLH = calcParams.DVSTORE1; //Was calculated for NCC PAD
@@ -408,6 +429,10 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		if (fcn == 20)
 		{
 			preliminary = true;
+		}
+		else
+		{
+			preliminary = false;
 		}
 
 		opt.mode = 5;
