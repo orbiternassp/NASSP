@@ -377,7 +377,6 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 
 		form->type = 4;
 		form->prelim = preliminary;
-
 	}
 	break;
 	case 18: //NSR preliminary update
