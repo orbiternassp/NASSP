@@ -141,6 +141,16 @@ namespace OrbMech{
 		return H*3600.0 + M*60.0 + S;
 	}
 
+	VECTOR3 round_to(VECTOR3 value, double precision)
+	{
+		VECTOR3 a;
+		for (int i = 0; i < 3; i++)
+		{
+			a.data[i] = round_to(value.data[i], precision);
+		}
+		return a;
+	}
+
 	double round_to(double value, double precision)
 	{
 		return round(value / precision) * precision;
