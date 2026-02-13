@@ -2985,7 +2985,7 @@ void MCC::drawPad(bool writetofile){
 			snprintf(buffer, 1024, "%s", fullString.c_str());
 			oapiAnnotationSetText(NHpad,buffer);
 		}
-		break;
+	break;
 	case PT_AP7TPI:
 		{
 			AP7TPI * form = (AP7TPI *)padForm;
@@ -3019,7 +3019,7 @@ void MCC::drawPad(bool writetofile){
 
 			oapiAnnotationSetText(NHpad, buffer);
 		}
-		break;
+	break;
 	case PT_SLMNV:
 	{
 		SLMNV * form = (SLMNV *)padForm;
