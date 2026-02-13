@@ -1608,14 +1608,14 @@ struct PMMMCDInput
 {
 	double GMTI;
 	int Thruster;
-	int Attitude;
+	int Attitude; //1 = Fixed inertial, 2 = manual holding body orientation invariant, 3 = Lambert, 4 = PGNS External DV, 5 = AGS External DV
 	double dt_ullage;
 	int ConfigChangeInd;
 	int ConfigCodeAfter;
 	int TVC;
 	double DockingAngle;
 	std::bitset<4> CCMI;
-	int BPIND;
+	int BPIND; //1 = DV or DT, 2 = External DV, 3 = IMU, 4 = LVLH, 5 = Lambert, 6 = lunar ascent
 	int ID;
 	bool UllageThrusterOpt;
 	double DT_10PCT;
@@ -1847,23 +1847,6 @@ struct PCMATCArray
 	double GMT_BI;
 	//Words 399-400: Height at apogee
 	double h_a;
-};
-
-struct StationContact
-{
-	StationContact();
-	double GMTAOS;
-	double GMTLOS;
-	double GMTEMAX;
-	double MAXELEV;
-	std::string StationID;
-	bool BestAvailableAOS;
-	bool BestAvailableLOS;
-	bool BestAvailableEMAX;
-	int REV;
-
-	//For sorting
-	bool operator<(const StationContact& rhs) const;
 };
 
 struct OrbitStationContactsTable
@@ -2623,11 +2606,12 @@ public:
 	//Environment Change Calculations
 	struct EMMENVInputTable
 	{
-		double GMT;			//Threshold GMT for the environment change search
-		int option;			//0 = Sun, 1 = Moon, 2 = star
-		bool terminator;	//Search for terminator of above condition
-		bool present;		//Search for condition being present (e.g. sunshine for sunrise)
-		VECTOR3 u_vec; //Star unit vector for option 2
+		double GMT;				//Threshold GMT for the environment change search
+		int option;				//0 = Sun, 1 = Moon, 2 = star
+		bool terminator = false;//Search for terminator of above condition
+		bool present;			//Search for condition being present (e.g. sunshine for sunrise)
+		bool riseset = true;	//true = search for rise/set, false = search for noon/midnight
+		VECTOR3 u_vec;			//Star unit vector for option 2
 	};
 
 	struct EMMENVOutputTable
@@ -2635,9 +2619,10 @@ public:
 		double T_Change = 0.0; //Time of environment change
 		int err = 0; //Error condition: 0 = no error, 1 = too many iterations, 2 = requested GMT not in ephemeris limits, 3 = ran out of ephemeris, 4 = interpolation error, 5 = fatal ephemeris error (not available or wrong coordinate system)
 		bool IsActualChange = false; //Condition already existed at input GMT
+		EphemerisData2 sv; //State vector at time of environment change
 	};
 
-	bool EMMENVCondition(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, LunarStayTimesTable *LUNRSTAY, double GMT, int option, bool terminator, VECTOR3 u_vec, int &err);
+	bool EMMENVCondition(EphemerisDataTable2& ephemeris, ManeuverTimesTable& MANTIMES, LunarStayTimesTable* LUNRSTAY, double GMT, const EMMENVInputTable& in, EphemerisData2& sv, int& err);
 	void EMMENV(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, LunarStayTimesTable *LUNRSTAY, const EMMENVInputTable &in, EMMENVOutputTable &out);
 	
 	//Sunrise/Sunset, Moonrise/Moonset Display
@@ -2849,7 +2834,9 @@ public:
 	//GOST REFSMMAT Maintenance
 	void FormatREFSMMATCode(int ID, int num, char *buff);
 	//Sun-Moon-Earth Occultation
+	int EMMGSTCK(VECTOR3 R, double GMT, int body, VECTOR3 u_star, bool only_secondary, bool &IsOcculted);
 	bool EMMGSTCK(VECTOR3 u_star, VECTOR3 R, int body, VECTOR3 R_EM, VECTOR3 R_ES);
+	int EMMGSTCK(VECTOR3 R, double GMT, int body, VECTOR3 u_star, int option, bool& IsOcculted);
 	//Guidance Optics Support Table
 	void EMMGSTMP();
 	//Guidance Optics Display
@@ -2868,7 +2855,7 @@ public:
 	//Generalized Contact Generator
 	void EMGENGEN(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationTable &stationlist, int body, OrbitStationContactsTable &res, LunarStayTimesTable *LUNSTAY = NULL);
 	//Horizon Crossing Subprogram
-	int EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationData & station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY);
+	int EMXING(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, const StationData & station, int body, std::vector<StationContact> &acquisitions, LunarStayTimesTable *LUNSTAY, unsigned int acqmax = 45);
 	bool EMXINGLunarOccultation(EphemerisDataTable2 &ephemeris, ManeuverTimesTable &MANTIMES, double gmt, VECTOR3 R_S_equ, double &g_func, LunarStayTimesTable *LUNSTAY);
 	//Next Station Contact Display
 	void EMDSTAC();
@@ -2882,6 +2869,65 @@ public:
 	void EMGGPCHR(double lat, double lng, double alt, int body, double GHA, StationData *stat);
 	//Display Updates
 	void EMSNAP(int L, int ID);
+	//CSM Star Sighting Table Display Formatter
+	void EMDGSING();
+	//CSM Star Sighting Table Mathematics
+	int EMGSTSNG(const MATRIX3 &REFSMMAT, double *data, bool &HasSecOccult);
+	//Landmark AOS utility function
+	int FindLandmarkAOS(EphemerisDataTable2& ephemeris, double GMTT, double lat, double lng, double alt, int body, double elev, VECTOR3 &u_LOS, EphemerisData2 &sv);
+	
+	struct SCPointingDisplayDataTable
+	{
+		//INPUTS:
+		MATRIX3 REFSMMAT;
+		double GMT1;
+		double GMT5;
+		double GMTT;
+		int MainVeh; //Vehicle for which the attitude is being calculated
+		int star; //GOST star (mode 3)
+		int RBI; //Ground station reference body (mode 1)
+		double RX;
+		double RY;
+		int InstrVeh; //Vehicle with the pointing instrument
+		//OUTPUTS:
+		double Lat; //Latitude of ground target (mode 1) or subsatellite position of target vehicle (mode 4)
+		double Lng;	//Longitude of ground target (mode 1) or subsatellite position of target vehicle (mode 4)
+		double Alt;	//Altitude of ground target (mode 1) or subsatellite position of target vehicle (mode 4)
+		bool LatLngAltCalculated = false; //Flag set if Lat/Lng/Alt are valid
+		double RA;
+		double DEC;
+		bool RADECCalculated = false;
+		double GMTAOS;
+		bool BestAvailableAOS;
+		double GMTLOS;
+		bool BestAvailableLOS;
+		bool AOSLOSCalculated = false;
+		//TBD: BSS
+		double GMTArr[5];
+		VECTOR3 Att[5];
+		VECTOR3 AttRate[5];
+		double AltArr[5]; //Mode 1
+		double EL[5]; //Mode 1
+		double RNG[5]; //Mode 1 and 4
+		double SUNANG[5];
+		double MOONANG[5];
+		double EARTHANG[5];
+		bool OccultationFlags[5][4]; //E, M, S, A
+		bool AllT1T5ValuesCalculated = false;
+		int BSSStar = -1;
+		double BSS_RA, BSS_DEC;
+		double BSS_SPA;
+		double BSS_SXP;
+	};
+
+	//GOST CSM/LM Spacecraft Pointing Display Formatter
+	void EMDGPING();
+	//GOST CSM/LM Spacecraft Pointing Display Mathematics
+	int EMGSCPNG(SCPointingDisplayDataTable &table);
+	//GOST Target AOS/LOS Times Computation
+	int EMGEARLA(EphemerisDataTable2& EPHEM, ManeuverTimesTable& MANTIMES, LunarStayTimesTable& LUNSTAY, double GMTT, int mode, double lat, double lng, double alt, int RBI, VECTOR3 u_star, StationContact& contact);
+	//GOST Earth/Moon Target Direction Computation
+	int EMGSDEMT(EphemerisData2 SV, int RBI, double lat, double lng, double alt, VECTOR3& R_iner, VECTOR3& u_LOS, bool& HasLOS, double& Elev);
 
 	// LAUNCH/HIGH SPEED ABORT (L)
 
@@ -4770,24 +4816,74 @@ public:
 		int RETPlan = 1;
 	} EZETVMED;
 
+	struct SCPointingInstrument
+	{
+		char ID[7];
+		double RX, RY;
+	};
+
 	struct GMEDSaveTable
 	{
-		int G01_Type = RTCC_REFSMMAT_TYPE_MED;
+		GMEDSaveTable();
+		void SaveState(FILEHANDLE scn, char* start_str, char* end_str);
+		void LoadState(FILEHANDLE scn, char* end_str);
+
+		int G01_Type;
 		MATRIX3 G01_REFSMMAT = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
-		double GMT = 0.0;
-		unsigned StartingStar = 0;
-		int MTX1 = -1, MTX2 = -1, MTX3 = -1;
+
+		//Blocks 1-4 (GOST)
+		double G10_GMT = 0.0;
+		unsigned G10_StartingStar = 0;
+		int G10_MTX1 = -1, G10_MTX2 = -1, G10_MTX3 = -1;
+
+		//Blocks 91-95 (Special GOST target)
 		int G14_Vehicle = 1;
 		unsigned G14_Star = 0;
 		int G14_RB = 0;
 		double G14_lat = 0.0, G14_lng = 0.0, G14_height = 0.0;
 		double G14_GMT = 0.0;
 
+		//Blocks 6-9 (LOST)
 		double G20_HORIZGET = 0.0;
 		int G20_COAS_Axis = 1;
 		int G20_AOT_Detent = 2;
 
 		int G23_Option = 1;
+
+		//Blocks 11-24 (Star Sighting Table)
+		int G30_Mode; //0 = Ground target (fixed attitude), 1 = ground target (fixed sextant), 2 = celestial target (fixed sextant), 3 = unknown target, 4 = celestial target (fixed attitude)
+		std::string G30_TGTID; // 3 character name to be given the target. Third character must specifiy E (Earth) or M (Moon) for modes 0, 1
+		double G30_GETT;
+		int G30_Matrix;
+		double G30_Lat;
+		double G30_Lng;
+		double G30_Alt;
+		double G30_Elev;
+		double G30_RA;
+		double G30_DEC;
+		VECTOR3 G30_Att;
+		double G30_SFT;
+		double G30_TRN;
+
+		//Blocks 26-35 (Spacecraft Pointing Display)
+		int G40_Mode; //1 = Earth/Moon Target, 2 = General Celestial, 3 = GOST Star, 4 = Orbiting Object
+		std::string G40_InstrID;
+		std::string G40_TargetName;
+		double G40_Lat;
+		double G40_Lng;
+		double G40_Ht;
+		double G40_RA;
+		double G40_DEC;
+		int G40_Matrix;
+		int G40_AttRef; //0 = IMCSM, 1 = IMLEM, 2 = FDLEM
+		double G40_DokAngle;
+		//Blocks 38-73 (Instrument Table)
+		SCPointingInstrument G41_Instruments[12];
+		//Blocks 77-79 (Calculation MED)
+		double G42_GET1;
+		double G42_GET5;
+		double G42_GETT;
+
 	} EZGSTMED;
 
 	struct ExternalDVMakeupBuffer

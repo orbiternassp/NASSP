@@ -91,6 +91,7 @@ public:
 	void Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
 	void Text_Dot(oapi::Sketchpad *skp, int x, int y);
 	void Line(oapi::Sketchpad *skp, int x0, int y0, int x1, int y1);
+	void Line2(oapi::Sketchpad* skp, int x0, int y0, int x1, int y1);
 
 	void SelectPage(int page);
 
@@ -756,6 +757,11 @@ public:
 	void set_RecoveryTargetSelectionCalc(double get, double lng);
 	void menuSelectRecoveryTarget();
 	bool set_RecoveryTarget(int num);
+	void menuSetStarSightingTableInput();
+	void menuStarSightingTableCalc();
+	void menuSetSpacecraftPointingDisplayInput();
+	void menuMEDG41();
+	void menuSpacecraftPointingDisplayCalc();
 	void menuSaveDODREFSMMAT();
 	void menuSaveRTEREFSMMAT();
 	void menuMakeDODREFSMMATCurrent();
@@ -831,6 +837,8 @@ public:
 	void menuSetThrustCGPage();
 	void menuSetRTCCTimesPage();
 	void menuRTCCTimesInput();
+	void menuSetStarSightingTablePage();
+	void menuSetSpacecraftPointingDisplayPage();
 
 	void SetMEDInputPageM75();
 	void SetMEDInputPageP13();
@@ -843,13 +851,13 @@ public:
 	void menuGenericGoToDisplay();
 	void menuReturnToMEDInput();
 
-	void GenericGETInput(double *get, char *message, void (ApolloRTCCMFD::*func)(void) = NULL);
+	void GenericGETInput(double *get, char *message, void (ApolloRTCCMFD::*func)(void) = NULL, double factor = 1.0);
 	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
 	void GenericDouble2Input(double *val1, double *val2, char* message, double factor1 = 1.0, double factor2 = 1.0);
 	void GenericIntInput(int *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL, int min = 1, int max = 0);
 	void GenericInt2Input(int *val1, int *val2, char* message, int min1, int max1, int min2, int max2, void (ApolloRTCCMFD::*func)(void) = NULL);
 	void GenericVectorInput(VECTOR3 *val, char* message, double factor = 1.0, void (ApolloRTCCMFD::*func)(void) = NULL);
-	void GenericStringInput(std::string *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL);
+	void GenericStringInput(std::string *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL, unsigned int minlen = 0, unsigned int maxlen = 64);
 	void GenericUllageInput(bool *Use4Jets, double *UllageDuration, bool AllowDefault = true);
 protected:
 	oapi::Font *font_mocr1; //Used for displays with 42 x 84 static characters

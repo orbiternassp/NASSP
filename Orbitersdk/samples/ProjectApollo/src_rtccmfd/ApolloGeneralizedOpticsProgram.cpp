@@ -2022,8 +2022,8 @@ void AGOP::LunarSurfaceAlignmentDisplay(const AGOPInputs &in, AGOPOutputs &out)
 		if (in.Instrument == 1)
 		{
 			//COAS
-			U_NBA = GetLMCOASVector(in.COASElevationAngle[0], in.COASPositionAngle[0], in.LMCOASAxis);
-			U_NBB = GetLMCOASVector(in.COASElevationAngle[1], in.COASPositionAngle[1], in.LMCOASAxis);
+			U_NBA = OrbMech::GetLMCOASVector(in.COASElevationAngle[0], in.COASPositionAngle[0], in.LMCOASAxis);
+			U_NBB = OrbMech::GetLMCOASVector(in.COASElevationAngle[1], in.COASPositionAngle[1], in.LMCOASAxis);
 		}
 		else
 		{
@@ -2065,7 +2065,7 @@ void AGOP::LunarSurfaceAlignmentDisplay(const AGOPInputs &in, AGOPOutputs &out)
 		if (in.Instrument == 1)
 		{
 			//COAS
-			U_NBA = GetLMCOASVector(in.COASElevationAngle[0], in.COASPositionAngle[0], in.LMCOASAxis);
+			U_NBA = OrbMech::GetLMCOASVector(in.COASElevationAngle[0], in.COASPositionAngle[0], in.LMCOASAxis);
 		}
 		else
 		{
@@ -2453,7 +2453,7 @@ VECTOR3 AGOP::GetNBUnitVectorFromInstrument(const AGOPInputs &in, int set) const
 	else if (in.Instrument == 1)
 	{
 		// LM COAS
-		return GetLMCOASVector(in.COASElevationAngle[set], in.COASPositionAngle[set], in.LMCOASAxis);
+		return OrbMech::GetLMCOASVector(in.COASElevationAngle[set], in.COASPositionAngle[set], in.LMCOASAxis);
 	}
 	else if (in.Instrument == 2)
 	{
@@ -2467,7 +2467,7 @@ VECTOR3 AGOP::GetNBUnitVectorFromInstrument(const AGOPInputs &in, int set) const
 	else
 	{
 		// CSM COAS
-		return GetCSMCOASVector(in.COASElevationAngle[set], in.COASPositionAngle[set]);
+		return OrbMech::GetCSMCOASVector(in.COASElevationAngle[set], in.COASPositionAngle[set]);
 	}
 }
 
@@ -2475,24 +2475,6 @@ VECTOR3 AGOP::GetSextantVector(double TRN, double SFT) const
 {
 	//In navigation base coordinates
 	return OrbMech::SXTNB(TRN, SFT);
-}
-
-VECTOR3 AGOP::GetCSMCOASVector(double SPA, double SXP) const
-{
-	//In navigation base coordinates
-	return unit(_V(cos(SPA)*cos(SXP), sin(SXP), sin(SPA)*cos(SXP)));
-}
-
-VECTOR3 AGOP::GetLMCOASVector(double EL, double SXP, bool IsZAxis) const
-{
-	//In navigation base coordinates
-	if (IsZAxis)
-	{
-		return unit(_V(sin(SXP), -sin(EL)*cos(SXP), cos(EL)*cos(SXP)));
-	}
-
-	//X-axis
-	return unit(_V(cos(EL)*cos(SXP), sin(SXP), sin(EL)*cos(SXP)));
 }
 
 VECTOR3 AGOP::GetAOTNBVector(double EL, double AZ, double ReticleAngle, double SpiraleAngle, int axis) const
@@ -2669,13 +2651,14 @@ bool AGOP::InstrumentLimitCheck(const AGOPInputs &in, VECTOR3 u_NB) const
 
 void AGOP::InstrumentAngles(VECTOR3 u_NB, int Instrument, int AOTDetent, bool LMCOASAxis, double &pitch, double &yaw) const
 {
+	//0 = CSM sextant, 1 = LM COAS, 2 = AOT, 3 = CSM COAS
 	if (Instrument == 0)
 	{
 		SextantAngles(u_NB, pitch, yaw);
 	}
 	else if (Instrument == 1)
 	{
-		LMCOASAngles(LMCOASAxis, u_NB, pitch, yaw);
+		OrbMech::LMCOASAngles(LMCOASAxis, u_NB, pitch, yaw);
 	}
 	else if (Instrument == 2)
 	{
@@ -2683,7 +2666,7 @@ void AGOP::InstrumentAngles(VECTOR3 u_NB, int Instrument, int AOTDetent, bool LM
 	}
 	else
 	{
-		CSMCOASAngles(u_NB, pitch, yaw);
+		OrbMech::CSMCOASAngles(u_NB, pitch, yaw);
 	}
 }
 
@@ -2705,14 +2688,14 @@ void AGOP::SextantAngles(VECTOR3 u_NB, double &TA, double &SA) const
 	TA = acos(dotp(Z_SB, u_SB));
 }
 
-void AGOP::AOTAngles(int Detent, VECTOR3 u_NB, double &YROT, double &SROT) const
+void AGOP::AOTAngles(int Detent, VECTOR3 u_NB, double& YROT, double& SROT) const
 {
 	VECTOR3 u_OAN, UNITX, TS2, TS4;
 	double AZ, EL, C1, theta, C2;
 
 	GetAOTNBAngle(Detent, AZ, EL);
 
-	u_OAN = _V(sin(EL), cos(EL)*sin(AZ), cos(EL)*cos(AZ));
+	u_OAN = _V(sin(EL), cos(EL) * sin(AZ), cos(EL) * cos(AZ));
 	C1 = dotp(u_OAN, u_NB);
 
 	UNITX = _V(1, 0, 0);
@@ -2729,84 +2712,10 @@ void AGOP::AOTAngles(int Detent, VECTOR3 u_NB, double &YROT, double &SROT) const
 	{
 		YROT -= PI2;
 	}
-	SROT = YROT + 12.0*acos(C1);
+	SROT = YROT + 12.0 * acos(C1);
 	while (SROT >= PI2)
 	{
 		SROT -= PI2;
-	}
-}
-
-void AGOP::CSMCOASAngles(VECTOR3 u_NB, double &SPA, double &SXP) const
-{
-	SPA = -atan(u_NB.z / u_NB.x);
-	SXP = asin(u_NB.y);
-}
-
-void AGOP::LMCOASAngles(bool Axis, VECTOR3 u_NB, double &EL, double &SXP) const
-{
-	double EPS, GAM, ALP, R, SCV;
-
-	if (Axis)
-	{
-		//Z-axis
-		double HYP;
-
-		EPS = acos(u_NB.z);
-		GAM = acos(u_NB.x);
-		HYP = sqrt(u_NB.x*u_NB.x + u_NB.y*u_NB.y);
-		ALP = atan(HYP / u_NB.z);
-		SCV = PI05 - abs(asin(sin(GAM)*sin(ALP) / sin(EPS)));
-		R = u_NB.x*abs(asin(sin(SCV)*sin(EPS)) / u_NB.x);
-		if (u_NB.x < 0)
-		{
-			SXP = -abs(R);
-		}
-		else
-		{
-			SXP = abs(R);
-		}
-		EL = u_NB.y*abs(acos(cos(EPS) / cos(SXP)) / u_NB.y);
-		if (u_NB.y < 0.0)
-		{
-			EL = abs(EL);
-		}
-		else
-		{
-			EL = -abs(EL);
-		}
-		EL -= 30.0*RAD;
-	}
-	else
-	{
-		//X-axis
-		double ARG1, ARG2, ARG3;
-
-		EPS = acos(u_NB.x);
-		GAM = acos(u_NB.z);
-		ALP = atan(u_NB.y / u_NB.x);
-		ARG1 = sin(GAM)*sin(ALP) / sin(EPS);
-		SCV = PI05 - abs(asin(ARG1));
-		ARG2 = sin(SCV)*sin(EPS);
-		R = u_NB.z*abs(asin(ARG2) / u_NB.z);
-		ARG3 = cos(EPS) / cos(R);
-		SXP = u_NB.y*abs(acos(ARG3) / u_NB.y);
-		if (u_NB.y < 0)
-		{
-			SXP = -abs(SXP);
-		}
-		else
-		{
-			SXP = abs(SXP);
-		}
-		EL = R;
-		if (u_NB.z < 0)
-		{
-			EL = abs(EL);
-		}
-		else
-		{
-			EL = -abs(EL);
-		}
 	}
 }
 
