@@ -3306,6 +3306,68 @@ procedural or processing error is encountered.\\
 
 The display is only available in NASSP with the Mission Plan Table initialized.\\
 \newpage
+\subsection{Spacecraft Pointing Display (MSK 1504)}
+\subsubsection{Function}
+To provide mission controllers with pointing angles that will allow the crew to point a spacecraft instrument at an orbiting, celestial or ground target for the purpose of obtaining experimental data.
+\subsubsection{Inputs}
+Three manual entries are required for this display:
+\begin{enumerate}
+\item Target specification MED consisting of MODE, INSTRUMENT, TARGET, LAT, LONG, ALT, RA, DEC, REFSMMAT, AT REF, AND DOCKING ANGLE.
+\item Initialization MED consisting of T1, T5, and T START. T1 and T5 causes generation of pointing data. T START is for AOS/LOS search.
+\item Instrument definition and geometry MED specifying instrument code, code to add or delete. Rl counterclockwise rotation about X Body (Angle out of X-Z plane), R2 counterclockwise rotation about Y Body (Angle out of Y-Z plane). If R1and R2 equal zero the LOS is along the vehicle Z-axis.
+\end{enumerate}
+\textbf{Target specification:}\\
+
+\textbf{MODE:} 1 = Earth/Moon ground target, 2 = general celestial, 3 = GOST star, 4 = orbiting object.\\
+\textbf{INST ID:} Instrument ID. The last 3 characters must be CSM or LEM.\\
+ \textbf{ITARGET NM:} Target code.  Mode 1: The last character is E or M. Mode 3: The last 3 characters are a valid star number. Mode 4: Enter 7 characters. Last 3 are CSM or LEM. The first 4 spaces in the TARGET code are for experiment identification and no computations are based upon them.\\
+\textbf{LAT:} Latitude of ground target, degrees (Mode 1).\\
+\textbf{LNG:} Longitude of ground target, degrees (Mode 1).\\
+\textbf{HT:} Height of ground target, nautical miles (Mode 1).\\
+\textbf{RT ASC:} Right of ascension of input celestial target (Mode 2).\\
+\textbf{DEC:} Declination of input celestial target (Mode 2).\\
+\textbf{MATRIX:} Valid REFSMMAT code.\\
+\textbf{ATREF:} Attitude reference. IMCSM = CSM IMU, IMLEM = LM IMU, FDLEM = FDAI LM.\\
+\textbf{DOK:} Docking angle. Used when instrument vehicle and attitude reference vehicle are not the same.\\
+\newpage
+\subsubsection{Display}
+\begin{center}
+\begin{tabular}{ L{2.4cm} L{7.1cm} L{3cm} }
+\underline{QUANTITY} & \underline{DEFINITION} & \underline{DIMENSIONS} \\
+INST&ID of instrument to be pointed at target&\\
+TARGET&Alphanumeric identification code of target&\\
+LAT, LNG&Geodetic latitude and longitude of earth target or selenographic latitude and longitude of moon target for MODE 1. Subsatellite position of target vehicle with respect to its reference body in MODE 4 at T1&degrees\\
+ALT&Altitude of earth target above oblate body or of moon target above spherical body in MODE 1. Altitude of vehicle target above its reference body in MODE 4 at T1&nautical miles\\
+REV&Revolution in which AOS occurs&\\
+RA&Right ascension of a celestial target&hr:min:sec\\
+DEC&Declination of a celestial target&deg:min:sec\\
+AOS&GET and GMT of acquisition of target&hr:min:sec\\
+MODE&One of four modes in which display is being used&\\
+LOS&GET and GMT of loss of target&hr:min:sec\\
+ROLL, PITCH, YAW&Attitudes required of the spacecraft in order to point the line-of-sight of the specified instrument to the target. Displayed for T1 through T5. Attitudes will be as nearly heaas up as possible to the body containing ground target. For other targets, attitudes will be as nearly heads up as possible to the reference body at the time of sighting&degrees\\
+AT REF&Code to indicate that the displayed attitudes are referenced to the CSM IMU, the LM IMU, or the LM FDAI&\\
+DR, DP, DY&Differences in roll, pitch and yaw between time intervals&degrees\\
+EL&Elevation angle of the spacecraft from a ground target. Displayed for T1 through T5&degrees\\
+ALT&Spacecraft altitude in nautical miles above spherical reference body. Displayed for T1 through T5&nautical miles\\
+RNG&Slant range to ground target. Displayed for T1 through T5&nautical miles\\
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{ L{2.4cm} L{7.1cm} L{3cm} }
+\underline{QUANTITY} & \underline{DEFINITION} & \underline{DIMENSIONS} \\
+SUN ANG&The angle in degrees between the spacecraft-sun-line and the instrument line-of-sight Displayed for T1 through T5&degrees\\
+MOON ANG&The angle in degrees between the spacecraft-nearest moon horizon-line and the instrument line-of-sight. Displayed for T1 through T5&degrees\\
+EARTH ANG&The angle in degrees between the spacecraft-nearest earth horizon-line and the instrument line-of-sight. Displayed for T1 through T5&degrees\\
+T1,T2,T3,T4,T5&Evenly spaced times from T1 to T5 at which attitude data are generated&hr:min:sec\\
+REFSMMAT&Identification code of REFSMMAT used in generating the display&\\
+RA, DEC&Direction of CSM +X-axis if INST is CSM type. Direction of LM +Z-axis if INST is LM type&\\
+STAR&Identification code of star in COAS field-of-view at T1 (CSM COAS of CSM INST is specified, LM COAS if LM INST is specified)&\\
+SPA&COAS star-pitch-angle for CSM, COAS elevation angle for LM&degrees\\
+SXP&COAS star-X-position&degrees\\
+\end{tabular}
+\end{center}
+\newpage
 \subsection{Recovery Ascending Node Display (MSK 1505)}
 This program displays the time (GET and GMT) of the ascending node, the longitude of the node and the right ascension for the current rev and reach rev within the requested span. Alternative a beginning time and ending time can be input to define this span.\\
 
