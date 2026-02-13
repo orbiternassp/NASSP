@@ -14993,38 +14993,41 @@ void RTCC::EMDGPING()
 		DynamicDisplayData.DFLDouble(disp, 22, datatable.BSS_SXP * DEG, "%+04.1lf", 62, 6);
 	}
 	//T1-T5 DATA
-	for (int i = 0; i < 5; i++)
+	if (datatable.AllT1T5ValuesCalculated)
 	{
-		DynamicDisplayData.DFLTime(disp, 23 + i * 14, GETfromGMT(datatable.GMTArr[i]), 13, 11 + i * 4);
-		DynamicDisplayData.DFLDouble(disp, 24 + i * 14, datatable.Att[i].x * DEG, "%05.1lf", 19, 11 + i * 4);
-		DynamicDisplayData.DFLDouble(disp, 25 + i * 14, datatable.AttRate[i].x* DEG, "%05.1lf", 20, 13 + i * 4);
-		DynamicDisplayData.DFLDouble(disp, 26 + i * 14, datatable.Att[i].y* DEG, "%05.1lf", 26, 11 + i * 4);
-		DynamicDisplayData.DFLDouble(disp, 27 + i * 14, datatable.AttRate[i].y * DEG, "%05.1lf", 27, 13 + i * 4);
-		DynamicDisplayData.DFLDouble(disp, 28 + i * 14, datatable.Att[i].z * DEG, "%05.1lf", 33, 11 + i * 4);
-		DynamicDisplayData.DFLDouble(disp, 29 + i * 14, datatable.AttRate[i].z * DEG, "%05.1lf", 34, 13 + i * 4);
-		if (EZGSTMED.G40_Mode == 1)
+		for (int i = 0; i < 5; i++)
 		{
-			DynamicDisplayData.DFLDouble(disp, 30 + i * 14, min(99999.0, datatable.AltArr[i] / 1852.0), "%.0lf", 41, 11 + i * 4);
-			DynamicDisplayData.DFLDouble(disp, 31 + i * 14, datatable.EL[i] * DEG, "%+.1lf", 47, 11 + i * 4);
-		}
-		if (EZGSTMED.G40_Mode == 1 || EZGSTMED.G40_Mode == 4)
-		{
-			DynamicDisplayData.DFLDouble(disp, 32 + i * 14, min(99999.0, datatable.RNG[i] / 1852.0), "%.0lf", 54, 11 + i * 4);
-		}
-		DynamicDisplayData.DFLDouble(disp, 33 + i * 14, datatable.SUNANG[i] *DEG, "%.0lf", 58, 11 + i * 4);
-		DynamicDisplayData.DFLDouble(disp, 34 + i * 14, datatable.MOONANG[i] * DEG, "%+.0lf", 63, 11 + i * 4);
-		DynamicDisplayData.DFLDouble(disp, 35 + i * 14, datatable.EARTHANG[i] * DEG, "%+.0lf", 63, 12 + i * 4);
+			DynamicDisplayData.DFLTime(disp, 23 + i * 14, GETfromGMT(datatable.GMTArr[i]), 13, 11 + i * 4);
+			DynamicDisplayData.DFLDouble(disp, 24 + i * 14, datatable.Att[i].x * DEG, "%05.1lf", 19, 11 + i * 4);
+			DynamicDisplayData.DFLDouble(disp, 25 + i * 14, datatable.AttRate[i].x * DEG, "%05.1lf", 20, 13 + i * 4);
+			DynamicDisplayData.DFLDouble(disp, 26 + i * 14, datatable.Att[i].y * DEG, "%05.1lf", 26, 11 + i * 4);
+			DynamicDisplayData.DFLDouble(disp, 27 + i * 14, datatable.AttRate[i].y * DEG, "%05.1lf", 27, 13 + i * 4);
+			DynamicDisplayData.DFLDouble(disp, 28 + i * 14, datatable.Att[i].z * DEG, "%05.1lf", 33, 11 + i * 4);
+			DynamicDisplayData.DFLDouble(disp, 29 + i * 14, datatable.AttRate[i].z * DEG, "%05.1lf", 34, 13 + i * 4);
+			if (EZGSTMED.G40_Mode == 1)
+			{
+				DynamicDisplayData.DFLDouble(disp, 30 + i * 14, min(99999.0, datatable.AltArr[i] / 1852.0), "%.0lf", 41, 11 + i * 4);
+				DynamicDisplayData.DFLDouble(disp, 31 + i * 14, datatable.EL[i] * DEG, "%+.1lf", 47, 11 + i * 4);
+			}
+			if (EZGSTMED.G40_Mode == 1 || EZGSTMED.G40_Mode == 4)
+			{
+				DynamicDisplayData.DFLDouble(disp, 32 + i * 14, min(99999.0, datatable.RNG[i] / 1852.0), "%.0lf", 54, 11 + i * 4);
+			}
+			DynamicDisplayData.DFLDouble(disp, 33 + i * 14, datatable.SUNANG[i] * DEG, "%.0lf", 58, 11 + i * 4);
+			DynamicDisplayData.DFLDouble(disp, 34 + i * 14, datatable.MOONANG[i] * DEG, "%+.0lf", 63, 11 + i * 4);
+			DynamicDisplayData.DFLDouble(disp, 35 + i * 14, datatable.EARTHANG[i] * DEG, "%+.0lf", 63, 12 + i * 4);
 
-		strtemp.clear();
-		if (datatable.OccultationFlags[i][0]) strtemp.append("E");
-		else strtemp.append(" ");
-		if (datatable.OccultationFlags[i][1]) strtemp.append("M");
-		else strtemp.append(" ");
-		if (datatable.OccultationFlags[i][2]) strtemp.append("S");
-		else strtemp.append(" ");
-		if (datatable.OccultationFlags[i][3]) strtemp.append("A");
-		else strtemp.append(" ");
-		DynamicDisplayData.DisplayFormatting(disp, 36 + i * 14, strtemp, 13, 13 + i * 4, oapi::Sketchpad::RIGHT);
+			strtemp.clear();
+			if (datatable.OccultationFlags[i][0]) strtemp.append("E");
+			else strtemp.append(" ");
+			if (datatable.OccultationFlags[i][1]) strtemp.append("M");
+			else strtemp.append(" ");
+			if (datatable.OccultationFlags[i][2]) strtemp.append("S");
+			else strtemp.append(" ");
+			if (datatable.OccultationFlags[i][3]) strtemp.append("A");
+			else strtemp.append(" ");
+			DynamicDisplayData.DisplayFormatting(disp, 36 + i * 14, strtemp, 13, 13 + i * 4, oapi::Sketchpad::RIGHT);
+		}
 	}
 	//Error
 	strtemp = "";
@@ -15032,7 +15035,11 @@ void RTCC::EMDGPING()
 	{
 		strtemp = "REFSMMAT NOT AVAILABLE";
 	}
-	DynamicDisplayData.DisplayFormatting(disp, 93, strtemp, 50, 31, oapi::Sketchpad::RIGHT);
+	else if ((error & 1) == 1)
+	{
+		strtemp = "EPHEMERIS NOT AVAILABLE";
+	}
+	DynamicDisplayData.DisplayFormatting(disp, 93, strtemp, 48, 31, oapi::Sketchpad::RIGHT);
 
 	DynamicDisplayData.UpdateDisplay(disp);
 }

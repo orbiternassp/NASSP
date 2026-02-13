@@ -9527,14 +9527,14 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			Line2(skp, 32, 1, 32, 7);
 			Line2(skp, 0, 7, 64, 7);
 			Line2(skp, 0, 9, 64, 9);
-			Line2(skp, 13, 7, 13, 31);
-			Line2(skp, 20, 7, 20, 31);
-			Line2(skp, 27, 7, 27, 31);
-			Line2(skp, 34, 7, 34, 31);
-			Line2(skp, 41, 7, 41, 31);
-			Line2(skp, 47, 7, 47, 31);
-			Line2(skp, 54, 7, 54, 31);
-			Line2(skp, 58, 7, 58, 31);
+			Line2(skp, 13, 7, 13, 30);
+			Line2(skp, 20, 7, 20, 30);
+			Line2(skp, 27, 7, 27, 30);
+			Line2(skp, 34, 7, 34, 30);
+			Line2(skp, 41, 7, 41, 30);
+			Line2(skp, 47, 7, 47, 30);
+			Line2(skp, 54, 7, 54, 30);
+			Line2(skp, 58, 7, 58, 30);
 
 			DFLDynamicData(skp, 1504, 2);
 		}
