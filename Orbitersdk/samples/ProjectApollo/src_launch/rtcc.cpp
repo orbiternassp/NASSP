@@ -3682,7 +3682,7 @@ void RTCC::SLManeuverPAD(const AP7ManPADOpt &opt, SLMNV &pad)
 	int Ierr;
 	RTCCNIAuxOutputTable aux;
 	VECTOR3 IMUangles;
-	double dt, mu, apo, peri, ManPADApo, ManPADPeri, ManPADPTrim, ManPADYTrim, GMT_TIG;
+	double dt, mu, ManPADPTrim, ManPADYTrim, GMT_TIG;
 	double R_E;
 	EphemerisData sv1, sv2;
 
@@ -3752,6 +3752,18 @@ void RTCC::SLManeuverPAD(const AP7ManPADOpt &opt, SLMNV &pad)
 		pad.Vc = -pad.Vc;
 	}
 
+	//Calculate height of periapsis and apoapsis
+	if (sv1.RBI == BODY_EARTH)
+	{
+		mu = OrbMech::mu_Earth;
+		R_E = OrbMech::R_Earth;
+	}
+	else
+	{
+		mu = OrbMech::mu_Moon;
+		R_E = OrbMech::R_Moon;
+	}
+
 	//Attitude
 	VECTOR3 X_P, Y_P, Z_P;
 	X_P = _V(opt.REFSMMAT.m11, opt.REFSMMAT.m12, opt.REFSMMAT.m13);
@@ -3779,6 +3791,11 @@ void RTCC::SLManeuverPAD(const AP7ManPADOpt &opt, SLMNV &pad)
 	//Round IMU attitude to next degree
 	pad.Att = OrbMech::imulimit(IMUangles * DEG);
 
+	EphemerisData sv_sxt;
+	sv_sxt = coast(sv1, opt.sxtstardtime, opt.WeightsTable.ConfigWeight, opt.WeightsTable.ConfigArea, opt.WeightsTable.KFactor, false);
+
+	OrbMech::checkstar(EZJGSTAR, opt.REFSMMAT, pad.Att*RAD, sv_sxt.R, R_E, pad.Star, pad.Trun, pad.Shaft);
+
 	//Trim angles
 	if (opt.enginetype == RTCC_ENGINETYPE_CSMSPS)
 	{
@@ -3792,6 +3809,9 @@ void RTCC::SLManeuverPAD(const AP7ManPADOpt &opt, SLMNV &pad)
 		pad.pTrim = 0.0;
 		pad.yTrim = 0.0;
 	}
+
+	pad.Shaft *= DEG;
+	pad.Trun *= DEG;
 }
 
 void RTCC::SLTPIPAD(const AP7TPIPADOpt &opt, SLTPI &pad)

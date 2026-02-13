@@ -117,7 +117,9 @@ struct SLMNV {
 	VECTOR3 Att;		// Attitude at TIG
 	char remarks[256];	// remarks
 	int type;           // 1 = NC1, 2 = NPC, 3 = NC2, 4 = NCC, 5 = NSR
-	bool prelim;
+	bool prelim;		// preliminary or final pad
+	int Star;			// Nav star for orientation check
+	double Shaft, Trun;  // Shaft and trunnion values for orientation check
 };
 
 // SKYLAB - TERMINAL PHASE INITIATE
