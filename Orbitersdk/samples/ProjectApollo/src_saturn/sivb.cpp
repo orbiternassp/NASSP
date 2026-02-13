@@ -219,18 +219,6 @@ SIVB::~SIVB()
 		delete sivbsys;
 		sivbsys = 0;
 	}
-
-	//
-	// Delete LM PAD data.
-	//
-	if (LMPad) {
-		delete[] LMPad;
-		LMPad = 0;
-	}
-	if (AEAPad) {
-		delete[] AEAPad;
-		AEAPad = 0;
-	}
 }
 
 void SIVB::InitS4b()
@@ -338,20 +326,6 @@ void SIVB::InitS4b()
 	//
 
 	payloadSettings.checklistFile[0] = 0;
-
-	//
-	// LM PAD data.
-	//
-
-	LMPadCount = 0;
-	LMPad = 0;
-	LMPadLoadCount = 0;
-	LMPadValueCount = 0;
-
-	AEAPadCount = 0;
-	AEAPad = 0;
-	AEAPadLoadCount = 0;
-	AEAPadValueCount = 0;
 
 	//
 	// Set up the connections.
@@ -987,19 +961,17 @@ void SIVB::clbkSaveState (FILEHANDLE scn)
 		oapiWriteScenario_float (scn, "LMASCFUEL", payloadSettings.AscentFuelKg);
 		oapiWriteScenario_float(scn, "LMDSCEMPTY", payloadSettings.DescentEmptyKg);
 		oapiWriteScenario_float(scn, "LMASCEMPTY", payloadSettings.AscentEmptyKg);
-		if (LMPadCount > 0 && LMPad) {
-			oapiWriteScenario_int (scn, "LMPADCNT", LMPadCount);
+		if (LMPad.size() > 0) {
 			char str[64];
-			for (int i = 0; i < LMPadCount; i++) {
+			for (unsigned i = 0; i < LMPad.size() / 2; i++) {
 				sprintf(str, "%04o %05o", LMPad[i * 2], LMPad[i * 2 + 1]);
-				oapiWriteScenario_string (scn, "LMPAD", str);
+				oapiWriteScenario_string(scn, "LMPAD", str);
 			}
 		}
-		if (AEAPadCount > 0 && AEAPad) {
-			oapiWriteScenario_int(scn, "AEAPADCNT", AEAPadCount);
+		if (AEAPad.size() > 0) {
 			char str[64];
-			for (int i = 0; i < AEAPadCount; i++) {
-				sprintf(str, "%04o %05o", AEAPad[i * 2], AEAPad[i * 2 + 1]);
+			for (unsigned i = 0; i < AEAPad.size() / 2; i++) {
+				sprintf(str, "%04o %06o", AEAPad[i * 2], AEAPad[i * 2 + 1]);
 				oapiWriteScenario_string(scn, "AEAPAD", str);
 			}
 		}
@@ -1383,38 +1355,22 @@ void SIVB::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 			payloadSettings.AscentEmptyKg = flt;
 		}
 		else if (!strnicmp (line, "LMPADCNT", 8)) {
-			if (!LMPad) {
-				sscanf (line+8, "%d", &LMPadCount);
-				if (LMPadCount > 0) {
-					LMPad = new unsigned int[LMPadCount * 2];
-				}
-			}
+			//For backwards compatibilty to not overload LMPAD
 		}
-		else if (!strnicmp (line, "LMPAD", 5)) {
+		else if (!strnicmp(line, "LMPAD", 5)) {
 			unsigned int addr, val;
-			sscanf (line+5, "%o %o", &addr, &val);
-			LMPadValueCount++;
-			if (LMPad && LMPadLoadCount < (LMPadCount * 2)) {
-				LMPad[LMPadLoadCount++] = addr;
-				LMPad[LMPadLoadCount++] = val;
-			}
+			sscanf(line + 5, "%o %o", &addr, &val);
+			LMPad.push_back(addr);
+			LMPad.push_back(val);
 		}
 		else if (!strnicmp(line, "AEAPADCNT", 9)) {
-			if (!AEAPad) {
-				sscanf(line + 9, "%d", &AEAPadCount);
-				if (AEAPadCount > 0) {
-					AEAPad = new unsigned int[AEAPadCount * 2];
-				}
-			}
+			//For backwards compatibilty to not overload AEAPAD
 		}
 		else if (!strnicmp(line, "AEAPAD", 6)) {
 			unsigned int addr, val;
 			sscanf(line + 6, "%o %o", &addr, &val);
-			AEAPadValueCount++;
-			if (AEAPad && AEAPadLoadCount < (AEAPadCount * 2)) {
-				AEAPad[AEAPadLoadCount++] = addr;
-				AEAPad[AEAPadLoadCount++] = val;
-			}
+			AEAPad.push_back(addr);
+			AEAPad.push_back(val);
 		}
 		else if (!strnicmp(line, SIVBSYSTEMS_START_STRING, sizeof(SIVBSYSTEMS_START_STRING))) {
 			sivbsys->LoadState(scn);
@@ -1656,27 +1612,8 @@ void SIVB::SetState(SIVBSettings &state)
 		//
 		// Copy LM PAD data across.
 		//
-		LMPadCount = state.LMPadCount;
-
-		if (LMPadCount > 0) {
-			int i;
-			LMPad = new unsigned int[LMPadCount * 2];
-			for (i = 0; i < (LMPadCount * 2); i++)
-			{
-				LMPad[i] = state.LMPad[i];
-			}
-		}
-
-		AEAPadCount = state.AEAPadCount;
-
-		if (AEAPadCount > 0) {
-			int i;
-			AEAPad = new unsigned int[AEAPadCount * 2];
-			for (i = 0; i < (AEAPadCount * 2); i++)
-			{
-				AEAPad[i] = state.AEAPad[i];
-			}
-		}
+		LMPad = *state.LMPad;
+		AEAPad = *state.AEAPad;
 	}
 
 	if (state.SettingsType.SIVB_SETTINGS_GENERAL)
@@ -1929,20 +1866,22 @@ void SIVB::CreatePayload() {
 
 		LEM *lmvessel = static_cast<LEM *> (payloadvessel);
 
-		if (LMPad && LMPadCount > 0)
+		if (LMPad.size() > 0)
 		{
-			int i;
-			for (i = 0; i < LMPadCount; i++) {
+			unsigned i;
+			for (i = 0; i < LMPad.size() / 2; i++) {
 				lmvessel->PadLoad(LMPad[i * 2], LMPad[i * 2 + 1]);
 			}
+			LMPad.clear();
 		}
 
-		if (AEAPad && AEAPadCount > 0)
+		if (AEAPad.size() > 0)
 		{
-			int i;
-			for (i = 0; i < AEAPadCount; i++) {
+			unsigned i;
+			for (i = 0; i < AEAPad.size() / 2; i++) {
 				lmvessel->AEAPadLoad(AEAPad[i * 2], AEAPad[i * 2 + 1]);
 			}
+			AEAPad.clear();
 		}
 	}
 	break;

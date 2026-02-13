@@ -36,42 +36,44 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define MST_CP_TRANSLUNAR1	21
 // Ends at separation
 #define MST_CP_TRANSLUNAR2	22
-//Ends at Block Data 1 Update
+//Ends at Prelim TLI+11 Update
 #define MST_CP_TRANSLUNAR3	23
 //Ends at MCC1 Update
 #define MST_CP_TRANSLUNAR4	24
-//Ends at TLI+25 Block Data Update
+//Ends at TLI+11 Block Data Update
 #define MST_CP_TRANSLUNAR5	25
-//Ends at Flyby Update
+//Ends at TLI+25 Block Data Update
 #define MST_CP_TRANSLUNAR6	26
-//Ends at Block Data 3 Update
-#define MST_CP_TRANSLUNAR7	27
-//Ends at MCC2 Update
-#define MST_CP_TRANSLUNAR8	28
-//Ends at Block Data 4 Update
-#define MST_CP_TRANSLUNAR9	29
 //Ends at Flyby Update
+#define MST_CP_TRANSLUNAR7	27
+//Ends at Block Data 3 Update
+#define MST_CP_TRANSLUNAR8	28
+//Ends at MCC2 Update
+#define MST_CP_TRANSLUNAR9	29
+//Ends at Block Data 4 Update
 #define MST_CP_TRANSLUNAR10	30
-//Ends at Block Data 5 Update
+//Ends at Flyby Update
 #define MST_CP_TRANSLUNAR11	31
-//Ends at MCC3 Update
+//Ends at Block Data 5 Update
 #define MST_CP_TRANSLUNAR12	32
-//Ends at MCC4 Update
+//Ends at MCC3 Update
 #define MST_CP_TRANSLUNAR13	33
-//Ends at Preliminary LOI-1 Update
+//Ends at MCC4 Update
 #define MST_CP_TRANSLUNAR14	34
-//Ends at PC+2 Update
+//Ends at Preliminary LOI-1 Update
 #define MST_CP_TRANSLUNAR15	35
-//Ends at Fast PC+2 Update
+//Ends at PC+2 Update
 #define MST_CP_TRANSLUNAR16	36
-//Ends at Preliminary TEI-1 Update
+//Ends at Fast PC+2 Update
 #define MST_CP_TRANSLUNAR17	37
-//Ends at Preliminary TEI-2 Update
+//Ends at Preliminary TEI-1 Update
 #define MST_CP_TRANSLUNAR18	38
-//Ends at Map Update 1/2
+//Ends at Preliminary TEI-2 Update
 #define MST_CP_TRANSLUNAR19	39
-//Ends at LOI-1 Update
+//Ends at Map Update 1/2
 #define MST_CP_TRANSLUNAR20	40
+//Ends at LOI-1 Update
+#define MST_CP_TRANSLUNAR21	41
 //Ends at LOI-2 Update
 
 #define MST_CP_LUNAR_ORBIT1	101

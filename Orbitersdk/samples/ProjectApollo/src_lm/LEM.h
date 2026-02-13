@@ -127,8 +127,8 @@ public:
 	void SetLGCAltitudeRate(int val);
 	void AGSAltitudeAltitudeRate(int Data);
 
-	double GetLGCAltitude() { return lgc_alt; };
-	double GetLGCAltitudeRate() { return lgc_altrate; };
+	double GetTapeAltitude() { return reqRange * 3.2808399; };
+	double GetTapeAltitudeRate() { return reqRate * 3.2808399; };
 
 	bool PowerSignalMonOn();
 	bool PowerFailure();
@@ -161,11 +161,15 @@ public:
 	CrossPointer();
 	virtual ~CrossPointer();
 	void Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon);
-	void SaveState(FILEHANDLE scn);
-	void LoadState(FILEHANDLE scn);
+	void SaveState(FILEHANDLE scn, char *start_str);
+	void LoadState(char *line);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 	void GetVelocities(double &vx, double &vy);
+	double GetFwdVel() { return callout_x * 10.0; };
+	double GetLatVel() { return callout_y * 10.0; };
+	void UpdateDisplayValues(double simdt);
+	void MeterMovement(double simdt, double &val, double &dis_val);
 
 	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
 	void SetDirection(const VECTOR3 &xvec, const VECTOR3 &yvec);
@@ -180,7 +184,9 @@ protected:
 	ToggleSwitch *rateErrMonSw;
 
 	double vel_x, vel_y;
+	double display_vel_x, display_vel_y;
 	double lgc_forward, lgc_lateral;
+	double callout_x, callout_y;
 
 	UINT anim_xpointerx, anim_xpointery;
 	UINT grpX, grpY;
@@ -189,9 +195,8 @@ protected:
 	MGROUP_ROTATE *xtrans, *ytrans;
 };
 
-#define CROSSPOINTER_LEFT_START_STRING "CROSSPOINTER_LEFT_START"
-#define CROSSPOINTER_RIGHT_START_STRING "CROSSPOINTER_RIGHT_START"
-#define CROSSPOINTER_END_STRING "CROSSPOINTER_END"
+#define CROSSPOINTER_LEFT_STRING "CROSSPOINTER_LEFT"
+#define CROSSPOINTER_RIGHT_STRING "CROSSPOINTER_RIGHT"
 
 namespace mission
 {
@@ -547,7 +552,6 @@ public:
 	void StartSeparationPyros();
 	void StopSeparationPyros();
 
-	void AnimEVAAntHandle();
 	void SetAnimations(double);
 
 	//
@@ -788,10 +792,12 @@ protected:
 
 	LMAbortButton AbortSwitch;
 	LMAbortStageButton AbortStageSwitch;
-
 	
 	SwitchRow RRGyroSelSwitchRow;
 	ThreePosSwitch RRGyroSelSwitch;
+
+	SwitchRow AOTReticleSwitchRow;
+	ToggledPushSwitch AOTReticleDetent;
 	
 	/////////////////
 	// LEM panel 1 //
@@ -1538,7 +1544,7 @@ protected:
     PushSwitch       CO2CanisterPrimVent;
 	RotationalSwitch CO2CanisterSecValve;
     PushSwitch       CO2CanisterSecVent;
-	CircuitBrakerSwitch WaterSepSelectSwitch;
+	ToggledPushSwitch WaterSepSelectSwitch;
 
 	/////////////////////
 	// LEM Upper Hatch //
@@ -1578,7 +1584,7 @@ protected:
     // LEM EVA Antenna //
 	/////////////////////
  
-	CircuitBrakerSwitch EvaAntennaHandle;
+	LEMEvaAntennaHandle EvaAntennaHandle;
 
 	///////////////////////////
 	// ORDEAL Panel switches //
@@ -1791,14 +1797,6 @@ protected:
 	double vcFreeCamMaxOffset;
 
 	//
-	// EVA Antenna Handle
-	//
-
-	int EVAAntHandleStatus;
-	UINT EVAAntHandleAnim;
-	AnimState EVAAntHandleState;
-
-	//
 	// Failures.
 	//
 
@@ -1971,6 +1969,7 @@ protected:
 	LEM_SteerableAnt SBandSteerable;
 	LM_OMNI omni_fwd;
 	LM_OMNI omni_aft;
+	LM_ErectableAnt SBandErectable;
 	LM_VHF VHF;
 	LM_SBAND SBand;
 	LM_DSEA DSEA;

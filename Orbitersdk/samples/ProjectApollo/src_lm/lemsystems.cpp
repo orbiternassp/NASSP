@@ -386,6 +386,9 @@ void LEM::SystemsInit()
 	dsky.Init(&NumDockCompLTGFeeder, &LGC_DSKY_CB, &LtgAnunNumKnob, &LtgIntegralKnob, &LtgORideAnunSwitch, &LtgORideIntegralSwitch);
 	agc.InitHeat((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT"));
 
+	//Optics
+	optics.Init(this);
+
 	// AGS stuff
 	asa.Init(this, &AGSOperateSwitch, (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FastHeater"),
 									  (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FineHeater"),
@@ -459,6 +462,8 @@ void LEM::SystemsInit()
 	omni_aft.Init(this);
 	// S-Band Steerable Ant
 	SBandSteerable.Init(this, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-SBand-Steerable-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-SBand-Steerable-Antenna-Heater"), (h_HeatLoad*)Panelsdk.GetPointerByString("HYDRAULIC:SBDANTHEAT"));
+	// Erectable Ant
+	SBandErectable.Init(this);
 	// SBand System
 	SBand.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBXHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SBPHEAT"));
 	// VHF System
@@ -1545,6 +1550,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	crossPointerLeft.Timestep(simdt);
 	crossPointerRight.Timestep(simdt);
 	SBandSteerable.Timestep(simdt);
+	SBandErectable.Timestep();
 	omni_fwd.Timestep();
 	omni_aft.Timestep();
 	SBand.Timestep(simt);
@@ -1604,7 +1610,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	DockLights.Timestep(simdt);
 	UtilLights.Timestep(simdt);
 	COASLights.Timestep(simdt);
-	FloodLights.Timestep(simdt);
 	pfira.Timestep(simdt);
 
 	// Do this toward the end so we can see current system state
@@ -2479,6 +2484,15 @@ void LEM::CreateMissionSpecificSystems()
 		aeaa = new LEM_AEAA();
 	}
 	EventTimerDisplay.SetReverseAtZero(pMission->IsLMEventTimerReversingAtZero());
+	SBandSteerable.AngleInit(pMission->GetLMNumber()); //Initializes S Band Antenna To Proper Closeout Angles
+
+	if (pMission->GetLMNumber() < 6) // LM-5 And Earlier
+	{
+		Panel12AntPitchKnob.SetInitValue(22.0); //Initializes S Band Antenna Pitch Knob To Proper Closeout Angles
+		Panel12AntYawKnob.SetInitValue(6.0); //Initializes S Band Antenna Yaw Knob To Proper Closeout Angles
+		LandingAntSwitch.SetState(1); //Initializes LDG ANT Switch To Proper Closeout Position (DES)
+	}
+}
 	LR.SelfTest(pMission->GetLMNumber());
 	RR.SelfTest(pMission->GetLMNumber());
 }
@@ -2886,8 +2900,8 @@ CrossPointer::CrossPointer()
 	rateErrMonSw = NULL;
 	scaleSwitch = NULL;
 	dc_source = NULL;
-	vel_x = 0;
-	vel_y = 0;
+	vel_x = display_vel_x = callout_x = 0;
+	vel_y = display_vel_y = callout_y = 0;
 	lgc_forward = 0;
 	lgc_lateral = 0;
 	anim_xpointerx = -1;
@@ -2933,6 +2947,7 @@ void CrossPointer::Timestep(double simdt)
 	{
 		vel_x = 0;
 		vel_y = 0;
+		UpdateDisplayValues(simdt);
 		return;
 	}
 
@@ -2991,8 +3006,8 @@ void CrossPointer::Timestep(double simdt)
 			vx = 0;
 			vy = lem->aea.GetLateralVelocity()*0.3048;
 		}
-		vel_x = vx / 0.3048 * 20.0 / 200.0;
-		vel_y = vy / 0.3048 * 20.0 / 200.0;
+		vel_x = callout_x = vx / 0.3048 * 20.0 / 200.0;
+		vel_y = callout_y = vy / 0.3048 * 20.0 / 200.0;
 	}
 
 	//10 times finer scale
@@ -3003,12 +3018,13 @@ void CrossPointer::Timestep(double simdt)
 	}
 
 	//The output scaling is 20 for full deflection.
+	UpdateDisplayValues(simdt);
 }
 
 void CrossPointer::GetVelocities(double &vx, double &vy)
 {
-	vx = vel_x;
-	vy = vel_y;
+	vx = display_vel_x;
+	vy = display_vel_y;
 }
 
 void CrossPointer::SetDirection(const VECTOR3 &xvec, const VECTOR3 &yvec)
@@ -3037,24 +3053,34 @@ void CrossPointer::DefineVCAnimations(UINT vc_idx, bool left)
 	lem->AddAnimationComponent(anim_xpointery, 0.0f, 1.0f, ytrans);
 }
 
+void CrossPointer::UpdateDisplayValues(double simdt)
+{
+	MeterMovement(simdt, vel_x, display_vel_x);
+	MeterMovement(simdt, vel_y, display_vel_y);
+}
+
+void CrossPointer::MeterMovement(double simdt, double &val, double &dis_val)
+{
+	const double minMaxTime = 1.0;
+	double filtConstant = max(min(GAUGE_LPF_SCALAR * simdt * 5.0 / minMaxTime, 1.0), 0.0);
+	dis_val = dis_val * (1.0 - filtConstant) + (val * filtConstant);
+}
+
 void CrossPointer::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
-	if (anim_xpointerx != 1) lem->SetAnimation(anim_xpointerx, (vel_x / 40) + 0.5);
-	if (anim_xpointery != 1) lem->SetAnimation(anim_xpointery, (vel_y / 40) + 0.5);
+	if (anim_xpointerx != 1) lem->SetAnimation(anim_xpointerx, (display_vel_x / 40) + 0.5);
+	if (anim_xpointery != 1) lem->SetAnimation(anim_xpointery, (display_vel_y / 40) + 0.5);
 }
 
-void CrossPointer::SaveState(FILEHANDLE scn) {
+void CrossPointer::SaveState(FILEHANDLE scn, char *line_str)
+{
+	char buffer[128];
 
-	oapiWriteLine(scn, CROSSPOINTER_END_STRING);
+	sprintf(buffer, "%lf %lf", display_vel_x, display_vel_y);
+	oapiWriteScenario_string(scn, line_str, buffer);
 }
 
-void CrossPointer::LoadState(FILEHANDLE scn) {
-	char *line;
-
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, CROSSPOINTER_END_STRING, sizeof(CROSSPOINTER_END_STRING))) {
-			return;
-		}
-
-	}
+void CrossPointer::LoadState(char *line)
+{
+	sscanf(line + 17, "%lf %lf", &display_vel_x, &display_vel_y);
 }

@@ -116,6 +116,8 @@ private:
 
 struct TLIMEDQuantities
 {
+	TLIMEDQuantities();
+
 	//1 = CSM, 3 = LEM
 	int mpt;
 
@@ -138,6 +140,9 @@ struct TLIMEDQuantities
 
 	//Mode 4
 	double h_ap;	//Desired apogee altitude at TLI cutoff
+
+	//Mode 6
+	VECTOR3 dV_LVLH; //Impulsive LVLH Delta V vector
 };
 
 struct SevenParameterUpdate
@@ -176,6 +181,8 @@ protected:
 	void Option3();
 	//Desired apogee
 	void Option4();
+	//External DV
+	void Option6();
 
 	bool HybridMission(double C3_guess, double dv_TLI);
 	bool ConicTLIIEllipse(double C3_guess, double h_ap);

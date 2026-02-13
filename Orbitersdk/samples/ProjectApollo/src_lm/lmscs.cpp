@@ -240,6 +240,14 @@ double ATCA::GetMinus6VDCSupplyVoltage()
 		return 0.0;
 }
 
+double ATCA::Get28VAC800HzSinglePhaseVoltage()
+{
+	if (lem->SCS_ATCA_CB.IsPowered())
+		return 28.0;
+	else
+		return 0.0;
+}
+
 double ATCA::GetPlus43VDCSupplyVoltage()
 {
 	if (lem->SCS_ATCA_CB.IsPowered())
