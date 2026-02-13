@@ -2492,7 +2492,7 @@ void LEM::CreateMissionSpecificSystems()
 		Panel12AntYawKnob.SetInitValue(6.0); //Initializes S Band Antenna Yaw Knob To Proper Closeout Angles
 		LandingAntSwitch.SetState(1); //Initializes LDG ANT Switch To Proper Closeout Position (DES)
 	}
-}
+
 	LR.SelfTest(pMission->GetLMNumber());
 	RR.SelfTest(pMission->GetLMNumber());
 }
