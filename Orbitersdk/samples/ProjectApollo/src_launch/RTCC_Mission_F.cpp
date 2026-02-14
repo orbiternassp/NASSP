@@ -2591,7 +2591,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		OrbMech::format_time_HHMMSS(buffer3, T2);
 		OrbMech::format_time_HHMMSS(buffer4, T3);
 
-		sprintf(form->paddata, "VERTICAL STERO  T0 %s Camera start  T1 %s (Sub-solar pt)  T2 %s (65°E)  T3 %s (34°E)", buffer1, buffer2, buffer3, buffer4);
+		sprintf(form->paddata, "VERTICAL STEREO  T0 %s Camera start  T1 %s (Sub-solar pt)  T2 %s (65°E)  T3 %s (34°E)", buffer1, buffer2, buffer3, buffer4);
 	}
 	break;
 	case 203: //Strip Photo Update (rev 31)

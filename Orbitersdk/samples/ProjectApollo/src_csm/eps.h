@@ -122,3 +122,28 @@ protected:
 	e_object *Numericscb;
 	ContinuousRotationalSwitch *Rotary;
 };
+
+/// This class simulates exterior lighting behavior in the CSM
+class ExteriorLighting
+{
+public:
+	ExteriorLighting();
+	virtual ~ExteriorLighting();
+	void Init(Saturn *s, CircuitBrakerSwitch *RDVMNB, ThreeSourceTwoDestSwitch *RDZSPOT, PowerMerge *AC, ToggleSwitch *RUNEVA, ElectricLight *EVALT);
+	void SystemTimestep(double simdt);
+	void SaveState(FILEHANDLE scn, char *name_str);
+	void LoadState(char *line, int strlen);
+	bool IsRunEVAOn();
+	void DefineAnimations(UINT idx);
+
+protected:
+	Saturn *saturn;
+	CircuitBrakerSwitch *RNDZSPOTMNBcb;
+	ThreeSourceTwoDestSwitch *RDZSPOTsw;
+	PowerMerge *ACPower;
+	ToggleSwitch *RUNEVAsw;
+	ElectricLight *EVALight;
+	bool SpotDeployed;
+	bool EVALtDeployed;
+	UINT anim_EVALt;
+};

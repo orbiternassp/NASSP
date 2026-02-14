@@ -456,6 +456,7 @@ namespace OrbMech {
 	double HHMMSSToSS(int H, int M, int S);
 	double HHMMSSToSS(double H, double M, double S);
 	//Round to given precision
+	VECTOR3 round_to(VECTOR3 value, double precision = 1.0);
 	double round_to(double value, double precision = 1.0);
 	//Split up seconds in minutes etc.
 	void SStoMMSS(double time, int &minutes, double &seconds, double precision = 1.0);

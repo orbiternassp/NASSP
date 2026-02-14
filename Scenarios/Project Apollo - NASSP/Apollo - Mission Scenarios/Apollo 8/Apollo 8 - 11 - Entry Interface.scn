@@ -3430,6 +3430,9 @@ UDL_END
            7 0
            8 0
       </COOLING>  
+      <LIGHT>  SPOTLIGHT 0
+      <LIGHT>  RNDZLIGHT 0
+      <LIGHT>  EVALIGHT 0
       <AC>  AC-Bus1-PhaseA
       <AC>  AC-Bus1-PhaseB
       <AC>  AC-Bus1-PhaseC
