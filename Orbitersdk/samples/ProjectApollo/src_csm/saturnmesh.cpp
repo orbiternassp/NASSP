@@ -2308,10 +2308,10 @@ void Saturn::ToggleCMPEVA()
 {
 	ECSStatus ecs;
 	GetECSStatus(ecs);
-	if (ecs.crewNumber < 3) return;
+	//if (ecs.crewNumber < 3) return;
 	if (cmpeva) return;
 
-	SetCrewNumber(2);
+	//SetCrewNumber(2);
 
 	VESSELSTATUS vs1;
 	GetStatus(vs1);
@@ -2356,7 +2356,7 @@ void Saturn::UpdateEVA()
 		if (hCMPEVA == NULL)
 		{
 			cmpeva = false;
-			SetCrewNumber(3);
+			//SetCrewNumber(3);
 		}
 	}
 }
@@ -2382,7 +2382,7 @@ void Saturn::StopEVA()
 		if (distance < 0.4)
 		{
 			cmpeva = false;
-			SetCrewNumber(3);
+			//SetCrewNumber(3);
 			oapiDeleteVessel(hCMPEVA);
 		}
 	}

@@ -62,6 +62,11 @@ static TOUCHDOWNVTX tdvtx_geardown[3] = {
 	{_V(0.433, -1, -0.25), stiffness, damping, 1.0, 0.2}
 };
 
+static 	int refcount = 0;
+static MESHHANDLE hCMPEVA9;
+static MESHHANDLE hLMPEVA9;
+static MESHHANDLE hCMPEVAds;
+
 EVA::EVA(OBJHANDLE hVessel, int flightmodel)
 	: VESSEL3(hVessel, flightmodel)
 {
@@ -122,16 +127,16 @@ void EVA::DoFirstTimestep()
 		{
 			if (isLMP)
 			{
-				AddMesh("ProjectApollo/LM-LMPEVA-9", &mesh_dir);
+				AddMesh(hLMPEVA9, &mesh_dir);
 			}
 			else if (isCMP)
 			{
-				AddMesh("ProjectApollo/CM-CMPEVA-9", &mesh_dir);
+				AddMesh(hCMPEVA9, &mesh_dir);
 			}
 		}
 		else
 		{
-			AddMesh("ProjectApollo/CM-CMPEVA", &mesh_dir);
+			AddMesh(hCMPEVAds, &mesh_dir);
 		}
 
 		FirstTimestep = false;
@@ -270,6 +275,11 @@ void EVA::SetAstroStage()
 
 DLLCLBK VESSEL* ovcInit(OBJHANDLE hvessel, int flightmodel)
 {
+	if (!refcount++) {
+		hCMPEVA9 = oapiLoadMeshGlobal("ProjectApollo/CM-CMPEVA-9");
+		hLMPEVA9 = oapiLoadMeshGlobal("ProjectApollo/LM-LMPEVA-9");
+		hCMPEVAds = oapiLoadMeshGlobal("ProjectApollo/CM-CMPEVA");
+	}
 	return new EVA(hvessel, flightmodel);
 }
 
