@@ -5720,7 +5720,7 @@ int ARCore::subThread()
 	case 63: //Recovery Ascending Node Display
 		GC->rtcc->RMDASCND();
 		break;
-	case 64: //CManual Entry Device Inputs from File
+	case 64: //Manual Entry Device Inputs from File
 	{
 		ifstream medinputfile(GC->rtcc->RTCCMEDBUFFER);
 		if (medinputfile.is_open())
