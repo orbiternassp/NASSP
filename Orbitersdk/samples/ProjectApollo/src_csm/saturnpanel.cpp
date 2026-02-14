@@ -1860,8 +1860,8 @@ void Saturn::SetSwitches(int panel) {
 	TVCGimbalDriveYawSwitch.Init  (43, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], TVCGimbalDriveSwitchesRow);
 
 	CSMLightSwitchesRow.Init(AID_CSMLIGHTSWITCHES, MainPanel);
-	RunEVALightSwitch.Init(  0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], CSMLightSwitchesRow);
-	RndzLightSwitch.Init( 57, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CSMLightSwitchesRow, &RunEVATRGTAC2CB, NULL, &LightingRndzMNACB, RndzLight, SpotLight);
+	RunEVALightSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], CSMLightSwitchesRow);
+    RndzLightSwitch.Init(57, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], CSMLightSwitchesRow, &LightingRndzMNACB, NULL, &RunEVATRGTAC2CB, RndzLight, SpotLight);
 	TunnelLightSwitch.Init(111, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], CSMLightSwitchesRow);
 
 	LMPowerSwitchRow.Init(AID_LMPOWERSWITCH, MainPanel);
@@ -2741,7 +2741,7 @@ void Saturn::SetSwitches(int panel) {
 
 	InteriorLightsFloodSwitchesRow.Init(AID_INTERIORLIGHTSFLOODSSWITCHES, MainPanel);
 	InteriorLightsFloodDimSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], InteriorLightsFloodSwitchesRow);
-	InteriorLightsFloodFixedSwitch.Init(45, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], InteriorLightsFloodSwitchesRow);
+	InteriorLightsFloodFixedSwitch.Init(45, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], InteriorLightsFloodSwitchesRow, &LightingFloodMNACB, NULL);
 
 	SPSGaugingSwitchRow.Init(AID_SPSGAUGINGSWITCH, MainPanel);
 	SPSGaugingSwitch.Init(0, 0, 34, 33, srf[SRF_THREEPOSSWITCH305], srf[SRF_BORDER_34x33], SPSGaugingSwitchRow, &GaugingAc1CircuitBraker, NULL, &GaugingAc2CircuitBraker);
@@ -2774,7 +2774,7 @@ void Saturn::SetSwitches(int panel) {
 	Panel100SwitchesRow.Init(AID_PANEL100SWITCHES, MainPanel);
 	UtilityPowerSwitch.Init      (  0, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);
 	Panel100FloodDimSwitch.Init  ( 48, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);	
-	Panel100FloodFixedSwitch.Init(113, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);
+	Panel100FloodFixedSwitch.Init(113, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow, &LightingFloodMNBCB, NULL);
 	GNPowerOpticsSwitch.Init     (200, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);
 	GNPowerIMUSwitch.Init        (260, 23, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel100SwitchesRow);
 	GNPowerIMUSwitch.InitGuard   (259,  0, 36, 69, srf[SRF_SWITCHGUARDS], 0, 180);
@@ -2844,11 +2844,11 @@ void Saturn::SetSwitches(int panel) {
 	CryogenicFanMotorsAC2ACB.Init(297, 188, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &ACBus2PhaseA, 2.0);
 	CryogenicFanMotorsAC2BCB.Init(297, 121, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &ACBus2PhaseB, 2.0);
 	CryogenicFanMotorsAC2CCB.Init(297,  82, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &ACBus2PhaseC, 2.0);
-	LightingRndzMNACB.Init		 (297,  43, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, MainBusA, 5.);
-	LightingRndzMNBCB.Init		 (297,   4, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
-	LightingFloodMNACB.Init		 (393, 311, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
-	LightingFloodMNBCB.Init		 (393, 268, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
-	LightingFloodFLTPLCB.Init	 (393, 225, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow);
+	LightingRndzMNACB.Init		 (297,  43, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, MainBusA, 5.0);
+	LightingRndzMNBCB.Init		 (297,   4, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, MainBusB, 5.0);
+	LightingFloodMNACB.Init		 (393, 311, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, MainBusA, 7.5);
+	LightingFloodMNBCB.Init		 (393, 268, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, MainBusB, 7.5);
+	LightingFloodFLTPLCB.Init	 (393, 225, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &FlightPostLandingBus, 5.0);
 	LightingNumIntLEBCB.Init	 (393, 182, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &ACBus2PhaseA, 2.0);
 	LightingNumIntLMDCCB.Init	 (393, 129, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &ACBus1PhaseA, 2.0);
 	LightingNumIntRMDCCB.Init	 (393,  86, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel226CircuitBreakersRow, &ACBus1PhaseB, 2.0);
@@ -3104,7 +3104,7 @@ void Saturn::SetSwitches(int panel) {
 	FloodDimSwitch.Init(0, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], FloodDimSwitchRow);
 
 	FloodFixedSwitchRow.Init(AID_FLOODFIXEDSWITCH, MainPanel);
-	FloodFixedSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FloodFixedSwitchRow);
+	FloodFixedSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], FloodFixedSwitchRow, &LightingFloodMNBCB, NULL, &LightingFloodFLTPLCB);
 
 	ReactionControlSystemCircuitBrakerRow.Init(AID_REACTIONCONTROLSYSTEMCIRCUITBREAKERS, MainPanel);
 	CMHeater1MnACircuitBraker.Init( 0,  0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], ReactionControlSystemCircuitBrakerRow, &EPSMnAGroup5CircuitBraker, 20.0);
@@ -5776,7 +5776,7 @@ void Saturn::InitSwitches() {
 	NumericRotarySwitch.SetRotationRange(300.0*RAD);
 	NumericRotarySwitch.SetOffset(-150.0*RAD);
 
-	FloodRotarySwitch.Register(PSH, "FloodRotarySwitch", 4.0, 0.0, 10.0);
+	FloodRotarySwitch.Register(PSH, "FloodRotarySwitch", 10.0, 0.0, 10.0);
 	FloodRotarySwitch.SetRotationRange(300.0*RAD);
 	FloodRotarySwitch.SetOffset(-150.0*RAD);
 

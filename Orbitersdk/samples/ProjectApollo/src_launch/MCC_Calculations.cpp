@@ -40,8 +40,56 @@ MCC_Calculations::MCC_Calculations(RTCC *r) : RTCCModule(r)
 
 bool MCC_Calculations::CreateEphemeris(EphemerisData sv, double EphemerisLeftLimitGMT, double EphemerisRightLimitGMT, EphemerisDataTable2 &ephem)
 {
-	EMSMISSInputTable in;
+	//INPUTS:
+	//sv: State vector. Reference body indicator used to either generate Earth or Moon centered inertial (ECI/MCI) ephemeris.
+	//EphemerisLeftLimitGMT: Lower GMT limit of desired ephemeris
+	//EphemerisRightLimitGMT: Upper GMT limit of desired ephemeris
+	//OUTPUTS:
+	//ephem: Ephemeris table
+	//return value: true = error return 
+
 	PLAWDTOutput weights;
+
+	weights.KFactor = 0.0;
+	weights.CC.set(0);
+	weights.CSMWeight = 1.0;
+	weights.CSMArea = 0.0;
+
+	return CreateEphemeris(sv, weights, EphemerisLeftLimitGMT, EphemerisRightLimitGMT, ephem);
+}
+
+bool MCC_Calculations::CreateEphemeris(VehicleDataBlock sv, double EphemerisLeftLimitGMT, double EphemerisRightLimitGMT, EphemerisDataTable2& ephem)
+{
+	//INPUTS:
+	//sv: State vector and weights. Reference body indicator used to either generate Earth or Moon centered inertial (ECI/MCI) ephemeris.
+	//EphemerisLeftLimitGMT: Lower GMT limit of desired ephemeris
+	//EphemerisRightLimitGMT: Upper GMT limit of desired ephemeris
+	//OUTPUTS:
+	//ephem: Ephemeris table
+	//return value: true = error return 
+
+	PLAWDTOutput weights;
+
+	weights.KFactor = sv.KFactor;
+	weights.CC.set(0);
+	weights.CSMWeight = sv.Weight;
+	weights.CSMArea = sv.Area;
+
+	return CreateEphemeris(sv.sv, weights, EphemerisLeftLimitGMT, EphemerisRightLimitGMT, ephem);
+}
+
+bool MCC_Calculations::CreateEphemeris(EphemerisData sv, PLAWDTOutput weights, double EphemerisLeftLimitGMT, double EphemerisRightLimitGMT, EphemerisDataTable2& ephem)
+{
+	//INPUTS:
+	//sv: State vector. Reference body indicator used to either generate Earth or Moon centered inertial (ECI/MCI) ephemeris.
+	//weights = Weight table
+	//EphemerisLeftLimitGMT: Lower GMT limit of desired ephemeris
+	//EphemerisRightLimitGMT: Upper GMT limit of desired ephemeris
+	//OUTPUTS:
+	//ephem: Ephemeris table
+	//return value: true = error return 
+
+	EMSMISSInputTable in;
 
 	in.AnchorVector = sv;
 	in.EphemerisLeftLimitGMT = EphemerisLeftLimitGMT;
@@ -59,13 +107,6 @@ bool MCC_Calculations::CreateEphemeris(EphemerisData sv, double EphemerisLeftLim
 		in.MCIEphemTableIndicator = &ephem;
 	}
 	in.useInputWeights = true;
-
-	//TBD
-	weights.KFactor = 0.0;
-	weights.CC.set(0);
-	weights.CSMWeight = 1.0;
-
-	in.DensityMultiplier = 0.0;
 	in.WeightsTable = &weights;
 	in.VehicleCode = RTCC_MPT_CSM; //Not used
 
@@ -75,8 +116,18 @@ bool MCC_Calculations::CreateEphemeris(EphemerisData sv, double EphemerisLeftLim
 
 	return (in.NIAuxOutputTable.ErrorCode != 0);
 }
+
 double MCC_Calculations::EnvironmentChange(EphemerisDataTable2 &ephem, double gmt_estimate, int option, bool present, bool terminator)
 {
+	//INPUTS:
+	//ephem: Ephemeris table
+	//gmt_estimate: Estimated GMT for environment change, used as threshold
+	//option: 0 = Sun, 1 = Moon
+	//present: Search for condition being present (e.g. sunshine for sunrise)
+	//terminator: Search for terminator of above condition
+	//OUTPUTS:
+	//return value: GMT of environment change
+
 	ManeuverTimesTable MANTIMES;
 	LunarStayTimesTable LUNRSTAY;
 	RTCC::EMMENVInputTable in;
@@ -104,6 +155,14 @@ double MCC_Calculations::TerminatorRise(EphemerisDataTable2 &ephem, double gmt_e
 
 bool MCC_Calculations::LongitudeCrossing(EphemerisDataTable2 &ephem, double lng, double gmt_estimate, double &gmt_cross)
 {
+	//INPUTS:
+	//ephem: Ephemeris table (ECI or MCI coordinates)
+	//lng: Desired longitude
+	//gmt_estimate: Estimated GMT for environment change, used as threshold
+	//OUTPUTS:
+	//gmt_cross: Calculated GMT of longitude crossing
+	//return value: true = error return
+
 	ManeuverTimesTable MANTIMES;
 	EphemerisDataTable2 ephem_true;
 	EphemerisData2 sv;
@@ -208,6 +267,234 @@ double MCC_Calculations::FindOrbitalMidnight(SV sv, double t_TPI_guess)
 
 	ttoMidnight = OrbMech::sunrise(pRTCC->SystemParameters.MAT_J2000_BRCS, sv1.R, sv1.V, sv1.MJD, sv1.gravref, hSun, 1, 1, false);
 	return t_TPI_guess + ttoMidnight;
+}
+
+int MCC_Calculations::StationContactsGenerator(EphemerisDataTable2& ephem, double lat, double lng, double alt, int RBI, StationContact& contact)
+{
+	//INPUTS:
+	//ephem: Ephemeris data table generated with CreateEphemeris (ECI or MCI coordinates). Does not have to agree with RBI
+	//lat: Latitude of the ground station, radians
+	//lng: Longitude of the ground station, radians
+	//alt: Elevation of the ground station, radians
+	//RBI: Reference body indicator of the ground station (0 = Earth, 1 = Moon)
+	//OUTPUTS:
+	//contact: Station contact data table
+	//return value: Error if non-zero
+
+	EphemerisDataTable2 ephem_true;
+	std::vector<StationContact> acquisitions;
+	ManeuverTimesTable mantimes;
+	StationData station;
+	int csi, error;
+
+	pRTCC->EMGGPCHR(lat, lng, alt, RBI, 0.0, &station);
+
+	//Convert ephemeris to ECT or MCT
+	if (RBI == BODY_EARTH)
+	{
+		csi = RTCC_COORDINATES_ECT;
+	}
+	else
+	{
+		csi = RTCC_COORDINATES_MCT;
+	}
+	error = pRTCC->ELVCNV(ephem.table, ephem.Header.CSI, csi, ephem_true.table);
+	if (error) return 1;
+	ephem_true.Header = ephem.Header;
+	ephem_true.Header.CSI = csi;
+
+	//Generate station contact
+	error = pRTCC->EMXING(ephem_true, mantimes, station, RBI, acquisitions, NULL, 1);
+	if (error || (acquisitions.size() == 0U)) return 2;
+
+	contact = acquisitions[0];
+	return 0;
+}
+
+int MCC_Calculations::GroundTargetPointing(EphemerisDataTable2& ephem, MATRIX3 REFSMMAT, double gmt, double lat, double lng, double alt, int RBI, double yaw, double pitch, double omicron, VECTOR3& Att)
+{
+	//INPUTS:
+	//ephem: Ephemeris data table generated with CreateEphemeris (ECI or MCI coordinates). Does not have to agree with RBI.
+	//REFSMMAT: REFSMMAT of vehicle for which the attitude is to be calculated
+	//gmt: Time of sighting
+	//lat: Latitude of ground target, radians
+	//lng: Longitude of ground target, radians
+	//alt: Elevation of ground target, meters
+	//RBI: Reference body indicator for ground target (0 = Earth, 1 = Moon)
+	//yaw: Yaw angle, radians. Same definition as in P20 universal tracking
+	//pitch: Pitch angle, radians. Same definition as in P20 universal tracking
+	//omicron: Azimuth angle, radians. Same definition as in P20 universal tracking
+	//OUTPUTS:
+	//Att: Attitude for sighting
+	//return value: error if non-zero
+
+	ELVCTRInputTable elin;
+	ELVCTROutputTable2 elout;
+	ManeuverTimesTable mantimes;
+	VECTOR3 R_iner, u_LOS;
+	double Elev;
+	int err, csi;
+	bool HasLOS;
+
+	//Interpolate for vector
+	elin.GMT = gmt;
+	pRTCC->ELVCTR(elin, elout, ephem, mantimes);
+	if (elout.ErrorCode > 2) return 1;
+
+	//Convert to RBI, if required
+	if (RBI == BODY_EARTH)
+	{
+		csi = RTCC_COORDINATES_ECI;
+	}
+	else
+	{
+		csi = RTCC_COORDINATES_MCI;
+	}
+	err = pRTCC->ELVCNV(elout.SV, ephem.Header.CSI, csi, elout.SV);
+	if (err) return 1;
+
+	//Find direction
+	err = pRTCC->EMGSDEMT(elout.SV, RBI, lat, lng, alt, R_iner, u_LOS, HasLOS, Elev);
+	if (err) return 1;
+
+	//Calculate attitude
+	Att = AttitudeFromPointingDirection(elout.SV.R, elout.SV.V, REFSMMAT, u_LOS, yaw, pitch, omicron);
+
+	return 0;
+}
+
+int MCC_Calculations::CelestialTargetPointing(EphemerisDataTable2& ephem, MATRIX3 REFSMMAT, double gmt, int star, double yaw, double pitch, double omicron, VECTOR3& Att)
+{
+	//INPUTS:
+	//ephem: Ephemeris data table generated with CreateEphemeris (ECI or MCI coordinates)
+	//REFSMMAT: REFSMMAT of vehicle for which the attitude is to be calculated
+	//gmt: Time of sighting
+	//star: Star from star table (1-400)
+	//yaw: Yaw angle, radians. Same definition as in P20 universal tracking
+	//pitch: Pitch angle, radians. Same definition as in P20 universal tracking
+	//omicron: Azimuth angle, radians. Same definition as in P20 universal tracking
+	//OUTPUTS:
+	//Att: Attitude for sighting
+	//return value: error if non-zero
+
+	ELVCTRInputTable elin;
+	ELVCTROutputTable2 elout;
+	ManeuverTimesTable mantimes;
+	VECTOR3 u_LOS;
+
+	//Interpolate for vector
+	elin.GMT = gmt;
+	pRTCC->ELVCTR(elin, elout, ephem, mantimes);
+	if (elout.ErrorCode > 2) return 1;
+
+	//Get line-of-sight vector
+	if (star < 0 || star > 400) return 1;
+	u_LOS = pRTCC->EZJGSTAR[star - 1];
+
+	//Calculate attitude
+	Att = AttitudeFromPointingDirection(elout.SV.R, elout.SV.V, REFSMMAT, u_LOS, yaw, pitch, omicron);
+
+	return 0;
+}
+
+int MCC_Calculations::CelestialBodyPointing(EphemerisDataTable2& ephem, MATRIX3 REFSMMAT, double gmt, int option, double yaw, double pitch, double omicron, VECTOR3& Att)
+{
+	//INPUTS:
+	//ephem: Ephemeris data table generated with CreateEphemeris (ECI or MCI coordinates)
+	//REFSMMAT: REFSMMAT of vehicle for which the attitude is to be calculated
+	//gmt: Time of sighting
+	//option: 0 = Center of Earth, 1 = center of Moon, 2 = center of Sun
+	//yaw: Yaw angle, radians. Same definition as in P20 universal tracking
+	//pitch: Pitch angle, radians. Same definition as in P20 universal tracking
+	//omicron: Azimuth angle, radians. Same definition as in P20 universal tracking
+	//OUTPUTS:
+	//Att: Attitude for sighting
+	//return value: error if non-zero
+
+	ELVCTRInputTable elin;
+	ELVCTROutputTable2 elout;
+	ManeuverTimesTable mantimes;
+	VECTOR3 u_LOS;
+	int err;
+
+	//Interpolate for vector
+	elin.GMT = gmt;
+	pRTCC->ELVCTR(elin, elout, ephem, mantimes);
+	if (elout.ErrorCode > 2) return 1;
+
+	//Get line-of-sight vector
+	err = CelestialBodyPointingDirection(elout.SV.R, elout.SV.GMT, ephem.Header.CSI, option, u_LOS);
+	if (err) return 1;
+
+	//Calculate attitude
+	Att = AttitudeFromPointingDirection(elout.SV.R, elout.SV.V, REFSMMAT, u_LOS, yaw, pitch, omicron);
+
+	return 0;
+}
+
+int MCC_Calculations::CelestialBodyPointingDirection(VECTOR3 R, double GMT, int CSI, int option, VECTOR3& u_LOS)
+{
+	//INPUTS:
+	//R = Position vector
+	//GMT: Time of sighting
+	//CSI: Coordinate system indicator for position vector
+	//option: 0 = Center of Earth, 1 = center of Moon, 2 = center of Sun
+	//OUTPUTS:
+	//u_LOS: Inertial line-of-sight unit vector from vehicle to body
+	//return value: error if non-zero
+
+	VECTOR3 R_EM, V_EM, R_ES, R_VB;
+	int err;
+
+	//Get ephemerides
+	err = pRTCC->PLEFEM(1, GMT / 3600.0, 0, &R_EM, &V_EM, &R_ES, NULL);
+	if (err) return err;
+
+	if (CSI == RTCC_COORDINATES_ECI)
+	{
+		if (option == 0)
+		{
+			R_VB = -R;
+		}
+		else if (option == 1)
+		{
+			R_VB = R_EM - R;
+		}
+		else
+		{
+			R_VB = R_ES - R;
+		}
+	}
+	else
+	{
+		if (option == 0)
+		{
+			R_VB = -R_EM - R;
+		}
+		else if (option == 1)
+		{
+			R_VB = -R;
+		}
+		else
+		{
+			R_VB = -R_EM + R_ES - R;
+		}
+	}
+	u_LOS = unit(R_VB);
+	return 0;
+}
+
+VECTOR3 MCC_Calculations::AttitudeFromPointingDirection(VECTOR3 R, VECTOR3 V, MATRIX3 REFSMMAT, VECTOR3 u_LOS, double yaw, double pitch, double omicron)
+{
+	MATRIX3 RFNB;
+	VECTOR3 SCAXIS;
+
+	//Build body pointing vector
+	SCAXIS = _V(cos(yaw) * cos(pitch), sin(yaw) * cos(pitch), -sin(pitch));
+	//Calculate reference to navigation base matrix
+	RFNB = OrbMech::THREEAXISPOINTING(R, V, SCAXIS, u_LOS, omicron);
+	//Calculate attitude
+	return OrbMech::CALCGAR(REFSMMAT, RFNB);
 }
 
 void MCC_Calculations::FindRadarAOSLOS(SV sv, double lat, double lng, double &GET_AOS, double &GET_LOS)

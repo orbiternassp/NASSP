@@ -2905,7 +2905,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "", 0, ' ' },
 
 		{ "Calculate contacts", 0, 'C' },
-		{ "", 0, ' ' },
+		{ "Add ground point", 0, 'A' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
@@ -4586,6 +4586,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("DIS", OAPI_KEY_F, &ApolloRTCCMFD::menuCycleSubscreen);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuStarSightingTableCalc);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
+
+
+	static const MFDBUTTONMENU mnu135[] =
+	{
+		{ "Set item", 0, 'P' },
+		{ "Next item", 0, 'Q' },
+		{ "Previous item", 0, 'V' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Change instruments", 0, 'A' },
+
+		{ "Inputs/Display", 0, 'F' },
+		{ "Calculate", 0, 'C' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu135, sizeof(mnu135) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("SET", OAPI_KEY_O, &ApolloRTCCMFD::menuSetSpacecraftPointingDisplayInput);
+	RegisterFunction("<<", OAPI_KEY_Q, &ApolloRTCCMFD::menuCycleMarkerDown);
+	RegisterFunction(">>", OAPI_KEY_V, &ApolloRTCCMFD::menuCycleMarkerUp);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_M, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("G41", OAPI_KEY_A, &ApolloRTCCMFD::menuMEDG41);
+
+	RegisterFunction("DIS", OAPI_KEY_F, &ApolloRTCCMFD::menuCycleSubscreen);
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuSpacecraftPointingDisplayCalc);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);

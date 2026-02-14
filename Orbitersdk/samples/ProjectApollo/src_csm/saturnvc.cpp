@@ -1970,15 +1970,15 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		// Flood Lights Panel 8
 		SetVCLighting(vcidx, FloodLights_P8, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(FloodLights_P8));
-		floodLight_P8->SetIntensity(FloodRotarySwitch.GetOutput()*1.5);
+		floodLight_P8->SetIntensity(LeftFloodLights.GetCombinedOutput());
 
 		// CMVC Ordeal Lighting Switch
 		SetVCLighting(vcidx, IntegralLights_CMVC_Ordeal, MAT_EMISSION, ordeal.LightingPower(), NUM_ELEMENTS(IntegralLights_CMVC_Ordeal));
 		// ORDEALLightingSwitch.DrawSwitchVC(id, event, surf); // ***Check this line  by JK***
 
 		// Integral Lights Panel 8
-		SetVCLighting(vcidx, IntegralLights_P8, MAT_EMISSION, IntegralRotarySwitch.GetOutput(), NUM_ELEMENTS(IntegralLights_P8));
-		SetVCLighting(vcidx, IntergralLights_P8_NTex, MAT_LIGHT, IntegralRotarySwitch.GetOutput() + floodRotaryValue, NUM_ELEMENTS(IntergralLights_P8_NTex));
+		SetVCLighting(vcidx, IntegralLights_P8, MAT_EMISSION, LeftIntegralLights.GetOutput(), NUM_ELEMENTS(IntegralLights_P8));
+		SetVCLighting(vcidx, IntergralLights_P8_NTex, MAT_LIGHT, LeftIntegralLights.GetOutput() + floodRotaryValue, NUM_ELEMENTS(IntergralLights_P8_NTex));
 
 		// External meshes
 		SetVCLighting(seatsunfoldedidx, CMVCSeatsUnFolded, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(CMVCSeatsUnFolded));
@@ -1987,26 +1987,25 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		// Numerics Lights Panel 8
 //      SetVCLighting(vcidx,NumericLights_P8, MAT_LIGHT,NumericRotarySwitch.GetOutput(), NUM_ELEMENTS(NumericLights_P8));
-		SetVCLighting(vcidx, NumericLights_P8_NTex, MAT_LIGHT, NumericRotarySwitch.GetOutput() + floodRotaryValue, NUM_ELEMENTS(NumericLights_P8_NTex));
+		SetVCLighting(vcidx, NumericLights_P8_NTex, MAT_LIGHT, LeftNumericLights.GetOutput() + floodRotaryValue, NUM_ELEMENTS(NumericLights_P8_NTex));
 
 		// Integral Lights Panel 5
-		SetVCLighting(vcidx, IntegralLights_P5, MAT_EMISSION, RightIntegralRotarySwitch.GetOutput(), NUM_ELEMENTS(IntegralLights_P5));
+		SetVCLighting(vcidx, IntegralLights_P5, MAT_EMISSION, RightIntegralLights.GetOutput(), NUM_ELEMENTS(IntegralLights_P5));
 
 		// Flood Lights Panel 5 *** NOT FUNCTIONALY YET ***
 //		SetVCLighting(vcidx, FloodLights_P5, MAT_LIGHT, RightFloodRotarySwitch.GetOutput(), NUM_ELEMENTS(FloodLights_P5));
-		floodLight_P5->SetIntensity(RightFloodRotarySwitch.GetOutput()*1.5);
+		floodLight_P5->SetIntensity(RightFloodLights.GetCombinedOutput());
 
 		// Integral Lights Panel 100
-		SetVCLighting(vcidx, IntegralLights_P100, MAT_EMISSION, Panel100IntegralRotarySwitch.GetOutput(), NUM_ELEMENTS(IntegralLights_P100));
-		SetVCLighting(vcidx, IntegralLights_P100_NoTex, MAT_LIGHT, Panel100IntegralRotarySwitch.GetOutput(), NUM_ELEMENTS(IntegralLights_P100_NoTex));
-
+		SetVCLighting(vcidx, IntegralLights_P100, MAT_EMISSION, LEBIntegralLights.GetOutput(), NUM_ELEMENTS(IntegralLights_P100));
+		SetVCLighting(vcidx, IntegralLights_P100_NoTex, MAT_LIGHT, LEBIntegralLights.GetOutput(), NUM_ELEMENTS(IntegralLights_P100_NoTex));
 
 		//// Flood Lights Panel 100 *** NOT FUNCTIONALY YET ***
 //		SetVCLighting(vcidx, FloodLights_P100, MAT_LIGHT, Panel100FloodRotarySwitch.GetOutput(), NUM_ELEMENTS(FloodLights_P100));
-		floodLight_P100->SetIntensity(Panel100FloodRotarySwitch.GetOutput()*1.5);
+		floodLight_P100->SetIntensity(LEBFloodLights.GetCombinedOutput());
 
 		// Numerics Lights Panel 100
-		SetVCLighting(vcidx, NumericLights_P100, MAT_LIGHT, Panel100NumericRotarySwitch.GetOutput() + floodRotaryValue, NUM_ELEMENTS(NumericLights_P100));
+		SetVCLighting(vcidx, NumericLights_P100, MAT_LIGHT, LEBNumericLights.GetOutput() + floodRotaryValue, NUM_ELEMENTS(NumericLights_P100));
 
 		// DSKY and Caution & Warning Lights
 		std::vector<DWORD> DSKY_Lights;

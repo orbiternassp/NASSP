@@ -1815,3 +1815,20 @@ void ElectricLight::UpdatePosition(VECTOR3 offset)
 	BeaconPosition -= offset;
 	lamp->SetPosition(BeaconPosition);
 }
+
+void ElectricLight::Load(char* line)
+{
+	int inttemp;
+
+	sscanf(line, "    <LIGHT> %s %d", name, &inttemp);
+
+	enabled = (inttemp != 0);
+}
+
+void ElectricLight::Save(FILEHANDLE scn) {
+
+	char cbuf[1000];
+
+	sprintf(cbuf, "%s %d", name, enabled);
+	oapiWriteScenario_string(scn, "    <LIGHT> ", cbuf);
+}
