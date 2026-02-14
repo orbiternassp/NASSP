@@ -1331,6 +1331,12 @@ public:
 	//
 	void QuicksaveScenario();
 
+	//CSM Running Lights
+	void SetRunningLights();
+
+	VECTOR3 runningLightsPos[8];
+	BEACONLIGHTSPEC runningLights[8];             // running lights
+
 protected:
 
 	///
@@ -3735,6 +3741,7 @@ protected:
 	// Electric Lights
 	ElectricLight* SpotLight;
 	ElectricLight* RndzLight;
+	ElectricLight* EVALight;
 
 	// O2 Tanks
 	h_Tank *O2Tanks[2];
@@ -3855,6 +3862,10 @@ protected:
 
 	NumericLights LeftNumericLights;
 	NumericLights LEBNumericLights;
+
+	// Exterior Lighting
+	ExteriorLighting ExteriorLighting;
+	PowerMerge RunEVAFeeder;
 
 	// GSE
 	Pump* GSEGlycolPump;
@@ -4039,6 +4050,7 @@ protected:
 	int coascdridx;
 	int coascdrreticleidx;
 	DEVMESHHANDLE vcmesh;
+	int smidx;
 
 	double DockAngle;
 
@@ -4740,6 +4752,7 @@ protected:
 	friend class TunnelLights;
 	friend class IntegralLights;
 	friend class NumericLights;
+	friend class ExteriorLighting;
 
 	friend void cbCSMVesim(int inputID, int eventType, int newValue, void *pdata);
 };

@@ -139,11 +139,17 @@ void Saturn::SystemsInit() {
 	FuelCellN2Blanket[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET");
 
 	//
-	// Electric Lights
+	// Exterior Lights
 	//
 
 	SpotLight = (ElectricLight *)Panelsdk.GetPointerByString("ELECTRIC:SPOTLIGHT");
 	RndzLight = (ElectricLight *)Panelsdk.GetPointerByString("ELECTRIC:RNDZLIGHT");
+	EVALight = (ElectricLight*)Panelsdk.GetPointerByString("ELECTRIC:EVALIGHT");
+
+	RunEVAFeeder.WireToBuses(&RunEVATRGTAC1CB, &RunEVATRGTAC2CB);
+	EVALight->WireTo(&RunEVAFeeder);
+
+	ExteriorLighting.Init(this, &LightingRndzMNBCB, &RndzLightSwitch, &RunEVAFeeder, &RunEVALightSwitch, EVALight);
 
 	//
 	// Interior Lights
@@ -1918,6 +1924,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		LEBIntegralLights.SystemTimestep(tFactor);
 		LeftNumericLights.SystemTimestep(tFactor);
 		LEBNumericLights.SystemTimestep(tFactor);
+		ExteriorLighting.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
@@ -2971,8 +2978,9 @@ void Saturn::CheckSMSystemsState()
 		}
 
 		// Disconnect Exterior SM lights
-		RndzLight->WireTo(NULL);
-		SpotLight->WireTo(NULL);
+		RndzLight->Disable();
+		SpotLight->Disable();
+		EVALight->Disable();
 	}
 }
 

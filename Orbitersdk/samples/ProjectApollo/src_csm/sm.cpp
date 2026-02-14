@@ -405,6 +405,9 @@ void SM::clbkPreStep(double simt, double simdt, double mjd)
 	}
     SetAnimation (anim_umbilical, umbilical_proc);
 
+	//EVA Lt pole Anim state
+	SetAnimation(anim_EVALt, 1.0);
+
 	//
 	// See section 2.9.4.13.2 of the Apollo Operations Handbook Seq Sys section for
 	// details on RCS operation after SM sep.
@@ -1020,7 +1023,7 @@ void SM::AddEngines()
 
 void SM::DefineAnimations()
 {
-
+	//Umbilical Animation
 	static UINT umbilical_group = {2}; // participating groups
 	static MGROUP_ROTATE umbilical
 	(
@@ -1032,6 +1035,17 @@ void SM::DefineAnimations()
 	);
 	anim_umbilical = CreateAnimation (0.0);
 	AddAnimationComponent (anim_umbilical, 0, 1, &umbilical);
+
+	//EVA Lt pole Animation
+	ANIMATIONCOMPONENT_HANDLE ach_EVALtDeployedX;
+	ANIMATIONCOMPONENT_HANDLE ach_EVALtDeployedY;
+	static UINT EVALtDeployedGrp10[1] = { 10 };
+	const VECTOR3 EVALtDeployedPivot = { 1.66741, 0.99237, 3.14599 };    //EVA Lt Pole Pivot Point
+	static MGROUP_ROTATE mgr_EVALtDeployedGrp10X(0, EVALtDeployedGrp10, 1, EVALtDeployedPivot, _V(1, 0, 0), (float)(RAD * 30));
+	static MGROUP_ROTATE mgr_EVALtDeployedGrp10Y(0, EVALtDeployedGrp10, 1, EVALtDeployedPivot, _V(0, 1, 0), (float)(RAD * -120));
+	anim_EVALt = CreateAnimation(0.0);
+	ach_EVALtDeployedX = AddAnimationComponent(anim_EVALt, 0.0, 1.0, &mgr_EVALtDeployedGrp10X);
+	ach_EVALtDeployedY = AddAnimationComponent(anim_EVALt, 0.0, 1.0, &mgr_EVALtDeployedGrp10Y);
 }
 
 void SM::DefineAnimationsHGA(UINT idx) {
