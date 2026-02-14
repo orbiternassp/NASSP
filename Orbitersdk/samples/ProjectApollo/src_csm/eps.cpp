@@ -277,7 +277,7 @@ double FloodLights::GetCombinedOutput() //Provides scaling for VC lighting until
 	return (GetPrimOutput() + GetSecOutput()) * 1.5;
 }
 
-void FloodLights::SystemTimestep(double simdt)
+void FloodLights::SystemTimestep(double simdt) ///TBD: Generate Heat
 {
 	//Primary Flood Power Draw
 	if (FloodRtycb->Voltage() > SP_MIN_DCVOLTAGE && DIMsw->GetState() == TOGGLESWITCH_UP)  //Dim 1
@@ -332,4 +332,193 @@ double TunnelLights::GetOutput() //Provides scaling for VC lighting and power dr
 void TunnelLights::SystemTimestep(double simdt)
 {
 	MNcb->DrawPower(GetOutput() * 9.0); //Each tunnel segment consists of 3 lights at 3W each 
+}
+
+//Integral Lights
+IntegralLights::IntegralLights(double watts)
+{
+	saturn = NULL;
+	Integralcb = NULL;
+	Rotary = NULL;
+	powerdraw = watts;
+}
+
+IntegralLights::~IntegralLights()
+{
+
+}
+
+void IntegralLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *rty)
+{
+	saturn = s;
+	Integralcb = cb;
+	Rotary = rty;
+}
+
+double IntegralLights::GetOutput() //Provides scaling for VC lighting and power draw
+{
+	if (Integralcb->Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		return (Integralcb->Voltage() / 115.0) * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
+	}
+	return 0.0;
+}
+
+void IntegralLights::SystemTimestep(double simdt)
+{
+	Integralcb->DrawPower(GetOutput() * powerdraw);
+}
+
+//Numeric Lights
+NumericLights::NumericLights()
+{
+	saturn = NULL;
+	Numericscb = NULL;
+	Rotary = NULL;
+}
+
+NumericLights::~NumericLights()
+{
+
+}
+
+void NumericLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *rty)
+{
+	saturn = s;
+	Numericscb = cb;
+	Rotary = rty;
+}
+
+double NumericLights::GetOutput() //Provides scaling for VC lighting and power draw
+{
+	if (Numericscb->Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		return (Numericscb->Voltage() / 115.0) * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
+	}
+	return 0.0;
+}
+
+void NumericLights::SystemTimestep(double simdt)
+{
+	Numericscb->DrawPower(GetOutput() * 9.0); //9W per segment not including mission timer or DSKY which are drawn elsewhere
+}
+
+//Exterior Lights
+ExteriorLighting::ExteriorLighting()
+{
+	saturn = NULL;
+	RNDZSPOTMNBcb = NULL;
+	RDZSPOTsw = NULL;
+	ACPower = NULL;
+	RUNEVAsw = NULL;
+	EVALight = NULL;
+	SpotDeployed = false;
+	EVALtDeployed = false;
+	anim_EVALt = -1;
+}
+
+ExteriorLighting::~ExteriorLighting()
+{
+
+}
+
+void ExteriorLighting::Init(Saturn *s, CircuitBrakerSwitch *RDVMNB, ThreeSourceTwoDestSwitch *RDZSPOT, PowerMerge *RUNEVAAC, ToggleSwitch *RUNEVA, ElectricLight *EVALT)
+{
+	saturn = s;
+	RNDZSPOTMNBcb = RDVMNB;
+	RDZSPOTsw = RDZSPOT;
+	ACPower = RUNEVAAC;
+	RUNEVAsw = RUNEVA;
+	EVALight = EVALT;
+}
+
+bool ExteriorLighting::IsRunEVAOn()
+{
+	if (saturn->stage == CSM_LEM_STAGE && ACPower->Voltage() > SP_MIN_ACVOLTAGE && RUNEVAsw->IsUp())  //stage check prevents ghost lighting after SM sep
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+void ExteriorLighting::SystemTimestep(double simdt)
+{
+	if (!saturn->LETAttached())
+	{
+		EVALtDeployed = true;
+	}
+
+	if (RDZSPOTsw->IsDown() && RNDZSPOTMNBcb->IsPowered())
+	{
+		SpotDeployed = true;
+	}
+
+	//Running Lights
+	int i;
+
+	if (IsRunEVAOn()) {
+		for (i = 0; i < 8; i++) saturn->runningLights[i].active = true;
+		ACPower->DrawPower(28.0); // 8 lights at 3.5W each
+	}
+	else {
+		for (i = 0; i < 8; i++) saturn->runningLights[i].active = false;
+	}
+
+	//EVA Light
+	if (IsRunEVAOn() && EVALtDeployed)
+	{
+		EVALight->Enable();
+	}
+	else
+	{
+		EVALight->Disable();
+	}
+
+	//EVA Pole Lt execute Animation
+	if (anim_EVALt != 0) {
+		if (EVALtDeployed)
+			saturn->SetAnimation(anim_EVALt, 1.0); // deployed
+		else
+			saturn->SetAnimation(anim_EVALt, 0.0); // stowed
+	}
+}
+
+void ExteriorLighting::LoadState(char *line, int strlen)
+{
+	int i, j;
+
+	sscanf(line + strlen + 1, "%i %i", &i, &j);
+
+	SpotDeployed = (i != 0);
+	EVALtDeployed = (j != 0);
+}
+
+void ExteriorLighting::SaveState(FILEHANDLE scn, char *name_str)
+{
+	char buffer[100];
+
+	sprintf(buffer, "%d %d", SpotDeployed, EVALtDeployed);
+	oapiWriteScenario_string(scn, name_str, buffer);
+}
+
+void ExteriorLighting::DefineAnimations(UINT idx)
+{
+	if (anim_EVALt != NULL)
+	{
+		saturn->DelAnimation(anim_EVALt);
+		anim_EVALt = NULL;
+	}
+
+	static UINT EVALtDeployedGrp10[1] = { 10 };
+	const VECTOR3 EVALtDeployedPivot = { 1.67261, 0.996135, 3.146 };
+	MGROUP_ROTATE* mgrX = new MGROUP_ROTATE(idx, EVALtDeployedGrp10, 1, EVALtDeployedPivot, _V(1, 0, 0), (float)(RAD * -8.15));
+	MGROUP_ROTATE* mgrZ = new MGROUP_ROTATE(idx, EVALtDeployedGrp10, 1, EVALtDeployedPivot, _V(0, 0, 1), (float)(RAD * 30));
+	MGROUP_ROTATE* mgrY = new MGROUP_ROTATE(idx, EVALtDeployedGrp10, 1,EVALtDeployedPivot, _V(0, 1, 0), (float)(RAD * -124.32));
+	anim_EVALt = saturn->CreateAnimation(0.0);
+	saturn->AddAnimationComponent(anim_EVALt, 0.0, 1.0, mgrY);
+	saturn->AddAnimationComponent(anim_EVALt, 0.0, 1.0, mgrZ);
+	saturn->AddAnimationComponent(anim_EVALt, 0.0, 1.0, mgrX);
 }
