@@ -3026,6 +3026,9 @@ UDL_END
            7 0
            8 0
       </COOLING>  
+      <LIGHT>  SPOTLIGHT 1
+      <LIGHT>  RNDZLIGHT 1
+      <LIGHT>  EVALIGHT 1
       <AC>  AC-Bus1-PhaseA
       <AC>  AC-Bus1-PhaseB
       <AC>  AC-Bus1-PhaseC
@@ -3453,7 +3456,7 @@ PANELSWITCHES_BEGIN
   GlycolToRadiatorsRotary 0
   OxygenSurgeTankValveRotary 8
   Panel100IntegralRotarySwitch 0.647917
-  Panel100FloodRotarySwitch 0.297917
+  Panel100FloodRotarySwitch 0.6
   Panel100NumericRotarySwitch 0.779167
   RightSystemTestRotarySwitch 1
   LeftSystemTestRotarySwitch 8

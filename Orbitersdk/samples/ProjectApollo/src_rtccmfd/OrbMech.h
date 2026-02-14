@@ -221,6 +221,10 @@ namespace OrbMech {
 	const MATRIX3 R_ref_Moon = mul(_M(cos(L_ref_Moon), 0, -sin(L_ref_Moon), 0, 1, 0, sin(L_ref_Moon), 0, cos(L_ref_Moon)), _M(1, 0, 0, 0, cos(e_ref_Moon), -sin(e_ref_Moon), 0, sin(e_ref_Moon), cos(e_ref_Moon)));
 	const MATRIX3 R_obl_Moon = _M(1, 0, 0, 0, cos(e_rel_Moon), -sin(e_rel_Moon), 0, sin(e_rel_Moon), cos(e_rel_Moon));
 
+	//Additional conversion factors
+	const double RASEC_TO_RADIANS = PI / 43200.0;	//Seconds of right ascension to radians
+	const double ARCSEC_TO_RADIANS = PI / 648000.0; //Arc seconds to radians
+
 	void rv_from_r0v0_obla(VECTOR3 R1, VECTOR3 V1, double MJD, double dt, VECTOR3 &R2, VECTOR3 &V2);
 	double kepler_E(double e, double M, double error2 = 1.e-8);
 	double kepler_H(double e, double M);
@@ -242,6 +246,7 @@ namespace OrbMech {
 	double TrueToEccentricAnomaly(double ta, double ecc);
 	void perifocal(double h, double mu, double e, double theta, double inc, double lambda, double w, VECTOR3 &RX, VECTOR3 &VX);
 	double fischer_ellipsoid(VECTOR3 R);
+	VECTOR3 VectorToHorizon(VECTOR3 r_ZC, VECTOR3 u_S, int body, bool far_horizon);
 	double timetoperi(VECTOR3 R, VECTOR3 V, double mu);
 	double timetoperi_integ(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri);
 	double timetoperi_integ(int Epoch, VECTOR3 R, VECTOR3 V, double MJD, OBJHANDLE gravref, OBJHANDLE ref_peri, VECTOR3 &R2, VECTOR3 &V2);
@@ -272,9 +277,17 @@ namespace OrbMech {
 	VECTOR3 CALCGTA(MATRIX3 des);
 	void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP);
 	void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA);
+
+	VECTOR3 GetCSMCOASVector(double SPA, double SXP);
+	VECTOR3 GetLMCOASVector(double EL, double SXP, bool IsZAxis);
+
+	void CSMCOASAngles(VECTOR3 u_NB, double& SPA, double& SXP);
+	void LMCOASAngles(bool Axis, VECTOR3 u_NB, double& EL, double& SXP);
+
 	MATRIX3 AXISGEN(VECTOR3 s_NBA, VECTOR3 s_NBB, VECTOR3 s_SMA, VECTOR3 s_SMB);
 	MATRIX3 ROTCOMP(VECTOR3 U_R, double A);
-	MATRIX3 THREEAXISPOINTING(VECTOR3 R, VECTOR3 V ,VECTOR3 SCAXIS, VECTOR3 LAMC, double TVR);
+	MATRIX3 HeadsUpAttitude(VECTOR3 R, VECTOR3 V, VECTOR3 SCAXIS, VECTOR3 TLOS);
+	MATRIX3 THREEAXISPOINTING(VECTOR3 R, VECTOR3 V ,VECTOR3 SCAXIS, VECTOR3 TLOS, double OMICRON);
 	VECTOR3 backupgdcalignment(const VECTOR3 *navstars, MATRIX3 REFS, VECTOR3 R_C, double R_E, int prefset, int &set);
 	MATRIX3 AGSStarAlignment(const VECTOR3 *navstars, VECTOR3 Att1, VECTOR3 Att2, int star1, int star2, int axis, int detent, double AOTCounter);
 	bool oneclickcoast(int Epoch, VECTOR3 R0, VECTOR3 V0, double mjd0, double dt, VECTOR3 &R1, VECTOR3 &V1, OBJHANDLE gravref, OBJHANDLE &gravout);
@@ -443,6 +456,7 @@ namespace OrbMech {
 	double HHMMSSToSS(int H, int M, int S);
 	double HHMMSSToSS(double H, double M, double S);
 	//Round to given precision
+	VECTOR3 round_to(VECTOR3 value, double precision = 1.0);
 	double round_to(double value, double precision = 1.0);
 	//Split up seconds in minutes etc.
 	void SStoMMSS(double time, int &minutes, double &seconds, double precision = 1.0);

@@ -2611,6 +2611,9 @@ UDL_END
            7 0
            8 0
       </COOLING>  
+      <LIGHT>  SPOTLIGHT 1
+      <LIGHT>  RNDZLIGHT 1
+      <LIGHT>  EVALIGHT 0
       <AC>  AC-Bus1-PhaseA
       <AC>  AC-Bus1-PhaseB
       <AC>  AC-Bus1-PhaseC
@@ -3055,7 +3058,7 @@ PANELSWITCHES_BEGIN
   SCSElectronicsPowerRotarySwitch 2
   FDAIPowerRotarySwitch 3
   IntegralRotarySwitch 0.62152
-  FloodRotarySwitch 0.4
+  FloodRotarySwitch 1.0
   NumericRotarySwitch 0.4
   DockingProbeBIndicator 1
   DockingProbeAIndicator 1
@@ -3074,7 +3077,7 @@ PANELSWITCHES_BEGIN
   HighGainAntennaPitchMeter 0.000000 0.000000
   HighGainAntennaYawPositionSwitch 0.5
   HighGainAntennaPitchPositionSwitch 0.5
-  RightFloodRotarySwitch 0.0
+  RightFloodRotarySwitch 1.0
   RightIntegralRotarySwitch 0.583715
   EcsGlycolPumpsSwitch 1
   SPSTestSwitch 1 0

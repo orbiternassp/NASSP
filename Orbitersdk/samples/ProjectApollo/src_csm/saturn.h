@@ -1353,6 +1353,12 @@ public:
 	//
 	void QuicksaveScenario();
 
+	//CSM Running Lights
+	void SetRunningLights();
+
+	VECTOR3 runningLightsPos[8];
+	BEACONLIGHTSPEC runningLights[8];             // running lights
+
 protected:
 
 	///
@@ -2645,7 +2651,7 @@ protected:
 
 	SwitchRow InteriorLightsFloodSwitchesRow;
 	ToggleSwitch InteriorLightsFloodDimSwitch;
-	ToggleSwitch InteriorLightsFloodFixedSwitch;
+	TwoSourceSwitch InteriorLightsFloodFixedSwitch;
 
 	//////////////////////
 	// Panel 5 rotaries //
@@ -2737,7 +2743,7 @@ protected:
 	SwitchRow Panel100SwitchesRow;
 	ToggleSwitch UtilityPowerSwitch;
 	ToggleSwitch Panel100FloodDimSwitch;	
-	ToggleSwitch Panel100FloodFixedSwitch;
+	TwoSourceSwitch Panel100FloodFixedSwitch;
 	ToggleSwitch GNPowerOpticsSwitch;
 	GuardedToggleSwitch GNPowerIMUSwitch;
 	ThreePosSwitch Panel100RNDZXPDRSwitch;
@@ -2976,7 +2982,7 @@ protected:
 	ToggleSwitch FloodDimSwitch;
 
 	SwitchRow FloodFixedSwitchRow;
-	ThreePosSwitch FloodFixedSwitch;
+	ThreeSourceSwitch FloodFixedSwitch;
 
 	//////////////////////
 	// Panel 7 switches //
@@ -3823,6 +3829,7 @@ protected:
 	// Electric Lights
 	ElectricLight* SpotLight;
 	ElectricLight* RndzLight;
+	ElectricLight* EVALight;
 
 	// O2 Tanks
 	h_Tank *O2Tanks[2];
@@ -3928,6 +3935,25 @@ protected:
 
 	ThreePhasePowerMerge SuitCompressor1Feeder;
 	ThreePhasePowerMerge SuitCompressor2Feeder;
+
+	// Interior Lighting
+	FloodLights LeftFloodLights;
+	FloodLights RightFloodLights;
+	FloodLights LEBFloodLights;
+
+	TunnelLights MNATunnelLights;
+	TunnelLights MNBTunnelLights;
+
+	IntegralLights LeftIntegralLights;
+	IntegralLights RightIntegralLights;
+	IntegralLights LEBIntegralLights;
+
+	NumericLights LeftNumericLights;
+	NumericLights LEBNumericLights;
+
+	// Exterior Lighting
+	ExteriorLighting ExteriorLighting;
+	PowerMerge RunEVAFeeder;
 
 	// GSE
 	Pump* GSEGlycolPump;
@@ -4112,6 +4138,7 @@ protected:
 	int coascdridx;
 	int coascdrreticleidx;
 	DEVMESHHANDLE vcmesh;
+	int smidx;
 
 
 	double DockAngle;
@@ -4819,6 +4846,11 @@ protected:
 	friend class AR_GCore;
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
+	friend class FloodLights;
+	friend class TunnelLights;
+	friend class IntegralLights;
+	friend class NumericLights;
+	friend class ExteriorLighting;
 
 	// Friend class Simbay equipment
 	friend class HF_Antenna_1;
