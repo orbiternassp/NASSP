@@ -6465,8 +6465,14 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_BOOL("RTCC_GZGENCSN_LDPPPoweredDescentSimFlag", GZGENCSN.LDPPPoweredDescentSimFlag);
 	SAVE_DOUBLE("RTCC_GZGENCSN_LDPPDescentFlightArc", GZGENCSN.LDPPDescentFlightArc);
 	SAVE_DOUBLE("RTCC_GZGENCSN_LDPPLandingSiteOffset", GZGENCSN.LDPPLandingSiteOffset);
-	i = CapeCrossingRev(RTCC_MPT_CSM, RTCCPresentTimeGMT()); SAVE_INT("EZCCSM", i); //Saving the current rev is enough for the reload logic
-	i = CapeCrossingRev(RTCC_MPT_LM, RTCCPresentTimeGMT()); SAVE_INT("EZCLEM", i); //Saving the current rev is enough for the reload logic
+
+	i = CapeCrossingRev(RTCC_MPT_CSM, RTCCPresentTimeGMT());
+	sprintf(Buffer, "%d %lf %d %d", i, CapeCrossingGMT(RTCC_MPT_CSM, i), EZCCSM.TUP, EZCCSM.ref_body);
+	oapiWriteScenario_string(scn, "EZCCSM", Buffer);
+	i = CapeCrossingRev(RTCC_MPT_LM, RTCCPresentTimeGMT());
+	sprintf(Buffer, "%d %lf %d %d", i, CapeCrossingGMT(RTCC_MPT_LM, i), EZCLEM.TUP, EZCLEM.ref_body);
+	oapiWriteScenario_string(scn, "EZCLEM", Buffer);
+
 	if (EZETVMED.SpaceDigVehID != -1)
 	{
 		SAVE_INT("EZETVMED_SpaceDigVehID", EZETVMED.SpaceDigVehID);
@@ -6709,7 +6715,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 	int tmp = 0; // Used in boolean type loader
 	std::string strtemp;
 	double darrtemp[10];
-	int inttemp, inttemp2;
+	int inttemp, inttemp2, inttemp3;
 	REFSMMATData refs;
 
 	while (oapiReadScenario_nextline(scn, line)) {
@@ -6811,10 +6817,10 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_GZGENCSN_LDPPDescentFlightArc", GZGENCSN.LDPPDescentFlightArc);
 		LOAD_DOUBLE("RTCC_GZGENCSN_LDPPLandingSiteOffset", GZGENCSN.LDPPLandingSiteOffset);
 
-		if (papiReadScenario_int(line, "EZCCSM", inttemp) || papiReadScenario_int(line, "EZCLEM", inttemp))
+		if (!strnicmp(line, "EZCCSM", 6) || !strnicmp(line, "EZCLEM", 6))
 		{
-			CapeCrossingTable *tab;
-			if (papiReadScenario_int(line, "EZCCSM", inttemp))
+			CapeCrossingTable* tab;
+			if (!strnicmp(line, "EZCCSM", 6))
 			{
 				tab = &EZCCSM;
 			}
@@ -6822,9 +6828,15 @@ void RTCC::LoadState(FILEHANDLE scn) {
 			{
 				tab = &EZCLEM;
 			}
+			inttemp = inttemp2 = inttemp3 = 0;
+			darrtemp[0] = 0.0;
+			sscanf(line + 7, "%d %lf %d %d", &inttemp, &darrtemp[0], &inttemp2, &inttemp3);
 			//Set up fake cape crossing table with current rev
 			tab->NumRev = 1;
 			tab->NumRevFirst = tab->NumRevLast = inttemp;
+			tab->GMTCrossPrev = tab->GMTCross[0] = darrtemp[0];
+			tab->TUP = inttemp2;
+			tab->ref_body = inttemp3;
 		}
 
 		LOAD_INT("EZETVMED_SpaceDigVehID", EZETVMED.SpaceDigVehID);
@@ -25108,7 +25120,7 @@ VECTOR3 RTCC::EMMGFDAI(VECTOR3 Att, bool IsIMU) const
 int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 {
 	int iErr, rev, rev_max = 24;
-	double lng_des, GMT_min, GMT_cross;
+	double lng_des, GMT_min, GMT_cross, GMT_current;
 
 	OrbitEphemerisTable *ephemeris;
 	CapeCrossingTable *cctab;
@@ -25130,6 +25142,13 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 	{
 		//TBD
 		return 1;
+	}
+
+	//Get begin time of current rev
+	GMT_current = CapeCrossingGMT(L, rev0);
+	if (GMT_current < 0.0)
+	{
+		GMT_current = 0.0;
 	}
 
 	//Reset table
@@ -25227,9 +25246,17 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 
 	GMT_min = EPHEM2.table.front().GMT;
 
-	//Use current time as start of current rev
+	//Use current time as start of current rev, if no other time is available
 	rev = 0;
-	cctab->GMTCross[rev] = GMT_min;
+	cctab->GMTCrossPrev = GMT_current;
+	if (GMT_current != 0.0)
+	{
+		cctab->GMTCross[rev] = GMT_current;
+	}
+	else
+	{
+		cctab->GMTCross[rev] = GMT_min;
+	}
 
 	EphemerisData2 sv_cross;
 
@@ -41210,7 +41237,8 @@ void RTCC::RMDREC()
 
 	//Count vectors
 	err = ELNMVC(GMT1, GMT2, EZETVMED.RecovZoneVehID, NumVec, TUP);
-	if (err) return;
+	//Fatal error?
+	if (err > 8) return;
 
 	//Get vectors
 	err = ELFECH(GMT1, NumVec, 1, EZETVMED.RecovZoneVehID, EPHEM, MANTIMES, LUNSTAY);
@@ -41251,7 +41279,7 @@ void RTCC::RMDREC()
 		{
 			if (RZC1ZNE.table[j].ID == "") continue;
 			err = FindLandmarkTCA(EPHEM, MANTIMES, GMTT, RZC1ZNE.table[j].lat, RZC1ZNE.table[j].lng, tempdata.GMT, tempdata.Range);
-			if (err) return;
+			if (err) continue;
 			tempdata.Zone = j;
 			//Store data if smaller than 1000 NM
 			if (tempdata.Range < 1000.0 * 1852.0)
@@ -41382,7 +41410,7 @@ void RTCC::RMDREC()
 	}
 	RZPAGE.TotalNumEntries = j;
 	RZPAGE.CurrentPage = 1;
-	RZPAGE.TotalNumPages = 1 + (RZPAGE.TotalNumEntries - 1) / 10;
+	RZPAGE.TotalNumPages = max(0, 1 + (RZPAGE.TotalNumEntries - 1) / 10);
 	if (EZETVMED.RecovZoneVehID == RTCC_MPT_CSM)
 	{
 		RZPAGE.VehicleName = "CSM";
