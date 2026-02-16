@@ -39,7 +39,7 @@ void MCC::MissionSequence_SL()
 		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(30.0*60.0), 10, MST_SL_RENDEZVOUS_PLAN);
 		break;
 	case MST_SL_RENDEZVOUS_PLAN: //Rendezvous planning to NC1 preliminary update
-		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(1.0*3600.0 + 35.0*60.0), 11, MST_SL_PRELIM_NC1);
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(1.0*3600.0 + 35.0*60.0), 11, MST_SL_PRELIM_NC1);
 		break;
 	case MST_SL_PRELIM_NC1: //NC1 preliminary update to NC1 final update
 		UpdateMacro(UTP_PADONLY, PT_SLMNV, mcc_calcs.GETEval(1.0 * 3600.0 + 55.0*60.0), 12, MST_SL_FINAL_NC1);

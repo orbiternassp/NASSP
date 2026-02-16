@@ -126,6 +126,8 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 	break;
 	case 11: //RENDEZVOUS PLANNING
 	{
+		GENERICPAD * form = (GENERICPAD *)pad;
+		char Buff1[64], Buff2[64];
 		DKIOpt opt;
 
 		opt.sv_CSM = StateVectorCalcEphem(calcParams.src);
@@ -156,11 +158,10 @@ bool RTCC::CalculationMTP_SL(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		calcParams.CDH = PZREDT.GET[3]; //NSR time
 		calcParams.TPI = PZRPDT.data[0].GETTPI; //TPI time
 
-		char Buff1[64], Buff2[64];
 		OrbMech::format_time_HHMMSS(Buff1, calcParams.Phasing);
 		OrbMech::format_time_HHMMSS(Buff2, calcParams.TPI);
 
-		sprintf(upMessage, "NC1: %s, TPI: %s", Buff1, Buff2);
+		sprintf(form->paddata, "NC1: %s, TPI: %s", Buff1, Buff2);
 	}
 	break;
 	case 12: //NC1 preliminary update

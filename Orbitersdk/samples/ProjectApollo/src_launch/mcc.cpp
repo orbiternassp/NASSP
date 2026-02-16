@@ -3046,19 +3046,19 @@ void MCC::drawPad(bool writetofile){
 		{
 		case 1: //NC1
 		{
-			snprintf(buffer, 1024, "%s NC1 PAD DATA\n%+06d HR N95\n%+06d MIN TIG NC1\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NC1\n%+07.1f DVZ\nXXX%03.0f R N22\nXXX%03.0f P NC1\nXXX%03.0f Y\n%+07.1f DVC\nXX%d:%04.0f BT\n%s%s%sRemarks:\n",
+			snprintf(buffer, 1024, "%s NC1 PAD DATA\n%+06d HR N95\n%+06d MIN TIG NC1\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NC1\n%+07.1f DVZ\nXXX%03.0f R N22\nXXX%03.0f P NC1\nXXX%03.0f Y\n%+07.1f DVC\nXX%d:%02.0f BT\n%s%s%sRemarks:\n",
 				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Att.x, form->Att.y, form->Att.z, form->Vc, mm2, ss2, tempString1, tempString2, form->remarks);
 		}
 		break;
 		case 2: //NPC
 		{
-			snprintf(buffer, 1024, "NPC PAD DATA\nPLANE CHANGE\n%+06d HR N33\n%+06d MIN TIG NPC\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NPC\n%+07.1f DVZ\n%+07.1f DVC\nXX%d:%04.1f BT\n%s\n%sRemarks:\n",
+			snprintf(buffer, 1024, "NPC PAD DATA\nPLANE CHANGE\n%+06d HR N33\n%+06d MIN TIG NPC\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NPC\n%+07.1f DVZ\n%+07.1f DVC\nXX%d:%02.0f BT\n%s\n%sRemarks:\n",
 				hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Vc, mm2, ss2, tempString1, form->remarks);
 		}
 		break;
 		case 3: //NC2
 		{
-			snprintf(buffer, 1024, "%s NC2 PAD DATA\n%+06d HR N28\n%+06d MIN TIG NC2\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NC2\n%+07.1f DVZ\nXXX%03.0f R N22\nXXX%03.0f P NC2\nXXX%03.0f Y\n%+07.1f DVC\nXX%d:%04.0f BT\n%s%sRemarks:\n",
+			snprintf(buffer, 1024, "%s NC2 PAD DATA\n%+06d HR N28\n%+06d MIN TIG NC2\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NC2\n%+07.1f DVZ\nXXX%03.0f R N22\nXXX%03.0f P NC2\nXXX%03.0f Y\n%+07.1f DVC\nXX%d:%02.0f BT\n%s%sRemarks:\n",
 				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Att.x, form->Att.y, form->Att.z, form->Vc, mm2, ss2, tempString1, form->remarks);
 		}
 		break;
