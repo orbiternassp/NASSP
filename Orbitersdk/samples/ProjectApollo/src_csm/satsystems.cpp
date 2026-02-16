@@ -1083,12 +1083,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
 					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSECHILLER:PUMP") = SP_PUMP_OFF;
 
-					// Disable GSE SM RCS heaters
-					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADAHEATER:PUMP") = SP_PUMP_OFF;
-					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADBHEATER:PUMP") = SP_PUMP_OFF;
-					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADCHEATER:PUMP") = SP_PUMP_OFF;
-					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADDHEATER:PUMP") = SP_PUMP_OFF;
-
 					//Close GSE dewars
 					GSECryoO2Dewar->OUT_valve.Close();
 					GSECryoH2Dewar->OUT_valve.Close();
@@ -1124,6 +1118,12 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					PrimEcsRadiatorExchanger2->SetLength(10.0);
 					SecEcsRadiatorExchanger1->SetLength(10.0);
 					SecEcsRadiatorExchanger2->SetLength(10.0);
+
+					// Disable Dummy GSE SM RCS heaters
+					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADAHEATER:PUMP") = SP_PUMP_OFF;
+					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADBHEATER:PUMP") = SP_PUMP_OFF;
+					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADCHEATER:PUMP") = SP_PUMP_OFF;
+					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADDHEATER:PUMP") = SP_PUMP_OFF;
 
 					// Next state
 					systemsState = SATSYSTEMS_CABINVENTING;
