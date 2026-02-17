@@ -2292,7 +2292,7 @@ void Saturn::SetRunningLights() {
 		runningLights[i].shape = BEACONSHAPE_DIFFUSE;
 		runningLights[i].pos = &runningLightsPos[i];
 		runningLights[i].col = (i < 2 ? beaconCol : i < 4 ? beaconCol + 1 : beaconCol + 2);
-		runningLights[i].size = 0.12;
+		runningLights[i].size = 0.05;
 		runningLights[i].falloff = 0.8;
 		runningLights[i].period = 0.0;
 		runningLights[i].duration = 1.0;
