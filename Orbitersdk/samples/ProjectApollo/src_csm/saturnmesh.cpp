@@ -2311,6 +2311,7 @@ void Saturn::ToggleCMPEVA()
 	//if (ecs.crewNumber < 3) return;
 	if (cmpeva) return;
 
+	if (ecs.crewNumber > 0) SetCrewNumber(ecs.crewNumber - 1);
 	//SetCrewNumber(2);
 
 	VESSELSTATUS vs1;
@@ -2347,6 +2348,9 @@ void Saturn::ToggleCMPEVA()
 
 void Saturn::UpdateEVA()
 {
+	ECSStatus ecs;
+	GetECSStatus(ecs);
+
 	if (cmpeva)
 	{
 		char VName[256] = "";
@@ -2356,17 +2360,20 @@ void Saturn::UpdateEVA()
 		if (hCMPEVA == NULL)
 		{
 			cmpeva = false;
-			//SetCrewNumber(3);
+			SetCrewNumber(ecs.crewNumber + 1);
 		}
 	}
 }
 
 void Saturn::StopEVA()
 {
+	ECSStatus ecs;
+	GetECSStatus(ecs);
+
 	VECTOR3 gpos;
 	VECTOR3 ghatch;
-	if (stage == STAGE_ORBIT_SIVB) ghatch = { 0, 0, 13.15 + 2.227 };
-	else if (stage == CSM_LEM_STAGE) ghatch = { 0, 0, 2.23204 };
+	if (stage == STAGE_ORBIT_SIVB) ghatch = { 0, 1.10678, 13.15 + 2.227 };
+	else if (stage == CSM_LEM_STAGE) ghatch = { 0, 1.10678, 2.23204 };
 
 	Local2Global(ghatch - currentCoG, ghatch);
 
@@ -2379,9 +2386,10 @@ void Saturn::StopEVA()
 		oapiGetGlobalPos(hCMPEVA, &gpos);
 		double distance = dist(gpos, ghatch);
 
-		if (distance < 0.4)
+		if (distance < 0.75)
 		{
 			cmpeva = false;
+			SetCrewNumber(ecs.crewNumber + 1);
 			//SetCrewNumber(3);
 			oapiDeleteVessel(hCMPEVA);
 		}
