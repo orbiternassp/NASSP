@@ -946,7 +946,7 @@ void LEM::StopSpaceEVA()
 {
 	VECTOR3 gpos;
 	VECTOR3 ghatch;
-	ghatch = { 0, 0.685402, 1.28703 };
+	ghatch = { 0, 0.685402, 2.55546 };
 
 	Local2Global(ghatch - currentCoG, ghatch);
 
@@ -959,7 +959,7 @@ void LEM::StopSpaceEVA()
 		oapiGetGlobalPos(hSPACEEVA, &gpos);
 		double distance = dist(gpos, ghatch);
 
-		if (distance < 0.4)
+		if (distance < 0.75)
 		{
 			spaceeva = false;
 			oapiDeleteVessel(hSPACEEVA);
