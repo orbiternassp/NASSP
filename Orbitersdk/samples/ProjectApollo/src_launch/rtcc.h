@@ -3034,14 +3034,18 @@ public:
 	void RMDRTSD(EphemerisDataTable2 &tab, int opt, double val, double lng);
 	//Recovery Ascending Node Display
 	void RMDASCND();
+	//Recovery Zone Display
+	void RMDREC();
 	//Reentry MED Decoder
-	int RMRMED(std::string med, std::vector<std::string> data);
+	void RMRMED(std::string med, std::vector<std::string> data, int& err, unsigned& param);
 	//Spacecraft Setting Control
 	void RMSSCS(int entry);
 	//External DV Parameters
 	void RMDRXDV(bool rte);
 	//Reentry online print
 	void RMGENT(std::string source, int n);
+	//Time of closest approach utility function
+	int FindLandmarkTCA(EphemerisDataTable2& ephemeris, ManeuverTimesTable& mantimes, double GMTT, double lat, double lng, double& GMT_TCA, double &range);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
@@ -4374,6 +4378,7 @@ public:
 
 	struct RecoveryZoneDefinitionTableEntry
 	{
+		std::string ID;
 		double lat = 0.0;
 		double lng = 0.0;
 	};
@@ -4382,6 +4387,29 @@ public:
 	{
 		RecoveryZoneDefinitionTableEntry table[6];
 	} RZC1ZNE;
+
+	struct RecoveryZoneDisplayEntry
+	{
+		std::string ID;
+		int Rev;
+		double Bearing;
+		double Distance;
+		double GETCA;
+		double lat_TCA, lng_TCA;
+		double lat_TCAMin1, lng_TCAMin1;
+		double lat_TCAPlus1, lng_TCAPlus1;
+	};
+
+	struct RecoveryZoneDisplay
+	{
+		std::string VehicleName;
+		std::string ErrorMessage = "MED OUTDATED";
+		std::string StationID;
+		int CurrentPage = 1;
+		int TotalNumPages = 1;
+		int TotalNumEntries = 0;
+		RecoveryZoneDisplayEntry table[40];
+	} RZPAGE;
 
 	struct LMLaunchTargetTable
 	{
@@ -4801,6 +4829,10 @@ public:
 		double RecovAscNodeBeginTime = 0.0;
 		double RecovAscNodeEndTime = 0.0;
 		int RecovAscNodeCoordinates = RTCC_COORDINATES_ECT;
+		//Block XX: Recovery Zone
+		int RecovZoneVehID = RTCC_MPT_CSM;
+		int RecovZoneBeginRev = 0;
+		int RecovZoneEndRev = 0;
 
 		//DMT
 		int DMT1Vehicle = 0;
