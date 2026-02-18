@@ -744,6 +744,8 @@ void LEM_RR::SelfTest(int LMNumber)
 {
 	switch (LMNumber)
 	{
+	case 1: //LM-1
+	case 2: //LM-2
 	case 3: //LM-3
 	{
 		rangetest = 362454.9;
@@ -780,6 +782,7 @@ void LEM_RR::SelfTest(int LMNumber)
 	}
 	break;
 	case 8: //LM-8
+	case 9: //"LM-9" if decided to be used
 	{
 		rangetest = 362251.2;
 		ratetest = -152.4;
@@ -800,7 +803,7 @@ void LEM_RR::SelfTest(int LMNumber)
 		rdrxmtr = 3.0;
 	}
 	break;
-	case 12: //LM-12
+	default: //LM-12 and other "future" LM's
 	{
 		rangetest = 361695.6;
 		ratetest = -149.504;

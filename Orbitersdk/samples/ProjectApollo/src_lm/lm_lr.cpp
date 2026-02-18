@@ -392,6 +392,8 @@ void LEM_LR::SelfTest(int LMNumber)
 {
 	switch (LMNumber)
 	{
+	case 1: //LM-1
+	case 2: //LM-2
 	case 3: //LM-3
 	{
 		rangetest = 8287;
@@ -422,13 +424,9 @@ void LEM_LR::SelfTest(int LMNumber)
 		velxmtr = 3.6;
 	}
 	break;
-	case 6: //LM-6
-	case 7: //LM-7
-	case 8: //LM-8
-	case 11: //LM-11
-	case 12: //LM-12
+	case 10: //LM-10
 	{
-		rangetest = 8286;
+		rangetest = 8287;
 		ratetest[0] = -495;
 		ratetest[1] = 1862;
 		ratetest[2] = 1331;
@@ -436,9 +434,9 @@ void LEM_LR::SelfTest(int LMNumber)
 		velxmtr = 3.6;
 	}
 	break;
-	case 10: //LM-10
+	default: //LM-6, 7, 8, "9", 11, 12, and other "future" LM's
 	{
-		rangetest = 8287;
+		rangetest = 8286;
 		ratetest[0] = -495;
 		ratetest[1] = 1862;
 		ratetest[2] = 1331;
