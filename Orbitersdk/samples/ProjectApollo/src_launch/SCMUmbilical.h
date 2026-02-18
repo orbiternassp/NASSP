@@ -34,8 +34,6 @@ public:
 	SCMUmbilical(TailUmbilicalInterface *ml);
 	~SCMUmbilical();
 
-	bool IsUmbilicalConnected() { return UmbilicalConnected; }
-
 	void Connect(SIBSystems* sic);
 	void Disconnect();
 
@@ -44,6 +42,6 @@ public:
 	void SetEngineStart(int eng);
 	void SIGSECutoff(bool cut);
 
-protected:
 	SIBSystems* sib;
+protected:
 };

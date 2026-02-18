@@ -44,6 +44,8 @@ LEM_RR::LEM_RR()
 	RREHeat = 0;
 	NoTrackSignal = false;
 	radarDataGood = false;
+	shaftVel = 0.0;
+	trunnionVel = 0.0;
 
 	anim_RRPitch = -1;
 	anim_RRYaw = -1;
@@ -375,8 +377,8 @@ void LEM_RR::Timestep(double simdt) {
 
 		if (csm)
 		{
-			//if the csm happens to pop into existance mid-sceneriao, this should connect to it
-			//need a better solution for multiple CSMs/LEMs in the same sceneriao
+			//if the csm happens to pop into existance mid-scenario, this should connect to it
+			//need a better solution for multiple CSMs/LMs in the same sceneriao
 			if (!(lem->lm_rr_to_csm_connector.connectedTo))
 			{
 				lem->lm_rr_to_csm_connector.ConnectTo(GetVesselConnector(csm, VIRTUAL_CONNECTOR_PORT, RADAR_RF_SIGNAL));

@@ -62,7 +62,7 @@ GNDataTab::GNDataTab()
 
 ReentryNumericalIntegrator::ReentryNumericalIntegrator(RTCC *r) : RTCCModule(r)
 {
-	Bank = 0.0;
+	Bank = MBank = FBank = 0.0;
 	BRATE = 0.0;
 	K1 = 0.0;
 	K2 = 55.0*RAD;
@@ -82,6 +82,10 @@ ReentryNumericalIntegrator::ReentryNumericalIntegrator(RTCC *r) : RTCCModule(r)
 	RE = 21202900.0*0.3048;
 	ATK = 3437.7468*1852.0;
 	K_D = 0.948;
+	MCGAXA = 4.6397*RAD;
+	MCGAEG = 0.35;
+	MCGARL = 20.0*RAD;
+	MCGRTG = 0.0;
 }
 
 void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTable &out)
@@ -131,6 +135,7 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 	{
 		Bank = ROLLC = K1;
 	}
+	MBank = FBank = Bank;
 	BRATE = 0.0;
 	gmax = 0;
 	T = T_prev = 0.0;
@@ -333,6 +338,11 @@ void ReentryNumericalIntegrator::Main(const RMMYNIInputTable &in, RMMYNIOutputTa
 
 void ReentryNumericalIntegrator::RungeKuttaIntegrationRoutine(VECTOR3 R_N, VECTOR3 V_N, double dt, VECTOR3 &R_N1, VECTOR3 &V_N1)
 {
+	//Three bank angles have to be available before entering this routine
+	//Bank = current bank angle
+	//MBank = bank angle at midstep
+	//FBank = final bank angle
+
 	VECTOR3 K1, K2, K3;
 
 	if (dt != dt_prev)
@@ -343,15 +353,17 @@ void ReentryNumericalIntegrator::RungeKuttaIntegrationRoutine(VECTOR3 R_N, VECTO
 		dt6 = dt / 6.0;
 		dt_prev = dt;
 	}
-
+	//Store current acceleration vector
 	K1 = YPP;
-	Bank += BRATE * dt2;
+	//Use midstep bank angle and normalize
+	Bank = MBank;
 	Limit02PI(Bank);
 	SecondDerivativeRoutine(R_N + V_N * dt2 + K1 * dt28, V_N + K1 * dt2);
 	K2 = YPP;
 	SecondDerivativeRoutine(R_N + V_N * dt2 + K1 * dt28, V_N + K2 * dt2);
 	K3 = YPP;
-	Bank += BRATE * dt2;
+	//Use endstep bank angle and normalize
+	Bank = FBank;
 	Limit02PI(Bank);
 	SecondDerivativeRoutine(R_N + V_N * dt + K3 * dt22, V_N + K3 * dt);
 
@@ -519,27 +531,37 @@ void ReentryNumericalIntegrator::EventsRoutine()
 
 void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V)
 {
+	//DT is available for bank predictions
 	if (LiftMode == 1)
 	{
-		//Zero lift to 0.05G, then rolling reentry
+		//Zero lift (ballistic)
+		//Initial bank to 0.05g, then rolling
 		if (K05G == false)
 		{
-			Bank = K1;
-			BRATE = 0.0;
+			ROLLC = K1;
+			SCSRollControl();
 		}
 		else
 		{
-			BRATE = 20.0*RAD;
+			SCSRollRateControl(20.0*RAD);
 		}
 	}
 	else if (LiftMode == 2)
 	{
 		//Maximum lift
-		Bank = 0.0;
-		BRATE = 0.0;
+		if (K05G == false)
+		{
+			ROLLC = K1;
+		}
+		else
+		{
+			ROLLC = 0.0;
+		}
+		SCSRollControl();
 	}
 	else if (LiftMode == 3)
 	{
+		//G&N reentry
 		if (ISGNInit == false)
 		{
 			GNInitialization();
@@ -550,55 +572,54 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V)
 		{
 			GNTargeting();
 			TLAST = T;
+			//
 		}
-		RollControl();
+		ReentryDAP();
 	}
 	else if (LiftMode == 4)
 	{
 		//Bank angle - time to reverse bank angle
 		if (K05G == false)
 		{
-			Bank = K1;
-			BRATE = 0.0;
+			ROLLC = K1;
 		}
 		else
 		{
 			if (IREVBANK == false)
 			{
-				Bank = K2;
+				ROLLC = K2;
 			}
 			else
 			{
-				Bank = -K2;
+				ROLLC = -K2;
 			}
-			BRATE = 0.0;
 		}
+		SCSRollControl();
 	}
 	else if (LiftMode == 5)
 	{
 		//Constant bank angle
 		if (K05G == false)
 		{
-			Bank = K1;
-			BRATE = 0.0;
+			ROLLC = K1;
 		}
 		else
 		{
-			Bank = K2;
-			BRATE = 0.0;
+			ROLLC = K2;
 		}
+		SCSRollControl();
 	}
 	else if (LiftMode == 6)
 	{
 		//Bank angle to a G-level then zero lift
 		if (KGC == false)
 		{
-			Bank = K1;
-			BRATE = 0.0;
+			ROLLC = K1;
+			SCSRollControl();
 		}
 		else
 		{
-			BRATE = 20.0*RAD;
+			SCSRollRateControl(20.0*RAD);
 		}
 	}
 	else if (LiftMode == 7)
@@ -606,49 +627,46 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V)
 		//Bank angle to a G-level then maximum lift
 		if (KGC == false)
 		{
-			Bank = K1;
-			BRATE = 0.0;
+			ROLLC = K1;
 		}
 		else
 		{
-			Bank = 0.0;
-			BRATE = 0.0;
+			ROLLC = 0.0;
 		}
+		SCSRollControl();
 	}
 	else if (LiftMode == 8)
 	{
 		//Bank angle to a G-level then angle-time to reverse bank angle
 		if (KGC == false)
 		{
-			Bank = K1;
-			BRATE = 0.0;
+			ROLLC = K1;
 		}
 		else
 		{
 			if (IREVBANK == false)
 			{
-				Bank = K2;
+				ROLLC = K2;
 			}
 			else
 			{
-				Bank = -K2;
+				ROLLC = -K2;
 			}
-			BRATE = 0.0;
 		}
+		SCSRollControl();
 	}
 	else if (LiftMode == 9)
 	{
 		//Bank angle to a G-level then another bank angle to impact prediction
 		if (KGC == false)
 		{
-			Bank = K1;
-			BRATE = 0.0;
+			ROLLC = K1;
 		}
 		else
 		{
-			Bank = K2;
-			BRATE = 0.0;
+			ROLLC = K2;
 		}
+		SCSRollControl();
 	}
 	else if (LiftMode == 10)
 	{
@@ -661,38 +679,180 @@ void ReentryNumericalIntegrator::GuidanceRoutine(VECTOR3 R, VECTOR3 V)
 		{
 			ROLLC = ConstantGLogic(unit(R), V, DRAG);
 		}
-		RollControl();
+		SCSRollControl();
 	}
 }
 
-void ReentryNumericalIntegrator::RollControl()
+void ReentryNumericalIntegrator::SCSRollRateControl(double DESRATE)
 {
-	double DROLL, ROLLRATE;
+	//Routine to generate the angular acceleration from a desired roll rate without any restriction in roll angle
+	//Using the current rate (BRATE), desired rate (DESRATE), current roll angle (Bank) and the upcoming step length (DT) calculate the angular acceleration
+	
+	double DRATE, AngAccel;
 
+	//Difference in desired rate
+	DRATE = DESRATE - BRATE;
+	//Required angular acceleration to achieve desired rate in the next timestep
+	AngAccel = DRATE / DT;
+	//Limit angular acceleration
+	if (abs(AngAccel) > MCGAXA)
+	{
+		if (AngAccel >= 0.0)
+		{
+			AngAccel = MCGAXA;
+		}
+		else
+		{
+			AngAccel = -MCGAXA;
+		}
+	}
+	UpdateAttitude(AngAccel);
+}
+
+void ReentryNumericalIntegrator::SCSRollControl()
+{
+	//Routine to generate the angular acceleration from a desired roll angle (ROLLC)
+	//Using the current roll angle (Bank),  current roll rate (BRATE), desired roll angle (ROLLC) and the upcoming step length (DT) calculate the angular acceleration
+
+	double DROLL, ARC, RPM, RC, DRATE, ACCEL;
+
+	//Calculate roll error
 	DROLL = ROLLC - Bank;
+	//Normalize
+	OrbMech::normalizeAngle(DROLL, false);
+	//Proportional controller
+	ARC = DROLL * MCGAEG;
+	//Limit to maximum roll rate
+	if (abs(ARC) > MCGARL)
+	{
+		if (ARC >= 0.0)
+		{
+			ARC = MCGARL;
+		}
+		else
+		{
+			ARC = -MCGARL;
+		}
+	}
+	//Differential controller
+	RPM = BRATE * MCGRTG;
+	//Total rate command
+	RC = ARC - RPM;
+	//Difference in desired rate
+	DRATE = RC - BRATE;
+	//Required angular acceleration
+	ACCEL = DRATE / DT;
+	if (abs(ACCEL) > MCGAXA)
+	{
+		if (ACCEL >= 0.0)
+		{
+			ACCEL = MCGAXA;
+		}
+		else
+		{
+			ACCEL = -MCGAXA;
+		}
+	}
+	//Update attitude
+	UpdateAttitude(ACCEL);
+}
 
-	if (DROLL > PI)
-	{
-		DROLL -= PI2;
-	}
-	else if (DROLL < -PI)
-	{
-		DROLL += PI2;
-	}
+void ReentryNumericalIntegrator::ReentryDAP()
+{
+	double R, R_C, DROLL, ARC, RPM, RC, DRATE, ACCEL;
 
-	ROLLRATE = DROLL / DT;
-	if (ROLLRATE > 15.0*RAD)
+	//TBD: For now this is the same implementation as for SCS control
+
+	R = Bank;
+	R_C = ROLLC;
+
+	//If LATSW is not set then this logic prevents rolling through lift vector down
+	if (GNData.LATSW)
 	{
-		BRATE = 15.0*RAD;
-	}
-	else if (ROLLRATE < -15.0*RAD)
-	{
-		BRATE = -15.0*RAD;
+		double TEM;
+
+		//Calculate roll error: express R, R_C in range 0 to 360 degrees
+		OrbMech::normalizeAngle(R, true);
+		OrbMech::normalizeAngle(R_C, true);
+		DROLL = R_C - R;
+		//Take shortest angular path
+		TEM = OrbMech::sign(-BRATE)*BRATE*BRATE / (2.0*MCGAXA) + DROLL;
+		if (abs(TEM) >= PI)
+		{
+			DROLL = DROLL - PI2 * OrbMech::sign(DROLL);
+		}
+		//DROLL can be +/-180 degrees
+		OrbMech::normalizeAngle(DROLL, false);
 	}
 	else
 	{
-		BRATE = ROLLRATE;
+		//Set LATSW
+		GNData.LATSW = true;
+		//Calculate roll error to enforce roll over top
+		// R and R_C in range +/-180
+		OrbMech::normalizeAngle(R, false);
+		OrbMech::normalizeAngle(R_C, false);
+		//DROLL can be +/-360 degrees
+		DROLL = R_C - R;
 	}
+
+	//Proportional controller
+	ARC = DROLL * MCGAEG;
+	//Limit to maximum roll rate
+	if (abs(ARC) > MCGARL)
+	{
+		if (ARC >= 0.0)
+		{
+			ARC = MCGARL;
+		}
+		else
+		{
+			ARC = -MCGARL;
+		}
+	}
+	//Differential controller
+	RPM = BRATE * MCGRTG;
+	//Total rate command
+	RC = ARC - RPM;
+	//Difference in desired rate
+	DRATE = RC - BRATE;
+	//Required angular acceleration
+	ACCEL = DRATE / DT;
+	if (abs(ACCEL) > MCGAXA)
+	{
+		if (ACCEL >= 0.0)
+		{
+			ACCEL = MCGAXA;
+		}
+		else
+		{
+			ACCEL = -MCGAXA;
+		}
+	}
+	//Update attitude
+	UpdateAttitude(ACCEL);
+}
+
+void ReentryNumericalIntegrator::UpdateAttitude(double ACCEL)
+{
+	//In all guidance/control modes this function updates the attitude and attitude rate given an angular acceleration assumed constant during an integration step
+	//Global variables used: DT, Bank, BRATE
+
+	double DT05, FUEL;
+
+	//Half timestep
+	DT05 = DT * 0.5;
+	//Calculate midpoint bank angle
+	MBank = Bank + BRATE * DT05 + 0.5*ACCEL*DT05*DT05;
+	//Calculate final bank angle
+	FBank = Bank + BRATE * DT + 0.5*ACCEL*DT*DT;
+	//Normalize bank angles
+	Limit02PI(MBank);
+	Limit02PI(FBank);
+	//Calculate final bank rate
+	BRATE = BRATE + ACCEL * DT;
+	//TBD: Calculate fuel usage
+	FUEL = 0.0; // abs(AngAccel) / MCGAXA * DT*MCTRFR;
 }
 
 double ReentryNumericalIntegrator::ConstantGLogic(VECTOR3 unitR, VECTOR3 VI, double D)
@@ -737,9 +897,11 @@ void ReentryNumericalIntegrator::GNInitialization()
 	GNData.RTE = crossp(U_Z, GNData.URTO);
 	GNData.UTR = crossp(GNData.RTE, U_Z);
 	GNData.WT = GNData.WIE*(GNData.TN + T);
-	VECTOR3 RTINT = GNData.URTO + GNData.UTR*(cos(GNData.WT) - 1.0) + GNData.RTE*sin(GNData.WT);
-	GNData.THETA = acos(dotp(unit(R_cur), unit(RTINT)));
-	GNData.K2ROLL = -dotp(unit(RTINT), crossp(unit(V_cur), unit(R_cur)));
+	GNData.URT = GNData.URTO + GNData.UTR*(cos(GNData.WT) - 1.0) + GNData.RTE*sin(GNData.WT);
+	GNData.UNI = unit(crossp(V_cur, unit(R_cur)));
+	GNData.LATANG = dotp(GNData.URT, GNData.UNI);
+	GNData.THETA = acos(dotp(GNData.URT, unit(R_cur)));
+	GNData.K2ROLL = -GNData.LATANG;
 	if (GNData.K2ROLL >= 0.0)
 	{
 		GNData.K2ROLL = 1.0;
@@ -759,11 +921,19 @@ void ReentryNumericalIntegrator::GNInitialization()
 	GNData.LEWD = GNData.LEWDI;
 	GNData.Q2 = (-1152.0 + 500.0*LAD)*1852.0;
 	GNData.SELECTOR = 1;
+	GNData.GONEPAST = true;
+	GNData.EGSW = false;
+	GNData.HIND = false;
+	GNData.LATSW = true;
+	GNData.RELVELSW = false;
+	GNData.K05GSW = false;
+	GNData.INRLSW = false;
+	GNData.NOSWITCH = false;
 }
 
 void ReentryNumericalIntegrator::GNTargeting()
 {
-	VECTOR3 V, UNI;
+	VECTOR3 V;
 
 	GNData.HUNTCN = 0;
 	if (GNData.RELVELSW == false)
@@ -778,7 +948,7 @@ void ReentryNumericalIntegrator::GNTargeting()
 	GNData.VSQ = GNData.v * GNData.v / VSAT / VSAT;
 	GNData.LEQ = (GNData.VSQ - 1.0)*GS;
 	GNData.RDOT = dotp(V, unit(R_cur));
-	UNI = unit(crossp(V, unit(R_cur)));
+	GNData.UNI = unit(crossp(V, unit(R_cur)));
 	GNData.D = DRAG;
 	GNData.LATSW = true;
 	if (GNData.RELVELSW)
@@ -801,17 +971,14 @@ void ReentryNumericalIntegrator::GNTargeting()
 		}
 	}
 	GNData.URT = GNData.URTO + GNData.UTR * (cos(GNData.WT) - 1.0) + GNData.RTE * sin(GNData.WT);
-	GNData.LATANG = dotp(GNData.URT, UNI);
+	GNData.LATANG = dotp(GNData.URT, GNData.UNI);
 	GNData.THETA = acos(dotp(GNData.URT, unit(R_cur)));
 	GNData.THETNM = GNData.THETA*ATK;
 	if (GNData.NOGOSW)
 	{
 		//Go to 380
+		GNRoutine380();
 		return;
-	}
-	else
-	{
-
 	}
 	//TBD: Error checking
 	if (GNData.D - 0.05*9.80665 < 0)
@@ -822,9 +989,13 @@ void ReentryNumericalIntegrator::GNTargeting()
 	{
 		GNData.K05GSW = true;
 	}
-	if (dotp(crossp(GNData.URT, unit(R_cur)), UNI) <= 0)
+	if (dotp(crossp(GNData.URT, unit(R_cur)), GNData.UNI) <= 0)
 	{
 		GNData.GONEBY = true;
+	}
+	else
+	{
+		GNData.GONEBY = false;
 	}
 	GNModeSelector();
 }
@@ -936,7 +1107,15 @@ void ReentryNumericalIntegrator::GNHuntest()
 	GNData.ALP = 2.0*GNData.C1*GNData.A0*HS / (GNData.LEWD*GNData.V1*GNData.V1);
 	GNData.FACT1 = GNData.V1 / (1.0 - GNData.ALP);
 	GNData.FACT2 = GNData.ALP * (GNData.ALP - 1.0) / GNData.A0;
-	GNData.VL = GNData.FACT1 * (1.0 - sqrt(GNData.FACT2*GNData.Q7 + GNData.ALP));
+	//Protect against negative in square root
+	TEMP = GNData.FACT2*GNData.Q7 + GNData.ALP;
+	if (TEMP < 0.0)
+	{
+		GNData.NOGOSW = true;
+		GNRoutine380();
+		return;
+	}
+	GNData.VL = GNData.FACT1 * (1.0 - sqrt(TEMP));
 	if (GNData.VL - GNData.VLMIN < 0)
 	{
 		GNData.SELECTOR = 5;
@@ -975,15 +1154,34 @@ void ReentryNumericalIntegrator::GNHuntest()
 
 void ReentryNumericalIntegrator::GNRangePrediction()
 {
-	double VBARS = GNData.VL * GNData.VL / (VSAT*VSAT);
-	double COSG = 1.0 - GNData.GAMMAL * GNData.GAMMAL / 2.0;
-	double E = sqrt(1.0 + (VBARS - 2.0)*COSG*COSG*VBARS);
-	double ASKEP = 2.0*ATK*asin(VBARS*COSG*GNData.GAMMAL / E);
-	double ASP1 = GNData.Q2 + GNData.Q3*GNData.VL;
-	double ASPUP = ATK / RE * (HS / GNData.GAMMAL1)*log(GNData.A0*GNData.VL*GNData.VL/(GNData.Q7*GNData.V1*GNData.V1));
-	double ASP3 = GNData.Q5*(GNData.Q6 - GNData.GAMMAL);
-	double ASPDWN = -GNData.RDOT*GNData.v*ATK / (GNData.A0*LAD*RE);
-	double ASP = ASKEP + ASP1 + ASPUP + ASP3 + ASPDWN;
+	double VBARS, COSG, E, ASKEP, ASP1, ASPUP, ASP3, ASPDWN, ASP;
+
+	VBARS = GNData.VL * GNData.VL / (VSAT*VSAT);
+	COSG = 1.0 - GNData.GAMMAL * GNData.GAMMAL / 2.0;
+	TEMP = 1.0 + (VBARS - 2.0)*COSG*COSG*VBARS;
+	//Protect against negative in square root
+	if (TEMP < 0.0)
+	{
+		GNData.NOGOSW = true;
+		GNRoutine380();
+		return;
+	}
+	E = sqrt(TEMP);
+
+	ASKEP = 2.0*ATK*asin(VBARS*COSG*GNData.GAMMAL / E); //Ballistic range
+	ASP1 = GNData.Q2 + GNData.Q3*GNData.VL; //Final phase range
+	TEMP = GNData.A0*GNData.VL*GNData.VL / (GNData.Q7*GNData.V1*GNData.V1);
+	//Protect against negative in log
+	if (TEMP < 0.0)
+	{
+		GNData.NOGOSW = true;
+		GNRoutine380();
+		return;
+	}
+	ASPUP = ATK / RE * (HS / GNData.GAMMAL1)*log(TEMP); //Up-phase range
+	ASP3 = GNData.Q5*(GNData.Q6 - GNData.GAMMAL); //Gamma correction
+	ASPDWN = -GNData.RDOT*GNData.v*ATK / (GNData.A0*LAD*RE); //Range to pullout
+	ASP = ASKEP + ASP1 + ASPUP + ASP3 + ASPDWN; // Total range
 	GNData.DIFF = GNData.THETNM - ASP;
 	if (abs(GNData.DIFF) - 25.0*1852.0 < 0.0)
 	{
@@ -1074,7 +1272,15 @@ void ReentryNumericalIntegrator::GNUpcontrol()
 		GNRoutine310();
 		return;
 	}
-	double VREF = GNData.FACT1*(1.0 - sqrt(GNData.FACT2*GNData.D + GNData.ALP));
+	TEMP = GNData.FACT2*GNData.D + GNData.ALP;
+	//Protect against negative in square root
+	if (TEMP < 0.0)
+	{
+		GNData.NOGOSW = true;
+		GNRoutine380();
+		return;
+	}
+	double VREF = GNData.FACT1*(1.0 - sqrt(TEMP));
 	double RDOTREF;
 	if (VREF - GNData.VS1 > 0)
 	{

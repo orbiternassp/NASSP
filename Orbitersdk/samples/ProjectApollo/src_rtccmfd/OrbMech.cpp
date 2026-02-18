@@ -141,6 +141,16 @@ namespace OrbMech{
 		return H*3600.0 + M*60.0 + S;
 	}
 
+	VECTOR3 round_to(VECTOR3 value, double precision)
+	{
+		VECTOR3 a;
+		for (int i = 0; i < 3; i++)
+		{
+			a.data[i] = round_to(value.data[i], precision);
+		}
+		return a;
+	}
+
 	double round_to(double value, double precision)
 	{
 		return round(value / precision) * precision;
@@ -206,6 +216,22 @@ namespace OrbMech{
 			length += sprintf(buf, "-");
 		}
 		sprintf(buf + length, "%d:%02.1lf", minutes, seconds);
+	}
+
+	void format_time_HHMM(char *buf, double time)
+	{
+		// Format time to HH:MM
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds, 60.0);
+
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%02d:%02d", hours, minutes);
 	}
 
 	void format_time_HHHMM(char *buf, double time)
@@ -394,6 +420,79 @@ double fischer_ellipsoid(VECTOR3 R)		//Used in the AGC to calculate the radius o
 	b = 6356784.0;									//Semi-minor axis of the ellipsoid (not of an orbit!)
 	sinl = sin(phi);								//Saves one sinus calculation
 	return sqrt(b*b / (1 - (1 - b*b / a / a)*(1 - sinl*sinl)));	//Calculates the radius dependent on the latitude
+}
+
+VECTOR3 VectorToHorizon(VECTOR3 r_ZC, VECTOR3 u_S, int body, bool far_horizon)
+{
+	//INPUTS:
+	//r_ZC: Vector from body to spacecraft
+	//u_S: Star unit vector (line-of-sight)
+	//body: 0 = Earth, 1 = Moon
+	//far_horizon: true = return vector to far horizon, false = return vector to near horizon
+
+	MATRIX3 M;
+	VECTOR3 u0, u1, u2, u_Z, r_H, u_sH, t[2], t_n, t_f, R_L, u_horizon;
+	double a_H, b_H, A, alpha, beta, AA[2];
+
+	u_Z = _V(0, 0, 1);
+
+	u2 = unit(crossp(u_S, r_ZC));
+	u0 = unit(crossp(u_Z, u2));
+	u1 = crossp(u2, u0);
+	M = _M(u0.x, u0.y, u0.z, u1.x, u1.y, u1.z, u2.x, u2.y, u2.z);
+
+	if (body == BODY_EARTH)
+	{
+		double SINL, r_F, h;
+
+		h = 0.0; //TBD
+
+		SINL = dotp(u1, u_Z);
+		r_F = OrbMech::R_Earth; //TBD
+		a_H = r_F + h;
+		b_H = r_F + h;
+	}
+	else
+	{
+		a_H = b_H = R_Moon;
+	}
+	r_H = mul(M, r_ZC);
+	u_sH = mul(M, u_S);
+	A = r_H.x * r_H.x / a_H / a_H + r_H.y * r_H.y / b_H / b_H;
+
+	alpha = a_H / b_H * r_H.y * sqrt(A - 1.0);
+	beta = b_H / a_H * r_H.x * sqrt(A - 1.0);
+
+	t[0] = _V(r_H.x + alpha, r_H.y - beta, 0.0) / A;
+	t[1] = _V(r_H.x - alpha, r_H.y + beta, 0.0) / A;
+
+	AA[0] = dotp(u_sH, unit(t[0] - r_H));
+	AA[1] = dotp(u_sH, unit(t[1] - r_H));
+
+	if (AA[1] > AA[0])
+	{
+		// 1 is near horizon
+		t_n = t[1];
+		t_f = t[0];
+	}
+	else
+	{
+		// 0 is near horizon
+		t_n = t[0];
+		t_f = t[1];
+	}
+
+	if (far_horizon)
+	{
+		R_L = t_f;
+	}
+	else
+	{
+		R_L = t_n;
+	}
+	R_L = tmul(M, R_L);
+	u_horizon = unit(R_L - r_ZC);
+	return u_horizon;
 }
 
 void rv_from_r0v0_ta(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu)
@@ -3418,6 +3517,15 @@ void AGCSignedValue(int &val)
 		val = -(077777 - val);
 }
 
+void DoubleToAGCTriple(double val, int* oct)
+{
+	oct[0] = (int)(val * pow(2, -28));
+	val = val - pow(2, 28) * oct[0];
+	oct[1] = (int)(val * pow(2, -14));
+	val = val - pow(2, 14) * oct[1];
+	oct[2] = (int)(round(val));
+}
+
 int DoubleToBuffer(double x, double q, int m)
 {
 	int c = 0, out = 0, f = 1;
@@ -4262,6 +4370,99 @@ void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA)
 	TA = acos(dotp(Z_SB, S_SB));
 }
 
+VECTOR3 GetCSMCOASVector(double SPA, double SXP)
+{
+	//In navigation base coordinates
+	return unit(_V(cos(SPA) * cos(SXP), sin(SXP), sin(SPA) * cos(SXP)));
+}
+
+VECTOR3 GetLMCOASVector(double EL, double SXP, bool IsZAxis)
+{
+	//In navigation base coordinates
+	if (IsZAxis)
+	{
+		return unit(_V(sin(SXP), -sin(EL) * cos(SXP), cos(EL) * cos(SXP)));
+	}
+
+	//X-axis
+	return unit(_V(cos(EL) * cos(SXP), sin(SXP), sin(EL) * cos(SXP)));
+}
+
+void CSMCOASAngles(VECTOR3 u_NB, double& SPA, double& SXP)
+{
+	SPA = -atan(u_NB.z / u_NB.x);
+	SXP = asin(u_NB.y);
+}
+
+void LMCOASAngles(bool Axis, VECTOR3 u_NB, double& EL, double& SXP)
+{
+	//Axis: true = Z-axis, false = X-axis
+	double EPS, GAM, ALP, R, SCV;
+
+	if (Axis)
+	{
+		//Z-axis
+		double HYP;
+
+		EPS = acos(u_NB.z);
+		GAM = acos(u_NB.x);
+		HYP = sqrt(u_NB.x * u_NB.x + u_NB.y * u_NB.y);
+		ALP = atan(HYP / u_NB.z);
+		SCV = PI05 - abs(asin(sin(GAM) * sin(ALP) / sin(EPS)));
+		R = u_NB.x * abs(asin(sin(SCV) * sin(EPS)) / u_NB.x);
+		if (u_NB.x < 0)
+		{
+			SXP = -abs(R);
+		}
+		else
+		{
+			SXP = abs(R);
+		}
+		EL = u_NB.y * abs(acos(cos(EPS) / cos(SXP)) / u_NB.y);
+		if (u_NB.y < 0.0)
+		{
+			EL = abs(EL);
+		}
+		else
+		{
+			EL = -abs(EL);
+		}
+		EL -= 30.0 * RAD;
+	}
+	else
+	{
+		//X-axis
+		double ARG1, ARG2, ARG3;
+
+		EPS = acos(u_NB.x);
+		GAM = acos(u_NB.z);
+		ALP = atan(u_NB.y / u_NB.x);
+		ARG1 = sin(GAM) * sin(ALP) / sin(EPS);
+		SCV = PI05 - abs(asin(ARG1));
+		ARG2 = sin(SCV) * sin(EPS);
+		R = u_NB.z * abs(asin(ARG2) / u_NB.z);
+		ARG3 = cos(EPS) / cos(R);
+		SXP = u_NB.y * abs(acos(ARG3) / u_NB.y);
+		if (u_NB.y < 0)
+		{
+			SXP = -abs(SXP);
+		}
+		else
+		{
+			SXP = abs(SXP);
+		}
+		EL = R;
+		if (u_NB.z < 0)
+		{
+			EL = abs(EL);
+		}
+		else
+		{
+			EL = -abs(EL);
+		}
+	}
+}
+
 void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP) 
 {
 	//Input: Stable member/navigation base matrix, unit star vector
@@ -4310,6 +4511,69 @@ MATRIX3 ROTCOMP(VECTOR3 U_R, double A)
 	I = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	R = I * cos(A) + tensorp(U_R, U_R)*(1.0 - cos(A)) + skew(U_R)*sin(A);
 	return R;
+}
+
+MATRIX3 MATRIX(VECTOR3 A, VECTOR3 B, VECTOR3 C)
+{
+	return _M(A.x, A.y, A.z, B.x, B.y, B.z, C.x, C.y, C.z);
+}
+
+MATRIX3 HeadsUpAttitude(VECTOR3 R, VECTOR3 V, VECTOR3 SCAXIS, VECTOR3 TLOS)
+{
+	//This is bad, but works
+
+	MATRIX3 RFNB;
+
+	RFNB = THREEAXISPOINTING(R, V, SCAXIS, TLOS, 0.0);
+	//Check if Z axis is closer to radius vector than -Z axis
+	if (dotp(tmul(RFNB, _V(0, 0, 1)), unit(R)) > 0.0)
+	{
+		RFNB = THREEAXISPOINTING(R, V, SCAXIS, TLOS, PI);
+	}
+	return RFNB;
+}
+
+MATRIX3 THREEAXISPOINTING(VECTOR3 R, VECTOR3 V, VECTOR3 SCAXIS, VECTOR3 TLOS, double OMICRON)
+{
+	//INPUTS:
+	//R = Position vector
+	//V = Velocity vector
+	//SCAXIS = Unit body pointing vector
+	//TLOS = Unit inertial pointing vector
+	//OMICRON = Roll angle
+	//OUTPUTS:
+	//MTP = Inertial to body matrix
+
+	MATRIX3 MTP;
+	VECTOR3 RR_BOD, RR_INER, YN, YT, RRA_INER;
+	double TOL, DOT, ROLL;
+
+	TOL = cos(1.0 * RAD);
+	RR_BOD = _V(0.0, 1.0, 0.0);
+
+	RR_INER = -unit(crossp(R, V));
+
+	DOT = dotp(SCAXIS, RR_BOD);
+
+	if (abs(DOT) > TOL)
+	{
+		RR_BOD = _V(0.0, 0.0, -1.0);
+	}
+	RRA_INER = crossp(_V(0.0, 0.0, 1.0), RR_INER);
+	ROLL = OMICRON + PI05;
+
+	DOT = dotp(TLOS, RR_INER);
+
+	if (abs(DOT) > TOL)
+	{
+		RR_INER = RRA_INER * sign(DOT);
+	}
+	YN = unit(crossp(SCAXIS, RR_BOD));
+	YT = unit(crossp(TLOS, RR_INER)) * sin(ROLL) - crossp(TLOS, unit(crossp(TLOS, RR_INER))) * cos(ROLL);
+
+	MTP = MATRIX(SCAXIS, crossp(SCAXIS, YN), -YN);
+	MTP = mul(tmat(MTP), MATRIX(TLOS, crossp(TLOS, YT), -YT));
+	return MTP;
 }
 
 void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri)
@@ -4941,13 +5205,15 @@ VECTOR3 imulimit(VECTOR3 a)
 
 double imulimit(double a)
 {
+	//Input in degrees. Round and limit output to 0-359.
 	if (a < 0)
 	{
 		a += 360.0;
 	}
-	if (a > 359.5)
+	a = round(a);
+	if (a >= 359.5)
 	{
-		return a - 359.5;
+		a = 0.0;
 	}
 	return a;
 }
@@ -5213,6 +5479,16 @@ double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu)
 	return sqrt(mu / pow(GetSemiMajorAxis(R, V, mu), 3));
 }
 
+double GetTrueMotion(VECTOR3 R, VECTOR3 V, double mu)
+{
+	double h, r;
+
+	h = length(crossp(R, V));
+	r = length(R);
+
+	return h / (r*r);
+}
+
 double CMCEMSRangeToGo(MATRIX3 Rot_J_B, VECTOR3 R05G, double MJD05G, double lat, double lng)
 {
 	//INPUT:
@@ -5284,6 +5560,13 @@ double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S, int body)
 	N_dot = V_S / length(R_S);
 
 	return (dotp(rho_dot, N) + dotp(rho_apo, N_dot))*length(rho);
+}
+
+//Calculates station vector in ECT coordinates
+VECTOR3 EMXING_Station_ECT(double GMT, double R_E_sin_lat, double R_E_cos_lat, double stat_lng)
+{
+	double lng = stat_lng + OrbMech::w_Earth * GMT;
+	return _V(R_E_cos_lat * cos(lng), R_E_cos_lat * sin(lng), R_E_sin_lat);
 }
 
 double LongitudeConversion(double lng, double T, double w_E, double lng_0, bool inertial_to_geographic)

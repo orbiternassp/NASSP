@@ -27,17 +27,12 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 TailUmbilical::TailUmbilical(TailUmbilicalInterface *ml) : TailUmb(ml)
 {
-	UmbilicalConnected = false;
+
 }
 
 TailUmbilical::~TailUmbilical()
 {
 
-}
-
-void TailUmbilical::AbortDisconnect()
-{
-	UmbilicalConnected = false;
 }
 
 bool TailUmbilical::ESEGetSIThrustOKSimulate(int eng, int n)

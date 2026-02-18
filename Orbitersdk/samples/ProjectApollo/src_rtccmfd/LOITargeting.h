@@ -56,6 +56,9 @@ namespace rtcc
 		bool usePlaneSolnForInterSoln = true;
 		//Convergence criterium for DELV2
 		double RARPGT = 10.0*1852.0;
+		double VectorTime;
+		//Station ID for display
+		std::string StationID;
 	};
 
 	struct LOIDisplayData
