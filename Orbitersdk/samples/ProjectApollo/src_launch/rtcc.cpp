@@ -1924,18 +1924,24 @@ RTCC::RTCC() :
 	SystemParameters.MKRBKS = 19;
 
 	//Recovery Zones
-	RZC1ZNE.table[0].lat = 28.0*RAD;
-	RZC1ZNE.table[0].lng = -60.0*RAD;
-	RZC1ZNE.table[1].lat = 28.0*RAD;
-	RZC1ZNE.table[1].lng = -25.0*RAD;
-	RZC1ZNE.table[2].lat = 28.0*RAD;
-	RZC1ZNE.table[2].lng = 155.0*RAD;
-	RZC1ZNE.table[3].lat = 28.0*RAD;
-	RZC1ZNE.table[3].lng = 140.0*RAD;
-	RZC1ZNE.table[4].lat = -8.0*RAD; //Ascension
-	RZC1ZNE.table[4].lng = -14.0*RAD;
-	RZC1ZNE.table[5].lat = -14.0*RAD; //Samoa
-	RZC1ZNE.table[5].lng = -170.7*RAD;
+	RZC1ZNE.table[0].ID = "WATL1"; //Atlantic West, Zone 1
+	RZC1ZNE.table[0].lat = 28.0 * RAD;
+	RZC1ZNE.table[0].lng = -63.0 * RAD;
+	RZC1ZNE.table[1].ID = "EATL2"; //Atlantic East, Zone 2
+	RZC1ZNE.table[1].lat = 23.0 * RAD;
+	RZC1ZNE.table[1].lng = -27.0 * RAD;
+	RZC1ZNE.table[2].ID = "WPAC3"; //West Pacific, Zone 3
+	RZC1ZNE.table[2].lat = 28.0 * RAD;
+	RZC1ZNE.table[2].lng = 137.5 * RAD;
+	RZC1ZNE.table[3].ID = "MPAC4"; //Mid Pacific, Zone 4
+	RZC1ZNE.table[3].lat = 28.0 * RAD;
+	RZC1ZNE.table[3].lng = -162.0 * RAD;
+	RZC1ZNE.table[4].ID = "SATLA"; //Ascension Island, Zone A
+	RZC1ZNE.table[4].lat = -8.0 * RAD;
+	RZC1ZNE.table[4].lng = -14.0 * RAD;
+	RZC1ZNE.table[5].ID = "INDB";
+	RZC1ZNE.table[5].lat = -20.0 * RAD; //Mauritius
+	RZC1ZNE.table[5].lng = 55.0 * RAD;
 
 	//Set up the yearly coordinate system (default AGCEpoch = 1969)
 	InitializeCoordinateSystem();
@@ -6459,8 +6465,14 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_BOOL("RTCC_GZGENCSN_LDPPPoweredDescentSimFlag", GZGENCSN.LDPPPoweredDescentSimFlag);
 	SAVE_DOUBLE("RTCC_GZGENCSN_LDPPDescentFlightArc", GZGENCSN.LDPPDescentFlightArc);
 	SAVE_DOUBLE("RTCC_GZGENCSN_LDPPLandingSiteOffset", GZGENCSN.LDPPLandingSiteOffset);
-	i = CapeCrossingRev(RTCC_MPT_CSM, RTCCPresentTimeGMT()); SAVE_INT("EZCCSM", i); //Saving the current rev is enough for the reload logic
-	i = CapeCrossingRev(RTCC_MPT_LM, RTCCPresentTimeGMT()); SAVE_INT("EZCLEM", i); //Saving the current rev is enough for the reload logic
+
+	i = CapeCrossingRev(RTCC_MPT_CSM, RTCCPresentTimeGMT());
+	sprintf(Buffer, "%d %lf %d %d", i, CapeCrossingGMT(RTCC_MPT_CSM, i), EZCCSM.TUP, EZCCSM.ref_body);
+	oapiWriteScenario_string(scn, "EZCCSM", Buffer);
+	i = CapeCrossingRev(RTCC_MPT_LM, RTCCPresentTimeGMT());
+	sprintf(Buffer, "%d %lf %d %d", i, CapeCrossingGMT(RTCC_MPT_LM, i), EZCLEM.TUP, EZCLEM.ref_body);
+	oapiWriteScenario_string(scn, "EZCLEM", Buffer);
+
 	if (EZETVMED.SpaceDigVehID != -1)
 	{
 		SAVE_INT("EZETVMED_SpaceDigVehID", EZETVMED.SpaceDigVehID);
@@ -6580,6 +6592,14 @@ void RTCC::SaveState(FILEHANDLE scn) {
 			papiWriteScenario_Station(scn, "RTCC_EZEXSITE", i, EZEXSITE.Data[i]);
 		}
 	}
+	for (i = 0; i < 6; i++)
+	{
+		if (RZC1ZNE.table[i].ID != "")
+		{
+			sprintf(Buffer, "%d %s %lf %lf", i, RZC1ZNE.table[i].ID.c_str(), RZC1ZNE.table[i].lat, RZC1ZNE.table[i].lng);
+			oapiWriteScenario_string(scn, "RZC1ZNE", Buffer);
+		}
+	}
 	//CG tables. TBD: Don't save these yet because there is no point to saving them until the actual CG calculations are more complex.
 	//papiSave_CGTable(scn, &SystemParameters.MHVLCG, "MHVLCG");
 	//papiSave_CGTable(scn, &SystemParameters.MHVACG, "MHVACG");
@@ -6695,7 +6715,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 	int tmp = 0; // Used in boolean type loader
 	std::string strtemp;
 	double darrtemp[10];
-	int inttemp, inttemp2;
+	int inttemp, inttemp2, inttemp3;
 	REFSMMATData refs;
 
 	while (oapiReadScenario_nextline(scn, line)) {
@@ -6797,10 +6817,10 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_GZGENCSN_LDPPDescentFlightArc", GZGENCSN.LDPPDescentFlightArc);
 		LOAD_DOUBLE("RTCC_GZGENCSN_LDPPLandingSiteOffset", GZGENCSN.LDPPLandingSiteOffset);
 
-		if (papiReadScenario_int(line, "EZCCSM", inttemp) || papiReadScenario_int(line, "EZCLEM", inttemp))
+		if (!strnicmp(line, "EZCCSM", 6) || !strnicmp(line, "EZCLEM", 6))
 		{
-			CapeCrossingTable *tab;
-			if (papiReadScenario_int(line, "EZCCSM", inttemp))
+			CapeCrossingTable* tab;
+			if (!strnicmp(line, "EZCCSM", 6))
 			{
 				tab = &EZCCSM;
 			}
@@ -6808,9 +6828,15 @@ void RTCC::LoadState(FILEHANDLE scn) {
 			{
 				tab = &EZCLEM;
 			}
+			inttemp = inttemp2 = inttemp3 = 0;
+			darrtemp[0] = 0.0;
+			sscanf(line + 7, "%d %lf %d %d", &inttemp, &darrtemp[0], &inttemp2, &inttemp3);
 			//Set up fake cape crossing table with current rev
 			tab->NumRev = 1;
 			tab->NumRevFirst = tab->NumRevLast = inttemp;
+			tab->GMTCrossPrev = tab->GMTCross[0] = darrtemp[0];
+			tab->TUP = inttemp2;
+			tab->ref_body = inttemp3;
 		}
 
 		LOAD_INT("EZETVMED_SpaceDigVehID", EZETVMED.SpaceDigVehID);
@@ -6902,6 +6928,15 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		if (papiReadScenario_Station(line, "RTCC_EZEXSITE", EZEXSITE.Data, inttemp))
 		{
 			EMGGPCHR(EZEXSITE.Data[inttemp].lat_geod, EZEXSITE.Data[inttemp].lng, EZEXSITE.Data[inttemp].H, EZEXSITE.REF, 0.0, &EZEXSITE.Data[inttemp]);
+		}
+		if (!strnicmp(line, "RZC1ZNE", sizeof("RZC1ZNE"))) {
+			sscanf(line + 8, "%d %s %lf %lf", &inttemp, Buff, &darrtemp[0], &darrtemp[1]);
+			if (inttemp >= 0 && inttemp <= 5)
+			{
+				RZC1ZNE.table[inttemp].ID.assign(Buff);
+				RZC1ZNE.table[inttemp].lat = darrtemp[0];
+				RZC1ZNE.table[inttemp].lng = darrtemp[1];
+			}
 		}
 
 		papiReadConfigFile_CGTable(line, "MHVCCG", SystemParameters.MHVCCG);
@@ -25085,7 +25120,7 @@ VECTOR3 RTCC::EMMGFDAI(VECTOR3 Att, bool IsIMU) const
 int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 {
 	int iErr, rev, rev_max = 24;
-	double lng_des, GMT_min, GMT_cross;
+	double lng_des, GMT_min, GMT_cross, GMT_current;
 
 	OrbitEphemerisTable *ephemeris;
 	CapeCrossingTable *cctab;
@@ -25107,6 +25142,13 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 	{
 		//TBD
 		return 1;
+	}
+
+	//Get begin time of current rev
+	GMT_current = CapeCrossingGMT(L, rev0);
+	if (GMT_current < 0.0)
+	{
+		GMT_current = 0.0;
 	}
 
 	//Reset table
@@ -25204,9 +25246,17 @@ int RTCC::RMMEACC(int L, int ref_frame, int ephem_type, int rev0)
 
 	GMT_min = EPHEM2.table.front().GMT;
 
-	//Use current time as start of current rev
+	//Use current time as start of current rev, if no other time is available
 	rev = 0;
-	cctab->GMTCross[rev] = GMT_min;
+	cctab->GMTCrossPrev = GMT_current;
+	if (GMT_current != 0.0)
+	{
+		cctab->GMTCross[rev] = GMT_current;
+	}
+	else
+	{
+		cctab->GMTCross[rev] = GMT_min;
+	}
 
 	EphemerisData2 sv_cross;
 
@@ -28584,7 +28634,7 @@ bool RTCC::GMGMED(char *str)
 	}
 	else if (medtype == 'R')
 	{
-		err = RMRMED(code, MEDSequence);
+		RMRMED(code, MEDSequence, err, param);
 	}
 	else if (medtype == 'S')
 	{
@@ -41159,19 +41209,351 @@ void RTCC::RMDASCND() //Recovery Ascending Node Display
 	RZASCND.TotalNumEntries = i;
 }
 
-int RTCC::RMRMED(std::string med, std::vector<std::string> data)
+void RTCC::RMDREC()
 {
+	EphemerisDataTable2 EPHEM;
+	ManeuverTimesTable MANTIMES;
+	LunarStayTimesTable LUNSTAY;
+	double GMT1, GMT2, GMTT;
+	unsigned int NumVec, i, j, num;
+	int err, TUP, rev;
+
+	//Reset display
+	RZPAGE.CurrentPage = 1;
+	RZPAGE.TotalNumEntries = 0;
+	RZPAGE.TotalNumPages = 0;
+	RZPAGE.ErrorMessage = "EPHEMERIS ERROR";
+
+	//Get starting and ending GMT
+	GMT1 = CapeCrossingGMT(EZETVMED.RecovZoneVehID, EZETVMED.RecovZoneBeginRev);
+	GMT2 = CapeCrossingGMT(EZETVMED.RecovZoneVehID, EZETVMED.RecovZoneEndRev + 1);
+
+	if (GMT1 < 0.0 || GMT2 < 0.0)
+	{
+		//Error
+		RZPAGE.ErrorMessage = "REV NOT AVAILABLE";
+		return;
+	}
+
+	//Count vectors
+	err = ELNMVC(GMT1, GMT2, EZETVMED.RecovZoneVehID, NumVec, TUP);
+	//Fatal error?
+	if (err > 8) return;
+
+	//Get vectors
+	err = ELFECH(GMT1, NumVec, 1, EZETVMED.RecovZoneVehID, EPHEM, MANTIMES, LUNSTAY);
+	if (err) return;
+
+	//Convert to ECT
+	err = ELVCNV(EPHEM.table, EPHEM.Header.CSI, RTCC_COORDINATES_ECT, EPHEM.table);
+	if (err) return;
+	EPHEM.Header.CSI = RTCC_COORDINATES_ECT;
+
+	num = EZETVMED.RecovZoneEndRev - EZETVMED.RecovZoneBeginRev + 1;
+	rev = EZETVMED.RecovZoneBeginRev;
+
+	struct TempZoneData
+	{
+		double GMT;
+		int Zone;
+		double Range;
+
+		bool TempZoneData::operator<(const TempZoneData& rhs) const
+		{
+			if (Range == rhs.Range)
+			{
+				return Range < rhs.Range;
+			}
+
+			return Range < rhs.Range;
+		}
+	};
+
+	TempZoneData tempdata;
+	std::vector<TempZoneData> permtable, temptable;
+
+	for (i = 0; i < num; i++)
+	{
+		GMTT = CapeCrossingGMT(EZETVMED.RecovZoneVehID, rev);
+		for (j = 0; j < 6; j++)
+		{
+			if (RZC1ZNE.table[j].ID == "") continue;
+			err = FindLandmarkTCA(EPHEM, MANTIMES, GMTT, RZC1ZNE.table[j].lat, RZC1ZNE.table[j].lng, tempdata.GMT, tempdata.Range);
+			if (err) continue;
+			tempdata.Zone = j;
+			//Store data if smaller than 1000 NM
+			if (tempdata.Range < 1000.0 * 1852.0)
+			{
+				temptable.push_back(tempdata);
+			}
+		}
+
+		//Data for this rev complete, now sort
+
+		//How many zones did we find?
+		if (temptable.size() == 0U)
+		{
+			//Nothing to do
+		}
+		else if (temptable.size() == 1)
+		{
+			//Show the one zone
+			permtable.push_back(temptable[0]);
+		}
+		else if (temptable.size() == 2)
+		{
+			//Found 2. Show them both if they are both within 500 NM, otherwise only show the closest
+			if (temptable[0].Range < 500.0 * 1852.0 && temptable[1].Range < 500.0 * 1852.0)
+			{
+				//Show both
+				permtable.push_back(temptable[0]);
+				permtable.push_back(temptable[1]);
+			}
+			else
+			{
+				//Show closest
+				if (temptable[0].Range < temptable[1].Range)
+				{
+					permtable.push_back(temptable[0]);
+				}
+				else
+				{
+					permtable.push_back(temptable[1]);
+				}
+			}
+		}
+		else
+		{
+			//Found more than 2.Sort by range
+			std::sort(temptable.begin(), temptable.end());
+			//Use the first two and all with a range smaller than 225 NM
+			permtable.push_back(temptable[0]);
+			permtable.push_back(temptable[1]);
+			for (j = 2; j < temptable.size(); j++)
+			{
+				if (temptable[j].Range < 225.0 * 1852.0)
+				{
+					permtable.push_back(temptable[j]);
+				}
+			}
+		}
+
+		//Maximum 40
+		if (permtable.size() >= 40) break;
+
+		temptable.clear();
+		rev++;
+	}
+
+	//TBD: Sort permtable by time
+
+	RecoveryZoneDisplayEntry tempblock;
+
+	ELVCTRInputTable elin;
+	ELVCTROutputTable2 elout;
+	double lat, lng_iner, lng, dlng, bearing;
+	RecoveryZoneDefinitionTableEntry* entry;
+
+	j = 0;
+
+	//Generate data from permanent table for display
+	for (i = 0; i < permtable.size(); i++)
+	{
+		entry = &RZC1ZNE.table[permtable[i].Zone];
+		tempblock.ID = entry->ID;
+		tempblock.Rev = CapeCrossingRev(EZETVMED.RecovZoneVehID, permtable[i].GMT);
+
+		elin.GMT = permtable[i].GMT;
+
+		ELVCTR(elin, elout, EPHEM, MANTIMES);
+		if (elout.ErrorCode > 2) return;
+
+		OrbMech::latlong_from_r(elout.SV.R, lat, lng_iner);
+		lng = OrbMech::LongitudeConversion(lng_iner, elout.SV.GMT, OrbMech::w_Earth, 0.0, true);
+		dlng = lng - entry->lng;
+		bearing = atan2(sin(dlng) * cos(lat), cos(entry->lat) * sin(lat) - sin(entry->lat) * cos(lat) * cos(dlng));
+		if (bearing < 0.0) bearing += PI2;
+
+		tempblock.GETCA = GETfromGMT(permtable[i].GMT);
+		tempblock.lat_TCA = lat * DEG;
+		tempblock.lng_TCA = lng * DEG;
+		tempblock.Bearing = bearing * DEG;
+		tempblock.Distance = permtable[i].Range / 1852.0;
+
+		//TCA minus 1 minute
+		elin.GMT = permtable[i].GMT - 60.0;
+
+		ELVCTR(elin, elout, EPHEM, MANTIMES);
+		if (elout.ErrorCode > 2) return;
+
+		OrbMech::latlong_from_r(elout.SV.R, lat, lng_iner);
+		lng = OrbMech::LongitudeConversion(lng_iner, elout.SV.GMT, OrbMech::w_Earth, 0.0, true);
+
+		tempblock.lat_TCAMin1 = lat * DEG;
+		tempblock.lng_TCAMin1 = lng * DEG;
+
+		//TCA plus 1 minute
+		elin.GMT = permtable[i].GMT + 60.0;
+
+		ELVCTR(elin, elout, EPHEM, MANTIMES);
+		if (elout.ErrorCode > 2) return;
+
+		OrbMech::latlong_from_r(elout.SV.R, lat, lng_iner);
+		lng = OrbMech::LongitudeConversion(lng_iner, elout.SV.GMT, OrbMech::w_Earth, 0.0, true);
+
+		tempblock.lat_TCAPlus1 = lat * DEG;
+		tempblock.lng_TCAPlus1 = lng * DEG;
+
+		RZPAGE.table[j] = tempblock;
+		j++;
+		if (j >= 40) break;
+	}
+	RZPAGE.TotalNumEntries = j;
+	RZPAGE.CurrentPage = 1;
+	RZPAGE.TotalNumPages = max(0, 1 + (RZPAGE.TotalNumEntries - 1) / 10);
+	if (EZETVMED.RecovZoneVehID == RTCC_MPT_CSM)
+	{
+		RZPAGE.VehicleName = "CSM";
+		RZPAGE.StationID = PZMPTCSM.StationID;
+	}
+	else
+	{
+		RZPAGE.VehicleName = "LEM";
+		RZPAGE.StationID = PZMPTLEM.StationID;
+	}
+	RZPAGE.ErrorMessage = "";
+}
+
+void RTCC::RMRMED(std::string med, std::vector<std::string> data, int& err, unsigned& param)
+{
+	std::vector<rtcc::MEDProcessingOptions> opt;
+	rtcc::MEDProcessingOutput out;
+
+	//Display update
+	if (med == "20")
+	{
+		//Item 1: Vehicle
+		rtcc::AddTextMEDItem(opt, 1, { "CSM", "LEM" });
+		//Item 2: Update Code
+		rtcc::AddTextMEDItem(opt, 1, { "P", "C", "H", "Z", "TR", "TT", "AR", "AT", "GR", "GT", "Z1" , "Z2" , "Z3" , "Z4" , "Z5" , "Z6" });
+		//Item 3: Area
+		rtcc::AddTextMEDItem(opt, 1, { });
+		//Item 4: Latitude
+		rtcc::AddDoubleMEDItem(opt, 1, true, true, RAD, -90.0, 90.0);
+		//Item 5: Longitude
+		rtcc::AddDoubleMEDItem(opt, 1, true, true, RAD, -180.0, 180.0);
+		//Item 6: Begin Rev
+		rtcc::AddIntegerMEDItem(opt, 1, true, true, 1, 999);
+		//Item 7: Begin Rev
+		rtcc::AddIntegerMEDItem(opt, 1, true, true, 1, 999);
+		//Check items 1 and 2
+		err = rtcc::GenericMEDProcessing(opt, data, out, 0, 1);
+		if (err)
+		{
+			param = out.errorItem;
+			return;
+		}
+		int Veh = (out.Values[0].i == 0 ? RTCC_MPT_CSM : RTCC_MPT_LM);
+		int UpdateCode = out.Values[1].i;
+
+		if (UpdateCode == 0)
+		{
+			//TBD: Primary Target Table
+		}
+		else if (UpdateCode == 1)
+		{
+			//TBD: Contingency Target Table
+		}
+		else if (UpdateCode == 2)
+		{
+			//TBD: Target Table Header
+		}
+		else if (UpdateCode == 3)
+		{
+			//Recovery Zones Display Update
+			//Check items 6 and 7
+			err = rtcc::GenericMEDProcessing(opt, data, out, 5, 6);
+			if (err)
+			{
+				param = out.errorItem;
+				return;
+			}
+			if (out.Values[6].i < out.Values[5].i)
+			{
+				err = 2;
+				param = 6;
+				return;
+			}
+
+			EZETVMED.RecovZoneVehID = Veh;
+			EZETVMED.RecovZoneBeginRev = out.Values[5].i;
+			EZETVMED.RecovZoneEndRev = out.Values[6].i;
+
+			RMDREC();
+		}
+		else if (UpdateCode == 4)
+		{
+			//TBD: Recovery Target Selection with longitude, revs
+		}
+		else if (UpdateCode == 5)
+		{
+			//TBD: Recovery Target Selection with times, longitude
+		}
+		else if (UpdateCode == 6)
+		{
+			//TBD: Recovery Ascending Node with revs
+		}
+		else if (UpdateCode == 7)
+		{
+			//TBD: Recovery Ascending Node with times
+		}
+		else if (UpdateCode == 8)
+		{
+			//TBD: Groundtrack Digtials with longitude, revs
+		}
+		else if (UpdateCode == 9)
+		{
+			//TBD: Groundtrack Digtials with times, longitude
+		}
+		else if (UpdateCode >= 10)
+		{
+			//Recovery Zones 1-6
+			err = rtcc::GenericMEDProcessing(opt, data, out, 2, 4);
+			if (err)
+			{
+				param = out.errorItem;
+				return;
+			}
+			//Maximum 6 characters for the area
+			if (data[2].size() > 6U)
+			{
+				param = 2;
+				err = 2;
+				return;
+			}
+
+			//Set into table
+			int entry = UpdateCode - 10;
+			RZC1ZNE.table[entry].ID = data[2];
+			RZC1ZNE.table[entry].lat = out.Values[3].d;
+			RZC1ZNE.table[entry].lng = out.Values[4].d;
+		}
+	}
 	//Direct transfer to spacecraft setting
-	if (med == "65")
+	else if (med == "65")
 	{
 		if (data.size() != 3)
 		{
-			return 1;
+			err = 1;
+			param = 0;
+			return;
 		}
 
 		if (data[0] != "CSM")
 		{
-			return 2;
+			err = 2;
+			param = 0;
+			return;
 		}
 
 		int entry;
@@ -41190,7 +41572,9 @@ int RTCC::RMRMED(std::string med, std::vector<std::string> data)
 			}
 			else
 			{
-				return 2;
+				err = 2;
+				param = 2;
+				return;
 			}
 
 			RMSSCS(entry);
@@ -41207,18 +41591,20 @@ int RTCC::RMRMED(std::string med, std::vector<std::string> data)
 			}
 			else
 			{
-				return 2;
+				err = 2;
+				param = 2;
+				return;
 			}
 
 			RMSSCS(entry);
 		}
 		else
 		{
-			return 2;
+			err = 2;
+			param = 1;
+			return;
 		}
 	}
-
-	return 0;
 }
 
 void RTCC::RMSSCS(int entry)
@@ -41534,6 +41920,86 @@ void RTCC::RMGENT(std::string source, int n)
 	}
 
 	OnlinePrint(source, message);
+}
+
+int RTCC::FindLandmarkTCA(EphemerisDataTable2& ephemeris, ManeuverTimesTable& mantimes, double GMTT, double lat, double lng, double& GMT_TCA, double& range)
+{
+	//INPUTS:
+	//ephemeris: Ephemeris data table in ECT or MCT coordinates
+	//GMTT: Threshold time
+
+	if (!(ephemeris.Header.CSI == RTCC_COORDINATES_ECT || ephemeris.Header.CSI == RTCC_COORDINATES_MCT)) return 1;
+
+	ELVCTRInputTable elin;
+	ELVCTROutputTable2 elout;
+	VECTOR3 S, H, C, D;
+	double w_E, lng_iner, alpha, a, E1, SGN, dt, mu;
+	int N, NMAX;
+
+	N = 0;
+	NMAX = 20;
+
+	if (ephemeris.Header.CSI == RTCC_COORDINATES_ECT)
+	{
+		w_E = OrbMech::w_Earth;
+		mu = OrbMech::mu_Earth;
+	}
+	else
+	{
+		w_E = 0.0;
+		mu = OrbMech::mu_Moon;
+	}
+
+	//Interpolate starting at GMTT
+	elin.GMT = GMTT;
+
+	while (N < NMAX)
+	{
+		//Interpolate
+		ELVCTR(elin, elout, ephemeris, mantimes);
+		if (elout.ErrorCode > 2) return 2;
+		//Calculate site vector
+		lng_iner = lng + w_E * elout.SV.GMT;
+		S = _V(cos(lng_iner) * cos(lat), sin(lng_iner) * cos(lat), sin(lat));
+		//Project site into orbital plane
+		H = unit(crossp(elout.SV.R, elout.SV.V));
+		C = unit(crossp(H, crossp(S, H)));
+		D = unit(elout.SV.R);
+		//Angular distance
+		alpha = acos(dotp(D, C));
+		//Sign
+		E1 = dotp(H, crossp(D, C));
+		if (E1 >= 0.0)
+		{
+			SGN = 1.0;
+		}
+		else
+		{
+			if (N == 0)
+			{
+				alpha = PI2 - alpha;
+				SGN = 1.0;
+			}
+			else
+			{
+				SGN = -1.0;
+			}
+		}
+		a = OrbMech::GetSemiMajorAxis(elout.SV.R, elout.SV.V, mu);
+		if (a < 0.0) return 3;
+		dt = SGN * alpha * sqrt(pow(a, 3) / mu);
+		if (abs(dt) < 0.1) break;
+		elin.GMT += dt;
+
+		N++;
+	}
+
+	if (N >= NMAX) return 4;
+
+	GMT_TCA = elin.GMT;
+	range = acos(dotp(S, D)) * OrbMech::R_Earth;
+
+	return 0;
 }
 
 void RTCC::PMDARM(EphemerisData sv_CSM, EphemerisData sv_LM)

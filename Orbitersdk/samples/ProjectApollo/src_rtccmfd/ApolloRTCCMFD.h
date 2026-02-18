@@ -757,6 +757,10 @@ public:
 	void set_RecoveryTargetSelectionCalc(double get, double lng);
 	void menuSelectRecoveryTarget();
 	bool set_RecoveryTarget(int num);
+	void menuSetRecoveryZonesDisplayPage();
+	void menuRecoveryZonesDisplayCalc();
+	void menuCycleRecoveryZonesDisplayPages();
+	void menuEnterRecoveryZones();
 	void menuSetStarSightingTableInput();
 	void menuStarSightingTableCalc();
 	void menuSetSpacecraftPointingDisplayInput();
