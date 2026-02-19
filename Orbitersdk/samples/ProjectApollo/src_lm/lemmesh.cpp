@@ -639,7 +639,7 @@ void LEM::SetDockingLights() {
 		dockingLights[i].shape = BEACONSHAPE_DIFFUSE;
 		dockingLights[i].pos = &dockingLightsPos[i];
 		dockingLights[i].col = (i < 2 ? beaconCol : i < 3 ? beaconCol+1 : i < 4 ? beaconCol+2 : beaconCol+3);
-		dockingLights[i].size = 0.12;
+		dockingLights[i].size = 0.05;
 		dockingLights[i].falloff = 0.8;
 		dockingLights[i].period = 0.0;
 		dockingLights[i].duration = 1.0;

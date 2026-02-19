@@ -1767,7 +1767,7 @@ ElectricLight::ElectricLight(char* lightname, e_object* i_src, const bool flashi
 	lampBeacon.active = false;
 	lampBeacon.tofs = 0.0;
 	lampBeacon.falloff = 1.;
-	lampBeacon.size = 0.2;
+	lampBeacon.size = 0.05;
 	lampBeaconColor = _V(diffuse.r, diffuse.g, diffuse.b);
 	lampBeacon.col = &lampBeaconColor;
 	thisVessel->AddBeacon(&lampBeacon);
@@ -1814,4 +1814,21 @@ void ElectricLight::UpdatePosition(VECTOR3 offset)
 {
 	BeaconPosition -= offset;
 	lamp->SetPosition(BeaconPosition);
+}
+
+void ElectricLight::Load(char* line)
+{
+	int inttemp;
+
+	sscanf(line, "    <LIGHT> %s %d", name, &inttemp);
+
+	enabled = (inttemp != 0);
+}
+
+void ElectricLight::Save(FILEHANDLE scn) {
+
+	char cbuf[1000];
+
+	sprintf(cbuf, "%s %d", name, enabled);
+	oapiWriteScenario_string(scn, "    <LIGHT> ", cbuf);
 }

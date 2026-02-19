@@ -123,7 +123,7 @@ public:
 	std::vector<MEDInputPage> MEDInputData;
 
 	//MOCR DISPLAY
-	void DFLBackgroundSlide(oapi::Sketchpad *skp, DWORD W, DWORD H, unsigned display);
+	void DFLBackgroundSlide(oapi::Sketchpad *skp, DWORD W, DWORD WOFF, DWORD H, DWORD HOFF, unsigned display);
 
 protected:
 	const rtcc::RTCCBackgroundSlides BackgroundSlides;

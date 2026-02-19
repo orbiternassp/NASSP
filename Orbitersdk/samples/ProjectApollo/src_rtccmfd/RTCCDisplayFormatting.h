@@ -31,7 +31,7 @@ namespace rtcc
 	struct DisplayFormatData
 	{
 		std::string Text;
-		int x = 0, y = 0;
+		int x = -1, y = -1;
 		oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::RIGHT;
 	};
 
@@ -44,7 +44,7 @@ namespace rtcc
 	class RTCCDisplayPrint
 	{
 	public:
-		void Print(oapi::Sketchpad *skp, DWORD CW, DWORD CH, unsigned dispnum) const;
+		void Print(oapi::Sketchpad *skp, DWORD CW, DWORD WOFF, DWORD CH, DWORD HOFF, unsigned dispnum) const;
 	protected:
 		std::vector<RTCCDisplay> displays;
 	};
@@ -62,11 +62,12 @@ namespace rtcc
 	{
 	public:
 		void UpdateDisplay(const RTCCDisplay &disp);
+		int GetDisplayData(int MSK, RTCCDisplay& disp);
 
-		void DisplayFormatting(RTCCDisplay &disp, std::string Text, int x, int y, oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::LEFT) const;
-		void DFLDouble(RTCCDisplay &disp, double val, const char* format, int x, int y, oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::RIGHT) const;
-		void DFLInteger(RTCCDisplay &disp, int val, const char* format, int x, int y, oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::RIGHT) const;
-		void DFLTime(RTCCDisplay &display, double val, int x, int y, oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::RIGHT) const;
+		void DisplayFormatting(RTCCDisplay &disp, unsigned num, std::string Text, int x, int y, oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::LEFT) const;
+		void DFLDouble(RTCCDisplay &disp, unsigned num, double val, const char* format, int x, int y, oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::RIGHT) const;
+		void DFLInteger(RTCCDisplay &disp, unsigned num, int val, const char* format, int x, int y, oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::RIGHT) const;
+		void DFLTime(RTCCDisplay &disp, unsigned num, double val, int x, int y, oapi::Sketchpad::TAlign_horizontal align = oapi::Sketchpad::RIGHT) const;
 	protected:
 	};
 }

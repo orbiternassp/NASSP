@@ -770,3 +770,30 @@ struct VehicleDataBlock
 	double Area;
 	double Weight;
 };
+
+struct StationContact
+{
+	StationContact::StationContact()
+	{
+		GMTAOS = 0.0;
+		GMTLOS = 0.0;
+		GMTEMAX = 0.0;
+		MAXELEV = 0.0;
+		BestAvailableAOS = false;
+		BestAvailableLOS = false;
+		BestAvailableEMAX = false;
+		REV = 0;
+	}
+	double GMTAOS;			//GMT of AOS
+	double GMTLOS;			//GMT of LOS
+	double GMTEMAX;			//GMT of maximum elevation
+	double MAXELEV;			//Maximum elevation angle, rad
+	std::string StationID;	//Station ID (not set by EMXING)
+	bool BestAvailableAOS;	//True if not the actual time of AOS (e.g. if the time as at the beginning of the ephemeris)
+	bool BestAvailableLOS;	//True if not the actual time of LOS (e.g. if the time as at the end of the ephemeris)
+	bool BestAvailableEMAX; //True of not the actual time of EMAX (e.g. if the actual time would be before/after the ephemeris time span)
+	int REV;				//Revolution of station contact (not set by EMXING)
+
+	//For sorting
+	bool operator<(const StationContact& rhs) const;
+};

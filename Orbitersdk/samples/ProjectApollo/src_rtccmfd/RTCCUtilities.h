@@ -155,7 +155,12 @@ namespace rtcc
 		switch (opt.Format)
 		{
 		case 0: //Text
-		//Compare to table of inputs
+			//Compare to table of inputs
+			if (opt.TextTable.size() == 0U)
+			{
+				out.i = 0;
+				return 0;
+			}
 			for (unsigned i = 0; i < opt.TextTable.size(); i++)
 			{
 				if (data == opt.TextTable[i])
