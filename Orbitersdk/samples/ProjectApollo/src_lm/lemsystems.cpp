@@ -2625,14 +2625,7 @@ void LEM_RadarTape::Timestep(double simdt) {
 		{
 			if (lem->LR.IsRangeDataGood())
 			{
-				if (lem->LR.antennaAngle == 0)
-				{
-					setRange(lem->LR.GetAltitude() * cos(Radians(15))); // Tapemeter slant range bias of cos 15 deg in position 2
-				}
-				else
-				{
-					setRange(lem->LR.GetAltitude()); // Position 1
-				}
+				setRange(lem->LR.GetAltitude() * cos(Radians(15))); // Tapemeter slant range bias, multiplied by cos 15 deg
 			}
 			else
 			{
@@ -2646,7 +2639,7 @@ void LEM_RadarTape::Timestep(double simdt) {
 				}
 				else
 				{
-					setRate(lem->LR.GetAltitudeRate());
+					setRate(lem->LR.GetAltitudeRate() * cos(Radians(15)));
 				}
 			}
 			/*else
