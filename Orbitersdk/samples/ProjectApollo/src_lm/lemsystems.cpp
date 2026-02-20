@@ -2639,7 +2639,7 @@ void LEM_RadarTape::Timestep(double simdt) {
 				}
 				else if ((lem->pMission->GetLMNumber()) == 4)
 				{
-					setRate(lem->LR.GetAltitudeRate();
+					setRate(lem->LR.GetAltitudeRate());
 				}
 				else
 				{
