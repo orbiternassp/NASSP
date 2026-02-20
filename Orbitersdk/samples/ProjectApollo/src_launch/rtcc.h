@@ -3990,8 +3990,8 @@ public:
 	{
 		EphemerisData sv_man_bef[4];
 		VECTOR3 V_man_after[4];
-		int num_man;
-		int plan[4];
+		int num_man = 0;
+		int plan[4]; //Maneuver vehicle. 1 = CSM, 3 = LEM
 		std::string code[4];
 	} PZLDPELM;
 
