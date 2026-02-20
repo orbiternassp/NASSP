@@ -2639,7 +2639,7 @@ void LEM_RadarTape::Timestep(double simdt) {
 				}
 				else
 				{
-					setRate(lem->LR.GetAltitudeRate() * cos(Radians(15)));
+					setRate(lem->LR.GetAltitudeRate() * cos(Radians(15))); // Multiplied by cos 15 deg, would account for the differences seen in self testing. FIXME: Needs to be researched!
 				}
 			}
 			/*else
