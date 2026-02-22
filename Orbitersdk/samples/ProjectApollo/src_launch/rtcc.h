@@ -1417,6 +1417,10 @@ struct MPTManeuver
 	VECTOR3 V_1;
 	double GMT_1;
 	
+	//Total configuration weight at maneuver initiation
+	double W_B;
+	//Total configuration weight at main engine on
+	double W_IG;
 	double TotalMassAfter;
 	double TotalAreaAfter;
 	double MainEngineFuelUsed;
@@ -2536,7 +2540,7 @@ public:
 
 	void LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscentProcessorOutputs &out);
 	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, VehicleDataBlock sv, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, VehicleDataBlock &sv_PDI, VehicleDataBlock &sv_land, double &dv);
-	void EntryUpdateCalc(SV sv0, double entryrange, bool highspeed, EntryResults *res);
+	int EntryUpdateCalc(EphemerisData sv0, double entryrange, bool highspeed, EntryResults &res);
 	void PMMDKI(SPQOpt &opt, SPQResults &res);
 	//Velocity maneuver performer
 	void PCMVMR(AEGDataBlock &CHASER, AEGDataBlock &TARGET, double DELVX, double DELVY, double DELVZ, double mu, double &Pitch, double &Yaw, int I);
@@ -2849,7 +2853,7 @@ public:
 	void EMMDYNMC(int L, int queid, int ind = 0, double param = 0.0);
 	//FDO Space Digitals
 	int EMDSPACE(int queid, int option = 0, double val = 0.0, double incl = 0.0, double ascnode = 0.0);
-	int EMDSPACENoMPT(SV sv0, int queid, double gmt, double incl = 0.0, double ascnode = 0.0);
+	int EMDSPACENoMPT(VehicleDataBlock sv0, int queid, double gmt, double incl = 0.0, double ascnode = 0.0);
 	//Orbit Station Contact Generation Control
 	void EMSTAGEN(int L);
 	//Generalized Contact Generator
