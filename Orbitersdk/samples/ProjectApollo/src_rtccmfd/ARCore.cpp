@@ -865,11 +865,11 @@ void ARCore::EntryUpdateCalc()
 
 	if (v == NULL) return;
 
-	SV sv0;
+	EphemerisData sv0;
 	EntryResults res;
 
-	sv0 = GC->rtcc->StateVectorCalc(v);
-	GC->rtcc->EntryUpdateCalc(sv0, entryrange, true, &res);
+	sv0 = GC->rtcc->StateVectorCalcEphem(v);
+	GC->rtcc->EntryUpdateCalc(sv0, entryrange, true, res);
 
 	GC->rtcc->RZDBSC1.lat_T = res.latitude;
 	GC->rtcc->RZDBSC1.lng_T = res.longitude;
@@ -3362,7 +3362,7 @@ int ARCore::subThread()
 			break;
 		}
 
-		SV sv0 = GC->rtcc->StateVectorCalc(v);
+		VehicleDataBlock sv0 = GC->rtcc->StateVectorCalcDataBlock(v);
 		GC->rtcc->EMDSPACENoMPT(sv0, SpaceDigitalsOption + 2, GC->rtcc->GMTfromGET(SpaceDigitalsGET));
 
 		Result = DONE;

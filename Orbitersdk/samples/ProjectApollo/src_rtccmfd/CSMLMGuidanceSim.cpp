@@ -525,6 +525,7 @@ PMMRKJ_LABEL_22C:
 		Aux->X_B = X_B;
 		Aux->Y_B = Y_B;
 		Aux->Z_B = Z_B;
+		Aux->WTINIT = TArr.CAPWT;
 		Aux->WTENGON = WTENGON;
 		Aux->WTEND = WT;
 		Aux->MainFuelUsed = MAINFUELUSED;
