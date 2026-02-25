@@ -213,7 +213,7 @@ void ApolloGuidance::SetMissionInfo(std::string ProgramName, char *OtherName)
 {
 	this->ProgramName = ProgramName; 
 
-	if (OtherName != 0)
+	if (OtherName != 0 && !OtherVesselName[0])
 		strncpy(OtherVesselName, OtherName, 64);
 }
 

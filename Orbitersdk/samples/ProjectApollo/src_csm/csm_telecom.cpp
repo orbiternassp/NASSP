@@ -1733,7 +1733,7 @@ void VHFRangingSystem::TimeStep(double simdt)
 			if (abs(internalrange - newrange) < 1800.0*0.3048*simdt)
 			{
 				//Specification is 200NM range, but during the flights up to 320NM was achieved
-				if (newrange > 500.0*0.3048)
+				if (newrange > 5.0*0.3048)
 				{		
 					if(transceiver->RCVDinputPowRCVR_A > -122.0 && transceiver->GetActiveAntenna() && transceiver->RCVDRangeTone)
 					{
