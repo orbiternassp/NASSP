@@ -36966,8 +36966,9 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 			K = 0.0;
 			R_E = BZLAND.rad[RTCC_LMPOS_BEST];
 
-			mptman->h_BI = length(sv_BI_true.R) - BZLAND.rad[RTCC_LMPOS_BEST];
-			mptman->lat_BI = asin(sv_BI_true.R.z / sv_BI_true.R.x);
+			double r = length(sv_BI_true.R);
+			mptman->h_BI = r - BZLAND.rad[RTCC_LMPOS_BEST];
+			mptman->lat_BI = asin(sv_BI_true.R.z / r);
 		}
 
 		mptman->lng_BI = atan2(sv_BI_true.R.y, sv_BI_true.R.x) - K * OrbMech::w_Earth*sv_BI_true.GMT;
