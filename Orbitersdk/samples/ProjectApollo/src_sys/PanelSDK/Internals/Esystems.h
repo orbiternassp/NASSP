@@ -638,6 +638,9 @@ public:
 	~ElectricLight() = default;
 	virtual void refresh(double dt);
 	void UpdatePosition(VECTOR3 offset);
+
+	void Load(char* line);
+	void Save(FILEHANDLE scn);
 private:
 	double nomPowerDraw;
 	double nomVolts;

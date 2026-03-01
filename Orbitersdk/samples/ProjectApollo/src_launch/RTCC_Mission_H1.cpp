@@ -1361,10 +1361,10 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		}
 
 		form->KFactor = GETfromGMT(GetAGSClockZero());
-		form->DEDA224 = calcParams.SVSTORE1.R.x;			//Loads DEDA 224 for the AGS PAD, temporary storage solution
-		form->DEDA225 = calcParams.SVSTORE1.R.y;			//Loads DEDA 225 for the AGS PAD, temporary storage solution
-		form->DEDA226 = calcParams.SVSTORE1.R.z;			//Loads DEDA 226 for the AGS PAD, temporary storage solution
-		form->DEDA227 = calcParams.SVSTORE1.V.x;			//Loads DEDA 227 for the AGS PAD, temporary storage solution
+		form->DEDA224 = (int)calcParams.SVSTORE1.R.x;			//Loads DEDA 224 for the AGS PAD, temporary storage solution
+		form->DEDA225 = (int)calcParams.SVSTORE1.R.y;			//Loads DEDA 225 for the AGS PAD, temporary storage solution
+		form->DEDA226 = (int)calcParams.SVSTORE1.R.z;			//Loads DEDA 226 for the AGS PAD, temporary storage solution
+		form->DEDA227 = (int)calcParams.SVSTORE1.V.x;			//Loads DEDA 227 for the AGS PAD, temporary storage solution
 	}
 	break;
 	case 37: //SEPARATION MANEUVER
@@ -2396,7 +2396,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		opt.lat = BZLAND.lat[0];
 		opt.lng = BZLAND.lng[0];
 		opt.R_LLS = BZLAND.rad[0];
-		opt.sv_CSM = sv_CSM;
+		opt.sv_CSM.sv = ConvertSVtoEphemData(sv_CSM);
+		opt.sv_CSM.Weight = sv_CSM.mass;
 		opt.theta_1 = 9.9588 * RAD;
 		opt.dt_1 = 447.0;
 
@@ -2460,14 +2461,14 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 
 		if (fcn == 400)
 		{
-			t_Tag = calcParams.DOI - 10.0 * 60.0;
+			t_Tag = calcParams.DOI - 10.0 * 60.0;  //SV Time tag DOI - 10 minutes
 		}
 		else
 		{
-			t_Tag = calcParams.LunarLiftoff;
+			t_Tag = calcParams.LunarLiftoff;  //SV Time tag lunar liftoff
 		}
 
-		sv_upl = coast(sv, t_Tag - sv.sv.GMT); //Time tag SV
+		sv_upl = coast(sv, GMTfromGET(t_Tag) - sv.sv.GMT); //Time tag SV
 
 		AGCStateVectorUpdate(buffer1, 2, RTCC_MPT_CSM, sv_upl.sv);
 		LandingSiteUplink(buffer2, RTCC_MPT_LM);
@@ -2606,7 +2607,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		opt.lat = BZLAND.lat[0];
 		opt.lng = BZLAND.lng[0];
 		opt.R_LLS = BZLAND.rad[0];
-		opt.sv_CSM = sv_CSM;
+		opt.sv_CSM.sv = ConvertSVtoEphemData(sv_CSM);
+		opt.sv_CSM.Weight = sv_CSM.mass;
 		opt.theta_1 = 9.9588 * RAD;
 		opt.dt_1 = 447.0;
 
@@ -2871,7 +2873,8 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		opt.lat = BZLAND.lat[0];
 		opt.lng = BZLAND.lng[0];
 		opt.R_LLS = BZLAND.rad[0];
-		opt.sv_CSM = sv_CSM;
+		opt.sv_CSM.sv = ConvertSVtoEphemData(sv_CSM);
+		opt.sv_CSM.Weight = sv_CSM.mass;
 		opt.theta_1 = 9.9588 * RAD;
 		opt.dt_1 = 447.0;
 		opt.t_hole = GMTfromGET(t_TPI);
@@ -3468,7 +3471,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 				if (scrubbed)
 				{
 					//Entry prediction without maneuver
-					EntryUpdateCalc(sv, PZREAP.RRBIAS, true, &res);
+					EntryUpdateCalc(ConvertSVtoEphemData(sv), PZREAP.RRBIAS, true, res);
 
 					res.dV_LVLH = _V(0, 0, 0);
 					res.P30TIG = entopt.TIGguess;

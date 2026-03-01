@@ -370,6 +370,9 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	mechanicalAccelerometer(inertialData),
 	cws(SMasterAlarm, Bclick, Panelsdk),
 	dockingprobe(0, SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
+	LeftIntegralLights(11.0), //LH Integral Power (watts)
+	RightIntegralLights(13.1), //RH Integral Power (watts)
+	LEBIntegralLights(7.1), //LEB Integral Power (watts)
 	MissionTimerDisplay(Panelsdk),
 	MissionTimer306Display(Panelsdk),
 	EventTimerDisplay(Panelsdk),
@@ -444,6 +447,7 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	SuitCompressor2Switch(Panelsdk),
 	SuitCompressor1Feeder("Suit-Compressor-1-Feeder", Panelsdk),
 	SuitCompressor2Feeder("Suit-Compressor-2-Feeder", Panelsdk),
+	RunEVAFeeder("Run-EVA-Feeder", Panelsdk),
 	BatteryCharger("BatteryCharger", Panelsdk),
 	timedSounds(soundlib),
 	iuCommandConnector(agc, this),
@@ -1144,6 +1148,7 @@ void Saturn::initSaturn()
 	seatsunfoldedidx = -1;
 	coascdridx = -1;
 	coascdrreticleidx = -1;
+	smidx = -1;
 
 	vcmesh = NULL;
 	vis = NULL;
@@ -1241,6 +1246,12 @@ void Saturn::initSaturn()
 		// Switch to compatible dock mode 
 		SetDockMode(0);
 	}
+
+	for (int i = 0;i < 8;i++)
+	{
+		runningLightsPos[i] = _V(0, 0, 0);
+	}
+
 	InitSaturnCalled = true;
 }
 
@@ -5223,6 +5234,13 @@ void Saturn::UpdateMassAndCoG()
 		//lights
 		SpotLight->UpdatePosition(CoGShift);
 		RndzLight->UpdatePosition(CoGShift);
+		EVALight->UpdatePosition(CoGShift);
+
+		//Running Lights
+		for (int i = 0;i < 8;i++)
+		{
+			runningLightsPos[i] -= CoGShift;
+		}
 
 		// All done!
 		LastFuelWeight = CurrentFuelWeight;

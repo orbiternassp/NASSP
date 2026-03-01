@@ -1968,7 +1968,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 151: // RCS PROP A QTY
 					return(scale_data(lem->RCSA.GetRCSPropellantQuantity(), 0.0, 1.0));
 				case 152: // S-BND RCVR SIG
-					return(scale_scea(lem->scera1.GetVoltage(5, 5)));
+					return(scale_scea(lem->scera1.GetVoltage(5, 4)));
 				case 153: // APS HE 1 PRESS
 					return(scale_scea(lem->scera1.GetVoltage(8, 4)));
 				case 154: // "PRI W/B H20 TEMP" = Main Sublimator Inlet Water Temp
@@ -1986,7 +1986,7 @@ unsigned char LM_PCM::measure(int channel, int type, int ccode){
 				case 160: // RCS A HE PRESS
 					return(scale_scea(lem->scera1.GetVoltage(6, 1)));
 				case 161: //S-BND RCVR SIG
-					return(scale_scea(lem->scera1.GetVoltage(5, 5)));
+					return(scale_scea(lem->scera1.GetVoltage(5, 4)));
 				case 162: // RCS PROP A QTY
 					return(scale_data(lem->RCSA.GetRCSPropellantQuantity(), 0.0, 1.0));
 				case 163: // "PRI W/B H20 TEMP" = Main Sublimator Inlet Water Temp
@@ -2479,9 +2479,13 @@ void LM_SBAND::Timestep(double simt){
 	{
 		ant = &lem->omni_aft;
 	}
-	if (lem->Panel12SBandAntSelKnob.GetState() == 2)
+	else if (lem->Panel12SBandAntSelKnob.GetState() == 2)
 	{
 		ant = &lem->SBandSteerable;
+	}
+	else
+	{
+		ant = &lem->SBandErectable;
 	}
 	
 	switch(tc_mode_1){
@@ -3103,6 +3107,55 @@ void LM_OMNI::Timestep()
 	{
 		SignalStrength = 0.0;
 	}
+}
+
+LM_ErectableAnt::LM_ErectableAnt()
+{
+	lem = NULL;
+	AntGain = pow(10, (33.2 / 10));
+	double AntFrequency = 2119.0;
+	AntWavelength = C0 / (AntFrequency * 1000000.0); //meters
+}
+
+void LM_ErectableAnt::Init(LEM *vessel)
+{
+	lem = vessel;
+}
+
+void LM_ErectableAnt::Timestep()
+{
+	//Default to 0 signal strength
+	SignalStrength = 0.0;
+
+	//Try to find vessel
+	OBJHANDLE Ant = oapiGetVesselByName("S-Band");
+	if (Ant == NULL) return;
+
+	//Use stage condition to see if the antenna can still be connected
+	if (lem->GetStage() > 1) return;
+
+	//Get pointer to MCC
+	OBJHANDLE MCCV = oapiGetVesselByName("MCC");
+	if (MCCV == NULL) return;
+
+	VECTOR3 pos;
+	double EarthSignalDist, RecvdOMNIPower, RecvdOMNIPower_dBm;
+
+	//Global position of the spacecraft
+	lem->GetGlobalPos(pos);
+
+	//Get properties
+	VESSEL4* MCCVessel = (VESSEL4*)oapiGetVesselInterface(MCCV);
+	GroundTransmitterRFProperties.GlobalPosition = _V(0, 0, 0);
+	MCCVessel->clbkGeneric(paCBGmessageID::messageID::RF_PROPERTIES, paCBGmessageID::parameterID::GetLM, &GroundTransmitterRFProperties);
+
+	//Distance from active ground station
+	EarthSignalDist = length(pos - GroundTransmitterRFProperties.GlobalPosition);
+
+	//Signal strength
+	RecvdOMNIPower = GroundTransmitterRFProperties.Power * GroundTransmitterRFProperties.Gain * AntGain * pow(AntWavelength / (4.0 * PI*EarthSignalDist), 2); //maximum received power in watts
+	RecvdOMNIPower_dBm = RFCALC_W2dBm(RecvdOMNIPower);
+	SignalStrength = LM_SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 }
 
 LM_DSEA::LM_DSEA() :

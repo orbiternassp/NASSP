@@ -479,10 +479,10 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		WeightsTable = GetWeightsTable(calcParams.src, true, true);
 		CurrentREFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 
-		gmpopt.sv_in = sv0;
-		gmpopt.Area = WeightsTable.ConfigArea;
-		gmpopt.Weight = WeightsTable.ConfigWeight;
-		gmpopt.KFactor = PZMPTCSM.KFactor;
+		gmpopt.sv_in.sv = sv0;
+		gmpopt.sv_in.Area = WeightsTable.ConfigArea;
+		gmpopt.sv_in.Weight = WeightsTable.ConfigWeight;
+		gmpopt.sv_in.KFactor = PZMPTCSM.KFactor;
 
 		if (fcn == 13)
 		{
@@ -725,11 +725,11 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		gmpopt.dLAN = 6.9*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_NSO; //Gives TIG at northernmost latitude
-		gmpopt.sv_in = sv0.sv;
+		gmpopt.sv_in = sv0;
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(49, 10, 0);
-		gmpopt.Area = PZMPTCSM.ConfigurationArea;
-		gmpopt.Weight = med_m50.CSMWT + med_m50.LMWT;
-		gmpopt.KFactor = PZMPTCSM.KFactor;
+		gmpopt.sv_in.Area = PZMPTCSM.ConfigurationArea;
+		gmpopt.sv_in.Weight = med_m50.CSMWT + med_m50.LMWT;
+		gmpopt.sv_in.KFactor = PZMPTCSM.KFactor;
 
 		GeneralManeuverProcessor(&gmpopt, dV_imp, TIG_imp);
 
@@ -1482,7 +1482,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.long_D = -95.0*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_FCL;
 		gmpopt.Pitch = 0.0;
-		gmpopt.sv_in = sv0.sv;
+		gmpopt.sv_in = sv0;
 		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(101, 30, 0);
 		gmpopt.Yaw = -45.0*RAD;
 
@@ -1709,8 +1709,9 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		sv0 = StateVectorCalcEphem(calcParams.src); //State vector for uplink
 		WeightsTable = GetWeightsTable(calcParams.src, true, false);
 
-		gmpopt.Area = WeightsTable.ConfigArea;
-		gmpopt.Weight = WeightsTable.ConfigWeight;
+		gmpopt.sv_in.Area = WeightsTable.ConfigArea;
+		gmpopt.sv_in.Weight = WeightsTable.ConfigWeight;
+		gmpopt.sv_in.KFactor = PZMPTCSM.KFactor;
 
 		if (fcn == 45)
 		{
@@ -1718,7 +1719,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			gmpopt.H_P = 97.0*1852.0;	//Should be 95, but ensures that even with residuals and drag the perigee won't fall below 95 at SPS-7, which makes the calculation much more reliable
 			gmpopt.long_D = 122.3*RAD;
 			gmpopt.ManeuverCode = RTCC_GMP_HBL;
-			gmpopt.sv_in = sv0;
+			gmpopt.sv_in.sv = sv0;
 			gmpopt.TIG_GET = OrbMech::HHMMSSToSS(121, 30, 0);
 		}
 		else
@@ -1727,7 +1728,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			gmpopt.H_P = 95.0*1852.0;	//Should be 97, but, see above
 			gmpopt.long_D = -45.0*RAD;
 			gmpopt.ManeuverCode = RTCC_GMP_HAS;
-			gmpopt.sv_in = sv0;
+			gmpopt.sv_in.sv = sv0;
 			gmpopt.TIG_GET = OrbMech::HHMMSSToSS(169, 10, 0);
 			gmpopt.N = 46;
 		}
@@ -1825,11 +1826,12 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 	{
 		S065UPDATE * form = (S065UPDATE *)pad;
 
-		SV sv0, sv1, sv2;
-		MATRIX3 REFSMMAT, M_R;
-		VECTOR3 Att, UX, UY, UZ;
-		double GETbase, GET_AOS, GET_LOS, dt;
-
+		VehicleDataBlock sv0, sv1;
+		MATRIX3 REFSMMAT;
+		VECTOR3 Att;
+		double GET_TCA, GET, Exp2;
+		EphemerisDataTable2 S065Table;
+		StationContact S065Contact;
 
 		for (int i = 0; i < 4; i++)
 		{
@@ -1842,172 +1844,205 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 			form->OrbRate[i] = false;
 		}
 
-		sv0 = StateVectorCalc(calcParams.src);
-		GETbase = CalcGETBase();
+		sv0 = StateVectorCalcDataBlock(calcParams.src);
 		REFSMMAT = GetREFSMMATfromAGC(&mcc->cm->agc.vagc, true);
 
 		if (fcn == 46)
 		{
-			dt = OrbMech::HHMMSSToSS(124, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
-			sv1 = coast(sv0, dt);
+			mcc->mcc_calcs.CreateEphemeris(sv0, GMTfromGET(OrbMech::HHMMSSToSS(123, 50, 0)), GMTfromGET(OrbMech::HHMMSSToSS(126, 50, 0)), S065Table);
 
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, 31.0*RAD, -115.5*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
+			form->ExposureInterval[1] = 6.0;
+			form->ExposureNum[1] = 25;
+			Exp2 = (form->ExposureInterval[1] * (form->ExposureNum[1] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "SW US");
-			form->GETStart[1] = GET_AOS;
-			form->ExposureInterval[1] = 6.0;
-			form->ExposureNum[1] = 25;
+			form->GETStart[1] = GET;
 
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 29.6667*RAD, -95.1667*RAD, GET_AOS, GET_LOS);
-			sprintf(form->Area[2], "Houston");
-			form->GETStart[2] = GET_AOS;
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, 29.6667*RAD, -95.1667*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
 			form->ExposureInterval[2] = 6.0;
 			form->ExposureNum[2] = 3;
+			Exp2 = (form->ExposureInterval[2] * (form->ExposureNum[2] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
+
+			sprintf(form->Area[2], "Houston");
+			form->GETStart[2] = GET;
 		}
 		else if (fcn == 47)
 		{
-			dt = OrbMech::HHMMSSToSS(125, 40, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
-			sv1 = coast(sv0, dt);
+			mcc->mcc_calcs.CreateEphemeris(sv0, GMTfromGET(OrbMech::HHMMSSToSS(125, 40, 0)), GMTfromGET(OrbMech::HHMMSSToSS(128, 40, 0)), S065Table);
 
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 19.3*RAD, -99.6667*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, 19.3*RAD, -99.6667*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
+			form->ExposureInterval[1] = 6.0;
+			form->ExposureNum[1] = 15;
+			Exp2 = (form->ExposureInterval[1] * (form->ExposureNum[1] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "Mexico");
-			form->GETStart[1] = GET_AOS;
-			form->ExposureInterval[1] = 6.0;
-			form->ExposureNum[1] = 15;
+			form->GETStart[1] = GET;
 		}
 		else if (fcn == 58)
 		{
-			dt = OrbMech::HHMMSSToSS(171, 10, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
-			sv1 = coast(sv0, dt);
+			mcc->mcc_calcs.CreateEphemeris(sv0, GMTfromGET(OrbMech::HHMMSSToSS(171, 10, 0)), GMTfromGET(OrbMech::HHMMSSToSS(174, 10, 0)), S065Table);
 
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, 31.0*RAD, -115.5*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
+			form->ExposureInterval[1] = 6.0;
+			form->ExposureNum[1] = 25;
+			Exp2 = (form->ExposureInterval[1] * (form->ExposureNum[1] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "SW US");
-			form->GETStart[1] = GET_AOS;
-			form->ExposureInterval[1] = 6.0;
-			form->ExposureNum[1] = 25;
+			form->GETStart[1] = GET;
 		}
 		else if (fcn == 59)
 		{
-			dt = OrbMech::HHMMSSToSS(172, 45, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
-			sv1 = coast(sv0, dt);
+			mcc->mcc_calcs.CreateEphemeris(sv0, GMTfromGET(OrbMech::HHMMSSToSS(172, 45, 0)), GMTfromGET(OrbMech::HHMMSSToSS(175, 45, 0)), S065Table);
 
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 19.3*RAD, -99.666*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, 19.3*RAD, -99.666*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
+			form->ExposureInterval[1] = 6.0;
+			form->ExposureNum[1] = 25;
+			Exp2 = (form->ExposureInterval[1] * (form->ExposureNum[1] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "Mexico");
-			form->GETStart[1] = GET_AOS;
-			form->ExposureInterval[1] = 6.0;
-			form->ExposureNum[1] = 25;
+			form->GETStart[1] = GET;
 
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, -19.81666*RAD, -43.3666*RAD, GET_AOS, GET_LOS);
-			sprintf(form->Area[2], "Brazil");
-			form->GETStart[2] = GET_AOS;
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, -19.81666*RAD, -43.3666*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
 			form->ExposureInterval[2] = 6.0;
 			form->ExposureNum[2] = 3;
+			Exp2 = (form->ExposureInterval[2] * (form->ExposureNum[2] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
+
+			sprintf(form->Area[2], "Brazil");
+			form->GETStart[2] = GET;
 		}
 		else if (fcn == 63)
 		{
-			dt = OrbMech::HHMMSSToSS(190, 25, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
-			sv1 = coast(sv0, dt);
+			mcc->mcc_calcs.CreateEphemeris(sv0, GMTfromGET(OrbMech::HHMMSSToSS(190, 25, 0)), GMTfromGET(OrbMech::HHMMSSToSS(193, 25, 0)), S065Table);
 
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 31.91666*RAD, -105.0*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, 31.91666*RAD, -105.0*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
+			form->ExposureInterval[1] = 6.0;
+			form->ExposureNum[1] = 6;
+			Exp2 = (form->ExposureInterval[1] * (form->ExposureNum[1] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "North Mexico");
-			form->GETStart[1] = GET_AOS;
-			form->ExposureInterval[1] = 6.0;
-			form->ExposureNum[1] = 6;
+			form->GETStart[1] = GET;
 
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 29.1667*RAD, -89.333*RAD, GET_AOS, GET_LOS);
-			sprintf(form->Area[2], "Southeast US");
-			form->GETStart[2] = GET_AOS;
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, 29.1667*RAD, -89.333*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
 			form->ExposureInterval[2] = 6.0;
 			form->ExposureNum[2] = 6;
+			Exp2 = (form->ExposureInterval[2] * (form->ExposureNum[2] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
 
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 17.0*RAD, -15.61667*RAD, GET_AOS, GET_LOS);
-			sprintf(form->Area[3], "Africa");
-			form->GETStart[3] = GET_AOS;
+			sprintf(form->Area[2], "Southeast US");
+			form->GETStart[2] = GET;
+
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, 17.0*RAD, -15.61667*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
 			form->ExposureInterval[3] = 12.0;
 			form->ExposureNum[3] = 48;
+			Exp2 = (form->ExposureInterval[3] * (form->ExposureNum[3] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
+
+			sprintf(form->Area[3], "Africa");
+			form->GETStart[3] = GET;
 		}
 		else if (fcn == 64)
 		{
-			dt = OrbMech::HHMMSSToSS(192, 0, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
-			sv1 = coast(sv0, dt);
+			mcc->mcc_calcs.CreateEphemeris(sv0, GMTfromGET(OrbMech::HHMMSSToSS(192, 0, 0)), GMTfromGET(OrbMech::HHMMSSToSS(195, 0, 0)), S065Table);
 
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 31.0*RAD, -115.5*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, 31.0*RAD, -115.5*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
+			form->ExposureInterval[1] = 6.0;
+			form->ExposureNum[1] = 3;
+			Exp2 = (form->ExposureInterval[1] * (form->ExposureNum[1] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "Southwest US");
-			form->GETStart[1] = GET_AOS;
-			form->ExposureInterval[1] = 6.0;
-			form->ExposureNum[1] = 3;
+			form->GETStart[1] = GET;
 		}
 		else if (fcn == 68)
 		{
-			dt = OrbMech::HHMMSSToSS(214, 30, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
-			sv1 = coast(sv0, dt);
+			mcc->mcc_calcs.CreateEphemeris(sv0, GMTfromGET(OrbMech::HHMMSSToSS(214, 30, 0)), GMTfromGET(OrbMech::HHMMSSToSS(217, 30, 0)), S065Table);
 
-			//Wilmington, North Carolina
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 34.22333*RAD, -77.91222*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, 34.22333*RAD, -77.91222*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
+			form->ExposureInterval[1] = 20.0;
+			form->ExposureNum[1] = 3;
+			Exp2 = (form->ExposureInterval[1] * (form->ExposureNum[1] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "Wilmington");
-			form->GETStart[1] = GET_AOS;
-			form->ExposureInterval[1] = 20;
-			form->ExposureNum[1] = 3;
+			form->GETStart[1] = GET;
 
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, -17.3667*RAD, 37.95*RAD, GET_AOS, GET_LOS);
-			sprintf(form->Area[2], "Mozambique");
-			form->GETStart[2] = GET_AOS;
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, -17.3667*RAD, 37.95*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
 			form->ExposureInterval[2] = 12.0;
 			form->ExposureNum[2] = 6;
+			Exp2 = (form->ExposureInterval[2] * (form->ExposureNum[2] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
+
+			sprintf(form->Area[2], "Mozambique");
+			form->GETStart[2] = GET;
 		}
 		else if (fcn == 69)
 		{
-			dt = OrbMech::HHMMSSToSS(215, 55, 0) - OrbMech::GETfromMJD(sv0.MJD, GETbase);
-			sv1 = coast(sv0, dt);
+			mcc->mcc_calcs.CreateEphemeris(sv0, GMTfromGET(OrbMech::HHMMSSToSS(215, 55, 0)), GMTfromGET(OrbMech::HHMMSSToSS(218, 55, 0)), S065Table);
 
-			mcc->mcc_calcs.FindRadarAOSLOS(sv1, 32.333*RAD, -107.667*RAD, GET_AOS, GET_LOS);
-			form->GETStart[0] = GET_AOS - 5.0*60.0;
+			mcc->mcc_calcs.StationContactsGenerator(S065Table, 32.333*RAD, -107.667*RAD, 0, 0, S065Contact);
+			GET_TCA = GETfromGMT(S065Contact.GMTEMAX);
+			form->ExposureInterval[1] = 20.0;
+			form->ExposureNum[1] = 6;
+			Exp2 = (form->ExposureInterval[1] * (form->ExposureNum[1] - 1)) / 2.0; // Total exposure time divided by 2
+			GET = GET_TCA - Exp2; // Midpoint of pass minus exposure time
+
+			form->GETStart[0] = GET - 5.0*60.0;
 			form->OrbRate[0] = true;
 			form->OrbRate[2] = true;
 
 			sprintf(form->Area[1], "New Mexico");
-			form->GETStart[1] = GET_AOS;
-			form->ExposureInterval[1] = 20;
-			form->ExposureNum[1] = 6;
+			form->GETStart[1] = GET;
 		}
-
-		sv2 = coast(sv1, form->GETStart[0] - OrbMech::GETfromMJD(sv1.MJD, GETbase));
-
-		UY = unit(crossp(sv2.V, -sv2.R));
-		UZ = unit(sv2.R);
-		UX = crossp(UY, UZ);
-
-		M_R = _M(UX.x, UX.y, UX.z, UY.x, UY.y, UY.z, UZ.x, UZ.y, UZ.z);
-		Att = OrbMech::CALCGAR(REFSMMAT, M_R);
-
-		form->FDAIAngles[0] = Att * DEG;
+		mcc->mcc_calcs.CelestialBodyPointing(S065Table, REFSMMAT, GMTfromGET(form->GETStart[0]), 0, 0.0*RAD, 57.5*RAD, 180.0*RAD, Att);
+		form->FDAIAngles[0] = OrbMech::round_to((Att * DEG), 0.1);
 	}
 	break;
 	case 48: //BLOCK DATA 14 **Block data needs pitch and yaw trims added**
