@@ -1921,6 +1921,43 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		return true;
 
 	case AID_VC_Ordeal_Stowed:
+	{
+		const VECTOR3 P13_ROT_AXIS = { 0.54191307344258, -0.645820796385401, -0.53781569314045 };
+		const VECTOR3 ORDEAL_RotLocation = { -0.887517, 1.00696,-0.051799 };
+		const VECTOR3 P13_SW_AXIS = { 0.385804106483757, -0.378054512596731, 0.841564006434162 };
+		const double rotAngle = 22.5f;  // 22.5f is estimated. Which angle is used by the switches?
+
+		if (ORDEALFDAI1Switch.IsUp())		 updateOrdealMshGrp(VC_GRP_Sw_P13_01_d, VC_GRP_Sw_P13_01, P13_SW_AXIS, P13_TOGGLE_POS[0], rotAngle);
+		if (ORDEALFDAI1Switch.IsDown())		 updateOrdealMshGrp(VC_GRP_Sw_P13_01_d, VC_GRP_Sw_P13_01, P13_SW_AXIS, P13_TOGGLE_POS[0], -rotAngle);
+
+		if (ORDEALFDAI2Switch.IsUp())		 updateOrdealMshGrp(VC_GRP_Sw_P13_02_d, VC_GRP_Sw_P13_02, P13_SW_AXIS, P13_TOGGLE_POS[1], rotAngle);
+		if (ORDEALFDAI2Switch.IsDown())		 updateOrdealMshGrp(VC_GRP_Sw_P13_02_d, VC_GRP_Sw_P13_02, P13_SW_AXIS, P13_TOGGLE_POS[1], -rotAngle);
+
+		if (ORDEALEarthSwitch.IsUp())		 updateOrdealMshGrp(VC_GRP_Sw_P13_03_d, VC_GRP_Sw_P13_03, P13_SW_AXIS, P13_TOGGLE_POS[2], rotAngle);
+		if (ORDEALEarthSwitch.IsCenter())	 updateOrdealMshGrp(VC_GRP_Sw_P13_03_d, VC_GRP_Sw_P13_03, P13_SW_AXIS, P13_TOGGLE_POS[2], 0.0f);
+		if (ORDEALEarthSwitch.IsDown())		 updateOrdealMshGrp(VC_GRP_Sw_P13_03_d, VC_GRP_Sw_P13_03, P13_SW_AXIS, P13_TOGGLE_POS[2], -rotAngle);
+
+		if (ORDEALLightingSwitch.IsUp())	 updateOrdealMshGrp(VC_GRP_Sw_P13_04_d, VC_GRP_Sw_P13_04, P13_SW_AXIS, P13_TOGGLE_POS[3], rotAngle);
+		if (ORDEALLightingSwitch.IsCenter()) updateOrdealMshGrp(VC_GRP_Sw_P13_04_d, VC_GRP_Sw_P13_04, P13_SW_AXIS, P13_TOGGLE_POS[3], 0.0f);
+		if (ORDEALLightingSwitch.IsDown())	 updateOrdealMshGrp(VC_GRP_Sw_P13_04_d, VC_GRP_Sw_P13_04, P13_SW_AXIS, P13_TOGGLE_POS[3], -rotAngle);
+
+		if (ORDEALModeSwitch.IsUp())		 updateOrdealMshGrp(VC_GRP_Sw_P13_05_d, VC_GRP_Sw_P13_05, P13_SW_AXIS, P13_TOGGLE_POS[4], rotAngle);
+		if (ORDEALModeSwitch.IsDown())		 updateOrdealMshGrp(VC_GRP_Sw_P13_05_d, VC_GRP_Sw_P13_05, P13_SW_AXIS, P13_TOGGLE_POS[4], -rotAngle);
+
+		if (ORDEALSlewSwitch.IsUp())		 updateOrdealMshGrp(VC_GRP_Sw_P13_06_d, VC_GRP_Sw_P13_06, P13_SW_AXIS, P13_TOGGLE_POS[5], rotAngle);
+		if (ORDEALSlewSwitch.IsCenter())	 updateOrdealMshGrp(VC_GRP_Sw_P13_06_d, VC_GRP_Sw_P13_06, P13_SW_AXIS, P13_TOGGLE_POS[5], 0.0f);
+		if (ORDEALSlewSwitch.IsDown())		 updateOrdealMshGrp(VC_GRP_Sw_P13_06_d, VC_GRP_Sw_P13_06, P13_SW_AXIS, P13_TOGGLE_POS[5], -rotAngle);
+
+/*		// First i wanted to try this method, but had no success :-(
+		updateOrdealMshGrp(VC_GRP_Sw_P13_01_d, VC_GRP_Sw_P13_01, P13_SW_AXIS, P13_TOGGLE_POS[0], (ORDEALFDAI1Switch.GetState()    22.5f) /2;
+		updateOrdealMshGrp(VC_GRP_Sw_P13_02_d, VC_GRP_Sw_P13_02, P13_SW_AXIS, P13_TOGGLE_POS[1], (ORDEALFDAI2Switch.GetState()    22.5f) /2;
+		updateOrdealMshGrp(VC_GRP_Sw_P13_03_d, VC_GRP_Sw_P13_03, P13_SW_AXIS, P13_TOGGLE_POS[2], (ORDEALEarthSwitch.GetState()    22.5f) /2;
+		updateOrdealMshGrp(VC_GRP_Sw_P13_04_d, VC_GRP_Sw_P13_04, P13_SW_AXIS, P13_TOGGLE_POS[3], (ORDEALLightingSwitch.GetState() 22.5f) /2;
+		updateOrdealMshGrp(VC_GRP_Sw_P13_05_d, VC_GRP_Sw_P13_05, P13_SW_AXIS, P13_TOGGLE_POS[4], (ORDEALModeSwitch.GetState()     22.5f) /2;
+		updateOrdealMshGrp(VC_GRP_Sw_P13_06_d, VC_GRP_Sw_P13_06, P13_SW_AXIS, P13_TOGGLE_POS[5], (ORDEALSlewSwitch.GetState()     22.5f) /2;
+*/
+		updateOrdealMshGrp(VC_GRP_ORDEAL_Rot_d, VC_GRP_ORDEAL_Rot, P13_ROT_AXIS, ORDEAL_RotLocation, (ORDEALAltSetRotary.GetOutput() * 285.0) -133);
+
 		if (ordealState.Closed()) {
 			ordealState.action = AnimState::OPENING;
 		}
@@ -1928,6 +1965,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 			ordealState.action = AnimState::CLOSING;
 		}
 		return true;
+	}
 
 	case AID_VC_COAS:
 		if (coasEnabled) {
@@ -5752,35 +5790,6 @@ void Saturn::DefineVCAnimations()
 
 // Ordeal Animation
 
-	// Extra Testing Code for the ORDEAL Floating switches bug by Jordan
-	static UINT ordealSw01 = VC_GRP_Sw_P13_01_d;
-	static UINT ordealSw02 = VC_GRP_Sw_P13_02_d;
-	static UINT ordealSw03 = VC_GRP_Sw_P13_03_d;
-	static UINT ordealSw04 = VC_GRP_Sw_P13_04_d;
-	static UINT ordealSw05 = VC_GRP_Sw_P13_05_d;
-	static UINT ordealSw06 = VC_GRP_Sw_P13_06_d;
-	static UINT ordealRot1 = VC_GRP_ORDEAL_Rot_d;
-
-	ordealSw01_rot[0] = new MGROUP_ROTATE (0, &ordealSw01, 1, ORDEALFDAI1Switch.GetReference(),    ORDEALFDAI1Switch.GetDirection(),    (float)PI / 4);
-	ordealSw01_rot[1] = new MGROUP_ROTATE (0, &ordealSw02, 1, ORDEALFDAI2Switch.GetReference(),    ORDEALFDAI2Switch.GetDirection(),    (float)PI / 4);
-	ordealSw01_rot[2] = new MGROUP_ROTATE (0, &ordealSw03, 1, ORDEALEarthSwitch.GetReference(),    ORDEALEarthSwitch.GetDirection(),    (float)PI / 4);
-	ordealSw01_rot[3] = new MGROUP_ROTATE (0, &ordealSw04, 1, ORDEALLightingSwitch.GetReference(), ORDEALLightingSwitch.GetDirection(), (float)PI / 4);
-	ordealSw01_rot[4] = new MGROUP_ROTATE (0, &ordealSw05, 1, ORDEALModeSwitch.GetReference(),     ORDEALModeSwitch.GetDirection(),     (float)PI / 4);
-	ordealSw01_rot[5] = new MGROUP_ROTATE (0, &ordealSw06, 1, ORDEALSlewSwitch.GetReference(),     ORDEALSlewSwitch.GetDirection(),     (float)PI / 4);
-	ordealSw01_rot[6] = new MGROUP_ROTATE (0, &ordealRot1, 1, ORDEALAltSetRotary.GetReference(),   ORDEALAltSetRotary.GetDirection(),   (float)(285.0*RAD));
-
-	ordealDummyMeshAnim[0] = CreateAnimation(0.5);
-	ordealDummyMeshAnim[1] = CreateAnimation(0.5);
-	ordealDummyMeshAnim[2] = CreateAnimation(0.5);
-	ordealDummyMeshAnim[3] = CreateAnimation(0.5);
-	ordealDummyMeshAnim[4] = CreateAnimation(0.5);
-	ordealDummyMeshAnim[5] = CreateAnimation(0.5);
-	ordealDummyMeshAnim[6] = CreateAnimation(133.0 / 285.0);
-
-	for (unsigned int i = 0; i < std::size(ordealSw01_rot); i++) {
-		AddAnimationComponent(ordealDummyMeshAnim[i], 0.0f, 1.0f, ordealSw01_rot[i]);
-	}
-
 #define ORDEALMESHCNT 12  // 5 or 12
 	static UINT ordealMesh[ORDEALMESHCNT] = { 
 		VC_GRP_Group_78,
@@ -6158,4 +6167,67 @@ void Saturn::HideMeshGroup(int meshidx, int meshgrp, bool hide){
 		}
 		oapiEditMeshGroup(hmesh, meshgrp, &grpSpec);
 	}
+}
+
+// This is for solving the switsches floating away during the Ordeal animation
+// The solution is to manimulate the vertices directly instead doing a "combined" animation
+void Saturn::updateOrdealMshGrp(int tgtGroupIdx, int srcGroupIdx, VECTOR3 axis, VECTOR3 pivot, double deg)
+{
+	DEVMESHHANDLE hMesh = GetDevMesh(vis, vcidx);
+	// Safety check
+	if (!hMesh || !vcmesh) return;
+
+	MESHGROUP* srcGroup = oapiMeshGroup(GetMeshTemplate(vcidx), srcGroupIdx);
+	MESHGROUP* tgtGroup = oapiMeshGroup(GetMeshTemplate(vcidx), tgtGroupIdx);
+
+	DWORD vertexCnt = srcGroup->nVtx;
+
+    GROUPEDITSPEC ges;
+    ges.flags  = GRPEDIT_VTXCRD | GRPEDIT_VTXNML;	// Flags for Vertex Coordinate and Normal manipulation
+    ges.nVtx   = vertexCnt;							// Vertex Count
+    ges.vIdx   = 0;									// We change all Vertices
+	ges.Vtx    = new NTVERTEX[ges.nVtx];
+	
+    // 1. Calculate Transformation Matrix
+    double rad = deg * RAD;
+    VECTOR3 nAxis = unit(axis); 
+    
+    double c = cos(rad);
+    double s = sin(rad);
+    double t = 1.0 - c;
+    double x = nAxis.x, y = nAxis.y, z = nAxis.z;
+
+    // Pur Rotationsmatrix R (Rodrigues)
+    MATRIX4 R = {
+        t*x*x + c,   t*x*y - z*s, t*x*z + y*s, 0,
+        t*x*y + z*s, t*y*y + c,   t*y*z - x*s, 0,
+        t*x*z - y*s, t*y*z + x*s, t*z*z + c,   0,
+        0,           0,           0,           1
+    };
+
+    // Translation for the Pivot point
+    MATRIX4 T1 = identity4(); T1.m14 = -pivot.x; T1.m24 = -pivot.y; T1.m34 = -pivot.z;
+    MATRIX4 T2 = identity4(); T2.m14 =  pivot.x; T2.m24 =  pivot.y; T2.m34 =  pivot.z;
+
+    MATRIX4 M = mul(T2, mul(R, T1));
+
+    // 2. Transform Vertices
+    for (WORD i = 0; i < vertexCnt; i++) {
+
+		// Vertices transformation (Rotation)
+        ges.Vtx[i].x = (float)(M.m11 * srcGroup->Vtx[i].x + M.m12 * srcGroup->Vtx[i].y + M.m13 * srcGroup->Vtx[i].z + M.m14);
+        ges.Vtx[i].y = (float)(M.m21 * srcGroup->Vtx[i].x + M.m22 * srcGroup->Vtx[i].y + M.m23 * srcGroup->Vtx[i].z + M.m24);
+        ges.Vtx[i].z = (float)(M.m31 * srcGroup->Vtx[i].x + M.m32 * srcGroup->Vtx[i].y + M.m33 * srcGroup->Vtx[i].z + M.m34);
+
+        // Normals Rotation for proper lighting
+        ges.Vtx[i].nx = (float)(R.m11 * srcGroup->Vtx[i].nx + R.m12 * srcGroup->Vtx[i].ny + R.m13 * srcGroup->Vtx[i].nz);
+        ges.Vtx[i].ny = (float)(R.m21 * srcGroup->Vtx[i].nx + R.m22 * srcGroup->Vtx[i].ny + R.m23 * srcGroup->Vtx[i].nz);
+        ges.Vtx[i].nz = (float)(R.m31 * srcGroup->Vtx[i].nx + R.m32 * srcGroup->Vtx[i].ny + R.m33 * srcGroup->Vtx[i].nz);
+    }
+
+	// 3. IMPORTANT: Tell D3D9Client to Update the GPU-Buffer
+    oapiEditMeshGroup(hMesh, tgtGroupIdx, &ges);
+
+	// CleanUp
+	if(ges.Vtx) delete [] ges.Vtx;
 }

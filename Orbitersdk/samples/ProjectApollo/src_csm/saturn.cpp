@@ -642,11 +642,6 @@ Saturn::~Saturn()
 	// Waste Disposal animation
 	if (wasteDisposalKnob) delete wasteDisposalKnob;
 
-	// Ordeal animation
-	for (unsigned int i = 0; i < std::size(ordealSw01_rot); i++) {
-		if (ordealSw01_rot[i]) delete ordealSw01_rot[i];
-	}
-
 	//fclose(PanelsdkLogFile);
 }
 
@@ -1556,30 +1551,6 @@ void Saturn::SetAnimations(double simdt)
 {
 	// By Jordan
 	// ANIMATED MESHES
-
-	if (ORDEALFDAI1Switch.IsUp())			SetAnimation(ordealDummyMeshAnim[0], 1.0);
-	if (ORDEALFDAI1Switch.IsDown())			SetAnimation(ordealDummyMeshAnim[0], 0.0);
-
-	if (ORDEALFDAI2Switch.IsUp())			SetAnimation(ordealDummyMeshAnim[1], 1.0);
-	if (ORDEALFDAI2Switch.IsDown())			SetAnimation(ordealDummyMeshAnim[1], 0.0);
-
-	if (ORDEALEarthSwitch.IsUp())			SetAnimation(ordealDummyMeshAnim[2], 1.0);
-	if (ORDEALEarthSwitch.IsCenter())		SetAnimation(ordealDummyMeshAnim[2], 0.5);
-	if (ORDEALEarthSwitch.IsDown())			SetAnimation(ordealDummyMeshAnim[2], 0.0);
-
-	if (ORDEALLightingSwitch.IsUp())		SetAnimation(ordealDummyMeshAnim[3], 1.0);
-	if (ORDEALLightingSwitch.IsCenter())	SetAnimation(ordealDummyMeshAnim[3], 0.5);
-	if (ORDEALLightingSwitch.IsDown())		SetAnimation(ordealDummyMeshAnim[3], 0.0);
-
-	if (ORDEALModeSwitch.IsUp())			SetAnimation(ordealDummyMeshAnim[4], 1.0);
-	if (ORDEALModeSwitch.IsDown())			SetAnimation(ordealDummyMeshAnim[4], 0.0);
-
-	if (ORDEALSlewSwitch.IsUp())			SetAnimation(ordealDummyMeshAnim[5], 1.0);
-	if (ORDEALSlewSwitch.IsCenter())		SetAnimation(ordealDummyMeshAnim[5], 0.5);
-	if (ORDEALSlewSwitch.IsDown())			SetAnimation(ordealDummyMeshAnim[5], 0.0);
-
-	SetAnimation(ordealDummyMeshAnim[6], ORDEALAltSetRotary.GetOutput());
-
 	DoMeshAnimation(panel382CoverState, panel382CoverAnim, 0.5, simdt);
 	DoMeshAnimation(altimeterCoverState, altimeterCoverAnim, 2.0, simdt);
 	DoMeshAnimation(wasteDisposalState, wasteDisposalAnim, 1.0, simdt);
