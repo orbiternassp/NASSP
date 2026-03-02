@@ -793,6 +793,8 @@ MPTManeuver::MPTManeuver()
 	V_BO = _V(0, 0, 0);
 	GMT_BO = 0.0;
 
+	W_B = 0.0;
+	W_IG = 0.0;
 	TotalMassAfter = 0.0;
 	TotalAreaAfter = 0.0;
 	MainEngineFuelUsed = 0.0;
@@ -908,6 +910,8 @@ void MPTManeuver::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_vec(scn, "R_1", R_1);
 	papiWriteScenario_vec(scn, "V_1", V_1);
 	papiWriteScenario_double(scn, "GMT_1", GMT_1);
+	papiWriteScenario_double(scn, "W_B", W_B);
+	papiWriteScenario_double(scn, "W_IG", W_IG);
 	papiWriteScenario_double(scn, "TotalMassAfter", TotalMassAfter);
 	papiWriteScenario_double(scn, "TotalAreaAfter", TotalAreaAfter);
 	papiWriteScenario_double(scn, "MainEngineFuelUsed", MainEngineFuelUsed);
@@ -1029,6 +1033,8 @@ void MPTManeuver::LoadState(FILEHANDLE scn, char *end_str)
 		papiReadScenario_vec(line, "R_1", R_1);
 		papiReadScenario_vec(line, "V_1", V_1);
 		papiReadScenario_double(line, "GMT_1", GMT_1);
+		papiReadScenario_double(line, "W_B", W_B);
+		papiReadScenario_double(line, "W_IG", W_IG);
 		papiReadScenario_double(line, "TotalMassAfter", TotalMassAfter);
 		papiReadScenario_double(line, "TotalAreaAfter", TotalAreaAfter);
 		papiReadScenario_double(line, "MainEngineFuelUsed", MainEngineFuelUsed);
@@ -9390,46 +9396,68 @@ RTCC_PMMLLWP_22_19:
 	}
 }
 
-void RTCC::EntryUpdateCalc(SV sv0, double entryrange, bool highspeed, EntryResults *res)
+int RTCC::EntryUpdateCalc(EphemerisData sv0, double entryrange, bool highspeed, EntryResults &res)
 {
-	OBJHANDLE hEarth;
-	VECTOR3 REI, VEI, UREI, R3, V3, R05G, V05G;
-	double EntryInterface, RCON, dt2, MJD_EI, lambda, phi, GMT_l, vEI, t32, dt22, EMSAlt, t2;
+	//INPUTS:
+	//sv0: Input state vector, should be before EI
+	//entryrange: Desired entry range, nautical miles
+	//highspeed: false = Earth orbit entry EMS altitude, true = lunar return EMS altitude
+	//OUTPUTS:
+	//res: Flight-path angle at EI, range, splashdown latitude, splashdown longitude, EI velocity, EI GET, 0.05g GET
+	//return value: Error if non-zero
 
-	hEarth = oapiGetObjectByName("Earth");
+	EphemerisData sv_EI, sv_05G;
+	VECTOR3 UREI;
+	double lambda, phi, GMT_l, vEI, EMSAlt;
 
-	EntryInterface = 400000.0 * 0.3048;
-	RCON = OrbMech::R_Earth + EntryInterface;
+	//Reset outputs
+	res.ReA = res.RTGO = res.latitude = res.longitude = res.VIO = res.GET400K = res.GET05G = 0.0;
+
+	//Set EMS altitude
 	if (highspeed)
 	{
-		EMSAlt = 297431.0*0.3048;
+		EMSAlt = 297431.0 * 0.3048;
 	}
 	else
 	{
-		EMSAlt = 284643.0*0.3048;
+		EMSAlt = 284643.0 * 0.3048;
 	}
 
-	dt2 = OrbMech::time_radius_integ(SystemParameters.AGCEpoch, sv0.R, sv0.V, sv0.MJD, RCON, -1, sv0.gravref, hEarth, REI, VEI);
-	MJD_EI = sv0.MJD + dt2 / 24.0 / 3600.0;
-	t2 = (sv0.MJD - CalcGETBase()) * 24.0 * 3600.0 + dt2;	//EI time in seconds from launch
+	//Find entry interface altitude
+	EMMENIInputTable in;
 
-	UREI = unit(REI);
-	vEI = length(VEI);
-	res->ReA = asin(dotp(UREI, VEI) / vEI);
+	in.AnchorVector = sv0;
+	in.EarthRelStopParam = 400000.0 * 0.3048;
+	in.StopParamRefFrame = 0;
+	in.CutoffIndicator = 3;
 
-	t32 = OrbMech::time_radius(REI, VEI, RCON - 30480.0, -1, OrbMech::mu_Earth);
-	OrbMech::rv_from_r0v0(REI, VEI, t32, R3, V3, OrbMech::mu_Earth);
-	dt22 = OrbMech::time_radius(R3, V3, length(R3) - (300000.0 * 0.3048 - EMSAlt), -1, OrbMech::mu_Earth);
-	OrbMech::rv_from_r0v0(R3, V3, dt22, R05G, V05G, OrbMech::mu_Earth);
+	EMMENI(in);
 
-	res->RTGO = EntryCalculations::LNDING(REI, VEI, OrbMech::GETfromMJD(MJD_EI, GetGMTBase()), SystemParameters.MCLAMD, 0.3, 2, entryrange, lambda, phi, GMT_l);
+	if (in.TerminationCode != 3) return 1;
+	sv_EI = in.sv_cutoff;
 
-	res->latitude = phi;
-	res->longitude = lambda;
+	// Find EMS init altitude
+	in.AnchorVector = sv_EI;
+	in.EarthRelStopParam = EMSAlt;
+	in.StopParamRefFrame = 0;
+	in.CutoffIndicator = 3;
 
-	res->VIO = length(V05G);
-	res->GET400K = t2;
-	res->GET05G = t2 + t32 + dt22;
+	EMMENI(in);
+
+	if (in.TerminationCode != 3) return 1;
+	sv_05G = in.sv_cutoff;
+
+	//Calculate output data
+	UREI = unit(sv_EI.R);
+	vEI = length(sv_EI.V);
+	res.ReA = asin(dotp(UREI, sv_EI.V) / vEI);
+	res.RTGO = EntryCalculations::LNDING(sv_EI.R, sv_EI.V, sv_EI.GMT, SystemParameters.MCLAMD, 0.3, 2, entryrange, lambda, phi, GMT_l);
+	res.latitude = phi;
+	res.longitude = lambda;
+	res.VIO = length(sv_05G.V);
+	res.GET400K = GETfromGMT(sv_EI.GMT);
+	res.GET05G = GETfromGMT(sv_05G.GMT);
+	return 0;
 }
 
 double RTCC::CalculateTPITimes(SV sv0, int tpimode, double t_TPI_guess, double dt_TPI_sunrise)
@@ -15971,7 +15999,7 @@ void RTCC::EMMDYNMC(int L, int queid, int ind, double param)
 
 //Space Digitals
 
-int RTCC::EMDSPACENoMPT(SV sv0, int queid, double gmt, double incl, double ascnode)
+int RTCC::EMDSPACENoMPT(VehicleDataBlock sv0, int queid, double gmt, double incl, double ascnode)
 {
 	//queid:
 	//3 = MED Column 1
@@ -15980,11 +16008,11 @@ int RTCC::EMDSPACENoMPT(SV sv0, int queid, double gmt, double incl, double ascno
 
 	EZSPACE.errormessage = "";
 
-	EphemerisData sv = ConvertSVtoEphemData(sv0);
+	EphemerisData sv = sv0.sv;
 
 	//Generate display values for current state vector
 	EZSPACE.GET = GETfromGMT(sv.GMT);
-	EZSPACE.WEIGHT = sv0.mass * LBS*1000.0;
+	EZSPACE.WEIGHT = sv0.Weight * LBS*1000.0;
 	EZSPACE.GMTV = 0.0;
 	EZSPACE.GETV = EZSPACE.GETAxis = 0.0;
 
@@ -16043,7 +16071,7 @@ int RTCC::EMDSPACENoMPT(SV sv0, int queid, double gmt, double incl, double ascno
 			mu = OrbMech::mu_Moon;
 		}
 
-		EZSPACE.WT = sv0.mass * LBS*1000.0;
+		EZSPACE.WT = sv0.Weight * LBS*1000.0;
 
 		int csi_out;
 		if (sv.RBI == BODY_EARTH)
@@ -18081,6 +18109,7 @@ int RTCC::PMMLAI(PMMLAIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 
 	aux.sv_FF.GMT = asc_out.sv_IG.GMT;
 	aux.sv_FF.RBI = asc_out.sv_IG.RBI;
 	aux.V_G = aux.A_T*asc_out.dv;
+	aux.WTINIT = in.m0;
 	aux.WTEND = asc_out.m1;
 	aux.WTENGON = asc_in.m0;
 	aux.W_CSM = 0.0;
@@ -18153,6 +18182,7 @@ int RTCC::PMMLDI(PMMLDIInput in, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 
 	aux.sv_FF.GMT = sv_PDI.sv.GMT;
 	aux.sv_FF.RBI = sv_PDI.sv.RBI;
 	aux.V_G = _V(1, 0, 0)*dv;
+	aux.WTINIT = in.sv.Weight;
 	aux.WTEND = sv_land.Weight;
 	aux.WTENGON = sv_PDI.Weight;
 	aux.W_CSM = 0.0;
@@ -18330,6 +18360,7 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 		int TUP = mpt->CommonBlock.TUP;
 		mpt->CommonBlock = mpt->mantable[man - 1].CommonBlock;
 		mpt->CommonBlock.TUP = TUP;
+		mpt->TotalInitMass = mpt->CommonBlock.CSMMass + mpt->CommonBlock.LMAscentMass + mpt->CommonBlock.LMDescentMass + mpt->CommonBlock.SIVBMass;
 		//TBD: Compute and store new GET to begin venting
 
 		for (unsigned i = 0;i < man;i++)
@@ -36574,6 +36605,8 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 	//mptman->GMTFrozen = mpt->GMTAV;
 	//mptman->StationIDFrozen = mpt->StationID;
 	mptman->CommonBlock.TUP = abs(mpt->CommonBlock.TUP);
+	mptman->W_B = aux->WTINIT;
+	mptman->W_IG = aux->WTENGON;
 
 	//Update fuel masses
 	double WDOT, T, F;

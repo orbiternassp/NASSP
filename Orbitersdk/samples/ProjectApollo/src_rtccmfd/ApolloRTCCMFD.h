@@ -516,7 +516,7 @@ public:
 	bool set_ChooseTIThruster(std::string th);
 	void menuTransferTIToMPT();
 	void menuSetSPQorDKIRTransferPage();
-	void menuTransferSPQorDKIToMPT();
+	void menuTransferLDPOrSPQorDKIToMPT();
 	void menuBackToSPQorDKIPage();
 	void menuChooseSPQDKIThruster();
 	bool set_ChooseSPQDKIThruster(std::string th);
