@@ -6169,65 +6169,74 @@ void Saturn::HideMeshGroup(int meshidx, int meshgrp, bool hide){
 	}
 }
 
-// This is for solving the switsches floating away during the Ordeal animation
+// This is for solving the switches floating away during the Ordeal animation
 // The solution is to manimulate the vertices directly instead doing a "combined" animation
-void Saturn::updateOrdealMshGrp(int tgtGroupIdx, int srcGroupIdx, VECTOR3 axis, VECTOR3 pivot, double deg)
+void Saturn::updateOrdealMshGrp(int tgtGrpIdx, int srcGrpIdx, VECTOR3 axis, VECTOR3 pivot, double deg)
 {
+	// 1. Get Handles for the visual instance and the static template
 	DEVMESHHANDLE hMesh = GetDevMesh(vis, vcidx);
-	// Safety check
-	if (!hMesh || !vcmesh) return;
+	MESHHANDLE hTempl = GetMeshTemplate(vcidx);
 
-	MESHGROUP* srcGroup = oapiMeshGroup(GetMeshTemplate(vcidx), srcGroupIdx);
-	MESHGROUP* tgtGroup = oapiMeshGroup(GetMeshTemplate(vcidx), tgtGroupIdx);
+	// Safety check
+	if (!hMesh || !vcmesh || !hTempl) return;
+
+    MESHGROUP* srcGroup = oapiMeshGroup(hTempl, srcGrpIdx);
+    MESHGROUP* tgtGroup = oapiMeshGroup(hTempl, tgtGrpIdx);
+	if (!srcGroup || !tgtGroup) return;
 
 	DWORD vertexCnt = srcGroup->nVtx;
+	
+    // 2. Prepare Transformation Matrices using Orbiter SDK helpers
+    double rad = deg * RAD;
+    VECTOR3 nAxis = unit(axis); 
 
-    GROUPEDITSPEC ges;
+	// Use SDK internal rotm for 3x3 rotation (Rodrigues equivalent)
+    MATRIX3 R3 = rotm(nAxis, rad);
+
+    // Embed 3x3 rotation into a 4x4 MATRIX4 using the _M macro
+    MATRIX4 R = _M(R3.m11, R3.m12, R3.m13, 0,
+                   R3.m21, R3.m22, R3.m23, 0,
+                   R3.m31, R3.m32, R3.m33, 0,
+                   0,      0,      0,      1);
+
+    // Define Translation matrices for the Pivot point
+    MATRIX4 T1 = _M(1, 0, 0, -pivot.x,
+                    0, 1, 0, -pivot.y,
+                    0, 0, 1, -pivot.z,
+                    0, 0, 0, 1);
+
+    MATRIX4 T2 = _M(1, 0, 0, pivot.x,
+                    0, 1, 0, pivot.y,
+                    0, 0, 1, pivot.z,
+                    0, 0, 0, 1);
+
+    // Combine: Total Matrix M = T2 * R * T1
+    MATRIX4 M = mul(T2, mul(R, T1));
+
+	// 3. Setup Mesh-Update structure (GROUPEDITSPEC)
+	GROUPEDITSPEC ges;
     ges.flags  = GRPEDIT_VTXCRD | GRPEDIT_VTXNML;	// Flags for Vertex Coordinate and Normal manipulation
     ges.nVtx   = vertexCnt;							// Vertex Count
     ges.vIdx   = 0;									// We change all Vertices
 	ges.Vtx    = new NTVERTEX[ges.nVtx];
-	
-    // 1. Calculate Transformation Matrix
-    double rad = deg * RAD;
-    VECTOR3 nAxis = unit(axis); 
-    
-    double c = cos(rad);
-    double s = sin(rad);
-    double t = 1.0 - c;
-    double x = nAxis.x, y = nAxis.y, z = nAxis.z;
 
-    // Pur Rotationsmatrix R (Rodrigues)
-    MATRIX4 R = {
-        t*x*x + c,   t*x*y - z*s, t*x*z + y*s, 0,
-        t*x*y + z*s, t*y*y + c,   t*y*z - x*s, 0,
-        t*x*z - y*s, t*y*z + x*s, t*z*z + c,   0,
-        0,           0,           0,           1
-    };
+	// 4. Transform Vertices (Positions and Normals)
+    for (DWORD i = 0; i < vertexCnt; i++) {
 
-    // Translation for the Pivot point
-    MATRIX4 T1 = identity4(); T1.m14 = -pivot.x; T1.m24 = -pivot.y; T1.m34 = -pivot.z;
-    MATRIX4 T2 = identity4(); T2.m14 =  pivot.x; T2.m24 =  pivot.y; T2.m34 =  pivot.z;
-
-    MATRIX4 M = mul(T2, mul(R, T1));
-
-    // 2. Transform Vertices
-    for (WORD i = 0; i < vertexCnt; i++) {
-
-		// Vertices transformation (Rotation)
+        // Position: Full transform (Rotation around Pivot)
         ges.Vtx[i].x = (float)(M.m11 * srcGroup->Vtx[i].x + M.m12 * srcGroup->Vtx[i].y + M.m13 * srcGroup->Vtx[i].z + M.m14);
         ges.Vtx[i].y = (float)(M.m21 * srcGroup->Vtx[i].x + M.m22 * srcGroup->Vtx[i].y + M.m23 * srcGroup->Vtx[i].z + M.m24);
         ges.Vtx[i].z = (float)(M.m31 * srcGroup->Vtx[i].x + M.m32 * srcGroup->Vtx[i].y + M.m33 * srcGroup->Vtx[i].z + M.m34);
 
-        // Normals Rotation for proper lighting
+        // Normals: Rotation only (for correct lighting/shading)
         ges.Vtx[i].nx = (float)(R.m11 * srcGroup->Vtx[i].nx + R.m12 * srcGroup->Vtx[i].ny + R.m13 * srcGroup->Vtx[i].nz);
         ges.Vtx[i].ny = (float)(R.m21 * srcGroup->Vtx[i].nx + R.m22 * srcGroup->Vtx[i].ny + R.m23 * srcGroup->Vtx[i].nz);
         ges.Vtx[i].nz = (float)(R.m31 * srcGroup->Vtx[i].nx + R.m32 * srcGroup->Vtx[i].ny + R.m33 * srcGroup->Vtx[i].nz);
     }
 
-	// 3. IMPORTANT: Tell D3D9Client to Update the GPU-Buffer
-    oapiEditMeshGroup(hMesh, tgtGroupIdx, &ges);
+    // 5. Tell D3D9Client to Update the GPU-Buffer
+    oapiEditMeshGroup(hMesh, tgtGrpIdx, &ges);
 
-	// CleanUp
+    // 6. Cleanup allocated memory
 	if(ges.Vtx) delete [] ges.Vtx;
 }
