@@ -335,7 +335,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		entopt.vessel = calcParams.src;
 		entopt.RV_MCC = sv1;
 
-		EntryTargeting(&entopt, &res); //Target load for uplink
+		EntryTargeting(entopt, res);
 
 		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -394,7 +394,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		entopt.TIGguess = form->GETI[0] = OrbMech::HHMMSSToSS(8, 0, 0);
 		entopt.t_Z = OrbMech::HHMMSSToSS(25.0, 43.0, 0.0);
 		entopt.RV_MCC = sv1;
-		EntryTargeting(&entopt, &res);
+		EntryTargeting(entopt, res);
 		form->dVT[0] = length(res.dV_LVLH) / 0.3048;
 		form->GET400K[0] = res.GET05G;
 		form->lng[0] = round(res.longitude * DEG);
@@ -470,7 +470,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 			entopt.TIGguess = form->GETI[0] = OrbMech::HHMMSSToSS(15, 0, 0);
 			entopt.t_Z = OrbMech::HHMMSSToSS(50.0, 6.0, 0.0);
 			entopt.RV_MCC = sv2;
-			EntryTargeting(&entopt, &res);
+			EntryTargeting(entopt, res);
 			form->dVT[0] = length(res.dV_LVLH) / 0.3048;
 			form->GET400K[0] = res.GET05G;
 			form->lng[0] = round(res.longitude * DEG);
@@ -480,7 +480,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 			entopt.TIGguess = form->GETI[0] = OrbMech::HHMMSSToSS(25, 0, 0);
 			entopt.t_Z = OrbMech::HHMMSSToSS(74.0, 12.0, 0.0);
 			entopt.RV_MCC = sv1;
-			EntryTargeting(&entopt, &res);
+			EntryTargeting(entopt, res);
 			form->dVT[0] = length(res.dV_LVLH) / 0.3048;
 			form->GET400K[0] = res.GET05G;
 			form->lng[0] = round(res.longitude * DEG);
@@ -488,7 +488,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 			entopt.TIGguess = form->GETI[1] = OrbMech::HHMMSSToSS(35, 0, 0);
 			entopt.t_Z = OrbMech::HHMMSSToSS(73.0, 39.0, 0.0);
 			entopt.RV_MCC = sv2;
-			EntryTargeting(&entopt, &res);
+			EntryTargeting(entopt, res);
 			form->dVT[1] = length(res.dV_LVLH) / 0.3048;
 			form->GET400K[1] = res.GET05G;
 			form->lng[1] = round(res.longitude * DEG);
@@ -496,7 +496,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 			entopt.TIGguess = form->GETI[2] = OrbMech::HHMMSSToSS(45, 0, 0);
 			entopt.t_Z = OrbMech::HHMMSSToSS(97.0, 58.0, 0.0);
 			entopt.RV_MCC = sv2;
-			EntryTargeting(&entopt, &res);
+			EntryTargeting(entopt, res);
 			form->dVT[2] = length(res.dV_LVLH) / 0.3048;
 			form->GET400K[2] = res.GET05G;
 			form->lng[2] = round(res.longitude * DEG);
@@ -504,7 +504,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 			entopt.TIGguess = form->GETI[3] = OrbMech::HHMMSSToSS(60, 0, 0);
 			entopt.t_Z = OrbMech::HHMMSSToSS(122.0, 01.0, 0.0);
 			entopt.RV_MCC = sv2;
-			EntryTargeting(&entopt, &res);
+			EntryTargeting(entopt, res);
 			form->dVT[3] = length(res.dV_LVLH) / 0.3048;
 			form->GET400K[3] = res.GET05G;
 			form->lng[3] = round(res.longitude * DEG);
@@ -3418,7 +3418,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 		}
 
 		entopt.type = 3;
-		EntryTargeting(&entopt, &res);
+		EntryTargeting(entopt, res);
 
 		if (fcn != 205)
 		{
@@ -3432,7 +3432,7 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 			{
 				entopt.type = 1;
 				entopt.t_Z = res.GET400K;
-				EntryTargeting(&entopt, &res);
+				EntryTargeting(entopt, res);
 			}
 
 			//Apollo 11 Mission Rules

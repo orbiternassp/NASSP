@@ -2866,7 +2866,7 @@ void RTCC::AP11BlockData(AP11BLKOpt *opt, P37PAD &pad)
 		entopt.lng = opt->lng[i];
 		entopt.t_Z = opt->T_Z[i];
 
-		EntryTargeting(&entopt, &res);
+		EntryTargeting(entopt, res);
 
 		pad.dVT[i] = length(res.dV_LVLH) / 0.3048;
 		pad.GET400K[i] = res.GET05G;
@@ -2927,83 +2927,113 @@ void RTCC::BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res)
 	RZRFTT.Primary.DeltaV = res->dV_LVLH;
 }
 
-void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
+void RTCC::EntryTargeting(const EntryOpt &opt, EntryResults &res)
 {
-	RTEEarth* entry;
-	double GET, LINE[10];
-	bool stop;
-	SV sv;
+	double LINE[10], GMT, GMT_TIG;
+	SV sv_tig;
 
-	stop = false;
+	GMT = OrbMech::GETfromMJD(opt.RV_MCC.MJD, GetGMTBase());
+	GMT_TIG = GMTfromGET(opt.TIGguess);
 
-	sv = opt->RV_MCC;
-	GET = (sv.MJD - CalcGETBase())*24.0*3600.0;
-
-	if (opt->entrylongmanual)
+	if (opt.entrylongmanual)
 	{
 		LINE[0] = PI05;
-		LINE[1] = opt->lng;
+		LINE[1] = opt.lng;
 		LINE[2] = -PI05;
-		LINE[3] = opt->lng;
+		LINE[3] = opt.lng;
 		LINE[4] = 1e10;
 		LINE[5] = 1e10;
 	}
 	else
 	{
-		if (opt->ATPLine < 0 || opt->ATPLine>4)
+		if (opt.ATPLine < 0 || opt.ATPLine>4)
 		{
 			return;
 		}
 
 		for (int i = 0;i < 10;i++)
 		{
-			LINE[i] = PZREAP.ATPCoordinates[opt->ATPLine][i];
+			LINE[i] = PZREAP.ATPCoordinates[opt.ATPLine][i];
 		}
 	}
 
-	entry = new RTEEarth(this, ConvertSVtoEphemData(sv), GetGMTBase(), SystemParameters.MCLAMD, GMTfromGET(opt->TIGguess), GMTfromGET(opt->t_Z), opt->type);
-	//Check for error (state vector not in Earth SOI)
-	if (entry->errorstate)
+	//Propagate to TIG
+	sv_tig = coast(opt.RV_MCC, GMT_TIG - GMT);
+
+	if (sv_tig.gravref == hEarth)
 	{
-		return;
-	}
+		bool stop;
 
-	entry->READ(PZREAP.RRBIAS, opt->dv_max, PZREAP.TGTLN + 1, 37500.0*0.3048);
-	entry->ATP(LINE);
-	while (!stop)
-	{
-		stop = entry->EntryIter();
-	}
+		stop = false;
 
-	res->dV_LVLH = entry->Entry_DV;
-	res->P30TIG = GETfromGMT(entry->sv_ig.GMT);
-	res->latitude = entry->EntryLatcor;
-	res->longitude = entry->EntryLngcor;
-	res->GET400K = GETfromGMT(entry->t2);
-	res->GET05G = GETfromGMT(entry->EntryRET);
-	res->RTGO = entry->EntryRTGO;
-	res->VIO = entry->EntryVIO;
-	res->ReA = entry->EntryAng;
-	res->precision = entry->precision;
+		RTEEarth rte(this, ConvertSVtoEphemData(sv_tig), GetGMTBase(), SystemParameters.MCLAMD, GMTfromGET(opt.TIGguess), GMTfromGET(opt.t_Z), opt.type);
 
-	delete entry;
+		//Check for error
+		if (rte.errorstate)
+		{
+			return;
+		}
 
-	double TIG_imp, LMmass;
-	VECTOR3 DV_imp;
+		rte.READ(PZREAP.RRBIAS, opt.dv_max, PZREAP.TGTLN + 1, 37500.0 * 0.3048);
+		rte.ATP(LINE);
+		while (!stop)
+		{
+			stop = rte.EntryIter();
+		}
 
-	TIG_imp = res->P30TIG;
-	DV_imp = res->dV_LVLH;
+		res.dV_LVLH = rte.Entry_DV;
+		res.P30TIG = GETfromGMT(rte.sv_ig.GMT);
+		res.latitude = rte.EntryLatcor;
+		res.longitude = rte.EntryLngcor;
+		res.GET400K = GETfromGMT(rte.t2);
+		res.GET05G = GETfromGMT(rte.EntryRET);
+		res.RTGO = rte.EntryRTGO;
+		res.VIO = rte.EntryVIO;
+		res.ReA = rte.EntryAng;
+		res.precision = rte.precision;
 
-	if (opt->csmlmdocked)
-	{
-		LMmass = GetDockedVesselMass(opt->vessel);
+		double TIG_imp, LMmass;
+		VECTOR3 DV_imp;
+
+		TIG_imp = res.P30TIG;
+		DV_imp = res.dV_LVLH;
+
+		if (opt.csmlmdocked)
+		{
+			LMmass = GetDockedVesselMass(opt.vessel);
+		}
+		else
+		{
+			LMmass = 0.0;
+		}
+
+		PoweredFlightProcessor(sv_tig, TIG_imp, opt.enginetype, LMmass, DV_imp, true, res.P30TIG, res.dV_LVLH, res.sv_preburn, res.sv_postburn);
 	}
 	else
 	{
-		LMmass = 0.0;
-	}
+		//Temporary fix for TIG being in lunar SOI
+		RTEMoonOpt moonopt;
 
-	PoweredFlightProcessor(opt->RV_MCC, TIG_imp, opt->enginetype, LMmass, DV_imp, true, res->P30TIG, res->dV_LVLH, res->sv_preburn, res->sv_postburn);
+		moonopt.vessel = opt.vessel;
+		moonopt.TIGguess = opt.TIGguess;
+		moonopt.EntryLng = opt.lng;
+		moonopt.RV_MCC = sv_tig;
+		moonopt.csmlmdocked = opt.csmlmdocked;
+		moonopt.entrylongmanual = opt.entrylongmanual;
+		moonopt.enginetype = opt.enginetype;
+		if (opt.type == 1)
+		{
+			moonopt.SMODE = 14;
+		}
+		else
+		{
+			moonopt.SMODE = 16;
+		}
+		moonopt.t_zmin = opt.t_Z;
+		moonopt.ATPLine = opt.ATPLine;
+
+		RTEMoonTargeting(&moonopt, &res);
+	}
 }
 
 void RTCC::PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res)
@@ -7339,8 +7369,18 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 
 	arr.SMODEI = opt->SMODE;
 	arr.alpha_SID0 = SystemParameters.MCLAMD;
-	arr.TZMINI = GMTfromGET(TZMINI);
-	arr.TZMAXI = 0.0; //TBD
+	if (opt->SMODE == 14 || opt->SMODE == 34)
+	{
+		//ATP
+		arr.TZMINI = GMTfromGET(TZMINI);
+		arr.TZMAXI = 0.0;
+	}
+	else
+	{
+		//UA
+		arr.TZMINI = GMTfromGET(PZREAP.TZMIN * 3600.0);
+		arr.TZMAXI = GMTfromGET(PZREAP.TZMAX * 3600.0);
+	}
 	arr.IRMAXI = PZREAP.IRMAX;
 	arr.URMAXI = PZREAP.VRMAX;
 	arr.RRBI = PZREAP.RRBIAS;
