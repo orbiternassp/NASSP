@@ -2027,7 +2027,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		// First Darken All Lights
 //		double floodRotaryValue = 0.0; //FloodRotarySwitch.GetOutput();
-		double floodRotaryValue = (FloodRotarySwitch.GetOutput() + RightFloodRotarySwitch.GetOutput() + Panel100FloodRotarySwitch.GetOutput()) / 30;	// add some fake ambient light, max 10% of all floodlights
+		double floodRotaryValue = (LeftFloodLights.GetCombinedOutput() + RightFloodLights.GetCombinedOutput() + LEBFloodLights.GetCombinedOutput()) / 60;	// add some fake ambient light, max 10% of all floodlights
 
 		// Hardcoded Materials with no Texture
 		SetVCLighting(vcidx,   VC_MAT_FDAI_errorneedle, MAT_LIGHT, floodRotaryValue, 1);
