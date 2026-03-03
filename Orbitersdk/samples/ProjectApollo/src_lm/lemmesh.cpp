@@ -52,6 +52,7 @@ MESHHANDLE hLMAscent;
 MESHHANDLE hLMVC;
 MESHHANDLE hLMWindowShades;
 MESHHANDLE hLMXpointerShades;
+MESHHANDLE hLMPointingArrow;
 
 static PARTICLESTREAMSPEC lunar_dust = {
 	0,		// flag
@@ -834,6 +835,9 @@ void LEM::SetMeshes() {
 	// Ascent Stage Mesh
 	ascidx = AddMesh(hLMAscent, &mesh_asc);
 
+	// Pointing Arrow
+	hLMPointingArrowidx = AddMesh(hLMPointingArrow, &mesh_asc);
+
 	// VC Mesh
 	vcidx = AddMesh(hLMVC, &mesh_asc);
 
@@ -863,6 +867,7 @@ void LEMLoadMeshes()
 	hLMWindowShades = oapiLoadMeshGlobal("ProjectApollo/LM_Window_Shades");
 	hLMXpointerShades = oapiLoadMeshGlobal("ProjectApollo/LM_Xpointer_Shades");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
+	hLMPointingArrow = oapiLoadMeshGlobal("ProjectApollo/Helpers/PointingArrow");
 }
 
 //

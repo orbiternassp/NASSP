@@ -434,6 +434,4 @@ const int TexMul = TEXTURES_4K;
 #define _OPENORBITER
 #endif
 
-//#define _OPENORBITER
-
 #endif
