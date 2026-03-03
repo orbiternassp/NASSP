@@ -703,7 +703,7 @@ void LEM::InitSwitches() {
 	LMPBatteryFeedTieCB2.Register(PSH, "LMPBatteryFeedTieCB2", 1);
 
 	LEMCoas1Enabled = false;
-	LEMCoas2Enabled = true;
+	LEMCoas2Enabled = false;
 	LEMWindowShades = true;
 	ordealEnabled = false;
 
