@@ -1767,7 +1767,7 @@ ElectricLight::ElectricLight(char* lightname, e_object* i_src, const bool flashi
 	lampBeacon.active = false;
 	lampBeacon.tofs = 0.0;
 	lampBeacon.falloff = 1.;
-	lampBeacon.size = 0.2;
+	lampBeacon.size = 0.05;
 	lampBeaconColor = _V(diffuse.r, diffuse.g, diffuse.b);
 	lampBeacon.col = &lampBeaconColor;
 	thisVessel->AddBeacon(&lampBeacon);

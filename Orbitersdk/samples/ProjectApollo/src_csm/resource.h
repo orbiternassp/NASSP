@@ -566,7 +566,6 @@
 #define IDB_CSM_MAIN_LEFT_PANEL                             851
 #define IDB_CSM_MAIN_RIGHT_PANEL                            852
 #define IDB_CSM_MAIN_MIDDLE_PANEL                           853
-#define IDB_SPS_INJ_VLV                                     854
 #define IDB_TELESCOPE_WIDE                                  855
 #define IDB_SEXTANT_WIDE                                    856
 #define IDB_THUMBWHEEL_GPI_PITCH                            857
@@ -916,6 +915,14 @@
 #define AID_VC_Sextant_Eyepiece			3221
 #define AID_VC_Telescope_Eyepiece		3222
 
+// VC Active Areas (Panel 300/301/302/303/305)
+#define AID_VC_Panel300_SuitFlowValve_Handle	3223
+#define AID_VC_Panel301_SuitFlowValve_Handle 	3224
+#define AID_VC_Panel302_SuitFlowValve_Handle 	3225
+#define AID_VC_Rot_Panel303 					3226
+#define AID_VC_Panel305_FootPrepWater_Lever02	3227
+#define AID_VC_Panel305_FootPrepWater_Lever01	3228
+
 // VC Active Areas (Panel 2)
 #define AID_VC_PANEL_2			((id >= 4800) && (id <= 4999))
 #define AID_VC_PUSHB_P2_01      4801    // DSKY key Verb
@@ -1136,7 +1143,6 @@
 #define AID_VC_SPS_OXID_PCT     3388
 #define AID_VC_SPS_FUEL_PCT     3389
 #define AID_VC_SPSOXIDFLOWIND   3390
-#define AID_VC_SPS_INJ_VLV      3391
 
 // VC Active Areas (Panel 4)
 #define AID_VC_PANEL_4			((id >= 3400) && (id <= 3499))
@@ -1690,6 +1696,10 @@
 
 // Integral Lights Cue Card
 #define AID_VC_CUE_CARDS_LIGHTING  7020
+
+// Pointing arrow
+#define AID_CMVC_POINTINGARROW 7021
+
 
 // Next default values for new objects
 //

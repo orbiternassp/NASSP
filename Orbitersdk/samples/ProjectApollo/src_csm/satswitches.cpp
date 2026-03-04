@@ -2986,3 +2986,24 @@ void SaturnAltimeter::DefineVCAnimations(UINT vc_idx)
 	ach_needleAnim = Sat->AddAnimationComponent(animNeedle, 0.0f, 1.0f, &mgt_needleAnim);
 	Sat->SetAnimation(animNeedle, 0.0);
 }
+
+SaturnSPSInjectorValveIndicator::SaturnSPSInjectorValveIndicator()
+{
+	Index = 1;
+}
+
+void SaturnSPSInjectorValveIndicator::Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, int index)
+{
+	SaturnRoundMeter::Init(p0, p1, row, s);
+	Index = index;
+}
+
+double SaturnSPSInjectorValveIndicator::QueryValue()
+{
+	return Sat->GetSPSEngine()->GetInjectorValvePosition(Index);
+}
+
+void SaturnSPSInjectorValveIndicator::DoDrawSwitch(double v, SURFHANDLE drawSurface)
+{
+	DrawNeedle2(drawSurface, 48 * (Index - 1) + 17, 17, 8.0, 12.0, -(v + 45.0) * RAD);
+}

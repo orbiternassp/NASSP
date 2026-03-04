@@ -516,7 +516,7 @@ public:
 	bool set_ChooseTIThruster(std::string th);
 	void menuTransferTIToMPT();
 	void menuSetSPQorDKIRTransferPage();
-	void menuTransferSPQorDKIToMPT();
+	void menuTransferLDPOrSPQorDKIToMPT();
 	void menuBackToSPQorDKIPage();
 	void menuChooseSPQDKIThruster();
 	bool set_ChooseSPQDKIThruster(std::string th);
@@ -757,6 +757,10 @@ public:
 	void set_RecoveryTargetSelectionCalc(double get, double lng);
 	void menuSelectRecoveryTarget();
 	bool set_RecoveryTarget(int num);
+	void menuSetRecoveryZonesDisplayPage();
+	void menuRecoveryZonesDisplayCalc();
+	void menuCycleRecoveryZonesDisplayPages();
+	void menuEnterRecoveryZones();
 	void menuSetStarSightingTableInput();
 	void menuStarSightingTableCalc();
 	void menuSetSpacecraftPointingDisplayInput();

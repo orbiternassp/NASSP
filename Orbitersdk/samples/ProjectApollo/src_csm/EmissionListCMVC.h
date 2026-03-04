@@ -22,7 +22,7 @@ DWORD IntegralLights_P8[] = {
 	VC_MAT_Meters_P1_t,
 	VC_MAT_Meters_P2_P8_t,
 	VC_MAT_Rotarys_P8_t,
-	VC_MAT_TW_Switches_CMP
+//	VC_MAT_TW_Switches_CMP
 };
 
 // Material Emissions Panel 8 without Emission Texture
@@ -30,7 +30,8 @@ DWORD IntergralLights_P8_NTex[] = {
 
 	// TODO Material List
 //	VC_MAT_CWLights_P8_t,
-	VC_MAT_EMS_Scroll_Timer_P1_t,
+	VC_MAT_EMS_Scroll,
+	VC_MAT_Timer_P1,
 	VC_MAT_FDAI_Ball_t,
 	VC_MAT_AttitudeSetNumbers
 
@@ -57,15 +58,15 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_AdditionalParts_t,
 //	VC_MAT_AttitudeSetNumbers,
 	VC_MAT_Altimeter_Cover,
-	VC_MAT_Sextant_Eyepiece,
-	VC_MAT_Telescope_Eyepiece,
+	VC_MAT_Optics,
 //	VC_MAT_CM_Switches,
 	VC_MAT_Accelerometer_Cover,
 	VC_MAT_DSKY_Glareshade,
 	VC_MAT_MissionTimer_Glareshade,
 	VC_MAT_EMSDeltaV_Glareshield,
 	VC_MAT_Alluminum,
-	VC_MAT_CB_black_t,
+//	VC_MAT_CB_black_t,
+	VC_MAT_CircuitBreakers_t,
 	VC_MAT_CM_VC_Color_1,
 	VC_MAT_CM_VC_Color_2,
 	VC_MAT_CM_VC_Color_3,
@@ -95,13 +96,13 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_csm_right_cb_panels_ILL_P5_t,
 	VC_MAT_csm_right_cb_panels_ILL_P100_t,
 	VC_MAT_csm_right_cb_panels_t,
-	VC_MAT_DOR_t,
+	//VC_MAT_DOR_t,
 	VC_MAT_DSKY_Keys_LEB_t,
 	VC_MAT_DSKY_Keys_t,
 	VC_MAT_FDAI_Frame_t,
 	VC_MAT_FwdHatch_t,
-	VC_MAT_HolderRahmen_t,
-	VC_MAT_HOPEN_t,
+	VC_MAT_SwitchGuard_t,
+	//VC_MAT_HOPEN_t,
 	VC_MAT_LMVC_t,
 	VC_MAT_MAINVCTEX_t,
 	VC_MAT_Meters_P1_t,
@@ -130,9 +131,10 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_EventTimerLEB,
 	VC_MAT_csm_waste_disposal_rotary,
 	VC_MAT_Panel382_Cover,
-	VC_MAT_TW_Switches_LEB,
-	VC_MAT_TW_Switches_CMP,
-	VC_MAT_TW_Switches_LMP,
+	VC_MAT_TW_Switches,
+//	VC_MAT_TW_Switches_LEB,
+//	VC_MAT_TW_Switches_CMP,
+//	VC_MAT_TW_Switches_LMP,
 
 	// DSKY Panel 2 Lights Materials
 	VC_MAT_DSKY_Lights_GIMBAL_LOCK,
@@ -242,7 +244,15 @@ DWORD FloodLights_P8[] = {
 
 	VC_MAT_MasterAlarm_LEB,
 
-	VC_MAT_Panel_225_226_229_Guards
+	VC_MAT_Panel_225_226_229_Guards,
+	VC_MAT_P305_FootPrepWater_Lever,
+	VC_MAT_Panels_300_305,
+	VC_MAT_Panel300_SuitFlowValves,
+	VC_MAT_Panel305WaterPipe,
+
+	// Panel 230
+	VC_MAT_csm_right_LEB_panel_230_A15,
+	VC_MAT_csm_right_LEB_panel_230_A17
 };
 
 //
@@ -260,13 +270,13 @@ DWORD IntegralLights_P5[] = {
 	VC_MAT_Rotarys_P5_t,
 	VC_MAT_Talkbacks_P2_t,
 	VC_MAT_Talkbacks_P3_t,
-	VC_MAT_TW_Switches_LMP
+//	VC_MAT_TW_Switches_LMP
 };
 
 DWORD FloodLights_P5[] = {
 
 	// TODO Material List
-	VC_MAT_CB_black_t,
+//	VC_MAT_CB_black_t,
 	VC_MAT_CMVCTex2_t,
 	VC_MAT_CMVCTex3_t,
 	VC_MAT_Colors_t,
@@ -288,7 +298,9 @@ DWORD IntegralLights_P100[] = {
 	VC_MAT_DSKY_Keys_LEB_t,
 	VC_MAT_Rotarys_P100_t,
 	VC_MAT_Panel306,
-	VC_MAT_TW_Switches_LEB
+	VC_MAT_csm_right_LEB_panel_230_A15,
+	VC_MAT_csm_right_LEB_panel_230_A17
+//	VC_MAT_TW_Switches_LEB
 };
 
 DWORD IntegralLights_P100_NoTex[] = {

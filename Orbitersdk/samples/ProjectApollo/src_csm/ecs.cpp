@@ -988,16 +988,24 @@ void SaturnSideHatch::SaveState(FILEHANDLE scn) {
 	sprintf(buffer, "%i %i %lf %lf", (open ? 1 : 0), toggle, sidehatch_state.State(), sidehatch_state.Speed());
 	oapiWriteScenario_string(scn, "SIDEHATCH", buffer);
 }
+
+double SaturnSideHatch::GetAnimState()
+{
+	return sidehatch_state.State();
+}
+
 void SaturnSideHatch::DefineAnimationsVC(UINT idx)
 {
 	// Side Hatch Animations
 	ANIMATIONCOMPONENT_HANDLE ach_SideHatchVC, ach_gearboxsel, ach_actuatorsel, ach_ventvalve;
 
-	const VECTOR3 SideHatch_HandleRot1Location = { 0.3076, 1.3543, -0.1137 };
-	const VECTOR3 SideHatch_HandleRot2Location = { 0.2348, 1.2453, 0.0608 };
-	const VECTOR3 SideHatch_VentValveLocation = { -0.2637, 1.1932, 0.1462 };
-	const VECTOR3 sidehatch_gearbox_axis = { -0.160457905417272, -0.797020760042779, -0.582246656194721 };
-	const VECTOR3 sidehatch_ventvalve_axis = { 0.080192220002342, -0.837079540734271, -0.541171923084705 };
+	const VECTOR3 SideHatch_HandleRot1Location = { 0.306458, 1.27405, -0.138274 };
+	const VECTOR3 SideHatch_HandleRot2Location = { 0.235498, 1.14957, 0.030519 };
+	const VECTOR3 SideHatch_VentValveLocation = { -0.265141, 1.20124, 0.146229 };
+
+	const VECTOR3 sidehatch_gearbox_axis = { -0.175839, -0.819104, -0.54603 };
+	const VECTOR3 sidehatch_actuator_axis = { -0.166602, -0.699166, -0.695278 };
+	const VECTOR3 sidehatch_ventvalve_axis = { 0.188955, -0.812085, -0.5521 };	
 
 	static UINT	meshgroup_SideHatchVC[7] = { VC_GRP_SideHatch_1, VC_GRP_SideHatch_2, VC_GRP_SideHatch_3, VC_GRP_SideHatch_4, VC_GRP_SideHatch_5, VC_GRP_SideHatch_6,
 		VC_GRP_SideHatch_7};
@@ -1005,9 +1013,9 @@ void SaturnSideHatch::DefineAnimationsVC(UINT idx)
 	static UINT	meshgroup_actuatorsel = { VC_GRP_SideHatch_HandleRot2 };
 	static UINT	meshgroup_ventvalve = { VC_GRP_SideHatch_VentValve };
 
-	static MGROUP_ROTATE mgt_SideHatchVC(idx, meshgroup_SideHatchVC, 7, _V(-0.427397, 1.06886, 0.440263), _V(-0.187232813439751, 0.501366307175263, -0.844734099939665), (float)(-90.0*RAD));
+	static MGROUP_ROTATE mgt_SideHatchVC(idx, meshgroup_SideHatchVC, 7, _V(-0.499843, 1.27804, 0.180651), _V(-0.187108, 0.50544, -0.842331), (float)(-90.0*RAD));
 	static MGROUP_ROTATE mgt_gearboxsel(idx, &meshgroup_gearboxsel, 1, SideHatch_HandleRot1Location, sidehatch_gearbox_axis, (float)(RAD * 60));
-	static MGROUP_ROTATE mgt_actuatorsel(idx, &meshgroup_actuatorsel, 1, SideHatch_HandleRot2Location, sidehatch_gearbox_axis, (float)(RAD * 60));
+	static MGROUP_ROTATE mgt_actuatorsel(idx, &meshgroup_actuatorsel, 1, SideHatch_HandleRot2Location, sidehatch_actuator_axis, (float)(RAD * 60));
 	static MGROUP_ROTATE mgt_ventvalve(idx, &meshgroup_ventvalve, 1, SideHatch_VentValveLocation, sidehatch_ventvalve_axis, (float)(RAD * 180));
 
 	anim_SideHatchVC = saturn->CreateAnimation(0.0);
@@ -1026,6 +1034,41 @@ void SaturnSideHatch::DefineAnimationsVC(UINT idx)
 	saturn->SetAnimation(anim_ventvalve, 0.5);
 }
 
+BoostProtectiveCover::BoostProtectiveCover()
+{
+	saturn = NULL;
+	SideHatch = NULL;
+	BPC_CoverAnim = -1;
+	BPC_CoverRotation = NULL;
+}
+
+BoostProtectiveCover::~BoostProtectiveCover()
+{
+	if (BPC_CoverRotation) delete BPC_CoverRotation;
+}
+
+void BoostProtectiveCover::Init(Saturn *s, SaturnSideHatch *hatch)
+{
+	saturn = s;
+	SideHatch = hatch;
+}
+
+void BoostProtectiveCover::Timestep(double simdt)
+{
+	if (!saturn->LETAttached()) return;
+	saturn->SetAnimation(BPC_CoverAnim, SideHatch->GetAnimState());
+}
+
+void BoostProtectiveCover::DefineAnimations(UINT idx)
+{
+	static UINT BPC_Cover[2] = { 2,8 }; // LES_HatchWindow, LES_WindowGlas
+	if (BPC_CoverRotation) delete BPC_CoverRotation;
+	BPC_CoverRotation = new MGROUP_ROTATE(idx, BPC_Cover, 2, _V(-0.549913, 1.32721, -4.70315), _V(-0.195347, 0.471609, -0.859898), (float)(-140.0*RAD));
+	BPC_CoverAnim = saturn->CreateAnimation(0.0);
+	saturn->AddAnimationComponent(BPC_CoverAnim, 0.0, 1.0, BPC_CoverRotation); // Rotation
+
+	saturn->SetAnimation(BPC_CoverAnim, SideHatch->GetAnimState());
+}
 
 SaturnWaterController::SaturnWaterController() {
 }

@@ -67,6 +67,9 @@ PanelSwitchItem::PanelSwitchItem() : fInitialAnimState(0.0)
 	bHasAnimations = false;
 	bHasDirection = false;
 	bHasReference = false;
+	bHasMeshGroup = false;
+
+	reference = dir = arrowoffset = { 0,0,0 };
 }
 
 PanelSwitchItem::~PanelSwitchItem()
@@ -134,6 +137,11 @@ void PanelSwitchItem::SetDirection(const VECTOR3& _dir)
 	dir = _dir;
 }
 
+void PanelSwitchItem::SetArrowOffset(const VECTOR3 & _off)
+{
+	arrowoffset = _off;
+}
+
 void PanelSwitchItem::SetReference(const VECTOR3& ref, const VECTOR3& dir)
 {
 	bHasReference = true;
@@ -150,6 +158,11 @@ void PanelSwitchItem::SetInitialAnimState(double fState)
 const VECTOR3& PanelSwitchItem::GetReference() const
 {
 	return reference;
+}
+
+VECTOR3 PanelSwitchItem::GetChecklistReference() const
+{
+	return (reference + arrowoffset);
 }
 
 const VECTOR3& PanelSwitchItem::GetDirection() const
@@ -409,6 +422,7 @@ void TwoPositionSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 
 void TwoPositionSwitch::DefineMeshGroup(UINT _grpIndex)
 {
+	bHasMeshGroup = true;
 	grpIndex = _grpIndex;
 }
 
@@ -504,13 +518,21 @@ const double ToggleSwitch::GetRotationRange() const
 
 void ToggleSwitch::DefineVCAnimations(UINT vc_idx)
 {
-	if (bHasReference && bHasDirection && !bHasAnimations)
+	if (bHasReference && bHasDirection && bHasMeshGroup && !bHasAnimations)
 	{
 		pswitchrot = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), GetDirection(), (float)(GetRotationRange()));
 		anim_switch = OurVessel->CreateAnimation(0.5);
 		OurVessel->AddAnimationComponent(anim_switch, 0.0f, 1.0f, pswitchrot);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 //
@@ -838,6 +860,14 @@ void FivePosSwitch::DefineVCAnimations(UINT vc_idx)
 		OurVessel->AddAnimationComponent(anim_switchy, 0.0f, 1.0f, pswitchroty);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 void FivePosSwitch::OnPostStep(double SimT, double DeltaT, double MJD)
@@ -929,6 +959,14 @@ void SimplePushSwitch::DefineVCAnimations(UINT vc_idx)
 		OurVessel->AddAnimationComponent(anim_switch, 0.0f, 1.0f, pswitchtrans);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 //
@@ -1484,6 +1522,18 @@ void PanelSwitchesVC::ClearSwitches()
 	SwitchArea.clear();
 }
 
+PanelSwitchItem *PanelSwitchesVC::GetFlashingItem()
+{
+    for (unsigned i = 0; i < SwitchList.size(); i++)
+    {
+        if (SwitchList[i]->IsFlashing())
+        {
+            return SwitchList[i];
+        }
+    }
+    return NULL;
+}
+
 //
 // Panel of switches. This code wraps up a whole panel with multiple
 // rows of switches, and passes redraw and mouse events to the appropriate
@@ -1543,6 +1593,13 @@ bool PanelSwitches::SetFlashing(const char *n, bool flash)
 		if (p)
 		{
 			p->SetFlashing(flash);
+/*
+			if (flash) {
+				nextActiveSwitch = p;
+			}else{
+				nextActiveSwitch = nullptr;
+			}
+*/
 			return true;
 		}
 
@@ -1823,6 +1880,7 @@ bool GuardedToggleSwitch::CheckMouseClick(int event, int mx, int my) {
 
 void GuardedToggleSwitch::DefineMeshGroup(UINT _grpIndex, UINT _coverGrpIndex)
 {
+	bHasMeshGroup = true;
 	grpIndex = _grpIndex;
 	coverGrpIndex = _coverGrpIndex;
 }
@@ -1839,7 +1897,7 @@ void GuardedToggleSwitch::SetReference(const VECTOR3& ref, const VECTOR3& coverr
 
 void GuardedToggleSwitch::DefineVCAnimations(UINT vc_idx)
 {
-	if (bHasReference && bHasDirection && !bHasAnimations)
+	if (bHasReference && bHasDirection && bHasMeshGroup && !bHasAnimations)
 	{
 		ToggleSwitch::DefineVCAnimations(vc_idx);
 		pcoverrot = new MGROUP_ROTATE(vc_idx, &coverGrpIndex, 1, GetCoverReference(), GetCoverDirection(), (float)(RAD * 90));
@@ -1847,6 +1905,14 @@ void GuardedToggleSwitch::DefineVCAnimations(UINT vc_idx)
 		OurVessel->AddAnimationComponent(guardAnim, 0.0f, 1.0f, pcoverrot);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 bool GuardedToggleSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
@@ -1941,6 +2007,7 @@ void GuardedPushSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE surf,
 
 void GuardedPushSwitch::DefineMeshGroup(UINT _grpIndex, UINT _coverGrpIndex)
 {
+	bHasMeshGroup = true;
 	grpIndex = _grpIndex;
 	coverGrpIndex = _coverGrpIndex;
 }
@@ -1972,18 +2039,19 @@ void GuardedPushSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
-void GuardedPushSwitch::SetReference(const VECTOR3& _dir, const VECTOR3& coverref, const VECTOR3& _coverdir)
+void GuardedPushSwitch::SetReference(const VECTOR3& _dir, const VECTOR3& coverref, const VECTOR3& ref, const VECTOR3& _coverdir)
 {
 	bHasReference = true;
 	bHasDirection = true;
 	dir = _dir;
 	coverreference = coverref;
+	reference = ref;
 	coverdir = _coverdir;
 }
 
 void GuardedPushSwitch::DefineVCAnimations(UINT vc_idx)
 {
-	if (bHasReference && bHasDirection && !bHasAnimations)
+	if (bHasReference && bHasDirection && bHasMeshGroup && !bHasAnimations)
 	{
 		PushSwitch::DefineVCAnimations(vc_idx);
 		pcoverrot = new MGROUP_ROTATE(vc_idx, &coverGrpIndex, 1, GetCoverReference(), GetCoverDirection(), (float)(GetCoverRotation()));
@@ -1991,6 +2059,14 @@ void GuardedPushSwitch::DefineVCAnimations(UINT vc_idx)
 		OurVessel->AddAnimationComponent(guardAnim, 0.0f, 1.0f, pcoverrot);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 void GuardedPushSwitch::DrawSwitchVC(int id, int event, SURFHANDLE surf) {
@@ -2143,6 +2219,7 @@ void GuardedThreePosSwitch::InitGuard(int xp, int yp, int w, int h, SURFHANDLE s
 
 void GuardedThreePosSwitch::DefineMeshGroup(UINT _grpIndex, UINT _coverGrpIndex)
 {
+	bHasMeshGroup = true;
 	grpIndex = _grpIndex;
 	coverGrpIndex = _coverGrpIndex;
 }
@@ -2159,7 +2236,7 @@ void GuardedThreePosSwitch::SetReference(const VECTOR3& ref, const VECTOR3& cove
 
 void GuardedThreePosSwitch::DefineVCAnimations(UINT vc_idx)
 {
-	if (bHasReference && bHasDirection && !bHasAnimations)
+	if (bHasReference && bHasDirection && bHasMeshGroup && !bHasAnimations)
 	{
 		ToggleSwitch::DefineVCAnimations(vc_idx);
 		pcoverrot = new MGROUP_ROTATE(vc_idx, &coverGrpIndex, 1, GetCoverReference(), GetCoverDirection(), (float)(RAD * 90));
@@ -2167,6 +2244,14 @@ void GuardedThreePosSwitch::DefineVCAnimations(UINT vc_idx)
 		OurVessel->AddAnimationComponent(guardAnim, 0.0f, 1.0f, pcoverrot);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 void GuardedThreePosSwitch::DrawSwitch(SURFHANDLE DrawSurface) {
@@ -2454,18 +2539,27 @@ void ContinuousSwitch::SetInitValue(double defaultValue)
 
 void ContinuousSwitch::DefineMeshGroup(UINT _grpIndex)
 {
+	bHasMeshGroup = true;
 	grpIndex = _grpIndex;
 }
 
 void ContinuousSwitch::DefineVCAnimations(UINT vc_idx)
 {
-	if (bHasReference && bHasDirection && !bHasAnimations)
+	if (bHasReference && bHasDirection && bHasMeshGroup && !bHasAnimations)
 	{
 		pswitchrot = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), GetDirection(), (float)(RotationRange));
 		anim_switch = OurVessel->CreateAnimation(InitialAnimState());
 		OurVessel->AddAnimationComponent(anim_switch, 0.0f, 1.0f, pswitchrot);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 void ContinuousSwitch::DrawFlash(SURFHANDLE drawSurface)
@@ -3094,18 +3188,27 @@ void RotationalSwitch::SetState(int value)
 
 void RotationalSwitch::DefineMeshGroup(UINT _grpIndex)
 {
+	bHasMeshGroup = true;
 	grpIndex = _grpIndex;
 }
 
 void RotationalSwitch::DefineVCAnimations(UINT vc_idx)
 {
-	if (bHasReference && bHasDirection && !bHasAnimations)
+	if (bHasReference && bHasDirection && bHasMeshGroup && !bHasAnimations)
 	{
 		pswitchrot = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), GetDirection(), (float)(RAD * 360));
 		anim_switch = OurVessel->CreateAnimation(0.0);
 		OurVessel->AddAnimationComponent(anim_switch, 0.0f, 1.0f, pswitchrot);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 void RotationalSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface)
@@ -3454,18 +3557,27 @@ const double ThumbwheelSwitch::GetRotationRange() const
 
 void ThumbwheelSwitch::DefineMeshGroup(UINT _grpIndex)
 {
+	bHasMeshGroup = true;
 	grpIndex = _grpIndex;
 }
 
 void ThumbwheelSwitch::DefineVCAnimations(UINT vc_idx)
 {
-	if (bHasReference && bHasDirection && !bHasAnimations)
+	if (bHasReference && bHasDirection && bHasMeshGroup && !bHasAnimations)
 	{
 		pswitchrot = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), GetDirection(), (float)(GetRotationRange()));
 		anim_switch = OurVessel->CreateAnimation(InitialAnimState());
 		OurVessel->AddAnimationComponent(anim_switch, 0.0f, 1.0f, pswitchrot);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 bool ThumbwheelSwitch::CheckMouseClickVC(int event, VECTOR3 &p) {
@@ -3712,10 +3824,10 @@ void IndicatorSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface) {
 	}
 
 	if (drawState && displayState < 3.0)
-		displayState += oapiGetSimStep() * 4.0;
+		displayState += oapiGetSimStep() * 64.0;
 
 	if (!drawState && displayState > 0.0)
-		displayState -= oapiGetSimStep() * 4.0;
+		displayState -= oapiGetSimStep() * 64.0;
 
 	if (displayState > 3.0) displayState = 3.0;
 	if (displayState < 0.0) displayState = 0.0;
@@ -3800,6 +3912,7 @@ void MeterSwitch::Init(SwitchRow &row) {
 
 void MeterSwitch::DefineMeshGroup(UINT _grpIndex)
 {
+	bHasMeshGroup = true;
 	grpIndex = _grpIndex;
 }
 
@@ -3910,13 +4023,21 @@ const double CurvedMeter::GetRotationRange() const
 
 void CurvedMeter::DefineVCAnimations(UINT vc_idx)
 {
-	if (bHasReference && !bHasAnimations)
+	if (bHasReference && bHasMeshGroup && !bHasAnimations)
 	{
 		pswitchrot = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), _V(1, 0, 0), (float)(GetRotationRange()));
 		anim_switch = OurVessel->CreateAnimation(0.0);
 		OurVessel->AddAnimationComponent(anim_switch, 0.0f, 1.0f, pswitchrot);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 void CurvedMeter::OnPostStep(double SimT, double DeltaT, double MJD)
@@ -3945,6 +4066,14 @@ void LinearMeter::DefineVCAnimations(UINT vc_idx)
 		OurVessel->AddAnimationComponent(anim_switch, 0.0f, 1.0f, pswitchtrans);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 void LinearMeter::OnPostStep(double SimT, double DeltaT, double MJD)
@@ -3957,6 +4086,7 @@ RoundMeter::RoundMeter()
 {
 	pswitchrot = NULL;
 	RotationRange = RAD * 270;
+	fInitialAnimState = 0.5;
 }
 
 RoundMeter::~RoundMeter()
@@ -3988,10 +4118,18 @@ void RoundMeter::DefineVCAnimations(UINT vc_idx)
 	if (bHasDirection && bHasReference && !bHasAnimations)
 	{
 		pswitchrot = new MGROUP_ROTATE(vc_idx, &grpIndex, 1, GetReference(), GetDirection(), (float)(GetRotationRange()));
-		anim_switch = OurVessel->CreateAnimation(0.5);
+		anim_switch = OurVessel->CreateAnimation(InitialAnimState());
 		OurVessel->AddAnimationComponent(anim_switch, 0.0f, 1.0f, pswitchrot);
 		VerifyAnimations();
 	}
+	/*
+	else
+	{
+		char Buff[128];
+		sprintf(Buff, "Could not create animation for %s. bRef %d bDir %d bMesh %d", name, bHasReference, bHasDirection, bHasMeshGroup);
+		oapiWriteLog(Buff);
+	}
+	*/
 }
 
 void RoundMeter::OnPostStep(double SimT, double DeltaT, double MJD)
@@ -4001,9 +4139,9 @@ void RoundMeter::OnPostStep(double SimT, double DeltaT, double MJD)
 }
 
 void RoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double angle)
-
 {
 	// Needle function by Rob Conley from Mercury code
+	// Drawn from center of rotation to "rad" distance
 	
 	double dx = rad * cos(angle), dy = rad * sin(angle);
 
@@ -4012,6 +4150,20 @@ void RoundMeter::DrawNeedle (SURFHANDLE surf, int x, int y, double rad, double a
 	skp->MoveTo(x, y); skp->LineTo(x + (int)(0.85 * dx + 0.5), y - (int)(0.85 * dy + 0.5));
 	skp->SetPen(Pen0);
 	skp->MoveTo(x, y); skp->LineTo(x + (int)(dx + 0.5), y - (int)(dy + 0.5));
+	oapiReleaseSketchpad(skp);
+}
+
+void RoundMeter::DrawNeedle2(SURFHANDLE surf, int x, int y, double rad_1, double rad_2, double angle)
+{
+	// Drawn from center of rotation to "rad_1" distance in one direction, "rad_2" in the other direction
+	// If rad_1 and rad_2 are set identical then the needle is centered on the axis of rotation
+
+	double dx1 = -rad_1 * cos(angle), dy1 = -rad_1 * sin(angle);
+	double dx2 = rad_2 * cos(angle), dy2 = rad_2 * sin(angle);
+
+	oapi::Sketchpad* skp = oapiGetSketchpad(surf);
+	skp->SetPen(Pen0);
+	skp->Line(x + (int)(dx1 + 0.5), y - (int)(dy1 + 0.5), x + (int)(dx2 + 0.5), y - (int)(dy2 + 0.5));
 	oapiReleaseSketchpad(skp);
 }
 
@@ -5527,4 +5679,172 @@ bool PanelGroup::AddPanel(BasicPanel* pPanel, PanelSwitchScenarioHandler *PSH)
 	panels.push_back(pPanel);
 	pPanel->Register(PSH);
 	return true;
+}
+
+VCPointingArrow::VCPointingArrow()
+{
+	first = true;
+	arrow_group = NULL;
+	arrowVertsCnt = circleVertsCnt = 0;
+	arrowData = NULL;
+	circle_group = NULL;
+	circleData = NULL;
+	circleDataOrig = NULL;
+	rotationangle = rad = cos_a = sin_a = 0.0;
+	camPosGlobal = camPos = camDir = globVesselPos = camPointing = _V(0, 0, 0);
+	arrowCurPos = circleCurPos = _V(0, 0, 0);
+	pointing_dir = _V(0, 0, 0);
+	rot_axis = circle_dir = rot_axis_circle = final_vertex = _V(0, 0, 0);
+	dot = angle = 0.0;
+	rotation = rotation_circle = _M(0, 0, 0, 0, 0, 0, 0, 0, 0);
+	dot_circle = angle_circle = 0.0;
+
+	memset(&arrow_grp, 0, sizeof(GROUPREQUESTSPEC));
+	memset(&circle_grp, 0, sizeof(GROUPREQUESTSPEC));
+
+	vessel = NULL;
+}
+
+VCPointingArrow::~VCPointingArrow()
+{
+	if (arrowData) delete[] arrowData;
+	if (circleData) delete[] circleData;
+	if (circleDataOrig) delete[] circleDataOrig;
+	if (arrow_grp.Vtx) delete[] arrow_grp.Vtx;
+	if (circle_grp.Vtx) delete[] circle_grp.Vtx;
+}
+
+void VCPointingArrow::Init(VESSEL* v)
+{
+	vessel = v;
+}
+
+void VCPointingArrow::Timestep(int PointingArrowidx, DEVMESHHANDLE hArrowMesh, const VECTOR3& ofs, const VECTOR3& activeSwitchPos)
+{
+	oapiCameraGlobalPos(&camPosGlobal);							// Get camera (in global co-ords)
+	vessel->Global2Local(camPosGlobal, camPos);					// Translate from global to local co-ordinates.
+	oapiCameraGlobalDir(&camDir);								// Get camera direction (in global co-ords)
+	vessel->GetGlobalPos(globVesselPos);						// Get global position of vessel so we can translate
+	vessel->Global2Local(globVesselPos + camDir, camPointing);	// Translate from global to local co-ordinates.
+	//	normalise(camPointing);
+
+	if (first) {											// Run this once for retrieving the Arrow data
+		arrow_group = oapiMeshGroup(vessel->GetMeshTemplate(PointingArrowidx), 0);
+		arrowVertsCnt = arrow_group->nVtx;
+		arrowData = new VECTOR3[arrowVertsCnt];
+		for (int i = 0; i < arrowVertsCnt; i++) {			// Make a copy of the Arrow data
+			arrowData[i].x = (double)arrow_group->Vtx[i].x;
+			arrowData[i].y = (double)arrow_group->Vtx[i].y;
+			arrowData[i].z = (double)arrow_group->Vtx[i].z;
+		}
+		circle_group = oapiMeshGroup(vessel->GetMeshTemplate(PointingArrowidx), 1);
+		circleVertsCnt = circle_group->nVtx;
+		circleData = new VECTOR3[circleVertsCnt];
+		circleDataOrig = new VECTOR3[circleVertsCnt];
+		for (int i = 0; i < circleVertsCnt; i++) {			// Make a copy of the Circle data
+			circleDataOrig[i].x = (double)circle_group->Vtx[i].x;
+			circleDataOrig[i].y = (double)circle_group->Vtx[i].y;
+			circleDataOrig[i].z = (double)circle_group->Vtx[i].z;
+		}
+		first = false;
+	}
+
+	if (!oapiGetPause()) {
+		rotationangle += oapiGetSimStep() / oapiGetTimeAcceleration() * -90;  // Rotate 360° every 4 Second
+		if (rotationangle > 360) rotationangle = 0;
+		rad = rotationangle * PI / 180.0;
+		cos_a = std::cos(rad);
+		sin_a = std::sin(rad);
+
+		//Rotate Circle
+		for (int i = 0; i < circleVertsCnt; i++) {
+			circleData[i].x = circleDataOrig[i].x * cos_a - circleDataOrig[i].y * sin_a;
+			circleData[i].y = circleDataOrig[i].x * sin_a + circleDataOrig[i].y * cos_a;
+			circleData[i].z = circleDataOrig[i].z;
+		}
+
+		/*		// Rotate Arrow
+				for (int i = 0; i < arrowVertsCnt; i++) {
+					arrowData[i].x = arrowData[i].x * cos_a - arrowData[i].y * sin_a;
+					arrowData[i].y = arrowData[i].x * sin_a + arrowData[i].y * cos_a;
+				}
+		*/
+	}
+
+	arrow_grp.nVtx = arrowVertsCnt;
+	if (!arrow_grp.Vtx) arrow_grp.Vtx = new NTVERTEX[arrow_grp.nVtx];
+	if (oapiGetMeshGroup(hArrowMesh, 0, &arrow_grp) != 0) {	// problems
+		delete[]arrow_grp.Vtx;
+		arrow_grp.Vtx = 0;
+	}
+	//	NTVERTEX *Vtx = arrow_grp.Vtx;
+
+	circle_grp.nVtx = circleVertsCnt;
+	if (!circle_grp.Vtx) circle_grp.Vtx = new NTVERTEX[circle_grp.nVtx];
+	if (oapiGetMeshGroup(hArrowMesh, 1, &circle_grp) != 0) {	// problems
+		delete[]circle_grp.Vtx;
+		circle_grp.Vtx = 0;
+	}
+	//	NTVERTEX *Vtx2 = circle_grp.Vtx;
+
+	arrowCurPos = camPos - ofs + (camPointing * 0.15);			// Move the Arrow to this Position
+	circleCurPos = activeSwitchPos;								// Move the Circle to this Position
+
+	// Rotation calculation to align the Arrow
+	const VECTOR3 init_dir = { 0, 0, 1 };							// Direction of the arrow (initially along the positive Z-axis)
+	pointing_dir = activeSwitchPos - arrowCurPos;				// Target direction (vector from the target location to the viewing direction)
+	normalise(pointing_dir);
+
+	rot_axis = crossp(init_dir, pointing_dir);					// Rotation axis (cross product of the initial and target directions)
+	normalise(rot_axis);
+
+	dot = dotp(init_dir, pointing_dir);							// Rotation angle (angle between the initial and target direction)
+	angle = std::acos(max(-1.0, min(1.0, dot)));				// Clamp to avoid NaN
+
+	rotation = rotm(rot_axis, angle);
+
+	// *** Do the same from above for the Circle ** //
+	circle_dir = activeSwitchPos - (camPos - ofs);
+	normalise(circle_dir);
+
+	rot_axis_circle = crossp(init_dir, circle_dir);
+	normalise(rot_axis_circle);
+
+	dot_circle = dotp(init_dir, circle_dir);
+	angle_circle = std::acos(max(-1.0, min(1.0, dot_circle)));
+
+	rotation_circle = rotm(rot_axis_circle, angle_circle);
+
+	for (int i = 0; i < arrowVertsCnt; i++) {
+		// Rotate, Translate and Scale the Arrow(Scale depends on Camera FOV)
+		final_vertex = mul(rotation, arrowData[i] * oapiCameraAperture()) + arrowCurPos;
+
+		arrow_grp.Vtx[i].x = (float)final_vertex.x;		// Copy Transformed Arrow Vertices
+		arrow_grp.Vtx[i].y = (float)final_vertex.y;
+		arrow_grp.Vtx[i].z = (float)final_vertex.z;
+	}
+
+	for (int i = 0; i < circleVertsCnt; i++) {
+		// Rotate and Translate the Circle
+		final_vertex = mul(rotation_circle, circleData[i]) + circleCurPos;
+
+		circle_grp.Vtx[i].x = (float)final_vertex.x;	// Copy Transformed Circle Vertices
+		circle_grp.Vtx[i].y = (float)final_vertex.y;
+		circle_grp.Vtx[i].z = (float)final_vertex.z;
+	}
+
+	// ** View in debug line the Camera Position, direction and the First Vertex of the Pointing Arrow **
+	//	sprintf(oapiDebugString(), "%.3f  %.3f  %.3f ** %.3f  %.3f  %.3f ** %.3f  %.3f  %.3f", camPos.x, camPos.y, camPos.z, camPointing.x, camPointing.y, camPointing.z, arrow_grp.Vtx[0].x, arrow_grp.Vtx[0].y, arrow_grp.Vtx[0].z);
+
+	ges.flags = GRPEDIT_VTXCRD;
+	ges.nVtx = arrow_grp.nVtx;
+	ges.Vtx = arrow_grp.Vtx;
+	ges.vIdx = 0;
+	oapiEditMeshGroup(hArrowMesh, 0, &ges);	// Move the Arrow
+
+	ges.nVtx = circle_grp.nVtx;
+	ges.Vtx = circle_grp.Vtx;
+	oapiEditMeshGroup(hArrowMesh, 1, &ges);	// Move the Circle
+
+	vessel->SetMeshVisibilityMode(PointingArrowidx, MESHVIS_VC);
 }

@@ -865,11 +865,11 @@ void ARCore::EntryUpdateCalc()
 
 	if (v == NULL) return;
 
-	SV sv0;
+	EphemerisData sv0;
 	EntryResults res;
 
-	sv0 = GC->rtcc->StateVectorCalc(v);
-	GC->rtcc->EntryUpdateCalc(sv0, entryrange, true, &res);
+	sv0 = GC->rtcc->StateVectorCalcEphem(v);
+	GC->rtcc->EntryUpdateCalc(sv0, entryrange, true, res);
 
 	GC->rtcc->RZDBSC1.lat_T = res.latitude;
 	GC->rtcc->RZDBSC1.lng_T = res.longitude;
@@ -1053,7 +1053,7 @@ void ARCore::TransferTIToMPT()
 	startSubthread(38);
 }
 
-void ARCore::Transfer_SPQ_Or_DKI_To_MPT()
+void ARCore::Transfer_LDP_Or_SPQ_Or_DKI_To_MPT()
 {
 	startSubthread(39);
 }
@@ -1061,11 +1061,6 @@ void ARCore::Transfer_SPQ_Or_DKI_To_MPT()
 void ARCore::MPTDirectInputCalc()
 {
 	startSubthread(41);
-}
-
-void ARCore::TransferDescentPlanToMPT()
-{
-	startSubthread(42);
 }
 
 void ARCore::TransferPoweredDescentToMPT()
@@ -3367,7 +3362,7 @@ int ARCore::subThread()
 			break;
 		}
 
-		SV sv0 = GC->rtcc->StateVectorCalc(v);
+		VehicleDataBlock sv0 = GC->rtcc->StateVectorCalcDataBlock(v);
 		GC->rtcc->EMDSPACENoMPT(sv0, SpaceDigitalsOption + 2, GC->rtcc->GMTfromGET(SpaceDigitalsGET));
 
 		Result = DONE;
@@ -4614,7 +4609,7 @@ int ARCore::subThread()
 		Result = DONE;
 	}
 	break;
-	case 39: //Transfer SPQ or DKI to MPT
+	case 39: //Transfer SPQ, DKI or descent planning to MPT
 	{
 		if (GC->MissionPlanningActive)
 		{
@@ -4623,34 +4618,59 @@ int ARCore::subThread()
 		}
 		else
 		{
-			int plan;
+			EphemerisData sv_before;
+			VECTOR3 V_after;
+			int MAN_VEH;
 
-			plan = GC->rtcc->med_m70.Plan;
-
-			if (plan > 0) plan--; //For DKI
-
-			if (plan < 0 || plan > 6)
+			if (GC->rtcc->med_m70.Plan < 0)
 			{
-				//Error
-				Result = DONE;
-				break;
+				//Descent Plan
+				if (GC->rtcc->PZLDPELM.num_man == 0)
+				{
+					//Error
+					Result = DONE;
+					break;
+				}
+
+				sv_before = GC->rtcc->PZLDPELM.sv_man_bef[0];
+				V_after = GC->rtcc->PZLDPELM.V_man_after[0];
+				MAN_VEH = GC->rtcc->PZLDPELM.plan[0];
 			}
-
-			RTCC::DKIDataBlock *block = &GC->rtcc->PZDKIT.Block[plan];
-
-			if (block->PlanStatus == 0)
+			else
 			{
-				//Error
-				Result = DONE;
-				break;
-			}
+				//SPQ or DKI
+				int plan;
 
-			RTCC::DKIElementsBlock *elem = &GC->rtcc->PZDKIELM.Block[plan];
+				plan = GC->rtcc->med_m70.Plan;
+				if (plan > 0) plan--; //For DKI
+
+				if (plan > 6)
+				{
+					//Error
+					Result = DONE;
+					break;
+				}
+
+				RTCC::DKIDataBlock* block = &GC->rtcc->PZDKIT.Block[plan];
+
+				if (block->PlanStatus == 0)
+				{
+					//Error
+					Result = DONE;
+					break;
+				}
+
+				RTCC::DKIElementsBlock* elem = &GC->rtcc->PZDKIELM.Block[plan];
+
+				sv_before = elem->SV_before[0].sv;
+				MAN_VEH = block->Display[0].VEH;
+				V_after = elem->V_after[0];
+			}
 
 			PMMMPTInput in;
 
 			//Get all required data for PMMMPT and error checking
-			if (GetVesselParameters(block->Display[0].VEH == RTCC_MPT_CSM, vesselisdocked, GC->rtcc->med_m70.ManData[0].Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
+			if (GetVesselParameters(MAN_VEH == RTCC_MPT_CSM, vesselisdocked, GC->rtcc->med_m70.ManData[0].Thruster, in.CONFIG, in.VC, in.CSMWeight, in.LMWeight))
 			{
 				//Error
 				Result = DONE;
@@ -4662,8 +4682,8 @@ int ARCore::subThread()
 			in.IgnitionTimeOption = GC->rtcc->med_m70.ManData[0].TimeFlag;
 			in.Thruster = GC->rtcc->med_m70.ManData[0].Thruster;
 
-			in.sv_before = elem->SV_before[0].sv;
-			in.V_aft = elem->V_after[0];
+			in.sv_before = sv_before;
+			in.V_aft = V_after;
 			if (GC->rtcc->med_m70.ManData[0].UllageDT < 0)
 			{
 				in.DETU = GC->rtcc->SystemParameters.MCTNDU;
@@ -4781,45 +4801,8 @@ int ARCore::subThread()
 		Result = DONE;
 	}
 	break;
-	case 42: //Transfer Descent Plan to MPT
+	case 42: //Spare
 	{
-		if (GC->MissionPlanningActive)
-		{
-			std::vector<std::string> str;
-			GC->rtcc->PMMMED("70", str);
-		}
-		else
-		{
-			SV sv_pre, sv_post, sv_tig;
-			double attachedMass = 0.0;
-
-			VESSEL *v;
-			if (GC->rtcc->PZLDPELM.plan[0] == RTCC_MPT_CSM)
-			{
-				v = GC->rtcc->pCSM;
-			}
-			else
-			{
-				v = GC->rtcc->pLM;
-			}
-
-			if (v == NULL)
-			{
-				Result = DONE;
-				break;
-			}
-
-			SV sv_now = GC->rtcc->StateVectorCalc(v);
-			sv_tig = GC->rtcc->coast(sv_now, GC->rtcc->PZLDPDIS.GETIG[0] - OrbMech::GETfromMJD(sv_now.MJD, GC->rtcc->CalcGETBase()));
-
-			if (vesselisdocked)
-			{
-				attachedMass = GC->rtcc->GetDockedVesselMass(v);
-			}
-
-			GC->rtcc->PoweredFlightProcessor(sv_tig, GC->rtcc->PZLDPDIS.GETIG[0], GC->rtcc->med_m70.ManData[0].Thruster, attachedMass, GC->rtcc->PZLDPDIS.DVVector[0] * 0.3048, true, P30TIG, dV_LVLH, sv_pre, sv_post);
-		}
-
 		Result = DONE;
 	}
 	break;
@@ -5720,7 +5703,7 @@ int ARCore::subThread()
 	case 63: //Recovery Ascending Node Display
 		GC->rtcc->RMDASCND();
 		break;
-	case 64: //CManual Entry Device Inputs from File
+	case 64: //Manual Entry Device Inputs from File
 	{
 		ifstream medinputfile(GC->rtcc->RTCCMEDBUFFER);
 		if (medinputfile.is_open())

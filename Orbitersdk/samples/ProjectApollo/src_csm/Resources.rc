@@ -146,7 +146,6 @@ IDB_SPSMININDICATOR                         BITMAP  "..\\Bitmaps\\SPSmin_indicat
 IDB_CSM_MAIN_LEFT_PANEL                     BITMAP  "..\\Bitmaps\\csm_main_left_panel.bmp"
 IDB_CSM_MAIN_RIGHT_PANEL                    BITMAP  "..\\Bitmaps\\csm_main_right_panel.bmp"
 IDB_CSM_MAIN_MIDDLE_PANEL                   BITMAP  "..\\Bitmaps\\csm_main_middle_panel.bmp"
-IDB_SPS_INJ_VLV                             BITMAP  "..\\Bitmaps\\sps_injector_indicators.bmp"
 IDB_TELESCOPE_WIDE                          BITMAP  "..\\Bitmaps\\csm_telescope_panel_wide.bmp"
 IDB_SEXTANT_WIDE                            BITMAP  "..\\Bitmaps\\csm_sextant_panel_wide.bmp"
 IDB_THUMBWHEEL_GPI_PITCH                    BITMAP  "..\\Bitmaps\\thumbwheel_gpi_pitch.bmp"

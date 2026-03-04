@@ -1417,6 +1417,10 @@ struct MPTManeuver
 	VECTOR3 V_1;
 	double GMT_1;
 	
+	//Total configuration weight at maneuver initiation
+	double W_B;
+	//Total configuration weight at main engine on
+	double W_IG;
 	double TotalMassAfter;
 	double TotalAreaAfter;
 	double MainEngineFuelUsed;
@@ -2536,7 +2540,7 @@ public:
 
 	void LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscentProcessorOutputs &out);
 	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, VehicleDataBlock sv, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, VehicleDataBlock &sv_PDI, VehicleDataBlock &sv_land, double &dv);
-	void EntryUpdateCalc(SV sv0, double entryrange, bool highspeed, EntryResults *res);
+	int EntryUpdateCalc(EphemerisData sv0, double entryrange, bool highspeed, EntryResults &res);
 	void PMMDKI(SPQOpt &opt, SPQResults &res);
 	//Velocity maneuver performer
 	void PCMVMR(AEGDataBlock &CHASER, AEGDataBlock &TARGET, double DELVX, double DELVY, double DELVZ, double mu, double &Pitch, double &Yaw, int I);
@@ -2849,7 +2853,7 @@ public:
 	void EMMDYNMC(int L, int queid, int ind = 0, double param = 0.0);
 	//FDO Space Digitals
 	int EMDSPACE(int queid, int option = 0, double val = 0.0, double incl = 0.0, double ascnode = 0.0);
-	int EMDSPACENoMPT(SV sv0, int queid, double gmt, double incl = 0.0, double ascnode = 0.0);
+	int EMDSPACENoMPT(VehicleDataBlock sv0, int queid, double gmt, double incl = 0.0, double ascnode = 0.0);
 	//Orbit Station Contact Generation Control
 	void EMSTAGEN(int L);
 	//Generalized Contact Generator
@@ -3034,14 +3038,18 @@ public:
 	void RMDRTSD(EphemerisDataTable2 &tab, int opt, double val, double lng);
 	//Recovery Ascending Node Display
 	void RMDASCND();
+	//Recovery Zone Display
+	void RMDREC();
 	//Reentry MED Decoder
-	int RMRMED(std::string med, std::vector<std::string> data);
+	void RMRMED(std::string med, std::vector<std::string> data, int& err, unsigned& param);
 	//Spacecraft Setting Control
 	void RMSSCS(int entry);
 	//External DV Parameters
 	void RMDRXDV(bool rte);
 	//Reentry online print
 	void RMGENT(std::string source, int n);
+	//Time of closest approach utility function
+	int FindLandmarkTCA(EphemerisDataTable2& ephemeris, ManeuverTimesTable& mantimes, double GMTT, double lat, double lng, double& GMT_TCA, double &range);
 
 	// **INTERMEDIATE LIBRARY PROGRAMS**
 	// MISSION CONTROL (G)
@@ -3986,8 +3994,8 @@ public:
 	{
 		EphemerisData sv_man_bef[4];
 		VECTOR3 V_man_after[4];
-		int num_man;
-		int plan[4];
+		int num_man = 0;
+		int plan[4]; //Maneuver vehicle. 1 = CSM, 3 = LEM
 		std::string code[4];
 	} PZLDPELM;
 
@@ -4374,6 +4382,7 @@ public:
 
 	struct RecoveryZoneDefinitionTableEntry
 	{
+		std::string ID;
 		double lat = 0.0;
 		double lng = 0.0;
 	};
@@ -4382,6 +4391,29 @@ public:
 	{
 		RecoveryZoneDefinitionTableEntry table[6];
 	} RZC1ZNE;
+
+	struct RecoveryZoneDisplayEntry
+	{
+		std::string ID;
+		int Rev;
+		double Bearing;
+		double Distance;
+		double GETCA;
+		double lat_TCA, lng_TCA;
+		double lat_TCAMin1, lng_TCAMin1;
+		double lat_TCAPlus1, lng_TCAPlus1;
+	};
+
+	struct RecoveryZoneDisplay
+	{
+		std::string VehicleName;
+		std::string ErrorMessage = "MED OUTDATED";
+		std::string StationID;
+		int CurrentPage = 1;
+		int TotalNumPages = 1;
+		int TotalNumEntries = 0;
+		RecoveryZoneDisplayEntry table[40];
+	} RZPAGE;
 
 	struct LMLaunchTargetTable
 	{
@@ -4801,6 +4833,10 @@ public:
 		double RecovAscNodeBeginTime = 0.0;
 		double RecovAscNodeEndTime = 0.0;
 		int RecovAscNodeCoordinates = RTCC_COORDINATES_ECT;
+		//Block XX: Recovery Zone
+		int RecovZoneVehID = RTCC_MPT_CSM;
+		int RecovZoneBeginRev = 0;
+		int RecovZoneEndRev = 0;
 
 		//DMT
 		int DMT1Vehicle = 0;

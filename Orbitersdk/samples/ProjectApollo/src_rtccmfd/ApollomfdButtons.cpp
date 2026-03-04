@@ -1905,7 +1905,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("", OAPI_KEY_F, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
-	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuTransferSPQorDKIToMPT);
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuTransferLDPOrSPQorDKIToMPT);
 	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuBackToSPQorDKIPage);
 
 
@@ -4620,6 +4620,40 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 
 	RegisterFunction("DIS", OAPI_KEY_F, &ApolloRTCCMFD::menuCycleSubscreen);
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuSpacecraftPointingDisplayCalc);
+	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("BCK", OAPI_KEY_B, &ApolloRTCCMFD::menuSetMCCDisplaysPage);
+
+
+	static const MFDBUTTONMENU mnu136[] =
+	{
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Change zones", 0, 'A' },
+
+		{ "Calculate", 0, 'C' },
+		{ "Cycle pages", 0, 'F' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "", 0, ' ' },
+		{ "Back to menu", 0, 'B' },
+	};
+
+	RegisterPage(mnu136, sizeof(mnu136) / sizeof(MFDBUTTONMENU));
+
+	RegisterFunction("", OAPI_KEY_O, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_V, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_U, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("", OAPI_KEY_M, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("ZON", OAPI_KEY_A, &ApolloRTCCMFD::menuEnterRecoveryZones);
+
+	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuRecoveryZonesDisplayCalc);
+	RegisterFunction("PAG", OAPI_KEY_F, &ApolloRTCCMFD::menuCycleRecoveryZonesDisplayPages);
 	RegisterFunction("", OAPI_KEY_P, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_K, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_L, &ApolloRTCCMFD::menuVoid);
