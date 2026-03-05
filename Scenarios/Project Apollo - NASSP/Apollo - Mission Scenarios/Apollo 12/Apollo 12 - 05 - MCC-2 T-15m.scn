@@ -2890,6 +2890,9 @@ UDL_END
            7 0
            8 0
       </COOLING>  
+      <LIGHT>  SPOTLIGHT 1
+      <LIGHT>  RNDZLIGHT 1
+      <LIGHT>  EVALIGHT 0
       <AC>  AC-Bus1-PhaseA
       <AC>  AC-Bus1-PhaseB
       <AC>  AC-Bus1-PhaseC
@@ -3317,7 +3320,7 @@ PANELSWITCHES_BEGIN
   GlycolToRadiatorsRotary 0
   OxygenSurgeTankValveRotary 8
   Panel100IntegralRotarySwitch 0.524468
-  Panel100FloodRotarySwitch 0.347873
+  Panel100FloodRotarySwitch 0.6
   Panel100NumericRotarySwitch 0.535067
   RightSystemTestRotarySwitch 1
   LeftSystemTestRotarySwitch 4
@@ -3334,7 +3337,7 @@ PANELSWITCHES_BEGIN
   SCSElectronicsPowerRotarySwitch 2
   FDAIPowerRotarySwitch 3
   IntegralRotarySwitch 0.650295
-  FloodRotarySwitch 0.622659
+  FloodRotarySwitch .8
   NumericRotarySwitch 0.64552
   DockingProbeBIndicator 1
   DockingProbeAIndicator 1
@@ -3353,7 +3356,7 @@ PANELSWITCHES_BEGIN
   HighGainAntennaPitchMeter -18.469800 -18.469800
   HighGainAntennaYawPositionSwitch 0.799986
   HighGainAntennaPitchPositionSwitch 0.60261
-  RightFloodRotarySwitch 0.609138
+  RightFloodRotarySwitch 0.8
   RightIntegralRotarySwitch 0.672445
   EcsGlycolPumpsSwitch 1
   SPSTestSwitch 1 0

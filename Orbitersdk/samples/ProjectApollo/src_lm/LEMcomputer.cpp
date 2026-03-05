@@ -422,6 +422,7 @@ void LEMcomputer::GetRadarData(int radarBits)
 LMOptics::LMOptics() {
 
 	lem = NULL;
+
 	OpticsShaft = 3;
 	OpticsReticle = 0.0;
 	ReticleMoved = 0;
@@ -432,6 +433,30 @@ LMOptics::LMOptics() {
 void LMOptics::Init(LEM *vessel) {
 
 	lem = vessel;
+}
+
+bool LMOptics::ReticlePush() {
+	if (((360.0 - OpticsReticle / RAD) < 1.0) || ((360.0 - OpticsReticle / RAD > 359.0)))
+	{
+		return true;
+	}
+
+	else
+		return false;
+}
+
+void LMOptics::AOTDetentToggle() {
+
+	if (lem->AOTReticleDetent.GetState() == 0 && ReticlePush() == true) 
+	{
+		lem->AOTReticleDetent.SetState(1);
+	}
+
+	else 
+	{
+		lem->AOTReticleDetent.SetState(0);
+	}
+	return;
 }
 
 void LMOptics::SystemTimestep(double simdt) {
@@ -448,7 +473,7 @@ void LMOptics::SystemTimestep(double simdt) {
 	}
 }
 
-bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits) {
+bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits, int TexMul) {
 	int beta, srx, sry, digit[4];
 	int x = (int)((-OpticsReticle)*100.0*DEG);
 	if (x < 0) { x += 36000; }
@@ -460,34 +485,47 @@ bool LMOptics::PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits) {
 	digit[3] = x / 10000;
 	sry = (int)((beta * 1.2) *z);
 	srx = (8 *z) + ((digit[3] * 25) *z);
-	oapiBlt(surf, digits, 0, 0, srx, 33 *z, 9 *z, 12 *z, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 0, 0, srx * TexMul, 33 *z * TexMul, 9 *z * TexMul, 12 *z * TexMul, SURF_PREDEF_CK);
 	srx = (8 *z) + ((digit[2] * 25) *z);
-	oapiBlt(surf, digits, 10 *z, 0, srx, 33 *z, 9 *z, 12 *z, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 10 *z * TexMul, 0, srx * TexMul, 33 *z * TexMul, 9 *z * TexMul, 12 *z * TexMul, SURF_PREDEF_CK);
 	srx = (8 *z) + ((digit[1] * 25) *z);
-	oapiBlt(surf, digits, 20 *z, 0, srx, 33 *z, 9 *z, 12 *z, SURF_PREDEF_CK);
+	oapiBlt(surf, digits, 20 *z * TexMul, 0, srx * TexMul, 33 *z * TexMul, 9 *z * TexMul, 12 *z * TexMul, SURF_PREDEF_CK);
 	srx = (8 *z) + ((digit[0] * 25) *z);
 	if (beta == 0) {
-		oapiBlt(surf, digits, 30 *z, 0, srx, 33 *z, 9 *z, 12 *z, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 30 *z * TexMul, 0, srx * TexMul, 33 *z * TexMul, 9 *z * TexMul, 12 *z * TexMul, SURF_PREDEF_CK);
 	}
 	else {
-		oapiBlt(surf, digits, 30 *z, sry, srx, 33 *z, 9 *z, (12 *z) - sry, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 30 *z * TexMul, sry * TexMul, srx * TexMul, 33 *z * TexMul, 9 *z * TexMul, (12 *z * TexMul) - sry * TexMul, SURF_PREDEF_CK);
 		if (digit[0] == 9) digit[0] = 0; else digit[0]++;
 		srx = (8 *z) + ((digit[0] * 25) *z);
-		oapiBlt(surf, digits, 30 *z, 0, srx, (45 *z) - sry, 9 *z, sry, SURF_PREDEF_CK);
+		oapiBlt(surf, digits, 30 *z * TexMul, 0, srx * TexMul, (45 *z * TexMul) - sry * TexMul, 9 *z * TexMul, sry * TexMul, SURF_PREDEF_CK);
 	}
 	return true;
 }
 
 void LMOptics::Timestep(double simdt) {
-	OpticsReticle = OpticsReticle + simdt * ReticleMoved;
-
-	/*if (ReticleMoved)
+	if (lem->AOTReticleDetent.GetState() == 1)
 	{
-		sprintf(oapiDebugString(), "Optics Shaft %d, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft, 360.0 - OpticsReticle / RAD, ReticleMoved, KnobTurning);
-	}*/
+		OpticsReticle = 0.0;
+		ReticleMoved = 0.0;
+	}
 
-	if (OpticsReticle > 2*PI) OpticsReticle -= 2*PI;
-	if (OpticsReticle < 0) OpticsReticle += 2*PI;
+	else
+	{
+		OpticsReticle = OpticsReticle + simdt * ReticleMoved;
+
+		/*if (ReticleMoved)
+		{
+			sprintf(oapiDebugString(), "Optics Shaft %d, Optics Reticle %.2f, Moved? %.4f, KnobTurning %d", OpticsShaft, 360.0 - OpticsReticle / RAD, ReticleMoved, KnobTurning);
+		}*/
+
+		//sprintf(oapiDebugString(), "Optics Reticle %.2f", 360.0 - OpticsReticle / RAD);
+
+		if (OpticsReticle > 2 * PI) OpticsReticle -= 2 * PI;
+		if (OpticsReticle < 0) OpticsReticle += 2 * PI;
+	}
+
+	//sprintf(oapiDebugString(), "Detent %d ReticlePush %d", lem->AOTReticleDetent.GetState(), ReticlePush());
 }
 
 void LMOptics::SaveState(FILEHANDLE scn) {

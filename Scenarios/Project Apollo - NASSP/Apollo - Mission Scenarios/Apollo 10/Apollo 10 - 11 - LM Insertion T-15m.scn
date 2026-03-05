@@ -3158,6 +3158,9 @@ UDL_END
            7 0
            8 0
       </COOLING>  
+      <LIGHT>  SPOTLIGHT 1
+      <LIGHT>  RNDZLIGHT 1
+      <LIGHT>  EVALIGHT 1
       <AC>  AC-Bus1-PhaseA
       <AC>  AC-Bus1-PhaseB
       <AC>  AC-Bus1-PhaseC
@@ -3585,7 +3588,7 @@ PANELSWITCHES_BEGIN
   GlycolToRadiatorsRotary 0
   OxygenSurgeTankValveRotary 8
   Panel100IntegralRotarySwitch 0.4
-  Panel100FloodRotarySwitch 0.483756
+  Panel100FloodRotarySwitch 0.6
   Panel100NumericRotarySwitch 0.4
   RightSystemTestRotarySwitch 1
   LeftSystemTestRotarySwitch 8
@@ -3602,8 +3605,7 @@ PANELSWITCHES_BEGIN
   SCSElectronicsPowerRotarySwitch 2
   FDAIPowerRotarySwitch 3
   IntegralRotarySwitch 0.652277
-  FloodRotarySwitch 0.55988
-  NumericRotarySwitch 0.4
+  FloodRotarySwitch 1.0
   DockingProbeBIndicator 1
   DockingProbeAIndicator 1
   DockingProbeRetractSecSwitch 1 0
@@ -3621,7 +3623,7 @@ PANELSWITCHES_BEGIN
   HighGainAntennaPitchMeter -81.953449 -81.962157
   HighGainAntennaYawPositionSwitch 0.477591
   HighGainAntennaPitchPositionSwitch 0.787851
-  RightFloodRotarySwitch 0.512917
+  RightFloodRotarySwitch 1.0
   RightIntegralRotarySwitch 0.542902
   EcsGlycolPumpsSwitch 1
   SPSTestSwitch 1 0
@@ -4028,7 +4030,7 @@ PANELSWITCHES_END
   FILE Doc\Project Apollo - NASSP\Checklists\Apollo 10 Checklists.xls
   COMPLETE 0
   FLASHING 0
-  LASTITEMTIME 369052.309144
+  LASTITEMTIME 369173.635
   AUTOEXECUTESLOWDELAY 2.0
   WAITFORCOMPLETION 0
   <container> 
@@ -7255,19 +7257,15 @@ PANELSWITCHES_END
   </item> 
   <item> 
   INDEX 805
-  STATUS 1
   </item> 
   <item> 
   INDEX 806
-  STATUS 1
   </item> 
   <item> 
   INDEX 807
-  STATUS 1
   </item> 
   <item> 
   INDEX 808
-  STATUS 1
   </item> 
   <item> 
   INDEX 809
@@ -9390,7 +9388,7 @@ PANELSWITCHES_END
   <item> 
   INDEX 1515
   </item> 
-  SEQUENCE 809
+  SEQUENCE 804
   TIME 15001.378906
   </container> 
   <group> 
@@ -9625,7 +9623,7 @@ PANELSWITCHES_END
   INDEX 109
   CALLED 1
   </group> 
-  </checklist> 
+  </checklist>
   SaturnEvents 
   BACKUP_CREW_PRELAUNCH -14399.980469
   PRIME_CREW_PRELAUNCH -9599.933594

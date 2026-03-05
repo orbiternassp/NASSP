@@ -123,7 +123,7 @@ public:
 	std::vector<MEDInputPage> MEDInputData;
 
 	//MOCR DISPLAY
-	void DFLBackgroundSlide(oapi::Sketchpad *skp, DWORD W, DWORD H, unsigned display);
+	void DFLBackgroundSlide(oapi::Sketchpad *skp, DWORD W, DWORD WOFF, DWORD H, DWORD HOFF, unsigned display);
 
 protected:
 	const rtcc::RTCCBackgroundSlides BackgroundSlides;
@@ -168,8 +168,7 @@ public:
 	void SkylabSaturnIBLaunchCalc();
 	void SkylabSaturnIBLaunchUplink();
 	void TransferTIToMPT();
-	void Transfer_SPQ_Or_DKI_To_MPT();
-	void TransferDescentPlanToMPT();
+	void Transfer_LDP_Or_SPQ_Or_DKI_To_MPT();
 	void TransferPoweredDescentToMPT();
 	void TransferPoweredAscentToMPT();
 	void TransferGPMToMPT();
@@ -300,8 +299,8 @@ public:
 
 	//REFSMMAT PAGE
 	double REFSMMAT_LVLH_Time;
+	int REFSMMAT_ManNum;	//Maneuver number for P30 REFSMMAT
 	int REFSMMATopt; //Displayed REFSMMAT page: 0 = P30 Maneuver, 1 = P30 Retro, 2 = LVLH, 3 = Lunar Entry, 4 = Launch, 5 = Landing Site, 6 = PTC, 7 = Attitude, 8 = LS during TLC
-	int REFSMMATcur; //Currently saved REFSMMAT
 	bool REFSMMATHeadsUp;
 
 	//ENTRY PAGE
@@ -387,6 +386,7 @@ public:
 
 	//SATURN IB LAUNCH TARGETING
 	VESSEL* Rendezvous_Target; //Target vessel in orbit
+	int Rendezvous_Target_Table; //1 = CSM, 3 = LEM
 
 	//UPLINK
 	double AGCClockTime[2];

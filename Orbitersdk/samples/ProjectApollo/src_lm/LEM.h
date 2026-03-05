@@ -553,6 +553,7 @@ public:
 	void StopSeparationPyros();
 
 	void SetAnimations(double);
+	void UpdatePointingArrow();
 
 	//
 	// VISHANDLE
@@ -697,6 +698,9 @@ public:
 	// Custom quicksave behaviour
 	void QuicksaveScenario();
 
+	// Hide or Show mesh group
+	void HideMeshGroup(int, int, bool);
+
 protected:
 
 	//
@@ -746,7 +750,8 @@ protected:
 	void SetCompLight(int m, bool state);
 	void SetContactLight(int m, bool state);
 	void SetPowerFailureLight(int m, bool state);
-	void SetStageSeqRelayLight(int m, bool state);
+
+	void DoMeshAnimation(AnimState &, UINT &, double, double);
 
 #ifdef _OPENORBITER
 	void SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
@@ -792,10 +797,12 @@ protected:
 
 	LMAbortButton AbortSwitch;
 	LMAbortStageButton AbortStageSwitch;
-
 	
 	SwitchRow RRGyroSelSwitchRow;
 	ThreePosSwitch RRGyroSelSwitch;
+
+	SwitchRow AOTReticleSwitchRow;
+	ToggledPushSwitch AOTReticleDetent;
 	
 	/////////////////
 	// LEM panel 1 //
@@ -1716,6 +1723,7 @@ protected:
 	UINT vcidx;
 	UINT windowshadesidx;
 	UINT xpointershadesidx;
+	UINT hLMPointingArrowidx;
 
 	DEVMESHHANDLE probes;
 	DEVMESHHANDLE deflectors;
@@ -1747,6 +1755,8 @@ protected:
 
 	VECTOR3 trackLightPos;
 	VECTOR3 dockingLightsPos[5];
+
+	VCPointingArrow pointingArrow;
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
@@ -1793,6 +1803,14 @@ protected:
 	double vcFreeCamz;
 	double vcFreeCamSpeed;
 	double vcFreeCamMaxOffset;
+
+	//
+	// AOT ReticleKnob
+	//
+	UINT AOT_ReticleKnobAnimTrans;
+	AnimState AOT_ReticleKnobState;
+	UINT AOT_ReticleKnobAnimRot;
+	AnimState AOT_ReticleKnobRotState;
 
 	//
 	// Failures.
@@ -1967,6 +1985,7 @@ protected:
 	LEM_SteerableAnt SBandSteerable;
 	LM_OMNI omni_fwd;
 	LM_OMNI omni_aft;
+	LM_ErectableAnt SBandErectable;
 	LM_VHF VHF;
 	LM_SBAND SBand;
 	LM_DSEA DSEA;
@@ -2146,6 +2165,7 @@ extern MESHHANDLE hLMDescent;
 extern MESHHANDLE hLMDescentNoLeg;
 extern MESHHANDLE hLMAscent;
 extern MESHHANDLE hLMVC;
+extern MESHHANDLE hLMPointingArrow;
 
 extern void LEMLoadMeshes();
 

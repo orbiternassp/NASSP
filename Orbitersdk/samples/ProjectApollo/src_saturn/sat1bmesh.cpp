@@ -417,6 +417,7 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 	opticscoveridx = -1;
 	seatsfoldedidx = -1;
 	seatsunfoldedidx = -1;
+	cmvccuecardsarrowsidx = -1;
 
 	if (SaturnHasCSM()) {
 
@@ -431,7 +432,7 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 			TowerOffset = 26.15 + offset;
 			mesh_dir=_V(0, 0, TowerOffset);
 			meshidx = AddMesh (hsat5tower, &mesh_dir);
-			SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+			SetBPCMesh(meshidx);
 
 			//
 			// If the LES is attached, no point drawing things in the external view which can't
@@ -467,6 +468,9 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		meshidx = AddMesh (hCMInt, &mesh_dir);
 		SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
+		// Pointing Arrow
+		hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+
 		// VC
 		UpdateVC(mesh_dir);
 		seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
@@ -475,6 +479,10 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 		coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 		coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 		SetCOASMesh();
+
+		//Cue Cards Arrows
+		cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
+		SetVCCueCardsArrows();
 
 		//
 		// Don't Forget the Hatch

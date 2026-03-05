@@ -92,6 +92,8 @@ MESHHANDLE hcmseatsfolded;
 MESHHANDLE hcmseatsunfolded;
 MESHHANDLE hcmCOAScdr;
 MESHHANDLE hcmCOAScdrreticle;
+MESHHANDLE hcmCueCardsArrows;
+MESHHANDLE hcmPointingArrow;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -664,6 +666,8 @@ void SaturnInitMeshes()
 	LOAD_MESH(hcmseatsunfolded, "ProjectApollo/CM-VC-SeatsUnfolded");
 	LOAD_MESH(hcmCOAScdr, "ProjectApollo/CM-COAS-CDR");
 	LOAD_MESH(hcmCOAScdrreticle, "ProjectApollo/CM-COAS-CDR_Reticle");
+	LOAD_MESH(hcmCueCardsArrows, "ProjectApollo/Helpers/CM-CueCardsArrows");
+	LOAD_MESH(hcmPointingArrow, "ProjectApollo/Helpers/PointingArrow");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
@@ -674,7 +678,8 @@ void Saturn::AddSM(double offset, bool showSPS)
 {
 	VECTOR3 mesh_dir=_V(0, SMVO, offset);
 
-	AddMesh (hSM, &mesh_dir);
+	smidx = AddMesh(hSM, &mesh_dir);
+	ExteriorLighting.DefineAnimations(smidx);
 
 	if (LowRes)
 		AddMesh(hSMRCSLow, &mesh_dir);
@@ -912,6 +917,8 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	agc.SetInputChannelBit(030, GuidanceReferenceRelease, false);
 	agc.SetInputChannelBit(030, UllageThrust, false);
 
+	SetRunningLights();
+
 	// Because all meshes are getting reloaded, we have to shift CG back to the center of the mesh, and then re-apply the offset CG on the next timestep
 	// Only necessary because of LET jettison function reloading all meshes.
 	ShiftCG(-currentCoG + cg_ofs);
@@ -1038,7 +1045,7 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 		TowerOffset += 2.1; //Additional offset for CSM stage
 
 		meshidx = AddMesh(hsat5tower, &mesh_dir_tower);
-		SetMeshVisibilityMode(meshidx, MESHVIS_VCEXTERNAL);
+		SetBPCMesh(meshidx);
 	}
 
 	// And the Crew
@@ -1065,6 +1072,9 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	fwdhatchidx = AddMesh(hFHF, &mesh_dir);
 	SetFwdHatchMesh();
 
+	// Pointing Arrow
+	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+
 	// VC
 	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
@@ -1073,6 +1083,10 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
+
+	//Cue Cards Arrows
+	cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
+	SetVCCueCardsArrows();
 
 	//Interior
 	meshidx = AddMesh(hCMInt, &mesh_dir);
@@ -1273,6 +1287,13 @@ void Saturn::SetSideHatchMesh() {
 	}
 }
 
+void Saturn::SetBPCMesh(UINT idx)
+{
+	if (idx == -1) return;
+	SetMeshVisibilityMode(idx, MESHVIS_VCEXTERNAL);
+	BPC.DefineAnimations(idx);
+}
+
 void Saturn::SetFwdHatchMesh() {
 
 	if (fwdhatchidx == -1)
@@ -1340,6 +1361,15 @@ void Saturn::SetVCSeatsMesh() {
 	} else {
 		SetMeshVisibilityMode(seatsfoldedidx, MESHVIS_NEVER);
 		SetMeshVisibilityMode(seatsunfoldedidx, MESHVIS_VC);
+	}
+}
+
+void Saturn::SetVCCueCardsArrows() {
+//	if (checkControl.getFlashing() || ViewCueCardArrows) {
+	if (ViewCueCardArrows) {
+		SetMeshVisibilityMode(cmvccuecardsarrowsidx, MESHVIS_VC);
+	} else {
+		SetMeshVisibilityMode(cmvccuecardsarrowsidx, MESHVIS_NEVER);
 	}
 }
 
@@ -1550,7 +1580,7 @@ void Saturn::SetReentryMeshes() {
 		VECTOR3 mesh_dir_tower = mesh_dir + _V(0, 0, TowerOffset);
 
 		meshidx = AddMesh (hsat5tower, &mesh_dir_tower);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetBPCMesh(meshidx);
 	}
 
 	// And the Crew
@@ -1585,6 +1615,9 @@ void Saturn::SetReentryMeshes() {
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
+	// Pointing Arrow
+	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+
 	// VC
 	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
@@ -1593,6 +1626,10 @@ void Saturn::SetReentryMeshes() {
 	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
+
+	//Cue Cards Arrows
+	cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
+	SetVCCueCardsArrows();
 
 	//Add CM meshes. More to be added here...
 	AddCMMeshes(mesh_dir);
@@ -1869,6 +1906,9 @@ void Saturn::SetRecovery()
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
+	// Pointing Arrow
+	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+
 	// VC
 	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
@@ -1877,6 +1917,10 @@ void Saturn::SetRecovery()
 	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
+
+	//Cue Cards Arrows
+	cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
+	SetVCCueCardsArrows();
 
 	if (Crewed) {
 		//old values 2.7,1.8,-1.5
@@ -2261,4 +2305,40 @@ void Saturn::AddCMMeshes(const VECTOR3 &mesh_dir)
 
 	//Reload cue cards, if required
 	CueCards.ResetCueCards();
+}
+
+void Saturn::SetRunningLights() {
+
+	int i;
+
+	runningLightsPos[0] = { 1.7929, 0.920507, 0.809995 }; //+Y Fwd Green
+	runningLightsPos[1] = { 1.7929, 0.920507, -3.22576 }; //+Y Tail Green
+
+	runningLightsPos[2] = { -1.42451, 1.42569, 0.809995 }; //-Y Fwd Red
+	runningLightsPos[3] = { -1.42451, 1.42569, -3.22576 }; //-Y Tail Red
+
+	runningLightsPos[4] = { -1.54094, -1.30004, 0.809995 }; //-Y Fwd Amber
+	runningLightsPos[5] = { -1.54094, -1.30004, -3.22576 }; //-Y Tail Amber
+
+	runningLightsPos[6] = { 1.42451, -1.42569, 0.809995 }; //+Y Fwd Amber
+	runningLightsPos[7] = { 1.42451, -1.42569, -3.22576 }; //+Y Tail Amber
+
+	static VECTOR3 beaconCol[3] = {
+		{ 0.5, 1.0, 0.5 }, //Green
+		{ 1.0, 0.5, 0.5 }, //Red
+		{ 1.0, 1.0, 0.5 }, //Amber
+	};
+
+	for (i = 0; i < 8; i++) {
+		runningLights[i].shape = BEACONSHAPE_DIFFUSE;
+		runningLights[i].pos = &runningLightsPos[i];
+		runningLights[i].col = (i < 2 ? beaconCol : i < 4 ? beaconCol + 1 : beaconCol + 2);
+		runningLights[i].size = 0.05;
+		runningLights[i].falloff = 0.8;
+		runningLights[i].period = 0.0;
+		runningLights[i].duration = 1.0;
+		runningLights[i].tofs = 0;
+		runningLights[i].active = false;
+		AddBeacon(runningLights + i);
+	}
 }
