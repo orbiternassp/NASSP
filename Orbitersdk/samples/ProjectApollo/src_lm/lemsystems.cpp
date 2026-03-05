@@ -2479,6 +2479,14 @@ void LEM::CreateMissionSpecificSystems()
 		aeaa = new LEM_AEAA();
 	}
 	EventTimerDisplay.SetReverseAtZero(pMission->IsLMEventTimerReversingAtZero());
+	SBandSteerable.AngleInit(pMission->GetLMNumber()); //Initializes S Band Antenna To Proper Closeout Angles
+
+	if (pMission->GetLMNumber() < 6) // LM-5 And Earlier
+	{
+		Panel12AntPitchKnob.SetInitValue(22.0); //Initializes S Band Antenna Pitch Knob To Proper Closeout Angles
+		Panel12AntYawKnob.SetInitValue(6.0); //Initializes S Band Antenna Yaw Knob To Proper Closeout Angles
+		LandingAntSwitch.SetState(1); //Initializes LDG ANT Switch To Proper Closeout Position (DES)
+	}
 }
 
 // SYSTEMS COMPONENTS
@@ -2858,8 +2866,8 @@ CrossPointer::CrossPointer()
 	rateErrMonSw = NULL;
 	scaleSwitch = NULL;
 	dc_source = NULL;
-	vel_x = display_vel_x = 0;
-	vel_y = display_vel_y = 0;
+	vel_x = display_vel_x = callout_x = 0;
+	vel_y = display_vel_y = callout_y = 0;
 	lgc_forward = 0;
 	lgc_lateral = 0;
 	anim_xpointerx = -1;
@@ -2964,8 +2972,8 @@ void CrossPointer::Timestep(double simdt)
 			vx = 0;
 			vy = lem->aea.GetLateralVelocity()*0.3048;
 		}
-		vel_x = vx / 0.3048 * 20.0 / 200.0;
-		vel_y = vy / 0.3048 * 20.0 / 200.0;
+		vel_x = callout_x = vx / 0.3048 * 20.0 / 200.0;
+		vel_y = callout_y = vy / 0.3048 * 20.0 / 200.0;
 	}
 
 	//10 times finer scale

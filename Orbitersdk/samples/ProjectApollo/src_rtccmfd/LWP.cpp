@@ -25,6 +25,8 @@
 
 LWPInputTable::LWPInputTable()
 {
+	TargetVectorTime = -1.0;
+
 	LAZCOE[0] = 490.931*RAD;
 	LAZCOE[1] = -20.131;
 	LAZCOE[2] = -1.2501;

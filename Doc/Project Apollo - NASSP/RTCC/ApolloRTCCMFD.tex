@@ -89,7 +89,37 @@ The main menu is dividing the MFD in the following categories:\\
 \textbf{CFG:} Configuration. Various settings for the MFD.\\
 \textbf{UPL:} Uplink Page. All uplinks to the AGCs and LVDC can be found here.\\
 \textbf{MCC:} MCC Displays. Shows the "TV Guide", a list of displays that were available in the MOCR.\\
+\newpage
+\section{Configuration}
 
+\textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\
+\textbf{TYP:} Choose the type of vehicle configuration (CSM or LM, docked or undocked).\\
+\textbf{STA:} Choose the type of LM configuration that is currently being used, ascent or descent configuration.\\
+\textbf{CG:} Page for changing the thrust and CG tables. The CG tables are used to determine e.g. SPS trim gimbal angles. The tables are a function of weight of the vehicle. The CG tables contain the center of gravity in 3 dimensions, while the thrust tables contain thrust and weight loss rate of the selected thruster. There are default tables; alternative an initial table can be loaded in the RTCC mission constants file. Afterwards the table are being saved and loaded in scenarios. Note that presently the CG tables are not saved in scenarios!
+
+\textbf{DAT:} Choose the launch date for the mission.\\
+\textbf{TIM:} Choose the launch time for the mission. This button leads to a subpage to select various times stored in the RTCC.\\
+\textbf{EPO:} Choose the AGC epoch. Usually this is a MJD at around January 1st of the yearly coordinate system defining period. This value should be automatically chose correctly for the AGC version in use.\\
+\textbf{UPD:} Update the liftoff time automatically by downlinking that time from the CMC or LGC. This will actually update three values in the RTCC: CSM liftoff time, time of clock zeroing in the CMC, time of clock zeroing in the LGC. These times are normally all set to the actual liftoff time of the CSM to get a consistent basis to calculate Ground Elapsed Time in the RTCC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\newpage
+\section{Initialization}
+For the flown, manned Apollo missions (Apollo 7-17) the initialization happens automatically upon loading the RTCC MFD for the first time, or if the MCC mission support functionality is enable, at Earth Orbit Insertion. This section applies therefore mostly for custom missions.\\
+As a first step a few files that supply data to the RTCC have to be selected. For more details on these see the "Config Files" chapter at the end of this manual. The file selection is done on a subpage of the Config page. Every mission needs to select at least a Constants file. This file is usually valid for a specific mission, no matter when it launches. For lunar missions the SFP file is required for the TLMCC Processor and the TLI file is required to simulate TLI. These files are usually valid for the duration of a monthly launch window. An init file, that contains additional initialization parameters for a specific launch day, can also be selected. The file is usually automatically selected by changing the launch day, but can afterwards be manually chosen as well.\\
+After the files have been selected the launch day should be initialized. This generates, among other things, the ephemerides data, so the launch day initialization is required before most calculations can be run in the RTCC.\\
+The liftoff time and GRR times of the onboard computers can be initialized before liftoff as well, on a subpage of the Config page (TIM button). After liftoff the UPD button on the Config page can be used to update the times to actual values, which can vary by a few tenths of a second from the planned time. The RTCC keeps track of the following times:\\
+
+\begin{itemize}
+	\item CSM liftoff time (MED P10). This is the time reference for Ground Elapsed Time.
+	\item CSM Guidance Reference Release (GRR) time (MED P12). The only purpose of this time is to calculate the Launch REFSMMAT.
+	\item CMC liftoff time/time of zeroing registers (MED P15). In AGC terms this is called TEPHEM. By convention this time is used as the reference for GET, so the CSM liftoff time and LGC time of zeroing registers should be set to this value.
+	\item IU GRR time (MED P12). Time at which the IU platform is set to inertial. Usually 17 seconds before liftoff.
+	\item LM liftoff time (MED P10). Only required for a dual launch mission (e.g. with the CSM on one Saturn IB, the LM on another Saturn IB). Not to be confused with the time at which the LM begins ascent from the Moon.
+	\item LGC liftoff time/time of zeroing registers (MED P15). Usually set to the same value as the CMC time.
+	\item AGS time of zeroing registers (MED P15). This value has two different input methods. Internally the RTCC stores this value as a GMT. The AGS clock is set with an offset bias from the LGC clock, so an additional input method is available (used by default) to input this time as a delay time from the LGC register zeroing time. This difference is known as the K-Factor. The RTCC times page shows the AGS time in both formats, GMT and GET.
+	\item Second IU GRR time (MED P12). On a dual launch mission a second IU GRR time can be set. The GRR time is used for e.g. state vector uplinks to the LVDC, so for that to work correctly this time will need to be set.
+\end{itemize}
+\newpage
 \section{Targeting}
 
 The targeting menu consists of the many maneuver calculation pages:\\
@@ -450,6 +480,7 @@ On a typical lunar mission all the targeting needed for TLI has been loaded into
 	\item Specified total Delta V
 	\item Specified apogee altitude
 	\item Integrated non-free return trajectory to the nominal nodal position at the Moon
+	\item External Delta V
 \end{enumerate}
 
 \subsubsection{Inputs}
@@ -459,7 +490,7 @@ On a typical lunar mission all the targeting needed for TLI has been loaded into
 \textbf{Opp:} Select the TLI opportunity. For option 1 this is the input to choose when the TLI is done and for all options this changes certain parameters associated with one of the opportunities in the LVDC, mostly the time of S-IVB mixture ratio shift from ignition.\\
 \textbf{Mode:} Choose the TLI processor calculation mode, see list above.\\
 \textbf{TIG:} Time of ignition. Not used for option 1. Used as a very rough initial guess in option 2 and 5, that only has to be accurate to a full orbit. In options 3 and 4 this is the exact time of ignition used.\\
-\textbf{DV:} Delta V of the maneuver (option 3 only).\\
+\textbf{DV:} Delta V of the maneuver (option 3) or Delta V vector (option 6).\\
 \textbf{APO:} Apogee altitude to be achieved by the maneuver (option 4 only).\\
 \textbf{Window:} Pacific or Atlantic TLI window, for the lunar mission options (2 and 5) this is used to generate the initial guess.\\
 \textbf{SFP:} For the lunar mission options (2 and 5) the target parameters are taken from the Skeleton Flight Plan table, which has two sets of data. See the Midcourse Correction Processor for more details about the SFP.\\
@@ -1320,7 +1351,8 @@ for a vector fetch, a time of abort, and maneuver targets. This type of manual e
 The launch window processor (LWP) can be used to calculate the optimal liftoff time and launch targeting parameters for Saturn IB missions to a rendezvous target in orbit, such as Skylab and ASTP. In the input descriptions below GMTLO* refers to the lift-off time that is required to achieve zero phase angle to the target at insertion.
 \subsubsection{Inputs}
 
-\textbf{TGT:} Select target vehicle in orbit for rendezvous.\\
+\textbf{PAD:} Select the launchpad (CSM or LEM). The pad coordinates are system parameters.\\
+\textbf{TGT:} Select target vehicle in orbit for rendezvous. If the MPT is active then the selection is the vector time. If no vector time is given (negative value input) then either the present time is used or, if there should be any maneuvers on the MPT, the first free flight vector after the last MPT maneuver.\\
 \textbf{LOT:} Liftoff time option. The options are: 
 
 \begin{itemize}
@@ -1361,6 +1393,7 @@ The launch window processor (LWP) can be used to calculate the optimal liftoff t
 \textbf{DELNOF:} Flag for option to compute differential nodal regression from insertion to rendezvous.\\
 \textbf{DELNO:} Angle that is added to the target descending node to account for differential nodal regression.\\
 \textbf{PHASE:} Expected phase angle at insertion. The default option is 90-270$^{\circ}$, which should work for most of the 0-360$^{\circ}$ range. Near 360$^{\circ}$ some difficulty to converge could arise, so if a calculation fails then switching this option to 270-540$^{\circ}$ can help. Other than that there should be no need to change the default value.\\
+\textbf{LAZCOE:} Coefficients of the empirical launch azimuth polynomial. The polynomial has the form \(A\textsubscript{z} = A\textsubscript{00} + A\textsubscript{01}i + A\textsubscript{10}\lambda + A\textsubscript{11}i\lambda\), where i is the inclination and \(\lambda\) is the descending node angle. All input and output angles in radian. \\
 \textbf{DIS:} Go to launch targeting display.\\ 
 \textbf{BCK:} Go back to utilities page.\\
 
@@ -1715,19 +1748,6 @@ On the left side of this page appear the input parameters that are automatically
 \textbf{TGT:} Select a vessel in the simulation to automatically populate the input data.\\
 \textbf{AUT:} Automatically update the input data with the selected vessel.\\
 \textbf{VPS:} Go to the Vector Panel Summary page for MPT state vector management.\\
-\textbf{BCK:} Go back to the main menu.\\
-\newpage
-\section{Configuration}
-
-\textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\
-\textbf{TYP:} Choose the type of vehicle configuration (CSM or LM, docked or undocked).\\
-\textbf{STA:} Choose the type of LM configuration that is currently being used, ascent or descent configuration.\\
-\textbf{CG:} Page for changing the thrust and CG tables. The CG tables are used to determine e.g. SPS trim gimbal angles. The tables are a function of weight of the vehicle. The CG tables contain the center of gravity in 3 dimensions, while the thrust tables contain thrust and weight loss rate of the selected thruster. There are default tables; alternative an initial table can be loaded in the RTCC mission constants file. Afterwards the table are being saved and loaded in scenarios. Note that presently the CG tables are not saved in scenarios!
-
-\textbf{DAT:} Choose the launch date for the mission.\\
-\textbf{TIM:} Choose the launch time for the mission. This will update the launch time of the CSM stored in the RTCC.\\
-\textbf{EPO:} Choose the AGC epoch. Usually this is a MJD at around January 1st of the yearly coordinate system defining period. This value should be automatically chose correctly for the AGC version in use.\\
-\textbf{UPD:} Update the liftoff time automatically by downlinking that time from the CMC or LGC. This will actually update three values in the RTCC: CSM liftoff time, time of clock zeroing in the CMC, time of clock zeroing in the LGC. These times are normally all set to the actual liftoff time of the CSM to get a consistent basis to calculate Ground Elapsed Time in the RTCC.\\
 \textbf{BCK:} Go back to the main menu.\\
 \newpage
 \section{Example: Apollo 7 Rendezvous}
@@ -3455,6 +3475,8 @@ MGVSGD&SPS engine gimbal plane in CSM coordinates&833.2&Inches\\
 \hline
 MGVSTD&Distance between SPS and DPS gimbal planes&435.55&Inches\\
 \hline
+MCVDKA&Nominal docking angle&240&degrees\\
+\hline
 MHVCCG&CSM CG table. Format: entry in table, weight, x, y and z coordinates. Example: 0 26600.0 976.946643 0.614894 3.200135&&-, lbs, in, in, in\\
 \hline
 MHVCCG\_N&Number of entries in CSM CG table&20&\\
@@ -3490,6 +3512,8 @@ MGTESE&Number of tesseral and sectorial coefficients in Earth potential&0 (use 4
 \hline
 MMTESE&Number of tesseral and sectorial coefficients in Moon potential&0 (use 3 in Open Orbiter)&\\
 \hline
+LAZCOE&Saturn IB launch targeting launch azimuth polynomial& 8568.36235 -20.131 -1.2501 5.5863385&\\
+\hline
 \end{tabular}
 \newpage
 \subsection{Launch Day Init Parameters}
@@ -3499,12 +3523,6 @@ For each launch day of a given mission (e.g. "1968-12-21 Init.txt" for Apollo 8)
 \begin{tabular}{L{3.7cm} L{7cm} L{1.95cm} L{1.5cm}}
 \hline
 \textbf{Name} & \textbf{Description} & \textbf{Default Value} & \textbf{Unit}\\
-\hline
-LSLat & Latitude of the lunar landing site & 0.0 & Degrees\\
-\hline
-LSLng & Longitude of the lunar landing site & 0.0 & Degrees\\
-\hline
-LSRad & Radius of the lunar landing site & Mean lunar radius & Nautical miles\\
 \hline
 LDPPDwellOrbits & Number of dwell orbits desired between DOI and PDI used by the Lunar Descent Planning Processor & 0 & None\\
 \hline

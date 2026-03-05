@@ -90,9 +90,38 @@ void EasepLR3::clbkSetClassCaps(FILEHANDLE cfg)
 void EasepLR3::DoFirstTimestep()
 {
 	if (spawned) {
-		//Point at Earth (To-Do)
+		RotateToFaceEarth(GetEarthPos());
 		spawned = false;
 	}
+}
+
+VECTOR3 EasepLR3::GetEarthPos()
+{
+	VECTOR3 rearth;
+	VECTOR3 rearthinv;
+	VECTOR3 rearthloc;
+	GetGlobalPos(rearth);
+	rearthinv = _V(-rearth.x, -rearth.y, -rearth.z);
+	Global2Local(rearthinv, rearthloc);
+
+	return rearthloc;
+}
+
+void EasepLR3::RotateToFaceEarth(VECTOR3 rearthloc)
+{
+	double heading = 0;
+	oapiGetHeading(hMaster, &heading);
+	if (heading >= PI2) heading -= PI2; //range always 0-2pi
+	else if (heading < 0) heading += PI2;
+
+	double earthangle = atan2(rearthloc.x, rearthloc.z); //current angle of earth on XY plane relative to z axis
+
+	heading += earthangle;
+
+	VESSELSTATUS vs1;
+	GetStatus(vs1);
+	vs1.vdata[0].z = heading;
+	DefSetState(&vs1);
 }
 
 void EasepLR3::clbkPreStep(double SimT, double SimDT, double mjd)
