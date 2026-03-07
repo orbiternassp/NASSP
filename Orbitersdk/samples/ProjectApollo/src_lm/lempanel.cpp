@@ -253,7 +253,7 @@ void LEM::InitSwitches() {
 	LMCabinTempMeter.Register(PSH,"LMCabinTempMeter",40,100,2);
 	LMSuitPressMeter.Register(PSH,"LMSuitPressMeter",0,10,2);
 	LMCabinPressMeter.Register(PSH,"LMCabinPressMeter",0,10,2);
-	LMCO2Meter.Register(PSH,"LMCO2Meter",0,30,2);
+	LMCO2Meter.Register(PSH,"LMCO2Meter",0,5,2);
 	LMGlycolTempMeter.Register(PSH,"LMGlycolTempMeter",0,80,2);
 	LMGlycolPressMeter.Register(PSH,"LMGlycolPressMeter",0,80,2);
 	LMOxygenQtyMeter.Register(PSH,"LMOxygenQtyMeter",0,100,2);
@@ -3291,13 +3291,8 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_CO2_LIGHT:
-		if (lca.GetAnnunVoltage() > 2.25) {
-			if (INST_CWEA_CB.IsPowered() && ECS_CO2_SENSOR_CB.IsPowered() && (scera1.GetVoltage(5, 2) >= (7.6 / 6))) {
-				oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
-			}
-			else if (CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6) {
-				oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
-			}
+		if (lca.GetAnnunVoltage() > 2.25 && (CWEA.IsCO2PartialPressureHigh() || CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6)) {
+			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 34, 34, 34, SURF_PREDEF_CK); // Light On
 		}
 		else {
 			oapiBlt(surf, srf[SRF_RR_NOTRACK], 0, 0, 0, 0, 34, 34, SURF_PREDEF_CK); // Light Off
