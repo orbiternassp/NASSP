@@ -2551,7 +2551,7 @@ bool LEM_RadarTape::PowerFailure()
 	return false;
 }
 
-bool LEM_RadarTape::SignalFailure()
+bool LEM_RadarTape::SignalFailure() //TODO: Light needs to flash progressively faster from 5 fps to 0 fps then go solid
 {
 	if (lem->AltRngMonSwitch.GetState() == TOGGLESWITCH_UP)
 	{
@@ -2613,7 +2613,7 @@ double LEM_RadarTape::GetLRAltitudeRate() //Applies roundoff error for LR data i
 	return (lem->LR.GetAltitudeRate() * (-19.41/-20.0));
 }
 
-double LEM_RadarTape::GetRRRange() //Applies roundoff error for RR data into tapemeter
+double LEM_RadarTape::GetRRRange() //Returns RR Range, no scale factor applied currently
 {
 	return (lem->RR.GetRadarRange());
 }
@@ -2630,12 +2630,13 @@ void LEM_RadarTape::Timestep(double simdt) {
 		return;
 	}
 
-	if (lem->AltRngMonSwitch.GetState()==TOGGLESWITCH_UP) {
-
+	if (lem->AltRngMonSwitch.GetState()==TOGGLESWITCH_UP) 
+	{
 		setRange(GetRRRange());
 		setRate(GetRRRate());
 	}
-	else {
+	else 
+	{
 		if (lem->ModeSelSwitch.IsUp()) // LR
 		{
 			if (lem->LR.IsRangeDataGood())
