@@ -2454,7 +2454,7 @@ public:
 	void PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res);
 	double FindDH(VehicleDataBlock sv_A, VehicleDataBlock sv_P, double GMT_guess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
-	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
+	void EntryTargeting(const EntryOpt &opt, EntryResults &res);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
 	//RTCC module name PMMEPP
 	void TranslunarInjectionProcessor(bool mpt, EphemerisData *sv = NULL, PLAWDTOutput *WeightsTable = NULL);
