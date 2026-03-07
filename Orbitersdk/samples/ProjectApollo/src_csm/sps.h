@@ -135,8 +135,6 @@ public:
 	double GetChamberPressurePSI();
 	bool IsThrustOnA() { return thrustOnA; };
 	bool IsThrustOnB() { return thrustOnB; };
-	bool GetInjectorValves12Open() { return injectorValves12Open; };
-	bool GetInjectorValves34Open() { return injectorValves34Open; };
 	double GetNitrogenPressureAPSI() { return nitrogenPressureAPSI; };
 	double GetNitrogenPressureBPSI() { return nitrogenPressureBPSI; };
 	double GetInjectorValvePosition(int i);

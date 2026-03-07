@@ -139,11 +139,17 @@ void Saturn::SystemsInit() {
 	FuelCellN2Blanket[2] = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:N2FUELCELL3BLANKET");
 
 	//
-	// Electric Lights
+	// Exterior Lights
 	//
 
 	SpotLight = (ElectricLight *)Panelsdk.GetPointerByString("ELECTRIC:SPOTLIGHT");
 	RndzLight = (ElectricLight *)Panelsdk.GetPointerByString("ELECTRIC:RNDZLIGHT");
+	EVALight = (ElectricLight*)Panelsdk.GetPointerByString("ELECTRIC:EVALIGHT");
+
+	RunEVAFeeder.WireToBuses(&RunEVATRGTAC1CB, &RunEVATRGTAC2CB);
+	EVALight->WireTo(&RunEVAFeeder);
+
+	ExteriorLighting.Init(this, &LightingRndzMNBCB, &RndzLightSwitch, &RunEVAFeeder, &RunEVALightSwitch, EVALight);
 
 	//
 	// Interior Lights
@@ -329,6 +335,9 @@ void Saturn::SystemsInit() {
 
 	EntryBatteryA->WireTo(&BatteryChargerBatACircuitBraker);
 	EntryBatteryB->WireTo(&BatteryChargerBatBCircuitBraker);
+
+	BatCPWRCircuitBraker.WireTo(DiodeBatC);
+	BatCCHRGCircuitBraker.WireTo(&BatCPWRCircuitBraker);
 
 	//
 	// SCS Logic Buses
@@ -700,6 +709,7 @@ void Saturn::SystemsInit() {
 	CMRCSHeat[11] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLL12COIL");
 
 	SideHatch.Init(this, &HatchGearBoxSelector, &HatchActuatorHandleSelector, &HatchActuatorHandleSelectorOpen, &HatchVentValveRotary);
+	BPC.Init(this, &SideHatch);
 	ForwardHatch.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:FORWARDHATCHPIPE"), &PressEqualValve);
 
 	WaterController.Init(this, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:POTABLEH2OTANK"),
@@ -860,6 +870,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		CMRCS1.Timestep(simt, simdt);	// Must be after JoystickTimestep
 		CMRCS2.Timestep(simt, simdt);
 		SideHatch.Timestep(simdt);
+		BPC.Timestep(simdt);
 		ForwardHatch.Timestep(simdt);
 
 		//Telecom update is last so telemetry reflects the current state
@@ -1077,12 +1088,6 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					*(int*) Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPGSEHEATEXCHANGER:PUMP") = SP_PUMP_OFF;
 					*(int*) Panelsdk.GetPointerByString("ELECTRIC:GSECHILLER:PUMP") = SP_PUMP_OFF;
 
-					// Disable GSE SM RCS heaters
-					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADAHEATER:PUMP") = SP_PUMP_OFF;
-					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADBHEATER:PUMP") = SP_PUMP_OFF;
-					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADCHEATER:PUMP") = SP_PUMP_OFF;
-					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADDHEATER:PUMP") = SP_PUMP_OFF;
-
 					//Close GSE dewars
 					GSECryoO2Dewar->OUT_valve.Close();
 					GSECryoH2Dewar->OUT_valve.Close();
@@ -1118,6 +1123,12 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 					PrimEcsRadiatorExchanger2->SetLength(10.0);
 					SecEcsRadiatorExchanger1->SetLength(10.0);
 					SecEcsRadiatorExchanger2->SetLength(10.0);
+
+					// Disable Dummy GSE SM RCS heaters
+					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADAHEATER:PUMP") = SP_PUMP_OFF;
+					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADBHEATER:PUMP") = SP_PUMP_OFF;
+					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADCHEATER:PUMP") = SP_PUMP_OFF;
+					*(int*)Panelsdk.GetPointerByString("ELECTRIC:GSESMRCSQUADDHEATER:PUMP") = SP_PUMP_OFF;
 
 					// Next state
 					systemsState = SATSYSTEMS_CABINVENTING;
@@ -1918,6 +1929,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		LEBIntegralLights.SystemTimestep(tFactor);
 		LeftNumericLights.SystemTimestep(tFactor);
 		LEBNumericLights.SystemTimestep(tFactor);
+		ExteriorLighting.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
@@ -2971,8 +2983,9 @@ void Saturn::CheckSMSystemsState()
 		}
 
 		// Disconnect Exterior SM lights
-		RndzLight->WireTo(NULL);
-		SpotLight->WireTo(NULL);
+		RndzLight->Disable();
+		SpotLight->Disable();
+		EVALight->Disable();
 	}
 }
 

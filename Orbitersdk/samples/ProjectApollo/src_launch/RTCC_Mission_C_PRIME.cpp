@@ -195,7 +195,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.RV_MCC = sv2;
 		entopt.dv_max = 7000.0*0.3048;
 
-		EntryTargeting(&entopt, &res); //Target load for uplink
+		EntryTargeting(entopt, res);
 
 		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -375,7 +375,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.vessel = calcParams.src;
 		entopt.dv_max = 7000.0*0.3048;
 
-		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target load for uplink
+		EntryTargeting(entopt, res);
 
 		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -1782,7 +1782,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.type = 3;
 
 		//Calculate corridor control burn
-		EntryTargeting(&entopt, &res);
+		EntryTargeting(entopt, res);
 
 		//If time to EI is more than 24 hours and the splashdown longitude is not within 2° of desired, then perform a longitude control burn
 		if (MCCtime < calcParams.EI - 24.0*3600.0 && abs(res.longitude - entopt.lng) > 2.0*RAD)
@@ -1790,7 +1790,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			entopt.type = 1;
 			entopt.t_Z = res.GET400K;
 
-			EntryTargeting(&entopt, &res);
+			EntryTargeting(entopt, res);
 		}
 
 		//Apollo 8 Mission Rules
@@ -1814,7 +1814,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(upMessage, "%s has been scrubbed.", manname);
 
 			//Entry prediction without maneuver
-			EntryUpdateCalc(sv, PZREAP.RRBIAS, true, &res);
+			EntryUpdateCalc(ConvertSVtoEphemData(sv), PZREAP.RRBIAS, true, res);
 
 			res.dV_LVLH = _V(0, 0, 0);
 			res.P30TIG = entopt.TIGguess;

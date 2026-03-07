@@ -703,7 +703,7 @@ void LEM::InitSwitches() {
 	LMPBatteryFeedTieCB2.Register(PSH, "LMPBatteryFeedTieCB2", 1);
 
 	LEMCoas1Enabled = false;
-	LEMCoas2Enabled = true;
+	LEMCoas2Enabled = false;
 	LEMWindowShades = true;
 	ordealEnabled = false;
 
@@ -3524,7 +3524,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_AOT_RETICLEDISPLAY:
-		optics.PaintReticleAngle(surf, srf[SRF_AOT_FONT]);
+		optics.PaintReticleAngle(surf, srf[SRF_AOT_FONT], 1);
 		return true;
 
 	case AID_COAS:
