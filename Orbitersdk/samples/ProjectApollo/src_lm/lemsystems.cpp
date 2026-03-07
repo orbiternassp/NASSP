@@ -2632,8 +2632,8 @@ void LEM_RadarTape::Timestep(double simdt) {
 
 	if (lem->AltRngMonSwitch.GetState()==TOGGLESWITCH_UP) {
 
-		setRange(lem->RR.GetRadarRange());
-		setRate(lem->RR.GetRadarRate());
+		setRange(GetRRRange());
+		setRate(GetRRRate());
 	}
 	else {
 		if (lem->ModeSelSwitch.IsUp()) // LR
@@ -2658,7 +2658,7 @@ void LEM_RadarTape::Timestep(double simdt) {
 				}
 				else
 				{
-					setRate(GetLRAltitudeRate() * cos(Radians(15)));
+					setRate(GetLRAltitudeRate());
 				}
 			}
 		}
