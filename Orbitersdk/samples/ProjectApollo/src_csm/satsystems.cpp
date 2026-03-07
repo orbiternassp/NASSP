@@ -336,6 +336,9 @@ void Saturn::SystemsInit() {
 	EntryBatteryA->WireTo(&BatteryChargerBatACircuitBraker);
 	EntryBatteryB->WireTo(&BatteryChargerBatBCircuitBraker);
 
+	BatCPWRCircuitBraker.WireTo(DiodeBatC);
+	BatCCHRGCircuitBraker.WireTo(&BatCPWRCircuitBraker);
+
 	//
 	// SCS Logic Buses
 	//

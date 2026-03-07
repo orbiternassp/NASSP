@@ -360,7 +360,7 @@ void RTCC_EMSMISS::UpdateWeightsTableAndSVAfterManeuver()
 
 		OtherCommonBlock = pRTCC->MPTDockingManeuver(intab->VehicleCode, state.StateVector.GMT, plawdtout);
 
-		if (plawdtout.Err)
+		if (plawdtout.Err == 1 || plawdtout.Err == 2)
 		{
 			ErrorCode = 4;
 			return;
