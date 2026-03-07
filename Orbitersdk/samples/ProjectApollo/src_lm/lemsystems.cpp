@@ -2596,6 +2596,33 @@ bool LEM_RadarTape::TimingFailure()
 		return false;
 }
 
+double LEM_RadarTape::GetLRAltitude() //Applies roundoff error for LR data into tapemeter
+{
+	if (lem->LR.GetAltitude() < 2500.0 * 0.3048)
+	{
+		return (lem->LR.GetAltitude() * (11.583/11.6));
+	}
+	else
+	{
+		return (lem->LR.GetAltitude() * (2.316/2.32));
+	}
+}
+
+double LEM_RadarTape::GetLRAltitudeRate() //Applies roundoff error for LR data into tapemeter
+{
+	return (lem->LR.GetAltitudeRate() * (-19.41/-20.0));
+}
+
+double LEM_RadarTape::GetRRRange() //Applies roundoff error for RR data into tapemeter
+{
+	return (lem->RR.GetRadarRange());
+}
+
+double LEM_RadarTape::GetRRRate() //Applies roundoff error for RR data into tapemeter
+{
+	return (lem->RR.GetRadarRate() * (-19.9/-20.0));
+}
+
 void LEM_RadarTape::Timestep(double simdt) {
 
 	if (!IsPowered())
@@ -2604,28 +2631,17 @@ void LEM_RadarTape::Timestep(double simdt) {
 	}
 
 	if (lem->AltRngMonSwitch.GetState()==TOGGLESWITCH_UP) {
-		if (lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_UP && lem->RR.GetRadarRate() == 0.0)
-		{
-			setRange(lem->RR.GetRadarRange());
-			setRate(lem->RR.GetRadarRate());
-		}
-		else if (lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_UP)
-		{
-			setRange(lem->RR.GetRadarRange());
-			setRate(lem->RR.GetRadarRate() - 0.6096); // 2 f/s bias from procedures (TM=R2-2)
-		}
-		else
-		{
-			setRange(lem->RR.GetRadarRange());
-			setRate(lem->RR.GetRadarRate());
-		}
+
+		setRange(lem->RR.GetRadarRange());
+		setRate(lem->RR.GetRadarRate());
 	}
 	else {
+
 		if (lem->ModeSelSwitch.IsUp()) // LR
 		{
 			if (lem->LR.IsRangeDataGood())
 			{
-				setRange(lem->LR.GetAltitude() * cos(Radians(15))); // Tapemeter slant range bias, multiplied by cos 15 deg
+				setRange(GetLRAltitude() * cos(Radians(15))); // Tapemeter slant range bias, multiplied by cos 15 deg
 			}
 			else
 			{
@@ -2639,17 +2655,13 @@ void LEM_RadarTape::Timestep(double simdt) {
 				}
 				else if ((lem->pMission->GetLMNumber()) == 4)
 				{
-					setRate(lem->LR.GetAltitudeRate());
+					setRate(GetLRAltitudeRate());
 				}
 				else
 				{
-					setRate(lem->LR.GetAltitudeRate() * cos(Radians(15))); // Multiplied by cos 15 deg, would account for the differences seen in self testing. FIXME: Needs to be researched!
+					setRate(GetLRAltitudeRate() * cos(Radians(15)));
 				}
 			}
-			/*else
-			{
-				setRate(0);
-			}*/
 		}
 		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
 		{

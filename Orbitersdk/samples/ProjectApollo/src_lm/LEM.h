@@ -135,6 +135,10 @@ public:
 	bool SignalFailure();
 	bool TimingFailure();
 	bool IsPowered();
+	double GetLRAltitude();
+	double GetLRAltitudeRate();
+	double GetRRRange();
+	double GetRRRate();
 private:
 	void TapeDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
 	LEM *lem;					// Pointer at LEM
