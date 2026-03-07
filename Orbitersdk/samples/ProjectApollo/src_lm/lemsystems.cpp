@@ -2636,7 +2636,6 @@ void LEM_RadarTape::Timestep(double simdt) {
 		setRate(lem->RR.GetRadarRate());
 	}
 	else {
-
 		if (lem->ModeSelSwitch.IsUp()) // LR
 		{
 			if (lem->LR.IsRangeDataGood())
@@ -2673,7 +2672,6 @@ void LEM_RadarTape::Timestep(double simdt) {
 			setRange(ags_alt);
 			setRate(ags_altrate);
 		}
-
 	}
 	// Altitude/Range
 	if (reqRange < (1000.0 * 0.3048))
