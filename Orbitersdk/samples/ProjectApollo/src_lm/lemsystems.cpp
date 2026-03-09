@@ -2651,11 +2651,7 @@ void LEM_RadarTape::Timestep(double simdt) {
 			{
 				if ((lem->pMission->GetLMNumber()) == 3)
 				{
-					setRate(lem->LR.GetAltitudeRate() * 1.82388664); // Generates seen rate signal from LM-3 \\FIXME: This is a hack, need to investigate why LM-3 generates this rate signal
-				}
-				else if ((lem->pMission->GetLMNumber()) == 4)
-				{
-					setRate(GetLRAltitudeRate());
+					setRate(lem->LR.GetAltitudeRate() * 1.82388664); // Generates seen rate signal from LM-3 \\FIXME: This is a hack, need to investigate why LM-3 generates this rate signal. LM-4 might need similar adjustment later
 				}
 				else
 				{
