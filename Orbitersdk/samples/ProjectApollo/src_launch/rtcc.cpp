@@ -3790,6 +3790,40 @@ void RTCC::AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad)
 	pad.dH_Max = TPIPAD_ddH / 1852.0;
 }
 
+void RTCC::SLManeuverPAD(const AP7ManPADOpt &opt, SLMNV &pad)
+{
+	AP7MNV padtemp;
+
+	AP7ManeuverPAD(opt, padtemp);
+
+	pad.GETI = padtemp.GETI;
+	pad.dV = padtemp.dV;
+	pad.Vc = padtemp.Vc;
+	pad.Weight = padtemp.Weight;
+	pad.pTrim = padtemp.pTrim;
+	pad.yTrim = padtemp.yTrim;
+	pad.burntime = padtemp.burntime;
+	pad.Att = padtemp.Att;
+	pad.Star = padtemp.Star;
+	pad.Shaft = padtemp.Shaft;
+	pad.Trun = padtemp.Trun;
+	pad.prelim = false;
+	pad.type = 0;
+}
+
+void RTCC::SLTPIPAD(const AP7TPIPADOpt &opt, SLTPI &pad)
+{
+	AP7TPI padtemp;
+
+	AP7TPIPAD(opt, padtemp);
+
+	pad.GETI = padtemp.GETI;
+	pad.Vg = padtemp.Vg;
+	pad.Backup_dV = padtemp.Backup_dV;
+	pad.Backup_bT = padtemp.Backup_bT;
+	pad.prelim = false;
+}
+
 void RTCC::AP9LMTPIPAD(const AP9LMTPIPADOpt &opt, AP9LMTPI &pad)
 {
 	EphemerisData sv_A1, sv_P1;
