@@ -3046,31 +3046,31 @@ void MCC::drawPad(bool writetofile){
 		{
 		case 1: //NC1
 		{
-			snprintf(buffer, 1024, "%s NC1 PAD DATA\n%+06d HR N95\n%+06d MIN TIG NC1\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NC1\n%+07.1f DVZ\nXXX%03.0f R N22\nXXX%03.0f P NC1\nXXX%03.0f Y\n%+07.1f DVC\nXX%d:%02.0f BT\n%s%s%sRemarks:\n",
+			snprintf(buffer, 1024, "%s NC1 PAD DATA\n%+06d HR N95\n%+06d MIN TIG NC1\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NC1\n%+07.1f DVZ\nXXX%03.0f R N22\nXXX%03.0f P NC1\nXXX%03.0f Y\n%+07.1f DVC\nXX%d:%02.0f BT\n%s%sRemarks:\n%s",
 				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Att.x, form->Att.y, form->Att.z, form->Vc, mm2, ss2, tempString1, tempString2, form->remarks);
 		}
 		break;
 		case 2: //NPC
 		{
-			snprintf(buffer, 1024, "NPC PAD DATA\nPLANE CHANGE\n%+06d HR N33\n%+06d MIN TIG NPC\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NPC\n%+07.1f DVZ\n%+07.1f DVC\nXX%d:%02.0f BT\n%s\n%sRemarks:\n",
+			snprintf(buffer, 1024, "NPC PAD DATA\nPLANE CHANGE\n%+06d HR N33\n%+06d MIN TIG NPC\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NPC\n%+07.1f DVZ\n%+07.1f DVC\nXX%d:%02.0f BT\n%s\nRemarks:\n%s",
 				hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Vc, mm2, ss2, tempString1, form->remarks);
 		}
 		break;
 		case 3: //NC2
 		{
-			snprintf(buffer, 1024, "%s NC2 PAD DATA\n%+06d HR N28\n%+06d MIN TIG NC2\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NC2\n%+07.1f DVZ\nXXX%03.0f R N22\nXXX%03.0f P NC2\nXXX%03.0f Y\n%+07.1f DVC\nXX%d:%02.0f BT\n%s%sRemarks:\n",
+			snprintf(buffer, 1024, "%s NC2 PAD DATA\n%+06d HR N28\n%+06d MIN TIG NC2\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NC2\n%+07.1f DVZ\nXXX%03.0f R N22\nXXX%03.0f P NC2\nXXX%03.0f Y\n%+07.1f DVC\nXX%d:%02.0f BT\n%sRemarks:\n%s",
 				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Att.x, form->Att.y, form->Att.z, form->Vc, mm2, ss2, tempString1, form->remarks);
 		}
 		break;
 		case 4: //NCC
 		{
-			snprintf(buffer, 1024, "%s NCC PAD DATA\n%+06d HR N11\n%+06d MIN TIG NCC\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NCC\n%+07.1f DVZ\n%+07.1f DVC\nXXX%03.0f R N22\nXXX%03.0f P NCC\nXXX%03.0f Y\n%s%sRemarks:\n",
+			snprintf(buffer, 1024, "%s NCC PAD DATA\n%+06d HR N11\n%+06d MIN TIG NCC\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NCC\n%+07.1f DVZ\n%+07.1f DVC\nXXX%03.0f R N22\nXXX%03.0f P NCC\nXXX%03.0f Y\n%sRemarks:\n%s",
 				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Vc, form->Att.x, form->Att.y, form->Att.z, tempString1, form->remarks);
 		}
 		break;
 		case 5: //NSR
 		{
-			snprintf(buffer, 1024, "%s NSR PAD DATA\n%+06d HR N13\n%+06d MIN TIG NSR\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NSR\n%+07.1f DVZ\n%+07.1f DVC\nXXX%03.0f R N22\nXXX%03.0f P NSR\nXXX%03.0f Y\n%s%sRemarks:\n",
+			snprintf(buffer, 1024, "%s NSR PAD DATA\n%+06d HR N13\n%+06d MIN TIG NSR\n%+07.2f SEC\n%+07.1f DVX N81\n%+07.1f DVY NSR\n%+07.1f DVZ\n%+07.1f DVC\nXXX%03.0f R N22\nXXX%03.0f P NSR\nXXX%03.0f Y\n%sRemarks:\n%s",
 				padprelim, hh, mm, ss, form->dV.x, form->dV.y, form->dV.z, form->Vc, form->Att.x, form->Att.y, form->Att.z, tempString1, form->remarks);
 		}
 		break;
