@@ -135,10 +135,7 @@ public:
 	bool SignalFailure();
 	bool TimingFailure();
 	bool IsPowered();
-	double GetLRAltitude();
-	double GetLRAltitudeRate();
-	double GetRRRange();
-	double GetRRRate();
+
 private:
 	void TapeDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
 	LEM *lem;					// Pointer at LEM
@@ -154,6 +151,10 @@ private:
 	double desRange, desRate;
 	double LGCaltUpdateTime, LGCaltRateUpdateTime;
 	double AGSaltUpdateTime, AGSaltRateUpdateTime;
+	double GetLRAltitude();
+	double GetLRAltitudeRate();
+	double GetRRRange();
+	double GetRRRate();
 
 	const double ALTSCALEFACTOR = 0.3048 * 2.345 * pow(2.0, -3.0);
 	const double ALTRATESCALEFACTOR = 0.3048 * pow(2.0, -4.0);
