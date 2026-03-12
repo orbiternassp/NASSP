@@ -106,6 +106,39 @@ struct AP7TPI {
 	double GET;			// Time that range,range-rate,azimuth, and elevation parameters are valid
 };
 
+// SKYLAB - MANEUVER
+struct SLMNV {
+	double GETI;		// TIG
+	VECTOR3 dV;			// P30 dV
+	double Vc;			// EMS dV
+	double Weight;		// Vehicle weight
+	double pTrim, yTrim; // SPS pitch/yaw trim
+	double burntime;	// Burn time
+	VECTOR3 Att;		// Attitude at TIG
+	char remarks[256];	// remarks
+	int type;           // 1 = NC1, 2 = NPC, 3 = NC2, 4 = NCC, 5 = NSR
+	bool prelim;		// preliminary or final pad
+	int Star;			// Nav star for orientation check
+	double Shaft, Trun;  // Shaft and trunnion values for orientation check
+};
+
+// SKYLAB - TERMINAL PHASE INITIATE
+struct SLTPI {
+	SLTPI::SLTPI()
+	{
+		GETI = 0.0;
+		Vg = _V(0, 0, 0);
+		Backup_dV = _V(0.0, 0.0, 0.0);
+		Backup_bT = _V(0.0, 0.0, 0.0);
+	}
+	// ON THE FORM:
+	double GETI;		// TIG
+	VECTOR3 Vg;			// P40 velocity to be gained
+	VECTOR3 Backup_dV;	// Backup "line-of-sight to Target" dV (fore/aft, left/right, up/down)
+	VECTOR3 Backup_bT;  // Burn time to get dV in backup axes
+	bool prelim;
+};
+
 // APOLLO 7 - ENTRY UPDATE
 struct AP7ENT {
 	// Pre-burn

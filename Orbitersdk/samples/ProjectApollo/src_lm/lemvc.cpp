@@ -2078,16 +2078,8 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, false); // Light Off
 		}
 
-		if (lca.GetAnnunVoltage() > 2.25) {
-			if (INST_CWEA_CB.IsPowered() && ECS_CO2_SENSOR_CB.IsPowered() && (scera1.GetVoltage(5, 2) >= (7.6 / 6))) {
-				SetCompLight(VC_MAT_L15_CompLight4_CO2, true); // Light On
-			}
-			else if (CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6) {
-				SetCompLight(VC_MAT_L15_CompLight4_CO2, true); // Light On
-			}
-			else {
-				SetCompLight(VC_MAT_L15_CompLight4_CO2, false); // Light Off
-			}
+		if (lca.GetAnnunVoltage() > 2.25 && (CWEA.IsCO2PartialPressureHigh() || CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6)) {
+			SetCompLight(VC_MAT_L15_CompLight4_CO2, true); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L15_CompLight4_CO2, false); // Light Off

@@ -298,13 +298,11 @@ void LMCabinPressMeter::OnPostStep(double SimT, double DeltaT, double MJD) {
 
 // ECS indicator, cabin CO2 level
 LMCO2Meter::LMCO2Meter()
-
 {
 	NeedleSurface = 0;
 }
 
 void LMCO2Meter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
-
 {
 	MeterSwitch::Init(row);
 	lem = s;
@@ -312,53 +310,19 @@ void LMCO2Meter::Init(SURFHANDLE surf, SwitchRow &row, LEM *s)
 }
 
 double LMCO2Meter::QueryValue()
-
 {
 	if(!lem){ return 0; }
-	return lem->scera1.GetVoltage(5, 2)*6.0;
+	return lem->ecs.GetSensorCO2Voltage();
 }
 
 void LMCO2Meter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
-
 {
-	double cf,sf; // Correction Factor, Scale factor
-	int btm;      // Bottom of this segment
-	// Determine needle range and scale factor
-	if(v <= 5){
-		btm = 114;
-		sf = 8.0;
-		cf = 0;
-	}else{
-		if(v <= 10){
-			btm = 74;
-			cf = 5;
-			sf = 4.0;
-		}else{
-			if(v <= 15){
-				btm = 54;
-				cf = 10;
-				sf = 3.0;
-			}else{
-				if(v <= 20){
-					btm = 39;
-					cf = 15;
-					sf = 2;
-				}else{
-					btm = 29;
-					cf = 20;
-					sf = 1.5;
-				}
-			}
-		}
-	}
-	oapiBlt(drawSurface, NeedleSurface,  267, btm-((int)((v-cf)*sf)), 7, 0, 7, 7, SURF_PREDEF_CK);
+	oapiBlt(drawSurface, NeedleSurface, 267, 114 - ((int)(v * 20.0)), 7, 0, 7, 7, SURF_PREDEF_CK);
 }
 
 void LMCO2Meter::OnPostStep(double SimT, double DeltaT, double MJD)
-
 {
-	double v = ((GetDisplayValue() - minValue) * 0.98) / (maxValue - minValue);
-	// Still needs scale factor, right now its wrongly 1:1 for entire range
+	double v = (GetDisplayValue() - minValue) / (maxValue - minValue);
 
 	lem->SetAnimation(anim_switch, v);
 }

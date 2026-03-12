@@ -2550,10 +2550,25 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 				PZLOIPLN.eta_1 = dtemp;
 				PZMCCPLN.ETA1 = dtemp * RAD;
 			}
+			else if (papiReadScenario_double(Buff, "H_A_LPO1", dtemp))
+			{
+				med_k18.HALOI1 = dtemp;
+				PZMCCPLN.H_A_LPO1 = dtemp * 1852.0;
+			}
 			else if (papiReadScenario_double(Buff, "H_P_LPO1", dtemp))
 			{
 				med_k18.HPLOI1 = dtemp;
 				PZMCCPLN.H_P_LPO1 = dtemp * 1852.0;
+			}
+			else if (papiReadScenario_double(Buff, "H_A_LPO2", dtemp))
+			{
+				PZLOIPLN.HA_LLS = dtemp;
+				PZMCCPLN.H_A_LPO2 = dtemp * 1852.0;
+			}
+			else if (papiReadScenario_double(Buff, "H_P_LPO2", dtemp))
+			{
+				PZLOIPLN.HP_LLS = dtemp;
+				PZMCCPLN.H_P_LPO2 = dtemp * 1852.0;
 			}
 			else if (papiReadScenario_double(Buff, "PZLTRT_DT_Ins_TPI", dtemp))
 			{
@@ -3773,6 +3788,40 @@ void RTCC::AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad)
 	pad.Vg = opt.dV_LVLH / 0.3048;
 	pad.dH_TPI = TPIPAD_dH / 1852.0;
 	pad.dH_Max = TPIPAD_ddH / 1852.0;
+}
+
+void RTCC::SLManeuverPAD(const AP7ManPADOpt &opt, SLMNV &pad)
+{
+	AP7MNV padtemp;
+
+	AP7ManeuverPAD(opt, padtemp);
+
+	pad.GETI = padtemp.GETI;
+	pad.dV = padtemp.dV;
+	pad.Vc = padtemp.Vc;
+	pad.Weight = padtemp.Weight;
+	pad.pTrim = padtemp.pTrim;
+	pad.yTrim = padtemp.yTrim;
+	pad.burntime = padtemp.burntime;
+	pad.Att = padtemp.Att;
+	pad.Star = padtemp.Star;
+	pad.Shaft = padtemp.Shaft;
+	pad.Trun = padtemp.Trun;
+	pad.prelim = false;
+	pad.type = 0;
+}
+
+void RTCC::SLTPIPAD(const AP7TPIPADOpt &opt, SLTPI &pad)
+{
+	AP7TPI padtemp;
+
+	AP7TPIPAD(opt, padtemp);
+
+	pad.GETI = padtemp.GETI;
+	pad.Vg = padtemp.Vg;
+	pad.Backup_dV = padtemp.Backup_dV;
+	pad.Backup_bT = padtemp.Backup_bT;
+	pad.prelim = false;
 }
 
 void RTCC::AP9LMTPIPAD(const AP9LMTPIPADOpt &opt, AP9LMTPI &pad)
@@ -6541,6 +6590,15 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
 	SAVE_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
 	SAVE_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
+	SAVE_INT("RTCC_TLCC_REVS2", PZMCCPLN.REVS2);
+	SAVE_DOUBLE("RTCC_TLCC_H_A_LPO1", PZMCCPLN.H_A_LPO1 / 1852.0);
+	SAVE_DOUBLE("RTCC_TLCC_H_P_LPO1", PZMCCPLN.H_P_LPO1 / 1852.0);
+	SAVE_DOUBLE("RTCC_TLCC_H_A_LPO2", PZMCCPLN.H_A_LPO2 / 1852.0);
+	SAVE_DOUBLE("RTCC_TLCC_H_P_LPO2", PZMCCPLN.H_P_LPO2 / 1852.0);
+	SAVE_DOUBLE("RTCC_TLCC_H_PCYN_MIN", PZMCCPLN.H_PCYN_MIN / 1852.0);
+	SAVE_DOUBLE("RTCC_TLCC_H_PCYN_MAX", PZMCCPLN.H_PCYN_MAX / 1852.0);
+	SAVE_DOUBLE("RTCC_TLCC_SITEROT", PZMCCPLN.SITEROT * DEG);
+
 	sprintf(Buffer, "%.2lf %.2lf %.2lf %.2lf %d %.2lf %.2lf %d", PZLOIPLN.HA_LLS, PZLOIPLN.HP_LLS, PZLOIPLN.DW, PZLOIPLN.REVS1, PZLOIPLN.REVS2, PZLOIPLN.eta_1, PZLOIPLN.dh_bias, PZLOIPLN.PlaneSolnForInterSoln);
 	oapiWriteScenario_string(scn, "RTCC_PZLOIPLN", Buffer);
 
@@ -6732,6 +6790,9 @@ void RTCC::SaveState(FILEHANDLE scn) {
 		oapiWriteScenario_string(scn, "RTCCMFD_LM", pLM->GetName());
 	}
 	//MED
+	sprintf(Buffer, "%.2lf %.2lf %.0lf %.0lf %.2lf %.2lf %.2lf",
+		med_k18.HALOI1, med_k18.HPLOI1, med_k18.DVMAXp, med_k18.DVMAXm, med_k18.psi_DS, med_k18.psi_MX, med_k18.psi_MN);
+	oapiWriteScenario_string(scn, "RTCC_K18", Buffer);
 	sprintf(Buffer, "%d %d %lf %lf %lf %lf %lf %lf",
 		med_k30.Vehicle, med_k30.IVFlag, med_k30.ChaserVectorTime, med_k30.TargetVectorTime, med_k30.StartTime, med_k30.EndTime, med_k30.TimeStep, med_k30.TimeRange);
 	oapiWriteScenario_string(scn, "MED_K30", Buffer);
@@ -6903,6 +6964,15 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
 		LOAD_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
 		LOAD_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
+		LOAD_INT("RTCC_TLCC_REVS1", PZMCCPLN.REVS2);
+		if (papiReadScenario_double(line, "RTCC_TLCC_H_A_LPO1", darrtemp[0])) PZMCCPLN.H_A_LPO1 = darrtemp[0] * 1852.0;
+		if (papiReadScenario_double(line, "RTCC_TLCC_H_P_LPO1", darrtemp[0])) PZMCCPLN.H_P_LPO1 = darrtemp[0] * 1852.0;
+		if (papiReadScenario_double(line, "RTCC_TLCC_H_A_LPO2", darrtemp[0])) PZMCCPLN.H_A_LPO2 = darrtemp[0] * 1852.0;
+		if (papiReadScenario_double(line, "RTCC_TLCC_H_P_LPO2", darrtemp[0])) PZMCCPLN.H_P_LPO2 = darrtemp[0] * 1852.0;
+		if (papiReadScenario_double(line, "RTCC_TLCC_H_PCYN_MIN", darrtemp[0])) PZMCCPLN.H_PCYN_MIN = darrtemp[0] * 1852.0;
+		if (papiReadScenario_double(line, "RTCC_TLCC_H_PCYN_MAX", darrtemp[0])) PZMCCPLN.H_PCYN_MAX = darrtemp[0] * 1852.0;
+		if (papiReadScenario_double(line, "RTCC_TLCC_SITEROT", darrtemp[0])) PZMCCPLN.SITEROT = darrtemp[0] * RAD;
+
 		if (!strnicmp(line, "RTCC_PZLOIPLN", 13))
 		{
 			sscanf(line + 13, "%lf %lf %lf %lf %d %lf %lf %d",
@@ -7062,6 +7132,11 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		papiReadScenario_string(line, "RTCCMFD_CSM", CSMName);
 		papiReadScenario_string(line, "RTCCMFD_LM", LEMName);
 
+		if (!strnicmp(line, "MED_K18", 7))
+		{
+			sscanf(line + 8, "%lf %lf %lf %lf %lf %lf %lf",
+				&med_k18.HALOI1, &med_k18.HPLOI1, &med_k18.DVMAXp, &med_k18.DVMAXm, &med_k18.psi_DS, &med_k18.psi_MX, &med_k18.psi_MN);
+		}
 		if (!strnicmp(line, "MED_K30", 7)) {
 			sscanf(line + 8, "%d %d %lf %lf %lf %lf %lf %lf",
 				&med_k30.Vehicle, &med_k30.IVFlag, &med_k30.ChaserVectorTime, &med_k30.TargetVectorTime, &med_k30.StartTime, &med_k30.EndTime, &med_k30.TimeStep, &med_k30.TimeRange);
@@ -30256,7 +30331,7 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 	{
 	if (data.size() < 1 || data[0] == "")
 	{
-		PZMCCPLN.H_PCYN_MIN = 40.0*1852.0;
+		PZMCCPLN.H_PCYN_MIN = 40.0 * 1852.0;
 	}
 	else
 	{
@@ -30265,11 +30340,11 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		{
 			return 1;
 		}
-		PZMCCPLN.H_PCYN_MIN = ht * 1852.0;;
+		PZMCCPLN.H_PCYN_MIN = ht * 1852.0;
 	}
 	if (data.size() < 2 || data[1] == "")
 	{
-		PZMCCPLN.H_PCYN_MAX = 5000.0*1852.0;
+		PZMCCPLN.H_PCYN_MAX = 5000.0 * 1852.0;
 	}
 	else
 	{
