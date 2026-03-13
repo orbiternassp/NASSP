@@ -1358,17 +1358,34 @@ void LEM::RegisterActiveAreas()
 
 	// ECS Panels
 
-	oapiVCRegisterArea(AID_VC_ROT_SUITCIRCUITRELIEF, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_SUITCIRCUITRELIEF, Rot_SuitCircuitReliefLocation + ofs, 0.02);
+	if (viewpos != LMVIEW_LMP && viewpos != LMVIEW_CBRIGHT && viewpos != LMVIEW_ECS2) { // Otherwise you can click from the LMP position through the ECS module
+		oapiVCRegisterArea(AID_VC_ROT_SUITCIRCUITRELIEF, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_SUITCIRCUITRELIEF, Rot_SuitCircuitReliefLocation + ofs, 0.02);
 
-	oapiVCRegisterArea(AID_VC_ROT_CABINGASRETURN, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_CABINGASRETURN, Rot_CabinGasReturnLocation + ofs, 0.02);
+		oapiVCRegisterArea(AID_VC_ROT_CABINGASRETURN, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_CABINGASRETURN, Rot_CabinGasReturnLocation + ofs, 0.02);
 
-	oapiVCRegisterArea(AID_VC_ROT_CANISTER1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_CANISTER1, Rot_Canister1Location + ofs, 0.1);
+		oapiVCRegisterArea(AID_VC_ROT_ASCH2O, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_ASCH2O, Rot_AscH2OLocation + ofs, 0.02);
 
-	oapiVCRegisterArea(AID_VC_ROT_CANISTER2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_CANISTER2, Rot_Canister2Location + ofs, 0.07);
+		oapiVCRegisterArea(AID_VC_H2OSEP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_H2OSEP, H20SepHandleLocation + ofs, 0.02);
+
+		oapiVCRegisterArea(AID_VC_CANISTERSEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CANISTERSEL, _V(0.3571, 0.4668, 0.1878) + ofs, _V(0.3572, 0.4670, 0.0753) + ofs, _V(0.3570, 0.3545, 0.1876) + ofs, _V(0.3569, 0.3546, 0.0753) + ofs);
+
+		oapiVCRegisterArea(AID_VC_VENT1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_VENT1, PB_Vent1Location + ofs, 0.02);
+
+		oapiVCRegisterArea(AID_VC_VENT2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_VENT2, PB_Vent2Location + ofs, 0.02);
+
+		oapiVCRegisterArea(AID_VC_ROT_CANISTER1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_CANISTER1, Rot_Canister1Location + ofs, 0.1);
+
+		oapiVCRegisterArea(AID_VC_ROT_CANISTER2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
+		oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_CANISTER2, Rot_Canister2Location + ofs, 0.07);
+	}
 
 	oapiVCRegisterArea(AID_VC_ROT_CABINREPRESS, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_CABINREPRESS, Rot_CabinRepressLocation + ofs, 0.02);
@@ -1418,24 +1435,8 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_ROT_SUITISOLLMP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_SUITISOLLMP, Rot_SuitIsolLmpLocation + ofs, 0.02);
 
-	oapiVCRegisterArea(AID_VC_ROT_ASCH2O, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_ROT_ASCH2O, Rot_AscH2OLocation + ofs, 0.02);
-
-
 	oapiVCRegisterArea(AID_VC_SUITGASDIVERTER, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_SUITGASDIVERTER, SuitGasDiverterHandleLocation + ofs, 0.02);
-
-	oapiVCRegisterArea(AID_VC_H2OSEP, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_H2OSEP, H20SepHandleLocation + ofs, 0.02);
-
-	oapiVCRegisterArea(AID_VC_CANISTERSEL, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CANISTERSEL, _V(0.3571, 0.4668, 0.1878) + ofs, _V(0.3572, 0.4670, 0.0753) + ofs, _V(0.3570, 0.3545, 0.1876) + ofs, _V(0.3569, 0.3546, 0.0753) + ofs);
-
-	oapiVCRegisterArea(AID_VC_VENT1, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_VENT1, PB_Vent1Location + ofs, 0.02);
-
-	oapiVCRegisterArea(AID_VC_VENT2, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Spherical(AID_VC_VENT2, PB_Vent2Location + ofs, 0.02);
 
 	oapiVCRegisterArea(AID_VC_ACTOVRDCDR, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_ACTOVRDCDR, _V(0.342716, 0.154725, 0.539607) + ofs, 0.008);
@@ -1457,7 +1458,7 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_OVERHEADHATCHRELIEFVALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_OVERHEADHATCHRELIEFVALVE, _V(0.2085, 1.0112, 0.1652) + ofs, _V(0.1385, 1.0111, 0.1653) + ofs, _V(0.2084, 0.9411, 0.1651) + ofs, _V(0.1383, 0.9409, 0.1654) + ofs);
 
-	if (viewpos == LMVIEW_FWDHATCH) { // To avoid that my DSKY clicks plays with the forward dump valve as well
+	if (viewpos != LMVIEW_DSKY) { // To avoid that my DSKY clicks plays with the forward dump valve as well
 		oapiVCRegisterArea(AID_VC_FORWARDHATCH, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
 		oapiVCSetAreaClickmode_Spherical(AID_VC_FORWARDHATCH, FwdHatchInnerLocation + ofs, 0.1);
 
