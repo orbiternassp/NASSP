@@ -5848,9 +5848,8 @@ void Saturn::InitFDAI(UINT mesh)
 	const VECTOR3 needleyvector = { 0.05, 0, 0 };
 	const VECTOR3 ratexvector = { 0.00, 0.064*cos(P1_3_TILT), 0.064*sin(P1_3_TILT) };
 	const VECTOR3 rateyvector = { 0.064, 0, 0 };
-	const VECTOR3 FDAI_PIVOT_L = { -0.673236, 0.563893, 0.385934 }; // L FDAI Pivot Point
-	const VECTOR3 FDAI_PIVOT_R = { -0.340246, 0.750031, 0.44815 }; // R FDAI Pivot Point
-
+	const VECTOR3 FDAI_PIVOT_L = { -0.6732283, 0.5646107, 0.3855103 }; // L FDAI Pivot Point
+	const VECTOR3 FDAI_PIVOT_R = { -0.3402030, 0.7508576, 0.4472508 }; // R FDAI Pivot Point
 	// L FDAI Ball
 	ANIMATIONCOMPONENT_HANDLE	ach_FDAIroll_L, ach_FDAIpitch_L, ach_FDAIyaw_L;
 	static UINT meshgroup_Fdai1_L = { VC_GRP_FDAIBall1_L }; // Roll gimbal meshgroup (includes roll indicator)
