@@ -957,6 +957,89 @@ public:
 	CircuitBrakerSwitch SMSector1LogicPowerMNBBraker;
 };
 
+///Panel 230 Apollo 15/16
+class SaturnPanel230CSM112 : public BasicPanel
+{
+public:
+
+	void Register(PanelSwitchScenarioHandler* PSH);
+
+	double MappingCamera1IndicatorDelay = -1.0; //4 Sec delay
+	double GammaBay2IndicatorDelay = -1.0; //4 Sec delay
+	double MassSpectrometer2IndicatorDelay = -1.0; //4 Sec delay
+	double PanoramicCameraIndicatorDelay = -1.0; //4 Sec delay
+	double SubSatIndicatorDelay = -1.0; //9 Sec delay
+
+	SwitchRow Panel230CSM112SwitchesRow;
+	SwitchRow Panel230CSM112TBRow;
+	//
+	ThreePosSwitch MappingCamera1Switch;
+	ThreePosSwitch MappingCamera2Switch;
+	ThreePosSwitch GammaBay1Switch;
+	ToggleSwitch GammaBay2Switch;
+	ThreePosSwitch MassSpectrometer1Switch;
+	ToggleSwitch MassSpectrometer2Switch;
+	ThreePosSwitch ImageMtnSwitch;
+	ToggleSwitch LaserAltmSwitch;
+	ToggleSwitch Exp1Switch;
+	ThreePosSwitch Exp2Switch;
+	ThreePosSwitch IonSourceSwitch;
+	ToggleSwitch DataSys1Switch;
+	ToggleSwitch DataSys2Switch;
+	ThreePosSwitch GainStepSwitch;
+	ToggleSwitch MultSwitch;
+	ToggleSwitch DsCamSwitch;
+	ThreePosSwitch PanoramicCamera1Switch;
+	ToggleSwitch PanoramicCamera2Switch;
+	ThreePosSwitch AlphaRaySwitch;
+	ThreePosSwitch SubSatSwitch;
+	ToggleSwitch PanoramicCameraModeSwitch;
+	ThreePosSwitch PanoramicCameraPWRSwitch;
+	ThreePosSwitch PanoramicCameraExposureSwitch;
+	ThreePosSwitch XRaySwitch;
+};
+
+///Panel 230 Apollo 17
+class SaturnPanel230CSM114 : public BasicPanel
+{
+public:
+
+	void Register(PanelSwitchScenarioHandler* PSH);
+
+	double MappingCamera1IndicatorDelay = -1.0; //4 Sec delay
+	double LunarSounderIndicatorDelay = -1.0; //4 Sec delay
+	double HFAntennaJettIndicatorDelay = -1.0; //4 Sec delay
+	double PanoramicCameraIndicatorDelay = -1.0; //4 Sec delay
+
+	SwitchRow Panel230CSM114SwitchesRow;
+	SwitchRow Panel230CSM114TBRow;
+	//
+	ThreePosSwitch MappingCamera1Switch;
+	ThreePosSwitch MappingCamera2Switch;
+	ToggleSwitch LunarSounderSwitch;
+	ThreePosSwitch HFAntenna1Switch;
+	ThreePosSwitch HFAntenna2Switch;
+	ToggleSwitch HFAntennaJettSwitch;
+	//
+	ThreePosSwitch ImageMtnSwitch;
+	ToggleSwitch LaserAltmSwitch;
+	ThreePosSwitch RCDRSwitch;
+	ToggleSwitch RadarSwitch;
+	ThreePosSwitch ModeSwitch;
+	//
+	ToggleSwitch DataSys1Switch;
+	ToggleSwitch DataSys2Switch;
+	ToggleSwitch IRSwitch;
+	//
+	ThreePosSwitch PanoramicCamera1Switch;
+	ToggleSwitch PanoramicCamera2Switch;
+	//
+	ToggleSwitch PanoramicCameraModeSwitch;
+	ThreePosSwitch PanoramicCameraPWRSwitch;
+	ThreePosSwitch PanoramicCameraVHOVRDSwitch;
+	ToggleSwitch UVSpectSwitch;
+};
+
 class SaturnPanel277 : public BasicPanel
 {
 public:
@@ -979,12 +1062,18 @@ public:
 	SwitchRow Panel278JSwitchesRow;
 	ThreePosSwitch ExperimentCovers1Switch;
 	ThreePosSwitch ExperimentCovers2Switch;
+	ThreePosSwitch ExperimentCovers3Switch;
 	GuardedThreePosSwitch SMPowerSourceSwitch;
 	ThreePosSwitch O2Tank3IsolSwitch;
 	IndicatorSwitch ExperimentCovers1Indicator;
 	IndicatorSwitch ExperimentCovers2Indicator;
+	IndicatorSwitch ExperimentCovers3Indicator;
 	IndicatorSwitch O2Tank3IsolIndicator;
 	CircuitBrakerSwitch ExperimentCoversDeployBraker;
+
+	double ExperimentCovers1IndicatorDelay = -1.0; //Init at -1 for 4 Sec animation delay
+	double ExperimentCovers2IndicatorDelay = -1.0; //Init at -1 for 4 Sec animation delay
+	double ExperimentCovers3IndicatorDelay = -1.0; //Init at -1 for 4 Sec animation delay
 };
 
 class LeftCOASPowerSwitch : public SaturnToggleSwitch

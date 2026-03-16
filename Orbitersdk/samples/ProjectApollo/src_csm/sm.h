@@ -60,6 +60,8 @@ typedef struct {
 
 	int VehicleNo;						///< Saturn vehicle number.
 
+	int MissionNo;                      ///< Apollo Mission number.
+
 	double MissionTime;					///< Current MET in seconds.
 	double EmptyMass;					///< Empty mass in kg.
 	double MainFuelKg;					///< SPS fuel in kg.
@@ -73,6 +75,8 @@ typedef struct {
 
 	bool LowRes;						///< Using low-res meshes?
 	bool showHGA;						///< Do we have an HGA?
+	bool showYagi;						///< Does the SM has HGA?
+	int SIMBayVersion;					///< SIMBay version (CSM 112-114)
 	bool A13Exploded;					///< Did the SM explode on Apollo 13 mission?
 	bool SIMBayPanelJett;				///< Was the SIM bay panel jettisoned?
 
@@ -320,6 +324,21 @@ protected:
 	///
 
 	bool showSIMBay;
+
+	///
+    /// \brief Show the Yagi Antenna (Apollo 17).
+    ///
+	bool showYagi;
+
+	///
+	/// \SIMBay Version (Gets Panel 230 Version, 1 = Apollo 15/16, 2 = Apollo 17)
+	///
+	int SIMBayVersion;
+
+	///
+	/// \brief Show the Dipole Antennas boxes (Apollo 17).
+	///
+	bool showDipoleBoxes;
 
 	///
 	/// \brief This is an Apollo 13 SM which exploded in flight.

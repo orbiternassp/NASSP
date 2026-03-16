@@ -5711,3 +5711,259 @@ bool CTE::TimingSignal()
 {
 	return IsPowered();
 }
+
+HF_Antenna_1::HF_Antenna_1() {
+	sat = NULL;
+	DipoleAntenna1Anim = -1;
+	DipoleAntenna1AnimState = 0;
+}
+
+void HF_Antenna_1::Init(Saturn* vessel) {
+	sat = vessel;
+}
+
+void HF_Antenna_1::DefineAnimations(UINT idx)
+{
+	if (sat->pMission->GetPanel230Version() == 2)
+	{
+		///Dipole Antenna 1 Animations
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp0Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp1Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp2Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp3Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp4Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp5Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp6Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp7Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp8Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp9Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp10Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp11Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp12Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp13Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna1Grp14Deployed;
+		static UINT DipoleAntenna1Grp0[1] = { 0 };
+		static UINT DipoleAntenna1Grp1[1] = { 1 };
+		static UINT DipoleAntenna1Grp2[1] = { 2 };
+		static UINT DipoleAntenna1Grp3[1] = { 3 };
+		static UINT DipoleAntenna1Grp4[1] = { 4 };
+		static UINT DipoleAntenna1Grp5[1] = { 5 };
+		static UINT DipoleAntenna1Grp6[1] = { 6 };
+		static UINT DipoleAntenna1Grp7[1] = { 7 };
+		static UINT DipoleAntenna1Grp8[1] = { 8 };
+		static UINT DipoleAntenna1Grp9[1] = { 9 };
+		static UINT DipoleAntenna1Grp10[1] = { 10 };
+		static UINT DipoleAntenna1Grp11[1] = { 11 };
+		static UINT DipoleAntenna1Grp12[1] = { 12 };
+		static UINT DipoleAntenna1Grp13[1] = { 13 };
+		static UINT DipoleAntenna1Grp14[1] = { 14 };
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp0 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp0, 1, _V(-0.526243, 0.486454, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp1 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp1, 1, _V(-1.052490, 0.972907, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp2 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp2, 1, _V(-1.578730, 1.459360, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp3 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp3, 1, _V(-2.104970, 1.945810, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp4 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp4, 1, _V(-2.631201, 2.432260, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp5 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp5, 1, _V(-3.157450, 2.918710, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp6 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp6, 1, _V(-3.683690, 3.405160, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp7 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp7, 1, _V(-4.209930, 3.891610, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp8 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp8, 1, _V(-4.736170, 4.378060, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp9 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp9, 1, _V(-5.262410, 4.864510, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp10 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp10, 1, _V(-5.78865, 5.35096, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp11 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp11, 1, _V(-6.31489, 5.83741, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp12 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp12, 1, _V(-6.84113, 6.32386, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp13 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp13, 1, _V(-7.36737, 6.81031, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna1Grp14 = new MGROUP_TRANSLATE(idx, DipoleAntenna1Grp14, 1, _V(-7.89361, 7.29676, 0));
+		DipoleAntenna1Anim = sat->CreateAnimation(0.0);
+		ach_DipoleAntenna1Grp0Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.0, 0.0667, mgs_DipoleAntenna1Grp0);
+		ach_DipoleAntenna1Grp1Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.0667, 0.1333, mgs_DipoleAntenna1Grp1);
+		ach_DipoleAntenna1Grp2Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.1333, 0.2000, mgs_DipoleAntenna1Grp2);
+		ach_DipoleAntenna1Grp3Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.2000, 0.2667, mgs_DipoleAntenna1Grp3);
+		ach_DipoleAntenna1Grp4Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.2667, 0.3333, mgs_DipoleAntenna1Grp4);
+		ach_DipoleAntenna1Grp5Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.3333, 0.4000, mgs_DipoleAntenna1Grp5);
+		ach_DipoleAntenna1Grp6Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.4000, 0.4667, mgs_DipoleAntenna1Grp6);
+		ach_DipoleAntenna1Grp7Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.4667, 0.5333, mgs_DipoleAntenna1Grp7);
+		ach_DipoleAntenna1Grp8Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.5333, 0.6000, mgs_DipoleAntenna1Grp8);
+		ach_DipoleAntenna1Grp9Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.6000, 0.6667, mgs_DipoleAntenna1Grp9);
+		ach_DipoleAntenna1Grp10Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.6667, 0.7333, mgs_DipoleAntenna1Grp10);
+		ach_DipoleAntenna1Grp11Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.7333, 0.8000, mgs_DipoleAntenna1Grp11);
+		ach_DipoleAntenna1Grp12Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.8000, 0.8667, mgs_DipoleAntenna1Grp12);
+		ach_DipoleAntenna1Grp13Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.8667, 0.9333, mgs_DipoleAntenna1Grp13);
+		ach_DipoleAntenna1Grp14Deployed = sat->AddAnimationComponent(DipoleAntenna1Anim, 0.9333, 1.0, mgs_DipoleAntenna1Grp14);
+	}
+}
+
+void HF_Antenna_1::SystemTimestep(double simdt)
+{
+	if (sat->GetStage() != CSM_LEM_STAGE) return;
+
+	double speed = 1.0 / 65.0; // anim duration
+
+	if (sat->pMission->GetPanel230Version() == 2)
+	{
+		//Dipole Antenna1 Deploying
+		if (sat->DipoleAntenna1Deployed)
+		{
+			DipoleAntenna1AnimState += simdt * speed;
+			if (DipoleAntenna1AnimState > 1.0)
+				DipoleAntenna1AnimState = 1.0;
+		}
+		else
+		{
+			DipoleAntenna1AnimState -= simdt * speed;
+			if (DipoleAntenna1AnimState < 0.0)
+				DipoleAntenna1AnimState = 0.0;
+		}
+		sat->SetAnimation(DipoleAntenna1Anim, DipoleAntenna1AnimState);
+
+		if (DipoleAntenna1AnimState < 1)
+		{
+			sat->HFAntenna1Indicator.SetState(0);
+
+			if (DipoleAntenna1AnimState == 0)
+			{
+				sat->HFAntenna1Indicator.SetState(1);
+			}
+		}
+	}
+}
+
+// Load
+void HF_Antenna_1::LoadState(char* line) {
+	sscanf(line + 10, "%lf", &DipoleAntenna1AnimState);
+}
+
+// Save
+void HF_Antenna_1::SaveState(FILEHANDLE scn) {
+	char buffer[256];
+
+	sprintf(buffer, "%lf", DipoleAntenna1AnimState);
+
+	oapiWriteScenario_string(scn, "HFANTENNA1", buffer);
+}
+
+HF_Antenna_2::HF_Antenna_2() {
+	sat = NULL;
+	DipoleAntenna2Anim = -1;
+	DipoleAntenna2AnimState = 0;
+}
+
+void HF_Antenna_2::Init(Saturn* vessel) {
+	sat = vessel;
+}
+
+void HF_Antenna_2::DefineAnimations(UINT idx)
+{
+	if (sat->pMission->GetPanel230Version() == 2)
+	{
+		///Dipole Antenna 2 Animations
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp0Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp1Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp2Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp3Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp4Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp5Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp6Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp7Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp8Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp9Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp10Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp11Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp12Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp13Deployed;
+		ANIMATIONCOMPONENT_HANDLE ach_DipoleAntenna2Grp14Deployed;
+		static UINT DipoleAntenna2Grp0[1] = { 0 };
+		static UINT DipoleAntenna2Grp1[1] = { 1 };
+		static UINT DipoleAntenna2Grp2[1] = { 2 };
+		static UINT DipoleAntenna2Grp3[1] = { 3 };
+		static UINT DipoleAntenna2Grp4[1] = { 4 };
+		static UINT DipoleAntenna2Grp5[1] = { 5 };
+		static UINT DipoleAntenna2Grp6[1] = { 6 };
+		static UINT DipoleAntenna2Grp7[1] = { 7 };
+		static UINT DipoleAntenna2Grp8[1] = { 8 };
+		static UINT DipoleAntenna2Grp9[1] = { 9 };
+		static UINT DipoleAntenna2Grp10[1] = { 10 };
+		static UINT DipoleAntenna2Grp11[1] = { 11 };
+		static UINT DipoleAntenna2Grp12[1] = { 12 };
+		static UINT DipoleAntenna2Grp13[1] = { 13 };
+		static UINT DipoleAntenna2Grp14[1] = { 14 };
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp0 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp0, 1, _V(0.526243, -0.486454, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp1 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp1, 1, _V(1.052490, -0.972907, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp2 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp2, 1, _V(1.578730, -1.459360, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp3 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp3, 1, _V(2.104970, -1.945810, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp4 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp4, 1, _V(2.631201, -2.432260, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp5 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp5, 1, _V(3.157450, -2.918710, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp6 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp6, 1, _V(3.683690, -3.405160, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp7 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp7, 1, _V(4.209930, -3.891610, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp8 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp8, 1, _V(4.736170, -4.378060, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp9 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp9, 1, _V(5.262410, -4.864510, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp10 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp10, 1, _V(5.78865, -5.35096, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp11 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp11, 1, _V(6.31489, -5.83741, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp12 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp12, 1, _V(6.84113, -6.32386, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp13 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp13, 1, _V(7.36737, -6.81031, 0));
+		MGROUP_TRANSLATE* mgs_DipoleAntenna2Grp14 = new MGROUP_TRANSLATE(idx, DipoleAntenna2Grp14, 1, _V(7.89361, -7.29676, 0));
+		DipoleAntenna2Anim = sat->CreateAnimation(0.0);
+		ach_DipoleAntenna2Grp0Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.0, 0.0667, mgs_DipoleAntenna2Grp0);
+		ach_DipoleAntenna2Grp1Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.0667, 0.1333, mgs_DipoleAntenna2Grp1);
+		ach_DipoleAntenna2Grp2Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.1333, 0.2000, mgs_DipoleAntenna2Grp2);
+		ach_DipoleAntenna2Grp3Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.2000, 0.2667, mgs_DipoleAntenna2Grp3);
+		ach_DipoleAntenna2Grp4Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.2667, 0.3333, mgs_DipoleAntenna2Grp4);
+		ach_DipoleAntenna2Grp5Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.3333, 0.4000, mgs_DipoleAntenna2Grp5);
+		ach_DipoleAntenna2Grp6Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.4000, 0.4667, mgs_DipoleAntenna2Grp6);
+		ach_DipoleAntenna2Grp7Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.4667, 0.5333, mgs_DipoleAntenna2Grp7);
+		ach_DipoleAntenna2Grp8Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.5333, 0.6000, mgs_DipoleAntenna2Grp8);
+		ach_DipoleAntenna2Grp9Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.6000, 0.6667, mgs_DipoleAntenna2Grp9);
+		ach_DipoleAntenna2Grp10Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.6667, 0.7333, mgs_DipoleAntenna2Grp10);
+		ach_DipoleAntenna2Grp11Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.7333, 0.8000, mgs_DipoleAntenna2Grp11);
+		ach_DipoleAntenna2Grp12Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.8000, 0.8667, mgs_DipoleAntenna2Grp12);
+		ach_DipoleAntenna2Grp13Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.8667, 0.9333, mgs_DipoleAntenna2Grp13);
+		ach_DipoleAntenna2Grp14Deployed = sat->AddAnimationComponent(DipoleAntenna2Anim, 0.9333, 1.0, mgs_DipoleAntenna2Grp14);
+	}
+}
+
+void HF_Antenna_2::SystemTimestep(double simdt)
+{
+	if (sat->GetStage() != CSM_LEM_STAGE) return;
+
+	double speed = 1.0 / 65.0; // anim duration
+
+	if (sat->pMission->GetPanel230Version() == 2)
+	{
+		//Dipole Antenna2 Deploying
+		if (sat->DipoleAntenna2Deployed)
+		{
+			DipoleAntenna2AnimState += simdt * speed;
+			if (DipoleAntenna2AnimState > 1.0)
+				DipoleAntenna2AnimState = 1.0;
+		}
+		else
+		{
+			DipoleAntenna2AnimState -= simdt * speed;
+			if (DipoleAntenna2AnimState < 0.0)
+				DipoleAntenna2AnimState = 0.0;
+		}
+		sat->SetAnimation(DipoleAntenna2Anim, DipoleAntenna2AnimState);
+
+		if (DipoleAntenna2AnimState < 1)
+		{
+			sat->HFAntenna2Indicator.SetState(0);
+
+			if (DipoleAntenna2AnimState == 0)
+			{
+				sat->HFAntenna2Indicator.SetState(1);
+			}
+		}
+	}
+}
+
+// Load
+void HF_Antenna_2::LoadState(char* line) {
+	sscanf(line + 10, "%lf", &DipoleAntenna2AnimState);
+}
+
+// Save
+void HF_Antenna_2::SaveState(FILEHANDLE scn) {
+	char buffer[256];
+
+	sprintf(buffer, "%lf", DipoleAntenna2AnimState);
+
+	oapiWriteScenario_string(scn, "HFANTENNA2", buffer);
+}

@@ -510,6 +510,13 @@ void Saturn::SystemsInit() {
 	RRTsystem.Init(this, &RNDZXPNDRFLTBusCB, &RNDZXPDRSwitch, &Panel100RNDZXPDRSwitch, &LeftSystemTestRotarySwitch, &RightSystemTestRotarySwitch);
 	cte.Init(&CentralTimingEquipMNACB, &CentralTimingEquipMNBCB);
 
+	//SIMBay instruments init
+	simbay.Init(this);
+
+	//HF Dipole Antennas init (only CSM 114)
+	hf_antenna_1.Init(this);
+	hf_antenna_2.Init(this);
+
 	//Instrumentation
 	sce.Init(this);
 
@@ -1931,6 +1938,10 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		LEBNumericLights.SystemTimestep(tFactor);
 		ExteriorLighting.SystemTimestep(tFactor);
 
+		simbay.SystemTimestep(tFactor);
+		hf_antenna_1.SystemTimestep(tFactor);
+		hf_antenna_2.SystemTimestep(tFactor);
+
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
 		TRACE("Internal timestep done");
@@ -3002,6 +3013,15 @@ void Saturn::CreateMissionSpecificSystems()
 		Panel181->SMSector1AC2CSystemBraker.WireTo(&ACBus2PhaseC);
 
 		secs.InitSIMJett(&Panel181->SMSector1LogicPowerMNABraker, &Panel181->SMSector1LogicPowerMNBBraker);
+	}
+
+	if (pMission->GetPanel230Version() == 1)
+	{
+		pgPanels200.AddPanel(Panel230CSM112 = new SaturnPanel230CSM112, &PSH);
+	}
+	else if (pMission->GetPanel230Version() == 2)
+	{
+		pgPanels200.AddPanel(Panel230CSM114 = new SaturnPanel230CSM114, &PSH);
 	}
 
 	if (pMission->GetPanel277Version() == 1)

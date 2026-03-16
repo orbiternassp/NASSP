@@ -718,3 +718,49 @@ protected:
 	CircuitBrakerSwitch* cte_mna;
 	CircuitBrakerSwitch* cte_mnb;
 };
+
+class HF_Antenna_1
+{
+public:
+	HF_Antenna_1();
+	void Init(Saturn* vessel);					// Initialization
+	void DefineAnimations(UINT idx);
+	void SetAnimation(double state);
+	void UpdateAnimation(double simdt);
+	void DeleteAnimations();
+	void SystemTimestep(double simdt);			// System Timestep
+	void LoadState(char* line);
+	void SaveState(FILEHANDLE scn);
+	void clbkPostCreation();
+
+	double GetAnimState() const { return DipoleAntenna1AnimState; }
+
+	Saturn* sat;								// Ship we're installed in
+
+	// Animations
+	UINT DipoleAntenna1Anim;
+	double DipoleAntenna1AnimState;
+};
+
+class HF_Antenna_2
+{
+public:
+	HF_Antenna_2();
+	void Init(Saturn* vessel);					// Initialization
+	void DefineAnimations(UINT idx);
+	void SetAnimation(double state);
+	void UpdateAnimation(double simdt);
+	void DeleteAnimations();
+	void SystemTimestep(double simdt);			// System Timestep
+	void LoadState(char* line);
+	void SaveState(FILEHANDLE scn);
+	void clbkPostCreation();
+
+	double GetAnimState() const { return DipoleAntenna2AnimState; }
+
+	Saturn* sat;								// Ship we're installed in
+
+	// Animations
+	UINT DipoleAntenna2Anim;
+	double DipoleAntenna2AnimState;
+};

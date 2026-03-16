@@ -333,6 +333,10 @@ protected:
 	bool DockingRingFinalSeparation;
 	//Z5 (Only on Apollo 15 and later)
 	bool SIMPyroArmRelay;
+	//Z6 (Only on Apollo 15 and later)
+	bool SIMLogicPower;
+	//Z7 (Only on Apollo 15 and later)
+	bool SMACPower;
 
 	//Delay Timers
 
