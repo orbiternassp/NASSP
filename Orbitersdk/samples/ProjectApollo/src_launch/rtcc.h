@@ -4944,7 +4944,7 @@ public:
 		int UpdateNo = 0;
 		int SequenceNo = 0;
 		std::string Site1, Site2;
-		double GET = 0.0;
+		double GenGET = 0.0;
 		int Verb = 71;
 		int Octals[20] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 		int VehID = 0;
