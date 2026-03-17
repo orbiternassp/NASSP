@@ -78,9 +78,17 @@ static MESHHANDLE hLMPLRV;
 static MESHHANDLE hLRV;
 static MESHHANDLE hLRVConsole;
 static MESHHANDLE hTv;
+static MESHHANDLE hColorTV;
 static MESHHANDLE hEasepSWC;
 static MESHHANDLE hEasepPSEP;
 static MESHHANDLE hEasepLR3;
+static MESHHANDLE hAlsepStation;
+static MESHHANDLE hAlsepRTG;
+static MESHHANDLE hAlsepSBnd;
+static MESHHANDLE hAlsepPSE;
+static MESHHANDLE hAlsepLSM;
+static MESHHANDLE hAlsepSWS;
+static MESHHANDLE hAlsepSIDE;
 
 
 LEVA::LEVA(OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
@@ -125,6 +133,13 @@ void LEVA::init()
 	EasepSwcPlanted = false;
 	EasepPsepPlanted = false;
 	EasepLr3Planted = false;
+	AlsepStationPlanted = false;
+	AlsepLSMPlanted = false;
+	AlsepPSEPlanted = false;
+	AlsepSIDEPlanted = false;
+	AlsepRTGPlanted = false;
+	AlsepSBndPlanted = false;
+	AlsepSWSPlanted = false;
 
 	FirstTimestep = true;
 	SLEVAPlayed = false;
@@ -192,6 +207,28 @@ void LEVA::clbkPostCreation()
 
 	if (oapiGetVesselByName("LR3") == NULL) { EasepLr3Planted = false; }
 	else { EasepLr3Planted = true; }
+
+	if (oapiGetVesselByName("Centeral Station") == NULL) { AlsepStationPlanted = false; }
+	else { AlsepStationPlanted = true; }
+
+	if (oapiGetVesselByName("S-Band") == NULL) { AlsepSBndPlanted = false; }
+	else { AlsepSBndPlanted = true; }
+
+	if (oapiGetVesselByName("RTG") == NULL) { AlsepRTGPlanted= false; }
+	else { AlsepRTGPlanted = true; }
+
+	if (oapiGetVesselByName("PSE") == NULL) { AlsepPSEPlanted = false; }
+	else { AlsepPSEPlanted = true; }
+
+	if (oapiGetVesselByName("SWS") == NULL) { AlsepSWSPlanted = false; }
+	else { AlsepSWSPlanted = true; }
+
+	if (oapiGetVesselByName("LSM") == NULL) { AlsepLSMPlanted = false; }
+	else { AlsepLSMPlanted= true; }
+
+	if (oapiGetVesselByName("SIDE") == NULL) { AlsepSIDEPlanted = false; }
+	else { AlsepSIDEPlanted = true; }
+
 }
 
 void LEVA::ToggleLRV()
@@ -723,15 +760,35 @@ void LEVA::SetEquip()
 	vs1.vdata[0].y += distance * cos(vs1.vdata[0].z) / radius;
 
 	if (isCDR) {
-		if (ApolloNo <= 14) {
+		if (ApolloNo == 11) {
 			if (TvPlanted == false) {
 				oapiCreateVessel("TV", "ProjectApollo/EasepTV", vs1);
 				TvPlanted = true;
 			}
+			else if (AlsepSBndPlanted == false) {
+				oapiCreateVessel("S-Band", "ProjectApollo/AlsepSBnd", vs1);
+				AlsepSBndPlanted = true;
+			}
 		}
+			else if (ApolloNo >= 12) {
+				if (AlsepSBndPlanted == false) {
+					oapiCreateVessel("S-Band", "ProjectApollo/AlsepSBnd", vs1);
+					AlsepSBndPlanted = true;
+				}
+				else if (AlsepStationPlanted == false) {
+					oapiCreateVessel("Centeral Station", "ProjectApollo/AlsepStation", vs1);
+					AlsepStationPlanted = true;
+				}
+				else if (AlsepSWSPlanted == false) {
+					oapiCreateVessel("SWS", "ProjectApollo/AlsepSWS", vs1);
+					AlsepSWSPlanted = true;
+				}
+			}
+	
 	}
-	else {
-		if (ApolloNo == 11) {
+
+		else if (ApolloNo == 11) {
+
 			if (EasepSwcPlanted == false) {
 				oapiCreateVessel("SWC", "ProjectApollo/EasepSwc", vs1);
 				EasepSwcPlanted = true;
@@ -745,8 +802,35 @@ void LEVA::SetEquip()
 				EasepLr3Planted = true;
 			}
 		}
-	}
 
+		else if (ApolloNo >= 12) {
+
+			if (TvPlanted == false) {
+				oapiCreateVessel("TV", "ProjectApollo/AlsepTV", vs1);
+				TvPlanted = true;
+			}
+
+			else if (EasepSwcPlanted == false) {
+				oapiCreateVessel("SWC", "ProjectApollo/EasepSwc", vs1);
+				EasepSwcPlanted = true;
+			}
+			else if (AlsepRTGPlanted == false) {
+				oapiCreateVessel("RTG", "ProjectApollo/AlsepRTG", vs1);
+				AlsepRTGPlanted = true;
+			}
+			else if (AlsepPSEPlanted == false) {
+				oapiCreateVessel("PSE", "ProjectApollo/AlsepPSE", vs1);
+				AlsepPSEPlanted = true;
+			}
+			else if (AlsepLSMPlanted == false) {
+				oapiCreateVessel("LSM", "ProjectApollo/AlsepLSM", vs1);
+				AlsepLSMPlanted = true;
+			}
+			else if (AlsepSIDEPlanted == false) {
+				oapiCreateVessel("SIDE", "ProjectApollo/AlsepSIDE", vs1);
+				AlsepSIDEPlanted = true;
+			}
+		}
 	GoEquip = false;
 }
 
@@ -1007,9 +1091,17 @@ DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)
 		hLRV = oapiLoadMeshGlobal ("ProjectApollo/LRV");
 		hLRVConsole = oapiLoadMeshGlobal ("ProjectApollo/LRV_console");
 		hTv = oapiLoadMeshGlobal("ProjectApollo/EASEP_TV");
+		hColorTV = oapiLoadMeshGlobal("ProjectApollo/ALSEP_TV");
 		hEasepSWC = oapiLoadMeshGlobal("ProjectApollo/EASEP_SWC");
 		hEasepPSEP = oapiLoadMeshGlobal("ProjectApollo/EASEP_PSEP");
 		hEasepLR3 = oapiLoadMeshGlobal("ProjectApollo/EASEP_LR3");
+		hAlsepStation = oapiLoadMeshGlobal("ProjectApollo/ALSEP_Station");
+		hAlsepRTG = oapiLoadMeshGlobal("ProjectApollo/ALSEP_RTG");
+		hAlsepSBnd = oapiLoadMeshGlobal("ProjectApollo/ALSEP_SBnd");
+		hAlsepPSE = oapiLoadMeshGlobal("ProjectApollo/ALSEP_PSE");
+		hAlsepLSM = oapiLoadMeshGlobal("ProjectApollo/ALSEP_LSM");
+		hAlsepSWS = oapiLoadMeshGlobal("ProjectApollo/ALSEP_SWS");
+		hAlsepSIDE = oapiLoadMeshGlobal("ProjectApollo/ALSEP_SIDE");
 	}
 
 	return new LEVA (hvessel, flightmodel);

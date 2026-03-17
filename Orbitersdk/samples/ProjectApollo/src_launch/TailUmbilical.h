@@ -34,9 +34,6 @@ public:
 
 	virtual void Disconnect() = 0;
 
-	//Called by IU during a pad abort. Technically doesn't disconnect IU umbilical
-	virtual void AbortDisconnect();
-
 	//From SLV to ML
 	virtual bool ESEGetSIThrustOKSimulate(int eng, int n);
 
@@ -45,6 +42,5 @@ public:
 	virtual void SetEngineStart(int eng) = 0;
 	virtual void SIGSECutoff(bool cut) = 0;
 protected:
-	bool UmbilicalConnected;
 	TailUmbilicalInterface* TailUmb;
 };

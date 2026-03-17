@@ -41,6 +41,8 @@ private:
 	bool spawned;
 
 protected:
+	VECTOR3 GetEarthPos();
+	void RotateToFaceEarth(VECTOR3 rearthloc);
 	OBJHANDLE hMaster;
 
 };

@@ -33,7 +33,7 @@ public:
 	void SaveState(FILEHANDLE scn);
 	void LoadState(char *line);
 
-	void SetRelay(int set, int select, int doreset);
+	virtual void SetRelay(int set, int select, int doreset);
 
 	bool GetArmingSignal();
 	bool GetGuidanceSignal();

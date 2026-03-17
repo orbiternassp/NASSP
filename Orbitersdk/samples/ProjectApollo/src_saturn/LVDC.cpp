@@ -3472,6 +3472,7 @@ LVDCSV::LVDCSV(LVDA &lvd) : LVDC(lvd)
 	dot_eta_T = 0;
 	dT_3 = 0;
 	dT_4 = 0;
+	DTB6N = 0.0;
 	dt_c = 0;
 	dT_cost = 0;
 	dT_F = 0;
@@ -4343,6 +4344,9 @@ void LVDCSV::Init(){
 	C_A[10] = _V(0.84918, -0.46168, -0.25641);
 	R_STA = 6374932.0;
 
+	//Apollo 9
+	DTB6N = 5003.0;
+
 	// Set up remainder
 	LVDC_Timebase = -1;						// Start up halted in pre-launch pre-GRR loop
 	LVDC_TB_ETime = 0;
@@ -4605,6 +4609,7 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_dot_eta_T", dot_eta_T);
 	papiWriteScenario_double(scn, "LVDC_dT_3", dT_3);
 	papiWriteScenario_double(scn, "LVDC_dT_4", dT_4);
+	papiWriteScenario_double(scn, "LVDC_DTB6N", DTB6N);
 	papiWriteScenario_double(scn, "LVDC_dt_c", dt_c);
 	papiWriteScenario_double(scn, "LVDC_dT_cost", dT_cost);
 	papiWriteScenario_double(scn, "LVDC_dT_F", dT_F);
@@ -5401,6 +5406,7 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_dot_eta_T", dot_eta_T);
 		papiReadScenario_double(line, "LVDC_dT_3", dT_3);
 		papiReadScenario_double(line, "LVDC_dT_4", dT_4);
+		papiReadScenario_double(line, "LVDC_DTB6N", DTB6N);
 		papiReadScenario_double(line, "LVDC_dt_c", dt_c);
 		papiReadScenario_double(line, "LVDC_dT_cost", dT_cost);
 		papiReadScenario_double(line, "LVDC_dT_F", dT_F);
@@ -6173,6 +6179,20 @@ void LVDCSV::TimeStep(double simdt) {
 				{
 					LVDC_Stop = true;
 					return;
+				}
+				//Special Apollo 9 code for third S-IVB burn
+				if (FixedAttitudeBurn && first_op && TMM - TB6 > DTB6N)
+				{
+					//Reset parameters for burn
+					T_2R = TABLE15[1].T2IR;
+					Tt_3R = TABLE15[1].T3PR;
+					//Flag settings
+					DVP = 2;
+					first_op = false;
+					//Return to TB6
+					LVDC_Timebase = 6;
+					TimeBaseChangeRoutine();
+					TB6 = TI;
 				}
 				break;
 

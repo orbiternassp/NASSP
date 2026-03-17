@@ -1011,3 +1011,15 @@ protected:
 
 	UINT animNeedle;
 };
+
+class SaturnSPSInjectorValveIndicator : public SaturnRoundMeter
+{
+public:
+	SaturnSPSInjectorValveIndicator();
+	void Init(oapi::Pen *p0, oapi::Pen *p1, SwitchRow &row, Saturn *s, int index);
+
+	double QueryValue();
+	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
+protected:
+	int Index;
+};

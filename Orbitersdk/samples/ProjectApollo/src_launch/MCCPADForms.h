@@ -46,6 +46,7 @@ struct AP7NAV {
 	double lat[5];		// Latitude for N43
 	double lng[5];		// Longitude for N43
 	double alt[5];		// Altitude for N43
+	char remarks[256];	// remarks
 };
 
 // APOLLO 7 - MANEUVER
@@ -103,6 +104,39 @@ struct AP7TPI {
 	VECTOR3 Backup_bT;  // Burn time to get dV in backup axes
 	double dH_Max, dH_Min; // Max/Min altitude difference prior to TPI
 	double GET;			// Time that range,range-rate,azimuth, and elevation parameters are valid
+};
+
+// SKYLAB - MANEUVER
+struct SLMNV {
+	double GETI;		// TIG
+	VECTOR3 dV;			// P30 dV
+	double Vc;			// EMS dV
+	double Weight;		// Vehicle weight
+	double pTrim, yTrim; // SPS pitch/yaw trim
+	double burntime;	// Burn time
+	VECTOR3 Att;		// Attitude at TIG
+	char remarks[256];	// remarks
+	int type;           // 1 = NC1, 2 = NPC, 3 = NC2, 4 = NCC, 5 = NSR
+	bool prelim;		// preliminary or final pad
+	int Star;			// Nav star for orientation check
+	double Shaft, Trun;  // Shaft and trunnion values for orientation check
+};
+
+// SKYLAB - TERMINAL PHASE INITIATE
+struct SLTPI {
+	SLTPI::SLTPI()
+	{
+		GETI = 0.0;
+		Vg = _V(0, 0, 0);
+		Backup_dV = _V(0.0, 0.0, 0.0);
+		Backup_bT = _V(0.0, 0.0, 0.0);
+	}
+	// ON THE FORM:
+	double GETI;		// TIG
+	VECTOR3 Vg;			// P40 velocity to be gained
+	VECTOR3 Backup_dV;	// Backup "line-of-sight to Target" dV (fore/aft, left/right, up/down)
+	VECTOR3 Backup_bT;  // Burn time to get dV in backup axes
+	bool prelim;
 };
 
 // APOLLO 7 - ENTRY UPDATE
@@ -405,9 +439,10 @@ struct AP10MAPUPDATE
 struct AP11LMARKTRKPAD
 {
 	int entries;
+	int type;		        // 0: T2 = 35°, 1:T2 = TCA
 	char LmkID[4][128];		// Landmark ID
 	double T1[4];			// T1 time (landmark over horizon)
-	double T2[4];			// T2 time (spacecraft at 35° elevation from landmark)
+	double T2[4];			// T2 time (spacecraft at 35° elevation from landmark or TCA)
 	double CRDist[4];		// landmark distance to ground track
 	double Lat[4];			// landmark latitude
 	double Lng05[4];		// landmark longitude divided by 2
@@ -422,6 +457,10 @@ struct AP10DAPDATA
 	double OtherVehicleWeight;	// LM weight (or CSM for LM DAP PAD)
 	double PitchTrim;			// Pitch gimbal trim
 	double YawTrim;				// Yaw gimbal trim (or roll for LM DAP PAD)
+	double LMPitchTrim;			// LM Pitch gimbal trim
+	double LMRollTrim;			// LM Roll gimbal trim
+	double DVTO;				// Tail off thrust
+	int type;					// 1 = Apollo 9 Rendezvous
 };
 
 //APOLLO 10 CSI PAD

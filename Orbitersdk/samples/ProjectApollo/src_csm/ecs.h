@@ -249,6 +249,7 @@ public:
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	void DefineAnimationsVC(UINT idx);
+	double GetAnimState();
 
 protected:
 	bool open;
@@ -269,6 +270,24 @@ protected:
 	UINT anim_gearboxsel;
 	UINT anim_actuatorsel;
 	UINT anim_ventvalve;
+};
+
+// Class to manage the Boost Protective Cover hatch animation
+class BoostProtectiveCover
+{
+public:
+	BoostProtectiveCover();
+	~BoostProtectiveCover();
+	void Init(Saturn *s, SaturnSideHatch *hatch);
+
+	void Timestep(double simdt);
+
+	void DefineAnimations(UINT idx);
+protected:
+	Saturn *saturn;
+	SaturnSideHatch *SideHatch;
+	UINT BPC_CoverAnim;
+	MGROUP_ROTATE *BPC_CoverRotation;
 };
 
 ///

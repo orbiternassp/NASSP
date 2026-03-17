@@ -282,9 +282,6 @@ public:
 	bool GetSCControlPoweredFlight() { return SCControlPoweredFlight; }
 	VECTOR3 GetTheodoliteAlignment(double azimuth);
 
-	virtual void ConnectUmbilical(IUUmbilical *umb);
-	virtual void DisconnectUmbilical();
-
 	virtual bool DCSUplink(int type, void *upl);
 
 	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
@@ -324,7 +321,9 @@ public:
 	virtual bool ESEGetSICOutboardEnginesCantInhibit() { return false; }
 	virtual bool ESEGetSICOutboardEnginesCantSimulate() { return false; }
 
+	IUUmbilical *IuUmb;
 protected:
+	void DisconnectUmbilical();
 
 	int State;
 
@@ -363,8 +362,6 @@ protected:
 	IUAuxiliaryPowerDistributor2 AuxiliaryPowerDistributor2;
 	//601A24
 	IUControlSignalProcessor ControlSignalProcessor;
-
-	IUUmbilical *IuUmb;
 };
 
 class IU1B :public IU

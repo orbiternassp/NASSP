@@ -106,14 +106,13 @@ public:
 
 	virtual bool GetEngineStop();
 
-	virtual void ConnectUmbilical(TSMUmbilical *umb);
-	virtual void DisconnectUmbilical();
-	bool IsUmbilicalConnected();
+	TSMUmbilical *TSMUmb;
 protected:
-
 	bool TripleVoting(bool vote1, bool vote2, bool vote3);
 	double GetSumThrust();
 	bool ESEGetSICThrustOKSimulate(int eng, int n);
+	void DisconnectUmbilical();
+	bool IsUmbilicalConnected();
 
 	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
@@ -140,6 +139,4 @@ protected:
 	bool PointLevelSensorArmed;
 
 	bool ThrustOK[15];
-
-	TSMUmbilical *TSMUmb;
 };
