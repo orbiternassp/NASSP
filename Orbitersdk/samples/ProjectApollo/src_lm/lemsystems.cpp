@@ -2315,7 +2315,7 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 		ecs.cdrStatus = 0;
 	}
 
-	if (EVA_IP[1])
+	if (EVA_IP[1] || spaceeva)
 	{
 		ecs.lmpStatus = 2;
 	}
@@ -2407,6 +2407,9 @@ void LEM::StartEVA()
 {
 	if (ForwardHatch.IsOpen() && GroundContact()) {
 		ToggleEva = true;
+	}
+	else if (ForwardHatch.IsOpen() && !GroundContact() && ApolloNo == 9) {
+		ToggleSpaceEVA();
 	}
 }
 
