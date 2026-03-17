@@ -1756,7 +1756,7 @@ void LEM::PostLoadSetup(bool define_anims)
 void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 {
 	char *line;
-	int	SwitchState;
+	int	SwitchState, i;
 	float ftcp;
 
 	while (oapiReadScenario_nextline(scn, line)) {
@@ -2063,8 +2063,8 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "SPACEEVA", 8)) {
 			//Load EVA State from scn file
-			sscanf(line + 8, "%f", &ftcp);
-			spaceeva = ftcp;
+			sscanf(line + 8, "%d", &i);
+			spaceeva = i;
 		}
 		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString)))
 		{
