@@ -2556,8 +2556,8 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, "CMPEVA", 6)) {
 		//Load EVA State from scn file
-		sscanf(line + 6, "%f", &ftcp);
-		cmpeva = ftcp;
+		sscanf(line + 6, "%d", &i);
+		cmpeva = i;
 	}
 	else if (!strnicmp(line, FAILURES_START_STRING, sizeof(FAILURES_START_STRING))) {
 		Failures.LoadState(scn);
