@@ -1543,12 +1543,12 @@ void LEM::RegisterActiveAreas()
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_7, _V(-0.214698, 0.55106, 1.69977) + ofs, _V(-0.196345, 0.55106, 1.69977) + ofs,
 		_V(-0.214698, 0.517477, 1.69509) + ofs, _V(-0.196345, 0.517477, 1.69509) + ofs);
 
-	// Left shade APS/DPS Burn & Mission Rules
+	// Left glareshield APS/DPS Burn & Mission Rules
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_8, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_8, _V(-0.445737, 0.698733, 1.48784) + ofs, _V(-0.446737, 0.668341, 1.71138) + ofs,
 		_V(-0.445737, 0.397492, 1.44688) + ofs, _V(-0.446737, 0.3671, 1.67042) + ofs);
 
-	// Right shade DPS/APS Abort & Warning lights procedure
+	// Right glareshield DPS/APS Abort & Warning lights procedure
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_9, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_9, _V(0.444017, 0.698733, 1.48784) + ofs, _V(0.445017, 0.668341, 1.71138) + ofs,
 		_V(0.444017, 0.397492, 1.44688) + ofs, _V(0.445017, 0.3671, 1.67042) + ofs);
@@ -1570,8 +1570,8 @@ void LEM::RegisterActiveAreas()
 
 	// Bottom of Panel 14, S-Band angles
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_13, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_13, _V(0.945567, 0.305566, 1.41103) + ofs, _V(0.944567, 0.306666, 1.19009) + ofs,
-		_V(0.945567, 0.236999, 1.41203) + ofs, _V(0.944567, 0.237999, 1.19109) + ofs);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_13, _V(0.945567, 0.2931, 1.41103) + ofs, _V(0.944567, 0.2921, 1.19009) + ofs,
+		_V(0.945567, 0.2587, 1.41203) + ofs, _V(0.944567, 0.2577, 1.19109) + ofs);
 
 	// Bottof of Panel 12, COMM modes
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_14, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);

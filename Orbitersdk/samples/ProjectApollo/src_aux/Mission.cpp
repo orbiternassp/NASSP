@@ -170,8 +170,9 @@ namespace mission {
 		AddLMCueCard(6, "A15LM_ASCENT_MONITOR_CHART");
 		AddLMCueCard(6, "A15LM_DESCENT_H_vs_HDOT");
 		AddLMCueCard(7, "A15LM_DPS_BURN");
-		AddLMCueCard(7, "A15LM_MISSION_RULES_NOGO");
 		AddLMCueCard(7, "A15LM_NO_DPI_APS_BURN");
+		AddLMCueCard(7, "A15LM_MISSION_RULES_NOGO");
+		AddLMCueCard(7, "A15LM_ALARM_CODES");
 		AddLMCueCard(8, "A15LM_DPS_ABORT_INSERTION");
 		AddLMCueCard(8, "A15LM_STAGING");
 		AddLMCueCard(8, "A15LM_ABNORMAL_VEHICLE_DYNAMICS");
@@ -182,9 +183,8 @@ namespace mission {
 		AddLMCueCard(12, "A15LM_S_BAND_ANTENNA_ANGLES");
 		AddLMCueCard(13, "A15LM_LM_COMM_MODES");
 		AddLMCueCard(13, "A15LM_LOSS_OF_COMM");
-		//AddLMCueCard(0, "A15LM_COAS_BORESIGHT_LOG");
-		//AddLMCueCard(16, "A15LM_ALARM_CODES");
-		//AddLMCueCard(17, "A15LM_CDR_WARNING_LIGHTS");
+		//AddLMCueCard(0, "A15LM_COAS_BORESIGHT_LOG"); Backside card, skipped
+		//AddLMCueCard(17, "A15LM_CDR_WARNING_LIGHTS"); Unknown location
 	}
 
 	bool Mission::LoadMission(const int iMission)
