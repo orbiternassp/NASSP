@@ -626,6 +626,7 @@ void LEM::Init()
 	windowshadesidx = -1;
 	xpointershadesidx = -1;
 	hLMPointingArrowidx = -1;
+	LMvccuecardsarrowsidx = -1;
 
 	drogue = NULL;
 	probes = NULL;
@@ -642,6 +643,7 @@ void LEM::Init()
 	aeaa = NULL;
 
 	COASreticlevisible = 0;
+	ViewCueCardArrows = false;
 
 	trackLightPos = _V(0, 0, 0);
 	for (int i = 0;i < 5;i++)
@@ -893,6 +895,25 @@ int LEM::clbkConsumeDirectKey(char* kstate)
 int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	if (enableVESIM) vesim.clbkConsumeBufferedKey(key, down, keystate);
+
+	// Help key for CueCard Arrows
+	if (KEYMOD_LCONTROL(keystate)) {
+		if (down) {
+			switch (key) {
+			case OAPI_KEY_H:
+				if (InVC && oapiCameraInternal())
+				{
+					if (ViewCueCardArrows == true) {
+						ViewCueCardArrows = false;
+					}
+					else {
+						ViewCueCardArrows = true;
+					}
+					return 1;
+				}
+			}
+		}
+	}
 
 	// DS20060404 Allow keys to control DSKY like in the CM
 	if (KEYMOD_SHIFT(keystate) && !KEYMOD_CONTROL(keystate) && !KEYMOD_ALT(keystate)) {
