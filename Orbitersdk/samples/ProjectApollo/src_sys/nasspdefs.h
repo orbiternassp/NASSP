@@ -415,9 +415,9 @@ static inline void CSMToOrbiterCoordinates(VECTOR3 &vec)
 
 //#define LM_DES_H2O_CAPACITY 151046.2592		///< in g, 333 lb		//Quantity or 100% measurement of the h2o tanks needs to be adjusted based on pad fill
 //#define LM_ASC_H2O_CAPACITY 19277.67573		///< in g, 42.5 lb		//Quantity or 100% measurement of the h2o tanks needs to be adjusted based on pad fill
-#define LM_DES_H2O_CAPACITY 114795.157			//Pad fill 76%
-//#define LM_DES_H2O_CAPACITY 229590.3			//Pad fill 76% for J-Mission Conversion
-#define LM_ASC_H2O_CAPACITY 14651.03355			//Pad fill 76%
+#define LM_DES_H2O_CAPACITY 122379.2			//Pad Fill 269.8 lb (Average of non J Mission flights)
+//#define LM_DES_H2O_CAPACITY 183160.6			//J-Mission Conversion Pad Fill 403.8 lb (Average of J Mission flights)
+#define LM_ASC_H2O_CAPACITY 19232.3				//Pad Fill	42.4 lb (Average of all flights)
 
 //
 // Texture Size (1 = Old ProjectApollo 2K Textures, 2 = New 4K Textures, 4 = New 8K Textures)
@@ -433,7 +433,5 @@ const int TexMul = TEXTURES_4K;
 #ifdef OAPI_MSGTYPE
 #define _OPENORBITER
 #endif
-
-//#define _OPENORBITER
 
 #endif

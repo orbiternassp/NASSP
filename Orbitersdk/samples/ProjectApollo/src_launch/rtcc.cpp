@@ -2550,10 +2550,25 @@ void RTCC::LoadMissionInitParameters(int year, int month, int day)
 				PZLOIPLN.eta_1 = dtemp;
 				PZMCCPLN.ETA1 = dtemp * RAD;
 			}
+			else if (papiReadScenario_double(Buff, "H_A_LPO1", dtemp))
+			{
+				med_k18.HALOI1 = dtemp;
+				PZMCCPLN.H_A_LPO1 = dtemp * 1852.0;
+			}
 			else if (papiReadScenario_double(Buff, "H_P_LPO1", dtemp))
 			{
 				med_k18.HPLOI1 = dtemp;
 				PZMCCPLN.H_P_LPO1 = dtemp * 1852.0;
+			}
+			else if (papiReadScenario_double(Buff, "H_A_LPO2", dtemp))
+			{
+				PZLOIPLN.HA_LLS = dtemp;
+				PZMCCPLN.H_A_LPO2 = dtemp * 1852.0;
+			}
+			else if (papiReadScenario_double(Buff, "H_P_LPO2", dtemp))
+			{
+				PZLOIPLN.HP_LLS = dtemp;
+				PZMCCPLN.H_P_LPO2 = dtemp * 1852.0;
 			}
 			else if (papiReadScenario_double(Buff, "PZLTRT_DT_Ins_TPI", dtemp))
 			{
@@ -2866,7 +2881,7 @@ void RTCC::AP11BlockData(AP11BLKOpt *opt, P37PAD &pad)
 		entopt.lng = opt->lng[i];
 		entopt.t_Z = opt->T_Z[i];
 
-		EntryTargeting(&entopt, &res);
+		EntryTargeting(entopt, res);
 
 		pad.dVT[i] = length(res.dV_LVLH) / 0.3048;
 		pad.GET400K[i] = res.GET05G;
@@ -2927,83 +2942,113 @@ void RTCC::BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res)
 	RZRFTT.Primary.DeltaV = res->dV_LVLH;
 }
 
-void RTCC::EntryTargeting(EntryOpt *opt, EntryResults *res)
+void RTCC::EntryTargeting(const EntryOpt &opt, EntryResults &res)
 {
-	RTEEarth* entry;
-	double GET, LINE[10];
-	bool stop;
-	SV sv;
+	double LINE[10], GMT, GMT_TIG;
+	SV sv_tig;
 
-	stop = false;
+	GMT = OrbMech::GETfromMJD(opt.RV_MCC.MJD, GetGMTBase());
+	GMT_TIG = GMTfromGET(opt.TIGguess);
 
-	sv = opt->RV_MCC;
-	GET = (sv.MJD - CalcGETBase())*24.0*3600.0;
-
-	if (opt->entrylongmanual)
+	if (opt.entrylongmanual)
 	{
 		LINE[0] = PI05;
-		LINE[1] = opt->lng;
+		LINE[1] = opt.lng;
 		LINE[2] = -PI05;
-		LINE[3] = opt->lng;
+		LINE[3] = opt.lng;
 		LINE[4] = 1e10;
 		LINE[5] = 1e10;
 	}
 	else
 	{
-		if (opt->ATPLine < 0 || opt->ATPLine>4)
+		if (opt.ATPLine < 0 || opt.ATPLine>4)
 		{
 			return;
 		}
 
 		for (int i = 0;i < 10;i++)
 		{
-			LINE[i] = PZREAP.ATPCoordinates[opt->ATPLine][i];
+			LINE[i] = PZREAP.ATPCoordinates[opt.ATPLine][i];
 		}
 	}
 
-	entry = new RTEEarth(this, ConvertSVtoEphemData(sv), GetGMTBase(), SystemParameters.MCLAMD, GMTfromGET(opt->TIGguess), GMTfromGET(opt->t_Z), opt->type);
-	//Check for error (state vector not in Earth SOI)
-	if (entry->errorstate)
+	//Propagate to TIG
+	sv_tig = coast(opt.RV_MCC, GMT_TIG - GMT);
+
+	if (sv_tig.gravref == hEarth)
 	{
-		return;
-	}
+		bool stop;
 
-	entry->READ(PZREAP.RRBIAS, opt->dv_max, PZREAP.TGTLN + 1, 37500.0*0.3048);
-	entry->ATP(LINE);
-	while (!stop)
-	{
-		stop = entry->EntryIter();
-	}
+		stop = false;
 
-	res->dV_LVLH = entry->Entry_DV;
-	res->P30TIG = GETfromGMT(entry->sv_ig.GMT);
-	res->latitude = entry->EntryLatcor;
-	res->longitude = entry->EntryLngcor;
-	res->GET400K = GETfromGMT(entry->t2);
-	res->GET05G = GETfromGMT(entry->EntryRET);
-	res->RTGO = entry->EntryRTGO;
-	res->VIO = entry->EntryVIO;
-	res->ReA = entry->EntryAng;
-	res->precision = entry->precision;
+		RTEEarth rte(this, ConvertSVtoEphemData(sv_tig), GetGMTBase(), SystemParameters.MCLAMD, GMTfromGET(opt.TIGguess), GMTfromGET(opt.t_Z), opt.type);
 
-	delete entry;
+		//Check for error
+		if (rte.errorstate)
+		{
+			return;
+		}
 
-	double TIG_imp, LMmass;
-	VECTOR3 DV_imp;
+		rte.READ(PZREAP.RRBIAS, opt.dv_max, PZREAP.TGTLN + 1, 37500.0 * 0.3048);
+		rte.ATP(LINE);
+		while (!stop)
+		{
+			stop = rte.EntryIter();
+		}
 
-	TIG_imp = res->P30TIG;
-	DV_imp = res->dV_LVLH;
+		res.dV_LVLH = rte.Entry_DV;
+		res.P30TIG = GETfromGMT(rte.sv_ig.GMT);
+		res.latitude = rte.EntryLatcor;
+		res.longitude = rte.EntryLngcor;
+		res.GET400K = GETfromGMT(rte.t2);
+		res.GET05G = GETfromGMT(rte.EntryRET);
+		res.RTGO = rte.EntryRTGO;
+		res.VIO = rte.EntryVIO;
+		res.ReA = rte.EntryAng;
+		res.precision = rte.precision;
 
-	if (opt->csmlmdocked)
-	{
-		LMmass = GetDockedVesselMass(opt->vessel);
+		double TIG_imp, LMmass;
+		VECTOR3 DV_imp;
+
+		TIG_imp = res.P30TIG;
+		DV_imp = res.dV_LVLH;
+
+		if (opt.csmlmdocked)
+		{
+			LMmass = GetDockedVesselMass(opt.vessel);
+		}
+		else
+		{
+			LMmass = 0.0;
+		}
+
+		PoweredFlightProcessor(sv_tig, TIG_imp, opt.enginetype, LMmass, DV_imp, true, res.P30TIG, res.dV_LVLH, res.sv_preburn, res.sv_postburn);
 	}
 	else
 	{
-		LMmass = 0.0;
-	}
+		//Temporary fix for TIG being in lunar SOI
+		RTEMoonOpt moonopt;
 
-	PoweredFlightProcessor(opt->RV_MCC, TIG_imp, opt->enginetype, LMmass, DV_imp, true, res->P30TIG, res->dV_LVLH, res->sv_preburn, res->sv_postburn);
+		moonopt.vessel = opt.vessel;
+		moonopt.TIGguess = opt.TIGguess;
+		moonopt.EntryLng = opt.lng;
+		moonopt.RV_MCC = sv_tig;
+		moonopt.csmlmdocked = opt.csmlmdocked;
+		moonopt.entrylongmanual = opt.entrylongmanual;
+		moonopt.enginetype = opt.enginetype;
+		if (opt.type == 1)
+		{
+			moonopt.SMODE = 14;
+		}
+		else
+		{
+			moonopt.SMODE = 16;
+		}
+		moonopt.t_zmin = opt.t_Z;
+		moonopt.ATPLine = opt.ATPLine;
+
+		RTEMoonTargeting(&moonopt, &res);
+	}
 }
 
 void RTCC::PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res)
@@ -3743,6 +3788,40 @@ void RTCC::AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad)
 	pad.Vg = opt.dV_LVLH / 0.3048;
 	pad.dH_TPI = TPIPAD_dH / 1852.0;
 	pad.dH_Max = TPIPAD_ddH / 1852.0;
+}
+
+void RTCC::SLManeuverPAD(const AP7ManPADOpt &opt, SLMNV &pad)
+{
+	AP7MNV padtemp;
+
+	AP7ManeuverPAD(opt, padtemp);
+
+	pad.GETI = padtemp.GETI;
+	pad.dV = padtemp.dV;
+	pad.Vc = padtemp.Vc;
+	pad.Weight = padtemp.Weight;
+	pad.pTrim = padtemp.pTrim;
+	pad.yTrim = padtemp.yTrim;
+	pad.burntime = padtemp.burntime;
+	pad.Att = padtemp.Att;
+	pad.Star = padtemp.Star;
+	pad.Shaft = padtemp.Shaft;
+	pad.Trun = padtemp.Trun;
+	pad.prelim = false;
+	pad.type = 0;
+}
+
+void RTCC::SLTPIPAD(const AP7TPIPADOpt &opt, SLTPI &pad)
+{
+	AP7TPI padtemp;
+
+	AP7TPIPAD(opt, padtemp);
+
+	pad.GETI = padtemp.GETI;
+	pad.Vg = padtemp.Vg;
+	pad.Backup_dV = padtemp.Backup_dV;
+	pad.Backup_bT = padtemp.Backup_bT;
+	pad.prelim = false;
 }
 
 void RTCC::AP9LMTPIPAD(const AP9LMTPIPADOpt &opt, AP9LMTPI &pad)
@@ -6511,6 +6590,15 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
 	SAVE_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
 	SAVE_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
+	SAVE_INT("RTCC_TLCC_REVS2", PZMCCPLN.REVS2);
+	SAVE_DOUBLE("RTCC_TLCC_H_A_LPO1", PZMCCPLN.H_A_LPO1 / 1852.0);
+	SAVE_DOUBLE("RTCC_TLCC_H_P_LPO1", PZMCCPLN.H_P_LPO1 / 1852.0);
+	SAVE_DOUBLE("RTCC_TLCC_H_A_LPO2", PZMCCPLN.H_A_LPO2 / 1852.0);
+	SAVE_DOUBLE("RTCC_TLCC_H_P_LPO2", PZMCCPLN.H_P_LPO2 / 1852.0);
+	SAVE_DOUBLE("RTCC_TLCC_H_PCYN_MIN", PZMCCPLN.H_PCYN_MIN / 1852.0);
+	SAVE_DOUBLE("RTCC_TLCC_H_PCYN_MAX", PZMCCPLN.H_PCYN_MAX / 1852.0);
+	SAVE_DOUBLE("RTCC_TLCC_SITEROT", PZMCCPLN.SITEROT * DEG);
+
 	sprintf(Buffer, "%.2lf %.2lf %.2lf %.2lf %d %.2lf %.2lf %d", PZLOIPLN.HA_LLS, PZLOIPLN.HP_LLS, PZLOIPLN.DW, PZLOIPLN.REVS1, PZLOIPLN.REVS2, PZLOIPLN.eta_1, PZLOIPLN.dh_bias, PZLOIPLN.PlaneSolnForInterSoln);
 	oapiWriteScenario_string(scn, "RTCC_PZLOIPLN", Buffer);
 
@@ -6702,6 +6790,9 @@ void RTCC::SaveState(FILEHANDLE scn) {
 		oapiWriteScenario_string(scn, "RTCCMFD_LM", pLM->GetName());
 	}
 	//MED
+	sprintf(Buffer, "%.2lf %.2lf %.0lf %.0lf %.2lf %.2lf %.2lf",
+		med_k18.HALOI1, med_k18.HPLOI1, med_k18.DVMAXp, med_k18.DVMAXm, med_k18.psi_DS, med_k18.psi_MX, med_k18.psi_MN);
+	oapiWriteScenario_string(scn, "RTCC_K18", Buffer);
 	sprintf(Buffer, "%d %d %lf %lf %lf %lf %lf %lf",
 		med_k30.Vehicle, med_k30.IVFlag, med_k30.ChaserVectorTime, med_k30.TargetVectorTime, med_k30.StartTime, med_k30.EndTime, med_k30.TimeStep, med_k30.TimeRange);
 	oapiWriteScenario_string(scn, "MED_K30", Buffer);
@@ -6873,6 +6964,15 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
 		LOAD_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
 		LOAD_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
+		LOAD_INT("RTCC_TLCC_REVS1", PZMCCPLN.REVS2);
+		if (papiReadScenario_double(line, "RTCC_TLCC_H_A_LPO1", darrtemp[0])) PZMCCPLN.H_A_LPO1 = darrtemp[0] * 1852.0;
+		if (papiReadScenario_double(line, "RTCC_TLCC_H_P_LPO1", darrtemp[0])) PZMCCPLN.H_P_LPO1 = darrtemp[0] * 1852.0;
+		if (papiReadScenario_double(line, "RTCC_TLCC_H_A_LPO2", darrtemp[0])) PZMCCPLN.H_A_LPO2 = darrtemp[0] * 1852.0;
+		if (papiReadScenario_double(line, "RTCC_TLCC_H_P_LPO2", darrtemp[0])) PZMCCPLN.H_P_LPO2 = darrtemp[0] * 1852.0;
+		if (papiReadScenario_double(line, "RTCC_TLCC_H_PCYN_MIN", darrtemp[0])) PZMCCPLN.H_PCYN_MIN = darrtemp[0] * 1852.0;
+		if (papiReadScenario_double(line, "RTCC_TLCC_H_PCYN_MAX", darrtemp[0])) PZMCCPLN.H_PCYN_MAX = darrtemp[0] * 1852.0;
+		if (papiReadScenario_double(line, "RTCC_TLCC_SITEROT", darrtemp[0])) PZMCCPLN.SITEROT = darrtemp[0] * RAD;
+
 		if (!strnicmp(line, "RTCC_PZLOIPLN", 13))
 		{
 			sscanf(line + 13, "%lf %lf %lf %lf %d %lf %lf %d",
@@ -7032,6 +7132,11 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		papiReadScenario_string(line, "RTCCMFD_CSM", CSMName);
 		papiReadScenario_string(line, "RTCCMFD_LM", LEMName);
 
+		if (!strnicmp(line, "MED_K18", 7))
+		{
+			sscanf(line + 8, "%lf %lf %lf %lf %lf %lf %lf",
+				&med_k18.HALOI1, &med_k18.HPLOI1, &med_k18.DVMAXp, &med_k18.DVMAXm, &med_k18.psi_DS, &med_k18.psi_MX, &med_k18.psi_MN);
+		}
 		if (!strnicmp(line, "MED_K30", 7)) {
 			sscanf(line + 8, "%d %d %lf %lf %lf %lf %lf %lf",
 				&med_k30.Vehicle, &med_k30.IVFlag, &med_k30.ChaserVectorTime, &med_k30.TargetVectorTime, &med_k30.StartTime, &med_k30.EndTime, &med_k30.TimeStep, &med_k30.TimeRange);
@@ -7339,8 +7444,18 @@ void RTCC::RTEMoonTargeting(RTEMoonOpt *opt, EntryResults *res)
 
 	arr.SMODEI = opt->SMODE;
 	arr.alpha_SID0 = SystemParameters.MCLAMD;
-	arr.TZMINI = GMTfromGET(TZMINI);
-	arr.TZMAXI = 0.0; //TBD
+	if (opt->SMODE == 14 || opt->SMODE == 34)
+	{
+		//ATP
+		arr.TZMINI = GMTfromGET(TZMINI);
+		arr.TZMAXI = 0.0;
+	}
+	else
+	{
+		//UA
+		arr.TZMINI = GMTfromGET(PZREAP.TZMIN * 3600.0);
+		arr.TZMAXI = GMTfromGET(PZREAP.TZMAX * 3600.0);
+	}
 	arr.IRMAXI = PZREAP.IRMAX;
 	arr.URMAXI = PZREAP.VRMAX;
 	arr.RRBI = PZREAP.RRBIAS;
@@ -18907,13 +19022,6 @@ void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGM
 			//Terminated on altitude
 			if (InTable.NIAuxOutputTable.TerminationCode == 3)
 			{
-				if (QUEID == 1)
-				{
-					//Unable to get state vector to present time, exit with an error indication
-					L = -L;
-					return;
-				}
-
 				//NI ended on altitude
 				int num;
 
@@ -18964,6 +19072,15 @@ void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGM
 					}
 
 					IsKickout[num] = true;
+				}
+				else
+				{
+					if (QUEID == 1)
+					{
+						//Unable to get state vector to present time, exit with an error indication
+						L = -L;
+						return;
+					}
 				}
 			}
 			else
@@ -30216,7 +30333,7 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 	{
 	if (data.size() < 1 || data[0] == "")
 	{
-		PZMCCPLN.H_PCYN_MIN = 40.0*1852.0;
+		PZMCCPLN.H_PCYN_MIN = 40.0 * 1852.0;
 	}
 	else
 	{
@@ -30225,11 +30342,11 @@ int RTCC::PMQAFMED(std::string med, std::vector<std::string> data)
 		{
 			return 1;
 		}
-		PZMCCPLN.H_PCYN_MIN = ht * 1852.0;;
+		PZMCCPLN.H_PCYN_MIN = ht * 1852.0;
 	}
 	if (data.size() < 2 || data[1] == "")
 	{
-		PZMCCPLN.H_PCYN_MAX = 5000.0*1852.0;
+		PZMCCPLN.H_PCYN_MAX = 5000.0 * 1852.0;
 	}
 	else
 	{
@@ -36966,8 +37083,9 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 			K = 0.0;
 			R_E = BZLAND.rad[RTCC_LMPOS_BEST];
 
-			mptman->h_BI = length(sv_BI_true.R) - BZLAND.rad[RTCC_LMPOS_BEST];
-			mptman->lat_BI = asin(sv_BI_true.R.z / sv_BI_true.R.x);
+			double r = length(sv_BI_true.R);
+			mptman->h_BI = r - BZLAND.rad[RTCC_LMPOS_BEST];
+			mptman->lat_BI = asin(sv_BI_true.R.z / r);
 		}
 
 		mptman->lng_BI = atan2(sv_BI_true.R.y, sv_BI_true.R.x) - K * OrbMech::w_Earth*sv_BI_true.GMT;
@@ -37310,7 +37428,22 @@ void RTCC::CMMRFMAT(int L, int id, int addr)
 	MATRIX3 a = refs.REFSMMAT;
 	block->REFSMMAT = a;
 
-	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", a.m11, a.m12, a.m13, a.m21, a.m22, a.m23, a.m31, a.m32, a.m33);
+	if (block->SequenceNo == 0)
+	{
+		if (L == 1)
+		{
+			block->SequenceNo = 1201;
+		}
+		else
+		{
+			block->SequenceNo = 2301;
+		}
+	}
+	else
+	{
+		block->SequenceNo++;
+	}
+	block->GenGET = GETfromGMT(RTCCPresentTimeGMT());
 
 	block->Octals[0] = 24;
 	if (addr == 1)

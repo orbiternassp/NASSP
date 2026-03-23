@@ -47,6 +47,7 @@
 
 #include "connector.h"
 #include "nassputils.h"
+#include "LM_VC_Resource.h"
 
 using namespace nassp;
 
@@ -533,6 +534,8 @@ void LEM::Init()
 	CDRinPLSS = 0;
 	LMPinPLSS = 0;
 
+	spaceeva = false;
+
 	CMPowerToCDRBusRelayA = false;
 	CMPowerToCDRBusRelayB = false;
 
@@ -622,6 +625,7 @@ void LEM::Init()
 	vcidx = -1;
 	windowshadesidx = -1;
 	xpointershadesidx = -1;
+	hLMPointingArrowidx = -1;
 
 	drogue = NULL;
 	probes = NULL;
@@ -704,6 +708,7 @@ void LEM::Init()
 		fdaiSmooth = false;
 
 		InitVCAnimations();
+		pointingArrow.Init(this);
 
 		PanelId = LMPANEL_MAIN;	// default panel
 		InitSwitches();
@@ -1330,11 +1335,23 @@ int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 	return 0;
 }
 
+void LEM::DoMeshAnimation(AnimState &state, UINT &anim, double speed, double simdt)
+{
+	if (state.Moving()) {
+		state.Move(simdt / speed);
+		SetAnimation(anim, state.pos);
+	}
+}
+
 void LEM::SetAnimations(double simdt) {
 	//
 	//EVA Antenna
 	//
 	VHF.SetAnimation(EvaAntennaHandle.GetAnimState());
+
+	if (AOTReticleDetent.GetState() == 0) AOT_ReticleKnobState.action = AnimState::CLOSING;
+	else AOT_ReticleKnobState.action = AnimState::OPENING;
+	DoMeshAnimation(AOT_ReticleKnobState, AOT_ReticleKnobAnimTrans, 0.1, simdt);
 }
 
 //
@@ -1485,6 +1502,8 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		//We have focus on this vessel, and are in the VC
 		MoveFlashlight();
 	}
+
+	if (spaceeva)UpdateSpaceEVA(); //if lmp eva active (vessel created), enables EVA Timestep
 }
 
 
@@ -1737,7 +1756,7 @@ void LEM::PostLoadSetup(bool define_anims)
 void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 {
 	char *line;
-	int	SwitchState;
+	int	SwitchState, i;
 	float ftcp;
 
 	while (oapiReadScenario_nextline(scn, line)) {
@@ -2042,6 +2061,11 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
 		}
+		else if (!strnicmp(line, "SPACEEVA", 8)) {
+			//Load EVA State from scn file
+			sscanf(line + 8, "%d", &i);
+			spaceeva = i;
+		}
 		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString)))
 		{
 			checkControl.load(scn);
@@ -2131,6 +2155,22 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 	if (vcidx != -1) {
 		vcmesh = GetDevMesh(vis, vcidx);
 		SetCOAS();
+	}
+
+	// This is Mission Specific code to change for now only the Panel 14 DC FEEDER text.
+	// First hide all the texts
+	HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_FEEDER_FAULT, true);
+	HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_FEEDER_FAULT_2, true);
+	HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_BUS_FAULT, true);
+
+	if (pMission->GetLMNumber() < 6) {												// up to Apollo 11
+		HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_BUS_FAULT, false);
+	}
+	else if (pMission->GetLMNumber() > 5 && (pMission->GetLMNumber() < 9)) {		// Apollo 12 to 14
+		HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_FEEDER_FAULT, false);
+	}
+	else {
+		HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_FEEDER_FAULT_2, false);			// Apollo 15 to 17
 	}
 }
 
@@ -2375,6 +2415,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float (scn, "ASCFUEL", AscentFuelMassKg);
 	oapiWriteScenario_float(scn, "DSCEMPTYMASS", DescentEmptyMassKg);
 	oapiWriteScenario_float(scn, "ASCEMPTYMASS", AscentEmptyMassKg);
+
+	oapiWriteScenario_int(scn, "SPACEEVA", spaceeva);
 
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);

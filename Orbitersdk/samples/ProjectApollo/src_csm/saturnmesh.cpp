@@ -47,6 +47,8 @@
 #include "LES.h"
 #include "Mission.h"
 
+#include "eva.h"
+
 MESHHANDLE hSM;
 MESHHANDLE hSMRCS;
 MESHHANDLE hSMRCSLow;
@@ -92,6 +94,8 @@ MESHHANDLE hcmseatsfolded;
 MESHHANDLE hcmseatsunfolded;
 MESHHANDLE hcmCOAScdr;
 MESHHANDLE hcmCOAScdrreticle;
+MESHHANDLE hcmCueCardsArrows;
+MESHHANDLE hcmPointingArrow;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -664,6 +668,8 @@ void SaturnInitMeshes()
 	LOAD_MESH(hcmseatsunfolded, "ProjectApollo/CM-VC-SeatsUnfolded");
 	LOAD_MESH(hcmCOAScdr, "ProjectApollo/CM-COAS-CDR");
 	LOAD_MESH(hcmCOAScdrreticle, "ProjectApollo/CM-COAS-CDR_Reticle");
+	LOAD_MESH(hcmCueCardsArrows, "ProjectApollo/Helpers/CM-CueCardsArrows");
+	LOAD_MESH(hcmPointingArrow, "ProjectApollo/Helpers/PointingArrow");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
@@ -1041,7 +1047,7 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 		TowerOffset += 2.1; //Additional offset for CSM stage
 
 		meshidx = AddMesh(hsat5tower, &mesh_dir_tower);
-		SetMeshVisibilityMode(meshidx, MESHVIS_VCEXTERNAL);
+		SetBPCMesh(meshidx);
 	}
 
 	// And the Crew
@@ -1068,6 +1074,9 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	fwdhatchidx = AddMesh(hFHF, &mesh_dir);
 	SetFwdHatchMesh();
 
+	// Pointing Arrow
+	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+
 	// VC
 	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
@@ -1076,6 +1085,10 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
+
+	//Cue Cards Arrows
+	cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
+	SetVCCueCardsArrows();
 
 	//Interior
 	meshidx = AddMesh(hCMInt, &mesh_dir);
@@ -1276,6 +1289,13 @@ void Saturn::SetSideHatchMesh() {
 	}
 }
 
+void Saturn::SetBPCMesh(UINT idx)
+{
+	if (idx == -1) return;
+	SetMeshVisibilityMode(idx, MESHVIS_VCEXTERNAL);
+	BPC.DefineAnimations(idx);
+}
+
 void Saturn::SetFwdHatchMesh() {
 
 	if (fwdhatchidx == -1)
@@ -1343,6 +1363,15 @@ void Saturn::SetVCSeatsMesh() {
 	} else {
 		SetMeshVisibilityMode(seatsfoldedidx, MESHVIS_NEVER);
 		SetMeshVisibilityMode(seatsunfoldedidx, MESHVIS_VC);
+	}
+}
+
+void Saturn::SetVCCueCardsArrows() {
+//	if (checkControl.getFlashing() || ViewCueCardArrows) {
+	if (ViewCueCardArrows) {
+		SetMeshVisibilityMode(cmvccuecardsarrowsidx, MESHVIS_VC);
+	} else {
+		SetMeshVisibilityMode(cmvccuecardsarrowsidx, MESHVIS_NEVER);
 	}
 }
 
@@ -1553,7 +1582,7 @@ void Saturn::SetReentryMeshes() {
 		VECTOR3 mesh_dir_tower = mesh_dir + _V(0, 0, TowerOffset);
 
 		meshidx = AddMesh (hsat5tower, &mesh_dir_tower);
-		SetMeshVisibilityMode (meshidx, MESHVIS_VCEXTERNAL);
+		SetBPCMesh(meshidx);
 	}
 
 	// And the Crew
@@ -1588,6 +1617,9 @@ void Saturn::SetReentryMeshes() {
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
+	// Pointing Arrow
+	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+
 	// VC
 	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
@@ -1596,6 +1628,10 @@ void Saturn::SetReentryMeshes() {
 	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
+
+	//Cue Cards Arrows
+	cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
+	SetVCCueCardsArrows();
 
 	//Add CM meshes. More to be added here...
 	AddCMMeshes(mesh_dir);
@@ -1872,6 +1908,9 @@ void Saturn::SetRecovery()
 	meshidx = AddMesh (hCMInt, &mesh_dir);
 	SetMeshVisibilityMode (meshidx, MESHVIS_EXTERNAL);
 
+	// Pointing Arrow
+	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+
 	// VC
 	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
@@ -1880,6 +1919,10 @@ void Saturn::SetRecovery()
 	coascdrreticleidx = AddMesh(hcmCOAScdrreticle, &mesh_dir);
 	coascdridx = AddMesh(hcmCOAScdr, &mesh_dir);
 	SetCOASMesh();
+
+	//Cue Cards Arrows
+	cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
+	SetVCCueCardsArrows();
 
 	if (Crewed) {
 		//old values 2.7,1.8,-1.5
@@ -2299,5 +2342,97 @@ void Saturn::SetRunningLights() {
 		runningLights[i].tofs = 0;
 		runningLights[i].active = false;
 		AddBeacon(runningLights + i);
+	}
+}
+
+void Saturn::ToggleCMPEVA()
+{
+	ECSStatus ecs;
+	GetECSStatus(ecs);
+	//if (ecs.crewNumber < 3) return;
+	if (cmpeva) return;
+
+	if (ecs.crewNumber > 0) SetCrewNumber(ecs.crewNumber - 1);
+	//SetCrewNumber(2);
+
+	VESSELSTATUS vs1;
+	GetStatus(vs1);
+
+	char VName[256] = "";
+	strcpy(VName, pMission->GetCMPName().c_str());
+
+	VECTOR3 ofs;
+	if (stage == STAGE_ORBIT_SIVB) ofs = { 0, 1.10678, 13.15 + 2.227 };
+	else if (stage == CSM_LEM_STAGE) ofs = { 0, 1.10678, 2.23204 };
+
+	Local2Rel(ofs - currentCoG, vs1.rpos);
+
+	vs1.eng_main = vs1.eng_hovr = 0.0;
+	vs1.vrot.x = -vs1.vrot.x;
+	vs1.vrot.y = -vs1.vrot.y;
+	vs1.vrot.z = vs1.vrot.z;
+	hCMPEVA = oapiCreateVessel(VName, "ProjectApollo/EVA", vs1);
+
+	cmpeva = true;
+
+	EVA* eva = (EVA*)oapiGetVesselInterface(hCMPEVA);
+
+	EVASettingsCMP evascmp;
+
+	evascmp.MissionNo = ApolloNo;
+	evascmp.isCMP = true;
+	strcpy(evascmp.CSMName, GetName());
+	eva->SetEVAStatsCMP(evascmp);
+
+	oapiSetFocusObject(hCMPEVA);
+}
+
+void Saturn::UpdateEVA()
+{
+	ECSStatus ecs;
+	GetECSStatus(ecs);
+
+	if (cmpeva)
+	{
+		char VName[256] = "";
+		strcpy(VName, pMission->GetCMPName().c_str());
+		hCMPEVA = oapiGetObjectByName(VName);
+
+		if (hCMPEVA == NULL)
+		{
+			cmpeva = false;
+			SetCrewNumber(ecs.crewNumber + 1);
+		}
+	}
+}
+
+void Saturn::StopEVA()
+{
+	ECSStatus ecs;
+	GetECSStatus(ecs);
+
+	VECTOR3 gpos;
+	VECTOR3 ghatch;
+	if (stage == STAGE_ORBIT_SIVB) ghatch = { 0, 1.10678, 13.15 + 2.227 };
+	else if (stage == CSM_LEM_STAGE) ghatch = { 0, 1.10678, 2.23204 };
+
+	Local2Global(ghatch - currentCoG, ghatch);
+
+	if (cmpeva)
+	{
+		char VName[256] = "";
+		strcpy(VName, pMission->GetCMPName().c_str());
+		hCMPEVA = oapiGetObjectByName(VName);
+
+		oapiGetGlobalPos(hCMPEVA, &gpos);
+		double distance = dist(gpos, ghatch);
+
+		if (distance < 0.75)
+		{
+			cmpeva = false;
+			SetCrewNumber(ecs.crewNumber + 1);
+			//SetCrewNumber(3);
+			oapiDeleteVessel(hCMPEVA);
+		}
 	}
 }

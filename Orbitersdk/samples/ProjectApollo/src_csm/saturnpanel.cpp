@@ -370,7 +370,6 @@ void Saturn::InitPanel (int panel)
 	srf[SRF_SWLEVERTHREEPOS] 						= oapiCreateSurface (LOADBMP (IDB_SWLEVERTHREEPOS));
 	srf[SRF_ORDEAL_ROTARY] 							= oapiCreateSurface (LOADBMP (IDB_ORDEAL_ROTARY));
 	srf[SRF_LV_ENG_S1B]								= oapiCreateSurface (LOADBMP (IDB_LV_ENGINE_LIGHTS_S1B));
-	srf[SRF_SPS_INJ_VLV]						    = oapiCreateSurface (LOADBMP (IDB_SPS_INJ_VLV));
 	srf[SRF_THUMBWHEEL_GPI_PITCH]  					= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_GPI_PITCH));
 	srf[SRF_THUMBWHEEL_GPI_YAW]  					= oapiCreateSurface (LOADBMP (IDB_THUMBWHEEL_GPI_YAW));
 	srf[SRF_THC]				  					= oapiCreateSurface (LOADBMP (IDB_THC));
@@ -558,7 +557,6 @@ void Saturn::InitPanel (int panel)
 	oapiSetSurfaceColourKey	(srf[SRF_THUMBWHEEL_LARGEFONTSINV],				g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_SWLEVERTHREEPOS],						g_Param.col[4]);
 	oapiSetSurfaceColourKey	(srf[SRF_ORDEAL_ROTARY],						g_Param.col[4]);
-	oapiSetSurfaceColourKey	(srf[SRF_SPS_INJ_VLV],							g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_GPI_PITCH],    				g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THUMBWHEEL_GPI_YAW],    				g_Param.col[4]);
 	oapiSetSurfaceColourKey (srf[SRF_THC],				    				g_Param.col[4]);
@@ -2425,11 +2423,11 @@ void Saturn::SetSwitches(int panel) {
 	// SPS switches (panel 3)
 	//
 	
-	SPSInjectorValveIndicatorsRow.Init(AID_SPS_INJ_VLV, MainPanel);
-	SPSInjectorValve1Indicator.Init(  0, 0, 34, 34, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
-	SPSInjectorValve2Indicator.Init( 48, 0, 34, 34, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
-	SPSInjectorValve3Indicator.Init( 96, 0, 34, 34, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
-	SPSInjectorValve4Indicator.Init(144, 0, 34, 34, srf[SRF_SPS_INJ_VLV], SPSInjectorValveIndicatorsRow);
+	SPSInjectorValveIndicatorsRow.Init(AID_SPS_INJ_VLV, MainPanel, &GaugePower);
+	SPSInjectorValve1Indicator.Init(g_Param.pen[5], g_Param.pen[5], SPSInjectorValveIndicatorsRow, this, 1);
+	SPSInjectorValve2Indicator.Init(g_Param.pen[5], g_Param.pen[5], SPSInjectorValveIndicatorsRow, this, 2);
+	SPSInjectorValve3Indicator.Init(g_Param.pen[5], g_Param.pen[5], SPSInjectorValveIndicatorsRow, this, 3);
+	SPSInjectorValve4Indicator.Init(g_Param.pen[5], g_Param.pen[5], SPSInjectorValveIndicatorsRow, this, 4);
 
 	SPSTestSwitchRow.Init(AID_SPSTESTSWITCH, MainPanel);
 	SPSTestSwitch.Init(0, 0, 34, 29, srf[SRF_THREEPOSSWITCH], srf[SRF_BORDER_34x29], SPSTestSwitchRow);
@@ -2524,6 +2522,7 @@ void Saturn::SetSwitches(int panel) {
 	GTASwitch.InitGuard(0,  0, 55, 111, srf[SRF_GTACOVER], srf[SRF_BORDER_55x111]);
 	
 	EMSDvDisplayRow.Init(AID_EMSDVDISPLAY, MainPanel, &GaugePower);
+	EMSDvSetSwitch.Init(this);
 	EMSDvDisplay.Init(srf[SRF_DIGITAL], EMSDvDisplayRow, this);
 	EMSScrollDisplay.Init(EMSDvDisplayRow, this); 	// dummy switch/display for checklist controller
 
@@ -2893,10 +2892,10 @@ void Saturn::SetSwitches(int panel) {
 	PyroBSeqBCircuitBraker.Init				(170, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, PyroBatteryB, 20.0);
 	BatAPWRCircuitBraker.Init				(246, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, DiodeBatA, 80.0);
 	BatBPWRCircuitBraker.Init				(304, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, DiodeBatB, 80.0);
-	BatCPWRCircuitBraker.Init				(362, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, DiodeBatC, 80.0);
+	BatCPWRCircuitBraker.Init				(362, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, NULL, 80.0);
 	BatCtoBatBusACircuitBraker.Init			(420, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatCPWRCircuitBraker, 80.0);
 	BatCtoBatBusBCircuitBraker.Init			(478, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatCPWRCircuitBraker, 80.0);
-	BatCCHRGCircuitBraker.Init				(526, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, &BatCPWRCircuitBraker, 10.0);
+	BatCCHRGCircuitBraker.Init				(526, 0, 29, 29, srf[SRF_CIRCUITBRAKER], srf[SRF_BORDER_29x29], Panel250CircuitBreakersRow, NULL, 10.0);
 	
 	WasteMGMTOvbdDrainDumpRotaryRow.Init(AID_WASTE_MGMT_OVBD_DUMP, MainPanel);	
 	WasteMGMTOvbdDrainDumpRotary.Init( 0, 0, 116, 116, srf[SRF_CSM_WASTE_MGMT_ROTARY], srf[SRF_BORDER_116x116], WasteMGMTOvbdDrainDumpRotaryRow);
@@ -3572,7 +3571,7 @@ DLLCLBK void InitModule(HINSTANCE hModule) {
 	g_Param.pen[2] = oapiCreatePen (1, 1, RGB(  0,   0,   0));
 	g_Param.pen[3] = oapiCreatePen (1, 3, RGB( 77,  77,  77));
 	g_Param.pen[4] = oapiCreatePen (1, 3, RGB(  0,   0,   0));
-	g_Param.pen[5] = oapiCreatePen (1, 1, RGB(255,   0,   0));
+	g_Param.pen[5] = oapiCreatePen (1, 5, RGB(  0,   0,   0));
 	g_Param.pen[6] = oapiCreatePen (1, 3, RGB(255, 255, 255));
 }
 
@@ -4093,18 +4092,6 @@ void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 
 	} else if (s == &SPSHeliumValveBIndicator) {
 		SPSHeliumValveBIndicator.SetState(SPSPropellant.IsHeliumValveBOpen() ? 1 : 0);
-	
-	}  else if (s == &SPSInjectorValve1Indicator) {
-		SPSInjectorValve1Indicator.SetState(SPSEngine.GetInjectorValves12Open() ? 1 : 0);
-
-	}  else if (s == &SPSInjectorValve2Indicator) {
-		SPSInjectorValve2Indicator.SetState(SPSEngine.GetInjectorValves12Open() ? 1 : 0);
-
-	}  else if (s == &SPSInjectorValve3Indicator) {
-		SPSInjectorValve3Indicator.SetState(SPSEngine.GetInjectorValves34Open() ? 1 : 0);
-
-	}  else if (s == &SPSInjectorValve4Indicator) {
-		SPSInjectorValve4Indicator.SetState(SPSEngine.GetInjectorValves34Open() ? 1 : 0);
 	}
 }
 
@@ -4171,6 +4158,12 @@ void Saturn::PanelRefreshForwardHatch() {
 			RefreshPanelIdInTimestep = true;
 		}
 	}
+	else if (InVC && oapiCameraInternal())
+	{
+		VECTOR3 ofs;
+		GetMeshOffset(vcidx, ofs);
+		UpdateForwardHatchClickspots(ofs);
+	}
 }
 
 void Saturn::PanelRefreshSideHatch() {
@@ -4182,6 +4175,12 @@ void Saturn::PanelRefreshSideHatch() {
 		else {
 			RefreshPanelIdInTimestep = true;
 		}
+	}
+	else if (InVC && oapiCameraInternal())
+	{
+		VECTOR3 ofs;
+		GetMeshOffset(vcidx, ofs);
+		UpdateSideHatchClickspots(ofs);
 	}
 }
 
@@ -4622,7 +4621,12 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			if(errors.x > 41){ errors.x = 41; }else{ if(errors.x < -41){ errors.x = -41; }}
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
-			fdaiLeft.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);			
+			fdaiLeft.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);
+
+// TODO by Jordan 
+//			oapiBlt(srfFDAICamTexture, surf, 0, 0, 0, 0, 186, 186);	// 533, 612
+//			oapiBlt(srfFDAICamTexture, surf, 0, 0, 563, 642, 186, 186);
+			
 		}
 		return true;
 
@@ -5416,10 +5420,10 @@ void Saturn::InitSwitches() {
 	SMRCSProp2CTalkback.Register(PSH, "SMRCSProp2CTalkback", false);
 	SMRCSProp2DTalkback.Register(PSH, "SMRCSProp2DTalkback", false);
 
-	SPSInjectorValve1Indicator.Register(PSH, "SPSInjectorValve1Indicator", false);
-	SPSInjectorValve2Indicator.Register(PSH, "SPSInjectorValve2Indicator", false);
-	SPSInjectorValve3Indicator.Register(PSH, "SPSInjectorValve3Indicator", false);
-	SPSInjectorValve4Indicator.Register(PSH, "SPSInjectorValve4Indicator", false);
+	SPSInjectorValve1Indicator.Register(PSH, "SPSInjectorValve1Indicator", 0.0, 90.0, 2.0);
+	SPSInjectorValve2Indicator.Register(PSH, "SPSInjectorValve2Indicator", 0.0, 90.0, 2.0);
+	SPSInjectorValve3Indicator.Register(PSH, "SPSInjectorValve3Indicator", 0.0, 90.0, 2.0);
+	SPSInjectorValve4Indicator.Register(PSH, "SPSInjectorValve4Indicator", 0.0, 90.0, 2.0);
 
 	SPSOxidFlowValveMaxIndicator.Register(PSH, "SPSOxidFlowValveMaxIndicator", true);
 	SPSOxidFlowValveMinIndicator.Register(PSH, "SPSOxidFlowValveMinIndicator", true);

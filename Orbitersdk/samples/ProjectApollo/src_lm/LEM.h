@@ -135,6 +135,7 @@ public:
 	bool SignalFailure();
 	bool TimingFailure();
 	bool IsPowered();
+
 private:
 	void TapeDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
 	LEM *lem;					// Pointer at LEM
@@ -150,6 +151,10 @@ private:
 	double desRange, desRate;
 	double LGCaltUpdateTime, LGCaltRateUpdateTime;
 	double AGSaltUpdateTime, AGSaltRateUpdateTime;
+	double GetLRAltitude();
+	double GetLRAltitudeRate();
+	double GetRRRange();
+	double GetRRRate();
 
 	const double ALTSCALEFACTOR = 0.3048 * 2.345 * pow(2.0, -3.0);
 	const double ALTRATESCALEFACTOR = 0.3048 * pow(2.0, -4.0);
@@ -553,6 +558,7 @@ public:
 	void StopSeparationPyros();
 
 	void SetAnimations(double);
+	void UpdatePointingArrow();
 
 	//
 	// VISHANDLE
@@ -617,6 +623,8 @@ public:
 	virtual void AEAPadLoad(unsigned int address, unsigned int value);
 	virtual void StopEVA(bool isCDR);
 	virtual bool IsForwardHatchOpen() { return ForwardHatch.IsOpen(); }
+
+	virtual void StopSpaceEVA();
 
 	char *getOtherVesselName() { return agc.OtherVesselName;};
 	APSPropellantSource *GetAPSPropellant() { return &APSPropellant; };
@@ -697,6 +705,9 @@ public:
 	// Custom quicksave behaviour
 	void QuicksaveScenario();
 
+	// Hide or Show mesh group
+	void HideMeshGroup(int, int, bool);
+
 protected:
 
 	//
@@ -746,7 +757,14 @@ protected:
 	void SetCompLight(int m, bool state);
 	void SetContactLight(int m, bool state);
 	void SetPowerFailureLight(int m, bool state);
-	void SetStageSeqRelayLight(int m, bool state);
+
+	void DoMeshAnimation(AnimState &, UINT &, double, double);
+
+	void ToggleSpaceEVA();
+
+	void UpdateSpaceEVA(void);
+
+	OBJHANDLE hSPACEEVA;
 
 #ifdef _OPENORBITER
 	void SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
@@ -1613,6 +1631,8 @@ protected:
 	int CDRinPLSS;
 	int LMPinPLSS;
 
+	int spaceeva;
+
 #define LMVIEW_CDR		 0
 #define LMVIEW_LMP		 1
 #define LMVIEW_LPD		 2
@@ -1718,6 +1738,7 @@ protected:
 	UINT vcidx;
 	UINT windowshadesidx;
 	UINT xpointershadesidx;
+	UINT hLMPointingArrowidx;
 
 	DEVMESHHANDLE probes;
 	DEVMESHHANDLE deflectors;
@@ -1749,6 +1770,8 @@ protected:
 
 	VECTOR3 trackLightPos;
 	VECTOR3 dockingLightsPos[5];
+
+	VCPointingArrow pointingArrow;
 
 #define LMPANEL_MAIN			0
 #define LMPANEL_RIGHTWINDOW		1
@@ -1795,6 +1818,14 @@ protected:
 	double vcFreeCamz;
 	double vcFreeCamSpeed;
 	double vcFreeCamMaxOffset;
+
+	//
+	// AOT ReticleKnob
+	//
+	UINT AOT_ReticleKnobAnimTrans;
+	AnimState AOT_ReticleKnobState;
+	UINT AOT_ReticleKnobAnimRot;
+	AnimState AOT_ReticleKnobRotState;
 
 	//
 	// Failures.
@@ -2149,6 +2180,7 @@ extern MESHHANDLE hLMDescent;
 extern MESHHANDLE hLMDescentNoLeg;
 extern MESHHANDLE hLMAscent;
 extern MESHHANDLE hLMVC;
+extern MESHHANDLE hLMPointingArrow;
 
 extern void LEMLoadMeshes();
 

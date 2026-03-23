@@ -2045,6 +2045,7 @@ RTCC_PLAWDT_9_T:
 	out.SIVBWeight = in.SIVBWeight;
 	out.LMAscWeight = in.LMAscWeight;
 	out.LMDscWeight = in.LMDscWeight;
+	out.CC = in.Num;
 	goto RTCC_PLAWDT_M_5;
 }
 

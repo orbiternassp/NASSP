@@ -46,12 +46,15 @@
 #include "LM_VC_Resource.h"
 #include "Mission.h"
 
+#include "eva.h"
+
 MESHHANDLE hLMDescent;
 MESHHANDLE hLMDescentNoLeg;
 MESHHANDLE hLMAscent;
 MESHHANDLE hLMVC;
 MESHHANDLE hLMWindowShades;
 MESHHANDLE hLMXpointerShades;
+MESHHANDLE hLMPointingArrow;
 
 static PARTICLESTREAMSPEC lunar_dust = {
 	0,		// flag
@@ -834,6 +837,9 @@ void LEM::SetMeshes() {
 	// Ascent Stage Mesh
 	ascidx = AddMesh(hLMAscent, &mesh_asc);
 
+	// Pointing Arrow
+	hLMPointingArrowidx = AddMesh(hLMPointingArrow, &mesh_asc);
+
 	// VC Mesh
 	vcidx = AddMesh(hLMVC, &mesh_asc);
 
@@ -863,6 +869,7 @@ void LEMLoadMeshes()
 	hLMWindowShades = oapiLoadMeshGlobal("ProjectApollo/LM_Window_Shades");
 	hLMXpointerShades = oapiLoadMeshGlobal("ProjectApollo/LM_Xpointer_Shades");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
+	hLMPointingArrow = oapiLoadMeshGlobal("ProjectApollo/Helpers/PointingArrow");
 }
 
 //
@@ -889,3 +896,78 @@ void LEM::GetDockStatus()
 //	GetStatusEx(&vslm);
 }
 */
+
+void LEM::ToggleSpaceEVA()
+{
+	if (LMPinPLSS == 0) return;
+	if (spaceeva) return;
+
+	VESSELSTATUS vs1;
+	GetStatus(vs1);
+
+	char VName[256] = "";
+	strcpy(VName, pMission->GetLMPName().c_str());
+
+	VECTOR3 ofs = { 0, 0.685402, 2.55546 };
+
+	Local2Rel(ofs - currentCoG, vs1.rpos);
+
+	vs1.eng_main = vs1.eng_hovr = 0.0;
+	vs1.vrot.x = -vs1.vrot.x;
+	vs1.vrot.y = -vs1.vrot.y;
+	vs1.vrot.z = vs1.vrot.z;
+	hSPACEEVA = oapiCreateVessel(VName, "ProjectApollo/EVA", vs1);
+
+	spaceeva = true;
+
+	EVA* eva = (EVA*)oapiGetVesselInterface(hSPACEEVA);
+
+	EVASettingsLMP evaslmp;
+
+	evaslmp.MissionNo = ApolloNo;
+	evaslmp.isLMP = true;
+	strcpy(evaslmp.LEMName, GetName());
+	eva->SetEVAStatsLMP(evaslmp);
+
+	oapiSetFocusObject(hSPACEEVA);
+}
+
+void LEM::UpdateSpaceEVA()
+{
+	if (spaceeva)
+	{
+		char VName[256] = "";
+		strcpy(VName, pMission->GetLMPName().c_str());
+		hSPACEEVA = oapiGetObjectByName(VName);
+
+		if (hSPACEEVA == NULL)
+		{
+			spaceeva = false;
+		}
+	}
+}
+
+void LEM::StopSpaceEVA()
+{
+	VECTOR3 gpos;
+	VECTOR3 ghatch;
+	ghatch = { 0, 0.685402, 2.55546 };
+
+	Local2Global(ghatch - currentCoG, ghatch);
+
+	if (spaceeva)
+	{
+		char VName[256] = "";
+		strcpy(VName, pMission->GetLMPName().c_str());
+		hSPACEEVA = oapiGetObjectByName(VName);
+
+		oapiGetGlobalPos(hSPACEEVA, &gpos);
+		double distance = dist(gpos, ghatch);
+
+		if (distance < 0.75)
+		{
+			spaceeva = false;
+			oapiDeleteVessel(hSPACEEVA);
+		}
+	}
+}

@@ -49,6 +49,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s) : soundlib(s) {
 	CWEAHeat = 0;
 
 	MasterAlarm = false;
+	CO2PartialPressureHigh = false;
 	Operate = false;
 	ECSFailureCount = 0;
 }
@@ -498,8 +499,12 @@ void LEM_CWEA::Timestep(double simdt) {
 		// Restoration of normal CO2 pressure
 		// Restoration of normal water separator speed
 		// Selection of #2 suit fan
+
+		//CO2 partial pressure high comparator
+		CO2PartialPressureHigh = (lem->ecs.GetSensorCO2Voltage() >= 2.274);
+
 		lightlogic = false;
-		if (lem->ecs.GetSensorCO2MMHg() >= 7.6) { lightlogic = true;}	// CO2 Partial Pressure > 7.6mm
+		if (CO2PartialPressureHigh) { lightlogic = true;}	// CO2 Partial Pressure > 7.6mm
 		if (lem->scera2.GetVoltage(13, 3) > 2.5) { lightlogic = true; } // Glycol pump failure
 		if (lem->scera2.GetVoltage(3, 2) > 2.5) { lightlogic = true; } // Suit fan 1 failure
 		if (lem->ecs.GetWaterSeparatorRPM() < 792.5) { lightlogic = true; } // Water separator failure
@@ -596,6 +601,9 @@ void LEM_CWEA::Timestep(double simdt) {
 
 		//CWEA PWR
 		SetLight(3, 6, 1);
+
+		//Reset non-latching relays
+		CO2PartialPressureHigh = false;
 	}
 
 	// CWEA TEST SWITCH FUNCTIONALITY
@@ -722,6 +730,8 @@ void LEM_CWEA::TurnOff()
 
 void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 {
+	char buffer[256];
+
 	oapiWriteLine(scn, start_str);
 
 	papiWriteScenario_bool(scn, "OPERATE", Operate);
@@ -753,6 +763,8 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS3", &LightStatus[3][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS4", &LightStatus[4][0], 8);
 	oapiWriteScenario_int(scn, "ECSFAILURECOUNT", ECSFailureCount);
+	sprintf(buffer, "%d", CO2PartialPressureHigh);
+	oapiWriteScenario_string(scn, "RELAYS", buffer);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -828,6 +840,11 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		}
 		else if (!strnicmp(line, "OXYGENCAUTFF3", 13)) {
 			OxygenCautFF3.LoadState(line, 13);
+		}
+		else if (!strnicmp(line, "RELAYS", 6)) {
+			int iTemp = 0;
+			sscanf(line, "%d", &iTemp);
+			CO2PartialPressureHigh = (iTemp != 0);
 		}
 
 		papiReadScenario_bool(line, "OPERATE", Operate);
@@ -1080,4 +1097,9 @@ double LEM_CWEA::GetDimmableLoad()
 	}
 	else
 		return 0.0;
+}
+
+bool LEM_CWEA::IsCO2PartialPressureHigh()
+{
+	return CO2PartialPressureHigh;
 }

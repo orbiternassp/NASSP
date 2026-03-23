@@ -26,7 +26,6 @@
 #if !defined(_PA_SATURN_H)
 #define _PA_SATURN_H
 
-
 //
 // I hate nested includes, but this is much easier than adding them to all the files
 // which need them.
@@ -485,7 +484,6 @@ public:
 		SRF_ORDEAL_ROTARY,
 		SRF_LV_ENG_S1B,
 		SRF_SPSMININDICATOR,
-		SRF_SPS_INJ_VLV,
 		SRF_SM_RCS_MODE,
 		SRF_THUMBWHEEL_GPI_PITCH,
 		SRF_THUMBWHEEL_GPI_YAW,
@@ -601,12 +599,12 @@ public:
 		SRF_VC_EMS_SCROLL_BUG,
 		SRF_VC_EMS_LIGHTS,
 		SRF_VC_INDICATOR,
+		SRF_VC_INDICATOR_LM,
 		SRF_VC_ECSINDICATOR,
 		SRF_VC_SEQUENCERSWITCHES,
 		SRF_VC_LVENGLIGHTS_S1B,
 		SRF_VC_SPS_FONT_BLACK,
 		SRF_VC_SPS_FONT_WHITE,
-		SRF_VC_SPS_INJ_VLV,
 		SRF_VC_SPSMAXINDICATOR,
 		SRF_VC_SPSMININDICATOR,
 		SRF_VC_THUMBWHEEL_LARGEFONTSINV,
@@ -1111,6 +1109,8 @@ public:
 	virtual void SetPrimECSTestHeaterPowerW(double power);
 	virtual void SetSecECSTestHeaterPowerW(double power);
 
+	virtual void StartCMPEVA();
+
 	///
 	/// Enable or disable generic Service Module systems based on current state.
 	/// \brief Check SM systems state.
@@ -1214,6 +1214,11 @@ public:
 	void SetSideHatchMesh();
 
 	///
+	/// \brief Set boost protective cover mesh
+	///
+	void SetBPCMesh(UINT idx);
+
+	///
 	/// \brief Set fwd hatch mesh
 	///
 	void SetFwdHatchMesh();
@@ -1238,6 +1243,8 @@ public:
 	/// \brief Set VC seats mesh
 	///
 	void SetVCSeatsMesh();
+
+	void SetVCCueCardsArrows();
 
 	void SetCOASMesh();
 
@@ -1306,6 +1313,13 @@ public:
 	void SetAnimations(double);
 	void DoMeshAnimation(AnimState &, UINT &, double, double);
 
+	void UpdatePointingArrow();
+	void UpdateSideHatchClickspots(const VECTOR3 &ofs);
+	void UpdateForwardHatchClickspots(const VECTOR3 &ofs);
+
+	void HideMeshGroup(int, int, bool);
+	void updateOrdealMshGrp(int, int, VECTOR3, VECTOR3, double);
+
 	//
 	// Flashlight for VC
 	//
@@ -1336,6 +1350,19 @@ public:
 
 	VECTOR3 runningLightsPos[8];
 	BEACONLIGHTSPEC runningLights[8];             // running lights
+
+	//
+    // CSM EVA
+    //
+	void ToggleCMPEVA();
+
+	void UpdateEVA(void);
+
+	virtual void StopEVA();
+
+	OBJHANDLE hCMPEVA;
+
+	int cmpeva; //CMP EVA Started or not
 
 protected:
 
@@ -1626,6 +1653,7 @@ protected:
 	/// VC animations
 
 	/// Waste Disposal
+	MGROUP_ROTATE *wasteDisposalKnob;
 	UINT wasteDisposalAnim;
 	AnimState wasteDisposalState;
 
@@ -1638,7 +1666,7 @@ protected:
 	AnimState altimeterCoverState;
 
 	/// Ordeal
-	UINT ordealAnim;
+	UINT ordealMeshAnim;
 	AnimState ordealState;
 
 	/// DSKY_Glareshade
@@ -1989,10 +2017,10 @@ protected:
 	//
 
 	SwitchRow SPSInjectorValveIndicatorsRow;
-	IndicatorSwitch SPSInjectorValve1Indicator;
-	IndicatorSwitch SPSInjectorValve2Indicator;
-	IndicatorSwitch SPSInjectorValve3Indicator;
-	IndicatorSwitch SPSInjectorValve4Indicator;
+	SaturnSPSInjectorValveIndicator SPSInjectorValve1Indicator;
+	SaturnSPSInjectorValveIndicator SPSInjectorValve2Indicator;
+	SaturnSPSInjectorValveIndicator SPSInjectorValve3Indicator;
+	SaturnSPSInjectorValveIndicator SPSInjectorValve4Indicator;
 
 	SwitchRow SPSTestSwitchRow;
 	ThreePosSwitch SPSTestSwitch;
@@ -3905,6 +3933,7 @@ protected:
 	O2SMSupply O2SMSupply;
 	CrewStatus CrewStatus;
 	SaturnSideHatch SideHatch;
+	BoostProtectiveCover BPC;
 	SaturnWaterController WaterController;
 	SaturnGlycolCoolingController GlycolCoolingController;
 	SaturnLMTunnelVent LMTunnelVent;
@@ -4049,8 +4078,14 @@ protected:
 	int seatsunfoldedidx;
 	int coascdridx;
 	int coascdrreticleidx;
+	int cmvccuecardsarrowsidx;
+	int hcmPointingArrowidx;
+
 	DEVMESHHANDLE vcmesh;
+	bool ViewCueCardArrows;
 	int smidx;
+
+	VCPointingArrow pointingArrow;
 
 	double DockAngle;
 
@@ -4282,6 +4317,12 @@ protected:
 	void SetVCLighting(UINT meshidx, DWORD *matList, int EmissionMode, double state, int cnt);
 	void SetVCLighting(UINT meshidx, int material, int EmissionMode, double state, int cnt);
 #endif
+
+//	CAMERAHANDLE hFDAICam = NULL;
+//	SURFHANDLE srfFDAICamTexture;
+//	SURFHANDLE hFDAISurf;
+
+//	void InitFDAICustomCamera(void);
 
 	//
 	// Systems functions.
@@ -4785,5 +4826,7 @@ extern MESHHANDLE hcmseatsfolded;
 extern MESHHANDLE hcmseatsunfolded;
 extern MESHHANDLE hcmCOAScdr;
 extern MESHHANDLE hcmCOAScdrreticle;
+extern MESHHANDLE hcmCueCardsArrows;
+extern MESHHANDLE hcmPointingArrow;
 
 #endif // _PA_SATURN_H
