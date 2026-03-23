@@ -1466,7 +1466,7 @@ void LEM::RegisterActiveAreas()
 		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_FORWARDHATCHHANDLE, _V(-0.3796, -0.6482, 1.5752) + ofs, _V(-0.2240, -0.6481, 1.5751) + ofs, _V(-0.3797, -0.4924, 1.5752) + ofs, _V(-0.2238, -0.4926, 1.5750) + ofs);
 	}
 
-	if (viewpos != LMVIEW_DSKY) { // To avoid that my DSKY clicks plays with the forward dump valve as well
+	if (viewpos == LMVIEW_LMP || viewpos == LMVIEW_CBRIGHT || viewpos >= LMVIEW_FWDHATCH) { // Allow clicking the forward hatch relief valve only in certain view positions
 		oapiVCRegisterArea(AID_VC_FORWARDHATCHRELIEFVALVE, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN);
 		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_FORWARDHATCHRELIEFVALVE, _V(0.2532, -0.4597, 1.5752) + ofs, _V(0.1735, -0.4598, 1.5751) + ofs, _V(0.2531, -0.5396, 1.5751) + ofs, _V(0.1734, -0.5395, 1.5750) + ofs);
 	}
