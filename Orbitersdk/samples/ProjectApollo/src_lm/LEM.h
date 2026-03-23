@@ -494,6 +494,7 @@ public:
 	void SetTrackLight();
 	void SetDockingLights();
 	void SetCOAS();
+	void SetVCCueCardsArrows();
 	void SetWindowShades();
 	double GetMissionTime() { return MissionTime; }; // This must be here for the MFD can't use it.
 	int GetApolloNo() { return ApolloNo; }
@@ -1741,6 +1742,7 @@ protected:
 	UINT windowshadesidx;
 	UINT xpointershadesidx;
 	UINT hLMPointingArrowidx;
+	int LMvccuecardsarrowsidx;
 
 	DEVMESHHANDLE probes;
 	DEVMESHHANDLE deflectors;
@@ -1749,6 +1751,7 @@ protected:
 	DEVMESHHANDLE cdrmesh;
 	DEVMESHHANDLE lmpmesh;
 	DEVMESHHANDLE vcmesh;
+	bool ViewCueCardArrows;
 
 	// VC animations
 	UINT anim_fdaiR_cdr, anim_fdaiR_lmp;
@@ -2183,6 +2186,7 @@ extern MESHHANDLE hLMDescentNoLeg;
 extern MESHHANDLE hLMAscent;
 extern MESHHANDLE hLMVC;
 extern MESHHANDLE hLMPointingArrow;
+extern MESHHANDLE hLMCueCardsArrows;
 
 extern void LEMLoadMeshes();
 

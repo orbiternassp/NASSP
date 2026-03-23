@@ -1939,6 +1939,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_LMVC_POINTINGARROW:
 		UpdatePointingArrow();
+		SetVCCueCardsArrows();
 		return true;
 
 	case AID_VC_LM_CWS_LEFT:
