@@ -1735,18 +1735,18 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, VC_MAT_DEDA_Light,  MAT_LIGHT, 1, 1);
 		}
 
+#define XP_LIT_ON  (std::max)(lca.GetNumericVoltage() / 115.0, 0.25)
+#define XP_LIT_OFF  0.25
+
         //Tapemeter Lights
         if (AltRngMonSwitch.GetState() == TOGGLESWITCH_DOWN) {
-            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, (lca.GetNumericVoltage() / 115.0), 1);
-            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, 0.25, 1);
+            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, XP_LIT_ON, 1);
+            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, XP_LIT_OFF, 1);
 		}
         else {
-            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, (lca.GetNumericVoltage() / 115.0), 1);
-            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, 0.25, 1);
+            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, XP_LIT_ON, 1);
+            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, XP_LIT_OFF, 1);
 		}
-
-#define XP_LIT_ON  lca.GetNumericVoltage() / 115.0
-#define XP_LIT_OFF  0.25
 
 		// XPointer Lights CDR
         if (RateErrorMonSwitch.GetState() == TOGGLESWITCH_UP) {								// RATE ERR MON -> RNDZ RADAR
@@ -1829,10 +1829,10 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}		
 
         if (TempPressMonRotary.GetState() == 0) {
-            SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, (lca.GetNumericVoltage() / 115.0), 1);
+            SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, XP_LIT_ON, 1);
         }
         else {
-            SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, 0.25, 1);
+            SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, XP_LIT_OFF, 1);
         }
 
 		return true;
