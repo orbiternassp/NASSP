@@ -464,11 +464,27 @@ The output from the GPM Processor is a display containing such maneuver informat
 \subsubsection{Buttons}
 
 \textbf{SET:} Make an input for the GPM processor.\\
-\textbf{<<:} Move the marker down.\\  
-\textbf{>>:} Move the marker up.\\
+\textbf{$<<$:} Move the marker down.\\  
+\textbf{$>>$:} Move the marker up.\\
 \textbf{CLC:} Calculate the maneuver.\\
 \textbf{MPT:} Create finite maneuver from impulsive burn.\\
 \textbf{BCK:} Go back to the main menu.\\
+
+Error codes:\\
+
+\begin{tabular}{p{3cm} p{10cm}}
+\underline{Code}&\underline{Error Description}\\
+0&No error\\
+1&Maneuver cannot be performed in this orbit\\
+2&Maneuver cannot be performed at this point in the orbit\\
+3&AEG failed to converge\\
+4&Unrecoverable AEG error\\
+5&Unable to obtain libration matrix\\
+6&Unable to advance to selenographic argument of latitude\\
+7&PMMAPD error for current apoapsis/periapsis\\
+8&PMMAPD error for resultant apoapsis/periapsis\\ 
+9&Resultant orbit non-elliptical\\
+\end{tabular}
 \newpage
 \subsection{TLI Planning}
 \subsubsection{Introduction}
@@ -1345,6 +1361,24 @@ for a vector fetch, a time of abort, and maneuver targets. This type of manual e
 \textbf{GETL:} GET at drogue chute deployment using the primary entry mode:\\
 \textbf{MD:} Miss distance of the primary entry mode to the target splashdown coordinates. In nautical miles.\\
 
+Error codes:\\
+
+\begin{tabular}{p{3cm} p{10cm}}
+\underline{Code}&\underline{Error Description}\\
+0&No error\\
+1&$\Delta$V of main engine $\le$ 0\\
+2&Coast numerical integrator failed backing up to ignition time\\
+6&Forward iterator failed to converge\\
+7&Error in conversion from ECI to ECT coordinates\\
+8&Coast numerical integrator failed in PMMATC\\
+9&Maneuver numerical integrator failed in PMMATC\\
+10&REFSMMAT not available\\
+11&Illegal maneuver code\\
+12&Invalid vehicle configuration\\
+13&Invalid number of ullage quads\\
+14&Invalid entry mode\\
+\end{tabular}
+
 \newpage
 \subsection{Skylab Launch Window Processor}
 
@@ -1714,24 +1748,86 @@ $\dagger$PHA = First segment phase angle limit\\
 \textbf{J11} Slope value in first segment calculation of insertion semi-major axis. DEDA address 673.\\
 \newpage
 \section{Uplinks}
+A variety of AGC and LVDC uplinks are supported by the RTCC MFD.  These are selected by their load type number. Here is a list of the available uplinks:\\
 
-\subsection{State Vector}
-
+CMC:
+\begin{itemize}
+\item 00: CSM Navigation Update
+\item 06: Landing Site Vector
+\item 07: Time Increment
+\item 08: Liftoff Time Update
+\item 09: LM Navigation Update
+\item 10: External Delta-V Update
+\item 12: REFSMMAT Update
+\item 13: Retrofire External Delta-V Update
+\item 14: Entry Update
+\item 18: Erasable Memory Update A
+\item 19: Erasable Memory Update B
+\end{itemize}
+LGC:\\
+\begin{itemize}
+\item 20: LM Navigation Update
+\item 21: CSM Navigation Update
+\item 22: External Delta-V Update
+\item 23: REFSMMAT Update
+\item 24: Time Increment
+\item 25: Liftoff Time Update
+\item 26: Landing Site Vector
+\item 27: Descent Update
+\item 28: Erasable Memory Update A
+\item 29: Erasable Memory Update B
+\end{itemize}
+\newpage
+LVDC:\\
+\begin{itemize}
+\item 49: LVDC Navigation Update
+\end{itemize}
+\newpage
+\subsection{AGC Navigation Update}
 \subsubsection{Explanation}
-
-The state vector of the vessel can be calculated and uplinked here. Additionally to the functionality in the Project Apollo MFD, this MFD can calculate a state vector in the future, which sometimes was used during the Apollo program to prevent an internal state vector integration of the AGC.\\
-The AGC has two slots for state vectors: CSM and LM. For the CSM the MFD will prevent uplinking a state vector that is not the vessel itself. The vessel for the LM can be freely chosen.\\
-
+The state vector of the vessel can be calculated and uplinked here. The AGC has two slots for state vectors: CSM and LM.  Both CMC and LGC have these two slots.
 \subsubsection{Buttons}
-
-\textbf{MOD:} Choose  between calculating the state vector "now" and at a specified GET.\\
-\textbf{TIM:} Set the desired GET for the state vector in GET mode.\\
+\textbf{TIM:} Set the desired GET for the state vector.\\
 \textbf{TGT:} Set the target vessel.\\
-\textbf{SLT:} Switch between the slots.\\
 \textbf{CLC:} Calculate a state vector.\\
 \textbf{UPL:} Uplinks the calculated data to the AGC.\\
 \textbf{BCK:} Go back to the main menu.\\
-
+\subsection{External Delta-V Uplink}
+\subsubsection{Explanation}
+Uplink for burn data calculated with any of the RTCC maneuver targeting processors.
+\subsubsection{Buttons}
+\textbf{CLC:} Calculate the uplink data.\\
+\textbf{UPL:} Uplinks the calculated data to the AGC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\subsection{Time Increment}
+\subsubsection{Explanation}
+Uplink to adjust the CMC or LGC clock. Due to clock drift the clock could become misaligned with the actual mission elapsed time. This MFD page also contains a little utility calculation to calculate the current clock error. This calculated time can then be input for the uplink.
+\subsubsection{Buttons}
+\textbf{CLC:} Calculate the uplink data.\\
+\textbf{UPL:} Uplinks the calculated data to the AGC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\subsection{Liftoff Time Update}
+\subsubsection{Explanation}
+Uplink to adjust the time reference in the AGC. This will change the liftoff time (TEPHEM), the state vector times and the AGC clock. The MFD page has a calculation utility to calculate the change in liftoff time required to get to a specific liftoff time reference.\\
+\subsubsection{Buttons}
+\textbf{CLC:} Calculate the uplink data.\\
+\textbf{UPL:} Uplinks the calculated data to the AGC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\subsection{REFSMMAT Uplink}
+\subsubsection{Explanation}
+Uplink to the AGC to change the REFSMMAT. There are two types of REFSMMAT uplinks. The actual REFSMMAT can be changed directly, which is usually only desired on an initial LM activation. The usual case is to uplink a desired REFSMMAT, which can then get used in a P52 option 1 to realignment the IMU from a previously already existing alignment.
+\subsubsection{Buttons}
+\textbf{CLC:} Calculate the uplink data.\\
+\textbf{UPL:} Uplinks the calculated data to the AGC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\subsection{Descent Update}
+\subsubsection{Explanation}
+The LGC only has a lunar landing time stored that is used as an initial guess for the P63 ignition algorithm. The time can be uplinked with this MFD page.
+\subsubsection{Buttons}
+\textbf{CLC:} Calculate the uplink data.\\
+\textbf{UPL:} Uplinks the calculated data to the AGC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\newpage
 \section{Mission Planning}
 
 The mission plan table (MPT) is the central planning tool in the RTCC for future maneuvers. The RTCC has two MPTs, one for the CSM and one for the LM, which are related through undocking and docking maneuvers. Each MPT consists of a table header and data blocks for each individual maneuver. The table header has the initial vehicle configuration (combinations of CSM, Saturn and LM ascent and/or descent stages) and initial weights, area (for drag calculations) and propellant. Each maneuver block has data describing the maneuver and updates weights and propellant.\\
@@ -2897,7 +2993,35 @@ NV\textsubscript{2}&Number of vectors used in interpolation for base vector for 
 Trajectory Update Number&Update number associated with subject vehicle ephemeris&&(2)\\
 \end{tabular}
 \end{center}
+
+\subsubsection{Error Codes}
+
+\begin{tabular}{p{1cm} p{12cm}}
+\underline{Code}&\underline{Error Description}\\
+0&No error\\
+1&The trajectory for subject vehicle is not generated\\
+2&The Mission Plan table is either in an update state or inconsistent with trajectory update number\\
+3&The revolution defining times table is either in an update state or is inconsistent with trajectory update number\\
+4&The main ephemeris is in update status\\
+5&The revolution number on the MED U13 is less than the first available revolution defining time\\
+6&The revolution number on the MED U13 is greater than the last available revolution defining time\\
+7&The revolution number on the U13 MED is valid; however, the longitude crossing requested is outside the range of the ephemeris\\
+8&The time on the U14 MED precedes the start of the ephemeris\\
+9&The time on the U14 MED exceeds the end of the ephemeris\\
+10&The revolution number on the U12 MED is smaller than the first available revolution defining time\\
+11&The revolution number on the U12 MED is greater than the last revolution defining time\\
+12&The time on the U12 MED precedes the start of the ephemeris\\
+13&The time on the U12 MED exceeds the end of the ephemeris\\
+14&The maneuver number requested is greater than the number of maneuvers in the Mission Plan Table\\
+15&The base vector selected for predicted apogee/perigee computation was rejected by the Analytical Ephemeris Generator\\
+16&The base vector selected for upcoming apogee/perigee computation was rejected by the Analytical Ephemeris Generator\\
+17&No precession/nutation matrix is available for subject time\\
+18&Open\\
+19&Present position data not initialized in Time Constraints Table\\
+20&End of ephemeris reached\\
+\end{tabular}
 \newpage
+
 \subsection{Mission Plan Table (MSK 0047)}
 
 \subsubsection{Function}
@@ -3170,7 +3294,24 @@ IE & Inclination angle with respect to the earth at vacuum perigee & deg & (3)\\
 LN & Geographic longitude of the earth return ascending node & deg & (3)\\
 \end{tabular}
 \end{center}
+\subsubsection{Error Codes}
 
+\begin{tabular}{p{1cm} p{12cm}}
+\underline{Code}&\underline{Error Description}\\
+0&No error\\
+1&The display has not been initialized via MED U00\\
+2.&he trajectory for subject vehicle is not generated\\
+3&The time on the U01 exceeds the end of the ephemeris\\
+4&The time on the U01 precedes the start of the ephemeris\\
+5&The main ephemeris is in an update status\\
+6&The Mission Plan Table is either in an update state or is inconsistentwith the trajectory update number\\
+7&The time on the U01 falls within a maneuver\\
+8&The maneuver number requested is greater than the number of maneuvers in the Mission Plan Table\\
+9&Maneuver on U01 not integrated through\\
+10&No precession/nutation is available for subject time\\
+11&Base vector rejected by Encke Integrator\\
+12&The base vector selected for apogee/perigee computation was rejected by the analytical ephemeris generator\\
+\end{tabular}
 \newpage
 \subsection{CSM Optics Support Table (MSK 0229)}
 
@@ -3492,6 +3633,107 @@ If any function of the VPS does not work as expected, an error might have occurr
 16&Invalid vehicle code from high-speed processor.\\
 17&Invalid vector source code from high-speed processor.\\
 18&Vector with lunar landing site indicator set cannot be routed to CSM ephemeris update.\\
+\end{tabular}
+\newpage
+\subsection{Checkout Monitor (MSK 1619)}
+\subsubsection{Function}
+The function of the Checkout Monitor Display, EMDCHECK, is to obtain or calculate various orbital parameters, system parameters, and mission planning quantities to aid in the RTCC program checkout.
+\newpage
+\subsubsection{Display Parameters}
+\begin{center}
+\begin{tabular} { L{2cm} L{8cm} L{6cm} }
+\underline{Quantity}&\underline{Definition}&\underline{Dimensions}\\
+VEH&Vehicle associated with parameters&\\
+GET&Ground elapsed time tag of the vector&hhh:mm:ss.ss\\
+GMT&Greenwich mean time tag of the vector&hhh:mm:ss.ss\\
+VID&Identification of the last vector used to update the ephemeris&\\
+X&&\\
+Y&Position vector&feet or Earth radii\\
+Z&&\\
+$\dot X$&\\
+$\dot Y$&Velocity vector&FPS or Earth radii per hour\\
+$\dot Z$&\\ 
+V\textsubscript{i} &Inertial velocity&FPS\\
+$\gamma$\textsubscript{i}&Inertial flight-path angle&deg.\\
+$\psi$&Inertial azimuth&deg.\\
+$\phi$\textsubscript{c}&Geocentric/selenographic latitude&deg.\\
+$\lambda$&Geographic/selenographic longitude&deg.\\
+h\textsubscript{s}&Height of vehicle above a spherical Earth or moon&NM\\
+h\textsubscript{a}&Height of apogee above a spherical Earth or moon&NM\\
+h\textsubscript{p}&Height of perigee above a spherical Earth or moon&NM\\
+h\textsubscript{o}&Height above an oblate Earth&NM\\
+h\textsubscript{o}&Height above an oblate Earth&ft.\\
+$\phi$\textsubscript{D}&Geodetic/selenographic latitude&deg.\\
+$\lambda$\textsubscript{D}&Mean geographic/true inertial longitude&deg.\\
+a&Semi-major axis of orbital ellipse&NM\\
+e&Eccentricity of orbital ellipse&\\
+i&Orbital inclination&deg.\\
+$\omega$\textsubscript{p}&Argument of perigee&deg.\\
+$\Omega$&Right ascension of the ascending node (inertial)&deg.\\
+$\nu$&True anomaly&deg.\\
+m&Mean anomaly&deg.\\
+R&Vector magnitude radius&NM\\
+R-DAY&Calendar day of liftoff&day:month:year\\
+A&Vehicle area at GET&sq. ft.\\
+K-FAC&Current atmospheric density multiplier\\
+CFG&Vehicle configuration at GET&\\
+RF&Reference frame the vector is in: ECT = true Earth, ECI = mean Earth, MCT = true moon, MCI = mean moon&\\
+\end{tabular}
+\end{center}
+\newpage
+\begin{center}
+\begin{tabular} { L{2cm} L{8cm} L{6cm} }
+\underline{Quantity}&\underline{Definition}&\underline{Dimensions}\\
+WT&Total weight for above configuration&lb.\\
+WC&Total CSM weight&lb.\\
+WL&Total LM weight&lb.\\
+SPS&Total SPS propellant remaining&lb.\\
+RCS\textsubscript{C}&Total CSM RCS propellant remaining&lb.\\
+APS&Total APS propellant remaining&lb.\\
+DPS&Total DPS propellant remaining&lb.\\
+RCS\textsubscript{L}&Total LM RCS propellant remaining&lb.\\
+J2&Total J2 propellant remaining&lb.\\
+LO/C&Lift-off time of the CSM&hhh:mm:ss.ss\\
+GRR/C&Guidance reference release time of the spacecraft&hhh:mm:ss.ss\\
+ZS/C&Time that S/C register was zeroed&hhh:mm:ss.ss\\
+GRR/S&Guidance reference release time of the S-IVB&hhh:mm:ss.ss\\
+LO/L&Lift-off time of the LM&hhh:mm:ss.ss\\
+ZS/L&Time that the LGC register was zeroed&hhh:mm:ss.ss\\
+ZS/A&Time that the AGS register was zeroed&hhh:mm:ss.ss\\
+EPHB&The begin time of the ephemeris&hhh:mm:ss.ss\\
+EPHE&The end time of the ephemeris&hhh:mm:ss.ss\\
+Update No.&To indicate the number of times that the ephemeris was updated&\\
+NV&Number of vectors used to interpolate for vector displayed&\\
+THT&MED threshold time&hhh:mm:ss.ss\\
+RTT&Reentry threshold time&hhh:mm:ss.ss\\
+LSB&Lunar stay begin time&hhh:mm:ss.ss\\
+LLS&Lunar stay termination&hhh:mm:ss.ss\\
+$\delta$L&Lunar declination&deg.\\
+VSF&Venting scale factor&\\
+EB2&Ephemeris begin time (other vehicle)&hhh:mm:ss.ss\\
+EE2&Ephemeris end time (other vehicle)&hhh:mm:ss.ss\\
+X\textsubscript{T}&Unit thrust vector assocated with&\\
+Y\textsubscript{T}&the requested maneuver&\\
+Z\textsubscript{T}& &\\
+Option&MED option to which displayed data corresponds (GET, GMT, MVI, MVE, RAD, ALT, FPA or LNG)&\\
+\end{tabular}
+\end{center}
+\newpage
+\subsubsection{Errors}
+\begin{tabular}{p{3cm} p{10cm}}
+\underline{Code}&\underline{Error Description}\\
+1&MED input is required.\\
+2&The Mission Plan Table is in an update state.\\
+3&Update number are inconsistent across trajectory related tables.\\
+4&Input time is outside of ephemeris range.\\
+5&Input time is during a maneuver.\\
+6&Open.\\
+7&Requested maneuver is not in MPT.\\
+8&No ephemeris is available for subject vehicle (Zero update number is in MPT.)\\
+9&Precession/nutation matrix is not available for time of concern\\
+10&End conditions not achieved within integration time limits.\\
+11&Base vector rejected by analytical ephemeris generator.\\
+12&Base vector rejected by Encke Integrator.\\
 \end{tabular}
 \newpage
 \section{Config Files}
