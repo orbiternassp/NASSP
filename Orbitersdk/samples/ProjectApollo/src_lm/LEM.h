@@ -135,6 +135,7 @@ public:
 	bool SignalFailure();
 	bool TimingFailure();
 	bool IsPowered();
+
 private:
 	void TapeDrive(double &Angle, double AngleCmd, double RateLimit, double simdt);
 	LEM *lem;					// Pointer at LEM
@@ -150,6 +151,10 @@ private:
 	double desRange, desRate;
 	double LGCaltUpdateTime, LGCaltRateUpdateTime;
 	double AGSaltUpdateTime, AGSaltRateUpdateTime;
+	double GetLRAltitude();
+	double GetLRAltitudeRate();
+	double GetRRRange();
+	double GetRRRate();
 
 	const double ALTSCALEFACTOR = 0.3048 * 2.345 * pow(2.0, -3.0);
 	const double ALTRATESCALEFACTOR = 0.3048 * pow(2.0, -4.0);
@@ -619,6 +624,8 @@ public:
 	virtual void StopEVA(bool isCDR);
 	virtual bool IsForwardHatchOpen() { return ForwardHatch.IsOpen(); }
 
+	virtual void StopSpaceEVA();
+
 	char *getOtherVesselName() { return agc.OtherVesselName;};
 	APSPropellantSource *GetAPSPropellant() { return &APSPropellant; };
 	DPSPropellantSource *GetDPSPropellant() { return &DPSPropellant; };
@@ -752,6 +759,12 @@ protected:
 	void SetPowerFailureLight(int m, bool state);
 
 	void DoMeshAnimation(AnimState &, UINT &, double, double);
+
+	void ToggleSpaceEVA();
+
+	void UpdateSpaceEVA(void);
+
+	OBJHANDLE hSPACEEVA;
 
 #ifdef _OPENORBITER
 	void SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt);
@@ -1617,6 +1630,8 @@ protected:
 
 	int CDRinPLSS;
 	int LMPinPLSS;
+
+	int spaceeva;
 
 #define LMVIEW_CDR		 0
 #define LMVIEW_LMP		 1

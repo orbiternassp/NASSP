@@ -1487,7 +1487,7 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	Cabin_Repress = 0; // Auto
 	// For simplicity's sake, we'll use a docked LM as it would be at IVT, at first docking the LM is empty!
 	Cabin_Press = 0; Cabin_Temp = 0;
-	Suit_Press = 0; Suit_Temp = 0;
+	Suit_Press = 0; SGD_Press = 0;  Suit_Temp = 0;
 	SuitCircuit_CO2 = 0; SGD_CO2 = 0;
 	Water_Sep1_RPM = 0; Water_Sep2_RPM = 0;
 	Suit_Circuit_Relief = 0;
@@ -1607,17 +1607,37 @@ double LEM_ECS::GetSuitPressurePSI()
 	return *Suit_Press * PSI;
 }
 
-double LEM_ECS::GetSensorCO2MMHg() {
-	
+double LEM_ECS::GetSensorCO2Voltage()
+{
 	if (!lem->ECS_CO2_SENSOR_CB.IsPowered()) return 0.0;
-	
+
+	double CO2PartialPressureMMHG, PressPSIA, Voltage;
+
+	if (!Suit_Press) {
+		Suit_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:PRESS");
+	}
+	if (!SGD_Press) {
+		SGD_Press = (double*)sdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:PRESS");
+	}
 	if (!SuitCircuit_CO2) {
 		SuitCircuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
 	}
 	if (!SGD_CO2) {
 		SGD_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:CO2_PPRESS");
 	}
-	return ((*SuitCircuit_CO2 + *SGD_CO2) / 2.0) * MMHG;
+	CO2PartialPressureMMHG = ((*SuitCircuit_CO2 + *SGD_CO2) / 2.0)* MMHG;
+	PressPSIA = (*Suit_Press + *SGD_Press) / 2.0 * PSI;
+
+	//Function gives 0 V at 0 mm Hg, 2.274 V at 6.7 mm Hg (CWEA trip point) and 5.0 V at 30 mm Hg (maximum)
+	Voltage = 0.83679452562077151331 * pow(CO2PartialPressureMMHG, 0.52558391635993882975);
+
+	//Linearly scale voltage with total pressure, changes CWEA trip point from 6.7 mm Hg (5.0 PSIA) to 8.95 mm Hg (3.7 PSIA)
+	//The threshold voltage in the CWEA is 2.274 V which is supposed to be equivalent to 7.6 mm Hg
+	//With this linear function the pressure at which this is the case is probably a bit too low, 4.41 PSIA. TBD: More research into the sensor behavior
+	Voltage = Voltage * (1.0 + (PressPSIA - 5.0) * (1.0 / 1.16435 - 1.0) / (3.7 - 5.0));
+
+	//Limit to 0-5V
+	return max(0.0, min(5.0, Voltage));
 }
 
 double LEM_ECS::DescentWaterTankQuantity() {

@@ -1417,6 +1417,10 @@ struct MPTManeuver
 	VECTOR3 V_1;
 	double GMT_1;
 	
+	//Total configuration weight at maneuver initiation
+	double W_B;
+	//Total configuration weight at main engine on
+	double W_IG;
 	double TotalMassAfter;
 	double TotalAreaAfter;
 	double MainEngineFuelUsed;
@@ -2440,6 +2444,7 @@ private:
 	void TimeUpdate();
 public:
 	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);
+	void SLTPIPAD(const AP7TPIPADOpt &opt, SLTPI &pad);
 	void AP9LMTPIPAD(const AP9LMTPIPADOpt &opt, AP9LMTPI &pad);
 	void AP9LMCDHPAD(const AP9LMCDHPADOpt &opt, AP9LMCDH &pad);
 	void TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad);
@@ -2450,7 +2455,7 @@ public:
 	void PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res);
 	double FindDH(VehicleDataBlock sv_A, VehicleDataBlock sv_P, double GMT_guess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
-	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
+	void EntryTargeting(const EntryOpt &opt, EntryResults &res);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
 	//RTCC module name PMMEPP
 	void TranslunarInjectionProcessor(bool mpt, EphemerisData *sv = NULL, PLAWDTOutput *WeightsTable = NULL);
@@ -2536,7 +2541,7 @@ public:
 
 	void LunarAscentProcessor(const LunarAscentProcessorInputs &in, LunarAscentProcessorOutputs &out);
 	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, VehicleDataBlock sv, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, VehicleDataBlock &sv_PDI, VehicleDataBlock &sv_land, double &dv);
-	void EntryUpdateCalc(SV sv0, double entryrange, bool highspeed, EntryResults *res);
+	int EntryUpdateCalc(EphemerisData sv0, double entryrange, bool highspeed, EntryResults &res);
 	void PMMDKI(SPQOpt &opt, SPQResults &res);
 	//Velocity maneuver performer
 	void PCMVMR(AEGDataBlock &CHASER, AEGDataBlock &TARGET, double DELVX, double DELVY, double DELVZ, double mu, double &Pitch, double &Yaw, int I);
@@ -2849,7 +2854,7 @@ public:
 	void EMMDYNMC(int L, int queid, int ind = 0, double param = 0.0);
 	//FDO Space Digitals
 	int EMDSPACE(int queid, int option = 0, double val = 0.0, double incl = 0.0, double ascnode = 0.0);
-	int EMDSPACENoMPT(SV sv0, int queid, double gmt, double incl = 0.0, double ascnode = 0.0);
+	int EMDSPACENoMPT(VehicleDataBlock sv0, int queid, double gmt, double incl = 0.0, double ascnode = 0.0);
 	//Orbit Station Contact Generation Control
 	void EMSTAGEN(int L);
 	//Generalized Contact Generator
@@ -3990,8 +3995,8 @@ public:
 	{
 		EphemerisData sv_man_bef[4];
 		VECTOR3 V_man_after[4];
-		int num_man;
-		int plan[4];
+		int num_man = 0;
+		int plan[4]; //Maneuver vehicle. 1 = CSM, 3 = LEM
 		std::string code[4];
 	} PZLDPELM;
 
@@ -4939,7 +4944,7 @@ public:
 		int UpdateNo = 0;
 		int SequenceNo = 0;
 		std::string Site1, Site2;
-		double GET = 0.0;
+		double GenGET = 0.0;
 		int Verb = 71;
 		int Octals[20] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 		int VehID = 0;
@@ -5191,6 +5196,7 @@ public:
 
 private:
 	void AP7ManeuverPAD(const AP7ManPADOpt &opt, AP7MNV &pad);
+	void SLManeuverPAD(const AP7ManPADOpt &opt, SLMNV &pad);
 	void navcheck(VECTOR3 R, double GMT, int RBI, double &lat, double &lng, double &alt);
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);

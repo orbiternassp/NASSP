@@ -4352,13 +4352,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		Line(skp, CW, CH * 3, CW * 42, CH * 3);
 		Line(skp, CW, CH * 4, CW * 42, CH * 4);
-		Line(skp, (CW * 15) / 2, CH * 3, (CW * 15) / 2, CH * 28);
-		Line(skp, (CW * 31) / 2, CH * 3, (CW * 31) / 2, CH * 28);
-		Line(skp, (CW * 49) / 2, CH * 3, (CW * 49) / 2, CH * 28);
+		Line(skp, (CW * 15) / 2, CH * 3, (CW * 15) / 2, CH * 25);
+		Line(skp, (CW * 31) / 2, CH * 3, (CW * 31) / 2, CH * 25);
+		Line(skp, (CW * 49) / 2, CH * 3, (CW * 49) / 2, CH * 25);
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		SetMOCRFont(skp, 3, true);
-		Text(skp, 13, 1, "%04d", block->UpdateNo);
-		Text_GET_HHHMMSS(skp, 31, 1, block->GET);
+		Text(skp, 13, 1, "%04d", block->SequenceNo);
+		Text_GET_HHHMMSS(skp, 31, 1, block->GenGET);
 		Text(skp, 11, 2, block->MatrixID);
 		Text(skp, 32, 2, block->MatrixType == 2 ? "DESIRED" : "ACTUAL");
 		for (int i = 0; i < 024; i++)
@@ -4369,7 +4369,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			Text(skp, 40, 6 + i * 2, "%+.8lf", block->REFSMMAT.data[i]);
 		}
-		Text(skp, 10, 26, block->error);
+		Text(skp, 30, 26, block->error);
 	}
 	break;
 	case 54:

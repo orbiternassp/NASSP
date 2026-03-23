@@ -154,6 +154,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src_csm\saturn.h" />
+	<ClInclude Include="..\..\src_lm\LEM.h" />
     <ClInclude Include="..\..\src_csm\eva.h" />
     <ClInclude Include="..\..\src_aux\tracer.h" />
   </ItemGroup>

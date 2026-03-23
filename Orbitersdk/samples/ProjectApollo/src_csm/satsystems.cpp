@@ -336,6 +336,9 @@ void Saturn::SystemsInit() {
 	EntryBatteryA->WireTo(&BatteryChargerBatACircuitBraker);
 	EntryBatteryB->WireTo(&BatteryChargerBatBCircuitBraker);
 
+	BatCPWRCircuitBraker.WireTo(DiodeBatC);
+	BatCCHRGCircuitBraker.WireTo(&BatCPWRCircuitBraker);
+
 	//
 	// SCS Logic Buses
 	//
@@ -4186,5 +4189,13 @@ void Saturn::EnginesSoundTimestep() {
 	else
 	{
 		EngineS.stop();
+	}
+}
+
+void Saturn::StartCMPEVA()
+{
+	if (SideHatch.IsOpen() && !cmpeva)
+	{
+		ToggleCMPEVA();
 	}
 }

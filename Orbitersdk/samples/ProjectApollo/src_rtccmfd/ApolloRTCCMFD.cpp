@@ -3316,16 +3316,9 @@ void ApolloRTCCMFD::set_RTEDManualDV(VECTOR3 DV)
 	GC->rtcc->med_f81.XDV = DV * 0.3048;
 }
 
-void ApolloRTCCMFD::menuTransferSPQorDKIToMPT()
+void ApolloRTCCMFD::menuTransferLDPOrSPQorDKIToMPT()
 {
-	if (GC->rtcc->med_m70.Plan >= 0)
-	{
-		G->Transfer_SPQ_Or_DKI_To_MPT();
-	}
-	else
-	{
-		G->TransferDescentPlanToMPT();
-	}
+	G->Transfer_LDP_Or_SPQ_Or_DKI_To_MPT();
 }
 
 void ApolloRTCCMFD::menuBackToSPQorDKIPage()
@@ -3334,7 +3327,7 @@ void ApolloRTCCMFD::menuBackToSPQorDKIPage()
 	{
 		menuSetSPQPage();
 	}
-	else if (GC->rtcc->med_m70.Plan == 1)
+	else if (GC->rtcc->med_m70.Plan >= 1)
 	{
 		menuSetDKIPage();
 	}
@@ -4937,8 +4930,17 @@ void ApolloRTCCMFD::menuMPTUpdate()
 
 void ApolloRTCCMFD::menuMPTTrajectoryUpdateCSM()
 {
+	if (GC->rtcc->pCSM)
+	{
+		sprintf(Buffer, "%s", GC->rtcc->pCSM->GetName());
+	}
+	else
+	{
+		sprintf(Buffer, "");
+	}
+
 	bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Choose vessel for the CSM ground tracking solution (leave blank for CSM selected on config page):", DifferentialCorrectionSolutionCSMInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Choose vessel for the CSM ground tracking solution:", DifferentialCorrectionSolutionCSMInput, Buffer, 50, (void*)this);
 }
 
 bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data)
@@ -4952,8 +4954,17 @@ bool DifferentialCorrectionSolutionCSMInput(void* id, char *str, void *data)
 
 void ApolloRTCCMFD::menuMPTTrajectoryUpdateLEM()
 {
+	if (GC->rtcc->pLM)
+	{
+		sprintf(Buffer, "%s", GC->rtcc->pLM->GetName());
+	}
+	else
+	{
+		sprintf(Buffer, "");
+	}
+
 	bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Choose vessel for the LM ground tracking solution (leave blank for LM selected on config page):", DifferentialCorrectionSolutionLEMInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Choose vessel for the LM ground tracking solution:", DifferentialCorrectionSolutionLEMInput, Buffer, 50, (void*)this);
 }
 
 bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data)
@@ -4965,34 +4976,20 @@ bool DifferentialCorrectionSolutionLEMInput(void* id, char *str, void *data)
 	return false;
 }
 
-bool ApolloRTCCMFD::set_DifferentialCorrectionSolution(char *str, bool csm)
+bool ApolloRTCCMFD::set_DifferentialCorrectionSolution(char* str, bool csm)
 {
 	//To update display immediately
 	GC->rtcc->VectorPanelSummaryBuffer.gmt = -10000000000000.0;
 
 	OBJHANDLE hVessel;
-	VESSEL *v = NULL;
+	VESSEL* v = NULL;
 
-	if (strcmp(str, "") == 0) //If str is empty, use CSM or LM from config page
+	hVessel = oapiGetVesselByName(str);
+	if (hVessel)
 	{
-		if (csm)
-		{
-			v = GC->rtcc->pCSM;
-		}
-		else
-		{
-			v = GC->rtcc->pLM;
-		}
+		v = oapiGetVesselInterface(hVessel);
 	}
-	else //Otherwise use the input string to get the vessel name
-	{
-		hVessel = oapiGetVesselByName(str);
-		if (hVessel)
-		{
-			v = oapiGetVesselInterface(hVessel);
-		}
-		else return false;
-	}
+	else return false;
 
 	if (v)
 	{
@@ -5164,7 +5161,7 @@ bool MoveToUsableTableLEMInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuEphemerisUpdateCSM()
 {
 	bool EphemerisUpdateCSMInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Move CSM vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateCSMInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Move CSM vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateCSMInput, "DC", 50, (void*)this);
 }
 
 bool EphemerisUpdateCSMInput(void* id, char *str, void *data)
@@ -5211,7 +5208,7 @@ bool EphemerisUpdateCSMInput(void* id, char *str, void *data)
 void ApolloRTCCMFD::menuEphemerisUpdateLEM()
 {
 	bool EphemerisUpdateLEMInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Move LEM vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateLEMInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Move LEM vector to ephemeris update. Input: CMC, LGC, AGS, IU, HSR or DC", EphemerisUpdateLEMInput, "DC", 50, (void*)this);
 }
 
 bool EphemerisUpdateLEMInput(void* id, char *str, void *data)

@@ -47,6 +47,7 @@ public:
 	void DeleteAnimations();
 
 	bool IsPowered();
+	void SelfTest(int LMNumber);
 
 	LEM* lem;					// Pointer at LEM
 	h_Radiator* antenna;		// Antenna (loses heat into space)
@@ -61,4 +62,7 @@ public:
 	UINT anim_LR;				// LR Animation
 	double lr_proc;				// LR Animation State
 	double lr_proc_last;		// Previous LR Animation State
+
+private:
+	double rangetest, ratetest[3], altxmtr, velxmtr;
 };
