@@ -1090,6 +1090,9 @@
 #define AID_LMVC_LIGHTING      3831
 #define AID_LMVC_POINTINGARROW 3832
 
+// Integral Lights Cue Card
+#define AID_LMVC_CUE_CARDS_LIGHTING  3833
+
 // VC Active Areas (Panel 11)
 #define AID_VC_PANEL_11			((id >= 4100) && (id <= 4199))
 // Row 1

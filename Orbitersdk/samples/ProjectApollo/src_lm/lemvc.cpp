@@ -1047,6 +1047,9 @@ void LEM::RegisterActiveAreas()
 	// LMVC Lighting
 	oapiVCRegisterArea(AID_LMVC_LIGHTING,  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
+	// Cue Cards Lighting
+	oapiVCRegisterArea(AID_LMVC_CUE_CARDS_LIGHTING, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
 	// Pointing arrow
 	oapiVCRegisterArea(AID_LMVC_POINTINGARROW, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
@@ -1941,6 +1944,24 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		UpdatePointingArrow();
 		SetVCCueCardsArrows();
 		return true;
+
+	case AID_LMVC_CUE_CARDS_LIGHTING:
+	{
+		double floodRotaryValue = 0.0; //FloodRotarySwitch.GetOutput();
+
+		//Get list of mesh indices
+		std::vector<UINT> indices;
+		CueCards.GetMeshIndexList(indices);
+		//Assume cue cards only have material 0
+		DWORD ccmat[1] = { 0 };
+
+		for (unsigned i = 0; i < indices.size(); i++)
+		{
+			SetVCLighting(indices[i], ccmat, MAT_LIGHT, floodRotaryValue, 1);
+		}
+
+		return true;
+	}
 
 	case AID_VC_LM_CWS_LEFT:
 		CWEA.RedrawLeft(surf, srf[SFR_VC_CW_LIGHTS], TexMul);
