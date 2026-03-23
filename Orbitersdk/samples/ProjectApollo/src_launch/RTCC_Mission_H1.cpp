@@ -3427,8 +3427,11 @@ bool RTCC::CalculationMTP_H1(int fcn, LPVOID& pad, char* upString, char* upDesc,
 
 			AP11MNV* form = (AP11MNV*)pad;
 
-			//Longitude control before EI-24h
-			if (MCCtime < res.GET400K - 24.0 * 3600.0)
+			// Calculate the longitude on the MPL at the FCUA splashdown latitude
+			entopt.lng = EntryCalculations::MPL2(res.latitude);
+
+			//If time to EI is more than 24 hours and the splashdown longitude is not within 2° of desired, then perform a longitude control burn
+			if (MCCtime < calcParams.EI - 24.0 * 3600.0 && abs(res.longitude - entopt.lng) > 2.0 * RAD)
 			{
 				entopt.type = 1;
 				entopt.t_Z = res.GET400K;
