@@ -1313,7 +1313,7 @@ double LEM_LCA::GetAnnunVoltage()
 	return 0.0;
 }
 
-double LEM_LCA::GetAnnunDimPct()
+double LEM_LCA::GetAnnunOutput()
 {
 	if (GetAnnunVoltage() > 2.0)
 	{
@@ -1340,6 +1340,11 @@ double LEM_LCA::GetNumericVoltage()
 	return 0.0;
 }
 
+double LEM_LCA::GetNumericOutput()
+{
+	return GetNumericVoltage() / 115.0;
+}
+
 double LEM_LCA::GetIntegralVoltage()
 {
 	if (lem->INTGL_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
@@ -1356,6 +1361,11 @@ double LEM_LCA::GetIntegralVoltage()
 	}
 
 	return 0.0;
+}
+
+double LEM_LCA::GetIntegralOutput()
+{
+	return GetIntegralVoltage() / 75.0;
 }
 
 void LEM_LCA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
@@ -1419,23 +1429,23 @@ void LEM_UtilLights::SystemTimestep(double simdt)
 	//CDR Utility Lights Dim
 	if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_CENTER) {
 		UtlCB->DrawPower(2.2);
-		UtlLtgHeat->GenerateHeat(2.178);
+		UtlLtgHeat->GenerateHeat(2.178); //Need to determine if this heat load is emitted into cabin or LCA
 	}
 	//CDR Utility Lights Bright
 	else if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(6.15);
-		UtlLtgHeat->GenerateHeat(6.1);
+		UtlLtgHeat->GenerateHeat(6.1); //Need to determine if this heat load is emitted into cabin or LCA
 	}	
 
 	//LMP Utility Lights Dim
 	if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_CENTER) {
 		UtlCB->DrawPower(1.76);
-		UtlLtgHeat->GenerateHeat(1.74);
+		UtlLtgHeat->GenerateHeat(1.74); //Need to determine if this heat load is emitted into cabin or LCA
 	}
 	//LMP Utility Lights Bright
 	else if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(3.3);
-		UtlLtgHeat->GenerateHeat(3.267); 
+		UtlLtgHeat->GenerateHeat(3.267); //Need to determine if this heat load is emitted into cabin or LCA
 	}
 }
 
@@ -1473,7 +1483,7 @@ void LEM_COASLights::SystemTimestep(double simdt)
 {
 	if (IsPowered() && COASSwitch->GetState() != THREEPOSSWITCH_CENTER) {
 		COASCB->DrawPower(8.4);
-		COASHeat->GenerateHeat(8.4);
+		COASHeat->GenerateHeat(8.4); //Need to determine if this heat load is emitted into cabin or LCA
 	}
 }
 
@@ -1516,39 +1526,62 @@ bool LEM_FloodLights::IsHatchOpen()
 
 double LEM_FloodLights::GetLMPRotaryVoltage()
 {
-	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() != THREEPOSSWITCH_CENTER))
+	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
 	{
-		return (LMPRotary->GetValue() + 0.6154) / 0.3077;	//Returns 2V-28V, need to check if max dim is actually 2V
+		return LMPRotary->GetOutput() * FloodCB->Voltage();
+	}
+	else if (IsPowered() && FloodSwitch->GetState() == THREEPOSSWITCH_DOWN)
+	{
+		return FloodCB->Voltage();
 	}
 	return 0.0;
+}
+
+double LEM_FloodLights::GetLMPOutput() //Used to light LMP floods
+{
+	return GetLMPRotaryVoltage() / 28.0;
 }
 
 double LEM_FloodLights::GetCDRRotaryVoltage()
 {
-	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() != THREEPOSSWITCH_CENTER))
+	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
 	{
-		return (CDRRotary->GetValue() + 0.6154) / 0.3077;	//Returns 2V-28V, need to check if max dim is actually 2V
+		return CDRRotary->GetOutput() * FloodCB->Voltage();
+	}
+	else if (IsPowered() && FloodSwitch->GetState() == THREEPOSSWITCH_DOWN)
+	{
+		return FloodCB->Voltage();
 	}
 	return 0.0;
 }
 
-double LEM_FloodLights::GetALLPowerDraw()	//These lamps are not dimmable
+double LEM_FloodLights::GetCDROutput() //Used to light CDR floods
+{
+	return GetCDRRotaryVoltage() / 28.0;
+}
+
+double LEM_FloodLights::GetSideOutput() //Can be used to light Panel 11, 14, 16 floods
 {
 	if (IsPowered() && FloodSwitch->GetState() == THREEPOSSWITCH_DOWN)
 	{
-		return 50.626;  //34 lamps at 1.489W/lamp 
+		return FloodCB->Voltage() / 28.0;
 	}
 	return 0.0;
+}
+
+double LEM_FloodLights::GetSidePowerDraw()	//These lamps are not dimmable
+{
+	return GetSideOutput() * 50.626;  //34 lamps at 1.489W/lamp 
 }
 
 double LEM_FloodLights::GetOVHDFWDPowerDraw()	//Dimmable CDR and LMP lamps
 {
-	return (GetLMPRotaryVoltage() + GetCDRRotaryVoltage()) * 0.319;  //Assumes linear scaling, 12 lamps at 1.489W/lamp
+	return ((GetCDROutput() + GetLMPOutput()) / 2.0) * 17.868;  //Assumes linear scaling, 6 CDR lamps and 6 LMP lamps at 1.489W/lamp
 }
 
 double LEM_FloodLights::GetPowerDraw()
 {
-	return (GetOVHDFWDPowerDraw() + GetALLPowerDraw());
+	return (GetOVHDFWDPowerDraw() + GetSidePowerDraw());
 }
 
 void LEM_FloodLights::SystemTimestep(double simdt)

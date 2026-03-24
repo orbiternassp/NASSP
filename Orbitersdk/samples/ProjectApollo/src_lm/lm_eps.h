@@ -344,9 +344,11 @@ public:
 
 	double GetCompDockVoltage();
 	double GetAnnunVoltage();
-	double GetAnnunDimPct();
+	double GetAnnunOutput();
 	double GetNumericVoltage();
+	double GetNumericOutput();
 	double GetIntegralVoltage();
+	double GetIntegralOutput();
 protected:
 	bool HasDCPower;
 	double DCOutputVoltage;
@@ -406,7 +408,10 @@ public:
 	bool IsHatchOpen();
 	double GetLMPRotaryVoltage();
 	double GetCDRRotaryVoltage();
-	double GetALLPowerDraw();
+	double GetLMPOutput();
+	double GetCDROutput();
+	double GetSideOutput();
+	double GetSidePowerDraw();
 	double GetOVHDFWDPowerDraw();
 	double GetPowerDraw();
 protected:

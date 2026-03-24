@@ -1686,7 +1686,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 		// First Darken All Lights
 //		double floodRotaryValue = 0.0; // FloodLights.GetCDRRotaryVoltage() / 28.0;
-		double floodRotaryValue = (FloodLights.GetCDRRotaryVoltage() + FloodLights.GetLMPRotaryVoltage()) / 560.0;	// add some fake ambient light, max 10% of all floodlights
+		double floodRotaryValue = (FloodLights.GetCDROutput() + FloodLights.GetLMPOutput()) / 40.0;	// add some fake ambient light, max 10% of all floodlights
 		
 		/// Hardcode Materials with no Texture
 		SetVCLighting(vcidx,   VC_MAT_FDAI_errorneedle, MAT_LIGHT, floodRotaryValue, 1);
@@ -1694,22 +1694,22 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		// MAT_LIGHT changes the Brightness of the Material
 		// MAT_EMISSION changes the Brightness of the Material controlled by its _emis Texture
 		SetVCLighting(vcidx, FloodLights_LMVC, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(FloodLights_LMVC));
-		floodLight_Left->SetIntensity(FloodLights.GetCDRRotaryVoltage() / 28.0);
-		floodLight_Right->SetIntensity(FloodLights.GetLMPRotaryVoltage() / 28.0);
-		SetVCLighting(vcidx, IntegralLights_LMVC, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
-		SetVCLighting(vcidx, IntegralLights_LMVC_NoTex, MAT_LIGHT, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
+		floodLight_Left->SetIntensity(FloodLights.GetCDROutput());
+		floodLight_Right->SetIntensity(FloodLights.GetLMPOutput());
+		SetVCLighting(vcidx, IntegralLights_LMVC, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
+		SetVCLighting(vcidx, IntegralLights_LMVC_NoTex, MAT_LIGHT, lca.GetIntegralOutput() + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
 
 		if (LtgSidePanelsSwitch.GetState() == TOGGLESWITCH_UP){	// Panel 8, 11
-			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_8_11, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
-			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
+			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_8_11, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
+			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
 		}else{
 			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_8_11, MAT_EMISSION, 0, 1);
 			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, 0, 1);
 		}
 		if (SidePanelsSwitch.GetState() == TOGGLESWITCH_UP){ // Panel 12, 14, 16
-			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_12_14_16, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
-			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
-			SetVCLighting(vcidx, VC_MAT_Rotary_LM_Panel_12_14, MAT_EMISSION, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, 1);
+			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_12_14_16, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
+			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
+			SetVCLighting(vcidx, VC_MAT_Rotary_LM_Panel_12_14, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
 		}else{
 			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_12_14_16, MAT_EMISSION, 0, 1);
 			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, 0, 1);
@@ -1719,13 +1719,13 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		// LMVC Ordeal Lighting Switch
 		SetVCLighting(vcidx, IntegralLights_LMVC_Ordeal, MAT_EMISSION, ordeal.LightingPower(), NUM_ELEMENTS(IntegralLights_LMVC_Ordeal));
 
-		SetVCLighting(vcidx, NumericLights_LMVC,  MAT_LIGHT, (lca.GetNumericVoltage() / 115.0) + floodRotaryValue, NUM_ELEMENTS(NumericLights_LMVC));
+		SetVCLighting(vcidx, NumericLights_LMVC,  MAT_LIGHT, lca.GetNumericOutput() + floodRotaryValue, NUM_ELEMENTS(NumericLights_LMVC));
 
 		if (CWEA.GetMasterAlarm()) {
 			SetVCLighting(vcidx, MasterAlarm_NoTex,  MAT_LIGHT, 1, NUM_ELEMENTS(MasterAlarm_NoTex));
 		}
 
-		if (DSKY_CW_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_CW_Lights[0],  MAT_LIGHT, (lca.GetIntegralVoltage() / 75.0) + floodRotaryValue, DSKY_CW_Lights.size());
+		if (DSKY_CW_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_CW_Lights[0],  MAT_LIGHT, lca.GetIntegralOutput() + floodRotaryValue, DSKY_CW_Lights.size());
 
 		//External Meshes ***If Second parameter is 0 then the mesh contains only one Material***
 		SetVCLighting(xpointershadesidx, 0, MAT_LIGHT, floodRotaryValue, 1); //FloodLights_XPointer_Shades
@@ -1735,7 +1735,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, VC_MAT_DEDA_Light,  MAT_LIGHT, 1, 1);
 		}
 
-#define XP_LIT_ON  (std::max)(lca.GetNumericVoltage() / 115.0, 0.25)
+#define XP_LIT_ON  (std::max)(lca.GetNumericOutput(), 0.25)
 #define XP_LIT_OFF  0.25
 
         //Tapemeter Lights
