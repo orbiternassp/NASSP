@@ -1206,28 +1206,37 @@ LEM_LCA::LEM_LCA()
 	lem = NULL;
 	CDRAnnunDockCompCB = NULL;
 	LMPAnnunDockCompCB = NULL;
+	ACNumericsCB = NULL;
+	ACIntegralCB = NULL;
+	AnnunDockCompFeeder = NULL;
 	HasDCPower = false;
 	LCAHeat = 0;
-	AC_power_load = 0;
+	power_load = 0.0;
+	AC_num_power_load = 0.0;
+	AC_int_power_load = 0.0;
+	heat_load = 0.0;
 }
 
-void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, h_HeatLoad *lca_h)
+void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *dcfeeder, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h)
 {
 	lem = l;
 	CDRAnnunDockCompCB = cdrcb;
 	LMPAnnunDockCompCB = lmpcb;
+	ACNumericsCB = acnumcb;
+	ACIntegralCB = acintcb;
+	AnnunDockCompFeeder = dcfeeder;
 	LCAHeat = lca_h;
 }
 
 void LEM_LCA::DrawDCPower(double watts)
 {
 	power_load += watts;
-};
+}
 
-void LEM_LCA::DrawACPower(double watts)
+void LEM_LCA::DrawACNumPower(double watts)
 {
-	AC_power_load += watts;
-};
+	AC_num_power_load += watts;
+}
 
 void LEM_LCA::UpdateFlow(double dt)
 {
@@ -1238,51 +1247,47 @@ void LEM_LCA::UpdateFlow(double dt)
 
 	HasDCPower = false;
 
-	if (!lem->CMPowerToCDRBusRelayA && !lem->CMPowerToCDRBusRelayB && CDRAnnunDockCompCB->Voltage() > SP_MIN_DCVOLTAGE) //TBD: LM/SLA pressure switch
+	if (!lem->CMPowerToCDRBusRelayA && !lem->CMPowerToCDRBusRelayB && AnnunDockCompFeeder->Voltage() > SP_MIN_DCVOLTAGE) //TBD: LM/SLA pressure switch
 	{
-		CDR_Volts = CDRAnnunDockCompCB->Voltage();
 		HasDCPower = true;
-		csrc++;
 	}
 
-	if (LMPAnnunDockCompCB->Voltage() > SP_MIN_DCVOLTAGE)
+	//Integral power draw (46 total EL strips at 1.005W per strip)
+
+	AC_int_power_load += (17.078 * GetIntegralOutput());
+
+	if (lem->LtgSidePanelsSwitch.IsUp()) //CDR (13 EL Strips)
 	{
-		LMP_Volts = LMPAnnunDockCompCB->Voltage();
-		HasDCPower = true;
-		csrc++;
+		AC_int_power_load += (13.065 * GetIntegralOutput());
 	}
 
-	// Compute draw
-	if (csrc > 1) {
-		PowerDrawPerSource = power_load / 2.0;
-	}
-	else {
-		PowerDrawPerSource = power_load;
+	if (lem->SidePanelsSwitch.IsUp()) //LMP (16 EL Strips)
+	{
+		AC_int_power_load += (16.073 * GetIntegralOutput());
 	}
 
-	//sprintf(oapiDebugString(), "%f %f", power_load, AC_power_load);
-
-	if (CDR_Volts > 0) {
-		CDRAnnunDockCompCB->DrawPower(PowerDrawPerSource);
+	//DC Power Draw
+	if (HasDCPower == true)
+	{
+		AnnunDockCompFeeder->DrawPower(power_load);
 	}
-	if (LMP_Volts > 0) {
-		LMPAnnunDockCompCB->DrawPower(PowerDrawPerSource);
-	}
-
 	power_load = 0.0;
 
-	if (lem->NUM_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
+	//AC Numerics Power Draw
+	if (ACNumericsCB->Voltage() > SP_MIN_ACVOLTAGE)
 	{
-		lem->NUM_LTG_AC_CB.DrawPower(AC_power_load);
+		ACNumericsCB->DrawPower(AC_num_power_load);
 	}
+	AC_num_power_load = 0.0;
 
-	AC_power_load = 0.0;
-}
+	//AC Integral Power Draw
+	if (ACIntegralCB->Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		ACIntegralCB->DrawPower(AC_int_power_load);
+	}
+	AC_int_power_load = 0.0;
 
-
-void LEM_LCA::SystemTimestep(double simdt)
-{
-	//LCA Heating to be added
+	sprintf(oapiDebugString(), "DC: %f NUM: %f INT: %f Heat: %f", power_load, AC_num_power_load, AC_int_power_load, heat_load);
 }
 
 double LEM_LCA::GetCompDockVoltage()
@@ -1295,18 +1300,19 @@ double LEM_LCA::GetCompDockVoltage()
 	return 0.0;
 }
 
-double LEM_LCA::GetAnnunVoltage()
+double LEM_LCA::GetAnnunVoltage() //Returns annunciator voltage (transformed 28V to 6V)
 {
 	if (HasDCPower)
 	{
 		if (lem->LtgORideAnunSwitch.IsUp())
 		{
-			return 5.0;
+			//6V
+			return 6.0;
 		}
 		else
 		{
 			//2-5V
-			return (3.0 / 8.0*lem->LtgAnunNumKnob.GetValue() + 2.0);
+			return (3.0 * lem->LtgAnunNumKnob.GetOutput() + 2.0);
 		}
 	}
 
@@ -1315,7 +1321,7 @@ double LEM_LCA::GetAnnunVoltage()
 
 double LEM_LCA::GetAnnunOutput()
 {
-	if (GetAnnunVoltage() > 2.0)
+	if (GetAnnunVoltage() > 2.25) //5% of total to make full dim "off" TBD: will get actual values to use soon
 	{
 		return GetAnnunVoltage() / 5.0;
 	}
@@ -1324,16 +1330,17 @@ double LEM_LCA::GetAnnunOutput()
 
 double LEM_LCA::GetNumericVoltage()
 {
-	if (lem->NUM_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
+	if (ACNumericsCB->Voltage() > SP_MIN_ACVOLTAGE)
 	{
 		if (lem->LtgORideNumSwitch.IsUp())
 		{
+			//115V
 			return 115.0;
 		}
 		else
 		{
 			//20-110V
-			return (90.0 / 8.0*lem->LtgAnunNumKnob.GetValue() + 20.0);
+			return (90.0 * lem->LtgAnunNumKnob.GetOutput() + 20.0);
 		}
 	}
 
@@ -1342,21 +1349,26 @@ double LEM_LCA::GetNumericVoltage()
 
 double LEM_LCA::GetNumericOutput()
 {
-	return GetNumericVoltage() / 115.0;
+	if (GetNumericVoltage() > 25.75) //5% of total to make full dim "off" TBD: will get actual values to use soon
+	{
+		return GetNumericVoltage() / 115.0;
+	}
+	return 0.0;
 }
 
 double LEM_LCA::GetIntegralVoltage()
 {
-	if (lem->INTGL_LTG_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
+	if (ACIntegralCB->Voltage() > SP_MIN_ACVOLTAGE)
 	{
 		if (lem->LtgORideIntegralSwitch.IsUp())
 		{
-			return 75.0;
+			//115V
+			return ACIntegralCB->Voltage();
 		}
 		else
 		{
 			//15-75V
-			return (60.0 / 8.0*lem->LtgIntegralKnob.GetValue() + 15.0);
+			return (60.0 * lem->LtgIntegralKnob.GetOutput() + 15.0);
 		}
 	}
 
@@ -1365,7 +1377,25 @@ double LEM_LCA::GetIntegralVoltage()
 
 double LEM_LCA::GetIntegralOutput()
 {
-	return GetIntegralVoltage() / 75.0;
+	if (GetIntegralVoltage() > 25.75) //5% of total to make full dim "off" TBD: will get actual values to use soon
+	{
+		return GetIntegralVoltage() / 115.0;
+	}
+	return 0.0;
+}
+
+void LEM_LCA::SystemTimestep(double simdt)
+{
+	//Integral heat
+	heat_load += (AC_int_power_load * 0.206);
+
+	//Numerics heat
+	heat_load += (AC_num_power_load * 0.628);
+
+	//AnunDockComp heat
+	heat_load += (power_load * 0.534);
+
+	LCAHeat->GenerateHeat(heat_load);
 }
 
 void LEM_LCA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
@@ -1419,11 +1449,6 @@ return true;
 return false;
 }
 
-void LEM_UtilLights::Timestep(double simdt)
-{
-//Can be used to draw lit UTIL Lights
-}
-
 void LEM_UtilLights::SystemTimestep(double simdt)
 {
 	//CDR Utility Lights Dim
@@ -1472,11 +1497,6 @@ bool LEM_COASLights::IsPowered()
 		return true;
 	}
 	return false;
-}
-
-void LEM_COASLights::Timestep(double simdt)
-{
-	//Can be used to draw lit COAS
 }
 
 void LEM_COASLights::SystemTimestep(double simdt)

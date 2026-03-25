@@ -593,7 +593,6 @@ void LEM_CWEA::Timestep(double simdt) {
 	}
 	else
 	{
-
 		SetLightStates(0);
 
 		//Only for LM10+

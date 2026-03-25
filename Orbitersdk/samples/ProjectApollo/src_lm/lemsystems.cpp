@@ -371,7 +371,7 @@ void LEM::SystemsInit()
 	// Lighting
 	tle.Init(this, &LTG_TRACK_CB, &ExteriorLTGSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:TLEHEAT"));
 	DockLights.Init(this, &ExteriorLTGSwitch);
-	lca.Init(this, &CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LCAHEAT"));
+	lca.Init(this, &CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB, &NumDockCompLTGFeeder, &NUM_LTG_AC_CB, &INTGL_LTG_AC_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LCAHEAT"));
 	UtilLights.Init(this, &CDR_LTG_UTIL_CB, &UtilityLightSwitchCDR, &UtilityLightSwitchLMP, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	COASLights.Init(this, &COAS_DC_CB, &CDRCOASSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	FloodLights.Init(this, &LTG_FLOOD_CB, &FloodSwitch, &FloodRotary, &LtgFloodOhdFwdKnob, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
@@ -1608,8 +1608,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	ECA_4.Timestep(simdt);
 	tle.Timestep(simdt);
 	DockLights.Timestep(simdt);
-	UtilLights.Timestep(simdt);
-	COASLights.Timestep(simdt);
 	pfira.Timestep(simdt);
 
 	// Do this toward the end so we can see current system state

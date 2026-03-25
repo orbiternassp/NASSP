@@ -333,14 +333,14 @@ class LEM_LCA : public e_object
 {
 public:
 	LEM_LCA();
-	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, h_HeatLoad *lca_h);
+	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *dcfeeder, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h);
 	void UpdateFlow(double dt);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 
 	void DrawDCPower(double watts);
-	void DrawACPower(double watts);
+	void DrawACNumPower(double watts);
 
 	double GetCompDockVoltage();
 	double GetAnnunVoltage();
@@ -351,14 +351,19 @@ public:
 	double GetIntegralOutput();
 protected:
 	bool HasDCPower;
-	double DCOutputVoltage;
 
 	LEM *lem;
 	e_object *CDRAnnunDockCompCB;
 	e_object *LMPAnnunDockCompCB;
+	e_object *ACNumericsCB;
+	e_object *ACIntegralCB;
+	e_object *AnnunDockCompFeeder;
 	h_HeatLoad *LCAHeat;
 
-	double AC_power_load;
+	double power_load;
+	double AC_num_power_load;
+	double AC_int_power_load;
+	double heat_load;
 
 };
 
@@ -367,7 +372,6 @@ class LEM_UtilLights
 public:
 LEM_UtilLights();
 void Init(LEM *l, e_object *utl_cb, ThreePosSwitch *cdr_sw, ThreePosSwitch *lmp_sw, h_HeatLoad *util_h);
-void Timestep(double simdt);
 void SystemTimestep(double simdt);
 
 bool IsPowered();
@@ -385,7 +389,6 @@ class LEM_COASLights
 public:
 	LEM_COASLights();
 	void Init(LEM *l, e_object *coas_cb, ThreePosSwitch *coas_sw, h_HeatLoad *coas_h);
-	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
 	bool IsPowered();
