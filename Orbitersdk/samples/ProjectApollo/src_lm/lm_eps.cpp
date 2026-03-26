@@ -1381,7 +1381,7 @@ double LEM_LCA::GetIntegralOutput()
 
 void LEM_LCA::SystemTimestep(double simdt)
 {
-	LCAHeat->GenerateHeat(0.0);
+	LCAHeat->GenerateHeat(0.0); //LCA Heat
 }
 
 void LEM_LCA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
