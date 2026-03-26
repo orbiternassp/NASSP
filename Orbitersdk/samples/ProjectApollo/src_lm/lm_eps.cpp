@@ -1240,11 +1240,6 @@ void LEM_LCA::DrawACNumPower(double watts)
 
 void LEM_LCA::UpdateFlow(double dt)
 {
-	int csrc = 0;
-	double PowerDrawPerSource;
-	double CDR_Volts = 0;
-	double LMP_Volts = 0;
-
 	HasDCPower = false;
 
 	if (!lem->CMPowerToCDRBusRelayA && !lem->CMPowerToCDRBusRelayB && AnnunDockCompFeeder->Voltage() > SP_MIN_DCVOLTAGE) //TBD: LM/SLA pressure switch
@@ -1254,7 +1249,7 @@ void LEM_LCA::UpdateFlow(double dt)
 
 	//Integral power draw (46 total EL strips at 1.005W per strip)
 
-	AC_int_power_load += (17.078 * GetIntegralOutput());
+	AC_int_power_load = (17.078 * GetIntegralOutput());
 
 	if (lem->LtgSidePanelsSwitch.IsUp()) //CDR (13 EL Strips)
 	{
@@ -1265,6 +1260,8 @@ void LEM_LCA::UpdateFlow(double dt)
 	{
 		AC_int_power_load += (16.073 * GetIntegralOutput());
 	}
+
+	sprintf(oapiDebugString(), "DC: %f NUM: %f INT: %f", power_load, AC_num_power_load, AC_int_power_load);
 
 	//DC Power Draw
 	if (HasDCPower == true)
@@ -1286,8 +1283,6 @@ void LEM_LCA::UpdateFlow(double dt)
 		ACIntegralCB->DrawPower(AC_int_power_load);
 	}
 	AC_int_power_load = 0.0;
-
-	sprintf(oapiDebugString(), "DC: %f NUM: %f INT: %f Heat: %f", power_load, AC_num_power_load, AC_int_power_load, heat_load);
 }
 
 double LEM_LCA::GetCompDockVoltage()
@@ -1386,16 +1381,7 @@ double LEM_LCA::GetIntegralOutput()
 
 void LEM_LCA::SystemTimestep(double simdt)
 {
-	//Integral heat
-	heat_load += (AC_int_power_load * 0.206);
-
-	//Numerics heat
-	heat_load += (AC_num_power_load * 0.628);
-
-	//AnunDockComp heat
-	heat_load += (power_load * 0.534);
-
-	LCAHeat->GenerateHeat(heat_load);
+	LCAHeat->GenerateHeat(0.0);
 }
 
 void LEM_LCA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
