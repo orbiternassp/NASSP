@@ -329,42 +329,33 @@ protected:
 
 };
 
-class LEM_LCA : public e_object
+class LEM_LCA
 {
 public:
-	LEM_LCA();
-	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *dcfeeder, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h);
-	void UpdateFlow(double dt);
+	LEM_LCA(PanelSDK& p);
+	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h);
+	void Timestep(double dt);
 	void SystemTimestep(double simdt);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-
-	void DrawDCPower(double watts);
-	void DrawACNumPower(double watts);
 
 	double GetCompDockVoltage();
 	double GetAnnunVoltage();
-	double GetAnnunOutput();
+	double GetFixedAnnunOutput();
+	double GetVariableAnnunOutput();
 	double GetNumericVoltage();
 	double GetNumericOutput();
 	double GetIntegralVoltage();
 	double GetIntegralOutput();
-protected:
-	bool HasDCPower;
 
+	DCbus AnnunPower;
+	DCbus NumericsPower;
+	DCbus IntegralPower;
+protected:
 	LEM *lem;
-	e_object *CDRAnnunDockCompCB;
-	e_object *LMPAnnunDockCompCB;
-	e_object *ACNumericsCB;
-	e_object *ACIntegralCB;
-	e_object *AnnunDockCompFeeder;
 	h_HeatLoad *LCAHeat;
 
-	double power_load;
-	double AC_num_power_load;
-	double AC_int_power_load;
 	double heat_load;
 
+	PowerMerge NumDockCompLTGFeeder;
 };
 
 class LEM_UtilLights
