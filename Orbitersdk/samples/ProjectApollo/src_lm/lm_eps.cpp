@@ -1394,23 +1394,23 @@ void LEM_UtilLights::SystemTimestep(double simdt)
 	//CDR Utility Lights Dim
 	if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_CENTER) {
 		UtlCB->DrawPower(2.2);
-		UtlLtgHeat->GenerateHeat(2.178); //Need to determine if this heat load is emitted into cabin or LCA
+		UtlLtgHeat->GenerateHeat(2.178); //Need to determine if this heat load is fully emitted into cabin
 	}
 	//CDR Utility Lights Bright
 	else if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(6.15);
-		UtlLtgHeat->GenerateHeat(6.1); //Need to determine if this heat load is emitted into cabin or LCA
+		UtlLtgHeat->GenerateHeat(6.1); //Need to determine if this heat load is fully emitted into cabin
 	}	
 
 	//LMP Utility Lights Dim
 	if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_CENTER) {
 		UtlCB->DrawPower(1.76);
-		UtlLtgHeat->GenerateHeat(1.74); //Need to determine if this heat load is emitted into cabin or LCA
+		UtlLtgHeat->GenerateHeat(1.74); //Need to determine if this heat load is fully emitted into cabin
 	}
 	//LMP Utility Lights Bright
 	else if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(3.3);
-		UtlLtgHeat->GenerateHeat(3.267); //Need to determine if this heat load is emitted into cabin or LCA
+		UtlLtgHeat->GenerateHeat(3.267); //Need to determine if this heat load is fully emitted into cabin
 	}
 }
 
@@ -1443,7 +1443,7 @@ void LEM_COASLights::SystemTimestep(double simdt)
 {
 	if (IsPowered() && COASSwitch->GetState() != THREEPOSSWITCH_CENTER) {
 		COASCB->DrawPower(8.4);
-		COASHeat->GenerateHeat(8.4); //Need to determine if this heat load is emitted into cabin or LCA
+		COASHeat->GenerateHeat(8.4); //Need to determine if this heat load is fully emitted into cabin
 	}
 }
 
