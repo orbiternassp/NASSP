@@ -2058,73 +2058,73 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_RR_NOTRACK:
-		if (lca.GetAnnunVoltage() > 2.25 && (RR.GetNoTrackSignal() || LampToneTestRotary.GetState() == 6)) { // The AC side is only needed for the transmitter
-			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, true); // Light On
+		if (RR.GetNoTrackSignal() || LampToneTestRotary.GetState() == 6) { // The AC side is only needed for the transmitter
+			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, lca.GetVariableAnnunOutput()); // Light On
 		}
 		else {
-			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, false); // Light Off
+			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, 0.0); // Light Off
 		}
 		return true;
 
 	case AID_VC_PANEL2_COMPLIGHTS:
-		if (lca.GetAnnunVoltage() > 2.25 && (scera2.GetSwitch(12, 2)->IsClosed() || PrimGlycolPumpController.GetPressureSwitch() == true || LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(VC_MAT_L13_CompLight2_Glycol, true); // Light On
+		if (scera2.GetSwitch(12, 2)->IsClosed() || PrimGlycolPumpController.GetPressureSwitch() == true || LampToneTestRotary.GetState() == 6) {
+			SetCompLight(VC_MAT_L13_CompLight2_Glycol, lca.GetVariableAnnunOutput()); // Light On
 		}
 		else {
-			SetCompLight(VC_MAT_L13_CompLight2_Glycol, false); // Light Off
+			SetCompLight(VC_MAT_L13_CompLight2_Glycol, 0.0); // Light Off
 		}
 
-		if (lca.GetAnnunVoltage() > 2.25 && (SuitFanDPSensor.GetSuitFanFail() == true || LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, true); // Light On
+		if (SuitFanDPSensor.GetSuitFanFail() == true || LampToneTestRotary.GetState() == 6) {
+			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, lca.GetVariableAnnunOutput()); // Light On
 		}
 		else {
-			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, false); // Light Off
+			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, 0.0); // Light Off
 		}
 
-		if (lca.GetAnnunVoltage() > 2.25 && (CWEA.IsCO2PartialPressureHigh() || CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(VC_MAT_L15_CompLight4_CO2, true); // Light On
+		if (CWEA.IsCO2PartialPressureHigh() || CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6) {
+			SetCompLight(VC_MAT_L15_CompLight4_CO2, lca.GetVariableAnnunOutput()); // Light On
 		}
 		else {
-			SetCompLight(VC_MAT_L15_CompLight4_CO2, false); // Light Off
+			SetCompLight(VC_MAT_L15_CompLight4_CO2, 0.0); // Light Off
 		}
 
-		if (lca.GetAnnunVoltage() > 2.25 && INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < (792.5 / 720.0) || LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, true); // Light On
+		if (INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < (792.5 / 720.0) || LampToneTestRotary.GetState() == 6)) {
+			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, lca.GetVariableAnnunOutput()); // Light On
 		}
 		else {
-			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, false); // Light Off
+			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, 0.0); // Light Off
 		}
 		return true;
 
 	case AID_VC_PANEL14_COMPLIGHTS:
-		if (lca.GetCompDockVoltage() > 2.25 && (LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(VC_MAT_L17_CompLight6_DCBus, true); // Light On
+		if (LampToneTestRotary.GetState() == 6) {
+			SetCompLight(VC_MAT_L17_CompLight6_DCBus, lca.GetFixedAnnunOutput()); // Light On
 		}
 		else {
-			SetCompLight(VC_MAT_L17_CompLight6_DCBus, false); // Light Off
+			SetCompLight(VC_MAT_L17_CompLight6_DCBus, 0.0); // Light Off
 		}
 
-		if (lca.GetAnnunVoltage() > 2.25 && (LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(VC_MAT_L18_CompLight7_BatFault, true); // Light On
+		if (LampToneTestRotary.GetState() == 6) {
+			SetCompLight(VC_MAT_L18_CompLight7_BatFault, lca.GetVariableAnnunOutput()); // Light On
 		}
 		else {
-			SetCompLight(VC_MAT_L18_CompLight7_BatFault, false); // Light Off
+			SetCompLight(VC_MAT_L18_CompLight7_BatFault, 0.0); // Light Off
 		}
 		return true;
 
 	case AID_VC_SEQ_LIGHTS:
-		if (lca.GetCompDockVoltage() > 2.25 && (scera1.GetVoltage(12, 11) > 2.5 && stage < 2 || LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(VC_MAT_L19_StageSeq_SysA, true); // Light On
+		if (scera1.GetVoltage(12, 11) > 2.5 && stage < 2 || LampToneTestRotary.GetState() == 6) {
+			SetCompLight(VC_MAT_L19_StageSeq_SysA, lca.GetFixedAnnunOutput()); // Light On
 		}
 		else {
-			SetCompLight(VC_MAT_L19_StageSeq_SysA, false); // Light Off
+			SetCompLight(VC_MAT_L19_StageSeq_SysA, 0.0); // Light Off
 		}
 
-		if (lca.GetCompDockVoltage() > 2.25 && (scera1.GetVoltage(12, 12) > 2.5 || LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(VC_MAT_L20_StageSeq_SysB, true); // Light On
+		if (scera1.GetVoltage(12, 12) > 2.5 || LampToneTestRotary.GetState() == 6) {
+			SetCompLight(VC_MAT_L20_StageSeq_SysB, lca.GetFixedAnnunOutput()); // Light On
 		}
 		else {
-			SetCompLight(VC_MAT_L20_StageSeq_SysB, false); // Light Off
+			SetCompLight(VC_MAT_L20_StageSeq_SysB, 0.0); // Light Off
 		}
 		return true;
 
@@ -3665,23 +3665,24 @@ void LEM::InitFDAI(UINT mesh) {
 	AddAnimationComponent(anim_attflag_lmp, 0.0f, 1.0f, &mgt_attflag_lmp);
 }
 
-void LEM::SetCompLight(int m, bool state) {
+void LEM::SetCompLight(int m, double state) {
 
 	if (!vcmesh)
 		return;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
 
-    if (state == true)
+	// TBD: There should be special code for ON vs. OFF
+    if (state > 0.0)
     {   // ON
-		mat->diffuse.r = 0.937f * float((lca.GetAnnunVoltage() / 5.0));
-		mat->diffuse.g = 0.486f * float((lca.GetAnnunVoltage() / 5.0));
-		mat->diffuse.b = 0.055f * float((lca.GetAnnunVoltage() / 5.0));
+		mat->diffuse.r = 0.937f * float(state);
+		mat->diffuse.g = 0.486f * float(state);
+		mat->diffuse.b = 0.055f * float(state);
 		mat->diffuse.a = 1.0f;
 
-		mat->emissive.r = 0.937f * float((lca.GetAnnunVoltage() / 5.0));
-		mat->emissive.g = 0.486f * float((lca.GetAnnunVoltage() / 5.0));
-		mat->emissive.b = 0.055f * float((lca.GetAnnunVoltage() / 5.0));
+		mat->emissive.r = 0.937f * float(state);
+		mat->emissive.g = 0.486f * float(state);
+		mat->emissive.b = 0.055f * float(state);
 		mat->emissive.a = 1.0f;
     }
     else

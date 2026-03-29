@@ -1201,93 +1201,57 @@ void LEM_DockLights::SystemTimestep(double simdt)
 
 //LIGHTING CONTROL ASSEMBLY
 
-LEM_LCA::LEM_LCA()
+LEM_LCA::LEM_LCA(PanelSDK& p) :
+	AnnunPower("AnnumPower",NULL),
+	NumericsPower("NumericsPower", NULL),
+	IntegralPower("IntegralPower",NULL),
+	NumDockCompLTGFeeder("NumDockCompLTGFeeder", p)
 {
 	lem = NULL;
-	CDRAnnunDockCompCB = NULL;
-	LMPAnnunDockCompCB = NULL;
-	ACNumericsCB = NULL;
-	ACIntegralCB = NULL;
-	AnnunDockCompFeeder = NULL;
-	HasDCPower = false;
 	LCAHeat = 0;
-	power_load = 0.0;
-	AC_num_power_load = 0.0;
-	AC_int_power_load = 0.0;
 	heat_load = 0.0;
 }
 
-void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *dcfeeder, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h)
+void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h)
 {
 	lem = l;
-	CDRAnnunDockCompCB = cdrcb;
-	LMPAnnunDockCompCB = lmpcb;
-	ACNumericsCB = acnumcb;
-	ACIntegralCB = acintcb;
-	AnnunDockCompFeeder = dcfeeder;
 	LCAHeat = lca_h;
+
+	NumDockCompLTGFeeder.WireToBuses(cdrcb, lmpcb);
+	AnnunPower.WireTo(&NumDockCompLTGFeeder);
+	NumericsPower.WireTo(acnumcb);
+	IntegralPower.WireTo(acintcb);
 }
 
-void LEM_LCA::DrawDCPower(double watts)
+void LEM_LCA::Timestep(double dt)
 {
-	power_load += watts;
-}
-
-void LEM_LCA::DrawACNumPower(double watts)
-{
-	AC_num_power_load += watts;
-}
-
-void LEM_LCA::UpdateFlow(double dt)
-{
-	HasDCPower = false;
-
-	if (!lem->CMPowerToCDRBusRelayA && !lem->CMPowerToCDRBusRelayB && AnnunDockCompFeeder->Voltage() > SP_MIN_DCVOLTAGE) //TBD: LM/SLA pressure switch
-	{
-		HasDCPower = true;
-	}
-
 	//Integral power draw (46 total EL strips at 1.005W per strip)
 
-	AC_int_power_load = (17.078 * GetIntegralOutput());
+	IntegralPower.DrawPower(17.078 * GetIntegralOutput());
 
 	if (lem->LtgSidePanelsSwitch.IsUp()) //CDR (13 EL Strips)
 	{
-		AC_int_power_load += (13.065 * GetIntegralOutput());
+		IntegralPower.DrawPower(13.065 * GetIntegralOutput());
 	}
 
 	if (lem->SidePanelsSwitch.IsUp()) //LMP (16 EL Strips)
 	{
-		AC_int_power_load += (16.073 * GetIntegralOutput());
+		IntegralPower.DrawPower(16.073 * GetIntegralOutput());
 	}
 
-	sprintf(oapiDebugString(), "DC: %f NUM: %f INT: %f", power_load, AC_num_power_load, AC_int_power_load);
+	// TBD: All power loads available, produce heat here
 
-	//DC Power Draw
-	if (HasDCPower == true)
-	{
-		AnnunDockCompFeeder->DrawPower(power_load);
-	}
-	power_load = 0.0;
+	sprintf(oapiDebugString(), "Integral %f Anun %lf Num %lf", IntegralPower.PowerLoad(), AnnunPower.PowerLoad(), NumericsPower.PowerLoad());
 
-	//AC Numerics Power Draw
-	if (ACNumericsCB->Voltage() > SP_MIN_ACVOLTAGE)
-	{
-		ACNumericsCB->DrawPower(AC_num_power_load);
-	}
-	AC_num_power_load = 0.0;
-
-	//AC Integral Power Draw
-	if (ACIntegralCB->Voltage() > SP_MIN_ACVOLTAGE)
-	{
-		ACIntegralCB->DrawPower(AC_int_power_load);
-	}
-	AC_int_power_load = 0.0;
+	// Reset power load
+	AnnunPower.UpdateFlow(dt);
+	NumericsPower.UpdateFlow(dt);
+	IntegralPower.UpdateFlow(dt);
 }
 
 double LEM_LCA::GetCompDockVoltage()
 {
-	if (HasDCPower)
+	if (NumDockCompLTGFeeder.Voltage() > SP_MIN_DCVOLTAGE)
 	{
 		return 5.5;
 	}
@@ -1297,7 +1261,7 @@ double LEM_LCA::GetCompDockVoltage()
 
 double LEM_LCA::GetAnnunVoltage() //Returns annunciator voltage (transformed 28V to 6V)
 {
-	if (HasDCPower)
+	if (NumDockCompLTGFeeder.Voltage() > SP_MIN_DCVOLTAGE)
 	{
 		if (lem->LtgORideAnunSwitch.IsUp())
 		{
@@ -1314,18 +1278,27 @@ double LEM_LCA::GetAnnunVoltage() //Returns annunciator voltage (transformed 28V
 	return 0.0;
 }
 
-double LEM_LCA::GetAnnunOutput()
+double LEM_LCA::GetFixedAnnunOutput()
+{
+	if (GetCompDockVoltage() > 2.25) //5% of total to make full dim "off" TBD: will get actual values to use soon
+	{
+		return min(1.0, GetCompDockVoltage() / 5.0);
+	}
+	return 0.0;
+}
+
+double LEM_LCA::GetVariableAnnunOutput()
 {
 	if (GetAnnunVoltage() > 2.25) //5% of total to make full dim "off" TBD: will get actual values to use soon
 	{
-		return GetAnnunVoltage() / 5.0;
+		return min(1.0, GetAnnunVoltage() / 5.0);
 	}
 	return 0.0;
 }
 
 double LEM_LCA::GetNumericVoltage()
 {
-	if (ACNumericsCB->Voltage() > SP_MIN_ACVOLTAGE)
+	if (IntegralPower.Voltage() > SP_MIN_ACVOLTAGE)
 	{
 		if (lem->LtgORideNumSwitch.IsUp())
 		{
@@ -1353,12 +1326,12 @@ double LEM_LCA::GetNumericOutput()
 
 double LEM_LCA::GetIntegralVoltage()
 {
-	if (ACIntegralCB->Voltage() > SP_MIN_ACVOLTAGE)
+	if (IntegralPower.Voltage() > SP_MIN_ACVOLTAGE)
 	{
 		if (lem->LtgORideIntegralSwitch.IsUp())
 		{
 			//115V
-			return ACIntegralCB->Voltage();
+			return IntegralPower.Voltage();
 		}
 		else
 		{
@@ -1382,29 +1355,6 @@ double LEM_LCA::GetIntegralOutput()
 void LEM_LCA::SystemTimestep(double simdt)
 {
 	LCAHeat->GenerateHeat(0.0); //LCA Heat
-}
-
-void LEM_LCA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
-
-{
-	oapiWriteLine(scn, start_str);
-	papiWriteScenario_bool(scn, "HASDCPOWER", HasDCPower);
-	oapiWriteLine(scn, end_str);
-}
-
-void LEM_LCA::LoadState(FILEHANDLE scn, char *end_str)
-
-{
-	char *line;
-	int dec = 0;
-	int end_len = strlen(end_str);
-
-	while (oapiReadScenario_nextline(scn, line)) {
-		if (!strnicmp(line, end_str, end_len))
-			return;
-
-		papiReadScenario_bool(line, "HASDCPOWER", HasDCPower);
-	}
 }
 
 //Utility Lights
