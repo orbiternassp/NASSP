@@ -754,7 +754,7 @@ protected:
 	void JostleViewpoint(double amount);
 	void VCFreeCam(VECTOR3 dir, bool slow);
 	void AddDust();
-	void SetCompLight(int m, bool state);
+	void SetCompLight(int m, double state);
 	void SetContactLight(int m, bool state);
 	void SetPowerFailureLight(int m, bool state);
 
@@ -1245,6 +1245,7 @@ protected:
 	CircuitBrakerSwitch CDRInverter1CB;
 
 	bool CMPowerToCDRBusRelayA, CMPowerToCDRBusRelayB; //Relays 3K3 and 3K4
+	bool SLADockingLightPressureSwitchRelay; // Relay 16K1
 
 	/////////////////
 	// LEM Panel 5 //
@@ -1619,7 +1620,7 @@ protected:
 
 	LEMPanelOrdeal PanelOrdeal;		// Dummy switch/display for checklist controller
 	PowerMerge AOTLampFeeder;
-	PowerMerge NumDockCompLTGFeeder;
+	e_object DockingLightSwitchConnector; // Controlled by relay 16K1
 
 	int ordealEnabled;
 

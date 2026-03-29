@@ -310,6 +310,7 @@ protected:
 	e_object *TrackCB;
 	ThreePosSwitch *TrackSwitch;
 	h_HeatLoad *TLEHeat;
+	h_HeatLoad *SecTLEHeat;
 
 };
 
@@ -328,45 +329,33 @@ protected:
 
 };
 
-class LEM_LCA : public e_object
+class LEM_LCA
 {
 public:
-	LEM_LCA();
-	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, h_HeatLoad *lca_h);
-	void UpdateFlow(double dt);
+	LEM_LCA(PanelSDK& p);
+	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h);
+	void Timestep(double dt);
 	void SystemTimestep(double simdt);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
-
-	void DrawDCPower(double watts);
-	void DrawIntegralACPower(double watts);
-	void DrawNumericsACPower(double watts);
 
 	double GetCompDockVoltage();
 	double GetAnnunVoltage();
-	double GetIntegralVoltage();
+	double GetFixedAnnunOutput();
+	double GetVariableAnnunOutput();
 	double GetNumericVoltage();
+	double GetNumericOutput();
+	double GetIntegralVoltage();
+	double GetIntegralOutput();
 
-	double GetAnnunDimPct();
-	double GetIntegralDimPct();
-	double GetNumericsDimPct();
+	DCbus AnnunPower;
+	DCbus NumericsPower;
+	DCbus IntegralPower;
 protected:
-	void UpdateAnnunVoltage();
-	void UpdateIntegralVoltage();
-	void UpdateNumericsVoltage();
-
-	bool HasDCPower;
-	double DCAnnunVoltage;
-	double ACNumericsVoltage;
-	double ACIntegralVoltage;
-
 	LEM *lem;
-	e_object *CDRAnnunDockCompCB;
-	e_object *LMPAnnunDockCompCB;
 	h_HeatLoad *LCAHeat;
 
-	double Integral_AC_power_load;
-	double Numerics_AC_power_load;
+	double heat_load;
+
+	PowerMerge NumDockCompLTGFeeder;
 };
 
 class LEM_UtilLights
@@ -374,7 +363,6 @@ class LEM_UtilLights
 public:
 LEM_UtilLights();
 void Init(LEM *l, e_object *utl_cb, ThreePosSwitch *cdr_sw, ThreePosSwitch *lmp_sw, h_HeatLoad *util_h);
-void Timestep(double simdt);
 void SystemTimestep(double simdt);
 
 bool IsPowered();
@@ -392,7 +380,6 @@ class LEM_COASLights
 public:
 	LEM_COASLights();
 	void Init(LEM *l, e_object *coas_cb, ThreePosSwitch *coas_sw, h_HeatLoad *coas_h);
-	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
 	bool IsPowered();
@@ -415,7 +402,10 @@ public:
 	bool IsHatchOpen();
 	double GetLMPRotaryVoltage();
 	double GetCDRRotaryVoltage();
-	double GetALLPowerDraw();
+	double GetLMPOutput();
+	double GetCDROutput();
+	double GetSideOutput();
+	double GetSidePowerDraw();
 	double GetOVHDFWDPowerDraw();
 	double GetPowerDraw();
 protected:

@@ -369,9 +369,10 @@ void LEM::SystemsInit()
 	RCSXFeedTB.WireTo(&RCS_B_TEMP_PRESS_DISP_FLAGS_CB);
 
 	// Lighting
+	DockingLightSwitchConnector.WireTo(&CDR_LTG_ANUN_DOCK_COMPNT_CB);
 	tle.Init(this, &LTG_TRACK_CB, &ExteriorLTGSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:TLEHEAT"));
 	DockLights.Init(this, &ExteriorLTGSwitch);
-	lca.Init(this, &CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LCAHEAT"));
+	lca.Init(this, &DockingLightSwitchConnector, &LTG_ANUN_DOCK_COMPNT_CB, &NUM_LTG_AC_CB, &INTGL_LTG_AC_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LCAHEAT"));
 	UtilLights.Init(this, &CDR_LTG_UTIL_CB, &UtilityLightSwitchCDR, &UtilityLightSwitchLMP, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	COASLights.Init(this, &COAS_DC_CB, &CDRCOASSwitch, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	FloodLights.Init(this, &LTG_FLOOD_CB, &FloodSwitch, &FloodRotary, &LtgFloodOhdFwdKnob, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
@@ -382,8 +383,7 @@ void LEM::SystemsInit()
 	agc.WirePower(&LGC_DSKY_CB, NULL);
 	// The DSKY brightness IS controlled by the ANUN/NUM knob on panel 5, but by means of an isolated section of it.
 	// The source of the isolated section is coming from the LGC supply.
-	NumDockCompLTGFeeder.WireToBuses(&CDR_LTG_ANUN_DOCK_COMPNT_CB, &LTG_ANUN_DOCK_COMPNT_CB); //This should be handled in the LCA, powermerger for temporary functionality
-	dsky.Init(&NumDockCompLTGFeeder, &LGC_DSKY_CB, &LtgAnunNumKnob, &LtgIntegralKnob, &LtgORideAnunSwitch, &LtgORideIntegralSwitch);
+	dsky.Init(&lca.NumericsPower, &LGC_DSKY_CB, &LtgAnunNumKnob, &LtgIntegralKnob, &LtgORideAnunSwitch, &LtgORideIntegralSwitch);
 	agc.InitHeat((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT"));
 
 	//Optics
@@ -686,9 +686,6 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&ACVoltsAttenuator, false);
 	Panelsdk.AddElectrical(&INV_1, false);
 	Panelsdk.AddElectrical(&INV_2, false);
-
-	//Lighting Control Assembly
-	Panelsdk.AddElectrical(&lca, false);
 
 	// ECS
 	CabinPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), 4.70/PSI, 4.07/PSI);
@@ -1597,6 +1594,16 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		}
 	}
 	CMPowerToCDRBusRelayB = CMPowerToCDRBusRelayA;
+	SLADockingLightPressureSwitchRelay = (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && !CMPowerToCDRBusRelayA && !CMPowerToCDRBusRelayB && true); // TBD: LM/SLA pressure switch
+	if (SLADockingLightPressureSwitchRelay)
+	{
+		DockingLightSwitchConnector.WireTo(&CDR_LTG_ANUN_DOCK_COMPNT_CB);
+	}
+	else
+	{
+		DockingLightSwitchConnector.WireTo(NULL);
+	}
+	lca.Timestep(simdt);
 	rjb.Timestep();
 	drb.Timestep();
 	if (stage < 2)
@@ -1608,8 +1615,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	ECA_4.Timestep(simdt);
 	tle.Timestep(simdt);
 	DockLights.Timestep(simdt);
-	UtilLights.Timestep(simdt);
-	COASLights.Timestep(simdt);
 	pfira.Timestep(simdt);
 
 	// Do this toward the end so we can see current system state
