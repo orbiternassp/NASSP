@@ -318,13 +318,14 @@ class LEM_DockLights
 {
 public:
 	LEM_DockLights();
-	void Init(LEM *l, ThreePosSwitch *docksw);
+	void Init(LEM *l, e_object *dockpwr, ThreePosSwitch *docksw);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
 	bool IsPowered();
 protected:
 	LEM *lem;
+	e_object *DockPower;
 	ThreePosSwitch *DockSwitch;
 
 };
@@ -334,7 +335,6 @@ class LEM_LCA
 public:
 	LEM_LCA(PanelSDK& p);
 	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h);
-	void Timestep(double dt);
 	void SystemTimestep(double simdt);
 
 	double GetCompDockVoltage();
@@ -352,8 +352,6 @@ public:
 protected:
 	LEM *lem;
 	h_HeatLoad *LCAHeat;
-
-	double heat_load;
 
 	PowerMerge NumDockCompLTGFeeder;
 };

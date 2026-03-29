@@ -1168,10 +1168,11 @@ LEM_DockLights::LEM_DockLights()
 	DockSwitch = NULL;
 }
 
-void LEM_DockLights::Init(LEM *l, ThreePosSwitch *docksw)
+void LEM_DockLights::Init(LEM *l, e_object *dockpwr, ThreePosSwitch *docksw)
 {
 	lem = l;
 	DockSwitch = docksw;
+	DockPower = dockpwr;
 }
 
 bool LEM_DockLights::IsPowered()
@@ -1196,7 +1197,10 @@ void LEM_DockLights::Timestep(double simdt)
 
 void LEM_DockLights::SystemTimestep(double simdt)
 {
-	//This will need power draw through and heat generated to the LCA
+	if (IsPowered())
+	{
+		DockPower->DrawPower(17.5); //5 lights at 3.5W each
+	}
 }
 
 //LIGHTING CONTROL ASSEMBLY
@@ -1209,7 +1213,6 @@ LEM_LCA::LEM_LCA(PanelSDK& p) :
 {
 	lem = NULL;
 	LCAHeat = 0;
-	heat_load = 0.0;
 }
 
 void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h)
@@ -1221,32 +1224,6 @@ void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, 
 	AnnunPower.WireTo(&NumDockCompLTGFeeder);
 	NumericsPower.WireTo(acnumcb);
 	IntegralPower.WireTo(acintcb);
-}
-
-void LEM_LCA::Timestep(double dt)
-{
-	//Integral power draw (46 total EL strips at 1.005W per strip)
-
-	IntegralPower.DrawPower(17.078 * GetIntegralOutput());
-
-	if (lem->LtgSidePanelsSwitch.IsUp()) //CDR (13 EL Strips)
-	{
-		IntegralPower.DrawPower(13.065 * GetIntegralOutput());
-	}
-
-	if (lem->SidePanelsSwitch.IsUp()) //LMP (16 EL Strips)
-	{
-		IntegralPower.DrawPower(16.073 * GetIntegralOutput());
-	}
-
-	// TBD: All power loads available, produce heat here
-
-	sprintf(oapiDebugString(), "Integral %f Anun %lf Num %lf", IntegralPower.PowerLoad(), AnnunPower.PowerLoad(), NumericsPower.PowerLoad());
-
-	// Reset power load
-	AnnunPower.UpdateFlow(dt);
-	NumericsPower.UpdateFlow(dt);
-	IntegralPower.UpdateFlow(dt);
 }
 
 double LEM_LCA::GetCompDockVoltage()
@@ -1282,7 +1259,7 @@ double LEM_LCA::GetFixedAnnunOutput()
 {
 	if (GetCompDockVoltage() > 2.25) //5% of total to make full dim "off" TBD: will get actual values to use soon
 	{
-		return min(1.0, GetCompDockVoltage() / 5.0);
+		return GetCompDockVoltage() / 6.0; //6V maximum input
 	}
 	return 0.0;
 }
@@ -1291,7 +1268,7 @@ double LEM_LCA::GetVariableAnnunOutput()
 {
 	if (GetAnnunVoltage() > 2.25) //5% of total to make full dim "off" TBD: will get actual values to use soon
 	{
-		return min(1.0, GetAnnunVoltage() / 5.0);
+		return GetAnnunVoltage() / 6.0;  //6V maximum input
 	}
 	return 0.0;
 }
@@ -1354,7 +1331,34 @@ double LEM_LCA::GetIntegralOutput()
 
 void LEM_LCA::SystemTimestep(double simdt)
 {
-	LCAHeat->GenerateHeat(0.0); //LCA Heat
+	//Integral power draw (46 total EL strips at 1.005W per strip)
+
+	IntegralPower.DrawPower(17.078 * GetIntegralOutput()); //17 EL Strips
+
+	if (lem->LtgSidePanelsSwitch.IsUp()) //CDR Side Panel (13 EL Strips)
+	{
+		IntegralPower.DrawPower(13.065 * GetIntegralOutput());
+	}
+
+	if (lem->SidePanelsSwitch.IsUp()) //LMP Side Panel (16 EL Strips)
+	{
+		IntegralPower.DrawPower(16.073 * GetIntegralOutput());
+	}
+
+	sprintf(oapiDebugString(), "Integral %f Anun %lf Num %lf", IntegralPower.PowerLoad(), AnnunPower.PowerLoad(), NumericsPower.PowerLoad());
+
+	double AnnunHeat = AnnunPower.PowerLoad() * 0.5337;
+	double IntHeat = IntegralPower.PowerLoad() * 0.2056;
+	double NumHeat = NumericsPower.PowerLoad() * 0.6285;
+
+	LCAHeat->GenerateHeat(AnnunHeat + IntHeat + NumHeat); //LCA Heat
+
+	// Reset power load
+	AnnunPower.UpdateFlow(simdt);
+	NumericsPower.UpdateFlow(simdt);
+	IntegralPower.UpdateFlow(simdt);
+
+
 }
 
 //Utility Lights

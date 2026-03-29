@@ -234,7 +234,7 @@ void DSKY::Init(
 }
 
 bool DSKY::IsStatusPowered() {
-	if (StatusPower->Voltage() < 2){ return false; } //Used 2V for now as input voltage can be 0-5V AC or DC here
+	if (StatusPower->Voltage() < 2.25){ return false; } //Used 2.25V for now as input voltage can be 0-5V AC or DC here
 
 	if (DimmerRotationalSwitch != NULL) {
 		if (DimmerRotationalSwitch->GetOutput() < 0.00001) {
