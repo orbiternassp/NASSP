@@ -113,9 +113,12 @@ class LEMForwardHatch
 {
 public:
 	LEMForwardHatch(Sound &opensound, Sound &closesound);
-	void Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab);
+	void Init(LEM *l, ToggleSwitch *fhh, ToggleSwitch *fhr, h_Tank *cab, h_Tank *ucdt);
+	virtual void JettisonEquipment();
+	bool GetJettisonStatus() { return jettComplete; }
 	void DefineAnimations(UINT idx);
 	void DefineAnimationsVC(UINT idx);
+	double GetLMUCDPct() { return ((UCDTank->space.GetMass() / (UCDTank->space.Volume * 1000.0)) * 100.0); }
 	void Timestep(double simdt);
 	void Toggle();
 
@@ -126,11 +129,13 @@ public:
 protected:
 	AnimState2 hatch_state;
 	bool open;
+	bool jettComplete;
 
 	LEM *lem;
 	ToggleSwitch *ForwardHatchHandle;
 	ToggleSwitch *ForwardHatchReliefValve;
 	h_Tank *cabin;
+	h_Tank *UCDTank;
 
 	Sound &OpenSound;
 	Sound &CloseSound;
@@ -281,11 +286,11 @@ class LEMWaterSeparationSelector
 {
 public:
 	LEMWaterSeparationSelector();
-	void Init(h_Tank *wssv, CircuitBrakerSwitch* wsss);
+	void Init(h_Tank *wssv, ToggledPushSwitch* wsss);
 	void SystemTimestep(double simdt);
 protected:
 	h_Tank *WaterSeparationSelectorValve;
-	CircuitBrakerSwitch *WaterSeparationSelectorSwitch;
+	ToggledPushSwitch *WaterSeparationSelectorSwitch;
 };
 
 class LEMCabinFan
@@ -391,7 +396,7 @@ public:
 	double GetCabinTempF();
 	double GetSuitPressurePSI();
 	double GetSuitTempF();
-	double GetSensorCO2MMHg();
+	double GetSensorCO2Voltage();
 	double AscentWaterTank1Quantity();
 	double AscentWaterTank2Quantity();
 	double DescentWaterTankQuantity();
@@ -425,7 +430,7 @@ public:
 
 	LEM *lem;													// Pointer at LEM
 	double *Cabin_Press, *Cabin_Temp;					// Cabin Atmosphere
-	double *Suit_Press, *Suit_Temp, *SuitCircuit_CO2, *HX_CO2;					// Suit Circuit Atmosphere
+	double *Suit_Press, *SGD_Press, *Suit_Temp, *SuitCircuit_CO2, *SGD_CO2;					// Suit Circuit Atmosphere
 	double *Asc_Water1, *Asc_Water2, *Des_Water, *Des_Water_Press;	// Water tanks
 	double *Asc_Water1Temp, *Asc_Water2Temp, *WB_Prim_Water_Temp;	// Water tank temperatures
 	double *Asc_Oxygen1, *Asc_Oxygen2, *Des_Oxygen;				// Oxygen tanks

@@ -523,6 +523,7 @@ private:								// Saturn LV
 	double TI5F5;									// Time of Earth orbit retro maneuver
 	double T7M10;									// Time in TB7 to compute inertial attitude corresponding to locally referenced separation maneuver
 	double T7M11;									// Time in TB7 for the slingshot/LOX dump maneuver (Apollo 8)
+	double DTB6N;									// Delay time between the setting of TB6 and the initiation of restart preparations for the second reignition of the S-IVB (Apollo 9 only)
 	
 	// PAD-LOADED TABLES
 	double Fx[5][5];								// Pre-IGM pitch polynomial
@@ -752,8 +753,6 @@ private:								// Saturn LV
 	}TABLE15[2];
 	int tgt_index;				// Non-LVDC variable to enable selecting the correct set of injection parameters
 
-	// TABLE25 is apparently only used on direct-ascent
-
 	//Interrupts
 	enum SV_Interrupt_Bits
 	{
@@ -914,6 +913,7 @@ private:								// Saturn LV
 	friend class ApolloRTCCMFD;
 	friend class RTCC;
 	friend class ARCore;
+	friend class MCC_Calculations;
 };
 
 /* ********************
@@ -1155,7 +1155,6 @@ private:
 	double D;										// coefficient for fourth zonal gravity harmonic
 	double CG;
 	double alpha_D;									// Angle from perigee to DN vector
-	bool alpha_D_op;								// Option to determine alpha_D or load it
 	double G_T;										// Magnitude of desired terminal gravitational acceleration
 	double xi_T;									// Desired position component in the terminal reference system
 	VECTOR3 PosXEZ;									// Position components in the terminal reference system
@@ -1288,6 +1287,7 @@ private:
 	};
 
 	friend class ARCore;
+	friend class MCC_Calculations;
 };
 
 #define LVDC_START_STRING "LVDC_BEGIN"

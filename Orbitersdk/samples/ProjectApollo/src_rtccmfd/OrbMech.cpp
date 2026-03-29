@@ -141,6 +141,16 @@ namespace OrbMech{
 		return H*3600.0 + M*60.0 + S;
 	}
 
+	VECTOR3 round_to(VECTOR3 value, double precision)
+	{
+		VECTOR3 a;
+		for (int i = 0; i < 3; i++)
+		{
+			a.data[i] = round_to(value.data[i], precision);
+		}
+		return a;
+	}
+
 	double round_to(double value, double precision)
 	{
 		return round(value / precision) * precision;
@@ -183,9 +193,13 @@ namespace OrbMech{
 		int minutes;
 
 		SStoMMSS(abs(time), minutes, seconds);
-		if (time < 0.0) minutes = -minutes;
 
-		sprintf(buf, "%d:%02.0lf", minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%d:%02.0lf", minutes, seconds);
 	}
 
 	void format_time_MMSSC(char *buf, double time)
@@ -195,9 +209,29 @@ namespace OrbMech{
 		int minutes;
 
 		SStoMMSS(abs(time), minutes, seconds, 0.1);
-		if (time < 0.0) minutes = -minutes;
 
-		sprintf(buf, "%d:%02.1lf", minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%d:%02.1lf", minutes, seconds);
+	}
+
+	void format_time_HHMM(char *buf, double time)
+	{
+		// Format time to HH:MM
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(time), hours, minutes, seconds, 60.0);
+
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%02d:%02d", hours, minutes);
 	}
 
 	void format_time_HHHMM(char *buf, double time)
@@ -207,9 +241,13 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds, 60.0);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "%03d:%02d", hours, minutes);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%03d:%02d", hours, minutes);
 	}
 
 	void format_time_HHMMSS(char *buf, double time)
@@ -219,9 +257,13 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "%02d:%02d:%02.0lf", hours, minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%02d:%02d:%02.0lf", hours, minutes, seconds);
 	}
 
 	void format_time_HHHMMSS(char *buf, double time)
@@ -231,9 +273,13 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "%03d:%02d:%02.0lf", hours, minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%03d:%02d:%02.0lf", hours, minutes, seconds);
 	}
 
 	void format_time_XXHMMSS(char *buf, double time)
@@ -243,9 +289,13 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "%d:%02d:%02.0lf", hours, minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%d:%02d:%02.0lf", hours, minutes, seconds);
 	}
 
 	void format_time_HHHMMSSC(char *buf, double time)
@@ -255,9 +305,13 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds, 0.1);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "%03d:%02d:%04.1lf", hours, minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%03d:%02d:%04.1lf", hours, minutes, seconds);
 	}
 
 	void format_time_HHHMMSSCS(char *buf, double time)
@@ -267,9 +321,13 @@ namespace OrbMech{
 		int hours, minutes;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds, 0.01);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "%03d:%02d:%05.2lf", hours, minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "%03d:%02d:%05.2lf", hours, minutes, seconds);
 	}
 
 	// Format precise time.
@@ -277,12 +335,35 @@ namespace OrbMech{
 	{
 		int hours, minutes;
 		double seconds;
-		int length = 0;
 
 		SStoHHMMSS(abs(time), hours, minutes, seconds, 0.01);
-		if (time < 0.0) hours = -hours;
 
-		sprintf(buf, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
+		int length = 0;
+		if (time < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		sprintf(buf + length, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
+	}
+
+	void format_declination_HHMM(char *buf, double decl)
+	{
+		// Format declination to +HH:MM, input in arc seconds
+		double seconds;
+		int hours, minutes;
+
+		SStoHHMMSS(abs(decl), hours, minutes, seconds, 60.0);
+
+		int length = 0;
+		if (decl < 0.0)
+		{
+			length += sprintf(buf, "-");
+		}
+		else
+		{
+			length += sprintf(buf, "+");
+		}
+		sprintf(buf + length, "%02d:%02d", hours, minutes);
 	}
 
 	void adbar_from_rv(double rmag, double vmag, double rtasc, double decl, double fpav, double az, VECTOR3 &R, VECTOR3 &V)
@@ -339,6 +420,79 @@ double fischer_ellipsoid(VECTOR3 R)		//Used in the AGC to calculate the radius o
 	b = 6356784.0;									//Semi-minor axis of the ellipsoid (not of an orbit!)
 	sinl = sin(phi);								//Saves one sinus calculation
 	return sqrt(b*b / (1 - (1 - b*b / a / a)*(1 - sinl*sinl)));	//Calculates the radius dependent on the latitude
+}
+
+VECTOR3 VectorToHorizon(VECTOR3 r_ZC, VECTOR3 u_S, int body, bool far_horizon)
+{
+	//INPUTS:
+	//r_ZC: Vector from body to spacecraft
+	//u_S: Star unit vector (line-of-sight)
+	//body: 0 = Earth, 1 = Moon
+	//far_horizon: true = return vector to far horizon, false = return vector to near horizon
+
+	MATRIX3 M;
+	VECTOR3 u0, u1, u2, u_Z, r_H, u_sH, t[2], t_n, t_f, R_L, u_horizon;
+	double a_H, b_H, A, alpha, beta, AA[2];
+
+	u_Z = _V(0, 0, 1);
+
+	u2 = unit(crossp(u_S, r_ZC));
+	u0 = unit(crossp(u_Z, u2));
+	u1 = crossp(u2, u0);
+	M = _M(u0.x, u0.y, u0.z, u1.x, u1.y, u1.z, u2.x, u2.y, u2.z);
+
+	if (body == BODY_EARTH)
+	{
+		double SINL, r_F, h;
+
+		h = 0.0; //TBD
+
+		SINL = dotp(u1, u_Z);
+		r_F = OrbMech::R_Earth; //TBD
+		a_H = r_F + h;
+		b_H = r_F + h;
+	}
+	else
+	{
+		a_H = b_H = R_Moon;
+	}
+	r_H = mul(M, r_ZC);
+	u_sH = mul(M, u_S);
+	A = r_H.x * r_H.x / a_H / a_H + r_H.y * r_H.y / b_H / b_H;
+
+	alpha = a_H / b_H * r_H.y * sqrt(A - 1.0);
+	beta = b_H / a_H * r_H.x * sqrt(A - 1.0);
+
+	t[0] = _V(r_H.x + alpha, r_H.y - beta, 0.0) / A;
+	t[1] = _V(r_H.x - alpha, r_H.y + beta, 0.0) / A;
+
+	AA[0] = dotp(u_sH, unit(t[0] - r_H));
+	AA[1] = dotp(u_sH, unit(t[1] - r_H));
+
+	if (AA[1] > AA[0])
+	{
+		// 1 is near horizon
+		t_n = t[1];
+		t_f = t[0];
+	}
+	else
+	{
+		// 0 is near horizon
+		t_n = t[0];
+		t_f = t[1];
+	}
+
+	if (far_horizon)
+	{
+		R_L = t_f;
+	}
+	else
+	{
+		R_L = t_n;
+	}
+	R_L = tmul(M, R_L);
+	u_horizon = unit(R_L - r_ZC);
+	return u_horizon;
 }
 
 void rv_from_r0v0_ta(VECTOR3 R0, VECTOR3 V0, double dt, VECTOR3 &R1, VECTOR3 &V1, double mu)
@@ -1431,30 +1585,6 @@ void SolveQuartic(double *A, double *R, int &N)
 			R[3] = 0.5*sqrt((-1.0)*(-4.0*S*S - 2.0*p + q / S));
 		}
 	}
-}
-
-double NSRsecant(int Epoch, VECTOR3 RA, VECTOR3 VA, VECTOR3 RP, VECTOR3 VP, double mjd0, double x, double DH, OBJHANDLE gravref)
-{
-	double theta, SW, dh_CDH, mu;
-	VECTOR3 RA2, VA2, RP2, VP2, u, RA2_alt, VA2_alt, RPC, VPC;
-
-	mu = GGRAV*oapiGetMass(gravref);
-
-	oneclickcoast(Epoch, RA, VA, mjd0, x, RA2, VA2, gravref, gravref);
-	oneclickcoast(Epoch, RP, VP, mjd0, x, RP2, VP2, gravref, gravref);
-
-	u = unit(crossp(RP2, VP2));
-	RA2_alt = RA2;
-	VA2_alt = VA2;
-	RA2 = unit(RA2 - u*dotp(RA2, u))*length(RA2);
-	VA2 = unit(VA2 - u*dotp(VA2, u))*length(VA2);
-
-	theta = acos(dotp(RA2, RP2) / length(RA2) / length(RP2));
-	SW = sign(dotp(u, crossp(RP2, RA2)));
-	theta = SW*theta;
-	rv_from_r0v0_ta(RP2, VP2, theta, RPC, VPC, mu);
-	dh_CDH = length(RPC) - length(RA2);
-	return DH - dh_CDH;
 }
 
 MATRIX3 GetRotationMatrix(int plan, double t)
@@ -3167,66 +3297,6 @@ double LinearInterpolation(double x0, double y0, double x1, double y1, double x)
 	return y0 + (x - x0)*(y1 - y0) / (x1 - x0);
 }
 
-void CubicInterpolation(double *x, double *y, double *a)
-{
-	double **V = NULL;
-	double **A = NULL;
-	int *P = NULL;
-	std::vector<double> sol;
-	double Tol;
-	V = new double*[4];
-	A = new double*[4];
-	P = new int[5];
-	sol.assign(4, 0);
-	for (int i = 0;i < 4;i++)
-	{
-		V[i] = new double[4];
-		A[i] = new double[4];
-		for (int j = 0;j < 4;j++)
-		{
-			V[i][j] = 0.0;
-			A[i][j] = 0.0;
-		}
-	}
-
-	Tol = 0.0000000001;
-	VandermondeMatrix(x, 3, V);
-
-	for (int i = 0;i < 4;i++)
-	{
-		for (int j = 0;j < 4;j++)
-		{
-			A[i][j] = V[i][j];
-		}
-	}
-
-	LUPDecompose(A, 4, Tol, P);
-	LUPSolve(A, P, y, 4, sol);
-
-	for (int i = 0;i < 4;i++)
-	{
-		a[i] = sol[i];
-	}
-
-	delete[] A;
-	delete[] V;
-	delete[] P;
-}
-
-//x = N+1 data points
-//N = order of polynomial
-//V = (N+1)*(N+1) Vandermonde matrix
-void VandermondeMatrix(double *x, int N, double **V)
-{
-	for (int i = 0;i < N + 1;i++)
-	{
-		for (int j = 0;j < N + 1;j++)
-		{
-			V[i][j] = pow(x[i], N - j);
-		}
-	}
-}
-
 int LUPDecompose(double **A, int N, double Tol, int *P)
 {
 
@@ -3338,6 +3408,66 @@ void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, double &
 	delete[] yy;
 }
 
+void LinearLeastSquares(std::vector<double> &x, std::vector<double> &y, int M, std::vector<double> &b)
+{
+	//INPUTS:
+	//x: Observed values of the independent variable
+	//y: Observed values of the dependent variable
+	//M: Order of the regression (2 = linear)
+	//OUTPUTS:
+	//b: Solution vector
+
+	int N;
+	
+	N = (int)x.size();
+	b.resize(M);
+
+	//Generate information matrix (M x M)
+	//allocate the array
+	double** ATA = new double*[M];
+	for (int i = 0; i < M; i++)
+		ATA[i] = new double[M];
+
+	int i, j, k;
+	for (i = 0; i < M; i++)
+	{
+		for (j = 0; j < M; j++)
+		{
+			ATA[i][j] = 0.0;
+			for (k = 0; k < N; k++)
+			{
+				ATA[i][j] = ATA[i][j] + pow(x[k], i + j);
+			}
+		}
+	}
+	//Generate the observation matrix (M x 1)
+	double* ATb = new double[M];
+	for (i = 0; i < M; i++)
+	{
+		ATb[i] = 0.0;
+		for (j = 0; j < N; j++)
+		{
+			ATb[i] = ATb[i] + y[j] * pow(x[j], i);
+		}
+	}
+
+	//Solve equations
+	int *PP = new int[M + 1];
+
+	if (OrbMech::LUPDecompose(ATA, M, 0.0, PP) == 0)
+	{
+		//return true;
+	}
+	OrbMech::LUPSolve(ATA, PP, ATb, M, b);
+	delete[] PP;
+
+	//deallocate the arrays
+	for (int i = 0; i < M; i++)
+		delete[] ATA[i];
+	delete[] ATA;
+	delete[] ATb;
+}
+
 double Sum(double *x, int N)
 {
 	double a = 0.0;
@@ -3387,6 +3517,15 @@ void AGCSignedValue(int &val)
 		val = -(077777 - val);
 }
 
+void DoubleToAGCTriple(double val, int* oct)
+{
+	oct[0] = (int)(val * pow(2, -28));
+	val = val - pow(2, 28) * oct[0];
+	oct[1] = (int)(val * pow(2, -14));
+	val = val - pow(2, 14) * oct[1];
+	oct[2] = (int)(round(val));
+}
+
 int DoubleToBuffer(double x, double q, int m)
 {
 	int c = 0, out = 0, f = 1;
@@ -3405,15 +3544,59 @@ int DoubleToBuffer(double x, double q, int m)
 	return out;
 }
 
-int DoubleToDEDA(double x, double q)
+int AEAToSigned(int val)
 {
-	int c = 0, out = 0, f = 1;
+	if (val >= 0400000)
+	{
+		return -(01000000 - val);
+	}
+	return val;
+}
 
-	x = x * (268435456.0 / pow(2.0, fabs(q)));
+double AEAToDouble(int val, int SF)
+{
+	return pow(2, SF)*(double)(AEAToSigned(val));
+}
 
-	c = 0x3FFF & ((int)fabs(x));
+int AEAToDEDA(int val)
+{
+	//Input is value in AEA format. Output is signed DEDA value with reduced precision
+	int val2;
+	if (val >= 0400000)
+		val2 = -((val - 0400000) >> 2);
+	else
+		val2 = val >> 2;
+	return val2;
+}
 
-	if (x<0.0) c = 0x7FFF & (~c) + 1; // Polarity change
+int DoubleToAEA(double x, int q)
+{
+	//Conversion of scaled double value to AEA memory format
+	int val, val2;
+
+	val = static_cast<int>(round(x * pow(2, 17 - q)));
+	if (val < 0)
+		val2 = 01000000 - abs(val);
+	else
+		val2 = val;
+	return val2;
+}
+
+int DoubleToDEDA(double x, int q)
+{
+	//Conversion of scaled double value to DEDA (octal) format
+	int val, val2;
+
+	val = DoubleToAEA(x, q);
+	val2 = AEAToDEDA(val);
+	return DecimalToOctal(val2);
+}
+
+int DecimalToOctal(int x)
+{
+	int c, out = 0, f = 1;
+
+	c = abs(x);
 
 	while (c != 0) {
 		out += (c & 7) * f;
@@ -4187,6 +4370,99 @@ void CALCSXA(MATRIX3 SMNB, VECTOR3 S_SM, double &TA, double &SA)
 	TA = acos(dotp(Z_SB, S_SB));
 }
 
+VECTOR3 GetCSMCOASVector(double SPA, double SXP)
+{
+	//In navigation base coordinates
+	return unit(_V(cos(SPA) * cos(SXP), sin(SXP), sin(SPA) * cos(SXP)));
+}
+
+VECTOR3 GetLMCOASVector(double EL, double SXP, bool IsZAxis)
+{
+	//In navigation base coordinates
+	if (IsZAxis)
+	{
+		return unit(_V(sin(SXP), -sin(EL) * cos(SXP), cos(EL) * cos(SXP)));
+	}
+
+	//X-axis
+	return unit(_V(cos(EL) * cos(SXP), sin(SXP), sin(EL) * cos(SXP)));
+}
+
+void CSMCOASAngles(VECTOR3 u_NB, double& SPA, double& SXP)
+{
+	SPA = -atan(u_NB.z / u_NB.x);
+	SXP = asin(u_NB.y);
+}
+
+void LMCOASAngles(bool Axis, VECTOR3 u_NB, double& EL, double& SXP)
+{
+	//Axis: true = Z-axis, false = X-axis
+	double EPS, GAM, ALP, R, SCV;
+
+	if (Axis)
+	{
+		//Z-axis
+		double HYP;
+
+		EPS = acos(u_NB.z);
+		GAM = acos(u_NB.x);
+		HYP = sqrt(u_NB.x * u_NB.x + u_NB.y * u_NB.y);
+		ALP = atan(HYP / u_NB.z);
+		SCV = PI05 - abs(asin(sin(GAM) * sin(ALP) / sin(EPS)));
+		R = u_NB.x * abs(asin(sin(SCV) * sin(EPS)) / u_NB.x);
+		if (u_NB.x < 0)
+		{
+			SXP = -abs(R);
+		}
+		else
+		{
+			SXP = abs(R);
+		}
+		EL = u_NB.y * abs(acos(cos(EPS) / cos(SXP)) / u_NB.y);
+		if (u_NB.y < 0.0)
+		{
+			EL = abs(EL);
+		}
+		else
+		{
+			EL = -abs(EL);
+		}
+		EL -= 30.0 * RAD;
+	}
+	else
+	{
+		//X-axis
+		double ARG1, ARG2, ARG3;
+
+		EPS = acos(u_NB.x);
+		GAM = acos(u_NB.z);
+		ALP = atan(u_NB.y / u_NB.x);
+		ARG1 = sin(GAM) * sin(ALP) / sin(EPS);
+		SCV = PI05 - abs(asin(ARG1));
+		ARG2 = sin(SCV) * sin(EPS);
+		R = u_NB.z * abs(asin(ARG2) / u_NB.z);
+		ARG3 = cos(EPS) / cos(R);
+		SXP = u_NB.y * abs(acos(ARG3) / u_NB.y);
+		if (u_NB.y < 0)
+		{
+			SXP = -abs(SXP);
+		}
+		else
+		{
+			SXP = abs(SXP);
+		}
+		EL = R;
+		if (u_NB.z < 0)
+		{
+			EL = abs(EL);
+		}
+		else
+		{
+			EL = -abs(EL);
+		}
+	}
+}
+
 void CALCCOASA(MATRIX3 SMNB, VECTOR3 S_SM, double &SPA, double &SXP) 
 {
 	//Input: Stable member/navigation base matrix, unit star vector
@@ -4235,6 +4511,69 @@ MATRIX3 ROTCOMP(VECTOR3 U_R, double A)
 	I = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	R = I * cos(A) + tensorp(U_R, U_R)*(1.0 - cos(A)) + skew(U_R)*sin(A);
 	return R;
+}
+
+MATRIX3 MATRIX(VECTOR3 A, VECTOR3 B, VECTOR3 C)
+{
+	return _M(A.x, A.y, A.z, B.x, B.y, B.z, C.x, C.y, C.z);
+}
+
+MATRIX3 HeadsUpAttitude(VECTOR3 R, VECTOR3 V, VECTOR3 SCAXIS, VECTOR3 TLOS)
+{
+	//This is bad, but works
+
+	MATRIX3 RFNB;
+
+	RFNB = THREEAXISPOINTING(R, V, SCAXIS, TLOS, 0.0);
+	//Check if Z axis is closer to radius vector than -Z axis
+	if (dotp(tmul(RFNB, _V(0, 0, 1)), unit(R)) > 0.0)
+	{
+		RFNB = THREEAXISPOINTING(R, V, SCAXIS, TLOS, PI);
+	}
+	return RFNB;
+}
+
+MATRIX3 THREEAXISPOINTING(VECTOR3 R, VECTOR3 V, VECTOR3 SCAXIS, VECTOR3 TLOS, double OMICRON)
+{
+	//INPUTS:
+	//R = Position vector
+	//V = Velocity vector
+	//SCAXIS = Unit body pointing vector
+	//TLOS = Unit inertial pointing vector
+	//OMICRON = Roll angle
+	//OUTPUTS:
+	//MTP = Inertial to body matrix
+
+	MATRIX3 MTP;
+	VECTOR3 RR_BOD, RR_INER, YN, YT, RRA_INER;
+	double TOL, DOT, ROLL;
+
+	TOL = cos(1.0 * RAD);
+	RR_BOD = _V(0.0, 1.0, 0.0);
+
+	RR_INER = -unit(crossp(R, V));
+
+	DOT = dotp(SCAXIS, RR_BOD);
+
+	if (abs(DOT) > TOL)
+	{
+		RR_BOD = _V(0.0, 0.0, -1.0);
+	}
+	RRA_INER = crossp(_V(0.0, 0.0, 1.0), RR_INER);
+	ROLL = OMICRON + PI05;
+
+	DOT = dotp(TLOS, RR_INER);
+
+	if (abs(DOT) > TOL)
+	{
+		RR_INER = RRA_INER * sign(DOT);
+	}
+	YN = unit(crossp(SCAXIS, RR_BOD));
+	YT = unit(crossp(TLOS, RR_INER)) * sin(ROLL) - crossp(TLOS, unit(crossp(TLOS, RR_INER))) * cos(ROLL);
+
+	MTP = MATRIX(SCAXIS, crossp(SCAXIS, YN), -YN);
+	MTP = mul(tmat(MTP), MATRIX(TLOS, crossp(TLOS, YT), -YT));
+	return MTP;
 }
 
 void periapo(VECTOR3 R, VECTOR3 V, double mu, double &apo, double &peri)
@@ -4755,15 +5094,10 @@ void AOTStarAcquisition(VECTOR3 navstar, MATRIX3 REFSMMAT, VECTOR3 IMU, double A
 		theta = PI2 - theta;
 	}
 	YROT = PI2 + theta + AZ;
-	if (YROT >= PI2)
-	{
-		YROT -= PI2;
-	}
+	normalizeAngle(YROT);
+
 	SROT = YROT + 12.0*acos(C1);
-	if (SROT >= PI2)
-	{
-		SROT -= PI2;
-	}
+	normalizeAngle(SROT);
 }
 
 bool LMCOASCheckStar(VECTOR3 SI, MATRIX3 RMAT, VECTOR3 IMU, int Axis, double &EL, double &SPX)
@@ -4871,13 +5205,15 @@ VECTOR3 imulimit(VECTOR3 a)
 
 double imulimit(double a)
 {
+	//Input in degrees. Round and limit output to 0-359.
 	if (a < 0)
 	{
 		a += 360.0;
 	}
-	if (a > 359.5)
+	a = round(a);
+	if (a >= 359.5)
 	{
-		return a - 359.5;
+		a = 0.0;
 	}
 	return a;
 }
@@ -5143,6 +5479,16 @@ double GetMeanMotion(VECTOR3 R, VECTOR3 V, double mu)
 	return sqrt(mu / pow(GetSemiMajorAxis(R, V, mu), 3));
 }
 
+double GetTrueMotion(VECTOR3 R, VECTOR3 V, double mu)
+{
+	double h, r;
+
+	h = length(crossp(R, V));
+	r = length(R);
+
+	return h / (r*r);
+}
+
 double CMCEMSRangeToGo(MATRIX3 Rot_J_B, VECTOR3 R05G, double MJD05G, double lat, double lng)
 {
 	//INPUT:
@@ -5214,6 +5560,13 @@ double EMXINGElevSlope(VECTOR3 R, VECTOR3 V, VECTOR3 R_S, int body)
 	N_dot = V_S / length(R_S);
 
 	return (dotp(rho_dot, N) + dotp(rho_apo, N_dot))*length(rho);
+}
+
+//Calculates station vector in ECT coordinates
+VECTOR3 EMXING_Station_ECT(double GMT, double R_E_sin_lat, double R_E_cos_lat, double stat_lng)
+{
+	double lng = stat_lng + OrbMech::w_Earth * GMT;
+	return _V(R_E_cos_lat * cos(lng), R_E_cos_lat * sin(lng), R_E_sin_lat);
 }
 
 double LongitudeConversion(double lng, double T, double w_E, double lng_0, bool inertial_to_geographic)
@@ -5653,307 +6006,6 @@ void BrouwerSecularRates(CELEMENTS coe_osc, CELEMENTS coe_mean, int body, double
 		+ 5.0 / 4.0*gmp4*theta*(5.0 - 3.0*cn2)*(3.0 - 7.0*theta2));
 }
 
-SV PMMAEGS(int Epoch, SV sv0, int opt, double param, bool &error, double DN)
-{
-	if (sv0.gravref == oapiGetObjectByName("Earth"))
-	{
-		return PMMAEG(Epoch, sv0, opt, param, error, DN);
-	}
-	else
-	{
-		return PMMLAEG(Epoch, sv0, opt, param, error, DN);
-	}
-}
-
-SV PMMAEG(int Epoch, SV sv0, int opt, double param, bool &error, double DN)
-{
-	error = false;
-
-	//Update to the given time
-	if (opt == 0)
-	{
-		double MJD1, dt;
-
-		MJD1 = param;
-		dt = (MJD1 - sv0.MJD)*24.0*3600.0;
-		return coast(Epoch, sv0, dt);
-	}
-	else
-	{
-		SV sv1;
-		CELEMENTS osc0, osc1;
-		double DX_L, X_L, X_L_dot, dt, ddt, L_D, ll_dot, n0, g_dot, J20;
-		int LINE, COUNT;
-		bool DH;
-
-		J20 = 1082.6269e-6;
-
-		sv1 = sv0;
-		osc0 = OrbMech::GIMIKC(sv0.R, sv0.V, mu_Earth);
-
-		if (osc0.e > 0.85)
-		{
-			error = true;
-			return sv0;
-		}
-
-		n0 = sqrt(mu_Earth / (osc0.a*osc0.a*osc0.a));
-		ll_dot = n0;
-		g_dot = n0 * ((3.0 / 4.0)*(J20*R_Earth*R_Earth*(5.0*cos(osc0.i)*cos(osc0.i) - 1.0)) / (osc0.a*osc0.a*pow(1.0 - osc0.e*osc0.e, 2.0)));
-
-		osc1 = osc0;
-		if (opt != 3)
-		{
-			L_D = param;
-		}
-		else
-		{
-			double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
-			u = fmod(u, PI2);
-			if (u < 0)
-				u += PI2;
-			L_D = u;
-		}
-		DX_L = 1.0;
-		DH = true;
-		dt = 0.0;
-		LINE = 0;
-		COUNT = 24;
-
-		do
-		{
-			//Mean anomaly
-			if (opt == 1)
-			{
-				X_L = osc1.l;
-				X_L_dot = ll_dot;
-			}
-			//Argument of latitude
-			else if (opt == 2)
-			{
-				double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
-				u = fmod(u, PI2);
-				if (u < 0)
-					u += PI2;
-
-				X_L = u;
-				X_L_dot = ll_dot + g_dot;
-			}
-			//Maneuver line
-			else
-			{
-				double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
-				u = fmod(u, PI2);
-				if (u < 0)
-					u += PI2;
-
-				X_L = u;
-				X_L_dot = ll_dot + g_dot;
-				LINE = 2;
-			}
-
-			if (DH)
-			{
-				double DN_apo = DN * PI2;
-				ddt = DN_apo / ll_dot;
-				DH = false;
-
-				if (LINE != 0)
-				{
-					L_D = L_D + g_dot * ddt + DN_apo;
-					while (L_D < 0) L_D += PI2;
-					while (L_D >= PI2) L_D -= PI2;
-				}
-				else
-				{
-					ddt += (L_D - X_L) / X_L_dot;
-				}
-			}
-			else
-			{
-				DX_L = L_D - X_L;
-				if (abs(DX_L) - PI >= 0)
-				{
-					if (DX_L > 0)
-					{
-						DX_L -= PI2;
-					}
-					else
-					{
-						DX_L += PI2;
-					}
-				}
-				ddt = DX_L / X_L_dot;
-				if (LINE != 0)
-				{
-					L_D = L_D + ddt * g_dot;
-				}
-			}
-
-
-			dt += ddt;
-			sv1 = coast(Epoch, sv1, ddt);
-			osc1 = OrbMech::GIMIKC(sv1.R, sv1.V, mu_Earth);
-
-			COUNT--;
-
-		} while (abs(DX_L) > 2e-4 && COUNT > 0);
-
-		if (COUNT == 0)
-		{
-			error = true;
-		}
-
-		return sv1;
-	}
-
-	return sv0;
-}
-
-SV PMMLAEG(int Epoch, SV sv0, int opt, double param, bool &error, double DN)
-{
-	error = false;
-
-	//Update to the given time
-	if (opt == 0)
-	{
-		double MJD1, dt;
-
-		MJD1 = param;
-		dt = (MJD1 - sv0.MJD)*24.0*3600.0;
-		return coast(Epoch, sv0, dt);
-	}
-	//Update to the given mean anomaly (opt=1), argument of latitude (opt=2) or maneuver counter line (opt=3)
-	else
-	{
-		SV sv1;
-		CELEMENTS osc0, osc1;
-		double DX_L, X_L, X_L_dot, dt, ddt, L_D, ll_dot, n0, g_dot;
-		int LINE, COUNT;
-		bool DH;
-
-		sv1 = sv0;
-		osc0 = OrbMech::GIMIKC(sv0.R, sv0.V, mu_Moon);
-
-		if (osc0.e > 0.3)
-		{
-			error = true;
-			return sv0;
-		}
-
-		n0 = sqrt(mu_Moon / (osc0.a*osc0.a*osc0.a));
-		ll_dot = n0;
-		g_dot = 0.0; // n0 * ((3.0 / 4.0)*(J20*R_Moon*R_Moon*(5.0*cos(osc0.i)*cos(osc0.i) - 1.0)) / (osc0.a*osc0.a*pow(1.0 - osc0.e*osc0.e, 2.0)));
-
-		osc1 = osc0;
-		if (opt != 3)
-		{
-			L_D = param;
-		}
-		else
-		{
-			double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
-			u = fmod(u, PI2);
-			if (u < 0)
-				u += PI2;
-			L_D = u;
-		}
-		DX_L = 1.0;
-		DH = true;
-		dt = 0.0;
-		LINE = 0;
-		COUNT = 24;
-
-		do
-		{
-			//Mean anomaly
-			if (opt == 1)
-			{
-				X_L = osc1.l;
-				X_L_dot = ll_dot;
-			}
-			//Argument of latitude
-			else if (opt == 2)
-			{
-				double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
-				u = fmod(u, PI2);
-				if (u < 0)
-					u += PI2;
-
-				X_L = u;
-				X_L_dot = ll_dot + g_dot;
-			}
-			//Maneuver line
-			else
-			{
-				double u = OrbMech::MeanToTrueAnomaly(osc1.l, osc1.e) + osc1.g;
-				u = fmod(u, PI2);
-				if (u < 0)
-					u += PI2;
-
-				X_L = u;
-				X_L_dot = ll_dot + g_dot;
-				LINE = 2;
-			}
-
-			if (DH)
-			{
-				double DN_apo = DN * PI2;
-				ddt = DN_apo / ll_dot;
-				DH = false;
-
-				if (LINE != 0)
-				{
-					L_D = L_D + g_dot * ddt + DN_apo;
-					while (L_D < 0) L_D += PI2;
-					while (L_D >= PI2) L_D -= PI2;
-				}
-				else
-				{
-					ddt += (L_D - X_L) / X_L_dot;
-				}
-			}
-			else
-			{
-				DX_L = L_D - X_L;
-				if (abs(DX_L) - PI >= 0)
-				{
-					if (DX_L > 0)
-					{
-						DX_L -= PI2;
-					}
-					else
-					{
-						DX_L += PI2;
-					}
-				}
-				ddt = DX_L / X_L_dot;
-				if (LINE != 0)
-				{
-					L_D = L_D + ddt * g_dot;
-				}
-			}
-
-
-			dt += ddt;
-			sv1 = coast(Epoch, sv1, ddt);
-			osc1 = OrbMech::GIMIKC(sv1.R, sv1.V, mu_Moon);
-
-			COUNT--;
-
-		} while (abs(DX_L) > 2e-4 && COUNT > 0);
-
-		if (COUNT == 0)
-		{
-			error = true;
-		}
-
-		return sv1;
-	}
-
-	return sv0;
-}
-
 CELEMENTS GIMIKC(VECTOR3 R, VECTOR3 V, double mu)
 {
 	CELEMENTS elem;
@@ -6046,40 +6098,6 @@ double MeanToTrueAnomaly(double meanAnom, double eccdp, double error2)
 		ta += PI2;
 
 	return ta;
-}
-
-SV PositionMatch(int Epoch, SV sv_A, SV sv_P, double mu)
-{
-	SV sv_A1, sv_P1;
-	VECTOR3 u, R_A1, U_L;
-	double phase, n, dt, ddt;
-	int nmax, nn;
-	bool error;
-
-	dt = 0.0;
-	nn = 0;
-	nmax = 100;
-
-	u = unit(crossp(sv_P.R, sv_P.V));
-	U_L = unit(crossp(u, sv_P.R));
-	sv_A1 = PMMAEGS(Epoch, sv_A, 0, sv_P.MJD, error);
-
-	do
-	{
-		R_A1 = unit(sv_A1.R - u * dotp(sv_A1.R, u))*length(sv_A1.R);
-		phase = acos2(dotp(unit(R_A1), unit(sv_P.R)));
-		if (dotp(U_L, R_A1) > 0)
-		{
-			phase = -phase;
-		}
-		n = OrbMech::GetMeanMotion(sv_A1.R, sv_A1.V, mu);
-		ddt = phase / n;
-		sv_A1 = coast(Epoch, sv_A1, ddt);
-		dt += ddt;
-		nn++;
-	} while (abs(ddt) > 0.01 && nmax > nn);
-
-	return sv_A1;
 }
 
 double THETR(double u1, double u2, double i1, double i2, double h1, double h2)

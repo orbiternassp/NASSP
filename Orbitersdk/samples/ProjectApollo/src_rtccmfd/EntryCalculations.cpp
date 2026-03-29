@@ -2273,7 +2273,7 @@ void RetrofirePlanning::RMMATT_LVLH(VECTOR3 LVLH_Att, VECTOR3 R, VECTOR3 V, int 
 		{
 			double T, WDOT;
 			unsigned int IC = 1;
-			pRTCC->GIMGBL(mass, 0.0, P_G, Y_G, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 1, 0.0);
+			pRTCC->GIMGBL(mass, 0.0, P_G, Y_G, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 0.0);
 		}
 		else
 		{
@@ -2368,13 +2368,37 @@ VECTOR3 RetrofirePlanning::RMMATT_LVLH_Body(VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_
 	return LVLHAngles;
 }
 
-MATRIX3 RetrofirePlanning::RMMATT_REFSMMAT(VECTOR3 X_B, VECTOR3 Y_B, VECTOR3 Z_B, VECTOR3 R) const
+MATRIX3 RetrofirePlanning::RMMATT_REFSMMAT(VECTOR3 U_T, VECTOR3 R, int thruster, int TrimIndicator, double mass) const
 {
-	//Desired REFSMMAT from body axes and position vector
-	VECTOR3 X_SM, Y_SM, Z_SM;
-	X_SM = -X_B;
-	Y_SM = unit(crossp(X_SM, R));
+	VECTOR3 Y_T, Z_T, X_SM, Y_SM, Z_SM;
+	double P_G, Y_G;
+
+	if (thruster == RTCC_ENGINETYPE_CSMSPS)
+	{
+		if (TrimIndicator == -1)
+		{
+			double T, WDOT;
+			unsigned int IC = 1;
+			pRTCC->GIMGBL(mass, 0.0, P_G, Y_G, T, WDOT, RTCC_ENGINETYPE_CSMSPS, IC, 1, 0.0);
+		}
+		else
+		{
+			pRTCC->GetSystemGimbalAngles(RTCC_ENGINETYPE_CSMSPS, P_G, Y_G);
+		}
+	}
+	else
+	{
+		P_G = Y_G = 0.0;
+	}
+
+	Y_T = unit(crossp(U_T, R));
+	Z_T = unit(crossp(U_T, Y_T));
+	X_SM = U_T * cos(Y_G)*cos(P_G) - Y_T * sin(Y_G)*cos(P_G) + Z_T * sin(P_G);
+	Y_SM = U_T * sin(Y_G) + Y_T * cos(Y_G);
 	Z_SM = unit(crossp(X_SM, Y_SM));
+
+	X_SM = -X_SM;
+	Y_SM = -Y_SM;
 
 	return _M(X_SM.x, X_SM.y, X_SM.z, Y_SM.x, Y_SM.y, Y_SM.z, Z_SM.x, Z_SM.y, Z_SM.z);
 }
@@ -2421,7 +2445,7 @@ void RetrofirePlanning::RMSTTF()
 	else
 	{
 		tab->RefsID = "DES";
-		refsdata.REFSMMAT = RMMATT_REFSMMAT(X_B, Y_B, Z_B, sv_TIG.R);
+		refsdata.REFSMMAT = RMMATT_REFSMMAT(U_T, sv_TIG.R, Thruster, GimbalIndicator, CSMmass_Sep);
 	}
 
 	//Calculate retrofire IMU attitude
@@ -2505,7 +2529,7 @@ void RetrofirePlanning::RMSTTF()
 	sv_BO_ECT.RBI = BODY_EARTH;
 	pRTCC->EMMDYNEL(sv_BO_ECT, elem);
 
-	pRTCC->PIFAAP(elem.a, elem.e, elem.i, elem.TA, elem.TA + elem.AoP, length(sv_BO_ECT.R), r_apo, r_peri);
+	pRTCC->PIFAAP(elem.a, elem.e, elem.i, elem.TA, elem.TA + elem.AoP, length(sv_BO_ECT.R), OrbMech::R_Earth, OrbMech::J2_Earth, r_apo, r_peri);
 	tab->H_apo = (r_apo - OrbMech::R_Earth) / 1852.0;
 	tab->H_peri = (r_peri - OrbMech::R_Earth) / 1852.0;
 
@@ -2519,7 +2543,7 @@ void RetrofirePlanning::RMSTTF()
 		sv_BO_SEP_ECT.RBI = BODY_EARTH;
 		pRTCC->EMMDYNEL(sv_BO_SEP_ECT, elem);
 		
-		pRTCC->PIFAAP(elem.a, elem.e, elem.i, elem.TA, elem.TA + elem.AoP, length(sv_BO_SEP_ECT.R), r_apo, r_peri);
+		pRTCC->PIFAAP(elem.a, elem.e, elem.i, elem.TA, elem.TA + elem.AoP, length(sv_BO_SEP_ECT.R), OrbMech::R_Earth, OrbMech::J2_Earth, r_apo, r_peri);
 
 		tab->CSMWeightSep = burnaux_sep.WTENGON *LBS*1000.0;
 		tab->H_apo_sep = (r_apo - OrbMech::R_Earth) / 1852.0;

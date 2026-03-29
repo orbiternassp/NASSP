@@ -89,7 +89,37 @@ The main menu is dividing the MFD in the following categories:\\
 \textbf{CFG:} Configuration. Various settings for the MFD.\\
 \textbf{UPL:} Uplink Page. All uplinks to the AGCs and LVDC can be found here.\\
 \textbf{MCC:} MCC Displays. Shows the "TV Guide", a list of displays that were available in the MOCR.\\
+\newpage
+\section{Configuration}
 
+\textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\
+\textbf{TYP:} Choose the type of vehicle configuration (CSM or LM, docked or undocked).\\
+\textbf{STA:} Choose the type of LM configuration that is currently being used, ascent or descent configuration.\\
+\textbf{CG:} Page for changing the thrust and CG tables. The CG tables are used to determine e.g. SPS trim gimbal angles. The tables are a function of weight of the vehicle. The CG tables contain the center of gravity in 3 dimensions, while the thrust tables contain thrust and weight loss rate of the selected thruster. There are default tables; alternative an initial table can be loaded in the RTCC mission constants file. Afterwards the table are being saved and loaded in scenarios. Note that presently the CG tables are not saved in scenarios!
+
+\textbf{DAT:} Choose the launch date for the mission.\\
+\textbf{TIM:} Choose the launch time for the mission. This button leads to a subpage to select various times stored in the RTCC.\\
+\textbf{EPO:} Choose the AGC epoch. Usually this is a MJD at around January 1st of the yearly coordinate system defining period. This value should be automatically chose correctly for the AGC version in use.\\
+\textbf{UPD:} Update the liftoff time automatically by downlinking that time from the CMC or LGC. This will actually update three values in the RTCC: CSM liftoff time, time of clock zeroing in the CMC, time of clock zeroing in the LGC. These times are normally all set to the actual liftoff time of the CSM to get a consistent basis to calculate Ground Elapsed Time in the RTCC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\newpage
+\section{Initialization}
+For the flown, manned Apollo missions (Apollo 7-17) the initialization happens automatically upon loading the RTCC MFD for the first time, or if the MCC mission support functionality is enable, at Earth Orbit Insertion. This section applies therefore mostly for custom missions.\\
+As a first step a few files that supply data to the RTCC have to be selected. For more details on these see the "Config Files" chapter at the end of this manual. The file selection is done on a subpage of the Config page. Every mission needs to select at least a Constants file. This file is usually valid for a specific mission, no matter when it launches. For lunar missions the SFP file is required for the TLMCC Processor and the TLI file is required to simulate TLI. These files are usually valid for the duration of a monthly launch window. An init file, that contains additional initialization parameters for a specific launch day, can also be selected. The file is usually automatically selected by changing the launch day, but can afterwards be manually chosen as well.\\
+After the files have been selected the launch day should be initialized. This generates, among other things, the ephemerides data, so the launch day initialization is required before most calculations can be run in the RTCC.\\
+The liftoff time and GRR times of the onboard computers can be initialized before liftoff as well, on a subpage of the Config page (TIM button). After liftoff the UPD button on the Config page can be used to update the times to actual values, which can vary by a few tenths of a second from the planned time. The RTCC keeps track of the following times:\\
+
+\begin{itemize}
+	\item CSM liftoff time (MED P10). This is the time reference for Ground Elapsed Time.
+	\item CSM Guidance Reference Release (GRR) time (MED P12). The only purpose of this time is to calculate the Launch REFSMMAT.
+	\item CMC liftoff time/time of zeroing registers (MED P15). In AGC terms this is called TEPHEM. By convention this time is used as the reference for GET, so the CSM liftoff time and LGC time of zeroing registers should be set to this value.
+	\item IU GRR time (MED P12). Time at which the IU platform is set to inertial. Usually 17 seconds before liftoff.
+	\item LM liftoff time (MED P10). Only required for a dual launch mission (e.g. with the CSM on one Saturn IB, the LM on another Saturn IB). Not to be confused with the time at which the LM begins ascent from the Moon.
+	\item LGC liftoff time/time of zeroing registers (MED P15). Usually set to the same value as the CMC time.
+	\item AGS time of zeroing registers (MED P15). This value has two different input methods. Internally the RTCC stores this value as a GMT. The AGS clock is set with an offset bias from the LGC clock, so an additional input method is available (used by default) to input this time as a delay time from the LGC register zeroing time. This difference is known as the K-Factor. The RTCC times page shows the AGS time in both formats, GMT and GET.
+	\item Second IU GRR time (MED P12). On a dual launch mission a second IU GRR time can be set. The GRR time is used for e.g. state vector uplinks to the LVDC, so for that to work correctly this time will need to be set.
+\end{itemize}
+\newpage
 \section{Targeting}
 
 The targeting menu consists of the many maneuver calculation pages:\\
@@ -285,15 +315,30 @@ plane whenever the astronaut's LOS is to the target or the horizon, deg\\
 
 \paragraph{Explanation}\mbox{} \\
 
-Coelliptic orbits are two orbits that are coplanar (identical inclination and longitude of the ascending node) and confocal (identical eccentricity and argument of periapsis). To achieve such an orbit relative to a target vessel this MFD can calculate a maneuver based on Program 33 of the AGC and the maneuver to initiate the coelliptic sequence, based on Program 32 of the AGC.\\
+The Coelliptic Sequence Program computes the incremental velocities required to meet some relative vehicle positioning at the terminal phase initiation (TPI)
+point. The maneuvers of the iterative sequence are the concentric sequence initiation maneuver (CSI) and the coelliptic maneuver (CDH), which may or may not be scheduled.\\
+
+The desired relative positioning at TPI has two options: (1) that the active vehicle have a certain elevation angle to the target, or (2) that a desired differential altitude exist is the coelliptic orbit configuration.\\
+
+The time of the CSI maneuver, if scheduled, is input. The desired CSI DV that will only be horizontal, may be computed with respect to a desired elevation
+angle at TPI or a desired DH at CDH. An option exists to vary the CSI time within limits to reach both of these constraints.\\
+
+There are five options for the computation of the CDH maneuver:
+\begin{enumerate}
+	\item Arrival at a next apsis (Integrator)
+	\item At an input time
+	\item After some desired travel angle from CSI
+	\item Arrival at a next apsis (Keplerian)
+	\item Number of half revolutions from CSI
+\end{enumerate}
 
 \paragraph{Buttons}\mbox{} \\
 
 \textbf{INI:} Go to SPQ initialization page.\\
-\textbf{VEH:} Choose which of the two vehicles is the chaser and which is the target (MPT mode only).\\
-\textbf{CHA:} Threshold time for the state vector of the chaser vehicle (MPT mode only).\\
-\textbf{TGT:} Threshold time for the state vector of the target vehicle (MPT mode only).\\
-\textbf{MOD:} Calculation mode, CSI or CDH maneuver.\\
+\textbf{VEH:} Choose which of the two vehicles is the chaser and which is the target.\\
+\textbf{CHA:} Select the chaser vessel or the threshold time for the state vector of the chaser vehicle (MPT mode only).\\
+\textbf{TGT:} Select the target vessel or the threshold time for the state vector of the target vehicle (MPT mode only).\\
+\textbf{MOD:} Calculation mode, CSI or CDH maneuver or the optimum CSI mode which iterates on the CSI time to achieve both the desired DH at CDH and the desired time at TPI.\\
 \textbf{TIM:} Switches between fixed GET and finding the delta height of the maneuver or fixed delta height and finding the time of ignition.\\
 \textbf{TIG:} The time of the maneuver in GET. If the option is used to find the CDH time based on delta height this is an initial guess.\\
 \textbf{CLC:} Calculate the burn solution.\\
@@ -303,8 +348,14 @@ Coelliptic orbits are two orbits that are coplanar (identical inclination and lo
 
 \textbf{DH:} Delta height at the CDH maneuver.\\
 \textbf{E:} Desired elevation angle at TPI.\\
+\textbf{WT:} Desired travel angle between TPI and TPF.\\
 \textbf{TPI:} Desired TPI time.\\
+\textbf{CDH:} Select the option for the CDH maneuver point.\\
+\textbf{VAL:} Select the defining value for the CDH maneuver point.\\
 \textbf{BCK:} Go back to SPQ calculation page.\\
+\paragraph{Display}\mbox{} \\
+
+See Rendezvous Evaluation Display \ref{RED} under MOCR Displays.\\
 \newpage
 
 \subsubsection{Docking Initiation Processor (DKI)}
@@ -413,11 +464,27 @@ The output from the GPM Processor is a display containing such maneuver informat
 \subsubsection{Buttons}
 
 \textbf{SET:} Make an input for the GPM processor.\\
-\textbf{<<:} Move the marker down.\\  
-\textbf{>>:} Move the marker up.\\
+\textbf{$<<$:} Move the marker down.\\  
+\textbf{$>>$:} Move the marker up.\\
 \textbf{CLC:} Calculate the maneuver.\\
 \textbf{MPT:} Create finite maneuver from impulsive burn.\\
 \textbf{BCK:} Go back to the main menu.\\
+
+Error codes:\\
+
+\begin{tabular}{p{3cm} p{10cm}}
+\underline{Code}&\underline{Error Description}\\
+0&No error\\
+1&Maneuver cannot be performed in this orbit\\
+2&Maneuver cannot be performed at this point in the orbit\\
+3&AEG failed to converge\\
+4&Unrecoverable AEG error\\
+5&Unable to obtain libration matrix\\
+6&Unable to advance to selenographic argument of latitude\\
+7&PMMAPD error for current apoapsis/periapsis\\
+8&PMMAPD error for resultant apoapsis/periapsis\\ 
+9&Resultant orbit non-elliptical\\
+\end{tabular}
 \newpage
 \subsection{TLI Planning}
 \subsubsection{Introduction}
@@ -429,6 +496,7 @@ On a typical lunar mission all the targeting needed for TLI has been loaded into
 	\item Specified total Delta V
 	\item Specified apogee altitude
 	\item Integrated non-free return trajectory to the nominal nodal position at the Moon
+	\item External Delta V
 \end{enumerate}
 
 \subsubsection{Inputs}
@@ -438,7 +506,7 @@ On a typical lunar mission all the targeting needed for TLI has been loaded into
 \textbf{Opp:} Select the TLI opportunity. For option 1 this is the input to choose when the TLI is done and for all options this changes certain parameters associated with one of the opportunities in the LVDC, mostly the time of S-IVB mixture ratio shift from ignition.\\
 \textbf{Mode:} Choose the TLI processor calculation mode, see list above.\\
 \textbf{TIG:} Time of ignition. Not used for option 1. Used as a very rough initial guess in option 2 and 5, that only has to be accurate to a full orbit. In options 3 and 4 this is the exact time of ignition used.\\
-\textbf{DV:} Delta V of the maneuver (option 3 only).\\
+\textbf{DV:} Delta V of the maneuver (option 3) or Delta V vector (option 6).\\
 \textbf{APO:} Apogee altitude to be achieved by the maneuver (option 4 only).\\
 \textbf{Window:} Pacific or Atlantic TLI window, for the lunar mission options (2 and 5) this is used to generate the initial guess.\\
 \textbf{SFP:} For the lunar mission options (2 and 5) the target parameters are taken from the Skeleton Flight Plan table, which has two sets of data. See the Midcourse Correction Processor for more details about the SFP.\\
@@ -1293,13 +1361,32 @@ for a vector fetch, a time of abort, and maneuver targets. This type of manual e
 \textbf{GETL:} GET at drogue chute deployment using the primary entry mode:\\
 \textbf{MD:} Miss distance of the primary entry mode to the target splashdown coordinates. In nautical miles.\\
 
+Error codes:\\
+
+\begin{tabular}{p{3cm} p{10cm}}
+\underline{Code}&\underline{Error Description}\\
+0&No error\\
+1&$\Delta$V of main engine $\le$ 0\\
+2&Coast numerical integrator failed backing up to ignition time\\
+6&Forward iterator failed to converge\\
+7&Error in conversion from ECI to ECT coordinates\\
+8&Coast numerical integrator failed in PMMATC\\
+9&Maneuver numerical integrator failed in PMMATC\\
+10&REFSMMAT not available\\
+11&Illegal maneuver code\\
+12&Invalid vehicle configuration\\
+13&Invalid number of ullage quads\\
+14&Invalid entry mode\\
+\end{tabular}
+
 \newpage
 \subsection{Skylab Launch Window Processor}
 
 The launch window processor (LWP) can be used to calculate the optimal liftoff time and launch targeting parameters for Saturn IB missions to a rendezvous target in orbit, such as Skylab and ASTP. In the input descriptions below GMTLO* refers to the lift-off time that is required to achieve zero phase angle to the target at insertion.
 \subsubsection{Inputs}
 
-\textbf{TGT:} Select target vehicle in orbit for rendezvous.\\
+\textbf{PAD:} Select the launchpad (CSM or LEM). The pad coordinates are system parameters.\\
+\textbf{TGT:} Select target vehicle in orbit for rendezvous. If the MPT is active then the selection is the vector time. If no vector time is given (negative value input) then either the present time is used or, if there should be any maneuvers on the MPT, the first free flight vector after the last MPT maneuver.\\
 \textbf{LOT:} Liftoff time option. The options are: 
 
 \begin{itemize}
@@ -1340,6 +1427,7 @@ The launch window processor (LWP) can be used to calculate the optimal liftoff t
 \textbf{DELNOF:} Flag for option to compute differential nodal regression from insertion to rendezvous.\\
 \textbf{DELNO:} Angle that is added to the target descending node to account for differential nodal regression.\\
 \textbf{PHASE:} Expected phase angle at insertion. The default option is 90-270$^{\circ}$, which should work for most of the 0-360$^{\circ}$ range. Near 360$^{\circ}$ some difficulty to converge could arise, so if a calculation fails then switching this option to 270-540$^{\circ}$ can help. Other than that there should be no need to change the default value.\\
+\textbf{LAZCOE:} Coefficients of the empirical launch azimuth polynomial. The polynomial has the form \(A\textsubscript{z} = A\textsubscript{00} + A\textsubscript{01}i + A\textsubscript{10}\lambda + A\textsubscript{11}i\lambda\), where i is the inclination and \(\lambda\) is the descending node angle. All input and output angles in radian. \\
 \textbf{DIS:} Go to launch targeting display.\\ 
 \textbf{BCK:} Go back to utilities page.\\
 
@@ -1385,8 +1473,85 @@ The launch window processor (LWP) can be used to calculate the optimal liftoff t
 \textbf{TIME:} Greenwich mean time of lift-off\\
 
 \newpage
-\subsection{REFSMMAT}
+\section{Pre-Advisory Data}
+\subsection{Maneuver PAD}
 
+\subsubsection{Explanation}
+
+The Maneuver Pre-Advisory Data (PAD) contains all necessary numbers to safely conduct a burn with the SPS or RCS. A complete explanation of each item on the PAD can be found in all Apollo flight plans, e.g. \href{http://history.nasa.gov/alsj/a11/a11fltpln_final_reformat.pdf}{here}. Additionally to the Maneuver PAD the very similar Apollo 7 TPI PAD was added as a second mode.\\ 
+
+\subsubsection{Buttons}
+
+\textbf{VEH:} Cycle between using the docked (CSM/LM) or undocked vehicle configuration for the maneuver.\\
+\textbf{ENG:} Cycle between the available thrusters for the maneuver.\\
+\textbf{HEA:} Choose between conducting the maneuver in a heads-up or a heads-down orientation.\\
+\textbf{ULL:} Choose the ullage thrusters (2 or 4) and ullage duration for the maneuver.\\
+\textbf{TIG:} If you want to display a Maneuver PAD for a maneuver not calculated with the Apollo RTCC MFD you can manually enter the desired Time of Ignition and Delta V.\\
+\textbf{DV:} See above.\\
+\textbf{CLC:} Calculate the Maneuver PAD.\\
+\textbf{OPT:} Switch between the CSM and LM Maneuver PADs, the Apollo 7 TPI PAD, the TLI PAD and the PDI PAD.\\
+\textbf{STA:} Choose the time before the maneuver for which the sextant star check, boresight star check and backup GDC alignment are calculated.\\
+\textbf{GDC:} Choose the preferred star set for the backup GDC alignment. There are four sets of stars that can be used for the alignment. The Maneuver PAD logic will usually first try Deneb and Vega and perform an occultation check and a yaw angle check (75 deg max.). If this set is not available it will attempt to use the next one. With this button the preferred set, which will be checked first, can be selected. If it is not available the PAD would still show a different set that is available. The time for which the checks are performed is the same time as selected for the sextant and boresight star check.\\
+\textbf{BCK:} Go back to the main menu.\\
+\newpage
+\subsection{Entry PAD}
+
+\subsubsection{Explanation}
+
+The Entry PAD contains all numbers to conduct a safe reentry. There are two types of Entry PADs: Earth Orbit Reentry and Lunar Entry. A complete explanation of each item on the PAD can be found in most Apollo flight plans, e.g. \href{http://history.nasa.gov/alsj/a11/a11fltpln_final_reformat.pdf}{here}. \\
+
+\subsubsection{Buttons}
+
+\textbf{MAN:} For a lunar entry you can choose between calculating a direct Entry PAD without any additional maneuvers or a Entry PAD for a previously calculated Midcourse Correction. For an Earth orbit entry a deorbit maneuver has to be performed in any case.\\
+\textbf{DWN:} Downlink the splashdown coordinates from the AGC.\\
+\textbf{CLC:} Calculate the missing numbers on the Entry PAD.\\
+\textbf{OPT:} Switch between the Earth Entry PAD and the Lunar Entry PAD.\\
+\textbf{BCK:} Go back to the main menu.\\
+\newpage
+\subsection{Landmark Tracking}
+
+\subsubsection{Explanation}
+
+On the Landmark Tracking page coordinates on the spherical bodies (Earth and Moon) in Orbiter 2010 can be converted to AGC coordinates. Also the contents of a Landmark Tracking PAD can be calculated. These are used for the correct timing of a pitchdown maneuver for better tracking with Program 22.
+
+T1 is the time at which the CSM comes over the horizon and becomes visible from the landmark. At this time the astronaut can begin looking at the landmark to find the specific point he wants to track. \\
+T2 is the time at which the CSM is at an elevation angle of 35$^{\circ}$ from the landmark. If any marks on the landmark are to be done, then at this time the pitchdown maneuver should be started. In Earth orbit this is usually 0.5$^{\circ}$/s, in lunar orbit 0.3$^{\circ}$/s. \\
+The other displayed values are the distance of the landmark from the ground track of the CSM orbit and the AGC inputs. The AGC uses geodetic latitude, longitude divided by 2 and altitude in nautical miles as the inputs.\\
+
+\subsubsection{Buttons}
+
+\textbf{TIM:} Estimated time over the landmark.\\
+\textbf{LAT:} Geocentric latitude of the landmark.  If the landmark is listed in a marker file, then that latitude should be used as an input here.\\
+\textbf{LNG:} Longitude of the landmark.\\
+\textbf{CLC:} Calculate AGC coordinates and Landmark Tracking PAD.\\
+\newpage
+\subsection{Map Update}
+
+\subsubsection{Explanation}
+
+The Map Update is very different in Earth and Moon orbit. In Earth orbit the next ground station with the times of acqusition and loss of signal (AOS and LOS) are displayed.  In lunar orbit a few more times are displayed: loss of signal (LOS), sunrise (SR), crossing of the prime meridian (PM), acqusition of signal (AOS) and sunset (SS) are shown. These values are written down on the Apollo 8 Map Update forms.\\ 
+
+\subsubsection{Buttons}
+
+\textbf{CLC:} Calculate map update.\\
+\textbf{MOD:} Cycle between Earth and Moon orbit.\\
+\newpage
+\subsection{AGS State Vector Update}
+\subsubsection{Explanation}
+This page shows the AGS State Vector Update PAD. There would also be a MOCR display for the same function (MSK 277) but this page has been modelled after the PAD given to the crew for covenience. The AGS SV PAD can be used to manually input CSM and LM state vectors on the DEDA. This is a backup method, the main method of updating the state vectors would be via downlink from the PGNS (Verb 47).\\
+Because the AEA uses no REFSMMAT the coordinate system of the state vectors depends on the current alignment being used. For that the current REFSMMAT in use can be selected. The RTCC keeps several REFSMMAT stored, the main ones for this page would be the current (CUR) or AGS REFSMMATs. As the PGNS and AGS typically use the same alignment the CUR REFSMMAT would be saved as the AGS REFSMMAT and then the AGS REFSMMSAT is used for the state vector calculation. But any REFSMMAT in the LM REFSMMAT table can be used.\\
+This page can also be used to manually or automatically update the AGS K-Factor. For the automatic option the current PGNS and AGS clocks are compared and the difference is then saved as the K-Factor.\\
+\subsubsection{Buttons}
+\textbf{SLT:} Cycle between updating the CSM or the LM part of the PAD.\\
+\textbf{TGT:} Update the CSM or LM vessel.\\
+\textbf{REF:} Choose the REFSMMAT in the LM REFSMMAT table to use for the state vector calculation.\\
+\textbf{AGS:} Manually enter the AGS K-Factor.\\
+\textbf{KFA:} Run the automatic calculation to update the K-Factor.\\
+\textbf{CLC:} Calculate the AGS state vector PAD. CSM and LM state vectors are calculated separately.\\
+\textbf{SAV:} Save the present LM CUR REFSMMAT as the AGS REFSMMAT. All REFSMMATs in the LM REFSMMAT table can be used for the state vector calculation, but only the AGS REFSMMAT is used in converting telemetry vectors (see Vector Panel Summary) so this is a simple way to update the AGS REFSMMAT. The alternative would be using the G00 MED.\\
+\newpage
+\section{Utilities}
+\subsection{REFSMMAT}
 \subsubsection{Explanation}
 
 The REFSMMAT (REFerence to Stable Member MATrix) is a rotation matrix relating the Apollo Basic Reference Coordinate System (BRCS) and the currently used IMU Stable Member Coordinate System. Depending on the mission phase the REFSMMAT is chosen, so that the IMU angles provide meaningful attitude values. Some types of REFSMMATs can be calculated by the AGC itself, but most were uplinked to the spacecraft from the ground. The REFSMMATs that can be calculated with this MFD are:
@@ -1413,85 +1578,7 @@ The REFSMMAT (REFerence to Stable Member MATrix) is a rotation matrix relating t
 	\textbf{LAT:} Only for Landing Site: Choose the latitude of the landing site.\\
 	\textbf{LNG:} Only for Landing Site: Choose the longitude of the landing site.\\
 	\textbf{BCK:} Go back to the main menu.\\
-
-\subsection{State Vector}
-
-\subsubsection{Explanation}
-
-The state vector of the vessel can be calculated and uplinked here. Additionally to the functionality in the Project Apollo MFD, this MFD can calculate a state vector in the future, which sometimes was used during the Apollo program to prevent an internal state vector integration of the AGC.\\
-The AGC has two slots for state vectors: CSM and LM. For the CSM the MFD will prevent uplinking a state vector that is not the vessel itself. The vessel for the LM can be freely chosen.\\
-
-\subsection{Buttons}
-
-\textbf{MOD:} Choose  between calculating the state vector "now" and at a specified GET.\\
-\textbf{TIM:} Set the desired GET for the state vector in GET mode.\\
-\textbf{TGT:} Set the target vessel.\\
-\textbf{SLT:} Switch between the slots.\\
-\textbf{CLC:} Calculate a state vector.\\
-\textbf{UPL:} Uplinks the calculated data to the AGC.\\
-\textbf{BCK:} Go back to the main menu.\\
-
-\subsection{Landmark Tracking}
-
-\subsubsection{Explanation}
-
-On the Landmark Tracking page coordinates on the spherical bodies (Earth and Moon) in Orbiter 2010 can be converted to AGC coordinates. Also the contents of a Landmark Tracking PAD can be calculated. These are used for the correct timing of a pitchdown maneuver for better tracking with Program 22.
-
-T1 is the time at which the CSM comes over the horizon and becomes visible from the landmark. At this time the astronaut can begin looking at the landmark to find the specific point he wants to track. \\
-T2 is the time at which the CSM is at an elevation angle of 35$^{\circ}$ from the landmark. If any marks on the landmark are to be done, then at this time the pitchdown maneuver should be started. In Earth orbit this is usually 0.5$^{\circ}$/s, in lunar orbit 0.3$^{\circ}$/s. \\
-The other displayed values are the distance of the landmark from the ground track of the CSM orbit and the AGC inputs. The AGC uses geodetic latitude, longitude divided by 2 and altitude in nautical miles as the inputs.\\
-
-\subsubsection{Buttons}
-
-\textbf{TIM:} Estimated time over the landmark.\\
-\textbf{LAT:} Geocentric latitude of the landmark.  If the landmark is listed in a marker file, then that latitude should be used as an input here.\\
-\textbf{LNG:} Longitude of the landmark.\\
-\textbf{CLC:} Calculate AGC coordinates and Landmark Tracking PAD.\\
-
-\subsection{Map Update}
-
-\subsubsection{Explanation}
-
-The Map Update is very different in Earth and Moon orbit. In Earth orbit the next ground station with the times of acqusition and loss of signal (AOS and LOS) are displayed.  In lunar orbit a few more times are displayed: loss of signal (LOS), sunrise (SR), crossing of the prime meridian (PM), acqusition of signal (AOS) and sunset (SS) are shown. These values are written down on the Apollo 8 Map Update forms.\\ 
-
-\subsubsection{Buttons}
-
-\textbf{CLC:} Calculate map update.\\
-\textbf{MOD:} Cycle between Earth and Moon orbit.\\
-
-\subsection{Maneuver PAD}
-
-\subsubsection{Explanation}
-
-The Maneuver Pre-Advisory Data (PAD) contains all necessary numbers to safely conduct a burn with the SPS or RCS. A complete explanation of each item on the PAD can be found in all Apollo flight plans, e.g. \href{http://history.nasa.gov/alsj/a11/a11fltpln_final_reformat.pdf}{here}. Additionally to the Maneuver PAD the very similar Apollo 7 TPI PAD was added as a second mode.\\ 
-
-\subsubsection{Buttons}
-
-\textbf{VEH:}The vehicle configuration is only displayed here and chosen on the configuration page.\\
-\textbf{ENG:} Choose between the Service Propulsion System (SPS) and the Reaction Control System (RCS) for the maneuver.\\
-\textbf{HEA:} Choose between conducting the maneuver in a heads-up or a heads-down orientation.\\
-\textbf{TIG:} If you want to display a Maneuver PAD for a maneuver not calculated with the Apollo RTCC MFD you can manually enter the desired Time of Ignition and Delta V.\\
-\textbf{DV:} See above.\\
-\textbf{CLC:} Calculate the missing numbers on the Maneuver PAD.\\
-\textbf{OPT:} Switch between the Maneuver PAD, the Apollo 7 TPI PAD and the TLI PAD.\\
-\textbf{REQ:} Request a maneuver solution calculated with LTMFD or IMFD.\\
-\textbf{BCK:} Go back to the main menu.\\
-
-\subsection{Entry PAD}
-
-\subsubsection{Explanation}
-
-The Entry PAD contains all numbers to conduct a safe reentry. There are two types of Entry PADs: Earth Orbit Reentry and Lunar Entry. A complete explanation of each item on the PAD can be found in most Apollo flight plans, e.g. \href{http://history.nasa.gov/alsj/a11/a11fltpln_final_reformat.pdf}{here}. \\
-
-\subsubsection{Buttons}
-
-\textbf{MAN:} For a lunar entry you can choose between calculating a direct Entry PAD without any additional maneuvers or a Entry PAD for a previously calculated Midcourse Correction. For an Earth orbit entry a deorbit maneuver has to be performed in any case.\\
-\textbf{DWN:} Downlink the splashdown coordinates from the AGC.\\
-\textbf{CLC:} Calculate the missing numbers on the Entry PAD.\\
-\textbf{OPT:} Switch between the Earth Entry PAD and the Lunar Entry PAD.\\
-\textbf{BCK:} Go back to the main menu.\\
-\newpage
-\subsection{Apollo Generalized Optics Program}
+	\subsection{Apollo Generalized Optics Program}
 
 The Apollo Generalized Optics Program (AGOP) contains various optics and antenna pointing calculations.\\
 
@@ -1565,17 +1652,180 @@ The uplink to the IU for the impact targeting can currently not be done in the R
 \end{itemize}
 
 \newpage
-\subsection{Configuration}
+\subsection{Powered Descent Abort Program}
+\subsubsection{Explanation}
+The Powered Descent Abort Program (PDAP) calculates the parameters used by the PGNS and AGS during an abort from powered descent, to guide the LM to a trajectory that will lead to rendezvous with the CSM using the normal coelliptic rendezvous sequence. For the nominal PDI attempt (PDI-1) these parameters have already been loaded in the LGC and AEA during prelaunch and were rarely updated during the mission. If a second PDI attempt (PDI-2) has to be performed an update of the descent abort constants is required for a good rendezvous with the CSM.\\
 
-\textbf{MIS:} Leads to a page where several files can be selected that load data into the RTCC. The system parameters file contains e.g. launchpad coordinate, AGC uplink addresses. These numbers will be constant for the mission, no matter on what launch day the mission is launching. The TLI file contains parameters for simulating the TLI maneuver in the RTCC. This is required for the TLI PAD and adding a TLI maneuver to the MPT. The file contains data for whole monthly launch window. The Skeleton Flight Plan (SFP) file contains targets and initial guess for the TLI and MCC processors. They are also for the whole monthly launch window.\\
-\textbf{TYP:} Choose the type of vehicle configuration (CSM or LM, docked or undocked).\\
-\textbf{STA:} Choose the type of LM configuration that is currently being used, ascent or descent configuration.\\
-\textbf{SXT:} Change the time of the sextant star check, which is part of the procedure for a normal maneuver. During Earth orbit missions the Earth often blocks the sextant from viewing many stars, so adjusting the time of the check before the maneuver allows the MFD to find a suitable star.\\
-\textbf{UPL:} Inhibit or enable uplinks during times of no available ground stations. Currently all ground stations being used for Apollo 7 are implemented.\\
-\textbf{DAT:} Choose the launch date for the mission.\\
-\textbf{TIM:} Choose the launch time for the mission. This will update the launch time of the CSM stored in the RTCC.\\
-\textbf{EPO:} Choose the AGC epoch. Usually this is a MJD at around January 1st of the yearly coordinate system defining period. This value should be automatically chose correctly for the AGC version in use.\\
-\textbf{UPD:} Update the liftoff time automatically by downlinking that time from the CMC or LGC. This will actually update three values in the RTCC: CSM liftoff time, time of clock zeroing in the CMC, time of clock zeroing in the LGC. These times are normally all set to the actual liftoff time of the CSM to get a consistent basis to calculate Ground Elapsed Time in the RTCC.\\
+The onboard computer calculations using the abort constants generate a horizontal velocity to be achieved by orbit insertion after the abort. The scheme to calculate this velocity, and the parameters used in its calculation, differed from mission to mission.\\
+
+In the Apollo 11 PGNS the calculation involves a polynomial of the horizontal velocity as a function of time of abort initiation. Due to differing performance between APS and DPS two polynomials are used. One set for the case that the abort is initiated using the DPS engine (P70), the other set for the case the abort is initiated with the ascent stage directly (P71).\\
+
+In the Apollo 11 AGS (using the Flight Program 6 software) the horizontal velocity is calculated from the desired insertion semi-major axis, which is a linear function of phase angle to the CSM. This eliminates most differences between APS only vs. DPS+APS aborts so only one set of parameters has to be loaded.\\
+
+The Apollo 12 PGNS software switched to using the AGS calculation scheme with one important addition. A late powered descent abort would require a very low insertion orbit. Because typically a lower limit for the apolune altitude of 30 NM was enforced the rendezvous profile for a late abort would require an additional maneuver. The updated PGNS software instead added a second phase of descent aborts that would achieve rendezvous with the CSM one orbit later with a slightly different rendezvous profile. So the set of abort constants now consisted of the two parameters for a linear function, then a limiting phase angle at which the guidance switches to the second abort segment, and lastly the two parameters for the second linear function.\\
+
+The AGS software also switched to using this two segment scheme, but the next version of the AGS software was not ready until Apollo 13. This is the reason why the PDAP in the RTCC MFD has three versions selectable by mission number, with Apollo 12 flying a PGNS software that has two segments, but an AGS software (using the same general calculation scheme) only having one segment. A late powered descent abort using the AGS would have required some special procedures.\\
+
+One other thing to note is that later Apollo missions performed DOI with the CSM and the CSM also performed a circularization maneuver before PDI. These maneuvers change the relative trajectory between CSM and LM. In some cases the first powered descent abort segment now actually had the rendezvous with the CSM one orbit later than the second segment, which is the reverse order from Apollo 12. A table with suggested inputs for all the abort variants used on the Apollo missions is provided to clarify the differences between missions.\\
+\subsubsection{Inputs}
+\textbf{MIS:} Selection for the PGNS and AGS software versions. The three options are Apollo 11, 12 and 13+.\\
+\textbf{ENG:} Selelect the engine for the abort. Either the abort is started immediately using the ascent stage (APS engine) or the abort is started using the DPS, with staging potentially happening later when the DPS runs out of propellant (see WTDRY below). For the Apollo 11 PGNS both cases are run automatically.\\
+\textbf{CSM:} Select the CSM vehicle name or the CSM vector if the Mission Plan Table feature is enabled.\\
+\textbf{LM:} Select the LM vehicle name or the LM vector if the Mission Plan Table feature is enabled. The weight of this vehicle (or at the selected time) will be used as the initial weight at PDI.\\
+\textbf{HAMIN:} Select the minimum apolune altitude in nautical miles. This altitude is used as the segment switch or end of calculations for the descent aborts.\\
+\textbf{DH:} Select the delta height at the CDH maneuver during the coelliptic rendezvous that follows the descent abort.\\
+\textbf{K4:} Some of the later Apollo missions start powered descent at a fairly high phase angle (read distance) to the CSM. Some aborts on these trajectories would not run into the apolune limit (HAMIN) but would have the first onboard calculated rendezvous maneuver (CSI) at such a high range from the CSM that very little onboard navigation (Rendezvous Radar or VHF ranging) could be done before the maneuver has to be performed. For these cases an alternative segment switch point has been implemented. This flag switches between either using the apolune altitude HAMIN as the segment switch point or a phase angle at abort (PHA input) that represents a limit on the range to the CSM. Using the phase angle option the first segment of an abort would have the TPI maneuver one orbit later so that the CSI maneuver also happens later and closer to the CSM. Once the CSM is closer to the LM at abort initiation the rendezvous profile with TPI happening one orbit earlier is then possible. The second segment of a descent abort always ends at the apolune limit HAMIN.\\
+\textbf{PHA:} The limiting phase angle at abort initiation that is used to limit the range to the CSM at the first onboard calculated maneuver (CSI). See K4 for a detailed explanation.\\
+\textbf{DTCAN:} Delta time between orbit insertion and the canned maneuver. The canned maneuver is a maneuver with a fixed Delta V that is included in some rendezvous profiles. It is usually called the boost maneuver in the flight data files.\\
+\textbf{DVCAN:} LVLH components of the canned maneuver.\\
+\textbf{DTCSI:} Delta time between the canned maneuver and CSI.\\
+\textbf{TTPI:} TPI time used to generate the first set of targeting coefficients. This time can be calculated with the TPI times page using the 16 minutes before sunrise option.\\
+\textbf{DT2CAN:} Value of DTCAN used to generate the second set of targeting coefficients.\\
+\textbf{DV2CAN:} Value of DVCAN used to generate the second set of targeting coefficients.\\
+\textbf{DT2CSI:} Value of DTCSI used to generate the second set of targeting coefficients.\\
+\textbf{T2TPI:} Value of TTPI used to generate the second set of targeting coefficients.\\
+\textbf{WTDRY:} LM weight representative of DPS fuel depletion. Leave the input blank to automatically calculate this value (present LM weight minus DPS propellant).\\
+\textbf{WTAPS:} LM weight immediately after staging. Leave the input blank to automatically calculate this value (present LM ascent stage weight).\\
+\subsubsection{Suggested Inputs}
+\begin{tabular}{|m{2.0cm}|m{1.85cm}|m{1.85cm}|m{1.85cm}|m{1.85cm}|m{1.85cm}|}
+  \hline
+  \textbf{Input}&\textbf{Apollo 11 PDI-1/2}&\textbf{Apollo 12 PDI-1/2}&\textbf{A13-15 PDI-1/2}&\textbf{A16/17 PDI-1}&\textbf{A16/17 PDI-2}\\
+	\hline
+  \textbf{MIS}&11&12&13+&13+&13+\\
+	\hline
+  \textbf{ENG}&-&DPS/APS&DPS/APS&DPS/APS&DPS/APS\\
+	\hline
+	\textbf{K4}&-&HAMIN*&PHA$\dagger$&PHA$\dagger$&PHA$\dagger$\\
+	\hline
+	\textbf{PHA}&-&-&-13.5&16.0&-13.5\\
+  \hline
+	\textbf{DTCAN}&0&0&60&0&60\\
+	\hline
+	\textbf{DVCAN}&0 0 0&0 0 0&10 0 0&0 0 0&10 0 0\\
+  \hline
+	\textbf{DTCSI}&50&50&120&55&120\\
+	\hline
+	\textbf{TTPI}&PDI+2:40&PDI+2:40&PDI+4:50&PDI+2:50&PDI+4:50\\
+	\hline
+  \textbf{DT2CAN}&-&50&0&50&0\\
+	\hline
+  \textbf{DV2CAN}&-&10 0 0&0 0 0&10 0 0&0 0 0\\
+  \hline
+	\textbf{DT2CSI}&-&110&55&110&55\\
+	\hline
+	\textbf{T2TPI}&-&PDI+4:40&PDI+2:50&PDI+4:50&PDI+2:50\\
+	\hline
+\end{tabular}
+
+\hfill
+
+*HAMIN = First segment apolune limit\\
+$\dagger$PHA = First segment phase angle limit\\
+\newpage
+\subsubsection{Display}
+\paragraph{Apollo 11 PGNS}\mbox{} \\
+\textbf{DPS4-1} P70 polynomial. Horizontal insertion velocity as a function of abort initiation time since PDI.\\
+\textbf{APS4-1} P71 polynomial. Horizontal insertion velocity as a function of abort initiation time since PDI.\\
+\textbf{VHMIN} Minimum horizontal insertion velocity.
+\paragraph{Apollo 12+ PGNS}\mbox{} \\
+\textbf{J1} Constant value in first segment calculation of insertion semi-major axis.\\
+\textbf{K1} Slope value in first segment calculation of insertion semi-major axis.\\
+\textbf{J2} Constant value in second segment calculation of insertion semi-major axis.\\
+\textbf{K2} Slope value in second segment calculation of insertion semi-major axis.\\
+\textbf{THET} Limiting phase angle at abort initiation for the segment switch.\\
+\textbf{VHMIN} Minimum horizontal insertion velocity.
+\paragraph{Apollo 11-12 AGS}\mbox{} \\
+\textbf{J7} Constant value in calculation of insertion semi-major axis. DEDA address 224.\\
+\textbf{J8} Minimum insertion semi-major axis. DEDA address 225.\\
+\textbf{J9} Maximum insertion semi-major axis. DEDA address 226.\\
+\textbf{K410} Slope value in calculation of insertion semi-major axis. DEDA address 227.
+\paragraph{Apollo 13+ AGS}\mbox{} \\
+\textbf{J7} Constant value in first segment calculation of insertion semi-major axis. DEDA address 224.\\
+\textbf{J8} Minimum insertion semi-major axis. DEDA address 225.\\
+\textbf{J10} Constant value in second segment calculation of insertion semi-major axis. DEDA address 226.\\
+\textbf{J12} Limiting phase angle at abort initiation for the segment switch. DEDA address 305.\\
+\textbf{K410} Slope value in first segment calculation of insertion semi-major axis. DEDA address 662.\\
+\textbf{J11} Slope value in first segment calculation of insertion semi-major axis. DEDA address 673.\\
+\newpage
+\section{Uplinks}
+A variety of AGC and LVDC uplinks are supported by the RTCC MFD.  These are selected by their load type number. Here is a list of the available uplinks:\\
+
+CMC:
+\begin{itemize}
+\item 00: CSM Navigation Update
+\item 06: Landing Site Vector
+\item 07: Time Increment
+\item 08: Liftoff Time Update
+\item 09: LM Navigation Update
+\item 10: External Delta-V Update
+\item 12: REFSMMAT Update
+\item 13: Retrofire External Delta-V Update
+\item 14: Entry Update
+\item 18: Erasable Memory Update A
+\item 19: Erasable Memory Update B
+\end{itemize}
+LGC:\\
+\begin{itemize}
+\item 20: LM Navigation Update
+\item 21: CSM Navigation Update
+\item 22: External Delta-V Update
+\item 23: REFSMMAT Update
+\item 24: Time Increment
+\item 25: Liftoff Time Update
+\item 26: Landing Site Vector
+\item 27: Descent Update
+\item 28: Erasable Memory Update A
+\item 29: Erasable Memory Update B
+\end{itemize}
+\newpage
+LVDC:\\
+\begin{itemize}
+\item 49: LVDC Navigation Update
+\end{itemize}
+\newpage
+\subsection{AGC Navigation Update}
+\subsubsection{Explanation}
+The state vector of the vessel can be calculated and uplinked here. The AGC has two slots for state vectors: CSM and LM.  Both CMC and LGC have these two slots.
+\subsubsection{Buttons}
+\textbf{TIM:} Set the desired GET for the state vector.\\
+\textbf{TGT:} Set the target vessel.\\
+\textbf{CLC:} Calculate a state vector.\\
+\textbf{UPL:} Uplinks the calculated data to the AGC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\subsection{External Delta-V Uplink}
+\subsubsection{Explanation}
+Uplink for burn data calculated with any of the RTCC maneuver targeting processors.
+\subsubsection{Buttons}
+\textbf{CLC:} Calculate the uplink data.\\
+\textbf{UPL:} Uplinks the calculated data to the AGC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\subsection{Time Increment}
+\subsubsection{Explanation}
+Uplink to adjust the CMC or LGC clock. Due to clock drift the clock could become misaligned with the actual mission elapsed time. This MFD page also contains a little utility calculation to calculate the current clock error. This calculated time can then be input for the uplink.
+\subsubsection{Buttons}
+\textbf{CLC:} Calculate the uplink data.\\
+\textbf{UPL:} Uplinks the calculated data to the AGC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\subsection{Liftoff Time Update}
+\subsubsection{Explanation}
+Uplink to adjust the time reference in the AGC. This will change the liftoff time (TEPHEM), the state vector times and the AGC clock. The MFD page has a calculation utility to calculate the change in liftoff time required to get to a specific liftoff time reference.\\
+\subsubsection{Buttons}
+\textbf{CLC:} Calculate the uplink data.\\
+\textbf{UPL:} Uplinks the calculated data to the AGC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\subsection{REFSMMAT Uplink}
+\subsubsection{Explanation}
+Uplink to the AGC to change the REFSMMAT. There are two types of REFSMMAT uplinks. The actual REFSMMAT can be changed directly, which is usually only desired on an initial LM activation. The usual case is to uplink a desired REFSMMAT, which can then get used in a P52 option 1 to realignment the IMU from a previously already existing alignment.
+\subsubsection{Buttons}
+\textbf{CLC:} Calculate the uplink data.\\
+\textbf{UPL:} Uplinks the calculated data to the AGC.\\
+\textbf{BCK:} Go back to the main menu.\\
+\subsection{Descent Update}
+\subsubsection{Explanation}
+The LGC only has a lunar landing time stored that is used as an initial guess for the P63 ignition algorithm. The time can be uplinked with this MFD page.
+\subsubsection{Buttons}
+\textbf{CLC:} Calculate the uplink data.\\
+\textbf{UPL:} Uplinks the calculated data to the AGC.\\
 \textbf{BCK:} Go back to the main menu.\\
 \newpage
 \section{Mission Planning}
@@ -1853,6 +2103,87 @@ Select the target point like in example 1. Two input values have to be tweaked m
 \end{tabbing}
 \newpage
 
+\textbf{MED Code}: M10\\
+\textbf{Purpose}: CSM and LM thrust characteristics\\
+\textbf{Example}: \texttt{M10,S,,1,20000,20673,65.62;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &Thruster Code&Total no. of entries in table&Entry no. of this set&Weight&Thrust Level&Weight Loss Rate\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FXP&FXP&FLP&FLP&FLP \\
+ \hline
+ \textbf{Input Units} &S, A, D&&&lbs&lbf&lbs\\
+ \hline
+ \textbf{Checking Option}&&1$\leq$X$\leq$40&1$\leq$X$\leq$40&X$\geq$1000&0$\leq$X$\leq$28000&\\
+ \hline
+ \textbf{Missing Item Option}&Error&Ignore&Error&Error&Error&Error\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+
+\newpage
+
+\textbf{MED Code}: M11\\
+\textbf{Purpose}: CSM and LM CG characteristics\\
+\textbf{Example}: \texttt{M11,C,,1,20000,1.0,2.0,3.0;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &Vehicle&Total no. of entries in table&Entry no. of this set&Weight&X coordinate of CG&Y coordinate of CG\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FXP&FXP&FLP&FLP&FLP \\
+ \hline
+ \textbf{Input Units} &C, L, A&&&lbs&inches&inches\\
+ \hline
+ \textbf{Checking Option}&&1$\leq$X$\leq$40&1$\leq$X$\leq$40&&&\\
+ \hline
+ \textbf{Missing Item Option}&Error&Ignore&Error&Error&Error&Error\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+\newpage
+\textbf{MED Code}: M11 (cont.)\\
+\textbf{Purpose}: \\
+\textbf{Example}: \\
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &Z coordinate of CG&&&&&\\
+ \hline
+ \textbf{Input Format} &FLP&&&&& \\
+ \hline
+ \textbf{Input Units} &inches&&&&& \\
+ \hline
+ \textbf{Checking Option}&&&&&&\\
+ \hline
+ \textbf{Missing Item Option}&Error&&&&&\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}:
+\end{tabbing}
+
+\newpage
 \textbf{MED Code}: M49\\
 \textbf{Purpose}: Change fuel remaining weights\\
 \textbf{Example}: \texttt{M49,CSM,20000;}
@@ -2663,9 +2994,86 @@ Trajectory Update Number&Update number associated with subject vehicle ephemeris
 \end{tabular}
 \end{center}
 
+\subsubsection{Error Codes}
+
+\begin{tabular}{p{1cm} p{12cm}}
+\underline{Code}&\underline{Error Description}\\
+0&No error\\
+1&The trajectory for subject vehicle is not generated\\
+2&The Mission Plan table is either in an update state or inconsistent with trajectory update number\\
+3&The revolution defining times table is either in an update state or is inconsistent with trajectory update number\\
+4&The main ephemeris is in update status\\
+5&The revolution number on the MED U13 is less than the first available revolution defining time\\
+6&The revolution number on the MED U13 is greater than the last available revolution defining time\\
+7&The revolution number on the U13 MED is valid; however, the longitude crossing requested is outside the range of the ephemeris\\
+8&The time on the U14 MED precedes the start of the ephemeris\\
+9&The time on the U14 MED exceeds the end of the ephemeris\\
+10&The revolution number on the U12 MED is smaller than the first available revolution defining time\\
+11&The revolution number on the U12 MED is greater than the last revolution defining time\\
+12&The time on the U12 MED precedes the start of the ephemeris\\
+13&The time on the U12 MED exceeds the end of the ephemeris\\
+14&The maneuver number requested is greater than the number of maneuvers in the Mission Plan Table\\
+15&The base vector selected for predicted apogee/perigee computation was rejected by the Analytical Ephemeris Generator\\
+16&The base vector selected for upcoming apogee/perigee computation was rejected by the Analytical Ephemeris Generator\\
+17&No precession/nutation matrix is available for subject time\\
+18&Open\\
+19&Present position data not initialized in Time Constraints Table\\
+20&End of ephemeris reached\\
+\end{tabular}
+\newpage
+
 \subsection{Mission Plan Table (MSK 0047)}
 
 \subsubsection{Function}
+TBD
+\newpage
+\subsection{Star Sighting Table (MSK 0053)}
+\subsubsection{Function}
+For input Earth or moon ground targets, this element will compute and display sighting data for the CSM sextant based on the criterion that the first ascending line-of-sight at a specified elevation, which occurs after an input threshold time, is the desired one. For input celestial targets, this element will compute and display sighting data for the CSM sextant based on the criterion that the first ascending line-of-sight to the target not occulted by the Earth or its atmosphere is the desired one.
+\subsubsection{Inputs}
+\textbf{MODE:} Calculation mode of the display. Available options are: Ground target with fixed attitude, ground target in fixed sextant configuration, celestial target in fixed sextant configuration, unknown celestial target and celestial target with fixed attitude.\\
+\textbf{TGTID:} Three character name to be given to the target. For ground targets (modes 0 and 1) the third character must specify E (Earth) or M (Moon). Otherwise the target ID has no functional use.\\
+\textbf{GETT:} Threshold time for acquisition of signal (AOS) search. Used in all modes except mode 3.\\
+\textbf{MATRIX:} Selected REFSMMAT as the attitude reference for the input or calculated attitude. Valid options are: CUR, PCR, TLM, OST, MED, DMT, DOD or LCV.\\
+\textbf{LAT:} Latitude of the ground target in degrees.\\
+\textbf{LNG:} Longitude of the ground target in degrees.\\
+\textbf{HEI:} Height of the ground target in feet.\\
+\textbf{ELV:} Elevation angle from the ground target to the spacecraft in degrees.\\
+\textbf{RA:} Right ascension of the celestial target in hr:min:sec format.\\
+\textbf{DEC:} Declination of the celestial target in deg:min:sec format.\\
+\textbf{R:} Roll angle at the sighting in degrees.\\
+\textbf{P:} Pitch angle at the sighting in degrees.\\
+\textbf{Y:} Yaw angle at the sighting in degrees.\\
+\textbf{SFT:} Sextant shaft angle at the sighting in degrees.\\
+\textbf{TRN:} Sextant trunnion angle at the sighting in degrees.\\
+\newpage
+\subsubsection{Display}
+\begin{center}
+\begin{tabular}{ L{2.4cm} L{7.1cm} L{3cm} }
+\underline{QUANTITY} & \underline{DEFINITION} & \underline{DIMENSIONS} \\
+TGTID&Identification associated with a celestial or ground target&\\
+TGT DEC&The declination of the target point&deg:min:sec\\
+TGT RT ASC&The right ascension of the target point&hr:min:sec\\
+RO&The outer CDU gimbal angle (roll) associated with the required S/C attitude&deg\\
+PI&The inner CDU gimbal angle (pitch) associated with the required S/C attitude&deg\\
+YM&The middle CDU gimbal angle (yaw) associated with the required S/C attitude&deg\\
+SFT&The sextant shaft angle determined for the sighting&deg\\
+TRN&The sextant trunnion angle determined for the sighting&deg\\
+CA&Minimum central angle between the S/C and the celestial point&deg\\
+GETCA&GET of central angle&hr:min:sec\\
+GETT&Threshold time to begin search for target&hr:min:sec\\
+REV&The revolution in which sighting will be performed. Will be displayed as available&\\
+LON&The subsatellite longitude with respect to the reference body when a line of sight is available to the target. For earth reference body and targets other than earth ground targets, the line of sight cannot be occulted by the earth's atmosphere. &deg\\
+LON GET&The time of arrival at LOS&hr:min:sec\\
+LOS DEC&The declination of the LOS defined by the REFSMMAT, shaft and trunnion angles, and S/C attitudes&deg:min:sec\\
+LOS RT ASC&The right ascension of the LOS defined by the REFSMMAT, shaft and trunnion angles, and S/C attitudes&hr:min:sec\\
+REFSMMAT&The 3 by 3 matrix defining the orientation of the IMU coordinate system and its identification code&\\
+LAT&Geodetic latitude of earth ground target or selenographic latitude of lunar ground target&deg\\
+LONG&Longitude of ground target&deg\\
+ALT&Altitude of ground target above Earth or Moon&feet\\
+ELV&Elevation of spacecraft above ground target's local horizontal plane&deg\\
+\end{tabular}
+\end{center}
 \newpage
 \subsection{FDO Detailed Maneuver Table (MSK 0054 and 0069)}
 \subsubsection{Function}
@@ -2762,6 +3170,26 @@ PGNS VX, VY, VZ&Components of external DV vector required for targeting the onbo
 AGS EXT DV&Abort Guidance System ID for vehicle doing the external DV maneuver\\
 AGS GETI&Ground elapsed time of ignition&hr:min:sec\\
 AGS VX, VY, VZ&Components of external DV vector required for targeting the onboard AGS external DV guidance for maneuver execution&fps\\
+\end{tabular}
+\end{center}
+\newpage
+\subsection{Rendezvous Evaluation Display (MSK 0058)} \label{RED}
+\subsubsection{Function}
+The Rendezvous Evaluation Display shows the selected rendezvous plan from either the DKI or SPQ processor.
+\subsubsection{Display}
+\begin{center}
+\begin{tabular}{ L{2.8cm} L{8cm} L{3cm} }
+\underline{ITEM} & \underline{DESCRIPTION} & \underline{UNITS} \\
+ID&Row number of plan from Rendezvous Planning Table&\\
+M&Orbit number in which rendezvous is to occur&\\
+GET&Elapsed impulsive time of the maneuver&HR:MIN:SEC\\
+DT&Amount of time between each maneuver&MIN:SEC\\
+DV&Velocity increment for the maneuver&FT/SEC\\
+VEH&Maneuver vehicle code&\\
+ID&Maneuver purpose code of this maneuver&\\
+PHASE&Phase angle after the maneuver&DEG.\\
+DH&Height offset after the maneuver&N.M.\\
+HP/HA&Height of perigee and height of apogee&N.M.\\
 \end{tabular}
 \end{center}
 \newpage
@@ -2866,7 +3294,24 @@ IE & Inclination angle with respect to the earth at vacuum perigee & deg & (3)\\
 LN & Geographic longitude of the earth return ascending node & deg & (3)\\
 \end{tabular}
 \end{center}
+\subsubsection{Error Codes}
 
+\begin{tabular}{p{1cm} p{12cm}}
+\underline{Code}&\underline{Error Description}\\
+0&No error\\
+1&The display has not been initialized via MED U00\\
+2.&he trajectory for subject vehicle is not generated\\
+3&The time on the U01 exceeds the end of the ephemeris\\
+4&The time on the U01 precedes the start of the ephemeris\\
+5&The main ephemeris is in an update status\\
+6&The Mission Plan Table is either in an update state or is inconsistentwith the trajectory update number\\
+7&The time on the U01 falls within a maneuver\\
+8&The maneuver number requested is greater than the number of maneuvers in the Mission Plan Table\\
+9&Maneuver on U01 not integrated through\\
+10&No precession/nutation is available for subject time\\
+11&Base vector rejected by Encke Integrator\\
+12&The base vector selected for apogee/perigee computation was rejected by the analytical ephemeris generator\\
+\end{tabular}
 \newpage
 \subsection{CSM Optics Support Table (MSK 0229)}
 
@@ -2999,6 +3444,83 @@ MAT GET&An associated GET of any matrix display, such as time computed, time mad
 \end{figure}
 \end{landscape}
 \newpage
+\subsection{Groundtrack Digitals Display (MSK 0347)}
+This display shows subsatellite information for a designated vehicle to aid in determining recovery areas. The display is initialized only by input. On entry of a vehicle, revolution (or threshold time) and longitude the display program will compute one-degree increments of longitude for the next 40 degrees beginning with the input longitude. With each longitude thus generated will be computed and displayed a latitude, GET, GMT and true anomaly of the vehicle at the GMT. This is a paging display, yielding a maximum of two pages (20 lines per page).\\
+
+The display is available only in Earth Orbit and Lunar Orbit phases. No automatic updates are provided. An appropriate error message is displayed if any
+procedural or processing error is encountered.\\
+
+The display is only available in NASSP with the Mission Plan Table initialized.\\
+\newpage
+\subsection{Spacecraft Pointing Display (MSK 1504)}
+\subsubsection{Function}
+To provide mission controllers with pointing angles that will allow the crew to point a spacecraft instrument at an orbiting, celestial or ground target for the purpose of obtaining experimental data.
+\subsubsection{Inputs}
+Three manual entries are required for this display:
+\begin{enumerate}
+\item Target specification MED consisting of MODE, INSTRUMENT, TARGET, LAT, LONG, ALT, RA, DEC, REFSMMAT, AT REF, AND DOCKING ANGLE.
+\item Initialization MED consisting of T1, T5, and T START. T1 and T5 causes generation of pointing data. T START is for AOS/LOS search.
+\item Instrument definition and geometry MED specifying instrument code, code to add or delete. Rl counterclockwise rotation about X Body (Angle out of X-Z plane), R2 counterclockwise rotation about Y Body (Angle out of Y-Z plane). If R1and R2 equal zero the LOS is along the vehicle Z-axis.
+\end{enumerate}
+\textbf{Target specification:}\\
+
+\textbf{MODE:} 1 = Earth/Moon ground target, 2 = general celestial, 3 = GOST star, 4 = orbiting object.\\
+\textbf{INST ID:} Instrument ID. The last 3 characters must be CSM or LEM.\\
+ \textbf{ITARGET NM:} Target code.  Mode 1: The last character is E or M. Mode 3: The last 3 characters are a valid star number. Mode 4: Enter 7 characters. Last 3 are CSM or LEM. The first 4 spaces in the TARGET code are for experiment identification and no computations are based upon them.\\
+\textbf{LAT:} Latitude of ground target, degrees (Mode 1).\\
+\textbf{LNG:} Longitude of ground target, degrees (Mode 1).\\
+\textbf{HT:} Height of ground target, nautical miles (Mode 1).\\
+\textbf{RT ASC:} Right of ascension of input celestial target (Mode 2).\\
+\textbf{DEC:} Declination of input celestial target (Mode 2).\\
+\textbf{MATRIX:} Valid REFSMMAT code.\\
+\textbf{ATREF:} Attitude reference. IMCSM = CSM IMU, IMLEM = LM IMU, FDLEM = FDAI LM.\\
+\textbf{DOK:} Docking angle. Used when instrument vehicle and attitude reference vehicle are not the same.\\
+\newpage
+\subsubsection{Display}
+\begin{center}
+\begin{tabular}{ L{2.4cm} L{7.1cm} L{3cm} }
+\underline{QUANTITY} & \underline{DEFINITION} & \underline{DIMENSIONS} \\
+INST&ID of instrument to be pointed at target&\\
+TARGET&Alphanumeric identification code of target&\\
+LAT, LNG&Geodetic latitude and longitude of earth target or selenographic latitude and longitude of moon target for MODE 1. Subsatellite position of target vehicle with respect to its reference body in MODE 4 at T1&degrees\\
+ALT&Altitude of earth target above oblate body or of moon target above spherical body in MODE 1. Altitude of vehicle target above its reference body in MODE 4 at T1&nautical miles\\
+REV&Revolution in which AOS occurs&\\
+RA&Right ascension of a celestial target&hr:min:sec\\
+DEC&Declination of a celestial target&deg:min:sec\\
+AOS&GET and GMT of acquisition of target&hr:min:sec\\
+MODE&One of four modes in which display is being used&\\
+LOS&GET and GMT of loss of target&hr:min:sec\\
+ROLL, PITCH, YAW&Attitudes required of the spacecraft in order to point the line-of-sight of the specified instrument to the target. Displayed for T1 through T5. Attitudes will be as nearly heaas up as possible to the body containing ground target. For other targets, attitudes will be as nearly heads up as possible to the reference body at the time of sighting&degrees\\
+AT REF&Code to indicate that the displayed attitudes are referenced to the CSM IMU, the LM IMU, or the LM FDAI&\\
+DR, DP, DY&Differences in roll, pitch and yaw between time intervals&degrees\\
+EL&Elevation angle of the spacecraft from a ground target. Displayed for T1 through T5&degrees\\
+ALT&Spacecraft altitude in nautical miles above spherical reference body. Displayed for T1 through T5&nautical miles\\
+RNG&Slant range to ground target. Displayed for T1 through T5&nautical miles\\
+\end{tabular}
+\end{center}
+
+\begin{center}
+\begin{tabular}{ L{2.4cm} L{7.1cm} L{3cm} }
+\underline{QUANTITY} & \underline{DEFINITION} & \underline{DIMENSIONS} \\
+SUN ANG&The angle in degrees between the spacecraft-sun-line and the instrument line-of-sight Displayed for T1 through T5&degrees\\
+MOON ANG&The angle in degrees between the spacecraft-nearest moon horizon-line and the instrument line-of-sight. Displayed for T1 through T5&degrees\\
+EARTH ANG&The angle in degrees between the spacecraft-nearest earth horizon-line and the instrument line-of-sight. Displayed for T1 through T5&degrees\\
+T1,T2,T3,T4,T5&Evenly spaced times from T1 to T5 at which attitude data are generated&hr:min:sec\\
+REFSMMAT&Identification code of REFSMMAT used in generating the display&\\
+RA, DEC&Direction of CSM +X-axis if INST is CSM type. Direction of LM +Z-axis if INST is LM type&\\
+STAR&Identification code of star in COAS field-of-view at T1 (CSM COAS of CSM INST is specified, LM COAS if LM INST is specified)&\\
+SPA&COAS star-pitch-angle for CSM, COAS elevation angle for LM&degrees\\
+SXP&COAS star-X-position&degrees\\
+\end{tabular}
+\end{center}
+\newpage
+\subsection{Recovery Ascending Node Display (MSK 1505)}
+This program displays the time (GET and GMT) of the ascending node, the longitude of the node and the right ascension for the current rev and reach rev within the requested span. Alternative a beginning time and ending time can be input to define this span.\\
+
+The display is available for Earth (ECT) and Moon (MCT) ascending node crossings. In lunar orbit the additional option exists to compute the inertial ascending node crossing time (MCI) instead of the equator crossing. The right ascension display does not apply to lunar orbit however. No automatic updates are provided. An appropriate error message is displayed if any procedural or processing error is encountered.\\
+
+The display is only available in NASSP with the Mission Plan Table initialized.\\
+\newpage
 \subsection{Vector Comparison Display (MSK 1590)}
 
 \subsubsection{Function}
@@ -3079,7 +3601,7 @@ EV = Evaluation Vector Table\\
 TH = Telemetry (High Speed)\\
 TL = Telemetry (Low Speed)\\
 
-The TL vector slot has not been implemented yet. Pressing the TLM button will get data from all computers in the vessel where the RTCC MFD is open (AGS not yet implemented) and save them in the high speed telemetry tables. In reality the telemetry vectors get continually updated if telemetry is received, so for a more permanent saving solution the vectors can be moved to the evaluation vector table with the EV buttons. The vector is then moved to that table, assigned a vector ID and is then available for comparison using the vector compare display (MSK 1590). The telemetry vectors are not guaranteed to be valid, so the evaluation vectors were checked before being "moved up" to the usable vector table, which can be done with the UV buttons. Once in the usable vector table the vectors are available for ephemeris updates.\\
+The TL vector slot has not been implemented yet. Pressing the TLM button will get data from all computers whose vehicles is set on the configuration page and save them in the high speed telemetry tables. In reality the telemetry vectors get continually updated if telemetry is received, so for a more permanent saving solution the vectors can be moved to the evaluation vector table with the EV buttons. The vector is then moved to that table, assigned a vector ID and is then available for comparison using the vector compare display (MSK 1590). AGS and IU vectors need to have their specific REFSMMATs established for the transfer to the evaluation table to work. The telemetry vectors are not guaranteed to be valid, so the evaluation vectors were checked before being "moved up" to the usable vector table, which can be done with the UV buttons. Once in the usable vector table the vectors are available for ephemeris updates.\\
 
 The High Speed Radar panel is not currently implemented. It was a vector that is generated automatically at the end of a powered maneuver using radar data and could, if no telemetry vector was available, be a first estimate of the actual cutoff state.\\
 
@@ -3088,7 +3610,131 @@ Differential Correction (DC) is the state vector derived from long period ground
 The last panel shows the last executed maneuver in the mission plan table of the vehicle. The displayed times are ullage on and end of the thrust tailoff period after cutoff.\\
 
 To cause an ephemeris update the TUP button on each side can be pressed and then a vector from the usable vector table is chosen to do the update.\\
+\subsubsection{Errors}
+If any function of the VPS does not work as expected, an error might have occurred. An associated error message will have been written to the on-line monitor display (MSK 1629). Here follows a list of possible error messages:\\
 
+\begin{tabular}{p{3cm} p{10cm}}
+\underline{Code}&\underline{Error Description}\\
+1&An unrecognizable queue ID was detected.\\
+2&Not used.\\
+3&Not used.\\
+4&The PBI request made was not a valid request (missing information, two sources indicated, etc.).\\
+5&Request to move vector to Usable Slot cannot be honored because there is no vector in the corresponding Evaluation Slot.\\
+6&Request to move vector to ephemeris update cannot be honored because there is no vector in the corresponding Usable Slot.\\
+7&Not used.\\
+8&Test of PBI message header failed; improper message was routed to module.\\
+9&Unidentifiable vector ID in the S84 MED.\\
+10&Vector to be moved to ephemeris update could not be transformed to ECI coordinates.\\
+11&Telemetry vector requested by PBI cannot be furnished this mission.\\
+12&Not used.\\
+13&Not used.\\
+14&The matrix to rotate the telemetry vector requested is not available.\\
+15&Request is for a telemetry vector that is not available in the collection slot for this type vector.\\
+16&Invalid vehicle code from high-speed processor.\\
+17&Invalid vector source code from high-speed processor.\\
+18&Vector with lunar landing site indicator set cannot be routed to CSM ephemeris update.\\
+\end{tabular}
+\newpage
+\subsection{Checkout Monitor (MSK 1619)}
+\subsubsection{Function}
+The function of the Checkout Monitor Display, EMDCHECK, is to obtain or calculate various orbital parameters, system parameters, and mission planning quantities to aid in the RTCC program checkout.
+\newpage
+\subsubsection{Display Parameters}
+\begin{center}
+\begin{tabular} { L{2cm} L{8cm} L{6cm} }
+\underline{Quantity}&\underline{Definition}&\underline{Dimensions}\\
+VEH&Vehicle associated with parameters&\\
+GET&Ground elapsed time tag of the vector&hhh:mm:ss.ss\\
+GMT&Greenwich mean time tag of the vector&hhh:mm:ss.ss\\
+VID&Identification of the last vector used to update the ephemeris&\\
+X&&\\
+Y&Position vector&feet or Earth radii\\
+Z&&\\
+$\dot X$&\\
+$\dot Y$&Velocity vector&FPS or Earth radii per hour\\
+$\dot Z$&\\ 
+V\textsubscript{i} &Inertial velocity&FPS\\
+$\gamma$\textsubscript{i}&Inertial flight-path angle&deg.\\
+$\psi$&Inertial azimuth&deg.\\
+$\phi$\textsubscript{c}&Geocentric/selenographic latitude&deg.\\
+$\lambda$&Geographic/selenographic longitude&deg.\\
+h\textsubscript{s}&Height of vehicle above a spherical Earth or moon&NM\\
+h\textsubscript{a}&Height of apogee above a spherical Earth or moon&NM\\
+h\textsubscript{p}&Height of perigee above a spherical Earth or moon&NM\\
+h\textsubscript{o}&Height above an oblate Earth&NM\\
+h\textsubscript{o}&Height above an oblate Earth&ft.\\
+$\phi$\textsubscript{D}&Geodetic/selenographic latitude&deg.\\
+$\lambda$\textsubscript{D}&Mean geographic/true inertial longitude&deg.\\
+a&Semi-major axis of orbital ellipse&NM\\
+e&Eccentricity of orbital ellipse&\\
+i&Orbital inclination&deg.\\
+$\omega$\textsubscript{p}&Argument of perigee&deg.\\
+$\Omega$&Right ascension of the ascending node (inertial)&deg.\\
+$\nu$&True anomaly&deg.\\
+m&Mean anomaly&deg.\\
+R&Vector magnitude radius&NM\\
+R-DAY&Calendar day of liftoff&day:month:year\\
+A&Vehicle area at GET&sq. ft.\\
+K-FAC&Current atmospheric density multiplier\\
+CFG&Vehicle configuration at GET&\\
+RF&Reference frame the vector is in: ECT = true Earth, ECI = mean Earth, MCT = true moon, MCI = mean moon&\\
+\end{tabular}
+\end{center}
+\newpage
+\begin{center}
+\begin{tabular} { L{2cm} L{8cm} L{6cm} }
+\underline{Quantity}&\underline{Definition}&\underline{Dimensions}\\
+WT&Total weight for above configuration&lb.\\
+WC&Total CSM weight&lb.\\
+WL&Total LM weight&lb.\\
+SPS&Total SPS propellant remaining&lb.\\
+RCS\textsubscript{C}&Total CSM RCS propellant remaining&lb.\\
+APS&Total APS propellant remaining&lb.\\
+DPS&Total DPS propellant remaining&lb.\\
+RCS\textsubscript{L}&Total LM RCS propellant remaining&lb.\\
+J2&Total J2 propellant remaining&lb.\\
+LO/C&Lift-off time of the CSM&hhh:mm:ss.ss\\
+GRR/C&Guidance reference release time of the spacecraft&hhh:mm:ss.ss\\
+ZS/C&Time that S/C register was zeroed&hhh:mm:ss.ss\\
+GRR/S&Guidance reference release time of the S-IVB&hhh:mm:ss.ss\\
+LO/L&Lift-off time of the LM&hhh:mm:ss.ss\\
+ZS/L&Time that the LGC register was zeroed&hhh:mm:ss.ss\\
+ZS/A&Time that the AGS register was zeroed&hhh:mm:ss.ss\\
+EPHB&The begin time of the ephemeris&hhh:mm:ss.ss\\
+EPHE&The end time of the ephemeris&hhh:mm:ss.ss\\
+Update No.&To indicate the number of times that the ephemeris was updated&\\
+NV&Number of vectors used to interpolate for vector displayed&\\
+THT&MED threshold time&hhh:mm:ss.ss\\
+RTT&Reentry threshold time&hhh:mm:ss.ss\\
+LSB&Lunar stay begin time&hhh:mm:ss.ss\\
+LLS&Lunar stay termination&hhh:mm:ss.ss\\
+$\delta$L&Lunar declination&deg.\\
+VSF&Venting scale factor&\\
+EB2&Ephemeris begin time (other vehicle)&hhh:mm:ss.ss\\
+EE2&Ephemeris end time (other vehicle)&hhh:mm:ss.ss\\
+X\textsubscript{T}&Unit thrust vector assocated with&\\
+Y\textsubscript{T}&the requested maneuver&\\
+Z\textsubscript{T}& &\\
+Option&MED option to which displayed data corresponds (GET, GMT, MVI, MVE, RAD, ALT, FPA or LNG)&\\
+\end{tabular}
+\end{center}
+\newpage
+\subsubsection{Errors}
+\begin{tabular}{p{3cm} p{10cm}}
+\underline{Code}&\underline{Error Description}\\
+1&MED input is required.\\
+2&The Mission Plan Table is in an update state.\\
+3&Update number are inconsistent across trajectory related tables.\\
+4&Input time is outside of ephemeris range.\\
+5&Input time is during a maneuver.\\
+6&Open.\\
+7&Requested maneuver is not in MPT.\\
+8&No ephemeris is available for subject vehicle (Zero update number is in MPT.)\\
+9&Precession/nutation matrix is not available for time of concern\\
+10&End conditions not achieved within integration time limits.\\
+11&Base vector rejected by analytical ephemeris generator.\\
+12&Base vector rejected by Encke Integrator.\\
+\end{tabular}
 \newpage
 \section{Config Files}
 
@@ -3187,6 +3833,8 @@ MGVSGD&SPS engine gimbal plane in CSM coordinates&833.2&Inches\\
 \hline
 MGVSTD&Distance between SPS and DPS gimbal planes&435.55&Inches\\
 \hline
+MCVDKA&Nominal docking angle&240&degrees\\
+\hline
 MHVCCG&CSM CG table. Format: entry in table, weight, x, y and z coordinates. Example: 0 26600.0 976.946643 0.614894 3.200135&&-, lbs, in, in, in\\
 \hline
 MHVCCG\_N&Number of entries in CSM CG table&20&\\
@@ -3206,9 +3854,23 @@ MHVACG\_N&Number of entries in LM ascent stage CG table&14&\\
 \hline
 \textbf{Name} & \textbf{Description} & \textbf{Default Value} & \textbf{Unit}\\
 \hline
+MHTSTC&SPS thrust table&20500 lbf and 65.27 lbs &lbf and lbs/sec\\
+\hline
+MHTSTC\_N&Number of entries in SPS thrust table&1&\\
+\hline
+MHTATC&APS thrust table&3439 lbf and 11.31 lbs/sec&lbf and lbs/sec\\
+\hline
+MHTATC\_N&Number of entries in APS thrust table&1&\\
+\hline
+MHTDTC&DPS thrust table&9712.5 lbf and 32.27 lbs/sec&lbf and lbs/sec\\
+\hline
+MHTDTC\_N&Number of entries in DPS thrust table&1&\\
+\hline
 MGTESE&Number of tesseral and sectorial coefficients in Earth potential&0 (use 4 in Open Orbiter)&\\
 \hline
 MMTESE&Number of tesseral and sectorial coefficients in Moon potential&0 (use 3 in Open Orbiter)&\\
+\hline
+LAZCOE&Saturn IB launch targeting launch azimuth polynomial& 8568.36235 -20.131 -1.2501 5.5863385&\\
 \hline
 \end{tabular}
 \newpage
@@ -3219,12 +3881,6 @@ For each launch day of a given mission (e.g. "1968-12-21 Init.txt" for Apollo 8)
 \begin{tabular}{L{3.7cm} L{7cm} L{1.95cm} L{1.5cm}}
 \hline
 \textbf{Name} & \textbf{Description} & \textbf{Default Value} & \textbf{Unit}\\
-\hline
-LSLat & Latitude of the lunar landing site & 0.0 & Degrees\\
-\hline
-LSLng & Longitude of the lunar landing site & 0.0 & Degrees\\
-\hline
-LSRad & Radius of the lunar landing site & Mean lunar radius & Nautical miles\\
 \hline
 LDPPDwellOrbits & Number of dwell orbits desired between DOI and PDI used by the Lunar Descent Planning Processor & 0 & None\\
 \hline
@@ -3256,7 +3912,13 @@ LOI\_psi\_DS & Desired approach azimuth to the lunar landing site. Used by the L
 \hline
 eta\_1 & True anomaly on LPO-1 (orbit after LOI-1) for transferring from the hyperbola to LPO-1. Used by TLMCC and LOI targeting & 0.0 & Degrees\\
 \hline
-H\_P\_LPO1 & Perilune height on LPO-1 (orbit after LOI-1). Used by TLMCC and LOI targeting & 60.0 & Nautical miles\\
+H\_A\_LPO1 &Apolune height on LPO-1 (orbit after LOI). Used by TLMCC and LOI targeting&170.0& Nautical miles\\
+\hline
+H\_P\_LPO1 &Perilune height on LPO-1 (orbit after LOI). Used by TLMCC and LOI targeting&60.0& Nautical miles\\
+\hline
+H\_A\_LPO2 &Apolune height on LPO-2 (orbit after DOI). Used by TLMCC and LOI targeting&60.0& Nautical miles\\
+\hline
+H\_P\_LPO2 &Perilune height on LPO-2 (orbit after DOI). Used by TLMCC and LOI targeting&8.23& Nautical miles\\
 \hline
 PZLTRT\_DT\_Ins\_TPI & Time between insertion and TPI for the short rendezvous profile in lunar orbit & 40.0 & Minutes\\
 \hline

@@ -185,6 +185,12 @@ void LEM_Programer::ProcessChannel10(ChannelValue val)
 		case 137: //RCS Thruster Isol Valve 2B Open Reset
 			lem->RCSQuad2BCmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
 			break;
+		case 138: //Prim S-Band Enable
+			lem->SBandXCvrSelSwitch.SetState(THREEPOSSWITCH_UP);
+			break;
+		case 139: //Prim S-Band Off
+			lem->SBandXCvrSelSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
 		case 150: //DPS Arm
 			lem->EngineArmSwitch.SetState(THREEPOSSWITCH_DOWN);
 			break;
@@ -262,6 +268,11 @@ void LEM_Programer::ProcessChannel10(ChannelValue val)
 			break;
 		case 217: //RCS Thruster Isol Valve 4A Open Reset
 			lem->RCSQuad4ACmdEnableSwitch.SetState(THREEPOSSWITCH_CENTER);
+			break;
+		case 222: //Ascent H2O Coolant Valve Open
+			lem->WaterTankSelectValve.SetState(1);
+			break;
+		case 223: //Ascent H2O Coolant Valve Open Reset
 			break;
 		case 228: //DPS PQGS 1 Arm
 			//lem->QTYMonSwitch.SetState(THREEPOSSWITCH_UP);

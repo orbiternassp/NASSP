@@ -195,7 +195,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.RV_MCC = sv2;
 		entopt.dv_max = 7000.0*0.3048;
 
-		EntryTargeting(&entopt, &res); //Target load for uplink
+		EntryTargeting(entopt, res);
 
 		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -294,6 +294,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 	}
 	break;
+	case 9:  //MISSION CP BLOCK DATA 1 (Prelim)
 	case 10: //MISSION CP BLOCK DATA 1
 	case 11: //MISSION CP BLOCK DATA 2
 	case 12: //MISSION CP BLOCK DATA 3
@@ -305,16 +306,37 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		SV sv0;
 		double TLIplus;
 		char manname[32];
+		char mcc1scrub[100];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
-		if (fcn == 10)
+		if (fcn == 9)
 		{
 			TLIplus = calcParams.TLI + 11.0*3600.0;
 			sprintf(manname, "TLI+11");
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd, Assumes no MCC-1");
 			entopt.t_Z = OrbMech::HHMMSSToSS(50.0, 4.0, 0.0);
 			opt.PrefGDCStars = 1; //Navi,Polaris
+			sv0 = StateVectorCalc(calcParams.src);
+		}
+		else if (fcn == 10)
+		{
+			TLIplus = calcParams.TLI + 11.0*3600.0;
+			sprintf(manname, "TLI+11");
+			entopt.t_Z = OrbMech::HHMMSSToSS(50.0, 4.0, 0.0);
+			opt.PrefGDCStars = 1; //Navi,Polaris
+
+			if (length(DeltaV_LVLH) != 0.0)
+			{
+				sprintf(mcc1scrub, "Assumes MCC-1");
+				sv0 = calcParams.SVSTORE1;
+			}
+			else
+			{
+				sprintf(mcc1scrub, "Assumes no MCC-1");
+				sv0 = StateVectorCalc(calcParams.src);
+			}
+			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd, %s", mcc1scrub);
 		}
 		else if (fcn == 11)
 		{
@@ -323,6 +345,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,900 for Indian Ocean,  High-speed procedure not req'd");
 			entopt.t_Z = OrbMech::HHMMSSToSS(74.0, 38.0, 0.0);
 			opt.PrefGDCStars = 1; //Navi,Polaris
+			sv0 = StateVectorCalc(calcParams.src);
 		}
 		else if (fcn == 12)
 		{
@@ -331,6 +354,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 7,821 for Mid-Pacific landing,  High-speed procedure not req'd");
 			entopt.t_Z = OrbMech::HHMMSSToSS(98.0, 12.0, 0.0);
 			opt.PrefGDCStars = 3; //Sirius,Rigel
+			sv0 = StateVectorCalc(calcParams.src);
 		}
 		else if (fcn == 13)
 		{
@@ -339,9 +363,8 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(form->remarks, "No ullage, Fast return: P37 Delta-V equals 8,750 for Indian Ocean,  High-speed procedure (-MA) req'd");
 			entopt.t_Z = OrbMech::HHMMSSToSS(98.0, 12.0, 0.0);
 			opt.PrefGDCStars = 3; //Sirius,Rigel
+			sv0 = StateVectorCalc(calcParams.src);
 		}
-
-		sv0 = StateVectorCalc(calcParams.src);
 
 		entopt.entrylongmanual = true;
 		entopt.enginetype = RTCC_ENGINETYPE_CSMSPS;
@@ -352,7 +375,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.vessel = calcParams.src;
 		entopt.dv_max = 7000.0*0.3048;
 
-		EntryTargeting(&entopt, &res);//dV_LVLH, P30TIG, latitude, longitude, RET, RTGO, VIO, ReA, prec); //Target load for uplink
+		EntryTargeting(entopt, res);
 
 		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -390,7 +413,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		MATRIX3 REFSMMAT;
 		VECTOR3 dV_LVLH, dv;
 		char manname[32];
-		char ullage[10];
+		char ullage[32];
 
 		AP11MNV * form = (AP11MNV *)pad;
 
@@ -449,7 +472,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			dv = PZMCCXFR.V_man_after[0] - PZMCCXFR.sv_man_bef[0].V;
 
 			engine = mcc->mcc_calcs.SPSRCSDecision(SPS_THRUST / sv.mass, dv);
-			PoweredFlightProcessor(sv, tig, engine, 0.0, dv, false, P30TIG, dV_LVLH);
+			PoweredFlightProcessor(sv, tig, engine, 0.0, dv, false, P30TIG, dV_LVLH, sv_ig1, sv_cut1);
 		}
 		else //Nodal Targeting
 		{
@@ -468,10 +491,16 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			scrubbed = true;
 		}
 
-		//Message for scrubbed maneuvers
+		//If maneuver scrubbed
 		if (scrubbed)
 		{
 			sprintf(upMessage, "%s has been scrubbed.", manname);
+			DeltaV_LVLH = _V(0, 0, 0);
+		}
+		else
+		{
+			DeltaV_LVLH = dV_LVLH;
+			calcParams.SVSTORE1 = sv_cut1; //Stores SV for TLI+11
 		}
 
 		char buffer1[1000];
@@ -617,6 +646,15 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			}
 			else
 			{
+				if (fcn == 20)
+				{
+					manopt.PrefGDCStars = 1; //Navi,Polaris
+				}
+				else
+				{
+					manopt.PrefGDCStars = 3; //Sirius,Rigel
+				}
+
 				manopt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
 				manopt.TIG = P30TIG;
 				manopt.dV_LVLH = dV_LVLH;
@@ -633,7 +671,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 				}
 				else
 				{
-					sprintf(ullage, "");
+					sprintf(ullage, "4 jet translation");
 				}
 
 				AP11ManeuverPAD(manopt, *form);
@@ -710,7 +748,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		if (fcn == 31)
 		{
 			sprintf(form->purpose, "LOI-1");
-			sprintf(form->remarks, "No ullage,  Horizon window: At ignition minus 2 minutes; 40 degrees unlit.  At ignition; 27 degrees unlit");
+			sprintf(form->remarks, "No ullage,  Horizon window: At ignition minus 2 minutes, 40 degrees unlit,  At ignition, 27 degrees unlit");
 
 			char buffer1[1000];
 			char buffer2[1000];
@@ -1463,7 +1501,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			// give to mcc
 			strncpy(upString, uplinkdata, 1024 * 3);
 			sprintf(upDesc, "CSM & LM state vectors, Target load");
-			sprintf(form->remarks, "No ullage,  Horizon window: At ignition minus 3 minutes; 27 degrees, horizon left.  At ignition; 18 degrees, horizon left");
+			sprintf(form->remarks, "No ullage,  Horizon window: At ignition minus 3 minutes, 27 degrees horizon left,  At ignition, 18 degrees horizon left");
 		}
 	}
 	break;
@@ -1659,31 +1697,23 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 	break;
 	case 202: //Entry REFSMMAT
 	{
-		AP11MNV tempPAD;
-		AP11ManPADOpt opt;
 		MATRIX3 REFSMMAT;
-		EphemerisData sv_ephem;
+		VehicleDataBlock sv_ephem;
+		VECTOR3 GDCangles;
+		char SetStars[64];
 
 		char buffer1[1000];
 
 		GENERICPAD * form = (GENERICPAD *)pad;
 
-		sv_ephem = StateVectorCalcEphem(calcParams.src);
+		sv_ephem = StateVectorCalcDataBlock(calcParams.src);
 
 		REFSMMAT = EZJGMTX1.data[RTCC_REFSMMAT_TYPE_LCV - 1].REFSMMAT;
 
-		opt.TIG = calcParams.TEI + 45.0 * 60.0;
-		opt.RV_MCC = sv_ephem;
-		opt.REFSMMAT = REFSMMAT;
-		opt.PrefGDCStars = 3; //Sirius,Rigel
-		opt.sxtstardtime = 0.0;
-		opt.WeightsTable = GetWeightsTable(calcParams.src, true, false);
-
-		AP11ManeuverPAD(opt, tempPAD);
-
 		AGCDesiredREFSMMATUpdate(buffer1, REFSMMAT);
 
-		sprintf(form->paddata, "Backup GDC Alignment:  SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", tempPAD.SetStars, tempPAD.GDCangles.x, tempPAD.GDCangles.y, tempPAD.GDCangles.z);
+		mcc->mcc_calcs.BackupGDCAlignment(sv_ephem, (calcParams.TEI + 45.0 * 60.0), REFSMMAT, 3, GDCangles, SetStars);
+		sprintf(form->paddata, "Backup GDC Alignment:  SET STARS: %s  RALIGN %03.0f  PALIGN %03.0f  YALIGN %03.0f", SetStars, GDCangles.x, GDCangles.y, GDCangles.z);
 
 		sprintf(uplinkdata, "%s", buffer1);
 		if (upString != NULL) {
@@ -1752,7 +1782,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		entopt.type = 3;
 
 		//Calculate corridor control burn
-		EntryTargeting(&entopt, &res);
+		EntryTargeting(entopt, res);
 
 		//If time to EI is more than 24 hours and the splashdown longitude is not within 2° of desired, then perform a longitude control burn
 		if (MCCtime < calcParams.EI - 24.0*3600.0 && abs(res.longitude - entopt.lng) > 2.0*RAD)
@@ -1760,7 +1790,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			entopt.type = 1;
 			entopt.t_Z = res.GET400K;
 
-			EntryTargeting(&entopt, &res);
+			EntryTargeting(entopt, res);
 		}
 
 		//Apollo 8 Mission Rules
@@ -1784,7 +1814,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 			sprintf(upMessage, "%s has been scrubbed.", manname);
 
 			//Entry prediction without maneuver
-			EntryUpdateCalc(sv, PZREAP.RRBIAS, true, &res);
+			EntryUpdateCalc(ConvertSVtoEphemData(sv), PZREAP.RRBIAS, true, res);
 
 			res.dV_LVLH = _V(0, 0, 0);
 			res.P30TIG = entopt.TIGguess;
@@ -1822,7 +1852,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 		}
 		else
 		{
-			if (fcn == 203 || fcn == 206)
+			if (fcn == 206)
 			{
 				REFSMMATOpt refsopt;
 				refsopt.REFSMMATopt = 3;
@@ -1871,6 +1901,7 @@ bool RTCC::CalculationMTP_C_PRIME(int fcn, LPVOID &pad, char * upString, char * 
 
 				sprintf(form->remarks, "%sP37: High-speed procedure (-MA) req'd", ullage);
 
+				AGCStateVectorUpdate(buffer1, sv, false);
 				AGCStateVectorUpdate(buffer1, sv, false);
 				CMCRetrofireExternalDeltaVUpdate(buffer2, res.latitude, res.longitude, res.P30TIG, res.dV_LVLH);
 

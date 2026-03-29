@@ -200,16 +200,12 @@ protected:
 	// NB unit vector from instrument
 	VECTOR3 GetNBUnitVectorFromInstrument(const AGOPInputs &in, int set) const;
 	VECTOR3 GetSextantVector(double TRN, double SFT) const;
-	VECTOR3 GetCSMCOASVector(double SPA, double SXP) const;
-	VECTOR3 GetLMCOASVector(double EL, double SXP, bool IsZAxis) const;
 	VECTOR3 GetAOTNBVector(double EL, double AZ, double YROT, double SROT, int axis) const;
 
 	// Instrument angles from NB unit vector
 	void InstrumentAngles(VECTOR3 u_NB, int Instrument, int AOTDetent, bool LMCOASAxis, double &pitch, double &yaw) const;
 	void SextantAngles(VECTOR3 u_NB, double &TA, double &SA) const;
 	void AOTAngles(int Detent, VECTOR3 u_NB, double &YROT, double &SROT) const;
-	void CSMCOASAngles(VECTOR3 u_NB, double &SPA, double &SXP) const;
-	void LMCOASAngles(bool Axis, VECTOR3 u_NB, double &EL, double &SXP) const;
 
 	// BRCS to NB matrix from REFSMMAT, attitude and instrument ID
 	MATRIX3 BRCStoNBMatrix(const AGOPInputs &in, int set) const;

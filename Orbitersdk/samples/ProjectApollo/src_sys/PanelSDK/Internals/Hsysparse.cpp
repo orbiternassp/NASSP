@@ -63,16 +63,18 @@ return NULL;
 
 void H_system::Create_h_crew(char *line)
 {
-char name[100];
-int nmb;
-char source[100];
-char drink[100];
-h_Tank *SRC;
-h_Pipe *drinkpipe;
-sscanf(line+6,"%s %i %s %s",name,&nmb,source,drink);
-SRC=(h_Tank*)GetPointerByString(source);
-drinkpipe=(h_Pipe*)GetPointerByString(drink);
-AddSystem(new h_crew(name,nmb,SRC,drinkpipe));
+	char name[100];
+	int nmb;
+	char source[100];
+	char drink[100];
+	char urine[100];
+	h_Tank *SRC, *UCD;
+	h_Pipe *drinkpipe;
+	sscanf(line+6, "%s %i %s %s %s", name, &nmb, source, drink, urine);
+	SRC = (h_Tank*)GetPointerByString(source);
+	drinkpipe = (h_Pipe*)GetPointerByString(drink);
+	UCD = (h_Tank*)GetPointerByString(urine);
+	AddSystem(new h_crew(name, nmb, SRC, drinkpipe, UCD));
 }
 
 void H_system::Create_h_Radiator(char *line) {

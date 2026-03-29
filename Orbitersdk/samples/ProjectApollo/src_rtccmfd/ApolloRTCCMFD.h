@@ -39,31 +39,17 @@ struct RTCCMFDInputBoxData
 	void (ApolloRTCCMFD::*func)(void) = NULL;
 };
 
-struct MEDInput
-{
-	std::string Label;			//Short description on MFD page
-	std::string Description;	//Detailed description in MFD input box
-	std::string Unit;			//Unit displayed on MFD page
-	std::string Data;
-};
-
-struct MEDInputPage
-{
-	std::string Title;			//Title displayed on MFD page
-	std::string MEDCode;
-	std::vector<MEDInput> table;
-	int display = -1;
-};
-
 struct RTCCMFDData
 {
 	int screen = 0;
 	int subscreen = 0;
 	int subscreenmax = 0;
+	int subsubscreen = 0;
+	int subsubscreenmax = 0;
 	int marker = 0;
 	int markermax = 0;
 	UINT ID = 0;
-	std::string MEDCode;
+	unsigned int ActiveMEDInputPage = 0;
 	bool IsCSM = false;
 	bool EnableCalculation;
 };
@@ -81,17 +67,18 @@ public:
 	void ReadStatus(FILEHANDLE scn);
 	void RecallStatus(void);
 
-	void Text(oapi::Sketchpad *skp, std::string message, int x, int y, int xmax = 1024, int ymax = 1024);
 	void Text_Double(oapi::Sketchpad *skp, int x, int y, char *format, double val);
 	void Text_Int(oapi::Sketchpad *skp, int x, int y, char *format, int val);
 	void Text_String(oapi::Sketchpad *skp, int x, int y, std::string message);
 	//Functions using CW and CH
 	void Text(oapi::Sketchpad *skp, int x, int y, std::string message);
+	void Text(oapi::Sketchpad *skp, int x, int y, std::string message, int xmax, int ymax);
 	void TextW(oapi::Sketchpad *skp, int x, int y, LPWSTR message);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, double val);
 	void Text(oapi::Sketchpad *skp, int x, int y, char *format, int val);
 	void Text_GET_MMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_MMSSC(oapi::Sketchpad *skp, int x, int y, double val);
+	void Text_GET_HHMM(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMM(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
 	void Text_GET_HHHMMSS(oapi::Sketchpad *skp, int x, int y, double val);
@@ -103,6 +90,8 @@ public:
 	void Text_Latitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
 	void Text_Longitude(oapi::Sketchpad *skp, int x, int y, double val, int decimals);
 	void Text_Dot(oapi::Sketchpad *skp, int x, int y);
+	void Line(oapi::Sketchpad *skp, int x0, int y0, int x1, int y1);
+	void Line2(oapi::Sketchpad* skp, int x0, int y0, int x1, int y1);
 
 	void SelectPage(int page);
 
@@ -119,10 +108,6 @@ public:
 	void menuCorrectiveCombinationCalc();
 	void menuSetTwoImpulseSingleSolutionInput();
 	void menuTwoImpulseSingleSolutionCalc();
-	void SPQtimedialogue();
-	void set_SPQtime(double tig);
-	void menuSetSPQChaserThresholdTime();
-	void menuSetSPQTargetThresholdTime();
 	void menuDKINSRDHInput();
 	void menuDKINCCDHInput();
 	void SPQDHdialogue();
@@ -132,8 +117,8 @@ public:
 	void set_LMVessel();
 	void set_IUVessel();
 	void set_TargetVessel();
+	void set_TargetVesselTable();
 	void CycleThroughVessels(VESSEL **v) const;
-	void menuSLVLaunchTargetingPad();
 	void menuSLVLaunchTargeting();
 	void menuSLVInsertionSVtoMPT();
 	void menuSLVLaunchUplink();
@@ -154,6 +139,8 @@ public:
 	void menuREFSMMATLockerMovement();
 	void cycleREFSMMATHeadsUp();
 	void calcREFSMMAT();
+	void menuSetMEDM10();
+	void menuSetMEDM11();
 	void GMPInput1Dialogue();
 	void set_GMPInput1(double val);
 	void GMPInput2Dialogue();
@@ -162,16 +149,13 @@ public:
 	void set_GMPInput3(double val);
 	void GMPInput4Dialogue();
 	void set_GMPInput4(double val);
-	void OrbAdjGETDialogue();
 	void OrbAdjRevDialogue();
 	void GPMPCalc();
-	void menuCycleGMPManeuverVehicle();
 	void menuCycleGMPManeuverPoint();
 	void menuCycleGMPManeuverType();
 	void menuCycleMarkerUp();
 	void menuCycleMarkerDown();
 	void menuSetGMPInput();
-	void menuGPMCycleVessel();
 	void SPQcalc();
 	void lambertcalc();
 	void FormatDeclination(char *Buff, double angle);
@@ -212,10 +196,7 @@ public:
 	void menuCycleRTEDIterateOption();
 	void menuSetEntryDesiredInclination();
 	void set_EntryDesiredInclination(double inc);
-	void menuSetRTEConstraintF86();
-	void set_RTEConstraintF86(std::string constr, double value);
-	void menuSetRTEConstraintF87();
-	void set_RTEConstraintF87(std::string constr, std::string value);
+	void menuSetRTEConstraints();
 	void menuAddRTESite();
 	void menuReplaceRTESite();
 	void menuDeleteRTESite();
@@ -232,14 +213,17 @@ public:
 	void menuTransferRTEToMPT();
 	bool set_RTESolution(char *str);
 	void menuGeneralMEDRequest();
-	void menuGeneralMEDRequest(char *message);
+	void menuGeneralMEDRequest(char *message, char *defaultvalue = 0);
 	void GeneralMEDRequest(char *str);
+	void menuMEDInputFromFile();
+	void ProcessMEDInputFromFile(char *str);
 	void EntryRangeDialogue();
 	void set_SVPageTarget();
 	void menuSVCalc();
 	void menuSVUpload();
 	void menuLSCalc();
-	void menuRevertRLSToPrelaunch();
+	void menuCycleAGSNavUpdREFSMMAT();
+	void menuSaveAGSREFSMMAT();
 	void menuAGSSVCalc();
 	void menuEntryUpdateUpload();
 	void menuSwitchHeadsUp();
@@ -252,7 +236,7 @@ public:
 	void menuManPADUllage();
 	void menuManPADTIG();
 	void menusextantstartime();
-	void set_sextantstartime(double time);
+	void menuCyclePreferredGDCStarSet();
 	void menuManPADDV();
 	void set_P30DV(VECTOR3 dv);
 	void menuREFSMMATAtt();
@@ -275,13 +259,9 @@ public:
 	void menuSwitchMapUpdate();
 	void menuSetMapUpdateGET();
 	void menuCycleMapUpdatePM();
-	void menuCycleSPQMode();
-	void set_CDHtimemode();
-	void menuCycleSPQChaser();
+	void menuSetSPQInput();
 	void menuSetLaunchDate();
 	void set_launchdate(int year, int month, int day);
-	void menuSetLaunchTime();
-	void set_LaunchTime(int hours, int minutes, double seconds);
 	void menuChangeVesselStatus();
 	void menuCycleLMStage();
 	void menuUpdateLiftoffTime();
@@ -301,6 +281,7 @@ public:
 	void menuCycleTLCCConfiguration();
 	void menuSetTLCCAlt();
 	void menuSetTLCCAltMode5();
+	void menuSetTLCCVectorID();
 	void menuSetTLCCDesiredInclination();
 	void menuSetMidcourseConstraintsPage();
 	void menuSetTLMCCAzimuthConstraints();
@@ -334,6 +315,7 @@ public:
 	void menuSetLOIDHBias();
 	void menuSetLOIDW();
 	void menuCycleLOIInterSolnFlag();
+	void menuSetLOIVectorID();
 	void menuSetLOIRevs1();
 	void menuSetLOIRevs2();
 	void menuSetLOIEta1();
@@ -378,7 +360,6 @@ public:
 	void menuVECPOINTSelectAttitude();
 	void menuVECPOINTOmicron();
 	void menuVECPOINTCalc();
-	void menuSetLDPPVectorTime();
 	void menuLSRadius();
 	void menuSetLDPPDwellOrbits();
 	void menuSetLDPPLandingSiteOffset();
@@ -390,11 +371,8 @@ public:
 	void menuLDPPCalc();
 	void menuSetDescPlanCalcPage();
 	void menuTranslunarPage();
-	void menuSetLDPPMode();
-	void menuSetLDPPSequence();
 	void menuTLANDUplinkCalc();
 	void menuTLANDUpload();
-	void set_t_TPI(double time);
 	void menuSetDescPlanInitPage();
 	void menuCycleLLWPChaserOption();
 	void menuSetLiftoffguess();
@@ -405,6 +383,7 @@ public:
 	void set_LLWPDeltaHeights(double dh1, double dh2, double dh3);
 	void menuSetLLWPElevation();
 	void set_LLWPElevation(double elev);
+	void menuSetLLWPVectorID();
 	void menuSetTPIguess();
 	void menuLunarLiftoffCalc();
 	void menuLLTPCalc();
@@ -452,12 +431,9 @@ public:
 	void menuSetSPQElevation();
 	void set_SPQElevation(double elev);
 	void menuSetSPQTerminalPhaseAngle();
-	void set_SPQTerminalPhaseAngle(double wt);
+	void menuSetSPQMinimumPeriapsisAlt();
 	void menuSetSPQTPIDefinitionValue();
 	void set_SPQTPIDefinitionValue(double get);
-	void menuCycleSPQCDHPoint();
-	void menuSPQCDHValue();
-	bool set_SPQCDHValue(char* val);
 	void menuSetDKIElevation();
 	void menuSetDKITerminalPhaseAngle();
 	void menuSetDKIMinimumPerigee();
@@ -468,6 +444,8 @@ public:
 	void menuDKIInitialPhaseFlag();
 	void menuCycleDKITerminalPhaseOption();
 	void menuDKITerminalPhaseDefinitionValue();
+	void menuChooseDKIChaser();
+	void menuChooseDKITarget();
 	void menuCycleTPIMode();
 	void TPIDTDialogue();
 	void menuSetLAPLiftoffTime();
@@ -481,10 +459,10 @@ public:
 	void menuAscentPADCalc();
 	void menuCycleAscentPADVersion();
 	void menuSetPDAPPage();
+	void menuSetPDAPInputs();
+	bool set_PDAPInputs(int sel, char *str);
 	void menuPDAPCalc();
-	void menuCyclePDAPSegments();
-	void menuCyclePDAPEngine();
-	void menuAP11AbortCoefUplink();
+	void menuPDAPUplink();
 	void menuSetFIDOOrbitDigitalsCSMPage();
 	void menuSetFIDOOrbitDigitalsLMPage();
 	void menuSetFIDOOrbitDigitalsGETL();
@@ -534,38 +512,16 @@ public:
 	void menuREFSMMATUplinkCalc();
 	bool REFSMMATUplinkCalc(char *str);
 	void menuSetTITransferPage();
-	void menuCycleTITable();
-	void menuSetTIPlanNumber();
-	void set_TIPlanNumber(int plan);
-	void menuTIDeleteGET();
-	void set_TIDeleteGET(double get);
 	void menuChooseTIThruster();
 	bool set_ChooseTIThruster(std::string th);
-	void menuCycleTIAttitude();
-	void menuTIUllageOption();
-	void menuM70UllageOption();
-	void menuCycleTIIterationFlag();
-	void menuCycleTITimeFlag();
-	void menuTIDPSTenPercentTime();
-	void set_TIDPSTenPercentTime(double deltat);
-	void menuTIDPSScaleFactor();
-	void set_TIDPSScaleFactor(double scale);
 	void menuTransferTIToMPT();
 	void menuSetSPQorDKIRTransferPage();
-	void menuTransferSPQorDKIToMPT();
+	void menuTransferLDPOrSPQorDKIToMPT();
 	void menuBackToSPQorDKIPage();
 	void menuChooseSPQDKIThruster();
 	bool set_ChooseSPQDKIThruster(std::string th);
-	void menuM70SelectPlan();
-	void menuM70DeleteGET();
-	void set_MPTM70DeleteGET(double get);
-	void menuM70CycleAttitude();
-	void menuM70CycleIterationFlag();
-	void menuM70CycleTimeFlag();
-	void menuM70DPSTenPercentTime();
-	void set_M70DPSTenPercentTime(double deltat);
-	void menuM70DPSScaleFactor();
-	void set_M70DPSScaleFactor(double scale);
+	void menuSetM70Inputs();
+	void menuSetM72Inputs();
 	void menuSetGPMTransferPage();
 	void menuTransferGPMToMPT();
 	void menuCycleGPMTable();
@@ -652,13 +608,8 @@ public:
 	void menuSetDescPlanTablePage();
 	void menuSetLDPPAzimuth();
 	void menuSetLDPPDescentFlightTime();
-	void cycleLDPPVehicle();
-	void menuSetLDPPDesiredHeight();
-	void menuLDPPThresholdTime1();
-	void menuLDPPThresholdTime2();
-	void menuLDPPThresholdTime3();
-	void menuLDPPThresholdTime4();
-	void set_LDPPThresholdTime(double dt, int thr);
+	void menuSetLDPPInput();
+	void menuLDPPThresholdTimesCheck();
 	void menuSetSunriseSunsetTablePage();
 	void menuSunriseSunsetTimesCalc();
 	void menuSetMoonriseMoonsetTablePage();
@@ -668,6 +619,7 @@ public:
 	void menuSetFIDOLaunchAnalogNo2Page();
 	void menuSetRTETradeoffDisplayPage();
 	void menuCycleSubscreen();
+	void menuCycleSubSubscreen();
 	void menuCalcRTETradeoff();
 	void menuSetRTETradeoffSite();
 	void menuSetRTETradeoffRemoteEarthPage();
@@ -762,13 +714,16 @@ public:
 	void UpdateLOSTDisplay();
 	void CalculateLOSTDOKOption();
 	void menuSetDebugPage();
-	void menuCalculateIMUComparison();
+	void menuCycleDebugLMComputer();
+	void menuCalculateAttitudeComparison();
 	void menuSetIMUParkingAnglesPage();
 	void menuCalculateIMUParkingAngles();
 	void menuSLVNavigationUpdateCalc();
 	void menuSLVNavigationUpdateUplink();
 	void menuVectorPanelSummaryPage();
 	void menuGetOnboardStateVectors();
+	void menuSetGroundtrackDigitalsPage();
+	void menuSetRecoveryAscendingNodeDisplayPage();
 	void menuSetRetrofireConstraintsPage();
 	void menuSetRetrofireDigitalsPage();
 	void menuRetrofireGETIDialogue();
@@ -791,12 +746,26 @@ public:
 	void menuChooseRetrofireGs();
 	bool set_RetrofireGs(double val);
 	void menuChooseRetrofireUllage();
+	void menuCycleGroundTrackDigitalsPages();
+	void menuSetGroundtrackDigitalsInput();
+	void menuGroundtrackDigitalsCalc();
+	void menuSetRecoveryAscendingNodeDisplayInput();
+	void menuRecoveryAscendingNodeDisplayCalc();
 	void menuSetRetrofireTargetSelectionPage();
 	void menuCycleRecoveryTargetSelectionPages();
 	void menuRecoveryTargetSelectionCalc();
 	void set_RecoveryTargetSelectionCalc(double get, double lng);
 	void menuSelectRecoveryTarget();
 	bool set_RecoveryTarget(int num);
+	void menuSetRecoveryZonesDisplayPage();
+	void menuRecoveryZonesDisplayCalc();
+	void menuCycleRecoveryZonesDisplayPages();
+	void menuEnterRecoveryZones();
+	void menuSetStarSightingTableInput();
+	void menuStarSightingTableCalc();
+	void menuSetSpacecraftPointingDisplayInput();
+	void menuMEDG41();
+	void menuSpacecraftPointingDisplayCalc();
 	void menuSaveDODREFSMMAT();
 	void menuSaveRTEREFSMMAT();
 	void menuMakeDODREFSMMATCurrent();
@@ -859,6 +828,7 @@ public:
 	void menuPerigeeAdjustThresholdTime();
 	void menuPerigeeAdjustTimeIncrement();
 	void menuPerigeeAdjustHeight();
+	void menuPerigeeAdjustVectorID();
 	void menuSetAGOPPage();
 	void menuCycleAGOPPage();
 	void menuSetAGOPInput();
@@ -867,10 +837,17 @@ public:
 	void menuSetRTACFPage();
 	void CycleCSMOrLMSelection();
 	void CycleEnableCalculation();
+	void CycleREFSMMATType(int &type, bool csm);
+	void menuSetThrustCGPage();
+	void menuSetRTCCTimesPage();
+	void menuRTCCTimesInput();
+	void menuSetStarSightingTablePage();
+	void menuSetSpacecraftPointingDisplayPage();
 
 	void SetMEDInputPageM75();
 	void SetMEDInputPageP13();
 	void SetMEDInputPageP14();
+	void SetMEDInputPageS84();
 	void SetMEDInputPage(std::string med);
 	void menuMEDInputCalc();
 	void menuInputMEDData();
@@ -878,13 +855,13 @@ public:
 	void menuGenericGoToDisplay();
 	void menuReturnToMEDInput();
 
-	void GenericGETInput(double *get, char *message);
+	void GenericGETInput(double *get, char *message, void (ApolloRTCCMFD::*func)(void) = NULL, double factor = 1.0);
 	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
 	void GenericDouble2Input(double *val1, double *val2, char* message, double factor1 = 1.0, double factor2 = 1.0);
 	void GenericIntInput(int *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL, int min = 1, int max = 0);
 	void GenericInt2Input(int *val1, int *val2, char* message, int min1, int max1, int min2, int max2, void (ApolloRTCCMFD::*func)(void) = NULL);
 	void GenericVectorInput(VECTOR3 *val, char* message, double factor = 1.0, void (ApolloRTCCMFD::*func)(void) = NULL);
-	void GenericStringInput(std::string *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL);
+	void GenericStringInput(std::string *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL, unsigned int minlen = 0, unsigned int maxlen = 64);
 	void GenericUllageInput(bool *Use4Jets, double *UllageDuration, bool AllowDefault = true);
 protected:
 	oapi::Font *font_mocr1; //Used for displays with 42 x 84 static characters
@@ -909,10 +886,14 @@ protected:
 
 	int CW; //Character width
 	int CH; //Character height
+	int WOFF; //Offset from left to have the display be centered
+	int HOFF; //Offset from top to have the display be centered
 	int x, y, dx, dy; //Display spacing helper variables
 	int screen;
 	int subscreen;
 	int subscreenmax;
+	int subsubscreen;
+	int subsubscreenmax;
 	int marker;
 	int markermax;
 	int status; //Page dependent status, reset to 0 when new page is entered
@@ -931,7 +912,7 @@ private:
 	bool IsCSM; //Chooses if the CSM or LM vessel in the RTCC is selected
 	bool EnableCalculation; //Generic variable for switch on/off a display related calculation
 	int ErrorMessage;
-	MEDInputPage MEDInputData;
+	unsigned int ActiveMEDInputPage;
 
 	//Additional display functions
 	void AGOPDisplay(oapi::Sketchpad*skp);
@@ -944,6 +925,7 @@ private:
 	void AGOPDisplayOption7(oapi::Sketchpad*skp);
 	void AGOPDisplayOption8(oapi::Sketchpad*skp);
 	void AGOPDisplayOption9(oapi::Sketchpad*skp);
+	void RendezvousEvaluationDisplay(oapi::Sketchpad*skp);
 
 	void CSMOrLMSelection(oapi::Sketchpad*skp);
 	void CSMOrLMSelectionErrorMessage(oapi::Sketchpad*skp);
@@ -954,6 +936,8 @@ private:
 	void PrintUllage(char *Buffer, int Thruster, bool Use4Jets, double Duration);
 	void GetCharSize(oapi::Sketchpad*skp, int &CW, int &CH);
 	void SetMOCRFont(oapi::Sketchpad*skp, int size, bool dynamic);
+	void SetMOCRDisplayCentered(int size);
+	void ResetMOCRDisplayCentered();
 };
 
 #endif // !__ApolloRTCCMFD_H

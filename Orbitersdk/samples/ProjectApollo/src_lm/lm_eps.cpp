@@ -1598,11 +1598,6 @@ double LEM_FloodLights::GetPowerDraw()
 	return (GetOVHDFWDPowerDraw() + GetALLPowerDraw());
 }
 
-void LEM_FloodLights::Timestep(double simdt)
-{
-	//Can be used to light floods
-}
-
 void LEM_FloodLights::SystemTimestep(double simdt)
 {
 	FloodCB->DrawPower(GetPowerDraw());

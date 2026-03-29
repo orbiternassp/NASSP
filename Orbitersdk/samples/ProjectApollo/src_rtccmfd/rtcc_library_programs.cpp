@@ -807,12 +807,12 @@ void RTCC::ELVCTR(const ELVCTRInputTable &in, ELVCTROutputTable2 &out, Ephemeris
 	out.VPI = 0;
 	out.ErrorCode = 0;
 
-	if (in.GMT < EPH.table[0].GMT)
+	if (in.GMT < EPH.Header.TL)
 	{
 		out.ErrorCode = 8;
 		return;
 	}
-	if (in.GMT > EPH.table.back().GMT)
+	if (in.GMT > EPH.Header.TR)
 	{
 		out.ErrorCode = 16;
 		return;
@@ -2045,6 +2045,7 @@ RTCC_PLAWDT_9_T:
 	out.SIVBWeight = in.SIVBWeight;
 	out.LMAscWeight = in.LMAscWeight;
 	out.LMDscWeight = in.LMDscWeight;
+	out.CC = in.Num;
 	goto RTCC_PLAWDT_M_5;
 }
 

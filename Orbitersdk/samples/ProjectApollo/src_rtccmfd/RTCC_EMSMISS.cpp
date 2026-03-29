@@ -223,6 +223,10 @@ RTCC_EMSMISS_CutoffModeLogic_START:
 
 		CallManeuverIntegrator();
 
+		if (ErrorCode)
+		{
+			return;
+		}
 		//Maneuver error
 		if (nierror)
 		{
@@ -326,8 +330,6 @@ void RTCC_EMSMISS::UpdateWeightsTableAndSVAfterManeuver()
 	state.StateVector.GMT = AuxTableIndicator.GMT_BO;
 	state.StateVector.RBI = AuxTableIndicator.RBI;
 
-	//TBD: Docking maneuver
-
 	double dmass = AuxTableIndicator.MainFuelUsed + AuxTableIndicator.RCSFuelUsed;
 	switch (mpt->mantable[i].TVC)
 	{
@@ -349,8 +351,69 @@ void RTCC_EMSMISS::UpdateWeightsTableAndSVAfterManeuver()
 		break;
 	}
 
+	//Docking maneuver logic (but skip if integration is cut off at end of maneuver)
+	if (intab->ManCutoffIndicator == 1 && mpt->mantable[i].CommonBlock.ConfigChangeInd == RTCC_CONFIGCHANGE_DOCKING)
+	{
+		//Get weights from other MPT at desired time
+		PLAWDTOutput plawdtout;
+		MPTVehicleDataBlock *OtherCommonBlock;
+
+		OtherCommonBlock = pRTCC->MPTDockingManeuver(intab->VehicleCode, state.StateVector.GMT, plawdtout);
+
+		if (plawdtout.Err == 1 || plawdtout.Err == 2)
+		{
+			ErrorCode = 4;
+			return;
+		}
+		//Check for inconsistent configuration codes
+		std::bitset<4> TEMP;
+		//Do the two codes have any vehicle in common?
+		TEMP = state.WeightsTable.CC & plawdtout.CC;
+		if (TEMP != 0)
+		{
+			//Yes
+			ErrorCode = 4;
+			return;
+		}
+		//Unexpected final configuration?
+		TEMP = state.WeightsTable.CC | plawdtout.CC;
+		if (TEMP != mpt->mantable[i].CommonBlock.ConfigCode)
+		{
+			//Yes
+			ErrorCode = 4;
+			return;
+		}
+
+		//Add weights from other table
+		if (plawdtout.CC[0])
+		{
+			state.WeightsTable.CSMWeight = plawdtout.CSMWeight;
+			state.WeightsTable.CSMArea = plawdtout.CSMArea;
+		}
+		if (plawdtout.CC[1])
+		{
+			state.WeightsTable.SIVBWeight = plawdtout.SIVBWeight;
+			state.WeightsTable.SIVBArea = plawdtout.SIVBArea;
+		}
+		if (plawdtout.CC[2])
+		{
+			state.WeightsTable.LMAscWeight = plawdtout.LMAscWeight;
+			state.WeightsTable.LMAscArea = plawdtout.LMAscArea;
+		}
+		if (plawdtout.CC[3])
+		{
+			state.WeightsTable.LMDscWeight = plawdtout.LMDscWeight;
+			state.WeightsTable.LMDscArea = plawdtout.LMDscArea;
+		}
+		//Change configuration code
+		state.WeightsTable.CC = TEMP;
+		//Update areas
+		UpdateConfigArea(state.WeightsTable);
+	}
+
 	state.WeightsTable.ConfigWeight = state.WeightsTable.CSMWeight + state.WeightsTable.SIVBWeight + state.WeightsTable.LMAscWeight + state.WeightsTable.LMDscWeight;
 
+	//Update maneuver times table
 	MANTIMESData data;
 
 	data.ManData[0] = AuxTableIndicator.GMT_1;
@@ -630,8 +693,16 @@ void RTCC_EMSMISS::WriteEphemerisHeaders()
 			EphemerisTableIndicatorList[ii]->Header.NumVec = EphemerisTableIndicatorList[ii]->table.size();
 			EphemerisTableIndicatorList[ii]->Header.Offset = 0;
 			EphemerisTableIndicatorList[ii]->Header.Status = 0;
-			EphemerisTableIndicatorList[ii]->Header.TL = EphemerisTableIndicatorList[ii]->table.front().GMT;
-			EphemerisTableIndicatorList[ii]->Header.TR = EphemerisTableIndicatorList[ii]->table.back().GMT;
+			if (EphemerisTableIndicatorList[ii]->table.size() == 0U)
+			{
+				EphemerisTableIndicatorList[ii]->Header.TL = 0.0;
+				EphemerisTableIndicatorList[ii]->Header.TR = 0.0;
+			}
+			else
+			{
+				EphemerisTableIndicatorList[ii]->Header.TL = EphemerisTableIndicatorList[ii]->table.front().GMT;
+				EphemerisTableIndicatorList[ii]->Header.TR = EphemerisTableIndicatorList[ii]->table.back().GMT;
+			}
 			EphemerisTableIndicatorList[ii]->Header.TUP = mpt->CommonBlock.TUP;
 			EphemerisTableIndicatorList[ii]->Header.VEH = intab->VehicleCode;
 		}
@@ -753,7 +824,7 @@ void RTCC_EMSMISS::CallManeuverIntegrator()
 		return;
 	}
 
-	//Update weights table and SV
+	//Update weights table and state vector after the maneuver
 	UpdateWeightsTableAndSVAfterManeuver();
 }
 
@@ -806,10 +877,15 @@ void RTCC_EMSMISS::WeightsAtManeuverBegin()
 
 		state.WeightsTable = CurrentWeightsTable;
 	}
-	else if (mpt->mantable[i].CommonBlock.ConfigChangeInd == RTCC_CONFIGCHANGE_DOCKING)
-	{
-		//TBD
-	}
+}
+
+void RTCC_EMSMISS::UpdateConfigArea(PLAWDTOutput &tab) const
+{
+	tab.ConfigArea = 0.0;
+	if (tab.CC[RTCC_CONFIG_C] && tab.CSMArea > tab.ConfigArea) tab.ConfigArea = tab.CSMArea;
+	if (tab.CC[RTCC_CONFIG_S] && tab.SIVBArea > tab.ConfigArea) tab.ConfigArea = tab.SIVBArea;
+	if (tab.CC[RTCC_CONFIG_A] && tab.LMAscArea > tab.ConfigArea) tab.ConfigArea = tab.LMAscArea;
+	if (tab.CC[RTCC_CONFIG_D] && tab.LMDscArea > tab.ConfigArea) tab.ConfigArea = tab.LMDscArea;
 }
 
 void RTCC_EMSMISS::CallCSMLMIntegrator()
@@ -837,14 +913,6 @@ void RTCC_EMSMISS::CallCSMLMIntegrator()
 		integin.KEPHOP = 0;
 	}
 	integin.KTRIMOP = mpt->mantable[i].TrimAngleInd;
-	if (state.WeightsTable.CC[RTCC_CONFIG_D] == true)
-	{
-		integin.LMDESCJETT = 1e70;
-	}
-	else
-	{
-		integin.LMDESCJETT = 0;
-	}
 
 	if (mpt->mantable[i].AttitudesInput)
 	{
@@ -1021,7 +1089,7 @@ void RTCC_EMSMISS::CallAscentIntegrator()
 		{
 			gmt_sv = state.StateVector.GMT;
 		}
-		if (pRTCC->ELFECH(gmt_sv, RTCC_MPT_CSM, SV))
+		if (pRTCC->EMSFFV(gmt_sv, RTCC_MPT_CSM, SV))
 		{
 			nierror = 1;
 			return;
@@ -1034,6 +1102,5 @@ void RTCC_EMSMISS::CallAscentIntegrator()
 	integin.v_LH = mpt->mantable[i].dV_LVLH.z;
 	integin.v_LV = mpt->mantable[i].dV_LVLH.x;
 
-	nierror = 0;
-	pRTCC->PMMLAI(integin, AuxTableIndicator, &tempephemtable);
+	nierror = pRTCC->PMMLAI(integin, AuxTableIndicator, &tempephemtable);
 }

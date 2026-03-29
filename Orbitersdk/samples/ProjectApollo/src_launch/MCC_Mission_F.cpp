@@ -272,7 +272,7 @@ void MCC::MissionSequence_F()
 		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 13 && MoonRevTime > 1.0*3600.0 + 25.0*60.0, 75, MST_F_LUNAR_ORBIT_DOI_DAY_19);
 		break;
 	case MST_F_LUNAR_ORBIT_DOI_DAY_19: //LM insertion update to CSM backup insertion update
-		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, MoonRev >= 14 && MoonRevTime > 30.0*60.0, 77, MST_F_LUNAR_ORBIT_DOI_DAY_20);
+		UpdateMacro(UTP_PADONLY, PT_AP11LMMNV, MoonRev >= 14 && MoonRevTime > 25.0*60.0, 77, MST_F_LUNAR_ORBIT_DOI_DAY_20);
 		break;
 	case MST_F_LUNAR_ORBIT_DOI_DAY_20: //CSM backup insertion update to LM insertion update
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 3.0*60.0, 76, MST_F_LUNAR_ORBIT_DOI_DAY_21);
@@ -289,19 +289,34 @@ void MCC::MissionSequence_F()
 	case MST_F_LUNAR_ORBIT_DOI_DAY_24: //LM weight update to APS depletion PAD update
 		UpdateMacro(UTP_PADONLY, PT_GENERIC, SubStateTime > 3.0*60.0, 80, MST_F_LUNAR_ORBIT_DOI_DAY_25);
 		break;
-	case MST_F_LUNAR_ORBIT_DOI_DAY_25: //APS depletion PAD update to TEI-22 update
-		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, MoonRev >= 16 && MoonRevTime > 1.0*3600.0 + 15.0*60.0, 81, MST_F_LUNAR_ORBIT_DOI_DAY_26);
+	case MST_F_LUNAR_ORBIT_DOI_DAY_25: //APS depletion PAD update to AEAA ARM
+		UpdateMacro(UTP_PADWITHLGCUPLINK, PT_AP11LMMNV, mcc_calcs.GETEval(rtcc->TimeofIgnition - 10.0 * 60.0), 81, MST_F_LUNAR_ORBIT_DOI_DAY_26);
 		break;
-	case MST_F_LUNAR_ORBIT_DOI_DAY_26: //TEI-22 update to rev 22 map update
-		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 17 && MoonRevTime > 1.0*3600.0 + 15.0*60.0, 34, MST_F_LUNAR_ORBIT_DOI_DAY_27);
+	case MST_F_LUNAR_ORBIT_DOI_DAY_26: //AEAA ARM to P42
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, SubStateTime > 30.0, 120, MST_F_LUNAR_ORBIT_DOI_DAY_27); //Needs to be changed to AEAA ARM uplink
 		break;
-	case MST_F_LUNAR_ORBIT_DOI_DAY_27: //Rev 22 map update to state vector update
-		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, true, 45, MST_F_LUNAR_ORBIT_DOI_DAY_28);
+	case MST_F_LUNAR_ORBIT_DOI_DAY_27: //P42 to LM DSKY Enter
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, SubStateTime > 10.0, 121, MST_F_LUNAR_ORBIT_DOI_DAY_28);
 		break;
-	case MST_F_LUNAR_ORBIT_DOI_DAY_28: //State vector update to LLS2 photo PAD
-		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 3.0*60.0, 103, MST_F_LUNAR_ORBIT_DOI_DAY_29);
+	case MST_F_LUNAR_ORBIT_DOI_DAY_28: //LM DSKY Enter to LM DSKY PRO (ENG ON)
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, mcc_calcs.GETEval(rtcc->TimeofIgnition - 6.0), 122, MST_F_LUNAR_ORBIT_DOI_DAY_29);
 		break;
-	case MST_F_LUNAR_ORBIT_DOI_DAY_29: //LLS2 photo PAD to rev 23 map update
+	case MST_F_LUNAR_ORBIT_DOI_DAY_29: //LM DSKY PRO (ENG ON) to AGS Switchover
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, mcc_calcs.GETEval(rtcc->TimeofIgnition + 10.0), 123, MST_F_LUNAR_ORBIT_DOI_DAY_30);
+		break;
+	case MST_F_LUNAR_ORBIT_DOI_DAY_30: //AGS Switchover to TEI-22 update
+		UpdateMacro(UTP_LGCUPLINKDIRECT, PT_NONE, MoonRev >= 16 && MoonRevTime > 1.0*3600.0 + 15.0*60.0, 124, MST_F_LUNAR_ORBIT_DOI_DAY_31); //Needs to be changed to AGS ARM uplink
+		break;
+	case MST_F_LUNAR_ORBIT_DOI_DAY_31: //TEI-22 update to rev 22 map update
+		UpdateMacro(UTP_PADONLY, PT_AP11MNV, MoonRev >= 17 && MoonRevTime > 1.0*3600.0 + 15.0*60.0, 34, MST_F_LUNAR_ORBIT_DOI_DAY_32);
+		break;
+	case MST_F_LUNAR_ORBIT_DOI_DAY_32: //Rev 22 map update to state vector update
+		UpdateMacro(UTP_PADONLY, PT_AP10MAPUPDATE, true, 45, MST_F_LUNAR_ORBIT_DOI_DAY_33);
+		break;
+	case MST_F_LUNAR_ORBIT_DOI_DAY_33: //State vector update to LLS2 photo PAD
+		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 3.0*60.0, 103, MST_F_LUNAR_ORBIT_DOI_DAY_34);
+		break;
+	case MST_F_LUNAR_ORBIT_DOI_DAY_34: //LLS2 photo PAD to rev 23 map update
 		UpdateMacro(UTP_PADONLY, PT_GENERIC, MoonRev >= 22 && MoonRevTime > 55.0*60.0, 200, MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_1);
 		break;
 	case MST_F_LUNAR_ORBIT_LMK_TRACK_DAY_1: //Rev 23 map update to TEI-23 update

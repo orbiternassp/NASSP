@@ -25,6 +25,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "OrbMech.h"
 #include "RTCCModule.h"
+#include "RTCCTables.h"
 
 struct AEGHeader
 {
@@ -96,3 +97,28 @@ public:
 protected:
 	AEGDataBlock CurrentBlock;
 };
+
+class RTCC;
+
+//AEG-like utility functions
+namespace AnalyticEphemerisGenerator
+{
+	//Coast integration with AEG-like constraints
+	int coast(RTCC* r, VehicleDataBlock sv0, double dt, VehicleDataBlock& sv1);
+	//Argument of latitude from position and velocity vector
+	double ArgumentOfLatitude(EphemerisData sv0);
+	//Get secular rates (rates of mean anomaly, argument of periapsis and longitude of the ascending node)
+	void SecularRates(RTCC* r, EphemerisData sv0, double& l_dot, double& g_dot, double& h_dot);
+	//Routine to find arrival at time, mean anomaly, argument of latitude or maneuver line
+	int TimeOfArrivalRoutine(RTCC* r, VehicleDataBlock sv0, int opt, double param, double DN, VehicleDataBlock& sv1);
+	//To update inactive vehicle to phase match and compute delta height and time lag
+	int TAUA(RTCC* r, VehicleDataBlock sv_A0, VehicleDataBlock sv_P0, VehicleDataBlock& sv_P1, double& DELH, double& TA);
+	//Calculate inactive vehicle position above TPI position of active vehicle
+	int QDRTPI(RTCC* r, VehicleDataBlock sv_P0, double DH, double E_L, VehicleDataBlock& sv_P1);
+	//Sunrise/Sunset routine
+	int PMMDAN(RTCC* rtcc, VehicleDataBlock ELM, int IND, double &T_c, double &T_c_apo);
+	//Longitude crossing
+	int PMMTLC(RTCC* rtcc, VehicleDataBlock AEGIN, double DESLAM, VehicleDataBlock &AEGOUT);
+	//Coelliptic maneuver calculation
+	void PCMCEM(VehicleDataBlock sv_A0, VehicleDataBlock sv_PC, double DH, double mu, double& DV_H, double& DV_R);
+}

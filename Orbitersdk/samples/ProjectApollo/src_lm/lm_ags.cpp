@@ -723,7 +723,7 @@ VECTOR3 LEM_AEA::GetTotalAttitude()
 
 VECTOR3 LEM_AEA::GetAttitudeError()
 {
-	if (lem->AGS_AC_CB.Voltage() < SP_MIN_ACVOLTAGE)
+	if (lem->atca.Get28VAC800HzSinglePhaseVoltage() < SP_MIN_DCVOLTAGE)
 	{
 		return _V(0, 0, 0);
 	}
