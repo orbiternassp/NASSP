@@ -20,6 +20,9 @@ set(SOURCES
     ${NASSP_SOURCE_ROOT}/src_aux/animations.cpp
     ${NASSP_SOURCE_ROOT}/src_aux/BasicExcelVC6.cpp
     ${NASSP_SOURCE_ROOT}/src_aux/CDK.cpp
+	${NASSP_SOURCE_ROOT}/src_aux/CueCard.cpp
+	${NASSP_SOURCE_ROOT}/src_aux/CueCardLocation.cpp
+	${NASSP_SOURCE_ROOT}/src_aux/CueCardManager.cpp
     ${NASSP_SOURCE_ROOT}/src_aux/Mission.cpp
     ${NASSP_SOURCE_ROOT}/src_aux/OrbiterMath.cpp
     ${NASSP_SOURCE_ROOT}/src_aux/tracer.cpp
