@@ -154,6 +154,9 @@
     <ClCompile Include="..\..\src_aux\CDK.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
+    <ClCompile Include="..\..\src_aux\CueCard.cpp" />
+    <ClCompile Include="..\..\src_aux\CueCardLocation.cpp" />
+    <ClCompile Include="..\..\src_aux\CueCardManager.cpp" />
     <ClCompile Include="..\..\src_aux\Mission.cpp" />
     <ClCompile Include="..\..\src_aux\OrbiterMath.cpp">
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
@@ -371,6 +374,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src_aux\animations.h" />
+    <ClInclude Include="..\..\src_aux\CueCard.h" />
+    <ClInclude Include="..\..\src_aux\CueCardLocation.h" />
+    <ClInclude Include="..\..\src_aux\CueCardManager.h" />
     <ClInclude Include="..\..\src_aux\Mission.h" />
     <ClInclude Include="..\..\src_aux\RF_calc.h" />
     <ClInclude Include="..\..\src_aux\vesim.h" />
