@@ -1047,6 +1047,9 @@ void LEM::RegisterActiveAreas()
 	// LMVC Lighting
 	oapiVCRegisterArea(AID_LMVC_LIGHTING,  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
+	// Cue Cards Lighting
+	oapiVCRegisterArea(AID_LMVC_CUE_CARDS_LIGHTING, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
+
 	// Pointing arrow
 	oapiVCRegisterArea(AID_LMVC_POINTINGARROW, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
@@ -1506,6 +1509,78 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_COAS1, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_COAS1, COAS1Location + ofs, 0.05);
 
+	// Cue Cards
+
+	// Below mission and event timer, descent procedures
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_1, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_1, _V(-0.311226, 0.662860, 1.708660) + ofs, _V(-0.291192, 0.662860, 1.708660) + ofs,
+		_V(-0.311226, 0.777780, 1.725430) + ofs, _V(-0.291192, 0.777780, 1.725430) + ofs);
+
+	// Below RCS heater switches, CDR/LMP bus lost
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_2, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_2, _V(0.113078, 0.116084, 1.539060) + ofs, _V(0.154882, 0.116084, 1.539060) + ofs,
+		_V(0.113078, 0.138590, 1.554900) + ofs, _V(0.154882, 0.138590, 1.554900) + ofs);
+
+	// Below RCS controls, DPS/APS/RCS monitor
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_3, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_3, _V(-0.089500, 0.276500, 1.655800) + ofs, _V(0.197400, 0.276500, 1.655800) + ofs,
+		_V(-0.089500, 0.330000, 1.667600) + ofs, _V(0.197400, 0.330000, 1.667600) + ofs);
+
+	// Around RR No Track light, DPS Ascent
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_4, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_4, _V(-0.246735, 0.235775, 1.623300) + ofs, _V(-0.179550, 0.235775, 1.623300) + ofs,
+		_V(-0.246735, 0.278400, 1.653300) + ofs, _V(-0.179550, 0.278400, 1.653300) + ofs);
+
+	// Left of lamp test switch, feet to NM conversion
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_5, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_5, _V(0.198160, 0.150305, 1.566300) + ofs, _V(0.232670, 0.150305, 1.566300) + ofs,
+		_V(0.198160, 0.198455, 1.600300) + ofs, _V(0.232670, 0.198455, 1.600300) + ofs);
+
+	// Above the mission timer, Abort card
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_6, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_6, _V(-0.422395, 0.944158, 1.75474) + ofs, _V(-0.389174, 0.944158, 1.75474) + ofs,
+		_V(-0.422395, 0.883403, 1.74626) + ofs, _V(-0.389174, 0.883403, 1.74626) + ofs);
+
+	// Right of CDR FDAI, Ascent monitor chart & H/HDOT
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_7, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_7, _V(-0.214698, 0.55106, 1.69977) + ofs, _V(-0.196345, 0.55106, 1.69977) + ofs,
+		_V(-0.214698, 0.517477, 1.69509) + ofs, _V(-0.196345, 0.517477, 1.69509) + ofs);
+
+	// Left glareshield APS/DPS Burn & Mission Rules
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_8, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_8, _V(-0.445737, 0.698733, 1.48784) + ofs, _V(-0.446737, 0.668341, 1.71138) + ofs,
+		_V(-0.445737, 0.397492, 1.44688) + ofs, _V(-0.446737, 0.3671, 1.67042) + ofs);
+
+	// Right glareshield DPS/APS Abort & Warning lights procedure
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_9, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_9, _V(0.444017, 0.698733, 1.48784) + ofs, _V(0.445017, 0.668341, 1.71138) + ofs,
+		_V(0.444017, 0.397492, 1.44688) + ofs, _V(0.445017, 0.3671, 1.67042) + ofs);
+
+	// Right of TEMP/PRESS MON, SHe press
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_10, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_10, _V(0.099253, 0.347559, 1.67139) + ofs, _V(0.132129, 0.347559, 1.67139) + ofs,
+		_V(0.099253, 0.329596, 1.6689) + ofs, _V(0.132129, 0.329596, 1.6689) + ofs);
+
+	// Above CDR Window, CDR Buss loss
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_11, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_11, _V(-0.738219, 0.776343, 1.50091) + ofs, _V(-0.623475, 0.797416, 1.63656) + ofs,
+		_V(-0.740753, 0.695938, 1.51554) + ofs, _V(-0.626009, 0.717011, 1.65119) + ofs);
+
+	// Left of DEDA, DEDA Adresses
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_12, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_12, _V(0.392059, 0.000552, 1.4986) + ofs, _V(0.513942, 0.000552, 1.4986) + ofs,
+		_V(0.392059, -0.013417, 1.42092) + ofs, _V(0.513942, -0.013417, 1.42092) + ofs);
+
+	// Bottom of Panel 14, S-Band angles
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_13, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_13, _V(0.945567, 0.2931, 1.41103) + ofs, _V(0.944567, 0.2921, 1.19009) + ofs,
+		_V(0.945567, 0.2587, 1.41203) + ofs, _V(0.944567, 0.2577, 1.19109) + ofs);
+
+	// Bottof of Panel 12, COMM modes
+	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_14, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_14, _V(1.12895, 0.083892, 0.831028) + ofs, _V(1.12885, 0.083792, 0.71644) + ofs,
+		_V(0.952364, 0.030903, 0.832028) + ofs, _V(0.953364, 0.030803, 0.71744) + ofs);
+
 	//
 	// Initialize surfaces and switches
 	//
@@ -1635,6 +1710,33 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 			}
 			SwitchClick();
 			SetCOAS();
+			return true;
+		case AID_VC_CUE_CARD_LOCATION_1:
+		case AID_VC_CUE_CARD_LOCATION_2:
+		case AID_VC_CUE_CARD_LOCATION_3:
+		case AID_VC_CUE_CARD_LOCATION_4:
+		case AID_VC_CUE_CARD_LOCATION_5:
+		case AID_VC_CUE_CARD_LOCATION_6:
+		case AID_VC_CUE_CARD_LOCATION_7:
+		case AID_VC_CUE_CARD_LOCATION_8:
+		case AID_VC_CUE_CARD_LOCATION_9:
+		case AID_VC_CUE_CARD_LOCATION_10:
+		case AID_VC_CUE_CARD_LOCATION_11:
+		case AID_VC_CUE_CARD_LOCATION_12:
+		case AID_VC_CUE_CARD_LOCATION_13:
+		case AID_VC_CUE_CARD_LOCATION_14:
+		case AID_VC_CUE_CARD_LOCATION_15:
+		case AID_VC_CUE_CARD_LOCATION_16:
+		case AID_VC_CUE_CARD_LOCATION_17:
+		case AID_VC_CUE_CARD_LOCATION_18:
+		case AID_VC_CUE_CARD_LOCATION_19:
+		case AID_VC_CUE_CARD_LOCATION_20:
+		case AID_VC_CUE_CARD_LOCATION_21:
+		case AID_VC_CUE_CARD_LOCATION_22:
+		case AID_VC_CUE_CARD_LOCATION_23:
+		case AID_VC_CUE_CARD_LOCATION_24:
+		case AID_VC_CUE_CARD_LOCATION_25:
+			CueCards.CycleCueCard(id - AID_VC_CUE_CARD_LOCATION_1);
 			return true;
 	}
 	return MainPanelVC.VCMouseEvent(id, event, p);
@@ -1840,7 +1942,26 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_LMVC_POINTINGARROW:
 		UpdatePointingArrow();
+		SetVCCueCardsArrows();
 		return true;
+
+	case AID_LMVC_CUE_CARDS_LIGHTING:
+	{
+		double floodRotaryValue = 0.0; //FloodRotarySwitch.GetOutput();
+
+		//Get list of mesh indices
+		std::vector<UINT> indices;
+		CueCards.GetMeshIndexList(indices);
+		//Assume cue cards only have material 0
+		DWORD ccmat[1] = { 0 };
+
+		for (unsigned i = 0; i < indices.size(); i++)
+		{
+			SetVCLighting(indices[i], ccmat, MAT_LIGHT, floodRotaryValue, 1);
+		}
+
+		return true;
+	}
 
 	case AID_VC_LM_CWS_LEFT:
 		CWEA.RedrawLeft(surf, srf[SFR_VC_CW_LIGHTS], TexMul);
