@@ -234,11 +234,14 @@ enum DSEState
 {
 	STOPPED,			/// Tape is stopped
 	STARTING_PLAY,		/// Tape is accelerating to play speed
-	STARTING_RECORD,	/// Tape is accelerating to play speed
+	STARTING_REWIND,	/// Tape is accelerating to rewind speed
+	STARTING_RECORD,	/// Tape is accelerating to record speed
 	SLOWING_RECORD,		/// Tape is slowing to record speed
 	PLAYING,			/// Tape is playing
 	RECORDING,			/// Tape is recording
+	REWINDING,			/// Tape is rewinding
 	STOPPING,			/// Tape is stopping
+	STOPPING_REWIND,	/// Tape is stopping rewind
 };
 
 public:
@@ -246,6 +249,11 @@ public:
 	virtual ~DSE();
 
 	void Init(Saturn *vessel);	       // Initialization
+	
+	///
+	/// \brief Power check.
+	///
+	bool IsPowered();
 
 	///
 	/// \brief Tape motion indicator.
@@ -256,6 +264,11 @@ public:
 	/// \brief Start tape playing.
 	///
 	void Play();
+
+	///
+	/// \brief Start tape rewinding.
+	///
+	void Rewind();
 
 	///
 	/// \brief Stop tape playing.

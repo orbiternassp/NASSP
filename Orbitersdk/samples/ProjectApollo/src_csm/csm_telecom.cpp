@@ -5214,21 +5214,32 @@ void DSE::Init(Saturn *vessel)
 	sat = vessel;
 }
 
+bool DSE::IsPowered()
+{
+	if (sat->SBandFMXMTRFLTBusCB.IsPowered() && !sat->TapeRecorderForwardSwitch.IsCenter())
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 bool DSE::TapeMotion()
 {
-	switch (state)
+	if (IsPowered() && tapeSpeedInchesPerSecond != 0.0)
 	{
-	case STOPPED:
-	case STARTING_PLAY:
-	case STARTING_RECORD:
-		return false;
-
-	default:
 		return true;
+	}
+	else
+	{
+		return false;
 	}
 }
 
 const double playSpeed = 120.0;
+const double rewindSpeed = -120.0;
 const double hbrRecord = 15.0;
 const double lbrRecord = 3.75;
 
@@ -5242,13 +5253,35 @@ void DSE::Play()
 		state = PLAYING;
 }
 
+void DSE::Rewind()
+{
+	if (state != REWINDING || desiredTapeSpeed > rewindSpeed)
+	{
+		desiredTapeSpeed = rewindSpeed;
+		state = STARTING_REWIND;
+	}
+	else
+		state = REWINDING;
+}
+
 void DSE::Stop()
 {
-	if ( state != STOPPED || desiredTapeSpeed > 0.0  )
+	if (state != STOPPED)
 	{
-		desiredTapeSpeed = 0.0;
-		state = STOPPING;
-	} else
+		if (desiredTapeSpeed > 0.0)
+		{
+			desiredTapeSpeed = 0.0;
+			state = STOPPING;
+		}
+		else if (state != STOPPED || desiredTapeSpeed < 0.0)
+		{
+			desiredTapeSpeed = 0.0;
+			state = STOPPING_REWIND;
+		}
+		else
+			state = STOPPED;
+	}
+	else
 		state = STOPPED;
 }
 
@@ -5277,78 +5310,131 @@ void DSE::Record( bool hbr )
 
 const double tapeAccel = 30.0;
 
-void DSE::TimeStep( double simt, double simdt )
+void DSE::TimeStep(double simt, double simdt)
 {
-	/// \todo forward/backward motion
 	/// \todo high/low bitrate
-
-	switch ( state )
+	if (IsPowered())
 	{
-	case STOPPED:
-		if (!sat->TapeRecorderForwardSwitch.IsCenter()) {
-			if (sat->TapeRecorderRecordSwitch.IsUp()) {
+		switch (state)
+		{
+		case STOPPED:
+			if (sat->TapeRecorderForwardSwitch.IsUp()) {
+				if (sat->TapeRecorderRecordSwitch.IsUp()) {
+					Record(true);
+				}
+				else if (sat->TapeRecorderRecordSwitch.IsDown()) {
+					Play();
+				}
+			}
+			else if (!sat->TapeRecorderRecordSwitch.IsCenter() && sat->TapeRecorderForwardSwitch.IsDown()) {
+				Rewind();
+			}
+			break;
+
+		case PLAYING:
+			if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
+				Stop();
+			}
+			else if (sat->TapeRecorderForwardSwitch.IsDown())
+			{
+				Rewind();
+			}
+			else if (sat->TapeRecorderRecordSwitch.IsUp()) {
 				Record(true);
-			} else if (sat->TapeRecorderRecordSwitch.IsDown()) {
+			}
+			break;
+
+		case REWINDING:
+			if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
+				Stop();
+			}
+			else if (sat->TapeRecorderForwardSwitch.IsUp() && sat->TapeRecorderRecordSwitch.IsUp()) {
+				Record(true);
+			}
+			else if (sat->TapeRecorderForwardSwitch.IsUp() && sat->TapeRecorderRecordSwitch.IsDown()) {
 				Play();
 			}
-		}
-		break;
+			break;
 
-	case PLAYING:
-		if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
-			Stop();
-		} else if (sat->TapeRecorderRecordSwitch.IsUp()) {
-			Record(true);
-		}
-		break;
+		case RECORDING:
+			if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
+				Stop();
+			}
+			else if (sat->TapeRecorderForwardSwitch.IsDown())
+			{
+				Rewind();
+			}
+			else if (sat->TapeRecorderRecordSwitch.IsDown()) {
+				Play();
+			}
+			break;
 
-	case RECORDING:
-		if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
-			Stop();
-		} else if (sat->TapeRecorderRecordSwitch.IsDown()) {
-			Play();
-		}
-		break;
+		case STARTING_PLAY:
+			tapeSpeedInchesPerSecond += tapeAccel * simdt;
+			if (tapeSpeedInchesPerSecond >= desiredTapeSpeed)
+			{
+				tapeSpeedInchesPerSecond = desiredTapeSpeed;
+				state = PLAYING;
+			}
+			break;
 
-	case STARTING_PLAY:
-		tapeSpeedInchesPerSecond += tapeAccel * simdt;
-		if ( tapeSpeedInchesPerSecond >= desiredTapeSpeed )
-		{
-			tapeSpeedInchesPerSecond = desiredTapeSpeed;
-			state = PLAYING;
-		}
-		break;
+		case STARTING_REWIND:
+			tapeSpeedInchesPerSecond -= tapeAccel * simdt;
+			if (tapeSpeedInchesPerSecond <= desiredTapeSpeed)
+			{
+				tapeSpeedInchesPerSecond = desiredTapeSpeed;
+				state = REWINDING;
+			}
+			break;
 
-	case STARTING_RECORD:
-		tapeSpeedInchesPerSecond += tapeAccel * simdt;
-		if ( tapeSpeedInchesPerSecond >= desiredTapeSpeed )
-		{
-			tapeSpeedInchesPerSecond = desiredTapeSpeed;
-			state = RECORDING;
-		}
-		break;
+		case STARTING_RECORD:
+			tapeSpeedInchesPerSecond += tapeAccel * simdt;
+			if (tapeSpeedInchesPerSecond >= desiredTapeSpeed)
+			{
+				tapeSpeedInchesPerSecond = desiredTapeSpeed;
+				state = RECORDING;
+			}
+			break;
 
-	case SLOWING_RECORD:
-		tapeSpeedInchesPerSecond -= tapeAccel * simdt;
-		if ( tapeSpeedInchesPerSecond <= desiredTapeSpeed )
-		{
-			tapeSpeedInchesPerSecond = desiredTapeSpeed;
-			state = RECORDING;
-		}
-		break;
+		case SLOWING_RECORD:
+			tapeSpeedInchesPerSecond -= tapeAccel * simdt;
+			if (tapeSpeedInchesPerSecond <= desiredTapeSpeed)
+			{
+				tapeSpeedInchesPerSecond = desiredTapeSpeed;
+				state = RECORDING;
+			}
+			break;
 
-	case STOPPING:
-		tapeSpeedInchesPerSecond -= tapeAccel * simdt;
-		if ( tapeSpeedInchesPerSecond <= 0.0 )
-		{
-			tapeSpeedInchesPerSecond = 0.0;
-			state = STOPPED;
-		}
-		break;
+		case STOPPING:
+			tapeSpeedInchesPerSecond -= tapeAccel * simdt;
+			if (tapeSpeedInchesPerSecond <= 0.0)
+			{
+				tapeSpeedInchesPerSecond = 0.0;
+				state = STOPPED;
+			}
+			break;
 
-	default:
-		break;
+		case STOPPING_REWIND:
+			tapeSpeedInchesPerSecond += tapeAccel * simdt;
+			if (tapeSpeedInchesPerSecond >= 0.0)
+			{
+				tapeSpeedInchesPerSecond = 0.0;
+				state = STOPPED;
+			}
+			break;
+
+		default:
+			break;
+		}
+
 	}
+	else
+	{
+		desiredTapeSpeed = 0.0;
+		tapeSpeedInchesPerSecond = 0.0;
+		state = STOPPED;
+	}
+
 	lastEventTime = simt;
 	//sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state);
 }
