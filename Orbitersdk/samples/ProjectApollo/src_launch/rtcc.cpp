@@ -19022,13 +19022,6 @@ void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGM
 			//Terminated on altitude
 			if (InTable.NIAuxOutputTable.TerminationCode == 3)
 			{
-				if (QUEID == 1)
-				{
-					//Unable to get state vector to present time, exit with an error indication
-					L = -L;
-					return;
-				}
-
 				//NI ended on altitude
 				int num;
 
@@ -19079,6 +19072,15 @@ void RTCC::EMSEPH(int QUEID, StateVectorTableEntry &sv, int &L, double PresentGM
 					}
 
 					IsKickout[num] = true;
+				}
+				else
+				{
+					if (QUEID == 1)
+					{
+						//Unable to get state vector to present time, exit with an error indication
+						L = -L;
+						return;
+					}
 				}
 			}
 			else
@@ -37426,7 +37428,22 @@ void RTCC::CMMRFMAT(int L, int id, int addr)
 	MATRIX3 a = refs.REFSMMAT;
 	block->REFSMMAT = a;
 
-	//sprintf(oapiDebugString(), "%f, %f, %f, %f, %f, %f, %f, %f, %f", a.m11, a.m12, a.m13, a.m21, a.m22, a.m23, a.m31, a.m32, a.m33);
+	if (block->SequenceNo == 0)
+	{
+		if (L == 1)
+		{
+			block->SequenceNo = 1201;
+		}
+		else
+		{
+			block->SequenceNo = 2301;
+		}
+	}
+	else
+	{
+		block->SequenceNo++;
+	}
+	block->GenGET = GETfromGMT(RTCCPresentTimeGMT());
 
 	block->Octals[0] = 24;
 	if (addr == 1)
