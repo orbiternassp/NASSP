@@ -647,6 +647,7 @@ void Saturn::InitVC()
 	srf[SRF_VC_DIGITAL90] = oapiLoadTexture("ProjectApollo/VC/digitaldisp90.dds");
 	srf[SRF_VC_EVENT_TIMER_DIGITS90] = oapiLoadTexture("ProjectApollo/VC/event_timer90.dds");
 	srf[SRF_VC_ABORT] = oapiLoadTexture("ProjectApollo/VC/abort.dds");
+	srf[SRF_VC_OPTICS] = oapiLoadTexture("ProjectApollo/VC/DSKY4CMOptics.dds");
 
 //	srfFDAICamTexture = oapiLoadTexture("ProjectApollo/VC/FDAI_CustomCamera.dds");
 //	hFDAISurf = oapiCreateSurfaceEx(1024, 1024, OAPISURFACE_RENDER3D | OAPISURFACE_TEXTURE | OAPISURFACE_RENDERTARGET | OAPISURFACE_NOMIPMAPS);
@@ -916,12 +917,50 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_GNPANEL:
 		viewpos = SATVIEW_GNPANEL;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
-		oapiVCSetNeighbours(SATVIEW_LEBLEFT, SATVIEW_LEBRIGHT, SATVIEW_TUNNEL, -1);
+		oapiVCSetNeighbours(SATVIEW_LEBLEFT, SATVIEW_LEBRIGHT, SATVIEW_TUNNEL, SATVIEW_OPTICS_SCT);
 		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
 
 		SetView(true);
 
 		PanelId = SATPANEL_TELESCOPE;
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case SATVIEW_OPTICS_SCT:
+		HideMeshGroup(hCMVCOpticsidx, 0, false);	// CM_SCT_EYEPIECE
+		HideMeshGroup(hCMVCOpticsidx, 1, true);		// CM_SXT_EYEPIECE
+		HideMeshGroup(hCMVCOpticsidx, 2, false);	// DSKY4CMOPTICS  
+		HideMeshGroup(hCMVCOpticsidx, 3, false);	// CM_SCT_RETICLE 
+		HideMeshGroup(hCMVCOpticsidx, 4, true);		// CM_SXT_RETICLE 
+		HideMeshGroup(hCMVCOpticsidx, 5, true);		// CM_SXT_RETICLE2
+
+		viewpos = SATVIEW_OPTICS_SCT;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
+		oapiVCSetNeighbours(SATVIEW_OPTICS_SXT, -1, SATVIEW_GNPANEL, -1);
+		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
+		oapiCameraSetAperture(39.5*RAD); // Telescope FOV 79°
+		SetView(true);
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case SATVIEW_OPTICS_SXT:
+		HideMeshGroup(hCMVCOpticsidx, 0, true);		// CM_SCT_EYEPIECE
+		HideMeshGroup(hCMVCOpticsidx, 1, false);	// CM_SXT_EYEPIECE
+		HideMeshGroup(hCMVCOpticsidx, 2, false);	// DSKY4CMOPTICS  
+		HideMeshGroup(hCMVCOpticsidx, 3, true);		// CM_SCT_RETICLE 
+		HideMeshGroup(hCMVCOpticsidx, 4, false);	// CM_SXT_RETICLE 
+		HideMeshGroup(hCMVCOpticsidx, 5, false);	// CM_SXT_RETICLE2
+
+		viewpos = SATVIEW_OPTICS_SXT;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
+		oapiVCSetNeighbours(-1, SATVIEW_OPTICS_SCT, SATVIEW_GNPANEL, -1);
+		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
+		oapiCameraSetAperture(1.5*RAD); // Sextant FOV 3°
+		SetView(true);
 
 		RegisterActiveAreas();
 
@@ -2300,6 +2339,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_CMVC_POINTINGARROW:
 		UpdatePointingArrow();
 		SetVCCueCardsArrows();
+		UpdateCMVCOptics();
 		return true;
 
 	case AID_VC_CUE_CARDS_LIGHTING:
@@ -2789,6 +2829,20 @@ void Saturn::SetView(double offset, bool update_direction)
 				//v.z += vcFreeCamz;
 				break;
 
+			case SATVIEW_OPTICS_SCT:
+				v = _V(0.0, -1.5, 0.4 + ofs_vc.z);
+				//v.x += vcFreeCamx;
+				//v.y += vcFreeCamy;
+				//v.z += vcFreeCamz;
+				break;
+	
+			case SATVIEW_OPTICS_SXT:
+				v = _V(0.0, -1.5, 0.4 + ofs_vc.z);
+				//v.x += vcFreeCamx;
+				//v.y += vcFreeCamy;
+				//v.z += vcFreeCamz;
+				break;
+
 			case SATVIEW_GNPANEL:
 				v = _V(-0.05, -0.15, 0.3 + ofs_vc.z);
 				v.x += vcFreeCamx;
@@ -2836,6 +2890,10 @@ void Saturn::SetView(double offset, bool update_direction)
 			SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 			if (viewpos == SATVIEW_GNPANEL) {
 				SetCameraDefaultDirection(_V(0.0,-1.0, 0.0));
+			} else if (viewpos == SATVIEW_OPTICS_SCT) {
+				SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
+			} else if (viewpos == SATVIEW_OPTICS_SXT) {
+				SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
 			} else if (viewpos == SATVIEW_LEBRIGHT) {
 				SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 			} else if (viewpos == SATVIEW_LEBLEFT) {
@@ -6152,6 +6210,7 @@ void Saturn::UpdateForwardHatchClickspots(const VECTOR3 &ofs)
 	oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_PRESS_EQU_VLV, FwdHatch_Equal_ValveLocation + ofs, rad);
 }
 
+// Hides mesh group true=hide, false=show(unhide)
 void Saturn::HideMeshGroup(int meshidx, int meshgrp, bool hide){
 	DEVMESHHANDLE hmesh = GetDevMesh (vis, meshidx);	
 	if (hmesh){
@@ -6238,4 +6297,173 @@ void Saturn::updateOrdealMshGrp(int tgtGrpIdx, int srcGrpIdx, VECTOR3 axis, VECT
 
     // 6. Cleanup allocated memory
 	if(ges.Vtx) delete [] ges.Vtx;
+}
+
+void setVCCameraLOS(double shaft, double trunnion) {
+	double cosShaft = cos(shaft), sinShaft = sin(shaft);
+	double cosTrun = cos(trunnion), sinTrun = sin(trunnion);
+	double uzx = cosShaft*sinTrun, uzy = sinShaft*sinTrun, uzz = cosTrun;
+	double azimuth = 0.5*PI - acos(uzx), polar =-atan2(uzy, uzz);
+	oapiCameraSetCockpitDir(polar, azimuth, false);
+}
+
+void Saturn::UpdateCMVCOptics() {
+	// If we are not in Optics view, Sextant or Teleskop, hide the VC Optics mesh
+    if (viewpos != SATVIEW_OPTICS_SCT && viewpos != SATVIEW_OPTICS_SXT) {
+        SetMeshVisibilityMode(hCMVCOpticsidx, MESHVIS_NEVER);
+        return;
+    }
+
+	// If we are not in VC return
+	if (!vcmesh) return;
+
+#define OPTICS_BASE_COS  0.8431756920
+#define OPTICS_BASE_SIN  0.5376381241
+
+// Order of meshgroups an textures
+#define CM_SCT_EYEPIECE 0
+#define CM_SXT_EYEPIECE 1
+#define DSKY4CMOPTICS   2
+#define CM_SCT_RETICLE  3
+#define CM_SXT_RETICLE  4
+#define CM_SXT_RETICLE2	5
+
+	typedef struct OpticsMeshGroup{
+		VECTOR3* data = nullptr;
+		int vtxcnt;
+		MESHGROUP *mshgrp;
+		GROUPREQUESTSPEC grp;
+		int ordernr;
+	} OpticsMeshGroup;
+
+	static bool first = true;
+    static VECTOR3  camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs, opticsPos, final_vertex;
+    static double cos_a, sin_a;
+    static DEVMESHHANDLE hOpticsMesh;
+    static GROUPEDITSPEC ges;
+	double aperture;
+	SetCameraDefaultDirection(_V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN));
+			
+	if (viewpos == SATVIEW_OPTICS_SXT) { // Sextant
+		if (optics.SextDualView && optics.SextDVLOSTog){
+//		if (optics.SextDualView){
+			setVCCameraLOS(optics.SextShaft, 0.0);
+//			HideMeshGroup(hCMVCOpticsidx, CM_SXT_RETICLE2, false);
+		}
+		else
+		{
+			setVCCameraLOS(optics.SextShaft, optics.SextTrunion);
+			HideMeshGroup(hCMVCOpticsidx, CM_SXT_RETICLE2, true);
+		}
+		aperture = oapiCameraAperture() * 1.2605;
+	}
+
+	if (viewpos == SATVIEW_OPTICS_SCT) { // Telescope
+		setVCCameraLOS(optics.TeleShaft, optics.TeleTrunion);
+		aperture = oapiCameraAperture() * 1.5;
+	}
+
+    // 1. Global camera position and direction
+    oapiCameraGlobalPos(&camPosGlobal);
+    oapiCameraGlobalDir(&camDir);
+    
+    MATRIX3 mRot;
+    oapiCameraRotationMatrix(&mRot);
+    // The up vector is the second column of the camera matrix.
+    VECTOR3 gCamUp = _V(mRot.m12, mRot.m22, mRot.m32);
+
+    // 2. Transformation into the local ship system
+    Global2Local(camPosGlobal, camPos);
+    
+    VECTOR3 lCamDir, lCamUp, lCamRight;
+    
+    // Local viewing direction
+    VECTOR3 gTarget = camPosGlobal + camDir;
+    VECTOR3 lTarget;
+    Global2Local(gTarget, lTarget);
+    lCamDir = lTarget - camPos;
+    normalise(lCamDir);
+
+    // Local Up Vector
+    VECTOR3 gUpPos = camPosGlobal + gCamUp;
+    VECTOR3 lUpPos;
+    Global2Local(gUpPos, lUpPos);
+    lCamUp = lUpPos - camPos;
+    normalise(lCamUp);
+
+    // Local Right Vector
+    lCamRight = crossp(lCamUp, lCamDir);
+    normalise(lCamRight);
+
+    GetMeshOffset(vcidx, ofs);
+    hOpticsMesh = GetDevMesh(vis, hCMVCOpticsidx);
+
+	static OpticsMeshGroup cmvcOptics[9];	// 6 meshgroups from mesh + 3 extra for the reticles
+
+	// 3. Make copies of the mesh Vertices 
+    if (first) {
+        MESHHANDLE hCVOptics = GetMeshTemplate(hCMVCOpticsidx);		// handle for VC Optics Mesh
+        
+		// Order of mesh groups. This must be the same in the mesh
+		// 0=Telescope eyepiece, 1=Sextant eyepiece, 2=dsky
+		// 3=Telescope reticle,  4=Sextant reticle,  5=Sextant reticle for Dual view
+		for (int i=0; i<6; i++){
+			cmvcOptics[i].mshgrp = oapiMeshGroup(hCVOptics, i);
+			cmvcOptics[i].vtxcnt = cmvcOptics[i].mshgrp->nVtx;
+			cmvcOptics[i].data = new VECTOR3[cmvcOptics[i].vtxcnt];
+			if (i > 2 ) cmvcOptics[i+3].data = new VECTOR3[cmvcOptics[i].vtxcnt];
+
+			for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
+				cmvcOptics[i].data[j] = _V(cmvcOptics[i].mshgrp->Vtx[j].x, cmvcOptics[i].mshgrp->Vtx[j].y, cmvcOptics[i].mshgrp->Vtx[j].z);
+
+				// We copy all the original mesh reticle vertices from the positions 3/4/5 of the mesh array to positions 6/7/8
+				// This is needed for the rotation of the reticles. We need only the vertices. 
+				if (i > 2 ) cmvcOptics[i+3].data[j] = _V(cmvcOptics[i].mshgrp->Vtx[j].x, cmvcOptics[i].mshgrp->Vtx[j].y, cmvcOptics[i].mshgrp->Vtx[j].z);
+			}
+			// Allocate memory for the mesh updates. *** IMPORTANT THIS MEMORY ALLOCATION HAS TO BE DELETED SOMEWERE IN CODE ***
+			cmvcOptics[i].grp.Vtx = new NTVERTEX[cmvcOptics[i].vtxcnt];
+			cmvcOptics[i].grp.nVtx = cmvcOptics[i].vtxcnt;
+		}
+		first = false;
+    }
+
+    // 4. Reticle Rotation
+    if (!oapiGetPause()) {			// *** oapiGetPause() maybe unnecessary ***
+        cos_a = std::cos(-optics.TeleShaft);
+        sin_a = std::sin(-optics.TeleShaft);
+		for (int i=3; i<6; i++){
+			for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
+				cmvcOptics[i].data[j].x = cmvcOptics[i+3].data[j].x * cos_a - cmvcOptics[i+3].data[j].y * sin_a;
+				cmvcOptics[i].data[j].y = cmvcOptics[i+3].data[j].x * sin_a + cmvcOptics[i+3].data[j].y * cos_a;
+				cmvcOptics[i].data[j].z = cmvcOptics[i+3].data[j].z;
+			}
+		}
+    }
+
+	// 5. Position the Optics mesh 15cm in front of the camera
+    opticsPos = camPos - ofs + (lCamDir * 0.15);
+
+    ges.flags = GRPEDIT_VTXCRD;
+    ges.vIdx = 0;
+
+	// 8. Transform Vertices
+	for (int i =0; i < 6; i++){
+		for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
+			// Here we add '* aperture' to the local coordinates.
+			VECTOR3 vScaled = cmvcOptics[i].data[j] * aperture;
+    
+			final_vertex = lCamRight * vScaled.x + lCamUp * vScaled.y + lCamDir * vScaled.z;
+			final_vertex += opticsPos;
+			
+			cmvcOptics[i].grp.Vtx[j].x = (float)final_vertex.x;
+			cmvcOptics[i].grp.Vtx[j].y = (float)final_vertex.y;
+			cmvcOptics[i].grp.Vtx[j].z = (float)final_vertex.z;
+		}
+
+		// 11. Send Mesh-Update to Orbiter
+		ges.nVtx = cmvcOptics[i].vtxcnt;
+		ges.Vtx = cmvcOptics[i].grp.Vtx;
+		oapiEditMeshGroup(hOpticsMesh, i, &ges);
+	}
+    SetMeshVisibilityMode(hCMVCOpticsidx, MESHVIS_VC);
 }

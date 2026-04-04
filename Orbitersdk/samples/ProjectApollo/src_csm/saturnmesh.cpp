@@ -94,6 +94,7 @@ MESHHANDLE hcmCOAScdr;
 MESHHANDLE hcmCOAScdrreticle;
 MESHHANDLE hcmCueCardsArrows;
 MESHHANDLE hcmPointingArrow;
+MESHHANDLE hCMVCOptics;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -668,6 +669,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hcmCOAScdrreticle, "ProjectApollo/CM-COAS-CDR_Reticle");
 	LOAD_MESH(hcmCueCardsArrows, "ProjectApollo/Helpers/CM-CueCardsArrows");
 	LOAD_MESH(hcmPointingArrow, "ProjectApollo/Helpers/PointingArrow");
+	LOAD_MESH(hCMVCOptics, "ProjectApollo/CMVC_Optics");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
@@ -1074,6 +1076,9 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 
 	// Pointing Arrow
 	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+
+	// Optics
+	hCMVCOpticsidx = AddMesh(hCMVCOptics, &mesh_dir);
 
 	// VC
 	UpdateVC(mesh_dir);
@@ -1618,6 +1623,9 @@ void Saturn::SetReentryMeshes() {
 	// Pointing Arrow
 	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
 
+	// Optics
+	hCMVCOpticsidx = AddMesh(hCMVCOptics, &mesh_dir);
+
 	// VC
 	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
@@ -1908,6 +1916,9 @@ void Saturn::SetRecovery()
 
 	// Pointing Arrow
 	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+
+	// Optics
+	hCMVCOpticsidx = AddMesh(hCMVCOptics, &mesh_dir);
 
 	// VC
 	UpdateVC(mesh_dir);
