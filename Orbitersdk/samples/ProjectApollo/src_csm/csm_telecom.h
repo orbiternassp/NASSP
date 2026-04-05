@@ -278,7 +278,7 @@ public:
 	///
 	/// \brief Start tape recording.
 	///
-	void Record( bool hbr );
+	void Record();
 
 	///
 	/// \brief Timestep processing.
@@ -390,11 +390,12 @@ public:
 	unsigned char mcc_data[2048];	// MCC-provided incoming data
 
 	bool registerSocket(SOCKET sock);
+	bool LowBitrateLogic();
 
 	Saturn *sat;					// Ship we're installed in
 	friend class MCC;				// Allow MCC to write directly to buffer
 protected:
-	bool LowBitrateLogic();
+
 };
 
 // Premodulation Processor

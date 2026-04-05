@@ -5197,10 +5197,10 @@ void DSEChunk::Erase( const DSEChunkType dataType )
 }
 
 DSE::DSE() :
-	tapeSpeedInchesPerSecond( 0.0 ),
-	desiredTapeSpeed( 0.0 ),
-	tapeMotion( 0.0 ),
-	state( STOPPED )
+	tapeSpeedInchesPerSecond(0.0),
+	desiredTapeSpeed(0.0),
+	tapeMotion(0.0),
+	state(STOPPED)
 {
 	lastEventTime = 0;
 }
@@ -5245,11 +5245,12 @@ const double lbrRecord = 3.75;
 
 void DSE::Play()
 {
-	if ( state != PLAYING || desiredTapeSpeed < playSpeed  )
+	if (state != PLAYING || desiredTapeSpeed < playSpeed)
 	{
 		desiredTapeSpeed = playSpeed;
 		state = STARTING_PLAY;
-	} else
+	}
+	else
 		state = PLAYING;
 }
 
@@ -5285,18 +5286,19 @@ void DSE::Stop()
 		state = STOPPED;
 }
 
-void DSE::Record( bool hbr )
+void DSE::Record()
 {
-	double tapeSpeed = hbr ? hbrRecord : lbrRecord;
-	if ( state != RECORDING || tapeSpeedInchesPerSecond != tapeSpeed )
+	bool lbr = sat->pcm.LowBitrateLogic();
+	double tapeSpeed = lbr ? lbrRecord : hbrRecord;
+	if (state != RECORDING || tapeSpeedInchesPerSecond != tapeSpeed)
 	{
 		desiredTapeSpeed = tapeSpeed;
-		
-		if ( desiredTapeSpeed > tapeSpeedInchesPerSecond )
+
+		if (desiredTapeSpeed > tapeSpeedInchesPerSecond)
 		{
 			state = STARTING_RECORD;
 		}
-		else if ( desiredTapeSpeed < tapeSpeedInchesPerSecond )
+		else if (desiredTapeSpeed < tapeSpeedInchesPerSecond)
 		{
 			state = SLOWING_RECORD;
 		}
@@ -5304,7 +5306,8 @@ void DSE::Record( bool hbr )
 		{
 			state = RECORDING;
 		}
-	} else
+	}
+	else
 		state = RECORDING;
 }
 
@@ -5312,7 +5315,6 @@ const double tapeAccel = 30.0;
 
 void DSE::TimeStep(double simt, double simdt)
 {
-	/// \todo high/low bitrate
 	if (IsPowered())
 	{
 		switch (state)
@@ -5320,7 +5322,7 @@ void DSE::TimeStep(double simt, double simdt)
 		case STOPPED:
 			if (sat->TapeRecorderForwardSwitch.IsUp()) {
 				if (sat->TapeRecorderRecordSwitch.IsUp()) {
-					Record(true);
+					Record();
 				}
 				else if (sat->TapeRecorderRecordSwitch.IsDown()) {
 					Play();
@@ -5340,7 +5342,7 @@ void DSE::TimeStep(double simt, double simdt)
 				Rewind();
 			}
 			else if (sat->TapeRecorderRecordSwitch.IsUp()) {
-				Record(true);
+				Record();
 			}
 			break;
 
@@ -5349,7 +5351,7 @@ void DSE::TimeStep(double simt, double simdt)
 				Stop();
 			}
 			else if (sat->TapeRecorderForwardSwitch.IsUp() && sat->TapeRecorderRecordSwitch.IsUp()) {
-				Record(true);
+				Record();
 			}
 			else if (sat->TapeRecorderForwardSwitch.IsUp() && sat->TapeRecorderRecordSwitch.IsDown()) {
 				Play();
