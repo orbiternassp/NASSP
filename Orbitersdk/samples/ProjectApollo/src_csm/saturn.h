@@ -1315,7 +1315,7 @@ public:
 	void DoMeshAnimation(AnimState &, UINT &, double, double);
 
 	void UpdatePointingArrow();
-	void UpdateCMVCOptics();
+	void UpdateCMVCOptics(bool mem);
 	void UpdateSideHatchClickspots(const VECTOR3 &ofs);
 	void UpdateForwardHatchClickspots(const VECTOR3 &ofs);
 

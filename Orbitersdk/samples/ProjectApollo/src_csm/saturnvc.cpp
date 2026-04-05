@@ -2339,7 +2339,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_CMVC_POINTINGARROW:
 		UpdatePointingArrow();
 		SetVCCueCardsArrows();
-		UpdateCMVCOptics();
+		UpdateCMVCOptics(false);
 		return true;
 
 	case AID_VC_CUE_CARDS_LIGHTING:
@@ -6045,8 +6045,7 @@ void Saturn::SetVCLighting(UINT meshidx, DWORD *matList, int EmissionMode, doubl
 	if (vis == NULL || meshidx == -1) return;
 	DEVMESHHANDLE hMesh = GetDevMesh(vis, meshidx);
 
-    if (!hMesh)
-        return;
+	if (!hMesh) return;
 
 	for (int i = 0; i < cnt; i++)
 	{
@@ -6078,8 +6077,7 @@ void Saturn::SetVCLighting(UINT meshidx, int material, int EmissionMode, double 
 	if (vis == NULL || meshidx == -1) return;
 	DEVMESHHANDLE hMesh = GetDevMesh(vis, meshidx);
 
-    if (!hMesh)
-        return;
+	if (!hMesh) return;
 
 	gcCore *pCore = gcGetCoreInterface();
 	if (pCore) {
@@ -6238,64 +6236,64 @@ void Saturn::updateOrdealMshGrp(int tgtGrpIdx, int srcGrpIdx, VECTOR3 axis, VECT
 	// Safety check
 	if (!hMesh || !vcmesh || !hTempl) return;
 
-    MESHGROUP* srcGroup = oapiMeshGroup(hTempl, srcGrpIdx);
-    MESHGROUP* tgtGroup = oapiMeshGroup(hTempl, tgtGrpIdx);
+	MESHGROUP* srcGroup = oapiMeshGroup(hTempl, srcGrpIdx);
+	MESHGROUP* tgtGroup = oapiMeshGroup(hTempl, tgtGrpIdx);
 	if (!srcGroup || !tgtGroup) return;
 
 	DWORD vertexCnt = srcGroup->nVtx;
 	
-    // 2. Prepare Transformation Matrices using Orbiter SDK helpers
-    double rad = deg * RAD;
-    VECTOR3 nAxis = unit(axis); 
+	// 2. Prepare Transformation Matrices using Orbiter SDK helpers
+	double rad = deg * RAD;
+	VECTOR3 nAxis = unit(axis); 
 
 	// Use SDK internal rotm for 3x3 rotation (Rodrigues equivalent)
-    MATRIX3 R3 = rotm(nAxis, rad);
+	MATRIX3 R3 = rotm(nAxis, rad);
 
-    // Embed 3x3 rotation into a 4x4 MATRIX4 using the _M macro
-    MATRIX4 R = _M(R3.m11, R3.m12, R3.m13, 0,
+	// Embed 3x3 rotation into a 4x4 MATRIX4 using the _M macro
+	MATRIX4 R = _M(R3.m11, R3.m12, R3.m13, 0,
                    R3.m21, R3.m22, R3.m23, 0,
                    R3.m31, R3.m32, R3.m33, 0,
                    0,      0,      0,      1);
 
-    // Define Translation matrices for the Pivot point
-    MATRIX4 T1 = _M(1, 0, 0, -pivot.x,
+	// Define Translation matrices for the Pivot point
+	MATRIX4 T1 = _M(1, 0, 0, -pivot.x,
                     0, 1, 0, -pivot.y,
                     0, 0, 1, -pivot.z,
                     0, 0, 0, 1);
 
-    MATRIX4 T2 = _M(1, 0, 0, pivot.x,
+	MATRIX4 T2 = _M(1, 0, 0, pivot.x,
                     0, 1, 0, pivot.y,
                     0, 0, 1, pivot.z,
                     0, 0, 0, 1);
 
-    // Combine: Total Matrix M = T2 * R * T1
-    MATRIX4 M = mul(T2, mul(R, T1));
+	// Combine: Total Matrix M = T2 * R * T1
+	MATRIX4 M = mul(T2, mul(R, T1));
 
 	// 3. Setup Mesh-Update structure (GROUPEDITSPEC)
 	GROUPEDITSPEC ges;
-    ges.flags  = GRPEDIT_VTXCRD | GRPEDIT_VTXNML;	// Flags for Vertex Coordinate and Normal manipulation
-    ges.nVtx   = vertexCnt;							// Vertex Count
-    ges.vIdx   = 0;									// We change all Vertices
+	ges.flags  = GRPEDIT_VTXCRD | GRPEDIT_VTXNML;	// Flags for Vertex Coordinate and Normal manipulation
+	ges.nVtx   = vertexCnt;							// Vertex Count
+	ges.vIdx   = 0;									// We change all Vertices
 	ges.Vtx    = new NTVERTEX[ges.nVtx];
 
 	// 4. Transform Vertices (Positions and Normals)
-    for (DWORD i = 0; i < vertexCnt; i++) {
+	for (DWORD i = 0; i < vertexCnt; i++) {
 
-        // Position: Full transform (Rotation around Pivot)
-        ges.Vtx[i].x = (float)(M.m11 * srcGroup->Vtx[i].x + M.m12 * srcGroup->Vtx[i].y + M.m13 * srcGroup->Vtx[i].z + M.m14);
-        ges.Vtx[i].y = (float)(M.m21 * srcGroup->Vtx[i].x + M.m22 * srcGroup->Vtx[i].y + M.m23 * srcGroup->Vtx[i].z + M.m24);
-        ges.Vtx[i].z = (float)(M.m31 * srcGroup->Vtx[i].x + M.m32 * srcGroup->Vtx[i].y + M.m33 * srcGroup->Vtx[i].z + M.m34);
+		// Position: Full transform (Rotation around Pivot)
+		ges.Vtx[i].x = (float)(M.m11 * srcGroup->Vtx[i].x + M.m12 * srcGroup->Vtx[i].y + M.m13 * srcGroup->Vtx[i].z + M.m14);
+		ges.Vtx[i].y = (float)(M.m21 * srcGroup->Vtx[i].x + M.m22 * srcGroup->Vtx[i].y + M.m23 * srcGroup->Vtx[i].z + M.m24);
+		ges.Vtx[i].z = (float)(M.m31 * srcGroup->Vtx[i].x + M.m32 * srcGroup->Vtx[i].y + M.m33 * srcGroup->Vtx[i].z + M.m34);
 
-        // Normals: Rotation only (for correct lighting/shading)
-        ges.Vtx[i].nx = (float)(R.m11 * srcGroup->Vtx[i].nx + R.m12 * srcGroup->Vtx[i].ny + R.m13 * srcGroup->Vtx[i].nz);
-        ges.Vtx[i].ny = (float)(R.m21 * srcGroup->Vtx[i].nx + R.m22 * srcGroup->Vtx[i].ny + R.m23 * srcGroup->Vtx[i].nz);
-        ges.Vtx[i].nz = (float)(R.m31 * srcGroup->Vtx[i].nx + R.m32 * srcGroup->Vtx[i].ny + R.m33 * srcGroup->Vtx[i].nz);
-    }
+		// Normals: Rotation only (for correct lighting/shading)
+		ges.Vtx[i].nx = (float)(R.m11 * srcGroup->Vtx[i].nx + R.m12 * srcGroup->Vtx[i].ny + R.m13 * srcGroup->Vtx[i].nz);
+		ges.Vtx[i].ny = (float)(R.m21 * srcGroup->Vtx[i].nx + R.m22 * srcGroup->Vtx[i].ny + R.m23 * srcGroup->Vtx[i].nz);
+		ges.Vtx[i].nz = (float)(R.m31 * srcGroup->Vtx[i].nx + R.m32 * srcGroup->Vtx[i].ny + R.m33 * srcGroup->Vtx[i].nz);
+	}
 
-    // 5. Tell D3D9Client to Update the GPU-Buffer
-    oapiEditMeshGroup(hMesh, tgtGrpIdx, &ges);
+	// 5. Tell D3D9Client to Update the GPU-Buffer
+	oapiEditMeshGroup(hMesh, tgtGrpIdx, &ges);
 
-    // 6. Cleanup allocated memory
+	// 6. Cleanup allocated memory
 	if(ges.Vtx) delete [] ges.Vtx;
 }
 
@@ -6307,12 +6305,12 @@ void setVCCameraLOS(double shaft, double trunnion) {
 	oapiCameraSetCockpitDir(polar, azimuth, false);
 }
 
-void Saturn::UpdateCMVCOptics() {
+void Saturn::UpdateCMVCOptics(bool freemem) {
 	// If we are not in Optics view, Sextant or Teleskop, hide the VC Optics mesh
-    if (viewpos != SATVIEW_OPTICS_SCT && viewpos != SATVIEW_OPTICS_SXT) {
-        SetMeshVisibilityMode(hCMVCOpticsidx, MESHVIS_NEVER);
-        return;
-    }
+	if (viewpos != SATVIEW_OPTICS_SCT && viewpos != SATVIEW_OPTICS_SXT) {
+		SetMeshVisibilityMode(hCMVCOpticsidx, MESHVIS_NEVER);
+		return;
+	}
 
 	// If we are not in VC return
 	if (!vcmesh) return;
@@ -6320,7 +6318,7 @@ void Saturn::UpdateCMVCOptics() {
 #define OPTICS_BASE_COS  0.8431756920
 #define OPTICS_BASE_SIN  0.5376381241
 
-// Order of meshgroups an textures
+// Order of meshgroups and textures
 #define CM_SCT_EYEPIECE 0
 #define CM_SXT_EYEPIECE 1
 #define DSKY4CMOPTICS   2
@@ -6337,10 +6335,10 @@ void Saturn::UpdateCMVCOptics() {
 	} OpticsMeshGroup;
 
 	static bool first = true;
-    static VECTOR3  camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs, opticsPos, final_vertex;
-    static double cos_a, sin_a;
-    static DEVMESHHANDLE hOpticsMesh;
-    static GROUPEDITSPEC ges;
+	static VECTOR3  camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs, opticsPos, final_vertex;
+	static double cos_a, sin_a;
+	static DEVMESHHANDLE hOpticsMesh;
+	static GROUPEDITSPEC ges;
 	double aperture;
 	SetCameraDefaultDirection(_V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN));
 			
@@ -6363,47 +6361,47 @@ void Saturn::UpdateCMVCOptics() {
 		aperture = oapiCameraAperture() * 1.5;
 	}
 
-    // 1. Global camera position and direction
-    oapiCameraGlobalPos(&camPosGlobal);
-    oapiCameraGlobalDir(&camDir);
-    
-    MATRIX3 mRot;
-    oapiCameraRotationMatrix(&mRot);
-    // The up vector is the second column of the camera matrix.
-    VECTOR3 gCamUp = _V(mRot.m12, mRot.m22, mRot.m32);
+	// 1. Global camera position and direction
+	oapiCameraGlobalPos(&camPosGlobal);
+	oapiCameraGlobalDir(&camDir);
 
-    // 2. Transformation into the local ship system
-    Global2Local(camPosGlobal, camPos);
-    
-    VECTOR3 lCamDir, lCamUp, lCamRight;
-    
-    // Local viewing direction
-    VECTOR3 gTarget = camPosGlobal + camDir;
-    VECTOR3 lTarget;
-    Global2Local(gTarget, lTarget);
-    lCamDir = lTarget - camPos;
-    normalise(lCamDir);
+	MATRIX3 mRot;
+	oapiCameraRotationMatrix(&mRot);
+	// The up vector is the second column of the camera matrix.
+	VECTOR3 gCamUp = _V(mRot.m12, mRot.m22, mRot.m32);
 
-    // Local Up Vector
-    VECTOR3 gUpPos = camPosGlobal + gCamUp;
-    VECTOR3 lUpPos;
-    Global2Local(gUpPos, lUpPos);
-    lCamUp = lUpPos - camPos;
-    normalise(lCamUp);
+	// 2. Transformation into the local ship system
+	Global2Local(camPosGlobal, camPos);
 
-    // Local Right Vector
-    lCamRight = crossp(lCamUp, lCamDir);
-    normalise(lCamRight);
+	VECTOR3 lCamDir, lCamUp, lCamRight;
 
-    GetMeshOffset(vcidx, ofs);
-    hOpticsMesh = GetDevMesh(vis, hCMVCOpticsidx);
+	// Local viewing direction
+	VECTOR3 gTarget = camPosGlobal + camDir;
+	VECTOR3 lTarget;
+	Global2Local(gTarget, lTarget);
+	lCamDir = lTarget - camPos;
+	normalise(lCamDir);
+
+	// Local Up Vector
+	VECTOR3 gUpPos = camPosGlobal + gCamUp;
+	VECTOR3 lUpPos;
+	Global2Local(gUpPos, lUpPos);
+	lCamUp = lUpPos - camPos;
+	normalise(lCamUp);
+
+	// Local Right Vector
+	lCamRight = crossp(lCamUp, lCamDir);
+	normalise(lCamRight);
+
+	GetMeshOffset(vcidx, ofs);
+	hOpticsMesh = GetDevMesh(vis, hCMVCOpticsidx);
 
 	static OpticsMeshGroup cmvcOptics[9];	// 6 meshgroups from mesh + 3 extra for the reticles
 
 	// 3. Make copies of the mesh Vertices 
-    if (first) {
-        MESHHANDLE hCVOptics = GetMeshTemplate(hCMVCOpticsidx);		// handle for VC Optics Mesh
-        
+	if (first) {
+		MESHHANDLE hCVOptics = GetMeshTemplate(hCMVCOpticsidx);		// handle for VC Optics Mesh
+
 		// Order of mesh groups. This must be the same in the mesh
 		// 0=Telescope eyepiece, 1=Sextant eyepiece, 2=dsky
 		// 3=Telescope reticle,  4=Sextant reticle,  5=Sextant reticle for Dual view
@@ -6425,12 +6423,12 @@ void Saturn::UpdateCMVCOptics() {
 			cmvcOptics[i].grp.nVtx = cmvcOptics[i].vtxcnt;
 		}
 		first = false;
-    }
+	}
 
-    // 4. Reticle Rotation
-    if (!oapiGetPause()) {			// *** oapiGetPause() maybe unnecessary ***
-        cos_a = std::cos(-optics.TeleShaft);
-        sin_a = std::sin(-optics.TeleShaft);
+	// 4. Reticle Rotation
+	if (!oapiGetPause()) {			// *** oapiGetPause() maybe unnecessary ***
+		cos_a = std::cos(-optics.TeleShaft);
+		sin_a = std::sin(-optics.TeleShaft);
 		for (int i=3; i<6; i++){
 			for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
 				cmvcOptics[i].data[j].x = cmvcOptics[i+3].data[j].x * cos_a - cmvcOptics[i+3].data[j].y * sin_a;
@@ -6438,20 +6436,20 @@ void Saturn::UpdateCMVCOptics() {
 				cmvcOptics[i].data[j].z = cmvcOptics[i+3].data[j].z;
 			}
 		}
-    }
+	}
 
 	// 5. Position the Optics mesh 15cm in front of the camera
-    opticsPos = camPos - ofs + (lCamDir * 0.15);
+	opticsPos = camPos - ofs + (lCamDir * 0.15);
 
-    ges.flags = GRPEDIT_VTXCRD;
-    ges.vIdx = 0;
+	ges.flags = GRPEDIT_VTXCRD;
+	ges.vIdx = 0;
 
 	// 8. Transform Vertices
 	for (int i =0; i < 6; i++){
 		for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
 			// Here we add '* aperture' to the local coordinates.
 			VECTOR3 vScaled = cmvcOptics[i].data[j] * aperture;
-    
+
 			final_vertex = lCamRight * vScaled.x + lCamUp * vScaled.y + lCamDir * vScaled.z;
 			final_vertex += opticsPos;
 			
@@ -6465,5 +6463,14 @@ void Saturn::UpdateCMVCOptics() {
 		ges.Vtx = cmvcOptics[i].grp.Vtx;
 		oapiEditMeshGroup(hOpticsMesh, i, &ges);
 	}
-    SetMeshVisibilityMode(hCMVCOpticsidx, MESHVIS_VC);
+	SetMeshVisibilityMode(hCMVCOpticsidx, MESHVIS_VC);
+
+	// Clean Allocated memory
+	if (freemem){
+		for (int i = 0; i < 6; i++) {
+			if (cmvcOptics[i].data) delete cmvcOptics[i].data;
+			if (i > 2 && cmvcOptics[i + 3].data) delete cmvcOptics[i + 3].data;
+			if (cmvcOptics[i].grp.Vtx) delete cmvcOptics[i].grp.Vtx;
+		}
+	}
 }

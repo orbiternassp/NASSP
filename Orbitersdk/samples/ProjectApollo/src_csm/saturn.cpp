@@ -645,6 +645,9 @@ Saturn::~Saturn()
 	if (wasteDisposalKnob) delete wasteDisposalKnob;
 
 	//fclose(PanelsdkLogFile);
+
+	// Free allocated memory for the VC Optics
+	UpdateCMVCOptics(true);
 }
 
 void Saturn::initSaturn()
@@ -1578,7 +1581,7 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	TRACE(buffer);
 
 	SetAnimations(simdt);
-	UpdateCMVCOptics();
+	UpdateCMVCOptics(false);
 //	UpdatePointingArrow();
 //	InitFDAICustomCamera();
 
