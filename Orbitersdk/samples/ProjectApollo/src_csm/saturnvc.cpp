@@ -931,10 +931,11 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_OPTICS_SCT:
 		HideMeshGroup(hCMVCOpticsidx, 0, false);	// CM_SCT_EYEPIECE
 		HideMeshGroup(hCMVCOpticsidx, 1, true);		// CM_SXT_EYEPIECE
-		HideMeshGroup(hCMVCOpticsidx, 2, false);	// DSKY4CMOPTICS  
-		HideMeshGroup(hCMVCOpticsidx, 3, false);	// CM_SCT_RETICLE 
-		HideMeshGroup(hCMVCOpticsidx, 4, true);		// CM_SXT_RETICLE 
-		HideMeshGroup(hCMVCOpticsidx, 5, true);		// CM_SXT_RETICLE2
+		HideMeshGroup(hCMVCOpticsidx, 2, false);	// DSKY4CMOPTICS
+		HideMeshGroup(hCMVCOpticsidx, 3, false);	// CMVC_OPTICSP122
+		HideMeshGroup(hCMVCOpticsidx, 4, false);	// CM_SCT_RETICLE
+		HideMeshGroup(hCMVCOpticsidx, 5, true);		// CM_SXT_RETICLE
+		HideMeshGroup(hCMVCOpticsidx, 6, true);		// CM_SXT_RETICLE2
 
 		viewpos = SATVIEW_OPTICS_SCT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
@@ -950,10 +951,11 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_OPTICS_SXT:
 		HideMeshGroup(hCMVCOpticsidx, 0, true);		// CM_SCT_EYEPIECE
 		HideMeshGroup(hCMVCOpticsidx, 1, false);	// CM_SXT_EYEPIECE
-		HideMeshGroup(hCMVCOpticsidx, 2, false);	// DSKY4CMOPTICS  
-		HideMeshGroup(hCMVCOpticsidx, 3, true);		// CM_SCT_RETICLE 
-		HideMeshGroup(hCMVCOpticsidx, 4, false);	// CM_SXT_RETICLE 
-		HideMeshGroup(hCMVCOpticsidx, 5, false);	// CM_SXT_RETICLE2
+		HideMeshGroup(hCMVCOpticsidx, 2, false);	// DSKY4CMOPTICS
+		HideMeshGroup(hCMVCOpticsidx, 3, false);	// CMVC_OPTICSP122
+		HideMeshGroup(hCMVCOpticsidx, 4, true);		// CM_SCT_RETICLE
+		HideMeshGroup(hCMVCOpticsidx, 5, false);	// CM_SXT_RETICLE
+		HideMeshGroup(hCMVCOpticsidx, 6, true);		// CM_SXT_RETICLE2
 
 		viewpos = SATVIEW_OPTICS_SXT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
@@ -6305,6 +6307,11 @@ void setVCCameraLOS(double shaft, double trunnion) {
 	oapiCameraSetCockpitDir(polar, azimuth, false);
 }
 
+//
+// This is the CMVC Optics stuff.
+// If it's called with the bool Parameter "true" it cleans the Allocated memory.
+// Calling with the bool "true" should be called when exiting the Sim.
+//
 void Saturn::UpdateCMVCOptics(bool freemem) {
 	// If we are not in Optics view, Sextant or Teleskop, hide the VC Optics mesh
 	if (viewpos != SATVIEW_OPTICS_SCT && viewpos != SATVIEW_OPTICS_SXT) {
@@ -6322,9 +6329,10 @@ void Saturn::UpdateCMVCOptics(bool freemem) {
 #define CM_SCT_EYEPIECE 0
 #define CM_SXT_EYEPIECE 1
 #define DSKY4CMOPTICS   2
-#define CM_SCT_RETICLE  3
-#define CM_SXT_RETICLE  4
-#define CM_SXT_RETICLE2	5
+#define CMVC_OPTICSP122 3
+#define CM_SCT_RETICLE  4
+#define CM_SXT_RETICLE  5
+#define CM_SXT_RETICLE2	6
 
 	typedef struct OpticsMeshGroup{
 		VECTOR3* data = nullptr;
@@ -6396,27 +6404,27 @@ void Saturn::UpdateCMVCOptics(bool freemem) {
 	GetMeshOffset(vcidx, ofs);
 	hOpticsMesh = GetDevMesh(vis, hCMVCOpticsidx);
 
-	static OpticsMeshGroup cmvcOptics[9];	// 6 meshgroups from mesh + 3 extra for the reticles
+	static OpticsMeshGroup cmvcOptics[10];	// 7 meshgroups from mesh + 3 extra for the reticles
 
 	// 3. Make copies of the mesh Vertices 
 	if (first) {
 		MESHHANDLE hCVOptics = GetMeshTemplate(hCMVCOpticsidx);		// handle for VC Optics Mesh
 
 		// Order of mesh groups. This must be the same in the mesh
-		// 0=Telescope eyepiece, 1=Sextant eyepiece, 2=dsky
-		// 3=Telescope reticle,  4=Sextant reticle,  5=Sextant reticle for Dual view
-		for (int i=0; i<6; i++){
+		// 0=Telescope eyepiece, 1=Sextant eyepiece, 2=dsky, CMVCOptics_Panel_122
+		// 4=Telescope reticle,  5=Sextant reticle,  6=Sextant reticle for Dual view
+		for (int i=0; i<7; i++){
 			cmvcOptics[i].mshgrp = oapiMeshGroup(hCVOptics, i);
 			cmvcOptics[i].vtxcnt = cmvcOptics[i].mshgrp->nVtx;
 			cmvcOptics[i].data = new VECTOR3[cmvcOptics[i].vtxcnt];
-			if (i > 2 ) cmvcOptics[i+3].data = new VECTOR3[cmvcOptics[i].vtxcnt];
+			if (i > 3 ) cmvcOptics[i+3].data = new VECTOR3[cmvcOptics[i].vtxcnt];
 
 			for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
 				cmvcOptics[i].data[j] = _V(cmvcOptics[i].mshgrp->Vtx[j].x, cmvcOptics[i].mshgrp->Vtx[j].y, cmvcOptics[i].mshgrp->Vtx[j].z);
 
-				// We copy all the original mesh reticle vertices from the positions 3/4/5 of the mesh array to positions 6/7/8
+				// We copy all the original mesh reticle vertices from the positions 4/5/6 of the mesh array to positions 7/8/9
 				// This is needed for the rotation of the reticles. We need only the vertices. 
-				if (i > 2 ) cmvcOptics[i+3].data[j] = _V(cmvcOptics[i].mshgrp->Vtx[j].x, cmvcOptics[i].mshgrp->Vtx[j].y, cmvcOptics[i].mshgrp->Vtx[j].z);
+				if (i > 3 ) cmvcOptics[i+3].data[j] = _V(cmvcOptics[i].mshgrp->Vtx[j].x, cmvcOptics[i].mshgrp->Vtx[j].y, cmvcOptics[i].mshgrp->Vtx[j].z);
 			}
 			// Allocate memory for the mesh updates. *** IMPORTANT THIS MEMORY ALLOCATION HAS TO BE DELETED SOMEWERE IN CODE ***
 			cmvcOptics[i].grp.Vtx = new NTVERTEX[cmvcOptics[i].vtxcnt];
@@ -6429,7 +6437,7 @@ void Saturn::UpdateCMVCOptics(bool freemem) {
 	if (!oapiGetPause()) {			// *** oapiGetPause() maybe unnecessary ***
 		cos_a = std::cos(-optics.TeleShaft);
 		sin_a = std::sin(-optics.TeleShaft);
-		for (int i=3; i<6; i++){
+		for (int i=4; i<7; i++){
 			for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
 				cmvcOptics[i].data[j].x = cmvcOptics[i+3].data[j].x * cos_a - cmvcOptics[i+3].data[j].y * sin_a;
 				cmvcOptics[i].data[j].y = cmvcOptics[i+3].data[j].x * sin_a + cmvcOptics[i+3].data[j].y * cos_a;
@@ -6445,7 +6453,7 @@ void Saturn::UpdateCMVCOptics(bool freemem) {
 	ges.vIdx = 0;
 
 	// 8. Transform Vertices
-	for (int i =0; i < 6; i++){
+	for (int i =0; i < 7; i++){
 		for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
 			// Here we add '* aperture' to the local coordinates.
 			VECTOR3 vScaled = cmvcOptics[i].data[j] * aperture;
@@ -6467,9 +6475,9 @@ void Saturn::UpdateCMVCOptics(bool freemem) {
 
 	// Clean Allocated memory
 	if (freemem){
-		for (int i = 0; i < 6; i++) {
+		for (int i = 0; i < 7; i++) {
 			if (cmvcOptics[i].data) delete cmvcOptics[i].data;
-			if (i > 2 && cmvcOptics[i + 3].data) delete cmvcOptics[i + 3].data;
+			if (i > 3 && cmvcOptics[i+3].data) delete cmvcOptics[i+3].data;
 			if (cmvcOptics[i].grp.Vtx) delete cmvcOptics[i].grp.Vtx;
 		}
 	}
