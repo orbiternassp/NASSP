@@ -5216,7 +5216,7 @@ void DSE::Init(Saturn *vessel)
 
 bool DSE::IsPowered()
 {
-	if (sat->SBandFMXMTRFLTBusCB.IsPowered() && !sat->TapeRecorderForwardSwitch.IsCenter())
+	if (sat->SBandFMXMTRFLTBusCB.IsPowered() && TapeRecorderFWD() != 1)
 	{
 		return true;
 	}
@@ -5286,9 +5286,8 @@ void DSE::Stop()
 		state = STOPPED;
 }
 
-void DSE::Record()
+void DSE::Record(bool lbr)
 {
-	bool lbr = sat->pcm.LowBitrateLogic();
 	double tapeSpeed = lbr ? lbrRecord : hbrRecord;
 	if (state != RECORDING || tapeSpeedInchesPerSecond != tapeSpeed)
 	{
@@ -5313,60 +5312,103 @@ void DSE::Record()
 
 const double tapeAccel = 30.0;
 
+bool DSE::TapeRecorderPCM() //true for PCM/ANLG (up)
+{
+	if (sat->udl.GetTapeRecorderPCMLogic1()) return false;
+	if (sat->TapeRecorderPCMSwitch.IsDown() && !sat->udl.GetTapeRecorderPCMLogic1() && !sat->udl.GetTapeRecorderPCMLogic2()) return false;
+	return true;
+}
+
+int DSE::TapeRecorderRCD() //2 for RECORD (up), 1 for OFF (center), 0 for PLAY (down)
+{
+	if (!sat->udl.GetTapeRecorderRCDLogic1() && !sat->udl.GetTapeRecorderRCDLogic2())
+	{
+		return sat->TapeRecorderRecordSwitch.GetState();
+	}
+	if (!sat->udl.GetTapeRecorderRCDLogic1() && sat->udl.GetTapeRecorderRCDLogic2())
+	{
+		return 2;
+	}
+	if (!sat->udl.GetTapeRecorderRCDLogic1() && sat->udl.GetTapeRecorderRCDLogic2())
+	{
+		return 0;
+	}
+	return 1; //else
+}
+
+int DSE::TapeRecorderFWD() //2 for FORWARD (up), 1 for STOP (center), 0 for REWIND (down)
+{
+	if (!sat->udl.GetTapeRecorderFWDLogic1() && !sat->udl.GetTapeRecorderFWDLogic2())
+	{
+		return sat->TapeRecorderForwardSwitch.GetState();
+	}
+	if (!sat->udl.GetTapeRecorderFWDLogic1() && sat->udl.GetTapeRecorderFWDLogic2())
+	{
+		return 2;
+	}
+	if (!sat->udl.GetTapeRecorderFWDLogic1() && sat->udl.GetTapeRecorderFWDLogic2())
+	{
+		return 0;
+	}
+	return 1; //else
+}
+
 void DSE::TimeStep(double simt, double simdt)
 {
+	bool lbr = sat->pcm.LowBitrateLogic();
+
 	if (IsPowered())
 	{
 		switch (state)
 		{
 		case STOPPED:
-			if (sat->TapeRecorderForwardSwitch.IsUp()) {
-				if (sat->TapeRecorderRecordSwitch.IsUp()) {
-					Record();
+			if (TapeRecorderFWD() == 2) {
+				if (TapeRecorderRCD() == 2) {
+					Record(lbr);
 				}
-				else if (sat->TapeRecorderRecordSwitch.IsDown()) {
+				else if (TapeRecorderRCD() == 0) {
 					Play();
 				}
 			}
-			else if (!sat->TapeRecorderRecordSwitch.IsCenter() && sat->TapeRecorderForwardSwitch.IsDown()) {
+			else if (TapeRecorderFWD() == 0) {
 				Rewind();
 			}
 			break;
 
 		case PLAYING:
-			if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
+			if (TapeRecorderRCD() == 1) {
 				Stop();
 			}
-			else if (sat->TapeRecorderForwardSwitch.IsDown())
+			else if (TapeRecorderFWD() == 0)
 			{
 				Rewind();
 			}
-			else if (sat->TapeRecorderRecordSwitch.IsUp()) {
-				Record();
+			else if (TapeRecorderRCD() == 2) {
+				Record(lbr);
 			}
 			break;
 
 		case REWINDING:
-			if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
+			if (TapeRecorderRCD() == 1) {
 				Stop();
 			}
-			else if (sat->TapeRecorderForwardSwitch.IsUp() && sat->TapeRecorderRecordSwitch.IsUp()) {
-				Record();
+			else if (TapeRecorderFWD() == 2 && TapeRecorderRCD() == 2) {
+				Record(lbr);
 			}
-			else if (sat->TapeRecorderForwardSwitch.IsUp() && sat->TapeRecorderRecordSwitch.IsDown()) {
+			else if (TapeRecorderFWD() == 2 && TapeRecorderRCD() == 0) {
 				Play();
 			}
 			break;
 
 		case RECORDING:
-			if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
+			if (TapeRecorderRCD() == 1) {
 				Stop();
 			}
-			else if (sat->TapeRecorderForwardSwitch.IsDown())
+			else if (TapeRecorderFWD() == 0)
 			{
 				Rewind();
 			}
-			else if (sat->TapeRecorderRecordSwitch.IsDown()) {
+			else if (TapeRecorderRCD() == 0) {
 				Play();
 			}
 			break;
@@ -5428,7 +5470,6 @@ void DSE::TimeStep(double simt, double simdt)
 		default:
 			break;
 		}
-
 	}
 	else
 	{
@@ -5438,7 +5479,8 @@ void DSE::TimeStep(double simt, double simdt)
 	}
 
 	lastEventTime = simt;
-	//sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state);
+
+	sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i PCM %i RCD %d FWD %d rcd1 %i rcd2 %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state, TapeRecorderPCM(), TapeRecorderRCD(), TapeRecorderFWD(), sat->udl.GetTapeRecorderRCDLogic1(), sat->udl.GetTapeRecorderRCDLogic2());
 }
 
 void DSE::LoadState(char *line) {

@@ -249,41 +249,15 @@ public:
 	virtual ~DSE();
 
 	void Init(Saturn *vessel);	       // Initialization
-	
-	///
-	/// \brief Power check.
-	///
+
 	bool IsPowered();
-
-	///
-	/// \brief Tape motion indicator.
-	///
-	bool TapeMotion(); 
-
-	///
-	/// \brief Start tape playing.
-	///
+	bool TapeMotion();
 	void Play();
-
-	///
-	/// \brief Start tape rewinding.
-	///
 	void Rewind();
-
-	///
-	/// \brief Stop tape playing.
-	///
 	void Stop();
+	void Record(bool lbr);
 
-	///
-	/// \brief Start tape recording.
-	///
-	void Record();
-
-	///
-	/// \brief Timestep processing.
-	///
-	void TimeStep( double simt, double simdt );
+	void TimeStep(double simt, double simdt);
 
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
@@ -295,6 +269,10 @@ protected:
 	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
 	double tapeMotion;					/// Tape motion from 0.0 to 1.0.
 	DSEState state;						/// Tape state.
+
+	bool TapeRecorderPCM();
+	int TapeRecorderRCD();
+	int TapeRecorderFWD();
 
 	double lastEventTime;				/// Last event time.
 };
@@ -321,6 +299,13 @@ public:
 	bool GetRangingSignal2() { return Relays[21]; }
 	bool GetSBandPALogic1() { return Relays[24]; }
 	bool GetSBandPALogic2() { return Relays[25]; }
+	bool GetTapeRecorderPCMLogic1() { return Relays[26]; }
+	bool GetTapeRecorderPCMLogic2() { return Relays[27]; }
+	bool GetTapeRecorderRCDLogic1() { return Relays[28]; }
+	bool GetTapeRecorderRCDLogic2() { return Relays[29]; }
+	bool GetTapeRecorderFWDLogic1() { return Relays[30]; }
+	bool GetTapeRecorderFWDLogic2() { return Relays[31]; }
+
 protected:
 	bool IsPowered();
 	void OverrideReset();
