@@ -236,12 +236,11 @@ public:
 	virtual ~DSE();
 
 	void Init(Saturn *vessel);	       // Initialization
-	
-	bool IsPowered();
-	bool TapeMotion(); 
 
-	virtual void SetSpeeds(bool JMission);
-	void TimeStep( double simt, double simdt );
+	bool IsPowered();
+	bool TapeMotion();
+
+	void TimeStep(double simt, double simdt);
 
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
@@ -249,9 +248,9 @@ public:
 protected:
 	Saturn *sat;					    /// Ship we're installed in
 	DSEChunk tape[tapeSize];			/// Simulated tape.
-	double tapeSpeedInchesPerSecond;	/// Tape speed in inches per second.
+	double tapeSpeed;	/// Tape speed in inches per second.
 	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
-	double tapeMotion;					/// Tape motion from 0.0 to 1.0.
+	double motorDirection;				/// Tape motor direction, 1 for forward, -1 for reverse, 0 for stopped.
 
 	bool TapeRecorderPCM();
 	int TapeRecorderRCD();
@@ -267,10 +266,6 @@ protected:
 	bool K5;
 	bool K6;
 	bool K7;
-
-	double playSpeed;
-	double rewindSpeed;
-	double recordSpeed;
 
 	int state; //temporary until the save/load value orders can be changed to not break old saves
 };
