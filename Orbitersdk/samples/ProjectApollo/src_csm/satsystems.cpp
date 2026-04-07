@@ -3027,6 +3027,7 @@ void Saturn::CreateMissionSpecificSystems()
 		}
 	}
 	secs.Realize();
+	dataRecorder.SetSpeeds(pMission->IsJMission());
 
 	//Create cue cards. TBD: Load mission specific meshes
 	unsigned loc, counter = 0;

@@ -230,34 +230,18 @@ const unsigned int tapeSize = 18000;
 ///
 class DSE : public e_object
 {
-enum DSEState
-{
-	STOPPED,			/// Tape is stopped
-	STARTING_PLAY,		/// Tape is accelerating to play speed
-	STARTING_REWIND,	/// Tape is accelerating to rewind speed
-	STARTING_RECORD,	/// Tape is accelerating to record speed
-	SLOWING_RECORD,		/// Tape is slowing to record speed
-	PLAYING,			/// Tape is playing
-	RECORDING,			/// Tape is recording
-	REWINDING,			/// Tape is rewinding
-	STOPPING,			/// Tape is stopping
-	STOPPING_REWIND,	/// Tape is stopping rewind
-};
 
 public:
 	DSE();
 	virtual ~DSE();
 
 	void Init(Saturn *vessel);	       // Initialization
-
+	
 	bool IsPowered();
-	bool TapeMotion();
-	void Play();
-	void Rewind();
-	void Stop();
-	void Record(bool lbr);
+	bool TapeMotion(); 
 
-	void TimeStep(double simt, double simdt);
+	virtual void SetSpeeds(bool JMission);
+	void TimeStep( double simt, double simdt );
 
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
@@ -268,13 +252,27 @@ protected:
 	double tapeSpeedInchesPerSecond;	/// Tape speed in inches per second.
 	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
 	double tapeMotion;					/// Tape motion from 0.0 to 1.0.
-	DSEState state;						/// Tape state.
 
 	bool TapeRecorderPCM();
 	int TapeRecorderRCD();
 	int TapeRecorderFWD();
+	bool EndOfTape();
+	bool LBR();
 
 	double lastEventTime;				/// Last event time.
+	bool K1;
+	bool K2;
+	bool K3;
+	bool K4;
+	bool K5;
+	bool K6;
+	bool K7;
+
+	double playSpeed;
+	double rewindSpeed;
+	double recordSpeed;
+
+	int state; //temporary until the save/load value orders can be changed to not break old saves
 };
 
 //Up Data Link Equipment

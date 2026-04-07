@@ -5199,10 +5199,22 @@ void DSEChunk::Erase( const DSEChunkType dataType )
 DSE::DSE() :
 	tapeSpeedInchesPerSecond(0.0),
 	desiredTapeSpeed(0.0),
-	tapeMotion(0.0),
-	state(STOPPED)
+	tapeMotion(0.0)
 {
 	lastEventTime = 0;
+	K1 = false; //Latched with rew, unlatched with fwd
+	K2 = false; //Latched with K3, K4, and K6, unlatched with K6 unlatched
+	K3 = false; //Latched with record or play, else unlatched
+	K4 = false; //Latched with play, unlatched with record
+	K5 = false; //Latched with play, unlatched with record
+	K6 = false; //Latched with PCM/ANLG, unlatched with LM PCM
+	K7 = false; //Latched with fwd/rev, unlatched with end of tape
+
+	playSpeed = 120.0; //ips, non J mission
+	rewindSpeed = -120.0; //ips, non J mission
+	recordSpeed = 3.75; //ips, lbr, non J mission
+
+	state = 0;
 }
 
 DSE::~DSE()
@@ -5216,7 +5228,7 @@ void DSE::Init(Saturn *vessel)
 
 bool DSE::IsPowered()
 {
-	if (sat->SBandFMXMTRFLTBusCB.IsPowered() && TapeRecorderFWD() != 1)
+	if (sat->SBandFMXMTRFLTBusCB.IsPowered() && sat->SBandFMXMTRGroup1CB.IsPowered())
 	{
 		return true;
 	}
@@ -5238,78 +5250,32 @@ bool DSE::TapeMotion()
 	}
 }
 
-const double playSpeed = 120.0;
-const double rewindSpeed = -120.0;
-const double hbrRecord = 15.0;
-const double lbrRecord = 3.75;
-
-void DSE::Play()
+void DSE::SetSpeeds(bool JMission)
 {
-	if (state != PLAYING || desiredTapeSpeed < playSpeed)
+	if (!JMission && LBR())
 	{
-		desiredTapeSpeed = playSpeed;
-		state = STARTING_PLAY;
+		recordSpeed = 3.75;
 	}
-	else
-		state = PLAYING;
+	else if (!JMission && !LBR())
+	{
+		recordSpeed = 15.0;
+	}
+	else if (JMission)
+	{
+		if (LBR())
+		{
+			recordSpeed = 1.875;
+		}
+		else if (!LBR())
+		{
+			recordSpeed = 7.5;
+		}
+		playSpeed = 60.0;
+		rewindSpeed = -60.0;
+	}
 }
 
-void DSE::Rewind()
-{
-	if (state != REWINDING || desiredTapeSpeed > rewindSpeed)
-	{
-		desiredTapeSpeed = rewindSpeed;
-		state = STARTING_REWIND;
-	}
-	else
-		state = REWINDING;
-}
-
-void DSE::Stop()
-{
-	if (state != STOPPED)
-	{
-		if (desiredTapeSpeed > 0.0)
-		{
-			desiredTapeSpeed = 0.0;
-			state = STOPPING;
-		}
-		else if (state != STOPPED || desiredTapeSpeed < 0.0)
-		{
-			desiredTapeSpeed = 0.0;
-			state = STOPPING_REWIND;
-		}
-		else
-			state = STOPPED;
-	}
-	else
-		state = STOPPED;
-}
-
-void DSE::Record(bool lbr)
-{
-	double tapeSpeed = lbr ? lbrRecord : hbrRecord;
-	if (state != RECORDING || tapeSpeedInchesPerSecond != tapeSpeed)
-	{
-		desiredTapeSpeed = tapeSpeed;
-
-		if (desiredTapeSpeed > tapeSpeedInchesPerSecond)
-		{
-			state = STARTING_RECORD;
-		}
-		else if (desiredTapeSpeed < tapeSpeedInchesPerSecond)
-		{
-			state = SLOWING_RECORD;
-		}
-		else
-		{
-			state = RECORDING;
-		}
-	}
-	else
-		state = RECORDING;
-}
-
+const double tapelength = 27144.0; //2262 ft
 const double tapeAccel = 30.0;
 
 bool DSE::TapeRecorderPCM() //true for PCM/ANLG (up)
@@ -5333,7 +5299,7 @@ int DSE::TapeRecorderRCD() //2 for RECORD (up), 1 for OFF (center), 0 for PLAY (
 	{
 		return 0;
 	}
-	return 1; //else
+	return 1;
 }
 
 int DSE::TapeRecorderFWD() //2 for FORWARD (up), 1 for STOP (center), 0 for REWIND (down)
@@ -5350,137 +5316,87 @@ int DSE::TapeRecorderFWD() //2 for FORWARD (up), 1 for STOP (center), 0 for REWI
 	{
 		return 0;
 	}
-	return 1; //else
+	return 1;
+}
+
+bool DSE::EndOfTape()
+{
+	return false;
+	//TODO Add end of tape logic, which should be triggered when tape reaches end of reel, and should cause tape to stop and rewind a little bit, and latch K7 until rewound back to the point where it was triggered
+}
+
+bool DSE::LBR()
+{
+	return sat->pcm.LowBitrateLogic();
 }
 
 void DSE::TimeStep(double simt, double simdt)
 {
-	bool lbr = sat->pcm.LowBitrateLogic();
-
-	if (IsPowered())
+	if (!IsPowered())
 	{
-		switch (state)
-		{
-		case STOPPED:
-			if (TapeRecorderFWD() == 2) {
-				if (TapeRecorderRCD() == 2) {
-					Record(lbr);
-				}
-				else if (TapeRecorderRCD() == 0) {
-					Play();
-				}
-			}
-			else if (TapeRecorderFWD() == 0) {
-				Rewind();
-			}
-			break;
-
-		case PLAYING:
-			if (TapeRecorderRCD() == 1) {
-				Stop();
-			}
-			else if (TapeRecorderFWD() == 0)
-			{
-				Rewind();
-			}
-			else if (TapeRecorderRCD() == 2) {
-				Record(lbr);
-			}
-			break;
-
-		case REWINDING:
-			if (TapeRecorderRCD() == 1) {
-				Stop();
-			}
-			else if (TapeRecorderFWD() == 2 && TapeRecorderRCD() == 2) {
-				Record(lbr);
-			}
-			else if (TapeRecorderFWD() == 2 && TapeRecorderRCD() == 0) {
-				Play();
-			}
-			break;
-
-		case RECORDING:
-			if (TapeRecorderRCD() == 1) {
-				Stop();
-			}
-			else if (TapeRecorderFWD() == 0)
-			{
-				Rewind();
-			}
-			else if (TapeRecorderRCD() == 0) {
-				Play();
-			}
-			break;
-
-		case STARTING_PLAY:
-			tapeSpeedInchesPerSecond += tapeAccel * simdt;
-			if (tapeSpeedInchesPerSecond >= desiredTapeSpeed)
-			{
-				tapeSpeedInchesPerSecond = desiredTapeSpeed;
-				state = PLAYING;
-			}
-			break;
-
-		case STARTING_REWIND:
-			tapeSpeedInchesPerSecond -= tapeAccel * simdt;
-			if (tapeSpeedInchesPerSecond <= desiredTapeSpeed)
-			{
-				tapeSpeedInchesPerSecond = desiredTapeSpeed;
-				state = REWINDING;
-			}
-			break;
-
-		case STARTING_RECORD:
-			tapeSpeedInchesPerSecond += tapeAccel * simdt;
-			if (tapeSpeedInchesPerSecond >= desiredTapeSpeed)
-			{
-				tapeSpeedInchesPerSecond = desiredTapeSpeed;
-				state = RECORDING;
-			}
-			break;
-
-		case SLOWING_RECORD:
-			tapeSpeedInchesPerSecond -= tapeAccel * simdt;
-			if (tapeSpeedInchesPerSecond <= desiredTapeSpeed)
-			{
-				tapeSpeedInchesPerSecond = desiredTapeSpeed;
-				state = RECORDING;
-			}
-			break;
-
-		case STOPPING:
-			tapeSpeedInchesPerSecond -= tapeAccel * simdt;
-			if (tapeSpeedInchesPerSecond <= 0.0)
-			{
-				tapeSpeedInchesPerSecond = 0.0;
-				state = STOPPED;
-			}
-			break;
-
-		case STOPPING_REWIND:
-			tapeSpeedInchesPerSecond += tapeAccel * simdt;
-			if (tapeSpeedInchesPerSecond >= 0.0)
-			{
-				tapeSpeedInchesPerSecond = 0.0;
-				state = STOPPED;
-			}
-			break;
-
-		default:
-			break;
-		}
+		return;
 	}
-	else
+
+	if (TapeRecorderFWD() != 1)
 	{
-		desiredTapeSpeed = 0.0;
-		tapeSpeedInchesPerSecond = 0.0;
-		state = STOPPED;
+		K7 = true;
+	}
+	else if (EndOfTape())
+	{
+		K7 = false;
+	}
+
+	if (TapeRecorderFWD() == 0 && K7)
+	{
+		K1 = true;
+	}
+	else if (TapeRecorderFWD() == 2 && K7)
+	{
+		K1 = false;
+	}
+
+	if (TapeRecorderRCD() != 1)
+	{
+		K3 = true;
+	}
+	else if (TapeRecorderRCD() == 1)
+	{
+		K3 = false;
+	}
+
+	if (TapeRecorderRCD() == 2)
+	{
+		K4 = true;
+		K5 = true;
+	}
+	else if (TapeRecorderRCD() == 0)
+	{
+		K4 = false;
+		K5 = false;
+	}
+
+	if (TapeRecorderPCM())
+	{
+		K6 = true;
+	}
+	else if (!TapeRecorderPCM())
+	{
+		K6 = false;
+	}
+
+	if (K3 && K4 && K6)
+	{
+		K2 = true;
+	}
+	else if (K3 && K4 && !K6)
+	{
+		K2 = false;
 	}
 
 	lastEventTime = simt;
 
-	sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i PCM %i RCD %d FWD %d rcd1 %i rcd2 %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state, TapeRecorderPCM(), TapeRecorderRCD(), TapeRecorderFWD(), sat->udl.GetTapeRecorderRCDLogic1(), sat->udl.GetTapeRecorderRCDLogic2());
+	sprintf(oapiDebugString(), "K1 %i K2 %i K3 %i K4 %i K5 %i K6 %i K7 %i", K1, K2, K3, K4, K5, K6, K7);
+	//sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i PCM %i RCD %d FWD %d rcd1 %i rcd2 %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state, TapeRecorderPCM(), TapeRecorderRCD(), TapeRecorderFWD(), sat->udl.GetTapeRecorderRCDLogic1(), sat->udl.GetTapeRecorderRCDLogic2());
 }
 
 void DSE::LoadState(char *line) {
