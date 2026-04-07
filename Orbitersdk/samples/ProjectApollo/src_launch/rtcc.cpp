@@ -6964,7 +6964,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
 		LOAD_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
 		LOAD_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
-		LOAD_INT("RTCC_TLCC_REVS1", PZMCCPLN.REVS2);
+		LOAD_INT("RTCC_TLCC_REVS2", PZMCCPLN.REVS2);
 		if (papiReadScenario_double(line, "RTCC_TLCC_H_A_LPO1", darrtemp[0])) PZMCCPLN.H_A_LPO1 = darrtemp[0] * 1852.0;
 		if (papiReadScenario_double(line, "RTCC_TLCC_H_P_LPO1", darrtemp[0])) PZMCCPLN.H_P_LPO1 = darrtemp[0] * 1852.0;
 		if (papiReadScenario_double(line, "RTCC_TLCC_H_A_LPO2", darrtemp[0])) PZMCCPLN.H_A_LPO2 = darrtemp[0] * 1852.0;
