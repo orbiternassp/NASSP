@@ -249,16 +249,20 @@ protected:
 	Saturn *sat;					    /// Ship we're installed in
 	DSEChunk tape[tapeSize];			/// Simulated tape.
 	double tapeSpeed;	/// Tape speed in inches per second.
+	double tapePosition;	/// Tape position.
 	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
 	double motorDirection;				/// Tape motor direction, 1 for forward, -1 for reverse, 0 for stopped.
 
 	bool TapeRecorderPCM();
 	int TapeRecorderRCD();
 	int TapeRecorderFWD();
-	bool EndOfTape();
+	bool EndOfTapeFWD();
+	bool EndOfTapeREW();
 	bool LBR();
 
-	double lastEventTime;				/// Last event time.
+	bool record;
+	bool playback;
+	bool fwdSwitchChange;
 	bool K1;
 	bool K2;
 	bool K3;
@@ -266,8 +270,6 @@ protected:
 	bool K5;
 	bool K6;
 	bool K7;
-
-	int state; //temporary until the save/load value orders can be changed to not break old saves
 };
 
 //Up Data Link Equipment

@@ -5196,12 +5196,15 @@ void DSEChunk::Erase( const DSEChunkType dataType )
 	chunkValidBytes = 0;
 }
 
-DSE::DSE() :
-	tapeSpeed(0.0),
-	desiredTapeSpeed(0.0),
-	motorDirection(0.0)
+DSE::DSE()
 {
-	lastEventTime = 0;
+	sat = NULL;
+
+	tapeSpeed = 0.0;
+	tapePosition = 0.0;
+	desiredTapeSpeed = 0.0;
+	motorDirection = 0.0;
+
 	K1 = false; //Latched with rew, unlatched with fwd
 	K2 = false; //Latched with K3, K4, and K6, unlatched with K6 unlatched
 	K3 = false; //Latched with record or play, else unlatched
@@ -5209,9 +5212,10 @@ DSE::DSE() :
 	K5 = false; //Latched with play, unlatched with record
 	K6 = false; //Latched with PCM/ANLG, unlatched with LM PCM
 	K7 = false; //Latched with fwd/rev, unlatched with end of tape
-	sat = NULL;
 
-	state = 0;
+	record = false;
+	playback = false;
+	fwdSwitchChange = true;
 }
 
 DSE::~DSE()
@@ -5235,20 +5239,35 @@ bool DSE::IsPowered()
 	}
 }
 
+const double tapeLength = 27144.0; //inches, 2262 ft
+const double tapeAccel = 60.0;
+
 bool DSE::TapeMotion()
 {
-	if (IsPowered() && tapeSpeed != 0.0)
+	if (tapeSpeed != 0.0)
 	{
 		return true;
 	}
-	else
-	{
-		return false;
-	}
+	return false;
 }
 
-const double tapelength = 27144.0; //2262 ft
-const double tapeAccel = 30.0;
+bool DSE::EndOfTapeREW()
+{
+	if (tapePosition <= 0.0 && K1)
+	{
+		return true;
+	}
+	return false;
+}
+
+bool DSE::EndOfTapeFWD()
+{
+	if (tapePosition >= tapeLength && !K1)
+	{
+		return true;
+	}
+	return false;
+}
 
 bool DSE::TapeRecorderPCM() //true for PCM/ANLG (up)
 {
@@ -5291,12 +5310,6 @@ int DSE::TapeRecorderFWD() //2 for FORWARD (up), 1 for STOP (center), 0 for REWI
 	return 1;
 }
 
-bool DSE::EndOfTape()
-{
-	return false;
-	//TODO Add end of tape logic, which should be triggered when tape reaches end of reel and latch K7 until driven back to the point where it was triggered
-}
-
 bool DSE::LBR()
 {
 	return sat->pcm.LowBitrateLogic();
@@ -5304,19 +5317,37 @@ bool DSE::LBR()
 
 void DSE::TimeStep(double simt, double simdt)
 {
+	//Power check
 	if (!IsPowered())
 	{
 		return;
 	}
 
-	//Relay logic
-	if (TapeRecorderFWD() != 1)
+	//FWD Switch change logic
+	if (fwdSwitchChange == false && TapeRecorderFWD() == 2)
 	{
-		K7 = true;
+		if (TapeRecorderFWD() == 0)
+		{
+			fwdSwitchChange = true;
+		}
 	}
-	else if (EndOfTape())
+	else if (fwdSwitchChange == false && TapeRecorderFWD() == 0)
+	{
+		if (TapeRecorderFWD() == 2)
+		{
+			fwdSwitchChange = true;
+		}
+	}
+
+	//Relay logic
+	if (EndOfTapeREW() || EndOfTapeFWD())
 	{
 		K7 = false;
+		fwdSwitchChange = false;
+	}
+	else if (!K7 && fwdSwitchChange)
+	{
+		K7 = true;
 	}
 
 	if (TapeRecorderFWD() == 0 && K7)
@@ -5382,7 +5413,7 @@ void DSE::TimeStep(double simt, double simdt)
 
 	//Tape speed logic
 	double commandedSpeed, cmd, pos;
-	if (TapeRecorderRCD() == 2)
+	if (TapeRecorderRCD() == 2 && motorDirection >= 0.0)
 	{
 		if (LBR())
 		{
@@ -5393,7 +5424,7 @@ void DSE::TimeStep(double simt, double simdt)
 			commandedSpeed = 15.0;
 		}
 	}
-	else if (TapeRecorderRCD() == 0)
+	else if (TapeRecorderRCD() == 0 || motorDirection  != 0.0)
 	{
 		commandedSpeed = 120.0;
 	}
@@ -5402,9 +5433,25 @@ void DSE::TimeStep(double simt, double simdt)
 		commandedSpeed = 0.0;
 	}
 
+	//Mission check
 	if (sat->pMission->IsJMission())
 	{
 		commandedSpeed = commandedSpeed / 2.0;
+	}
+
+	//Head logic
+	if (tapeSpeed > 0.0)
+	{
+		if (K4)
+		{
+			playback = true;
+			record = false;
+		}
+		else
+		{
+			playback = false;
+			record = true;
+		}
 	}
 
 	desiredTapeSpeed = commandedSpeed * motorDirection;
@@ -5422,23 +5469,32 @@ void DSE::TimeStep(double simt, double simdt)
 
 	tapeSpeed += pos;
 
-	lastEventTime = simt;
+	tapePosition += tapeSpeed * simdt;
 
-	sprintf(oapiDebugString(), "K1 %i K2 %i K3 %i K4 %i K5 %i K6 %i K7 %i", K1, K2, K3, K4, K5, K6, K7);
-	//sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i PCM %i RCD %d FWD %d rcd1 %i rcd2 %i", tapeSpeed, desiredTapeSpeed, tapeMotion, state, TapeRecorderPCM(), TapeRecorderRCD(), TapeRecorderFWD(), sat->udl.GetTapeRecorderRCDLogic1(), sat->udl.GetTapeRecorderRCDLogic2());
+	if (tapePosition <= 0.0)
+	{
+		tapePosition = 0.0;
+	}
+	else if (tapePosition >= tapeLength)
+	{
+		tapePosition = tapeLength;
+	}
+
+	//sprintf(oapiDebugString(), "K1 %i K2 %i K3 %i K4 %i K5 %i K6 %i K7 %i", K1, K2, K3, K4, K5, K6, K7);
+	sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i tapeEndREW %i K1 %i K7 %i FWDsw %i PCM %i RCD %d FWD %d", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, fwdSwitchChange, TapeRecorderPCM(), TapeRecorderRCD(), TapeRecorderFWD());
 }
 
 void DSE::LoadState(char *line) {
 
 	/// \todo DSE Chunks
 
-	sscanf(line + 12, "%lf %lf %lf %i %lf", &tapeSpeed, &desiredTapeSpeed, &motorDirection, &state, &lastEventTime);
+	sscanf(line + 12, "%lf %lf %lf", &tapeSpeed, &desiredTapeSpeed, &tapePosition);
 }
 
 void DSE::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf %lf %i %lf", tapeSpeed, desiredTapeSpeed, motorDirection, state, lastEventTime);
+	sprintf(buffer, "%lf %lf %lf", tapeSpeed, desiredTapeSpeed, tapePosition);
 	oapiWriteScenario_string(scn, "DATARECORDER", buffer);
 }
 
