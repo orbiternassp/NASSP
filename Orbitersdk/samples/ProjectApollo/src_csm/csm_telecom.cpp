@@ -3062,6 +3062,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							data |= (secsStatus.EDSAbortLogicInput1 << 0);
 							data |= (secsStatus.EDSAbortLogicInput2 << 1);
 							data |= (secsStatus.EDSAbortLogicInput3 << 3);
+							data |= (sat->dataRecorder.TapeMotion() << 4);
 							return data;
 						case 15:
 							/*	2 = IMU HTR +28 VDC
