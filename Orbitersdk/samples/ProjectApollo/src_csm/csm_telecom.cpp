@@ -5215,7 +5215,7 @@ DSE::DSE()
 
 	record = false;
 	playback = false;
-	fwdSwitchChange = true;
+	fwdSwitchChange = false;
 }
 
 DSE::~DSE()
@@ -5317,47 +5317,38 @@ bool DSE::LBR()
 
 void DSE::TimeStep(double simt, double simdt)
 {
+	bool fwdstate = false;
 	//Power check
 	if (!IsPowered())
 	{
 		return;
 	}
 
-	//FWD Switch change logic
-	if (fwdSwitchChange == false && TapeRecorderFWD() == 2)
+	if (TapeRecorderFWD() == 0)
 	{
-		if (TapeRecorderFWD() == 0)
-		{
-			fwdSwitchChange = true;
-		}
+		K1 = true;
 	}
-	else if (fwdSwitchChange == false && TapeRecorderFWD() == 0)
+	else if (TapeRecorderFWD() == 2)
 	{
-		if (TapeRecorderFWD() == 2)
-		{
-			fwdSwitchChange = true;
-		}
+		K1 = false;
+	}
+
+	//FWD Switch change logic
+	if (TapeRecorderFWD() != 1)
+	{
+		fwdstate = true;
 	}
 
 	//Relay logic
 	if (EndOfTapeREW() || EndOfTapeFWD())
 	{
 		K7 = false;
-		fwdSwitchChange = false;
 	}
-	else if (!K7 && fwdSwitchChange)
+	else if (!fwdSwitchChange && fwdstate)
 	{
 		K7 = true;
 	}
-
-	if (TapeRecorderFWD() == 0 && K7)
-	{
-		K1 = true;
-	}
-	else if (TapeRecorderFWD() == 2 && K7)
-	{
-		K1 = false;
-	}
+	fwdSwitchChange = fwdstate;
 
 	if (TapeRecorderRCD() != 1)
 	{
@@ -5474,14 +5465,16 @@ void DSE::TimeStep(double simt, double simdt)
 	if (tapePosition <= 0.0)
 	{
 		tapePosition = 0.0;
+		tapeSpeed = 0.0;
 	}
 	else if (tapePosition >= tapeLength)
 	{
 		tapePosition = tapeLength;
+		tapeSpeed = 0.0;
 	}
 
 	//sprintf(oapiDebugString(), "K1 %i K2 %i K3 %i K4 %i K5 %i K6 %i K7 %i", K1, K2, K3, K4, K5, K6, K7);
-	sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i tapeEndREW %i K1 %i K7 %i FWDsw %i PCM %i RCD %d FWD %d", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, fwdSwitchChange, TapeRecorderPCM(), TapeRecorderRCD(), TapeRecorderFWD());
+	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i tapeEndREW %i K1 %i K7 %i FWDsw %i FWDstate %i PCM %i RCD %d FWD %d", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, fwdSwitchChange, fwdstate, TapeRecorderPCM(), TapeRecorderRCD(), TapeRecorderFWD());
 }
 
 void DSE::LoadState(char *line) {

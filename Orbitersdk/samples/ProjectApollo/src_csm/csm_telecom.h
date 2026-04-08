@@ -263,13 +263,7 @@ protected:
 	bool record;
 	bool playback;
 	bool fwdSwitchChange;
-	bool K1;
-	bool K2;
-	bool K3;
-	bool K4;
-	bool K5;
-	bool K6;
-	bool K7;
+	bool K1, K2, K3, K4, K5, K6, K7;
 };
 
 //Up Data Link Equipment
