@@ -612,7 +612,8 @@ public:
 		SRF_VC_DIGITAL90,
 		SRF_VC_EVENT_TIMER_DIGITS90,
 		SRF_VC_ABORT,
-		SRF_VC_OPTICS,
+		SRF_VC_OPTICS_DSKY,
+		SRF_VC_OPTICS_P122,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -1315,7 +1316,7 @@ public:
 	void DoMeshAnimation(AnimState &, UINT &, double, double);
 
 	void UpdatePointingArrow();
-	void UpdateCMVCOptics(bool mem);
+	void UpdateCMVCOptics();
 	void UpdateSideHatchClickspots(const VECTOR3 &ofs);
 	void UpdateForwardHatchClickspots(const VECTOR3 &ofs);
 
