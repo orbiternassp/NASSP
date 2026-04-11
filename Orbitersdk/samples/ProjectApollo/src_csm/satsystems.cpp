@@ -502,7 +502,7 @@ void Saturn::SystemsInit() {
 	omnib.Init(this);
 	omnic.Init(this);
 	omnid.Init(this);
-	dataRecorder.Init(this);
+	dataRecorder.Init(this, &SBandFMXMTRGroup1CB, &SBandFMXMTRFLTBusCB);
 	pcm.Init(this);
 	udl.Init(this);
 	vhfranging.Init(this, &VHFStationAudioRCB, &VHFRangingSwitch, &VHFRNGSwitch, &vhftransceiver);
@@ -885,7 +885,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		if (pMission->CSMHasVHFRanging()) vhfranging.TimeStep(simdt);
 		vhftransceiver.Timestep();
 		sce.Timestep();
-		dataRecorder.TimeStep( SimulatedTime, simdt );
+		dataRecorder.TimeStep(simdt);
 		RRTsystem.TimeStep(simdt);
 
 		//
@@ -1883,6 +1883,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		tvsa.SystemTimestep(tFactor);
 		optics.SystemTimestep(tFactor);
 		pcm.SystemTimestep(tFactor);
+		dataRecorder.SystemTimestep(tFactor);
 		pmp.SystemTimestep(tFactor);
 		usb.SystemTimestep(tFactor);
 		hga.SystemTimestep(tFactor);

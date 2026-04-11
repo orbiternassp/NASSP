@@ -235,12 +235,12 @@ public:
 	DSE();
 	virtual ~DSE();
 
-	void Init(Saturn *vessel);	       // Initialization
-
-	bool IsPowered();
+	void Init(Saturn *vessel, CircuitBrakerSwitch *accb, CircuitBrakerSwitch *dccb);	       // Initialization
+	bool IsACPowered();
+	bool IsDCPowered();
 	bool TapeMotion();
-
-	void TimeStep(double simt, double simdt);
+	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);			// System Timestep
 
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
@@ -248,8 +248,12 @@ public:
 protected:
 	Saturn *sat;					    /// Ship we're installed in
 	DSEChunk tape[tapeSize];			/// Simulated tape.
-	double tapeSpeed;	/// Tape speed in inches per second.
-	double tapePosition;	/// Tape position.
+
+	CircuitBrakerSwitch *ACbreaker;		/// AC circuit breaker.
+	CircuitBrakerSwitch *DCbreaker;		/// DC circuit breaker.
+
+	double tapeSpeed;					/// Tape speed in inches per second.
+	double tapePosition;				/// Tape position.
 	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
 	double motorDirection;				/// Tape motor direction, 1 for forward, -1 for reverse, 0 for stopped.
 

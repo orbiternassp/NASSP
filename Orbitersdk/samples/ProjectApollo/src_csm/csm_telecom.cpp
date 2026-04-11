@@ -5200,6 +5200,8 @@ void DSEChunk::Erase( const DSEChunkType dataType )
 DSE::DSE()
 {
 	sat = NULL;
+	ACbreaker = NULL;
+	DCbreaker = NULL;
 
 	tapeSpeed = 0.0;
 	tapePosition = 0.0;
@@ -5223,14 +5225,28 @@ DSE::~DSE()
 {
 }
 
-void DSE::Init(Saturn *vessel)
+void DSE::Init(Saturn *vessel, CircuitBrakerSwitch *accb, CircuitBrakerSwitch *dccb)
 {
 	sat = vessel;
+	ACbreaker = accb;
+	DCbreaker = dccb;
 }
 
-bool DSE::IsPowered()
+bool DSE::IsACPowered()
 {
-	if (sat->SBandFMXMTRFLTBusCB.IsPowered() && sat->SBandFMXMTRGroup1CB.IsPowered())
+	if (ACbreaker->IsPowered())
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool DSE::IsDCPowered()
+{
+	if (DCbreaker->IsPowered())
 	{
 		return true;
 	}
@@ -5279,32 +5295,44 @@ bool DSE::TapeRecorderPCM() //true for PCM/ANLG (up)
 
 int DSE::TapeRecorderRCD() //2 for RECORD (up), 1 for OFF (center), 0 for PLAY (down)
 {
-	if (!sat->udl.GetTapeRecorderRCDLogic1() && !sat->udl.GetTapeRecorderRCDLogic2())
+	if (!IsDCPowered())
+	{
+		return 1;
+	}
+	else if (!sat->udl.GetTapeRecorderRCDLogic1() && !sat->udl.GetTapeRecorderRCDLogic2())
 	{
 		return sat->TapeRecorderRecordSwitch.GetState();
 	}
-	if (!sat->udl.GetTapeRecorderRCDLogic1() && sat->udl.GetTapeRecorderRCDLogic2())
+	else if (!sat->udl.GetTapeRecorderRCDLogic1() && sat->udl.GetTapeRecorderRCDLogic2())
 	{
 		return 2;
 	}
-	if (!sat->udl.GetTapeRecorderRCDLogic1() && sat->udl.GetTapeRecorderRCDLogic2())
+	else if (!sat->udl.GetTapeRecorderRCDLogic1() && sat->udl.GetTapeRecorderRCDLogic2())
 	{
 		return 0;
 	}
-	return 1;
+	else
+	{
+		return 1;
+	}
 }
 
 int DSE::TapeRecorderFWD() //2 for FORWARD (up), 1 for STOP (center), 0 for REWIND (down)
 {
-	if (!sat->udl.GetTapeRecorderFWDLogic1() && !sat->udl.GetTapeRecorderFWDLogic2())
+	if (!IsDCPowered())
+	{
+		fwdSwitchChange = false;
+		return 1;
+	}
+	else if (!sat->udl.GetTapeRecorderFWDLogic1() && !sat->udl.GetTapeRecorderFWDLogic2())
 	{
 		return sat->TapeRecorderForwardSwitch.GetState();
 	}
-	if (!sat->udl.GetTapeRecorderFWDLogic1() && sat->udl.GetTapeRecorderFWDLogic2())
+	else if (!sat->udl.GetTapeRecorderFWDLogic1() && sat->udl.GetTapeRecorderFWDLogic2())
 	{
 		return 2;
 	}
-	if (!sat->udl.GetTapeRecorderFWDLogic1() && sat->udl.GetTapeRecorderFWDLogic2())
+	else if (!sat->udl.GetTapeRecorderFWDLogic1() && sat->udl.GetTapeRecorderFWDLogic2())
 	{
 		return 0;
 	}
@@ -5316,15 +5344,11 @@ bool DSE::LBR()
 	return sat->pcm.LowBitrateLogic();
 }
 
-void DSE::TimeStep(double simt, double simdt)
+void DSE::TimeStep(double simdt)
 {
 	bool fwdstate = false;
-	//Power check
-	if (!IsPowered())
-	{
-		return;
-	}
 
+	//Relay logic
 	if (TapeRecorderFWD() == 0)
 	{
 		K1 = true;
@@ -5340,7 +5364,6 @@ void DSE::TimeStep(double simt, double simdt)
 		fwdstate = true;
 	}
 
-	//Relay logic
 	if (EndOfTapeREW() || EndOfTapeFWD())
 	{
 		K7 = false;
@@ -5390,13 +5413,20 @@ void DSE::TimeStep(double simt, double simdt)
 	}
 
 	//Tape motion logic
-	if (TapeRecorderFWD() == 2 && K7)
+	if (IsACPowered() && K7)
 	{
-		motorDirection = 1.0;
-	}
-	else if (TapeRecorderFWD() == 0 && K7)
-	{
-		motorDirection = -1.0;
+		if (TapeRecorderFWD() == 2)
+		{
+			motorDirection = 1.0;
+		}
+		else if (TapeRecorderFWD() == 0)
+		{
+			motorDirection = -1.0;
+		}
+		else
+		{
+			motorDirection = 0.0;
+		}
 	}
 	else
 	{
@@ -5478,17 +5508,30 @@ void DSE::TimeStep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i tapeEndREW %i K1 %i K7 %i FWDsw %i FWDstate %i PCM %i RCD %d FWD %d", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, fwdSwitchChange, fwdstate, TapeRecorderPCM(), TapeRecorderRCD(), TapeRecorderFWD());
 }
 
+void DSE::SystemTimestep(double simdt)
+{
+	if (IsDCPowered())
+	{
+		DCbreaker->DrawPower(3.1);
+	}
+
+	if (IsACPowered() && tapeSpeed != 0.0)
+	{
+		ACbreaker->DrawPower(30.0);
+	}
+}
+
 void DSE::LoadState(char *line) {
 
 	/// \todo DSE Chunks
 
-	sscanf(line + 12, "%lf %lf %lf", &tapeSpeed, &desiredTapeSpeed, &tapePosition);
+	sscanf(line + 12, "%lf %lf %d %d %d %d %d %d %d", &tapeSpeed, &tapePosition, &K1, &K2, &K3, &K4, &K5, &K6, &K7);
 }
 
 void DSE::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf %lf", tapeSpeed, desiredTapeSpeed, tapePosition);
+	sprintf(buffer, "%lf %lf %d %d %d %d %d %d %d", tapeSpeed, desiredTapeSpeed, K1, K2, K3, K4, K5, K6, K7);
 	oapiWriteScenario_string(scn, "DATARECORDER", buffer);
 }
 
