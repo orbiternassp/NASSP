@@ -259,12 +259,14 @@ protected:
 
 	bool EndOfTapeFWD();
 	bool EndOfTapeREW();
+	void SwitchLogic();
+	void RelayLogic();
 
 	bool record;
 	bool playback;
 	bool fwdSwitchChange;
 	bool K1, K2, K3, K4, K5, K6, K7;
-	bool FWD, REW, RCD, PLAY, CSMPCM, LBR;
+	bool FWD, REW, RCD, PLAY, CSMPCM, LMPCM, LBR, HBR;
 };
 
 //Up Data Link Equipment

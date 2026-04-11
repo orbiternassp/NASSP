@@ -5220,8 +5220,10 @@ DSE::DSE()
 	REW = false;
 	RCD = false;
 	PLAY = false;
-	CSMPCM = true;
+	CSMPCM = false;
+	LMPCM = false;
 	LBR = false;
+	HBR = false;
 
 	record = false;
 	playback = false;
@@ -5293,7 +5295,7 @@ bool DSE::EndOfTapeFWD()
 	return false;
 }
 
-void DSE::TimeStep(double simdt)
+void DSE::SwitchLogic()
 {
 	//Input logic
 
@@ -5381,40 +5383,50 @@ void DSE::TimeStep(double simdt)
 	//PCM switch
 	if (!PLAY)
 	{
-		//Will not change PCM state
+		CSMPCM = false;
+		LMPCM = false;
 	}
 	else if (sat->udl.GetTapeRecorderPCMLogic1())
 	{
-		CSMPCM = false; //Forces 60/120 ips playback
-
+		CSMPCM = false;
+		LMPCM = true; //Forces 60/120 ips playback
 	}
 	else if (sat->TapeRecorderPCMSwitch.IsDown() && !sat->udl.GetTapeRecorderPCMLogic1() && !sat->udl.GetTapeRecorderPCMLogic2())
 	{
 		CSMPCM = false;
+		LMPCM = true; //Forces 60/120 ips playback
 	}
 	else
 	{
 		CSMPCM = true; //Allows playback based on recorded bitrate (not implemented yet)
+		LMPCM = false;
 	}
 
 	//LBR switch
 	if (!RCD)
 	{
-		//Will not change LBR state
+		LBR = false;
+		HBR = false;
 	}
 	else if (sat->udl.GetBitrateLogic1())
 	{
 		LBR = true;
+		HBR = false;
 	}
 	else if (sat->PCMBitRateSwitch.IsDown() && !sat->udl.GetBitrateLogic1() && !sat->udl.GetBitrateLogic2())
 	{
 		LBR = true;
+		HBR = false;
 	}
 	else
 	{
 		LBR = false;
-	};
+		HBR = true;
+	}
+}
 
+void DSE::RelayLogic()
+{
 	bool fwdstate = false;
 
 	//Relay logic
@@ -5467,7 +5479,7 @@ void DSE::TimeStep(double simdt)
 	{
 		K6 = true;
 	}
-	else if (!CSMPCM)
+	else if (LMPCM)
 	{
 		K6 = false;
 	}
@@ -5480,6 +5492,15 @@ void DSE::TimeStep(double simdt)
 	{
 		K2 = false;
 	}
+}
+
+void DSE::TimeStep(double simdt)
+{
+	//Switch logic
+	SwitchLogic();
+
+	//Relay logic
+	RelayLogic();
 
 	//Tape motion logic
 	if (IsACPowered() && K7)
@@ -5510,7 +5531,7 @@ void DSE::TimeStep(double simdt)
 		{
 			commandedSpeed = 3.75;
 		}
-		else
+		else if (HBR)
 		{
 			commandedSpeed = 15.0;
 		}
@@ -5574,7 +5595,7 @@ void DSE::TimeStep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "K1 %i K2 %i K3 %i K4 %i K5 %i K6 %i K7 %i", K1, K2, K3, K4, K5, K6, K7);
-	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i EndREW %i K1 %i K7 %i FWDsw %i FWDstate %i PCM %i LBR %i FWD %i REW %i RCD %i PLAY %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, fwdSwitchChange, fwdstate, CSMPCM, LBR, FWD, REW, RCD, PLAY);
+	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i EndREW %i K1 %i K7 %i FWDsw %i PCM %i LBR %i FWD %i REW %i RCD %i PLAY %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, fwdSwitchChange, CSMPCM, LBR, FWD, REW, RCD, PLAY);
 }
 
 void DSE::SystemTimestep(double simdt)
