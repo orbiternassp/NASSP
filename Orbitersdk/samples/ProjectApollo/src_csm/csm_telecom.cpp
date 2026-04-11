@@ -5216,6 +5216,13 @@ DSE::DSE()
 	K6 = false; //Latched with PCM/ANLG, unlatched with LM PCM
 	K7 = false; //Latched with fwd/rev, unlatched with end of tape
 
+	FWD = false;
+	REW = false;
+	RCD = false;
+	PLAY = false;
+	CSMPCM = true;
+	LBR = false;
+
 	record = false;
 	playback = false;
 	fwdSwitchChange = false;
@@ -5286,80 +5293,142 @@ bool DSE::EndOfTapeFWD()
 	return false;
 }
 
-bool DSE::TapeRecorderPCM() //true for PCM/ANLG (up)
+void DSE::TimeStep(double simdt)
 {
-	if (sat->udl.GetTapeRecorderPCMLogic1()) return false;
-	if (sat->TapeRecorderPCMSwitch.IsDown() && !sat->udl.GetTapeRecorderPCMLogic1() && !sat->udl.GetTapeRecorderPCMLogic2()) return false;
-	return true;
-}
+	//Input logic
 
-int DSE::TapeRecorderRCD() //2 for RECORD (up), 1 for OFF (center), 0 for PLAY (down)
-{
-	if (!IsDCPowered())
-	{
-		return 1;
-	}
-	else if (!sat->udl.GetTapeRecorderRCDLogic1() && !sat->udl.GetTapeRecorderRCDLogic2())
-	{
-		return sat->TapeRecorderRecordSwitch.GetState();
-	}
-	else if (!sat->udl.GetTapeRecorderRCDLogic1() && sat->udl.GetTapeRecorderRCDLogic2())
-	{
-		return 2;
-	}
-	else if (!sat->udl.GetTapeRecorderRCDLogic1() && sat->udl.GetTapeRecorderRCDLogic2())
-	{
-		return 0;
-	}
-	else
-	{
-		return 1;
-	}
-}
-
-int DSE::TapeRecorderFWD() //2 for FORWARD (up), 1 for STOP (center), 0 for REWIND (down)
-{
+	//Forward switch
 	if (!IsDCPowered())
 	{
 		fwdSwitchChange = false;
-		return 1;
+		FWD = false;
+		REW = false;
 	}
 	else if (!sat->udl.GetTapeRecorderFWDLogic1() && !sat->udl.GetTapeRecorderFWDLogic2())
 	{
-		return sat->TapeRecorderForwardSwitch.GetState();
+		if (sat->TapeRecorderForwardSwitch.GetState() == 2)
+		{
+			FWD = true;
+			REW = false;
+		}
+		else if (sat->TapeRecorderForwardSwitch.GetState() == 0)
+		{
+			FWD = false;
+			REW = true;
+		}
+		else
+		{
+			FWD = false;
+			REW = false;
+		}
 	}
 	else if (!sat->udl.GetTapeRecorderFWDLogic1() && sat->udl.GetTapeRecorderFWDLogic2())
 	{
-		return 2;
+		FWD = true;
+		REW = false;
 	}
 	else if (!sat->udl.GetTapeRecorderFWDLogic1() && sat->udl.GetTapeRecorderFWDLogic2())
 	{
-		return 0;
+		FWD = false;
+		REW = true;
 	}
-	return 1;
-}
+	else
+	{
+		FWD = false;
+		REW = false;
+	}
 
-bool DSE::LBR()
-{
-	return sat->pcm.LowBitrateLogic();
-}
+	//Record switch
+	if (!FWD)
+	{
+		RCD = false;
+		PLAY = false;
+	}
+	else if (!sat->udl.GetTapeRecorderRCDLogic1() && !sat->udl.GetTapeRecorderRCDLogic2())
+	{
+		if (sat->TapeRecorderRecordSwitch.GetState() == 2)
+		{
+			RCD = true;
+			PLAY = false;
+		}
+		else if (sat->TapeRecorderForwardSwitch.GetState() == 0)
+		{
+			RCD = false;
+			PLAY = true;
+		}
+		else
+		{
+			RCD = false;
+			PLAY = false;
+		}
+	}
+	else if (!sat->udl.GetTapeRecorderRCDLogic1() && sat->udl.GetTapeRecorderRCDLogic2())
+	{
+		RCD = true;
+		PLAY = false;
+	}
+	else if (!sat->udl.GetTapeRecorderRCDLogic1() && sat->udl.GetTapeRecorderRCDLogic2())
+	{
+		RCD = false;
+		PLAY = true;
+	}
+	else
+	{
+		RCD = false;
+		PLAY = false;
+	}
 
-void DSE::TimeStep(double simdt)
-{
+	//PCM switch
+	if (!PLAY)
+	{
+		//Will not change PCM state
+	}
+	else if (sat->udl.GetTapeRecorderPCMLogic1())
+	{
+		CSMPCM = false; //Forces 60/120 ips playback
+
+	}
+	else if (sat->TapeRecorderPCMSwitch.IsDown() && !sat->udl.GetTapeRecorderPCMLogic1() && !sat->udl.GetTapeRecorderPCMLogic2())
+	{
+		CSMPCM = false;
+	}
+	else
+	{
+		CSMPCM = true; //Allows playback based on recorded bitrate (not implemented yet)
+	}
+
+	//LBR switch
+	if (!RCD)
+	{
+		//Will not change LBR state
+	}
+	else if (sat->udl.GetBitrateLogic1())
+	{
+		LBR = true;
+	}
+	else if (sat->PCMBitRateSwitch.IsDown() && !sat->udl.GetBitrateLogic1() && !sat->udl.GetBitrateLogic2())
+	{
+		LBR = true;
+	}
+	else
+	{
+		LBR = false;
+	};
+
 	bool fwdstate = false;
 
 	//Relay logic
-	if (TapeRecorderFWD() == 0)
+	if (REW)
 	{
 		K1 = true;
 	}
-	else if (TapeRecorderFWD() == 2)
+	else if (FWD)
 	{
 		K1 = false;
 	}
 
 	//FWD Switch change logic
-	if (TapeRecorderFWD() != 1)
+	if (REW || FWD)
 	{
 		fwdstate = true;
 	}
@@ -5374,31 +5443,31 @@ void DSE::TimeStep(double simdt)
 	}
 	fwdSwitchChange = fwdstate;
 
-	if (TapeRecorderRCD() != 1)
+	if (RCD || FWD)
 	{
 		K3 = true;
 	}
-	else if (TapeRecorderRCD() == 1)
+	else if (!RCD && !FWD)
 	{
 		K3 = false;
 	}
 
-	if (TapeRecorderRCD() == 2)
+	if (RCD)
 	{
 		K4 = true;
 		K5 = true;
 	}
-	else if (TapeRecorderRCD() == 0)
+	else if (FWD)
 	{
 		K4 = false;
 		K5 = false;
 	}
 
-	if (TapeRecorderPCM())
+	if (CSMPCM)
 	{
 		K6 = true;
 	}
-	else if (!TapeRecorderPCM())
+	else if (!CSMPCM)
 	{
 		K6 = false;
 	}
@@ -5415,11 +5484,11 @@ void DSE::TimeStep(double simdt)
 	//Tape motion logic
 	if (IsACPowered() && K7)
 	{
-		if (TapeRecorderFWD() == 2)
+		if (FWD)
 		{
 			motorDirection = 1.0;
 		}
-		else if (TapeRecorderFWD() == 0)
+		else if (REW)
 		{
 			motorDirection = -1.0;
 		}
@@ -5435,9 +5504,9 @@ void DSE::TimeStep(double simdt)
 
 	//Tape speed logic
 	double commandedSpeed, cmd, pos;
-	if (TapeRecorderRCD() == 2 && motorDirection >= 0.0)
+	if (RCD && motorDirection >= 0.0)
 	{
-		if (LBR())
+		if (LBR)
 		{
 			commandedSpeed = 3.75;
 		}
@@ -5446,7 +5515,7 @@ void DSE::TimeStep(double simdt)
 			commandedSpeed = 15.0;
 		}
 	}
-	else if (TapeRecorderRCD() == 0 || motorDirection  != 0.0)
+	else if (PLAY || motorDirection  != 0.0)
 	{
 		commandedSpeed = 120.0;
 	}
@@ -5505,7 +5574,7 @@ void DSE::TimeStep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "K1 %i K2 %i K3 %i K4 %i K5 %i K6 %i K7 %i", K1, K2, K3, K4, K5, K6, K7);
-	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i tapeEndREW %i K1 %i K7 %i FWDsw %i FWDstate %i PCM %i RCD %d FWD %d", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, fwdSwitchChange, fwdstate, TapeRecorderPCM(), TapeRecorderRCD(), TapeRecorderFWD());
+	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i EndREW %i K1 %i K7 %i FWDsw %i FWDstate %i PCM %i LBR %i FWD %i REW %i RCD %i PLAY %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, fwdSwitchChange, fwdstate, CSMPCM, LBR, FWD, REW, RCD, PLAY);
 }
 
 void DSE::SystemTimestep(double simdt)
@@ -5525,7 +5594,15 @@ void DSE::LoadState(char *line) {
 
 	/// \todo DSE Chunks
 
-	sscanf(line + 12, "%lf %lf %d %d %d %d %d %d %d", &tapeSpeed, &tapePosition, &K1, &K2, &K3, &K4, &K5, &K6, &K7);
+	int inttemp[7];
+	sscanf(line + 12, "%lf %lf %d %d %d %d %d %d %d", &tapeSpeed, &tapePosition, &inttemp[0], &inttemp[1], &inttemp[2], &inttemp[3], &inttemp[4], &inttemp[5], &inttemp[6]);
+	K1 = (inttemp[0] != 0);
+	K2 = (inttemp[1] != 0);
+	K3 = (inttemp[2] != 0);
+	K4 = (inttemp[3] != 0);
+	K5 = (inttemp[4] != 0);
+	K6 = (inttemp[5] != 0);
+	K7 = (inttemp[6] != 0);
 }
 
 void DSE::SaveState(FILEHANDLE scn) {

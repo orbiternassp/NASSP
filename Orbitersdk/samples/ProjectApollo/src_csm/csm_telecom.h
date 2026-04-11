@@ -252,22 +252,19 @@ protected:
 	CircuitBrakerSwitch *ACbreaker;		/// AC circuit breaker.
 	CircuitBrakerSwitch *DCbreaker;		/// DC circuit breaker.
 
-	double tapeSpeed;					/// Tape speed in inches per second.
-	double tapePosition;				/// Tape position.
+	double tapeSpeed;	/// Tape speed in inches per second.
+	double tapePosition;	/// Tape position.
 	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
 	double motorDirection;				/// Tape motor direction, 1 for forward, -1 for reverse, 0 for stopped.
 
-	bool TapeRecorderPCM();
-	int TapeRecorderRCD();
-	int TapeRecorderFWD();
 	bool EndOfTapeFWD();
 	bool EndOfTapeREW();
-	bool LBR();
 
 	bool record;
 	bool playback;
 	bool fwdSwitchChange;
 	bool K1, K2, K3, K4, K5, K6, K7;
+	bool FWD, REW, RCD, PLAY, CSMPCM, LBR;
 };
 
 //Up Data Link Equipment
