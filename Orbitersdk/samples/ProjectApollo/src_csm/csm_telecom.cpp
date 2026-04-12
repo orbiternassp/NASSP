@@ -5644,7 +5644,7 @@ void DSE::LoadState(char *line) {
 void DSE::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf %d %d %d %d %d %d %d", tapeSpeed, desiredTapeSpeed, K1, K2, K3, K4, K5, K6, K7);
+	sprintf(buffer, "%lf %lf %d %d %d %d %d %d %d", tapeSpeed, tapePosition, K1, K2, K3, K4, K5, K6, K7);
 	oapiWriteScenario_string(scn, "DATARECORDER", buffer);
 }
 
