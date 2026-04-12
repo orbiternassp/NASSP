@@ -5196,7 +5196,6 @@ void DSEChunk::Erase( const DSEChunkType dataType )
 	chunkType = dataType;
 	chunkValidBytes = 0;
 }
-
 DSE::DSE()
 {
 	sat = NULL;
@@ -5500,11 +5499,11 @@ void DSE::RelayLogic()
 		K6 = true;
 	}
 
-	if (K3 && K4 && K6)
+	if (K3 && K4 && !K6)
 	{
 		K2 = true;
 	}
-	else if (K3 && K4 && !K6)
+	else if (K3 && K4 && K6)
 	{
 		K2 = false;
 	}
@@ -5611,7 +5610,7 @@ void DSE::TimeStep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "K1 %i K2 %i K3 %i K4 %i K5 %i K6 %i K7 %i", K1, K2, K3, K4, K5, K6, K7);
-	sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i EndREW %i K1 %i K7 %i FWDsw %i PCM %i LBR %i FWD %i REW %i RCD %i PLAY %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, fwdSwitchChange, CSMPCM, LBR, FWD, REW, RCD, PLAY);
+	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i EndREW %i K1 %i K7 %i FWDsw %i PCM %i LBR %i FWD %i REW %i RCD %i PLAY %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, fwdSwitchChange, CSMPCM, LBR, FWD, REW, RCD, PLAY);
 }
 
 void DSE::SystemTimestep(double simdt)
