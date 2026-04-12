@@ -920,6 +920,8 @@ bool Saturn::clbkLoadVC (int id)
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
 		oapiVCSetNeighbours(SATVIEW_LEBLEFT, SATVIEW_LEBRIGHT, SATVIEW_TUNNEL, SATVIEW_OPTICS_SCT);
 		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
+		if (FovSaveVCOptics) oapiCameraSetAperture(FovSaveVCOptics);	// Restore FOV from going back from Sextant View
+		FovSaveVCOptics = 0;											// Set it back to Zero
 
 		SetView(true);
 
@@ -943,6 +945,7 @@ bool Saturn::clbkLoadVC (int id)
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
 		oapiVCSetNeighbours(SATVIEW_OPTICS_SXT, -1, SATVIEW_GNPANEL, -1);
 		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
+		FovSaveVCOptics = oapiCameraAperture(); // Save FOV for going back from Sextant to LEB
 		oapiCameraSetAperture(39.5*RAD); // Telescope FOV 79°
 		SetView(true);
 
@@ -2245,6 +2248,139 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		else
 			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2302, 1066, 1832, 1408, 104, 104);	// UP
 		return true;
+
+	case AID_VC_OPTICS_DSKY_ZERO:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 597, 76, 846, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 597, 76, 846+228, 76, 76);			// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_ONE:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 597, 152, 846, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 597, 152, 846+228, 76, 76);			// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_TWO:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 597, 228, 846, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 597, 228, 846+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_THREE:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 597, 304, 846, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 597, 304, 846+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_FOUR:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 517, 152, 770, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 517, 152, 770+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_FIVE:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 517, 228, 770, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 517, 228, 770+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_SIX:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 517, 304, 770, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 517, 304, 770+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_SEVEN:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 436, 152, 694, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 436, 152, 694+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_EIGHT:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 436, 228, 694, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 436, 228, 694+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_NINE:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 436, 304, 694, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 436, 304, 694+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_PLUS:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 436, 76, 694, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 436, 76, 694+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_MINUS:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 517, 76, 770, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 517, 76, 770+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_CLR:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 436, 380, 694, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 436, 380, 694+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_PRO:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 517, 380, 770, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 517, 380, 770+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_KEYREL:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 597, 380, 846, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 597, 380, 846+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_VERB:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 477, 0, 694, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 477, 0, 694+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_NOUN:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 557, 0, 770, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 557, 0, 770+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_ENTR:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 477, 456, 694, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 477, 456, 694+228, 76, 76);		// UP
+		return true;
+
+	case AID_VC_OPTICS_DSKY_RESET:
+		if (event == PANEL_MOUSE_LBDOWN)
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 557, 456, 770, 76, 76);			// DOWN
+		else
+			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 557, 456, 770+228, 76, 76);		// UP
+		return true;
 	}
 
 	return MainPanelVC.VCMouseEvent(id, event, p);
@@ -3037,14 +3173,14 @@ void Saturn::SetView(double offset, bool update_direction)
 				break;
 
 			case SATVIEW_OPTICS_SCT:
-				v = _V(0.0, -1.5, 0.4 + ofs_vc.z);
+				v = _V(0.135, -1.3, 0.6 + ofs_vc.z);
 				//v.x += vcFreeCamx;
 				//v.y += vcFreeCamy;
 				//v.z += vcFreeCamz;
 				break;
 	
 			case SATVIEW_OPTICS_SXT:
-				v = _V(0.0, -1.5, 0.4 + ofs_vc.z);
+				v = _V(-0.145, -1.3, 0.6 + ofs_vc.z);
 				//v.x += vcFreeCamx;
 				//v.y += vcFreeCamy;
 				//v.z += vcFreeCamz;
@@ -6682,8 +6818,13 @@ void Saturn::UpdateCMVCOptics() {
 	}
 
 	// UPDATE CLICKPOINTS
-	double ClkArea = 0.002 * aperture;
-	for (int i = AID_VC_OPTICS_DSKY_ZERO; i < AID_VC_OPTICS_REJECT_BUTTON + 1; i++) {
+	double ClkArea = 0.0015 * aperture;			// Smaller CLickarea for the Switches
+	double ClkAreaDSKY = 0.005 * aperture;		// Bigger for the DSKY
+
+	for (int i = AID_VC_OPTICS_DSKY_ZERO; i < AID_VC_OPTICS_DSKY_RESET + 1; i++) {
+		oapiVCSetAreaClickmode_Spherical(i, cmvcOptics[4].datanew[i-AID_VC_OPTICS_DSKY_ZERO] + ofs, ClkAreaDSKY);
+	}
+	for (int i = AID_VC_OPTICS_ZERO_UP; i < AID_VC_OPTICS_REJECT_BUTTON + 1; i++) {
 //		oapiVCSetAreaClickmode_Spherical(i, _V(	cmvcOptics[4].grp.Vtx[i-AID_VC_OPTICS_DSKY_ZERO].x,
 //												cmvcOptics[4].grp.Vtx[i-AID_VC_OPTICS_DSKY_ZERO].y,
 //												cmvcOptics[4].grp.Vtx[i-AID_VC_OPTICS_DSKY_ZERO].z ) + ofs, ClkArea);
