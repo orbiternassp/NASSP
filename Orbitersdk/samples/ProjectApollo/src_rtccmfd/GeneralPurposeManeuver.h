@@ -95,6 +95,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 struct GMPOpt
 {
+	GMPOpt();
+
 	int ManeuverCode;
 	VehicleDataBlock sv_in;		//State vector as input or without
 	std::string StationID;
@@ -114,6 +116,7 @@ struct GMPOpt
 	double Yaw;		//Input yaw of the maneuver
 	double dLOA;	//Line-of-apsides shift
 	int N;			//Number of revolutions
+	bool OptApsid;	//true = Use optimum solution in function ApsidesChange, false = use other solution
 };
 
 class RTCCGeneralPurposeManeuverProcessor : public RTCCModule
