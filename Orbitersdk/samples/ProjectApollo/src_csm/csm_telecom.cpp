@@ -526,7 +526,7 @@ int USB::PAPowerLogic()
 int USB::SBandAntennaSelectionLogic()
 {
 	bool pwr;
-	if (sat->SBandNormalXPDRSwitch.IsUp() & sat->SBandPWRAmpl2FLTBusCB.IsPowered())
+	if (sat->SBandNormalXPDRSwitch.IsUp() && sat->SBandPWRAmpl2FLTBusCB.IsPowered())
 	{
 		pwr = true;
 	}
