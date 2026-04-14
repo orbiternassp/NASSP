@@ -534,6 +534,16 @@ protected:
 	SCEA_SolidStateSwitch * ssswitch2;
 };
 
+class RecorderTalkback : public IndicatorSwitch
+{
+public:
+	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, LM_DSEA *d, bool failopen = false);
+	int GetState();
+
+protected:
+	LM_DSEA *dsea;
+};
+
 class LEMRCSQuadTalkback : public IndicatorSwitch {
 public:
 	LEMRCSQuadTalkback();

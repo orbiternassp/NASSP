@@ -1397,8 +1397,8 @@ protected:
 	SwitchRow Panel12CommSwitchRow3;
 	ThumbwheelSwitch VHFASquelch;
 	ThumbwheelSwitch VHFBSquelch;
-	IndicatorSwitch TapeRecorderTB;
 	ToggleSwitch TapeRecorderSwitch;
+	RecorderTalkback TapeRecorderTB;
 
 	SwitchRow Panel12AntTrackModeSwitchRow;
 	ThreePosSwitch Panel12AntTrackModeSwitch;
