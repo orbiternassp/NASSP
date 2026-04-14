@@ -3158,7 +3158,7 @@ void LM_ErectableAnt::Timestep()
 	SignalStrength = LM_SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 }
 
-LM_DSEA::LM_DSEA() //0.6 inches per second, 2.5 hours of record time, 15,000 inches of tape, 4 tracks giving 10 hours total
+LM_DSEA::LM_DSEA() //0.6 inches per second, 2.5 hours of record time per track, 5,400 inches of tape, 4 tracks giving 10 hours total
 {
 	lem = NULL;
 	DSEHeat = NULL;
@@ -3204,25 +3204,25 @@ bool LM_DSEA::TimingSignal()
 bool LM_DSEA::CDRVoiceXmit()
 {
 	return false;
-	//Use for CDR Voice Transmission not simulated yet
+	//Use for CDR Voice Transmission (not simulated yet)
 }
 
 bool LM_DSEA::LMPVoiceXmit()
 {
 	return false;
-	//Use for LMP Voice Transmission not simulated yet
+	//Use for LMP Voice Transmission (not simulated yet)
 }
 
 bool LM_DSEA::CDRPTT()
 {
 	return false;
-	//Use for CDR PTT not simulated yet
+	//Use for CDR PTT (not simulated yet)
 }
 
 bool LM_DSEA::LMPPTT()
 {
 	return false;
-	//Use for LMP PTT not simulated yet
+	//Use for LMP PTT (not simulated yet)
 }
 
 //CDR Audio Center
@@ -3268,11 +3268,11 @@ bool LM_DSEA::CDRAudioRec()
 
 	if (CDRsupply && CDRDSEAKey)
 	{
-		return true;
+		return true; //Recording
 	}
 	else
 	{
-		return false;
+		return false; //Stopped
 	}
 }
 
@@ -3319,15 +3319,15 @@ bool LM_DSEA::LMPAudioRec()
 
 	if (LMPsupply && LMPDSEAKey)
 	{
-		return true;
+		return true; //Recording
 	}
 	else
 	{
-		return false;
+		return false; //Stopped
 	}
 }
 
-const double tapeLength = 5400.0; //inches
+const double tapeLength = 5400.0; //inches (450 ft)
 const double tapeAccel = 10.0; //arbitrary number to allow speed up/slow down
 const double commandedSpeed = 0.6; //0.6 inches per second
 
