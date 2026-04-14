@@ -3163,12 +3163,13 @@ LM_DSEA::LM_DSEA() //0.6 inches per second, 2.5 hours of record time, 15,000 inc
 	lem = NULL;
 	DSEHeat = NULL;
 	tapeSpeed = 0.0;
-	//tapePosition = 0.0;
-	tapePosition = 100.0;//TESTING PURPOSES ONLY, SHOULD START AT 0.0
+	tapePosition = 0.0;
 	desiredTapeSpeed = 0.0;
 	motorDirection = 0.0;
-	//trackNumber = 1;
-	trackNumber = 2;
+	trackNumber = 1;
+
+	FWD = false;
+	REV = false;
 
 	FWD = false;
 	REV = false;
