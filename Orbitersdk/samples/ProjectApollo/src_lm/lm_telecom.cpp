@@ -3327,7 +3327,7 @@ bool LM_DSEA::LMPAudioRec()
 	}
 }
 
-const double tapeLength = 15000.0; //inches
+const double tapeLength = 5400.0; //inches
 const double tapeAccel = 10.0; //arbitrary number to allow speed up/slow down
 const double commandedSpeed = 0.6; //0.6 inches per second
 
