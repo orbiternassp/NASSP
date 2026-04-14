@@ -3192,6 +3192,7 @@ bool LM_DSEA::IsACPowered()
 	return false;
 }
 
+//PCM Timing, written onto tape (not simulated yet)
 bool LM_DSEA::TimingSignal()
 {
 	return lem->PCM.TimingSignal();
@@ -3221,10 +3222,11 @@ bool LM_DSEA::CDRPTT()
 bool LM_DSEA::LMPPTT()
 {
 	return false;
-	//Use for CDR PTT not simulated yet
+	//Use for LMP PTT not simulated yet
 }
 
-bool LM_DSEA::CDRAudioRec()	//CDR Audio Center
+//CDR Audio Center
+bool LM_DSEA::CDRAudioRec()	
 {
 	bool CDRsupply, CDRDSEAKey;
 	if (lem->COMM_CDR_AUDIO_CB.IsPowered())
@@ -3274,7 +3276,8 @@ bool LM_DSEA::CDRAudioRec()	//CDR Audio Center
 	}
 }
 
-bool LM_DSEA::LMPAudioRec() 	//LMP Audio Center
+//LMP Audio Center
+bool LM_DSEA::LMPAudioRec() 	
 {
 	bool LMPsupply, LMPDSEAKey;
 	if (lem->COMM_SE_AUDIO_CB.IsPowered())
@@ -3325,7 +3328,7 @@ bool LM_DSEA::LMPAudioRec() 	//LMP Audio Center
 }
 
 const double tapeLength = 15000.0; //inches
-const double tapeAccel = 30.0;
+const double tapeAccel = 10.0; //arbitrary number to allow speed up/slow down
 const double commandedSpeed = 0.6; //0.6 inches per second
 
 bool LM_DSEA::TapeMotion()
@@ -3337,6 +3340,7 @@ bool LM_DSEA::TapeMotion()
 	return false;
 }
 
+//Tape track recording and switching
 void LM_DSEA::tapeTrack()
 {
 	if (trackNumber > 4)
@@ -3453,12 +3457,12 @@ void LM_DSEA::SystemTimestep(double simdt)
 
 	if (CDRAudioRec())
 	{
-		lem->COMM_CDR_AUDIO_CB.DrawPower(7.2);
+		lem->COMM_CDR_AUDIO_CB.DrawPower(7.2); //Momentary draw when recording per AOH
 	}
 
 	if (LMPAudioRec())
 	{
-		lem->COMM_SE_AUDIO_CB.DrawPower(7.2);
+		lem->COMM_SE_AUDIO_CB.DrawPower(7.2); //Momentary draw when recording per AOH
 	}
 }
 
