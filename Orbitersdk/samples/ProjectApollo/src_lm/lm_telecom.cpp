@@ -3170,9 +3170,6 @@ LM_DSEA::LM_DSEA() //0.6 inches per second, 2.5 hours of record time, 15,000 inc
 
 	FWD = false;
 	REV = false;
-
-	FWD = false;
-	REV = false;
 }
 
 LM_DSEA::~LM_DSEA()
