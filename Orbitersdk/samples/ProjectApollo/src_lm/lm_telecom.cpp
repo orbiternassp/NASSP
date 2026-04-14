@@ -3452,6 +3452,16 @@ void LM_DSEA::SystemTimestep(double simdt)
 		lem->TAPE_RCDR_AC_CB.DrawPower(2.7);
 		DSEHeat->GenerateHeat(2.7);
 	}
+
+	if (CDRAudioRec())
+	{
+		lem->COMM_CDR_AUDIO_CB.DrawPower(7.2);
+	}
+
+	if (LMPAudioRec())
+	{
+		lem->COMM_SE_AUDIO_CB.DrawPower(7.2);
+	}
 }
 
 void LM_DSEA::LoadState(char *line) {
