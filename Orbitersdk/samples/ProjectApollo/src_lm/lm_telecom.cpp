@@ -3436,12 +3436,10 @@ void LM_DSEA::Timestep(double simdt)
 	if (tapePosition <= 0.0)
 	{
 		tapePosition = 0.0;
-		tapeSpeed = 0.0;
 	}
 	else if (tapePosition >= tapeLength)
 	{
 		tapePosition = tapeLength;
-		tapeSpeed = 0.0;
 	}
 
 	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i track %d FWD %i REV %i CDR %i LMP %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), trackNumber, FWD, REV, CDRAudioRec(), LMPAudioRec());
