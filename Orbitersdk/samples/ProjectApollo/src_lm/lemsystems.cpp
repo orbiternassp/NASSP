@@ -472,7 +472,7 @@ void LEM::SystemsInit()
 	PCM.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:PCMHEAT"));
 	// DSEA
 	DSEA.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:DSEHEAT"));
-	TapeRecorderTB.WireTo(&INST_PCMTEA_CB); //Tape Recorder TB powered by PCM/TE cb
+	TapeRecorderTB.WireTo(&COMM_DISP_CB);
 
 	// CBs
 	INST_SIG_CONDR_1_CB.MaxAmps = 2.0;
@@ -1616,7 +1616,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	scera1.Timestep();
 	scera2.Timestep();
 	CWEA.Timestep(simdt);
-	DSEA.Timestep(simt, simdt);
+	DSEA.Timestep(simdt);
 
 	//Treat LM O2 as gas every timestep
 	DesO2Tank->BoilAllAndSetTemp(294.261);

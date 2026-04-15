@@ -2444,8 +2444,8 @@ void LEM::SetSwitches(int panel) {
 	Panel12CommSwitchRow3.Init(AID_LM_P12_COMM_SWITCHES_ROW3, MainPanel);
 	VHFASquelch.Init(0, 4, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel12CommSwitchRow3);
 	VHFBSquelch.Init(136, 4, 25, 78, srf[SRF_THUMBWHEEL_LARGEFONTS], NULL, Panel12CommSwitchRow3);
-	TapeRecorderTB.Init(841 - 636, 1214 - 1189, 23, 23, srf[SRF_INDICATOR], Panel12CommSwitchRow3);
 	TapeRecorderSwitch.Init(892 - 636, 1212 - 1189, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel12CommSwitchRow3);
+	TapeRecorderTB.Init(841 - 636, 1214 - 1189, 23, 23, srf[SRF_INDICATOR], Panel12CommSwitchRow3, &DSEA);
 
 	ComPitchMeterRow.Init(AID_LMPITCHDEGS, MainPanel, &COMM_DISP_CB);
 	ComPitchMeter.Init(g_Param.pen[4], g_Param.pen[4], ComPitchMeterRow, this, srf[SRF_LMPITCHDEGS]);

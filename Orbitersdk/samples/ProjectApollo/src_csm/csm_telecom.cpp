@@ -526,7 +526,7 @@ int USB::PAPowerLogic()
 int USB::SBandAntennaSelectionLogic()
 {
 	bool pwr;
-	if (sat->SBandNormalXPDRSwitch.IsUp() & sat->SBandPWRAmpl2FLTBusCB.IsPowered())
+	if (sat->SBandNormalXPDRSwitch.IsUp() && sat->SBandPWRAmpl2FLTBusCB.IsPowered())
 	{
 		pwr = true;
 	}
@@ -5242,7 +5242,7 @@ void DSE::Init(Saturn *vessel, CircuitBrakerSwitch *accb, CircuitBrakerSwitch *d
 
 bool DSE::IsACPowered()
 {
-	if (ACbreaker->IsPowered())
+	if (ACbreaker->Voltage() > SP_MIN_ACVOLTAGE)
 	{
 		return true;
 	}
