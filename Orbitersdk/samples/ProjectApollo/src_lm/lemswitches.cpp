@@ -1735,6 +1735,17 @@ int LEMDoubleSCEATalkback::GetState()
 	return state;
 }
 
+void RecorderTalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, LM_DSEA *d, bool failopen)
+{
+	dsea = d;
+	IndicatorSwitch::Init(xp, yp, w, h, surf, row, failopen);
+}
+
+int RecorderTalkback::GetState()
+{
+	return dsea->TapeMotion() ? 1 : 0;
+}
+
 LEMRCSQuadTalkback::LEMRCSQuadTalkback()
 {
 	ssswitch = 0;

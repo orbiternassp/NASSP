@@ -1961,7 +1961,7 @@ protected:
 
 	SwitchRow TelecomTBRow;
 	IndicatorSwitch PwrAmplTB;
-	DSEIndicatorSwitch DseTapeTB;
+	DSETalkback DseTapeTB;
 
 	ThreePosSwitch SBandNormalXPDRSwitch;
 	ToggleSwitch SBandNormalPwrAmpl1Switch;

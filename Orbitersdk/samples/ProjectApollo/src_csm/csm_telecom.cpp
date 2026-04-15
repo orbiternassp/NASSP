@@ -5242,7 +5242,7 @@ void DSE::Init(Saturn *vessel, CircuitBrakerSwitch *accb, CircuitBrakerSwitch *d
 
 bool DSE::IsACPowered()
 {
-	if (ACbreaker->IsPowered())
+	if (ACbreaker->Voltage() > SP_MIN_ACVOLTAGE)
 	{
 		return true;
 	}

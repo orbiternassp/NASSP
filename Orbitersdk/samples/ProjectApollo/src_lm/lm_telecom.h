@@ -408,47 +408,16 @@ protected:
 ///
 class LM_DSEA : public e_object
 {
-	enum LM_DSEAState
-	{
-		STOPPED,			/// Tape is stopped
-		STARTING_RECORD,	/// Tape is accelerating to play speed
-		SLOWING_RECORD,		/// Tape is slowing to record speed
-		RECORDING,			/// Tape is recording
-		STOPPING,			/// Tape is stopping
-	};
-
 public:
 	LM_DSEA();
 	virtual ~LM_DSEA();
 
 	void Init(LEM *l, h_HeatLoad *dseht);	       // Initialization
-
-									   ///
-									   /// \brief Tape motion indicator.
-									   ///
 	bool TapeMotion();
-
-	///
-	/// \brief Stop tape playing.
-	///
-	void Stop();
-
-	///
-	/// \brief Start tape recording.
-	///
-	void Record();
-
-	bool RecordLogic();
-	bool IsSWPowered();
 	bool IsACPowered();
-	bool IsPCMPowered();
-	bool LMPVoiceXmit();
-	bool CDRVoiceXmit();
-	bool VoiceXmit();
-	bool ICSPTT();
-	bool VOXPTT();
+	bool TimingSignal();
+	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
-	void Timestep(double simt, double simdt);
 
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
@@ -456,10 +425,21 @@ public:
 protected:
 	LEM *lem;						    /// Ship we're installed in
 	h_HeatLoad *DSEHeat;				/// Heatload
-	double tapeSpeedInchesPerSecond;	/// Tape speed in inches per second.
-	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
-	double tapeMotion;					/// Tape motion from 0.0 to 1.0.
-	LM_DSEAState state;					/// Tape state.
 
-	double lastEventTime;				/// Last event time.
+	double tapeSpeed;			/// Tape speed in inches per second.
+	double tapePosition;		/// Tape position.
+	double desiredTapeSpeed;	/// Desired tape speed in inches per second.
+	double motorDirection;		/// Tape motor direction, 1 for forward, -1 for reverse, 0 for stopped.
+	int trackNumber;				/// Tape track number (1-4) 
+
+	void tapeTrack();
+	bool CDRAudioRec();
+	bool LMPAudioRec();
+	bool LMPVoiceXmit();
+	bool CDRVoiceXmit();
+	bool CDRPTT();
+	bool LMPPTT();
+
+	bool FWD;
+	bool REV;
 };
