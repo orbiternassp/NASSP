@@ -649,7 +649,8 @@ void Saturn::InitVC()
 	srf[SRF_VC_ABORT] = oapiLoadTexture("ProjectApollo/VC/abort.dds");
 	srf[SRF_VC_OPTICS_DSKY] = oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 3);
 	srf[SRF_VC_OPTICS_P122] = oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 4);
-
+	srf[SRF_VC_OPTICS_DUALVIEW_RETICLE] = oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 7);
+	
 //	srfFDAICamTexture = oapiLoadTexture("ProjectApollo/VC/FDAI_CustomCamera.dds");
 //	hFDAISurf = oapiCreateSurfaceEx(1024, 1024, OAPISURFACE_RENDER3D | OAPISURFACE_TEXTURE | OAPISURFACE_RENDERTARGET | OAPISURFACE_NOMIPMAPS);
 
@@ -922,7 +923,7 @@ bool Saturn::clbkLoadVC (int id)
 		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
 		if (FovSaveVCOptics) oapiCameraSetAperture(FovSaveVCOptics);	// Restore FOV from going back from Sextant View
 		FovSaveVCOptics = 0;											// Set it back to Zero
-
+		GNPanelView = true;
 		SetView(true);
 
 		PanelId = SATPANEL_TELESCOPE;
@@ -945,7 +946,7 @@ bool Saturn::clbkLoadVC (int id)
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
 		oapiVCSetNeighbours(SATVIEW_OPTICS_SXT, -1, SATVIEW_GNPANEL, -1);
 		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
-		FovSaveVCOptics = oapiCameraAperture(); // Save FOV for going back from Sextant to LEB
+		if (GNPanelView) FovSaveVCOptics = oapiCameraAperture(); // Save FOV for going back from Sextant to LEB
 		oapiCameraSetAperture(39.5*RAD); // Telescope FOV 79°
 		SetView(true);
 
@@ -969,7 +970,7 @@ bool Saturn::clbkLoadVC (int id)
 		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
 		oapiCameraSetAperture(1.5*RAD); // Sextant FOV 3°
 		SetView(true);
-
+		GNPanelView = false;
 		RegisterActiveAreas();
 
 		return true;
@@ -2063,379 +2064,398 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 		CueCards.CycleCueCard(id - AID_VC_CUE_CARD_LOCATION_1);
 		return true;
 
-	case AID_VC_OPTICS_ZERO_UP:
-		oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 120, 120, 0, 1408, 144, 240);
-//		oapiBlt(oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 4), oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 4), 120, 120, 0, 1408, 144, 240);
-		OpticsZeroSwitch.SetState(TOGGLESWITCH_UP);
-		return true;
-
-	case AID_VC_OPTICS_ZERO_DOWN:
-		oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 120, 120, 144, 1408, 144, 240);
-		OpticsZeroSwitch.SetState(TOGGLESWITCH_DOWN);
-		return true;
-
-	case AID_VC_OPTICS_TEL_TRUN_UP:
-		if (ControllerTelescopeTrunnionSwitch.IsUp() || ControllerTelescopeTrunnionSwitch.IsCenter()) {
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 442, 120, 288, 1408, 144, 240);
-			ControllerTelescopeTrunnionSwitch.SetState(THREEPOSSWITCH_UP);
-		}
-		if (ControllerTelescopeTrunnionSwitch.IsDown()) {
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 442, 120, 432, 1408, 144, 240);
-			ControllerTelescopeTrunnionSwitch.SetState(THREEPOSSWITCH_CENTER);
-		}
-		return true;
-
-	case AID_VC_OPTICS_TEL_TRUN_DOWN:
-		if (ControllerTelescopeTrunnionSwitch.IsCenter() || ControllerTelescopeTrunnionSwitch.IsDown()) {
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 442, 120, 576, 1408, 144, 240);
-			ControllerTelescopeTrunnionSwitch.SetState(THREEPOSSWITCH_DOWN);
-		}
-		if (ControllerTelescopeTrunnionSwitch.IsUp()) {
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 442, 120, 432, 1408, 144, 240);
-			ControllerTelescopeTrunnionSwitch.SetState(THREEPOSSWITCH_CENTER);
-		}
-		return true;
-
-	case AID_VC_OPTICS_COUPLING_UP:
-		oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 708, 122, 720, 1408, 144, 240);
-		ControllerCouplingSwitch.SetState(TOGGLESWITCH_UP);
-		return true;
-
-	case AID_VC_OPTICS_COUPLING_DOWN:
-		oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 708, 122, 864, 1408, 144, 240);
-		ControllerCouplingSwitch.SetState(TOGGLESWITCH_DOWN);
-		return true;
-
-	case AID_VC_OPTICS_MODE_UP:
-		oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 450, 462, 1008, 1408, 144, 240);
-		OpticsModeSwitch.SetState(TOGGLESWITCH_UP);
-		return true;
-
-	case AID_VC_OPTICS_MODE_DOWN:
-		oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 450, 462, 1152, 1408, 144, 240);
-		OpticsModeSwitch.SetState(TOGGLESWITCH_DOWN);
-		return true;
-
-	case AID_VC_OPTICS_SPEED_UP:
-		if (ControllerSpeedSwitch.IsUp() || ControllerSpeedSwitch.IsCenter()) {
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 716, 462, 1296, 1408, 144, 240);
-			ControllerSpeedSwitch.SetState(THREEPOSSWITCH_UP);
-		}
-		if (ControllerSpeedSwitch.IsDown()) {
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 716, 462, 1440, 1408, 144, 240);
-			ControllerSpeedSwitch.SetState(THREEPOSSWITCH_CENTER);
-		}
-		return true;
-
-	case AID_VC_OPTICS_SPEED_DOWN:
-		if (ControllerSpeedSwitch.IsCenter() || ControllerSpeedSwitch.IsDown()) {
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 716, 462, 1584, 1408, 144, 240);
-			ControllerSpeedSwitch.SetState(THREEPOSSWITCH_DOWN);
-		}
-		if (ControllerSpeedSwitch.IsUp()){
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 716, 462, 1440, 1408, 144, 240);
-			ControllerSpeedSwitch.SetState(THREEPOSSWITCH_CENTER);
-		}
-		return true;
-
-	case AID_VC_OPTICS_LEFT_STICK_UP:
-		if (event == PANEL_MOUSE_LBDOWN){
-			unsigned int c = agc.GetInputChannel(032);
-			c &= 077700;
-			c |= 01;
-			agc.SetInputChannel(032, c);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 0, 1648, 200, 200);			// DOWN
-		}else{
-			unsigned int c = agc.GetInputChannel(032);
-			c &= 077700;
-			c |= 0;
-			agc.SetInputChannel(032, c);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
-		}
-		return true;
-
-	case AID_VC_OPTICS_LEFT_STICK_DOWN:
-		if (event == PANEL_MOUSE_LBDOWN) {
-			unsigned int c = agc.GetInputChannel(032);
-			c &= 077700;
-			c |= 02;
-			agc.SetInputChannel(032, c);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 400, 1648, 200, 200);		// DOWN
-		}else{
-			unsigned int c = agc.GetInputChannel(032);
-			c &= 077700;
-			c |= 0;
-			agc.SetInputChannel(032, c);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
-		}
-		return true;
-
-	case AID_VC_OPTICS_LEFT_STICK_RIGHT:
-		if (event == PANEL_MOUSE_LBDOWN) {
-			unsigned int c = agc.GetInputChannel(032);
-			c &= 077700;
-			c |= 020;
-			agc.SetInputChannel(032, c);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 600, 1648, 200, 200);		// DOWN
-		}else{
-			unsigned int c = agc.GetInputChannel(032);
-			c &= 077700;
-			c |= 0;
-			agc.SetInputChannel(032, c);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
-		}
-		return true;
-
-	case AID_VC_OPTICS_LEFT_STICK_LEFT:
-		if (event == PANEL_MOUSE_LBDOWN) {
-			unsigned int c = agc.GetInputChannel(032);
-			c &= 077700;
-			c |= 040;
-			agc.SetInputChannel(032, c);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 800, 1648, 200, 200);		// DOWN
-		}else{
-			unsigned int c = agc.GetInputChannel(032);
-			c &= 077700;
-			c |= 0;
-			agc.SetInputChannel(032, c);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
-		}
-		return true;
-
-	case AID_VC_OPTICS_LEFT_STICK_ROTLEFT:
-		if (event == PANEL_MOUSE_LBDOWN) {
-			unsigned int c = agc.GetInputChannel(032);
-			c &= 077700;
-			c |= 010;	
-			agc.SetInputChannel(032, c);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 1200, 1648, 200, 200);		// DOWN
-		}else{
-			unsigned int c = agc.GetInputChannel(032);
-			c &= 077700;
-			c |= 0;
-			agc.SetInputChannel(032, c);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
-		}
-		return true;
-		
-	case AID_VC_OPTICS_LEFT_STICK_ROTRIGHT:
-		if (event == PANEL_MOUSE_LBDOWN) {
-			unsigned int c = agc.GetInputChannel(032);
-			c &= 077700;
-			c |= 04;
-			agc.SetInputChannel(032, c);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 1000, 1648, 200, 200);		// DOWN
-		}else{
-			unsigned int c = agc.GetInputChannel(032);
-			c &= 077700;
-			c |= 0;
-			agc.SetInputChannel(032, c);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
-		}
-		return true;
-
-	case AID_VC_OPTICS_RIGHT_STICK_UP:
-		if (event == PANEL_MOUSE_LBDOWN) {
-			optics.OpticsManualMovement |= 0x01;
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1400, 1648, 208, 208);		// DOWN
-		}else{
-			optics.OpticsManualMovement = 0;
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1608, 1648, 208, 208);		// CENTER
-		}
-		return true;
-
-	case AID_VC_OPTICS_RIGHT_STICK_DOWN:
-		if (event == PANEL_MOUSE_LBDOWN) {
-			optics.OpticsManualMovement |= 0x02;
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1816, 1648, 208, 208);		// DOWN
-		}else{
-			optics.OpticsManualMovement = 0;
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1608, 1648, 208, 208);		// CENTER
-		}
-		return true;
-
-	case AID_VC_OPTICS_RIGHT_STICK_RIGHT:
-		if (event == PANEL_MOUSE_LBDOWN){
-			optics.OpticsManualMovement |= 0x08;
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 2024, 1648, 208, 208);		// DOWN
-		}else{
-			optics.OpticsManualMovement = 0;
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1608, 1648, 208, 208);		// CENTER
-		}
-		return true;
-
-	case AID_VC_OPTICS_RIGHT_STICK_LEFT:
-		if (event == PANEL_MOUSE_LBDOWN){
-			optics.OpticsManualMovement |= 0x04;
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 2232, 1648, 208, 208);		// DOWN
-		}else{
-			optics.OpticsManualMovement = 0;
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1608, 1648, 208, 208);		// CENTER
-		}
-		return true;
-
-	case AID_VC_OPTICS_MARK_BUTTON:
-		if (event == PANEL_MOUSE_LBDOWN){
-			agc.SetInputChannelBit(016, 5, 1);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2166, 1012, 1728, 1512, 104, 104);	// DOWN
-		}else{
-			agc.SetInputChannelBit(016, 5, 0);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2166, 1012, 1728, 1408, 104, 104);	// UP
-		}
-		return true;
-
-	case AID_VC_OPTICS_REJECT_BUTTON:
-		if (event == PANEL_MOUSE_LBDOWN){
-			agc.SetInputChannelBit(016, 6, 1);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2302, 1066, 1832, 1512, 104, 104);	// DOWN
-		}else{
-			agc.SetInputChannelBit(016, 6, 0);
-			oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2302, 1066, 1832, 1408, 104, 104);	// UP
-		}
-		return true;
-
-	case AID_VC_OPTICS_DSKY_ZERO:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 597, 76, 846, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 597, 76, 1074, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_ONE:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 597, 152, 846, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 597, 152, 1074, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_TWO:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 597, 228, 846, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 597, 228, 1074, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_THREE:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 597, 304, 846, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 597, 304, 1074, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_FOUR:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 517, 152, 770, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 517, 152, 998, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_FIVE:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 517, 228, 770, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 517, 228, 998, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_SIX:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 517, 304, 770, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 517, 304, 998, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_SEVEN:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 436, 152, 694, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 436, 152, 922, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_EIGHT:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 436, 228, 694, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 436, 228, 922, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_NINE:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 436, 304, 694, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 436, 304, 922, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_PLUS:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 436, 76, 694, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 436, 76, 922, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_MINUS:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 517, 76, 770, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 517, 76, 998, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_CLR:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 436, 380, 694, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 436, 380, 922, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_PRO:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 517, 380, 770, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 517, 380, 998, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_KEYREL:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 597, 380, 846, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 597, 380, 1074, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_VERB:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 477, 0, 694, 76, 76);			// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 477, 0, 922, 76, 76);			// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_NOUN:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 557, 0, 770, 76, 76);			// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 557, 0, 998, 76, 76);			// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_ENTR:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 477, 456, 694, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 477, 456, 922, 76, 76);		// UP
-		return true;
-
-	case AID_VC_OPTICS_DSKY_RESET:
-		if (event == PANEL_MOUSE_LBDOWN)
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 557, 456, 770, 76, 76);		// DOWN
-		else
-			oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 557, 456, 998, 76, 76);		// UP
-		return true;
-
 	case AID_VC_OPTICS_HIDEPANELS:
-		if(ViewOpticsPanels){
+		if (ViewOpticsPanels) {
 			HideMeshGroup(hCMVCOpticsidx, 2, true);
 			HideMeshGroup(hCMVCOpticsidx, 3, true);
 			ViewOpticsPanels = false;
-		}else{
+		}
+		else {
 			HideMeshGroup(hCMVCOpticsidx, 2, false);
 			HideMeshGroup(hCMVCOpticsidx, 3, false);
 			ViewOpticsPanels = true;
+		}
+	}
+
+	// Now check if any switch in the optics panels is clicked
+	// Do this only if panels are not hidden
+	if(ViewOpticsPanels && id >= AID_VC_OPTICS_DSKY_VERB && id <= AID_VC_OPTICS_REJECT_BUTTON){
+		switch (id) {
+			case AID_VC_OPTICS_ZERO_UP:
+				oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 120, 120, 0, 1408, 144, 240);
+//				oapiBlt(oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 4), oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 4), 120, 120, 0, 1408, 144, 240);
+				OpticsZeroSwitch.SetState(TOGGLESWITCH_UP);
+				return true;
+
+			case AID_VC_OPTICS_ZERO_DOWN:
+				oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 120, 120, 144, 1408, 144, 240);
+				OpticsZeroSwitch.SetState(TOGGLESWITCH_DOWN);
+				return true;
+
+			case AID_VC_OPTICS_TEL_TRUN_UP:
+				if (ControllerTelescopeTrunnionSwitch.IsUp() || ControllerTelescopeTrunnionSwitch.IsCenter()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 442, 120, 288, 1408, 144, 240);
+					ControllerTelescopeTrunnionSwitch.SetState(THREEPOSSWITCH_UP);
+				}
+				if (ControllerTelescopeTrunnionSwitch.IsDown()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 442, 120, 432, 1408, 144, 240);
+					ControllerTelescopeTrunnionSwitch.SetState(THREEPOSSWITCH_CENTER);
+				}
+				return true;
+
+			case AID_VC_OPTICS_TEL_TRUN_DOWN:
+				if (ControllerTelescopeTrunnionSwitch.IsCenter() || ControllerTelescopeTrunnionSwitch.IsDown()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 442, 120, 576, 1408, 144, 240);
+					ControllerTelescopeTrunnionSwitch.SetState(THREEPOSSWITCH_DOWN);
+				}
+				if (ControllerTelescopeTrunnionSwitch.IsUp()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 442, 120, 432, 1408, 144, 240);
+					ControllerTelescopeTrunnionSwitch.SetState(THREEPOSSWITCH_CENTER);
+				}
+				return true;
+
+			case AID_VC_OPTICS_COUPLING_UP:
+				oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 708, 122, 720, 1408, 144, 240);
+				ControllerCouplingSwitch.SetState(TOGGLESWITCH_UP);
+				return true;
+
+			case AID_VC_OPTICS_COUPLING_DOWN:
+				oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 708, 122, 864, 1408, 144, 240);
+				ControllerCouplingSwitch.SetState(TOGGLESWITCH_DOWN);
+				return true;
+
+			case AID_VC_OPTICS_MODE_UP:
+				oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 450, 462, 1008, 1408, 144, 240);
+				OpticsModeSwitch.SetState(TOGGLESWITCH_UP);
+				return true;
+
+			case AID_VC_OPTICS_MODE_DOWN:
+				oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 450, 462, 1152, 1408, 144, 240);
+				OpticsModeSwitch.SetState(TOGGLESWITCH_DOWN);
+				return true;
+
+			case AID_VC_OPTICS_SPEED_UP:
+				if (ControllerSpeedSwitch.IsUp() || ControllerSpeedSwitch.IsCenter()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 716, 462, 1296, 1408, 144, 240);
+					ControllerSpeedSwitch.SetState(THREEPOSSWITCH_UP);
+				}
+				if (ControllerSpeedSwitch.IsDown()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 716, 462, 1440, 1408, 144, 240);
+					ControllerSpeedSwitch.SetState(THREEPOSSWITCH_CENTER);
+				}
+				return true;
+
+			case AID_VC_OPTICS_SPEED_DOWN:
+				if (ControllerSpeedSwitch.IsCenter() || ControllerSpeedSwitch.IsDown()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 716, 462, 1584, 1408, 144, 240);
+					ControllerSpeedSwitch.SetState(THREEPOSSWITCH_DOWN);
+				}
+				if (ControllerSpeedSwitch.IsUp()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 716, 462, 1440, 1408, 144, 240);
+					ControllerSpeedSwitch.SetState(THREEPOSSWITCH_CENTER);
+				}
+				return true;
+
+			case AID_VC_OPTICS_LEFT_STICK_UP:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 01;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 0, 1648, 200, 200);			// DOWN
+				}
+				else {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 0;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_LEFT_STICK_DOWN:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 02;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 400, 1648, 200, 200);		// DOWN
+				}
+				else {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 0;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_LEFT_STICK_RIGHT:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 020;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 600, 1648, 200, 200);		// DOWN
+				}
+				else {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 0;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_LEFT_STICK_LEFT:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 040;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 800, 1648, 200, 200);		// DOWN
+				}
+				else {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 0;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_LEFT_STICK_ROTLEFT:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 010;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 1200, 1648, 200, 200);		// DOWN
+				}
+				else {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 0;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_LEFT_STICK_ROTRIGHT:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 04;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 1000, 1648, 200, 200);		// DOWN
+				}
+				else {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 0;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_RIGHT_STICK_UP:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					optics.OpticsManualMovement |= 0x01;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1400, 1648, 208, 208);		// DOWN
+				}
+				else {
+					optics.OpticsManualMovement = 0;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1608, 1648, 208, 208);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_RIGHT_STICK_DOWN:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					optics.OpticsManualMovement |= 0x02;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1816, 1648, 208, 208);		// DOWN
+				}
+				else {
+					optics.OpticsManualMovement = 0;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1608, 1648, 208, 208);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_RIGHT_STICK_RIGHT:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					optics.OpticsManualMovement |= 0x08;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 2024, 1648, 208, 208);		// DOWN
+				}
+				else {
+					optics.OpticsManualMovement = 0;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1608, 1648, 208, 208);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_RIGHT_STICK_LEFT:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					optics.OpticsManualMovement |= 0x04;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 2232, 1648, 208, 208);		// DOWN
+				}
+				else {
+					optics.OpticsManualMovement = 0;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1608, 1648, 208, 208);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_MARK_BUTTON:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					agc.SetInputChannelBit(016, 5, 1);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2166, 1012, 1728, 1512, 104, 104);	// DOWN
+				}
+				else {
+					agc.SetInputChannelBit(016, 5, 0);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2166, 1012, 1728, 1408, 104, 104);	// UP
+				}
+				return true;
+
+			case AID_VC_OPTICS_REJECT_BUTTON:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					agc.SetInputChannelBit(016, 6, 1);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2302, 1066, 1832, 1512, 104, 104);	// DOWN
+				}
+				else {
+					agc.SetInputChannelBit(016, 6, 0);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2302, 1066, 1832, 1408, 104, 104);	// UP
+				}
+				return true;
+
+			case AID_VC_OPTICS_DSKY_ZERO:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 597, 76, 846, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 597, 76, 1074, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_ONE:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 597, 152, 846, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 597, 152, 1074, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_TWO:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 597, 228, 846, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 597, 228, 1074, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_THREE:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 597, 304, 846, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 597, 304, 1074, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_FOUR:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 517, 152, 770, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 517, 152, 998, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_FIVE:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 517, 228, 770, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 517, 228, 998, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_SIX:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 517, 304, 770, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 517, 304, 998, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_SEVEN:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 436, 152, 694, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 436, 152, 922, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_EIGHT:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 436, 228, 694, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 436, 228, 922, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_NINE:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 436, 304, 694, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 436, 304, 922, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_PLUS:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 436, 76, 694, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 436, 76, 922, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_MINUS:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 517, 76, 770, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 517, 76, 998, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_CLR:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 436, 380, 694, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 436, 380, 922, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_PRO:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 517, 380, 770, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 517, 380, 998, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_KEYREL:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 597, 380, 846, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 597, 380, 1074, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_VERB:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 477, 0, 694, 76, 76);			// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 477, 0, 922, 76, 76);			// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_NOUN:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 557, 0, 770, 76, 76);			// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 557, 0, 998, 76, 76);			// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_ENTR:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 477, 456, 694, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 477, 456, 922, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_RESET:
+				if (event == PANEL_MOUSE_LBDOWN)
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 557, 456, 770, 76, 76);		// DOWN
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 557, 456, 998, 76, 76);		// UP
+				return true;
 		}
 	}
 
@@ -6743,7 +6763,7 @@ void Saturn::UpdateCMVCOptics() {
 		int ordernr;
 	} OpticsMeshGroup;
 
-	static bool first = true;
+	static bool initVCOptics = true;
 	static VECTOR3  camPosGlobal, camPos, camDir, globVesselPos, camPointing, ofs, opticsPos, final_vertex;
 	static double cos_a, sin_a;
 	static DEVMESHHANDLE hOpticsMesh;
@@ -6811,7 +6831,7 @@ void Saturn::UpdateCMVCOptics() {
 	static std::vector<OpticsMeshGroup> cmvcOptics(8+3);	// 8 meshgroups from mesh + 3 extra for the reticles
 
 	// Make copies of the mesh Vertices 
-	if (first) {
+	if (initVCOptics) {
 		MESHHANDLE hCVOptics = GetMeshTemplate(hCMVCOpticsidx);		// handle for VC Optics Mesh
 
 		// Order of mesh groups. This must be the same in the mesh
@@ -6835,7 +6855,28 @@ void Saturn::UpdateCMVCOptics() {
 			cmvcOptics[i].grp.Vtx = cmvcOptics[i].vertexdata.data();
 			cmvcOptics[i].grp.nVtx = cmvcOptics[i].vtxcnt;
 		}
-		first = false;
+
+		if (viewpos == SATVIEW_OPTICS_SXT) { // Sextant
+			HideMeshGroup(hCMVCOpticsidx, 0, true);					// CM_SCT_EYEPIECE
+			HideMeshGroup(hCMVCOpticsidx, 1, false);				// CM_SXT_EYEPIECE
+			HideMeshGroup(hCMVCOpticsidx, 2, !ViewOpticsPanels);	// DSKY4CMOPTICS
+			HideMeshGroup(hCMVCOpticsidx, 3, !ViewOpticsPanels);	// CMVC_OPTICSP122
+			HideMeshGroup(hCMVCOpticsidx, 5, true);					// CM_SCT_RETICLE
+			HideMeshGroup(hCMVCOpticsidx, 6, false);				// CM_SXT_RETICLE
+
+		} else if (viewpos == SATVIEW_OPTICS_SCT) { // Telescope
+			HideMeshGroup(hCMVCOpticsidx, 0, false);				// CM_SCT_EYEPIECE
+			HideMeshGroup(hCMVCOpticsidx, 1, true);					// CM_SXT_EYEPIECE
+			HideMeshGroup(hCMVCOpticsidx, 2, !ViewOpticsPanels);	// DSKY4CMOPTICS
+			HideMeshGroup(hCMVCOpticsidx, 3, !ViewOpticsPanels);	// CMVC_OPTICSP122
+			HideMeshGroup(hCMVCOpticsidx, 5, false);				// CM_SCT_RETICLE
+			HideMeshGroup(hCMVCOpticsidx, 6, true);					// CM_SXT_RETICLE
+		}
+		HideMeshGroup(hCMVCOpticsidx, 4, true);						// OPTICS_CLKPNTS
+		HideMeshGroup(hCMVCOpticsidx, 7, true);						// CM_SXT_RETICLE2
+		FovSaveVCOptics = 30*RAD;
+
+		initVCOptics = false;
 	}
 
 	// Rotate Reticle
@@ -6858,7 +6899,7 @@ void Saturn::UpdateCMVCOptics() {
 	ges.vIdx = 0;
 
 	// Transform Vertices
-	for (int i =0; i < 7; i++){
+	for (int i =0; i < 8; i++){
 		for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
 			VECTOR3 vScaled = cmvcOptics[i].data[j] * aperture;	// Multiply by the aperture to compensate for the field of view
 
