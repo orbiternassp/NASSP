@@ -1581,6 +1581,7 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	if (viewpos == SATVIEW_OPTICS_SXT || viewpos == SATVIEW_OPTICS_SCT)	UpdateCMVCOptics();
 //	UpdatePointingArrow();
 //	InitFDAICustomCamera();
+//	UpdateOpticsCustomCam();
 
 	//
 	// We die horribly if you set 100x or higher acceleration during launch.

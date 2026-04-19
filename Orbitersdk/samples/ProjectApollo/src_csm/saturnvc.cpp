@@ -650,6 +650,7 @@ void Saturn::InitVC()
 	srf[SRF_VC_OPTICS_DSKY] = oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 3);
 	srf[SRF_VC_OPTICS_P122] = oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 4);
 	srf[SRF_VC_OPTICS_DUALVIEW_RETICLE] = oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 7);
+	hOpticsDualViewReticleSurf = oapiCreateSurfaceEx(2048, 2048, OAPISURFACE_TEXTURE | OAPISURFACE_RENDERTARGET | OAPISURFACE_NOMIPMAPS | OAPISURFACE_ALPHA | OAPISURFACE_RENDER3D);
 	
 //	srfFDAICamTexture = oapiLoadTexture("ProjectApollo/VC/FDAI_CustomCamera.dds");
 //	hFDAISurf = oapiCreateSurfaceEx(1024, 1024, OAPISURFACE_RENDER3D | OAPISURFACE_TEXTURE | OAPISURFACE_RENDERTARGET | OAPISURFACE_NOMIPMAPS);
@@ -933,14 +934,14 @@ bool Saturn::clbkLoadVC (int id)
 		return true;
 
 	case SATVIEW_OPTICS_SCT:
-		HideMeshGroup(hCMVCOpticsidx, 0, false);			// CM_SCT_EYEPIECE
-		HideMeshGroup(hCMVCOpticsidx, 1, true);				// CM_SXT_EYEPIECE
-		HideMeshGroup(hCMVCOpticsidx, 2, !ViewOpticsPanels);	// DSKY4CMOPTICS
-		HideMeshGroup(hCMVCOpticsidx, 3, !ViewOpticsPanels);	// CMVC_OPTICSP122
-		HideMeshGroup(hCMVCOpticsidx, 4, true);				// OPTICS_CLKPNTS
-		HideMeshGroup(hCMVCOpticsidx, 5, false);			// CM_SCT_RETICLE
-		HideMeshGroup(hCMVCOpticsidx, 6, true);				// CM_SXT_RETICLE
-		HideMeshGroup(hCMVCOpticsidx, 7, true);				// CM_SXT_RETICLE2
+		HideMeshGroup(hCMVCOpticsidx, 0, false);				// CMVC_SCT_EYEPIECE
+		HideMeshGroup(hCMVCOpticsidx, 1, true);					// CMVC_SXT_EYEPIECE
+		HideMeshGroup(hCMVCOpticsidx, 2, !ViewOpticsPanels);	// CMVC_OPTICS_DSKY
+		HideMeshGroup(hCMVCOpticsidx, 3, !ViewOpticsPanels);	// CMVC_OPTICS_P122
+		HideMeshGroup(hCMVCOpticsidx, 4, true);					// CMVC_OPTICS_CLKPNTS
+		HideMeshGroup(hCMVCOpticsidx, 5, false);				// CMVC_SCT_RETICLE
+		HideMeshGroup(hCMVCOpticsidx, 6, true);					// CMVC_SXT_RETICLE
+		HideMeshGroup(hCMVCOpticsidx, 7, true);					// CMVC_SXT_CUSTOM_CAMERA
 
 		viewpos = SATVIEW_OPTICS_SCT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
@@ -955,14 +956,14 @@ bool Saturn::clbkLoadVC (int id)
 		return true;
 
 	case SATVIEW_OPTICS_SXT:
-		HideMeshGroup(hCMVCOpticsidx, 0, true);				// CM_SCT_EYEPIECE
-		HideMeshGroup(hCMVCOpticsidx, 1, false);			// CM_SXT_EYEPIECE
-		HideMeshGroup(hCMVCOpticsidx, 2, !ViewOpticsPanels);	// DSKY4CMOPTICS
-		HideMeshGroup(hCMVCOpticsidx, 3, !ViewOpticsPanels);	// CMVC_OPTICSP122
-		HideMeshGroup(hCMVCOpticsidx, 4, true);				// OPTICS_CLKPNTS
-		HideMeshGroup(hCMVCOpticsidx, 5, true);				// CM_SCT_RETICLE
-		HideMeshGroup(hCMVCOpticsidx, 6, false);			// CM_SXT_RETICLE
-		HideMeshGroup(hCMVCOpticsidx, 7, true);				// CM_SXT_RETICLE2
+		HideMeshGroup(hCMVCOpticsidx, 0, true);					// CMVC_SCT_EYEPIECE
+		HideMeshGroup(hCMVCOpticsidx, 1, false);				// CMVC_SXT_EYEPIECE
+		HideMeshGroup(hCMVCOpticsidx, 2, !ViewOpticsPanels);	// CMVC_OPTICS_DSKY
+		HideMeshGroup(hCMVCOpticsidx, 3, !ViewOpticsPanels);	// CMVC_OPTICS_P122
+		HideMeshGroup(hCMVCOpticsidx, 4, true);					// CMVC_OPTICS_CLKPNTS
+		HideMeshGroup(hCMVCOpticsidx, 5, true);					// CMVC_SCT_RETICLE
+		HideMeshGroup(hCMVCOpticsidx, 6, false);				// CMVC_SXT_RETICLE
+		HideMeshGroup(hCMVCOpticsidx, 7, true);					// CMVC_SXT_CUSTOM_CAMERA
 
 		viewpos = SATVIEW_OPTICS_SXT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
@@ -1078,6 +1079,7 @@ void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
 //		seatsfoldedmesh = GetDevMesh(vis, seatsfoldedidx);
 
 //		InitFDAICustomCamera();
+//		UpdateOpticsCustomCam();
 	}
 
 	bool A15Pan230Msh = true, A17Pan230Msh = true, OtherPan230Msh = true;	// First Set all Panel 230 meshes to TRUE (hide) -> HideMeshGroup
@@ -6452,7 +6454,20 @@ void Saturn::InitFDAICustomCamera(void) {
 }
 ****************************************************************************************************/
 
+// CustomCamera for Optics
+void Saturn::UpdateOpticsCustomCam(VECTOR3 camPos, VECTOR3 camDir, VECTOR3 camUp) {
 
+	gcCore *pCore = gcGetCoreInterface();
+	if (pCore) {
+		hOpticsEarthReticleCam = pCore->SetupCustomCamera(hOpticsEarthReticleCam, oapiCameraTarget(), camPos, camDir, camUp, 1.073*RAD, hOpticsDualViewReticleSurf, CUSTOMCAM_DEFAULTS);
+//		hOpticsEarthReticleCam = pCore->SetupCustomCamera(hOpticsEarthReticleCam, oapiCameraTarget(), camPos, camDir, camUp, 1.5*RAD, hOpticsDualViewReticleSurf, CUSTOMCAM_DEFAULTS);
+		
+		pCore->CustomCameraOnOff(hOpticsEarthReticleCam, true);
+
+		oapiSetTexture(GetDevMesh(vis, hCMVCOpticsidx), 7, hOpticsDualViewReticleSurf);
+//		oapiBlt(srf[SRF_VC_OPTICS_DUALVIEW_RETICLE], hOpticsDualViewReticleSurf, 0, 0, 0, 0, 2048, 2048);
+	}
+}
 
 #ifdef _OPENORBITER
 void Saturn::SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt)
@@ -6741,14 +6756,14 @@ void Saturn::UpdateCMVCOptics() {
 #define OPTICS_BASE_SIN  0.5376381241
 
 // Order of meshgroups and textures
-#define CM_SCT_EYEPIECE 0
-#define CM_SXT_EYEPIECE 1
-#define DSKY4CMOPTICS   2
-#define CMVC_OPTICSP122 3
-#define OPTICS_CLKPNTS  4
-#define CM_SCT_RETICLE  5
-#define CM_SXT_RETICLE  6
-#define CM_SXT_RETICLE2	7
+#define CMVC_SCT_EYEPIECE	0
+#define CMVC_SXT_EYEPIECE	1
+#define CMVC_OPTICS_DSKY	2
+#define CMVC_OPTICS_P122	3
+#define CMVC_OPTICS_CLKPNTS	4
+#define CMVC_SCT_RETICLE	5
+#define CMVC_SXT_RETICLE	6
+#define CMVC_SXT_CUSTOM_CAM	7
 
 	// struct for storing the original vertices from the mesh
 	// We do this to avoid rounding errors in every calculation.
@@ -6772,15 +6787,17 @@ void Saturn::UpdateCMVCOptics() {
 	SetCameraDefaultDirection(_V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN));
 			
 	if (viewpos == SATVIEW_OPTICS_SXT) { // Sextant
-		if (optics.SextDualView && optics.SextDVLOSTog){
-//		if (optics.SextDualView){
-			setVCCameraLOS(optics.SextShaft, 0.0);
-//			HideMeshGroup(hCMVCOpticsidx, CM_SXT_RETICLE2, false);
+//		if (optics.SextDualView && optics.SextDVLOSTog){
+		if (optics.SextDualView){
+//			setVCCameraLOS(optics.SextShaft, 0.0);
+			setVCCameraLOS(optics.SextShaft, optics.SextTrunion);
+			HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, false);
+//			HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_RETICLE, true);
 		}
 		else
 		{
 			setVCCameraLOS(optics.SextShaft, optics.SextTrunion);
-			HideMeshGroup(hCMVCOpticsidx, CM_SXT_RETICLE2, true);
+			HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, true);
 		}
 		aperture = oapiCameraAperture() * 1.2605;
 //		aperture = 0.03191;
@@ -6830,6 +6847,33 @@ void Saturn::UpdateCMVCOptics() {
 
 	static std::vector<OpticsMeshGroup> cmvcOptics(8+3);	// 8 meshgroups from mesh + 3 extra for the reticles
 
+
+	if (optics.SextDualView) {
+		// local custom camera direction
+		VECTOR3 localDir = _V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN);
+
+		// Calculate Local Up Vector to prevent image distortion
+		// Since localDir only has Y and Z components,
+		// we swap these and reverse one sign
+		VECTOR3 localUp  = _V(0.0, OPTICS_BASE_SIN, OPTICS_BASE_COS);
+
+		// normalise the vectors
+		normalise(localDir);
+		normalise(localUp);
+
+		UpdateOpticsCustomCam(camPos, localDir, localUp);
+
+		// SET Alpha to 0.1 *** ATTENTION Seems not to work but we already have transparency ***
+		gcCore *pCore = gcGetCoreInterface();
+		FVECTOR4 value;
+		value.r = 0.1f;
+		value.g = 0.1f;
+		value.b = 0.1f;
+		value.a = 0.1f;
+		pCore->MeshMaterial(hOpticsMesh, 7, MESHM_DIFFUSE, &value, true);
+	}
+
+
 	// Make copies of the mesh Vertices 
 	if (initVCOptics) {
 		MESHHANDLE hCVOptics = GetMeshTemplate(hCMVCOpticsidx);		// handle for VC Optics Mesh
@@ -6857,23 +6901,23 @@ void Saturn::UpdateCMVCOptics() {
 		}
 
 		if (viewpos == SATVIEW_OPTICS_SXT) { // Sextant
-			HideMeshGroup(hCMVCOpticsidx, 0, true);					// CM_SCT_EYEPIECE
-			HideMeshGroup(hCMVCOpticsidx, 1, false);				// CM_SXT_EYEPIECE
-			HideMeshGroup(hCMVCOpticsidx, 2, !ViewOpticsPanels);	// DSKY4CMOPTICS
-			HideMeshGroup(hCMVCOpticsidx, 3, !ViewOpticsPanels);	// CMVC_OPTICSP122
-			HideMeshGroup(hCMVCOpticsidx, 5, true);					// CM_SCT_RETICLE
-			HideMeshGroup(hCMVCOpticsidx, 6, false);				// CM_SXT_RETICLE
+			HideMeshGroup(hCMVCOpticsidx, 0, true);					// CMVC_SCT_EYEPIECE
+			HideMeshGroup(hCMVCOpticsidx, 1, false);				// CMVC_SXT_EYEPIECE
+			HideMeshGroup(hCMVCOpticsidx, 2, !ViewOpticsPanels);	// CMVC_OPTICS_DSKY
+			HideMeshGroup(hCMVCOpticsidx, 3, !ViewOpticsPanels);	// CMVC_OPTICS_P122
+			HideMeshGroup(hCMVCOpticsidx, 5, true);					// CMVC_SCT_RETICLE
+			HideMeshGroup(hCMVCOpticsidx, 6, false);				// CMVC_SXT_RETICLE
 
 		} else if (viewpos == SATVIEW_OPTICS_SCT) { // Telescope
-			HideMeshGroup(hCMVCOpticsidx, 0, false);				// CM_SCT_EYEPIECE
-			HideMeshGroup(hCMVCOpticsidx, 1, true);					// CM_SXT_EYEPIECE
-			HideMeshGroup(hCMVCOpticsidx, 2, !ViewOpticsPanels);	// DSKY4CMOPTICS
-			HideMeshGroup(hCMVCOpticsidx, 3, !ViewOpticsPanels);	// CMVC_OPTICSP122
-			HideMeshGroup(hCMVCOpticsidx, 5, false);				// CM_SCT_RETICLE
-			HideMeshGroup(hCMVCOpticsidx, 6, true);					// CM_SXT_RETICLE
+			HideMeshGroup(hCMVCOpticsidx, 0, false);				// CMVC_SCT_EYEPIECE
+			HideMeshGroup(hCMVCOpticsidx, 1, true);					// CMVC_SXT_EYEPIECE
+			HideMeshGroup(hCMVCOpticsidx, 2, !ViewOpticsPanels);	// CMVC_OPTICS_DSKY
+			HideMeshGroup(hCMVCOpticsidx, 3, !ViewOpticsPanels);	// CMVC_OPTICS_P122
+			HideMeshGroup(hCMVCOpticsidx, 5, false);				// CMVC_SCT_RETICLE
+			HideMeshGroup(hCMVCOpticsidx, 6, true);					// CMVC_SXT_RETICLE
 		}
-		HideMeshGroup(hCMVCOpticsidx, 4, true);						// OPTICS_CLKPNTS
-		HideMeshGroup(hCMVCOpticsidx, 7, true);						// CM_SXT_RETICLE2
+		HideMeshGroup(hCMVCOpticsidx, 4, true);						// CMVC_OPTICS_CLKPNTS
+		HideMeshGroup(hCMVCOpticsidx, 7, true);						// CMVC_SXT_CUSTOM_CAMERA
 		FovSaveVCOptics = 30*RAD;
 
 		initVCOptics = false;
@@ -6883,7 +6927,7 @@ void Saturn::UpdateCMVCOptics() {
 	if (!oapiGetPause()) {			// *** oapiGetPause() maybe unnecessary ***
 		cos_a = std::cos(-optics.TeleShaft);
 		sin_a = std::sin(-optics.TeleShaft);
-		for (int i=5; i<8; i++){
+		for (int i=5; i<7; i++){		// If we wand also to rotate the reticle for the Custom camera we need to change i<7 to i<8
 			for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
 				cmvcOptics[i].data[j].x = cmvcOptics[i+3].data[j].x * cos_a - cmvcOptics[i+3].data[j].y * sin_a;
 				cmvcOptics[i].data[j].y = cmvcOptics[i+3].data[j].x * sin_a + cmvcOptics[i+3].data[j].y * cos_a;
