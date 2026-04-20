@@ -2788,7 +2788,7 @@ void MCC::LoadState(FILEHANDLE scn) {
 		{
 		AP7P23PAD * form = (AP7P23PAD *)padForm;
 
-		LOAD_INT("AP7P23PAD_entries", form->entries);
+		LOAD_INT("MCC_AP7P23PAD_entries", form->entries);
 		for (int i = 0; i < form->entries; i++)
 			{
 				sprintf(tmpbuf, "MCC_AP7P23PAD_GET[%d]", i);

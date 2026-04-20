@@ -920,7 +920,7 @@ void ApolloRTCCMFD::menuSetSPQPage()
 void ApolloRTCCMFD::menuSetOrbAdjPage()
 {
 	marker = 0;
-	markermax = 9;
+	markermax = 10;
 	SelectPage(4);
 }
 
@@ -3754,6 +3754,13 @@ void ApolloRTCCMFD::menuSetGMPInput()
 		GMPInput4Dialogue();
 		break;
 	case 9:
+		if (G->GMPManeuverCode == RTCC_GMP_HBT || G->GMPManeuverCode == RTCC_GMP_HBH || G->GMPManeuverCode == RTCC_GMP_HBO || G->GMPManeuverCode == RTCC_GMP_HBL ||
+			G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL || G->GMPManeuverCode == RTCC_GMP_HAS)
+		{
+			G->GPMOptApsid = !G->GPMOptApsid;
+		}
+		break;
+	case 10:
 		GenericStringInput(&GC->rtcc->med_k20.VectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
 		break;
 	}
