@@ -905,6 +905,7 @@ public:
 
 	// For hiding the Optics Panel122 and DSKY
 	bool ViewOpticsPanels;
+	bool OpticsVCDualView = false;
 	//
 	// General functions that handle calls from Orbiter.
 	//

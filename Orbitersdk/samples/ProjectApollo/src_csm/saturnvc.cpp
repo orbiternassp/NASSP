@@ -1824,6 +1824,7 @@ void Saturn::RegisterActiveAreas() {
 	}
 	// For hiding the Optics Panel 122 and DSKY
 	oapiVCRegisterArea(AID_VC_OPTICS_HIDEPANELS, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+	oapiVCRegisterArea(AID_VC_OPTICS_DUALVIEW, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
 }
 
 // --------------------------------------------------------------
@@ -2077,6 +2078,9 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 			HideMeshGroup(hCMVCOpticsidx, 3, false);
 			ViewOpticsPanels = true;
 		}
+
+	case AID_VC_OPTICS_DUALVIEW:
+		OpticsVCDualView = !OpticsVCDualView;
 	}
 
 	// Now check if any switch in the optics panels is clicked
@@ -6787,20 +6791,38 @@ void Saturn::UpdateCMVCOptics() {
 	SetCameraDefaultDirection(_V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN));
 			
 	if (viewpos == SATVIEW_OPTICS_SXT) { // Sextant
-//		if (optics.SextDualView && optics.SextDVLOSTog){
-		if (optics.SextDualView){
-//			setVCCameraLOS(optics.SextShaft, 0.0);
-			setVCCameraLOS(optics.SextShaft, optics.SextTrunion);
-			HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, false);
-//			HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_RETICLE, true);
+		if (!OpticsVCDualView){
+	//		if (optics.SextDualView && optics.SextDVLOSTog){
+			if (optics.SextDualView){
+	//			setVCCameraLOS(optics.SextShaft, 0.0);
+				setVCCameraLOS(optics.SextShaft, optics.SextTrunion);
+				HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, false);
+	//			HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_RETICLE, true);
+			}
+			else
+			{
+				setVCCameraLOS(optics.SextShaft, optics.SextTrunion);
+				HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, true);
+			}
+			aperture = oapiCameraAperture() * 1.2605;
+	//		aperture = 0.03191;
+		} else {
+			if (optics.SextDualView && optics.SextDVLOSTog){
+	//		if (optics.SextDualView){
+				setVCCameraLOS(optics.SextShaft, 0.0);
+	//			setVCCameraLOS(optics.SextShaft, optics.SextTrunion);
+				HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, true);
+	//			HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_RETICLE, true);
+			}
+			else
+			{
+				setVCCameraLOS(optics.SextShaft, optics.SextTrunion);
+				HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, true);
+			}
+			aperture = oapiCameraAperture() * 1.2605;
+	//		aperture = 0.03191;
+
 		}
-		else
-		{
-			setVCCameraLOS(optics.SextShaft, optics.SextTrunion);
-			HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, true);
-		}
-		aperture = oapiCameraAperture() * 1.2605;
-//		aperture = 0.03191;
 	}
 
 	if (viewpos == SATVIEW_OPTICS_SCT) { // Telescope
@@ -6974,6 +6996,9 @@ void Saturn::UpdateCMVCOptics() {
 		oapiVCSetAreaClickmode_Spherical(i, cmvcOptics[4].datanew[i-AID_VC_OPTICS_DSKY_VERB] + ofs, ClkArea);
 	}
 	oapiVCSetAreaClickmode_Spherical(AID_VC_OPTICS_HIDEPANELS, cmvcOptics[4].datanew[AID_VC_OPTICS_HIDEPANELS-AID_VC_OPTICS_DSKY_VERB] + ofs, 0.015*aperture);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OPTICS_DUALVIEW, cmvcOptics[4].datanew[AID_VC_OPTICS_DUALVIEW-AID_VC_OPTICS_DSKY_VERB] + ofs, 0.015*aperture);
+	
+	
 
 	SetMeshVisibilityMode(hCMVCOpticsidx, MESHVIS_VC);
 }
