@@ -5208,13 +5208,15 @@ DSE::DSE()
 	desiredTapeSpeed = 0.0;
 	motorDirection = 0.0;
 
-	K1 = false; //Latched with rew, unlatched with fwd
-	K2 = false; //Latched with K3, K4, and K6, unlatched with K6 unlatched
-	K3 = false; //Latched with record or play, else unlatched
-	K4 = false; //Latched with play, unlatched with record
-	K5 = false; //Latched with play, unlatched with record
-	K6 = false; //Latched with LM PCM, unlatched with PC/ANLG
-	K7 = false; //Latched with fwd/rev, unlatched with end of tape
+	K1 = false;
+	K2 = false;
+	K3 = false;
+	K4 = false;
+	K5 = false;
+	K6 = false;
+	K7 = false;
+	slowClutch = false;
+	fastClutch = false;
 
 	FWD = false;
 	REW = false;
@@ -5474,12 +5476,12 @@ void DSE::RelayLogic()
 	}
 
 	//Play/Record Relays
-	if (RCD)
+	if (PLAY)
 	{
 		K4 = true;
 		K5 = true;
 	}
-	else if (PLAY)
+	else if (RCD)
 	{
 		K4 = false;
 		K5 = false;
@@ -5504,6 +5506,49 @@ void DSE::RelayLogic()
 	}
 }
 
+void DSE::ClutchLogic()
+{
+	if (K7 && !K1) //Tape is moving forward
+	{
+		if (!K3) //Not playing or recording
+		{
+			fastClutch = true;
+			slowClutch = false;
+		}
+		else if (K3 && !K4) //Record
+		{
+			if (LBR)
+			{
+				fastClutch = false;
+				slowClutch = false;
+			}
+			else if (HBR)
+			{
+				fastClutch = false;
+				slowClutch = true;
+			}
+		}
+		else if (K3 && K4) //Playback
+		{
+			if (K6) //LM PCM
+			{
+				fastClutch = true;
+				slowClutch = false;
+			}
+			else if (!K6) //PCM/ANLG (Set to fast clutch for now, this would normally depend on recorded bitrate)
+			{
+				fastClutch = true;
+				slowClutch = false;
+			}
+		}
+	}
+	else if (K7 && K1) //Tape is moving in reverse
+	{
+		fastClutch = true;
+		slowClutch = false;
+	}
+}
+
 void DSE::TimeStep(double simdt)
 {
 	//Switch logic
@@ -5511,6 +5556,9 @@ void DSE::TimeStep(double simdt)
 
 	//Relay logic
 	RelayLogic();
+
+	//Clutch logic
+	ClutchLogic();
 
 	//Tape motion logic
 	if (IsACPowered() && K7)
@@ -5535,24 +5583,22 @@ void DSE::TimeStep(double simdt)
 
 	//Tape speed logic
 	double commandedSpeed{}, cmd, pos;
-	if (RCD && motorDirection >= 0.0)
+
+	if (!FWD && !REW)
 	{
-		if (LBR)
-		{
-			commandedSpeed = 3.75;
-		}
-		else if (HBR)
-		{
-			commandedSpeed = 15.0;
-		}
+		commandedSpeed = 0.0;
 	}
-	else if (PLAY || motorDirection != 0.0)
+	else if (!fastClutch && !slowClutch)
+	{
+		commandedSpeed = 3.75;
+	}
+	else if (fastClutch && !slowClutch)
 	{
 		commandedSpeed = 120.0;
 	}
-	else
+	else if (!fastClutch && slowClutch)
 	{
-		commandedSpeed = 0.0;
+		commandedSpeed = 15.0;
 	}
 
 	//Mission check
@@ -5562,7 +5608,7 @@ void DSE::TimeStep(double simdt)
 	}
 
 	//Head logic
-	if (tapeSpeed > 0.0)
+	if (K3)
 	{
 		if (K4)
 		{
@@ -5605,7 +5651,7 @@ void DSE::TimeStep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "K1 %i K2 %i K3 %i K4 %i K5 %i K6 %i K7 %i", K1, K2, K3, K4, K5, K6, K7);
-	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i EndREW %i K1 %i K7 %i PCM %i LBR %i FWD %i REW %i RCD %i PLAY %i UDLF1 %i UDLF2 %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, CSMPCM, LBR, FWD, REW, RCD, PLAY, sat->udl.GetTapeRecorderFWDLogic1(), sat->udl.GetTapeRecorderFWDLogic2());
+	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i EndREW %i K1 %i K3 %i K4 %i K5 %i K7 %i PCM %i LBR %i FWD %i REW %i RCD %i PLAY %i fastclutch %i slowclutch %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K3, K4, K5, K7, CSMPCM, LBR, FWD, REW, RCD, PLAY, fastClutch, slowClutch);
 }
 
 void DSE::SystemTimestep(double simdt)

@@ -230,7 +230,6 @@ const unsigned int tapeSize = 18000;
 ///
 class DSE : public e_object
 {
-
 public:
 	DSE();
 	virtual ~DSE();
@@ -261,11 +260,21 @@ protected:
 	bool EndOfTapeREW();
 	void SwitchLogic();
 	void RelayLogic();
+	void ClutchLogic();
 
+	bool K1; //Latched with rew, unlatched with fwd
+	bool K2; //Latched with K3, K4, and K6, unlatched with K6 unlatched
+	bool K3; //Latched with record or play, else unlatched
+	bool K4; //Latched with play, unlatched with record
+	bool K5; //Latched with play, unlatched with record
+	bool K6; //Latched with LM PCM, unlatched with PCM/ANLG
+	bool K7; //Latched with fwd/rev, unlatched with end of tape
+	bool slowClutch; //15 or 7.5 ips clutch
+	bool fastClutch; //120 or 60 ips clutch
+
+	bool FWD, REW, RCD, PLAY, CSMPCM, LMPCM, LBR, HBR;
 	bool record;
 	bool playback;
-	bool K1, K2, K3, K4, K5, K6, K7;
-	bool FWD, REW, RCD, PLAY, CSMPCM, LMPCM, LBR, HBR;
 };
 
 //Up Data Link Equipment
