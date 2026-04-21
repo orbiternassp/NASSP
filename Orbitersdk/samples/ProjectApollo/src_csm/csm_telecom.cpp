@@ -5679,7 +5679,7 @@ void DSE::LoadState(char *line) {
 	/// \todo DSE Chunks
 
 	int inttemp[7];
-	sscanf(line + 12, "%lf %lf %d %d %d %d %d %d %d", &tapeSpeed, &tapePosition, &inttemp[0], &inttemp[1], &inttemp[2], &inttemp[3], &inttemp[4], &inttemp[5], &inttemp[6]);
+	sscanf(line + 12, "%lf %lf %d %d %d %d %d %d %d", &tapeSpeed, &tapePosition, &inttemp[0], &inttemp[1], &inttemp[2], &inttemp[3], &inttemp[4], &inttemp[5], &inttemp[6], &inttemp[7], &inttemp[8]);
 	K1 = (inttemp[0] != 0);
 	K2 = (inttemp[1] != 0);
 	K3 = (inttemp[2] != 0);
@@ -5687,12 +5687,14 @@ void DSE::LoadState(char *line) {
 	K5 = (inttemp[4] != 0);
 	K6 = (inttemp[5] != 0);
 	K7 = (inttemp[6] != 0);
+	fastClutch = (inttemp[7] != 0);
+	slowClutch = (inttemp[8] != 0);
 }
 
 void DSE::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf %d %d %d %d %d %d %d", tapeSpeed, tapePosition, K1, K2, K3, K4, K5, K6, K7);
+	sprintf(buffer, "%lf %lf %d %d %d %d %d %d %d %d %d", tapeSpeed, tapePosition, K1, K2, K3, K4, K5, K6, K7, fastClutch, slowClutch);
 	oapiWriteScenario_string(scn, "DATARECORDER", buffer);
 }
 
