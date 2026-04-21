@@ -5265,7 +5265,7 @@ bool DSE::IsDCPowered()
 }
 
 const double tapeLength = 27144.0; //inches, 2262 ft
-const double tapeAccel = 60.0;
+const double tapeAccel = 30.0;
 
 bool DSE::TapeMotion()
 {
@@ -5443,7 +5443,7 @@ void DSE::RelayLogic()
 {
 	//Relay logic
 
-	//Rev/Fwd Relay
+	//Rew/Fwd Relay
 	if (REW)
 	{
 		K1 = true;
@@ -5605,7 +5605,7 @@ void DSE::TimeStep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "K1 %i K2 %i K3 %i K4 %i K5 %i K6 %i K7 %i", K1, K2, K3, K4, K5, K6, K7);
-	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i EndREW %i K1 %i K7 %i PCM %i LBR %i FWD %i REW %i RCD %i PLAY %i UDLF1 %i UDLF2 %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, CSMPCM, LBR, FWD, REW, RCD, PLAY, sat->udl.GetTapeRecorderPCMLogic1(), sat->udl.GetTapeRecorderPCMLogic2());
+	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i EndREW %i K1 %i K7 %i PCM %i LBR %i FWD %i REW %i RCD %i PLAY %i UDLF1 %i UDLF2 %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, CSMPCM, LBR, FWD, REW, RCD, PLAY, sat->udl.GetTapeRecorderFWDLogic1(), sat->udl.GetTapeRecorderFWDLogic2());
 }
 
 void DSE::SystemTimestep(double simdt)
@@ -5617,7 +5617,14 @@ void DSE::SystemTimestep(double simdt)
 
 	if (IsACPowered() && tapeSpeed != 0.0)
 	{
-		ACbreaker->DrawPower(30.0);
+		if (tapeSpeed != desiredTapeSpeed)
+		{
+			ACbreaker->DrawPower(70.0); //Increased load when accelerating
+		}
+		else
+		{
+			ACbreaker->DrawPower(30.0); //Steady state load
+		}
 	}
 }
 
