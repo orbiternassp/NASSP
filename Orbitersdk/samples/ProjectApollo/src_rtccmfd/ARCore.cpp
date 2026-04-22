@@ -642,6 +642,7 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin)
 	GMPYaw = 0.0;
 	GMPRevs = 0;
 	GMPApseLineRotAngle = 0.0;
+	GPMOptApsid = true;
 
 	RTEASTType = 0;
 
@@ -2771,6 +2772,7 @@ int ARCore::subThread()
 		opt.Yaw = GMPYaw;
 		opt.dLOA = GMPApseLineRotAngle;
 		opt.N = GMPRevs;
+		opt.OptApsid = GPMOptApsid;
 
 		VECTOR3 OrbAdjDVX;
 		double GPM_TIG;
