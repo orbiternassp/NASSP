@@ -72,7 +72,12 @@
 #define DIRECTINPUT_VERSION 0x0800
 #include "dinput.h"
 #include "vesim.h"
+
+#ifdef _OPENORBITER
+#include <gcCoreAPI.h>
+#else
 #include <gcConst.h>
+#endif
 
 class MCC;
 class IU;

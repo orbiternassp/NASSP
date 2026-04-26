@@ -6892,7 +6892,12 @@ void Saturn::UpdateCMVCOptics() {
 		value.g = 0.1f;
 		value.b = 0.1f;
 		value.a = 0.1f;
+
+#ifdef _OPENORBITER
+		pCore->SetMeshMaterial(hOpticsMesh, 7, MAT_LIGHT, &value);
+#else
 		pCore->MeshMaterial(hOpticsMesh, 7, MESHM_DIFFUSE, &value, true);
+#endif
 	}
 
 
