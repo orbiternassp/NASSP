@@ -19719,7 +19719,7 @@ int RTCC::PMMWTC(int med)
 		else
 		{
 			//No, total weight equals ascent stage weight (can override input from LMASCWT earlier)
-			WTV[3] = med_m50.LMWT;
+			WTV[2] = med_m50.LMWT;
 		}
 	RTCC_PMMWTC_16:
 		W = W + WTV[2];
