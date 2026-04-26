@@ -5759,7 +5759,7 @@ unsigned char RNDZXPDRSystem::GetScaledRFPower()
 	
 	if(XPDRon)
 	{ 
-		return static_cast<unsigned char>(((XMITpower - min_value) / (max_value - min_value) * 148) + 107); //2.1 to 5.0V, scalled to 0x00 to 0xFF range
+		return static_cast<unsigned char>(((XMITpower - min_value) / (max_value - min_value) * 148) + 107); //2.1 to 5.0V, scaled to 0x00 to 0xFF range
 	}
 	else
 	{
@@ -5774,7 +5774,7 @@ unsigned char RNDZXPDRSystem::GetScaledAGCPower()
 
 	if (XPDRon && (haslock == LOCKED))
 	{
-		return static_cast<unsigned char>((abs(RCVDPowerdB)-min_value)/(max_value - min_value)*229); //0.0 to 4.5V, scalled to 0x00 to 0xFF range
+		return static_cast<unsigned char>((abs(RCVDPowerdB)-min_value)/(max_value - min_value)*229); //0.0 to 4.5V, scaled to 0x00 to 0xFF range
 	}
 	else
 	{
@@ -5786,7 +5786,7 @@ unsigned char RNDZXPDRSystem::GetScaledFreqLock()
 {
 	if (XPDRon && (haslock == LOCKED))
 	{
-		return static_cast<unsigned char>((lockTimer/1.3)*229); //0.0 to 4.5V, scalled to 0x00 to 0xFF range
+		return static_cast<unsigned char>((lockTimer/1.3)*229); //0.0 to 4.5V, scaled to 0x00 to 0xFF range
 	}
 	else if (XPDRon && (haslock == UNLOCKED))
 	{
