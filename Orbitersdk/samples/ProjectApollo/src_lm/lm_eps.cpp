@@ -1206,9 +1206,9 @@ void LEM_DockLights::SystemTimestep(double simdt)
 //LIGHTING CONTROL ASSEMBLY
 
 LEM_LCA::LEM_LCA(PanelSDK& p) :
-	AnnunPower("AnnumPower",NULL),
+	AnnunPower("AnnumPower", NULL),
 	NumericsPower("NumericsPower", NULL),
-	IntegralPower("IntegralPower",NULL),
+	IntegralPower("IntegralPower", NULL),
 	NumDockCompLTGFeeder("NumDockCompLTGFeeder", p)
 {
 	lem = NULL;
@@ -1365,28 +1365,28 @@ void LEM_LCA::SystemTimestep(double simdt)
 
 LEM_UtilLights::LEM_UtilLights()
 {
-lem = NULL;
-UtlCB = NULL;
-CDRSwitch = NULL;
-LMPSwitch = NULL;
-UtlLtgHeat = 0;
+	lem = NULL;
+	UtlCB = NULL;
+	CDRSwitch = NULL;
+	LMPSwitch = NULL;
+	UtlLtgHeat = 0;
 }
 
 void LEM_UtilLights::Init(LEM *l, e_object *utl_cb, ThreePosSwitch *cdr_sw, ThreePosSwitch *lmp_sw, h_HeatLoad *util_h)
 {
-lem = l;
-UtlCB = utl_cb;
-CDRSwitch = cdr_sw;
-LMPSwitch = lmp_sw;
-UtlLtgHeat = util_h;
+	lem = l;
+	UtlCB = utl_cb;
+	CDRSwitch = cdr_sw;
+	LMPSwitch = lmp_sw;
+	UtlLtgHeat = util_h;
 }
 
 bool LEM_UtilLights::IsPowered()
 {
-if (UtlCB->Voltage() > SP_MIN_DCVOLTAGE) {
-return true;
-}
-return false;
+	if (UtlCB->Voltage() > SP_MIN_DCVOLTAGE) {
+		return true;
+	}
+	return false;
 }
 
 void LEM_UtilLights::SystemTimestep(double simdt)
@@ -1394,23 +1394,23 @@ void LEM_UtilLights::SystemTimestep(double simdt)
 	//CDR Utility Lights Dim
 	if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_CENTER) {
 		UtlCB->DrawPower(2.2);
-		UtlLtgHeat->GenerateHeat(2.178); //Need to determine if this heat load is emitted into cabin or LCA
+		UtlLtgHeat->GenerateHeat(2.178); //Need to determine if this heat load is fully emitted into cabin
 	}
 	//CDR Utility Lights Bright
 	else if (IsPowered() && CDRSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(6.15);
-		UtlLtgHeat->GenerateHeat(6.1); //Need to determine if this heat load is emitted into cabin or LCA
-	}	
+		UtlLtgHeat->GenerateHeat(6.1); //Need to determine if this heat load is fully emitted into cabin
+	}
 
 	//LMP Utility Lights Dim
 	if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_CENTER) {
 		UtlCB->DrawPower(1.76);
-		UtlLtgHeat->GenerateHeat(1.74); //Need to determine if this heat load is emitted into cabin or LCA
+		UtlLtgHeat->GenerateHeat(1.74); //Need to determine if this heat load is fully emitted into cabin
 	}
 	//LMP Utility Lights Bright
 	else if (IsPowered() && LMPSwitch->GetState() == THREEPOSSWITCH_DOWN) {
 		UtlCB->DrawPower(3.3);
-		UtlLtgHeat->GenerateHeat(3.267); //Need to determine if this heat load is emitted into cabin or LCA
+		UtlLtgHeat->GenerateHeat(3.267); //Need to determine if this heat load is fully emitted into cabin
 	}
 }
 
@@ -1443,7 +1443,7 @@ void LEM_COASLights::SystemTimestep(double simdt)
 {
 	if (IsPowered() && COASSwitch->GetState() != THREEPOSSWITCH_CENTER) {
 		COASCB->DrawPower(8.4);
-		COASHeat->GenerateHeat(8.4); //Need to determine if this heat load is emitted into cabin or LCA
+		COASHeat->GenerateHeat(8.4); //Need to determine if this heat load is fully emitted into cabin
 	}
 }
 
@@ -1549,7 +1549,7 @@ void LEM_FloodLights::SystemTimestep(double simdt)
 	FloodCB->DrawPower(GetPowerDraw());
 
 	//LM8 Handbook Flood heat listed at 24.4W, this needs to be checked
-	FloodHeat->GenerateHeat(GetPowerDraw()*0.356);	//Assumes linear relationship between heat and power draw based on maximum at 28V.
+	FloodHeat->GenerateHeat(GetPowerDraw() * 0.356);	//Assumes linear relationship between heat and power draw based on maximum at 28V.
 }
 
 LEM_PFIRA::LEM_PFIRA()
