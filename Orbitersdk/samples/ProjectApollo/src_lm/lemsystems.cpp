@@ -1593,6 +1593,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 			CMPowerToCDRBusRelayA = (CSMToLEMPowerConnector.GetBatteriesLVHVOffA() || CSMToLEMPowerConnector.GetBatteriesLVHVOffB()) && !ECA_1.GetSectALVOn() && !ECA_1.GetSectBLVOn() && !ECA_2.GetSectALVOn() && !ECA_2.GetSectBLVOn();
 		}
 	}
+
 	CMPowerToCDRBusRelayB = CMPowerToCDRBusRelayA;
 	SLADockingLightPressureSwitchRelay = (CDR_LTG_ANUN_DOCK_COMPNT_CB.IsPowered() && !CMPowerToCDRBusRelayA && !CMPowerToCDRBusRelayB && true); // TBD: LM/SLA pressure switch
 	if (SLADockingLightPressureSwitchRelay)
