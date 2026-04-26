@@ -5196,6 +5196,7 @@ void DSEChunk::Erase( const DSEChunkType dataType )
 	chunkType = dataType;
 	chunkValidBytes = 0;
 }
+
 DSE::DSE()
 {
 	sat = NULL;
@@ -5207,13 +5208,15 @@ DSE::DSE()
 	desiredTapeSpeed = 0.0;
 	motorDirection = 0.0;
 
-	K1 = false; //Latched with rew, unlatched with fwd
-	K2 = false; //Latched with K3, K4, and K6, unlatched with K6 unlatched
-	K3 = false; //Latched with record or play, else unlatched
-	K4 = false; //Latched with play, unlatched with record
-	K5 = false; //Latched with play, unlatched with record
-	K6 = false; //Latched with LM PCM, unlatched with PC/ANLG
-	K7 = false; //Latched with fwd/rev, unlatched with end of tape
+	K1 = false;
+	K2 = false;
+	K3 = false;
+	K4 = false;
+	K5 = false;
+	K6 = false;
+	K7 = false;
+	slowClutch = false;
+	fastClutch = false;
 
 	FWD = false;
 	REW = false;
@@ -5226,7 +5229,6 @@ DSE::DSE()
 
 	record = false;
 	playback = false;
-	fwdSwitchChange = false;
 }
 
 DSE::~DSE()
@@ -5265,7 +5267,7 @@ bool DSE::IsDCPowered()
 }
 
 const double tapeLength = 27144.0; //inches, 2262 ft
-const double tapeAccel = 60.0;
+const double tapeAccel = 30.0;
 
 bool DSE::TapeMotion()
 {
@@ -5301,7 +5303,6 @@ void DSE::SwitchLogic()
 	//Forward switch
 	if (!IsDCPowered())
 	{
-		fwdSwitchChange = false;
 		FWD = false;
 		REW = false;
 	}
@@ -5442,9 +5443,9 @@ void DSE::SwitchLogic()
 
 void DSE::RelayLogic()
 {
-	bool fwdstate = false;
-
 	//Relay logic
+
+	//Rew/Fwd Relay
 	if (REW)
 	{
 		K1 = true;
@@ -5454,37 +5455,33 @@ void DSE::RelayLogic()
 		K1 = false;
 	}
 
-	//FWD Switch change logic
-	if (REW || FWD)
-	{
-		fwdstate = true;
-	}
-
+	//Power Relay
 	if (EndOfTapeREW() || EndOfTapeFWD())
 	{
 		K7 = false;
 	}
-	else if (!fwdSwitchChange && fwdstate)
+	else if (FWD || REW)
 	{
 		K7 = true;
 	}
-	fwdSwitchChange = fwdstate;
 
-	if (RCD || FWD)
+	//Electronics Relay
+	if (K7 && (RCD || PLAY))
 	{
 		K3 = true;
 	}
-	else if (!RCD && !FWD)
+	else if (!K7 || (!RCD && !PLAY))
 	{
 		K3 = false;
 	}
 
-	if (RCD)
+	//Play/Record Relays
+	if (PLAY)
 	{
 		K4 = true;
 		K5 = true;
 	}
-	else if (FWD)
+	else if (RCD)
 	{
 		K4 = false;
 		K5 = false;
@@ -5509,6 +5506,49 @@ void DSE::RelayLogic()
 	}
 }
 
+void DSE::ClutchLogic()
+{
+	if (K7 && !K1) //Tape is moving forward
+	{
+		if (!K3) //Not playing or recording
+		{
+			fastClutch = true;
+			slowClutch = false;
+		}
+		else if (K3 && !K4) //Record
+		{
+			if (LBR)
+			{
+				fastClutch = false;
+				slowClutch = false;
+			}
+			else if (HBR)
+			{
+				fastClutch = false;
+				slowClutch = true;
+			}
+		}
+		else if (K3 && K4) //Playback
+		{
+			if (K6) //LM PCM
+			{
+				fastClutch = true;
+				slowClutch = false;
+			}
+			else if (!K6) //PCM/ANLG (Set to fast clutch for now, this would normally depend on recorded bitrate)
+			{
+				fastClutch = true;
+				slowClutch = false;
+			}
+		}
+	}
+	else if (K7 && K1) //Tape is moving in reverse
+	{
+		fastClutch = true;
+		slowClutch = false;
+	}
+}
+
 void DSE::TimeStep(double simdt)
 {
 	//Switch logic
@@ -5516,6 +5556,9 @@ void DSE::TimeStep(double simdt)
 
 	//Relay logic
 	RelayLogic();
+
+	//Clutch logic
+	ClutchLogic();
 
 	//Tape motion logic
 	if (IsACPowered() && K7)
@@ -5539,25 +5582,23 @@ void DSE::TimeStep(double simdt)
 	}
 
 	//Tape speed logic
-	double commandedSpeed, cmd, pos;
-	if (RCD && motorDirection >= 0.0)
+	double commandedSpeed{}, cmd, pos;
+
+	if (!FWD && !REW)
 	{
-		if (LBR)
-		{
-			commandedSpeed = 3.75;
-		}
-		else if (HBR)
-		{
-			commandedSpeed = 15.0;
-		}
+		commandedSpeed = 0.0;
 	}
-	else if (PLAY || motorDirection  != 0.0)
+	else if (!fastClutch && !slowClutch)
+	{
+		commandedSpeed = 3.75;
+	}
+	else if (fastClutch && !slowClutch)
 	{
 		commandedSpeed = 120.0;
 	}
-	else
+	else if (!fastClutch && slowClutch)
 	{
-		commandedSpeed = 0.0;
+		commandedSpeed = 15.0;
 	}
 
 	//Mission check
@@ -5567,7 +5608,7 @@ void DSE::TimeStep(double simdt)
 	}
 
 	//Head logic
-	if (tapeSpeed > 0.0)
+	if (K3)
 	{
 		if (K4)
 		{
@@ -5610,7 +5651,7 @@ void DSE::TimeStep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "K1 %i K2 %i K3 %i K4 %i K5 %i K6 %i K7 %i", K1, K2, K3, K4, K5, K6, K7);
-	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i EndREW %i K1 %i K7 %i FWDsw %i PCM %i LBR %i FWD %i REW %i RCD %i PLAY %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K7, fwdSwitchChange, CSMPCM, LBR, FWD, REW, RCD, PLAY);
+	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i EndREW %i K1 %i K3 %i K4 %i K5 %i K7 %i PCM %i LBR %i FWD %i REW %i RCD %i PLAY %i fastclutch %i slowclutch %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K3, K4, K5, K7, CSMPCM, LBR, FWD, REW, RCD, PLAY, fastClutch, slowClutch);
 }
 
 void DSE::SystemTimestep(double simdt)
@@ -5622,7 +5663,14 @@ void DSE::SystemTimestep(double simdt)
 
 	if (IsACPowered() && tapeSpeed != 0.0)
 	{
-		ACbreaker->DrawPower(30.0);
+		if (tapeSpeed != desiredTapeSpeed)
+		{
+			ACbreaker->DrawPower(70.0); //Increased load when accelerating
+		}
+		else
+		{
+			ACbreaker->DrawPower(30.0); //Steady state load
+		}
 	}
 }
 
@@ -5630,8 +5678,8 @@ void DSE::LoadState(char *line) {
 
 	/// \todo DSE Chunks
 
-	int inttemp[7];
-	sscanf(line + 12, "%lf %lf %d %d %d %d %d %d %d", &tapeSpeed, &tapePosition, &inttemp[0], &inttemp[1], &inttemp[2], &inttemp[3], &inttemp[4], &inttemp[5], &inttemp[6]);
+	int inttemp[9];
+	sscanf(line + 12, "%lf %lf %d %d %d %d %d %d %d", &tapeSpeed, &tapePosition, &inttemp[0], &inttemp[1], &inttemp[2], &inttemp[3], &inttemp[4], &inttemp[5], &inttemp[6], &inttemp[7], &inttemp[8]);
 	K1 = (inttemp[0] != 0);
 	K2 = (inttemp[1] != 0);
 	K3 = (inttemp[2] != 0);
@@ -5639,12 +5687,14 @@ void DSE::LoadState(char *line) {
 	K5 = (inttemp[4] != 0);
 	K6 = (inttemp[5] != 0);
 	K7 = (inttemp[6] != 0);
+	fastClutch = (inttemp[7] != 0);
+	slowClutch = (inttemp[8] != 0);
 }
 
 void DSE::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf %d %d %d %d %d %d %d", tapeSpeed, tapePosition, K1, K2, K3, K4, K5, K6, K7);
+	sprintf(buffer, "%lf %lf %d %d %d %d %d %d %d %d %d", tapeSpeed, tapePosition, K1, K2, K3, K4, K5, K6, K7, fastClutch, slowClutch);
 	oapiWriteScenario_string(scn, "DATARECORDER", buffer);
 }
 
@@ -5709,7 +5759,7 @@ unsigned char RNDZXPDRSystem::GetScaledRFPower()
 	
 	if(XPDRon)
 	{ 
-		return static_cast<unsigned char>(((XMITpower - min_value) / (max_value - min_value) * 148) + 107); //2.1 to 5.0V, scalled to 0x00 to 0xFF range
+		return static_cast<unsigned char>(((XMITpower - min_value) / (max_value - min_value) * 148) + 107); //2.1 to 5.0V, scaled to 0x00 to 0xFF range
 	}
 	else
 	{
@@ -5724,7 +5774,7 @@ unsigned char RNDZXPDRSystem::GetScaledAGCPower()
 
 	if (XPDRon && (haslock == LOCKED))
 	{
-		return static_cast<unsigned char>((abs(RCVDPowerdB)-min_value)/(max_value - min_value)*229); //0.0 to 4.5V, scalled to 0x00 to 0xFF range
+		return static_cast<unsigned char>((abs(RCVDPowerdB)-min_value)/(max_value - min_value)*229); //0.0 to 4.5V, scaled to 0x00 to 0xFF range
 	}
 	else
 	{
@@ -5736,7 +5786,7 @@ unsigned char RNDZXPDRSystem::GetScaledFreqLock()
 {
 	if (XPDRon && (haslock == LOCKED))
 	{
-		return static_cast<unsigned char>((lockTimer/1.3)*229); //0.0 to 4.5V, scalled to 0x00 to 0xFF range
+		return static_cast<unsigned char>((lockTimer/1.3)*229); //0.0 to 4.5V, scaled to 0x00 to 0xFF range
 	}
 	else if (XPDRon && (haslock == UNLOCKED))
 	{
