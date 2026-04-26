@@ -1158,6 +1158,7 @@ void Saturn::initSaturn()
 	smidx = -1;
 	cmvccuecardsarrowsidx = -1;
 	hcmPointingArrowidx = -1;
+	hCMVCOpticsidx = -1;
 
 	vcmesh = NULL;
 	vis = NULL;
@@ -1577,8 +1578,10 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	TRACE(buffer);
 
 	SetAnimations(simdt);
+	if (viewpos == SATVIEW_OPTICS_SXT || viewpos == SATVIEW_OPTICS_SCT)	UpdateCMVCOptics();
 //	UpdatePointingArrow();
 //	InitFDAICustomCamera();
+//	UpdateOpticsCustomCam();
 
 	//
 	// We die horribly if you set 100x or higher acceleration during launch.
