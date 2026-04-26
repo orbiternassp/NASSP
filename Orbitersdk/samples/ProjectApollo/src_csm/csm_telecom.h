@@ -230,47 +230,16 @@ const unsigned int tapeSize = 18000;
 ///
 class DSE : public e_object
 {
-enum DSEState
-{
-	STOPPED,			/// Tape is stopped
-	STARTING_PLAY,		/// Tape is accelerating to play speed
-	STARTING_RECORD,	/// Tape is accelerating to play speed
-	SLOWING_RECORD,		/// Tape is slowing to record speed
-	PLAYING,			/// Tape is playing
-	RECORDING,			/// Tape is recording
-	STOPPING,			/// Tape is stopping
-};
-
 public:
 	DSE();
 	virtual ~DSE();
 
-	void Init(Saturn *vessel);	       // Initialization
-
-	///
-	/// \brief Tape motion indicator.
-	///
-	bool TapeMotion(); 
-
-	///
-	/// \brief Start tape playing.
-	///
-	void Play();
-
-	///
-	/// \brief Stop tape playing.
-	///
-	void Stop();
-
-	///
-	/// \brief Start tape recording.
-	///
-	void Record( bool hbr );
-
-	///
-	/// \brief Timestep processing.
-	///
-	void TimeStep( double simt, double simdt );
+	void Init(Saturn *vessel, CircuitBrakerSwitch *accb, CircuitBrakerSwitch *dccb);	       // Initialization
+	bool IsACPowered();
+	bool IsDCPowered();
+	bool TapeMotion();
+	void TimeStep(double simdt);
+	void SystemTimestep(double simdt);			// System Timestep
 
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
@@ -278,12 +247,34 @@ public:
 protected:
 	Saturn *sat;					    /// Ship we're installed in
 	DSEChunk tape[tapeSize];			/// Simulated tape.
-	double tapeSpeedInchesPerSecond;	/// Tape speed in inches per second.
-	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
-	double tapeMotion;					/// Tape motion from 0.0 to 1.0.
-	DSEState state;						/// Tape state.
 
-	double lastEventTime;				/// Last event time.
+	CircuitBrakerSwitch *ACbreaker;		/// AC circuit breaker.
+	CircuitBrakerSwitch *DCbreaker;		/// DC circuit breaker.
+
+	double tapeSpeed;					/// Tape speed in inches per second.
+	double tapePosition;				/// Tape position.
+	double desiredTapeSpeed;			/// Desired tape speed in inches per second.
+	double motorDirection;				/// Tape motor direction, 1 for forward, -1 for reverse, 0 for stopped.
+
+	bool EndOfTapeFWD();
+	bool EndOfTapeREW();
+	void SwitchLogic();
+	void RelayLogic();
+	void ClutchLogic();
+
+	bool K1; //Latched with rew, unlatched with fwd
+	bool K2; //Latched with K3, K4, and K6, unlatched with K6 unlatched
+	bool K3; //Latched with record or play, else unlatched
+	bool K4; //Latched with play, unlatched with record
+	bool K5; //Latched with play, unlatched with record
+	bool K6; //Latched with LM PCM, unlatched with PCM/ANLG
+	bool K7; //Latched with fwd/rev, unlatched with end of tape
+	bool slowClutch; //15 or 7.5 ips clutch
+	bool fastClutch; //120 or 60 ips clutch
+
+	bool FWD, REW, RCD, PLAY, CSMPCM, LMPCM, LBR, HBR;
+	bool record;
+	bool playback;
 };
 
 //Up Data Link Equipment
@@ -308,6 +299,13 @@ public:
 	bool GetRangingSignal2() { return Relays[21]; }
 	bool GetSBandPALogic1() { return Relays[24]; }
 	bool GetSBandPALogic2() { return Relays[25]; }
+	bool GetTapeRecorderPCMLogic1() { return Relays[26]; }
+	bool GetTapeRecorderPCMLogic2() { return Relays[27]; }
+	bool GetTapeRecorderRCDLogic1() { return Relays[28]; }
+	bool GetTapeRecorderRCDLogic2() { return Relays[29]; }
+	bool GetTapeRecorderFWDLogic1() { return Relays[30]; }
+	bool GetTapeRecorderFWDLogic2() { return Relays[31]; }
+
 protected:
 	bool IsPowered();
 	void OverrideReset();
@@ -377,11 +375,12 @@ public:
 	unsigned char mcc_data[2048];	// MCC-provided incoming data
 
 	bool registerSocket(SOCKET sock);
+	bool LowBitrateLogic();
 
 	Saturn *sat;					// Ship we're installed in
 	friend class MCC;				// Allow MCC to write directly to buffer
 protected:
-	bool LowBitrateLogic();
+
 };
 
 // Premodulation Processor

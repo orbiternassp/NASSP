@@ -55,6 +55,7 @@ MESHHANDLE hLMVC;
 MESHHANDLE hLMWindowShades;
 MESHHANDLE hLMXpointerShades;
 MESHHANDLE hLMPointingArrow;
+MESHHANDLE hLMCueCardsArrows;
 
 static PARTICLESTREAMSPEC lunar_dust = {
 	0,		// flag
@@ -451,6 +452,8 @@ void LEM::SetLMMeshVisVC() {
 		SetMeshVisibilityMode(vcidx, MESHVIS_VC);
 	}
 
+	//Cue Cards Arrows
+	SetVCCueCardsArrows();
 	SetWindowShades();
 
 }
@@ -705,6 +708,16 @@ void LEM::SetCOAS() {
 	}
 }
 
+void LEM::SetVCCueCardsArrows() {
+	//	if (checkControl.getFlashing() || ViewCueCardArrows) {
+	if (ViewCueCardArrows) {
+		SetMeshVisibilityMode(LMvccuecardsarrowsidx, MESHVIS_VC);
+	}
+	else {
+		SetMeshVisibilityMode(LMvccuecardsarrowsidx, MESHVIS_NEVER);
+	}
+}
+
 void LEM::SetWindowShades() {
 
 	if (!hLMWindowShades)
@@ -845,6 +858,9 @@ void LEM::SetMeshes() {
 
 	// Descent Stage Mesh
 	dscidx = AddMesh(hLMDescent, &mesh_dsc);
+
+	// Cue Cards pointing arrow
+	LMvccuecardsarrowsidx = AddMesh(hLMCueCardsArrows, &mesh_asc);
 }
 
 void LEM::CreateAirfoils()
@@ -870,6 +886,7 @@ void LEMLoadMeshes()
 	hLMXpointerShades = oapiLoadMeshGlobal("ProjectApollo/LM_Xpointer_Shades");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
 	hLMPointingArrow = oapiLoadMeshGlobal("ProjectApollo/Helpers/PointingArrow");
+	hLMCueCardsArrows = oapiLoadMeshGlobal("ProjectApollo/Helpers/LM-CueCardsArrows");
 }
 
 //

@@ -296,6 +296,7 @@ public:
 	//11 = Combination height maneuver and node shift
 	//12 = Combination apogee/perigee change and line-of-apsides shift
 	int GMPManeuverType;
+	bool GPMOptApsid;
 
 	//REFSMMAT PAGE
 	double REFSMMAT_LVLH_Time;

@@ -585,6 +585,21 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(CW * 6, CH * y, Buffer, strlen(Buffer));
 		}
 		y++;
+		// Optimum HA/HP solution
+		if (G->GMPManeuverCode == RTCC_GMP_HBT || G->GMPManeuverCode == RTCC_GMP_HBH || G->GMPManeuverCode == RTCC_GMP_HBO || G->GMPManeuverCode == RTCC_GMP_HBL ||
+			G->GMPManeuverCode == RTCC_GMP_NHT || G->GMPManeuverCode == RTCC_GMP_NHL || G->GMPManeuverCode == RTCC_GMP_HAS)
+		{
+			skp->Text(CW * 2, CH* y, "SOL", 3);
+			if (G->GPMOptApsid)
+			{
+				skp->Text(CW * 6, CH * y, "1st solution", 12);
+			}
+			else
+			{
+				skp->Text(CW * 6, CH * y, "2nd solution", 12);
+			}
+		}
+		y++;
 		skp->Text(CW * 2, CH * y, "VID", 3);
 		skp->Text(CW * 6, CH * y, GC->rtcc->med_k20.VectorID.c_str(), GC->rtcc->med_k20.VectorID.size());
 		if (GC->rtcc->PZGPMDIS.Err)
@@ -594,24 +609,34 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		}
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 
-		skp->Text(CW * 7, CH * 14, "GET A", 5);
-		skp->Text(CW * 7, CH * 15, "HA", 2);
-		skp->Text(CW * 7, CH * 16, "LONG A", 6);
-		skp->Text(CW * 7, CH * 17, "LAT A", 5);
-		skp->Text(CW * 7, CH * 18, "GET P", 5);
-		skp->Text(CW * 7, CH * 19, "HP", 2);
-		skp->Text(CW * 7, CH * 20, "LONG P", 6);
-		skp->Text(CW * 7, CH * 21, "LAT P", 5);
+		y = 15;
+
+		skp->Text(CW * 7, CH * y, "GET A", 5);
 		GET_Display(Buffer, GC->rtcc->PZGPMDIS.GET_A, false);
-		skp->Text(CW * 18, CH * 14, Buffer, strlen(Buffer));
+		skp->Text(CW * 18, CH * y, Buffer, strlen(Buffer));
+		y++;
+
+		skp->Text(CW * 7, CH * y, "HA", 2);
 		sprintf(Buffer, "%.1f", GC->rtcc->PZGPMDIS.HA / 1852.0);
-		skp->Text(CW * 18, CH * 15, Buffer, strlen(Buffer));
-		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.long_A*DEG);
-		skp->Text(CW * 18, CH * 16, Buffer, strlen(Buffer));
-		FormatLatitude(Buffer, GC->rtcc->PZGPMDIS.lat_A*DEG);
-		skp->Text(CW * 18, CH * 17, Buffer, strlen(Buffer));
+		skp->Text(CW * 18, CH * y, Buffer, strlen(Buffer));
+		y++;
+
+		skp->Text(CW * 7, CH * y, "LONG A", 6);
+		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.long_A* DEG);
+		skp->Text(CW * 18, CH * y, Buffer, strlen(Buffer));
+		y++;
+
+		skp->Text(CW * 7, CH * y, "LAT A", 5);
+		FormatLatitude(Buffer, GC->rtcc->PZGPMDIS.lat_A * DEG);
+		skp->Text(CW * 18, CH * y, Buffer, strlen(Buffer));
+		y++;
+
+		skp->Text(CW * 7, CH * y, "GET P", 5);
 		GET_Display(Buffer, GC->rtcc->PZGPMDIS.GET_P, false);
-		skp->Text(CW * 18, CH * 18, Buffer, strlen(Buffer));
+		skp->Text(CW * 18, CH * y, Buffer, strlen(Buffer));
+		y++;
+
+		skp->Text(CW * 7, CH * y, "HP", 2);
 		if (GC->rtcc->PZGPMDIS.ShowImpact)
 		{
 			sprintf(Buffer, "IMPACT");
@@ -620,11 +645,18 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		{
 			sprintf(Buffer, "%.1f", GC->rtcc->PZGPMDIS.HP / 1852.0);
 		}
-		skp->Text(CW * 18, CH * 19, Buffer, strlen(Buffer));
-		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.long_P*DEG);
-		skp->Text(CW * 18, CH * 20, Buffer, strlen(Buffer));
+		skp->Text(CW * 18, CH * y, Buffer, strlen(Buffer));
+		y++;
+
+		skp->Text(CW * 7, CH * y, "LONG P", 6);
+		FormatLongitude(Buffer, GC->rtcc->PZGPMDIS.long_P* DEG);
+		skp->Text(CW * 18, CH * y, Buffer, strlen(Buffer));
+		y++;
+
+		skp->Text(CW * 7, CH * y, "LAT P", 5);
 		FormatLatitude(Buffer, GC->rtcc->PZGPMDIS.lat_P*DEG);
-		skp->Text(CW * 18, CH * 21, Buffer, strlen(Buffer));
+		skp->Text(CW * 18, CH * y, Buffer, strlen(Buffer));
+		y++;
 
 		skp->Text(W - CW * 11, CH * 5, "GETI", 4);
 		skp->Text(W - CW * 11, CH * 6, "DEL V MAN", 9);

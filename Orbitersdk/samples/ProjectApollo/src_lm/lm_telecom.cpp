@@ -3158,13 +3158,18 @@ void LM_ErectableAnt::Timestep()
 	SignalStrength = LM_SBandAntenna::dBm2SignalStrength(RecvdOMNIPower_dBm);
 }
 
-LM_DSEA::LM_DSEA() :
-	tapeSpeedInchesPerSecond(0.0),
-	desiredTapeSpeed(0.0),
-	tapeMotion(0.0),
-	state(STOPPED)
+LM_DSEA::LM_DSEA() //0.6 inches per second, 2.5 hours of record time per track, 5,400 inches of tape, 4 tracks giving 10 hours total
 {
-	lastEventTime = 0;
+	lem = NULL;
+	DSEHeat = NULL;
+	tapeSpeed = 0.0;
+	tapePosition = 0.0;
+	desiredTapeSpeed = 0.0;
+	motorDirection = 0.0;
+	trackNumber = 1;
+
+	FWD = false;
+	REV = false;
 }
 
 LM_DSEA::~LM_DSEA()
@@ -3178,90 +3183,6 @@ void LM_DSEA::Init(LEM *l, h_HeatLoad *dseht)
 	DSEHeat = dseht;
 }
 
-bool LM_DSEA::TapeMotion()
-{
-	switch (state)
-	{
-	case STOPPED:
-	case STARTING_RECORD:
-		return false;
-
-	default:
-		return true;
-	}
-}
-
-void LM_DSEA::Stop()
-{
-	if (state != STOPPED || desiredTapeSpeed > 0.0)
-	{
-		desiredTapeSpeed = 0.0;
-		state = STOPPING;
-	}
-	else
-		state = STOPPED;
-}
-
-void LM_DSEA::Record()
-	//Records constantly if powered, tape recorder on, and in ICS/PTT.  
-	//Will also record if in VOX if voice activates or in PTT when PTT switch depressed with recorder power and switch on
-	//PCM/TE power required for PCM timestamp recording and for for TB functionality
-	//SE Audio power required for switch to function
-{
-	double tapeSpeed = 0.6;  // 0.6 inches per second from LM AOH
-	if (state != RECORDING || tapeSpeedInchesPerSecond != tapeSpeed)
-	{
-		desiredTapeSpeed = tapeSpeed;
-
-		if (desiredTapeSpeed > tapeSpeedInchesPerSecond)
-		{
-			state = STARTING_RECORD;
-		}
-		else if (desiredTapeSpeed < tapeSpeedInchesPerSecond)
-		{
-			state = SLOWING_RECORD;
-		}
-		else
-		{
-			state = RECORDING;
-		}
-	}
-	else
-		state = RECORDING;
-}
-
-bool LM_DSEA::RecordLogic()
-{
-	if (IsACPowered() == true && lem->TapeRecorderSwitch.IsUp() && IsSWPowered() == true)
-	{
-		if (ICSPTT() == true || (VOXPTT() == true && VoiceXmit() == true))
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-const double tapeAccel = 1.2; //No idea if this is right, CSM used 2x the tape speed so we will here
-
-bool LM_DSEA::IsSWPowered()
-{
-	if(lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE)
-	{
-		return true;
-	}
-	return false;
-}
-
-bool LM_DSEA::IsPCMPowered() //Allows PCM to timestamp tape
-{
-	if (lem->INST_PCMTEA_CB.Voltage() > SP_MIN_DCVOLTAGE)
-	{
-		return true;
-	}
-	return false;
-}
-
 bool LM_DSEA::IsACPowered()
 {
 	if (lem->TAPE_RCDR_AC_CB.Voltage() > SP_MIN_ACVOLTAGE)
@@ -3271,143 +3192,286 @@ bool LM_DSEA::IsACPowered()
 	return false;
 }
 
-//Voice Transmit
+//PCM Timing, written onto tape (not simulated yet)
+bool LM_DSEA::TimingSignal()
+{
+	return lem->PCM.TimingSignal();
+}
+
+//Voice Transmit/PTT
 //VOX and PTT modes will record if transmitting or keying mic while recorder powered/switch on
 //ICS/PTT mode will always record if recorder powered/switch on, but only have voice track if voice present
+bool LM_DSEA::CDRVoiceXmit()
+{
+	return false;
+	//Use for CDR Voice Transmission (not simulated yet)
+}
+
 bool LM_DSEA::LMPVoiceXmit()
 {
-	/*
-	//This logic will be necessary along with a signal that voice is being transmitted, commented out for now as voice is not simulated.
-	if ((lem->LMPAudVOXSwitch.IsCenter() && lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
-	{
-		return true;
-	}
-	*/
 	return false;
-	//voice not simulated yet
+	//Use for LMP Voice Transmission (not simulated yet)
 }
 
-bool LM_DSEA::CDRVoiceXmit() 
+bool LM_DSEA::CDRPTT()
 {
-	/*
-	//This logic will be necessary along with a signal that voice is being transmitted, commented out for now as voice is not simulated.
-	if ((lem->CDRAudVOXSwitch.IsCenter() && lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
-	{
-		return true;
-	}
-	*/
-
 	return false;
-	//voice not simulated yet
+	//Use for CDR PTT (not simulated yet)
 }
 
-bool LM_DSEA::VoiceXmit()
+bool LM_DSEA::LMPPTT()
 {
-	//if (lem->Panel12UpdataLinkSwitch.IsUp()) //Switch for debugging voice transmit
-	if (CDRVoiceXmit() == true || LMPVoiceXmit() == true)
+	return false;
+	//Use for LMP PTT (not simulated yet)
+}
+
+//CDR Audio Center
+bool LM_DSEA::CDRAudioRec()	
+{
+	bool CDRsupply, CDRDSEAKey;
+	if (lem->COMM_CDR_AUDIO_CB.IsPowered())
+	{
+		if (lem->TapeRecorderSwitch.IsUp())
+		{
+			CDRsupply = true;
+		}
+		else
+		{
+			CDRsupply = false;
+		}
+
+		if (lem->CDRAudICSSwitch.IsUp())
+		{
+			if ((lem->CDRAudVOXSwitch.IsUp() && CDRVoiceXmit()) || lem->CDRAudVOXSwitch.IsDown() && CDRPTT())
+			{
+				CDRDSEAKey = true;
+			}
+			else if (lem->CDRAudVOXSwitch.IsCenter())
+			{
+				CDRDSEAKey = true;
+			}
+			else
+			{
+				CDRDSEAKey = false;
+			}
+		}
+		else
+		{
+			CDRDSEAKey = false;
+		}
+	}
+	else
+	{
+		CDRsupply = false;
+		CDRDSEAKey = false;
+	}
+
+	if (CDRsupply && CDRDSEAKey)
+	{
+		return true; //Recording
+	}
+	else
+	{
+		return false; //Stopped
+	}
+}
+
+//LMP Audio Center
+bool LM_DSEA::LMPAudioRec() 	
+{
+	bool LMPsupply, LMPDSEAKey;
+	if (lem->COMM_SE_AUDIO_CB.IsPowered())
+	{
+		if (lem->TapeRecorderSwitch.IsUp())
+		{
+			LMPsupply = true;
+		}
+		else
+		{
+			LMPsupply = false;
+		}
+
+		if (lem->LMPAudICSSwitch.IsUp())
+		{
+			if ((lem->LMPAudVOXSwitch.IsUp() && LMPVoiceXmit()) || lem->LMPAudVOXSwitch.IsDown() && LMPPTT())
+			{
+				LMPDSEAKey = true;
+			}
+			else if (lem->LMPAudVOXSwitch.IsCenter())
+			{
+				LMPDSEAKey = true;
+			}
+			else
+			{
+				LMPDSEAKey = false;
+			}
+		}
+		else
+		{
+			LMPDSEAKey = false;
+		}
+	}
+	else
+	{
+		LMPsupply = false;
+		LMPDSEAKey = false;
+	}
+
+	if (LMPsupply && LMPDSEAKey)
+	{
+		return true; //Recording
+	}
+	else
+	{
+		return false; //Stopped
+	}
+}
+
+const double tapeLength = 5400.0; //inches (450 ft)
+const double tapeAccel = 10.0; //arbitrary number to allow speed up/slow down
+const double commandedSpeed = 0.6; //0.6 inches per second
+
+bool LM_DSEA::TapeMotion()
+{
+	if (tapeSpeed != 0.0)
 	{
 		return true;
 	}
 	return false;
 }
 
-bool LM_DSEA::ICSPTT()
+//Tape track recording and switching
+void LM_DSEA::tapeTrack()
 {
-	if ((lem->LMPAudVOXSwitch.IsCenter() && lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE) || (lem->CDRAudVOXSwitch.IsCenter() && lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE))  //ICS/PTT
+	if (trackNumber > 4)
 	{
-		return true;
+		trackNumber = 4;
+		FWD = false;
+		REV = false;
+		return;
 	}
-	return false;
+
+	if (CDRAudioRec() || LMPAudioRec())
+	{
+		if (trackNumber == 1 || trackNumber == 3)
+		{
+			FWD = true;
+			REV = false;
+		}
+		else if (trackNumber == 2 || trackNumber == 4)
+		{
+			FWD = false;
+			REV = true;
+		}
+		else
+		{
+			FWD = false;
+			REV = false;
+		}
+	}
+	else
+	{
+		FWD = false;
+		REV = false;
+	}
+
+	if (FWD && tapePosition >= tapeLength)
+	{
+		trackNumber++;
+		FWD = false;
+	}
+	else if (REV && tapePosition <= 0.0)
+	{
+		trackNumber++;
+		REV = false;
+	}
 }
 
-bool LM_DSEA::VOXPTT()
+void LM_DSEA::Timestep(double simdt)
 {
-	if ((lem->COMM_SE_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->LMPAudVOXSwitch.IsUp() || lem->LMPAudVOXSwitch.IsDown())) || (lem->COMM_CDR_AUDIO_CB.Voltage() > SP_MIN_DCVOLTAGE && (lem->CDRAudVOXSwitch.IsUp() || lem->CDRAudVOXSwitch.IsDown())))  //VOX or PTT
+	//Tape track logic
+	tapeTrack();
+
+	//Tape motion logic
+	if (IsACPowered())
 	{
-		return true;
+		if (FWD)
+		{
+			motorDirection = 1.0;
+		}
+		else if (REV)
+		{
+			motorDirection = -1.0;
+		}
+		else
+		{
+			motorDirection = 0.0;
+		}
 	}
-	return false;
+	else
+	{
+		motorDirection = 0.0;
+	}
+
+	//Tape speed logic
+	double cmd, pos;
+
+	desiredTapeSpeed = commandedSpeed * motorDirection;
+
+	//Tape acceleration logic
+	cmd = desiredTapeSpeed - tapeSpeed;
+	if (abs(cmd) > tapeAccel * simdt)
+	{
+		pos = sign(desiredTapeSpeed - tapeSpeed) * tapeAccel * simdt;
+	}
+	else
+	{
+		pos = cmd;
+	}
+
+	tapeSpeed += pos;
+
+	tapePosition += tapeSpeed * simdt;
+
+	if (tapePosition <= 0.0)
+	{
+		tapePosition = 0.0;
+	}
+	else if (tapePosition >= tapeLength)
+	{
+		tapePosition = tapeLength;
+	}
+
+	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i track %d FWD %i REV %i CDR %i LMP %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), trackNumber, FWD, REV, CDRAudioRec(), LMPAudioRec());
 }
 
 void LM_DSEA::SystemTimestep(double simdt)
 {
-	if (state != STOPPED)
+	if (IsACPowered() && tapeSpeed != 0.0)
 	{
 		lem->TAPE_RCDR_AC_CB.DrawPower(2.7);
 		DSEHeat->GenerateHeat(2.7);
 	}
-}
 
-void LM_DSEA::Timestep(double simt, double simdt)
-{
-	if (state == RECORDING && VoiceXmit() == true)
-	{ 
-		lem->TapeRecorderTB.SetState(1);
-	}
-
-	else 
-	{ 
-		lem->TapeRecorderTB.SetState(0);
-	}
-
-	switch (state)
+	if (CDRAudioRec())
 	{
-	case STOPPED:
-		if (RecordLogic())
-		{
-			Record();
-		}
-		break;
-
-	case RECORDING:
-		if (!RecordLogic())
-		{
-			Stop();
-		}
-		break;
-
-	case STARTING_RECORD:
-		tapeSpeedInchesPerSecond += tapeAccel * simdt;
-		if (tapeSpeedInchesPerSecond >= desiredTapeSpeed)
-		{
-			tapeSpeedInchesPerSecond = desiredTapeSpeed;
-			state = RECORDING;
-		}
-		break;
-
-	case SLOWING_RECORD:
-		tapeSpeedInchesPerSecond -= tapeAccel * simdt;
-		if (tapeSpeedInchesPerSecond <= desiredTapeSpeed)
-		{
-			tapeSpeedInchesPerSecond = desiredTapeSpeed;
-			state = RECORDING;
-		}
-		break;
-
-	case STOPPING:
-		tapeSpeedInchesPerSecond -= tapeAccel * simdt;
-		if (tapeSpeedInchesPerSecond <= 0.0)
-		{
-			tapeSpeedInchesPerSecond = 0.0;
-			state = STOPPED;
-		}
-		break;
-
-	default:
-		break;
+		lem->COMM_CDR_AUDIO_CB.DrawPower(7.2); //Momentary draw when recording per AOH
 	}
-	lastEventTime = simt;
-	//sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state);
+
+	if (LMPAudioRec())
+	{
+		lem->COMM_SE_AUDIO_CB.DrawPower(7.2); //Momentary draw when recording per AOH
+	}
 }
 
 void LM_DSEA::LoadState(char *line) {
 
-	sscanf(line + 12, "%lf %lf %lf %i %lf", &tapeSpeedInchesPerSecond, &desiredTapeSpeed, &tapeMotion, &state, &lastEventTime);
+	sscanf(line + 12, "%lf %lf %d", &tapeSpeed, &tapePosition, &trackNumber);
 }
 
 void LM_DSEA::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf %lf %i %lf", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state, lastEventTime);
+	sprintf(buffer, "%lf %lf %d", tapeSpeed, tapePosition, trackNumber);
 	oapiWriteScenario_string(scn, "DATARECORDER", buffer);
 }
