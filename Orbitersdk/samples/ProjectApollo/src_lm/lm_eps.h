@@ -359,17 +359,17 @@ protected:
 class LEM_UtilLights
 {
 public:
-LEM_UtilLights();
-void Init(LEM *l, e_object *utl_cb, ThreePosSwitch *cdr_sw, ThreePosSwitch *lmp_sw, h_HeatLoad *util_h);
-void SystemTimestep(double simdt);
+	LEM_UtilLights();
+	void Init(LEM *l, e_object *utl_cb, ThreePosSwitch *cdr_sw, ThreePosSwitch *lmp_sw, h_HeatLoad *util_h);
+	void SystemTimestep(double simdt);
 
-bool IsPowered();
+	bool IsPowered();
 protected:
-LEM *lem;
-e_object *UtlCB;
-ThreePosSwitch *CDRSwitch;
-ThreePosSwitch *LMPSwitch;
-h_HeatLoad *UtlLtgHeat;
+	LEM *lem;
+	e_object *UtlCB;
+	ThreePosSwitch *CDRSwitch;
+	ThreePosSwitch *LMPSwitch;
+	h_HeatLoad *UtlLtgHeat;
 
 };
 
