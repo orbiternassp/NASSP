@@ -80,5 +80,7 @@
 #define HATCHCLOSE_SOUND			"hatch_close.wav"
 #define LM_MASTERALARM_SOUND	    "alarm_lm.wav"
 #define MAIN_ENGINES_SOUND		    "Main Engines.wav"
+#define TBGREY_SOUND		        "tb_grey.wav"
+#define TBBP_SOUND		            "tb_bp.wav"
 
 #define SOUND_DIRECTORY				"ProjectApollo"
