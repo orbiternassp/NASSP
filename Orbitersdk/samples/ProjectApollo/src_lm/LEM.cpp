@@ -1959,9 +1959,6 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "DATARECORDER", 12)) {
 			DSEA.LoadState(line);
-			}
-		else if (!strnicmp(line, "LCA_START", sizeof("LCA_START"))) {
-			lca.LoadState(scn,"LCA_END");
 		}
 		else if (!strnicmp(line, CWEA_START_STRING, sizeof(CWEA_START_STRING))) {
 			CWEA.LoadState(scn, CWEA_END_STRING);
