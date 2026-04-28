@@ -1232,7 +1232,6 @@ double LEM_LCA::GetCompDockVoltage()
 	{
 		return 5.5;
 	}
-
 	return 0.0;
 }
 
@@ -1251,7 +1250,6 @@ double LEM_LCA::GetAnnunVoltage() //Returns annunciator voltage (transformed 28V
 			return (3.0 * lem->LtgAnunNumKnob.GetOutput() + 2.0);
 		}
 	}
-
 	return 0.0;
 }
 
@@ -1344,7 +1342,7 @@ void LEM_LCA::SystemTimestep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "Integral %lf Anun %lf Num %lf", IntegralPower.PowerLoad(), AnnunPower.PowerLoad(), NumericsPower.PowerLoad());
-	sprintf(oapiDebugString(), "Integral %lf Annun Fixed %lf Annun Var %lf Num %lf", GetIntegralOutput(), GetFixedAnnunOutput(), GetVariableAnnunOutput(), GetNumericOutput());
+	//sprintf(oapiDebugString(), "Integral %lf Annun Fixed %lf Annun Var %lf Num %lf", GetIntegralOutput(), GetFixedAnnunOutput(), GetVariableAnnunOutput(), GetNumericOutput());
 
 	double AnnunHeat = AnnunPower.PowerLoad() * 0.5337;
 	double IntHeat = IntegralPower.PowerLoad() * 0.2056;
