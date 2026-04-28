@@ -1713,6 +1713,9 @@ void LEM::PostLoadSetup(bool define_anims)
 	CheckDescentStageSystems();
 	if (define_anims) DefineAnimations();
 
+	//Reload cue cards, if required
+	CueCards.ResetCueCards();
+
 	///
 	// Realism Mode Settings
 	//
