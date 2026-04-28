@@ -1257,7 +1257,7 @@ double LEM_LCA::GetAnnunVoltage() //Returns annunciator voltage (transformed 28V
 
 double LEM_LCA::GetFixedAnnunOutput()
 {
-	if (GetCompDockVoltage() > 2.25) //5% of total to make full dim "off" TBD: will get actual values to use soon
+	if (GetCompDockVoltage() > 2.0)
 	{
 		return GetCompDockVoltage() / 6.0; //6V maximum input
 	}
@@ -1266,7 +1266,7 @@ double LEM_LCA::GetFixedAnnunOutput()
 
 double LEM_LCA::GetVariableAnnunOutput()
 {
-	if (GetAnnunVoltage() > 2.25) //5% of total to make full dim "off" TBD: will get actual values to use soon
+	if (GetAnnunVoltage() > 2.0)
 	{
 		return GetAnnunVoltage() / 6.0;  //6V maximum input
 	}
@@ -1275,12 +1275,12 @@ double LEM_LCA::GetVariableAnnunOutput()
 
 double LEM_LCA::GetNumericVoltage()
 {
-	if (IntegralPower.Voltage() > SP_MIN_ACVOLTAGE)
+	if (NumericsPower.Voltage() > SP_MIN_ACVOLTAGE)
 	{
 		if (lem->LtgORideNumSwitch.IsUp())
 		{
 			//115V
-			return 115.0;
+			return NumericsPower.Voltage();
 		}
 		else
 		{
@@ -1288,15 +1288,14 @@ double LEM_LCA::GetNumericVoltage()
 			return (90.0 * lem->LtgAnunNumKnob.GetOutput() + 20.0);
 		}
 	}
-
 	return 0.0;
 }
 
 double LEM_LCA::GetNumericOutput()
 {
-	if (GetNumericVoltage() > 25.75) //5% of total to make full dim "off" TBD: will get actual values to use soon
+	if (GetNumericVoltage() > 20.0)
 	{
-		return GetNumericVoltage() / 115.0;
+		return GetNumericVoltage() / 110.0;
 	}
 	return 0.0;
 }
@@ -1316,15 +1315,14 @@ double LEM_LCA::GetIntegralVoltage()
 			return (60.0 * lem->LtgIntegralKnob.GetOutput() + 15.0);
 		}
 	}
-
 	return 0.0;
 }
 
 double LEM_LCA::GetIntegralOutput()
 {
-	if (GetIntegralVoltage() > 25.75) //5% of total to make full dim "off" TBD: will get actual values to use soon
+	if (GetIntegralVoltage() > 20.0)
 	{
-		return GetIntegralVoltage() / 115.0;
+		return GetIntegralVoltage() / 110.0;
 	}
 	return 0.0;
 }
@@ -1345,7 +1343,8 @@ void LEM_LCA::SystemTimestep(double simdt)
 		IntegralPower.DrawPower(16.073 * GetIntegralOutput());
 	}
 
-	sprintf(oapiDebugString(), "Integral %f Anun %lf Num %lf", IntegralPower.PowerLoad(), AnnunPower.PowerLoad(), NumericsPower.PowerLoad());
+	//sprintf(oapiDebugString(), "Integral %lf Anun %lf Num %lf", IntegralPower.PowerLoad(), AnnunPower.PowerLoad(), NumericsPower.PowerLoad());
+	sprintf(oapiDebugString(), "Integral %lf Annun Fixed %lf Annun Var %lf Num %lf", GetIntegralOutput(), GetFixedAnnunOutput(), GetVariableAnnunOutput(), GetNumericOutput());
 
 	double AnnunHeat = AnnunPower.PowerLoad() * 0.5337;
 	double IntHeat = IntegralPower.PowerLoad() * 0.2056;
@@ -1357,8 +1356,6 @@ void LEM_LCA::SystemTimestep(double simdt)
 	AnnunPower.UpdateFlow(simdt);
 	NumericsPower.UpdateFlow(simdt);
 	IntegralPower.UpdateFlow(simdt);
-
-
 }
 
 //Utility Lights

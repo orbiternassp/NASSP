@@ -1791,15 +1791,15 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		double floodRotaryValue = (FloodLights.GetCDROutput() + FloodLights.GetLMPOutput()) / 40.0;	// add some fake ambient light, max 10% of all floodlights
 		
 		/// Hardcode Materials with no Texture
-		SetVCLighting(vcidx,   VC_MAT_FDAI_errorneedle, MAT_LIGHT, floodRotaryValue, 1);
+		SetVCLighting(vcidx, VC_MAT_FDAI_errorneedle, MAT_LIGHT, floodRotaryValue, 1);
 
 		// MAT_LIGHT changes the Brightness of the Material
 		// MAT_EMISSION changes the Brightness of the Material controlled by its _emis Texture
 		SetVCLighting(vcidx, FloodLights_LMVC, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(FloodLights_LMVC));
-		floodLight_Left->SetIntensity(FloodLights.GetCDROutput());
-		floodLight_Right->SetIntensity(FloodLights.GetLMPOutput());
+		floodLight_Left->SetIntensity(FloodLights.GetCDROutput()); // Need to add side panel floods
+		floodLight_Right->SetIntensity(FloodLights.GetLMPOutput()); // Need to add side panel floods
 		SetVCLighting(vcidx, IntegralLights_LMVC, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
-		SetVCLighting(vcidx, IntegralLights_LMVC_NoTex, MAT_LIGHT, lca.GetIntegralOutput() + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
+		SetVCLighting(vcidx, IntegralLights_LMVC_NoTex, MAT_LIGHT, lca.GetIntegralOutput() + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC_NoTex));
 
 		if (LtgSidePanelsSwitch.GetState() == TOGGLESWITCH_UP){	// Panel 8, 11
 			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_8_11, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
@@ -1830,8 +1830,8 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		if (DSKY_CW_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_CW_Lights[0],  MAT_LIGHT, lca.GetIntegralOutput() + floodRotaryValue, DSKY_CW_Lights.size());
 
 		//External Meshes ***If Second parameter is 0 then the mesh contains only one Material***
-		SetVCLighting(xpointershadesidx, 0, MAT_LIGHT, floodRotaryValue, 1); //FloodLights_XPointer_Shades
-		SetVCLighting(windowshadesidx,   0, MAT_LIGHT, floodRotaryValue, 1); //FloodLights_WindowShades
+		SetVCLighting(xpointershadesidx, 0, MAT_LIGHT, floodRotaryValue, 1); // FloodLights_XPointer_Shades
+		SetVCLighting(windowshadesidx, 0, MAT_LIGHT, floodRotaryValue, 1); // FloodLights_WindowShades
 
 		if (deda.OprErrLit()) {
 			SetVCLighting(vcidx, VC_MAT_DEDA_Light,  MAT_LIGHT, 1, 1);
