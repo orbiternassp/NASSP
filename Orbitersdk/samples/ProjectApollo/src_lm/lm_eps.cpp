@@ -1207,8 +1207,8 @@ void LEM_DockLights::SystemTimestep(double simdt)
 
 LEM_LCA::LEM_LCA(PanelSDK& p) :
 	AnnunPower("AnnumPower", NULL),
-	NumericsPower("NumericsPower", NULL),
-	IntegralPower("IntegralPower", NULL),
+	NumericsPower("NumericsPower", NULL, NULL),
+	IntegralPower("IntegralPower", NULL, NULL),
 	NumDockCompLTGFeeder("NumDockCompLTGFeeder", p)
 {
 	lem = NULL;

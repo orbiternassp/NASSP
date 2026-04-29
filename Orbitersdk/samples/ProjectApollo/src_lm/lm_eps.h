@@ -347,8 +347,8 @@ public:
 	double GetIntegralOutput();
 
 	DCbus AnnunPower;
-	DCbus NumericsPower;
-	DCbus IntegralPower;
+	ACbus NumericsPower;
+	ACbus IntegralPower;
 protected:
 	LEM *lem;
 	h_HeatLoad *LCAHeat;
