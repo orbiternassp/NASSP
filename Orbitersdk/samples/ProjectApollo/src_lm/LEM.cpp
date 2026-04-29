@@ -2125,6 +2125,9 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 
 void LEM::clbkPostCreation()
 {
+	//Set up systems
+	imu.clbkPostCreation();
+
 	//Find MCC, if it exists
 	pMCC = NULL;
 	hMCC = oapiGetVesselByName("MCC");

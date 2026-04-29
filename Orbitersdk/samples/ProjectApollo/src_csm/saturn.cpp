@@ -1286,6 +1286,9 @@ void Saturn::clbkPostCreation()
 	hga.clbkPostCreation();
 	SPSEngine.clbkPostCreation();
 
+	//Set up systems
+	imu.clbkPostCreation();
+
 	// Connect to the Checklist controller.
 	checkControl.linktoVessel(this);
 
