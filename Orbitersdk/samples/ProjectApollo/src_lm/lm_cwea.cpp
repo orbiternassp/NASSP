@@ -89,14 +89,14 @@ bool LEM_CWEA::IsMAPowered() {
 }
 
 bool LEM_CWEA::IsLTGPowered() {
-	if (lem->lca.GetAnnunVoltage() > 2.25)
+	if (lem->LtgORideAnunSwitch.Voltage() > 2.25)
 		return true;
 
 	return false;
 }
 
 bool LEM_CWEA::IsCWPWRLTGPowered() {
-	if (lem->lca.GetCompDockVoltage() > 2.25)
+	if (lem->lca.Fixed_5_5VDC_Output.Voltage() > 2.25)
 		return true;
 
 	return false;
@@ -670,7 +670,7 @@ void LEM_CWEA::SystemTimestep(double simdt) {
 		CWEAHeat->GenerateHeat(11.48);
 	}
 	if (IsLTGPowered())
-		lem->lca.AnnunPower.DrawPower(GetDimmableLoad() + GetNonDimmableLoad());
+		lem->LtgORideAnunSwitch.DrawPower(GetDimmableLoad() + GetNonDimmableLoad());
 	if (MasterAlarm == true)
 		ma_pwr->DrawPower(7.2);
 
@@ -1080,19 +1080,19 @@ double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the CW power light 
 double LEM_CWEA::GetDimmableLoad()
 {
 	if (lem->LampToneTestRotary == 0 || lem->LampToneTestRotary == 1 || lem->LampToneTestRotary == 6 || lem->LampToneTestRotary == 7) {
-		return (GetNumberLightsOn() * 1.18) * lem->lca.GetVariableAnnunOutput();	//Approx 1.18W per bulb, scaled with LCA dimming
+		return (GetNumberLightsOn() * 1.18) * (lem->LtgORideAnunSwitch.Voltage() / 6.0);	//Approx 1.18W per bulb, scaled with LCA dimming
 	}
 	else if (lem->LampToneTestRotary == 2) {
-		return ((GetCWBank2Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18) * lem->lca.GetVariableAnnunOutput();
+		return ((GetCWBank2Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18) * (lem->LtgORideAnunSwitch.Voltage() / 6.0);
 	}
 	else if (lem->LampToneTestRotary == 3) {
-		return ((GetCWBank1Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18) * lem->lca.GetVariableAnnunOutput();
+		return ((GetCWBank1Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18) * (lem->LtgORideAnunSwitch.Voltage() / 6.0);
 	}
 	else if (lem->LampToneTestRotary == 4) {
-		return ((GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank4Lights()) * 1.18) * lem->lca.GetVariableAnnunOutput();
+		return ((GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank4Lights()) * 1.18) * (lem->LtgORideAnunSwitch.Voltage() / 6.0);
 	}
 	else if (lem->LampToneTestRotary == 5) {
-		return ((GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank3Lights()) * 1.18) * lem->lca.GetVariableAnnunOutput();
+		return ((GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank3Lights()) * 1.18) * (lem->LtgORideAnunSwitch.Voltage() / 6.0);
 	}
 	else
 		return 0.0;

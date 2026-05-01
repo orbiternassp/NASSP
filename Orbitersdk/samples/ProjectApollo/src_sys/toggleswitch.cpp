@@ -5665,6 +5665,22 @@ void DSKYPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
+RotVariableVoltageTransformer::RotVariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt) : VariableVoltageTransformer(i_name, MinVolt, MaxVolt)
+{
+	rotary = NULL;
+}
+
+void RotVariableVoltageTransformer::Init(ContinuousSwitch* rot)
+{
+	rotary = rot;
+}
+
+double RotVariableVoltageTransformer::GetValue()
+{
+	if (rotary) return rotary->GetOutput();
+	else return 0.0;
+}
+
 PanelGroup::~PanelGroup()
 {
 	while (!panels.empty()) {
