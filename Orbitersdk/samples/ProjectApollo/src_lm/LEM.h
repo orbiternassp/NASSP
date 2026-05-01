@@ -756,7 +756,7 @@ protected:
 	void JostleViewpoint(double amount);
 	void VCFreeCam(VECTOR3 dir, bool slow);
 	void AddDust();
-	void SetCompLight(int m, double state);
+	void SetCompLight(int m, double voltage);
 	void SetContactLight(int m, bool state);
 	void SetPowerFailureLight(int m, bool state);
 

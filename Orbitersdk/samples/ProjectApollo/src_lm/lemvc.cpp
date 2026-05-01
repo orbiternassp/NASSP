@@ -2180,7 +2180,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_RR_NOTRACK:
 		if (RR.GetNoTrackSignal() || LampToneTestRotary.GetState() == 6) { // The AC side is only needed for the transmitter
-			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, LtgORideAnunSwitch.Voltage() / 6.0); // Light On
+			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, 0.0); // Light Off
@@ -2189,28 +2189,28 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_PANEL2_COMPLIGHTS:
 		if (scera2.GetSwitch(12, 2)->IsClosed() || PrimGlycolPumpController.GetPressureSwitch() == true || LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L13_CompLight2_Glycol, LtgORideAnunSwitch.Voltage() / 6.0); // Light On
+			SetCompLight(VC_MAT_L13_CompLight2_Glycol, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L13_CompLight2_Glycol, 0.0); // Light Off
 		}
 
 		if (SuitFanDPSensor.GetSuitFanFail() == true || LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, LtgORideAnunSwitch.Voltage() / 6.0); // Light On
+			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, 0.0); // Light Off
 		}
 
 		if (CWEA.IsCO2PartialPressureHigh() || CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L15_CompLight4_CO2, LtgORideAnunSwitch.Voltage() / 6.0); // Light On
+			SetCompLight(VC_MAT_L15_CompLight4_CO2, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L15_CompLight4_CO2, 0.0); // Light Off
 		}
 
 		if (INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < (792.5 / 720.0) || LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, LtgORideAnunSwitch.Voltage() / 6.0); // Light On
+			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, 0.0); // Light Off
@@ -2219,14 +2219,14 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_PANEL14_COMPLIGHTS:
 		if (LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L17_CompLight6_DCBus, lca.Fixed_5_5VDC_Output.Voltage() / 6.0); // Light On
+			SetCompLight(VC_MAT_L17_CompLight6_DCBus, lca.Fixed_5_5VDC_Output.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L17_CompLight6_DCBus, 0.0); // Light Off
 		}
 
 		if (LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L18_CompLight7_BatFault, LtgORideAnunSwitch.Voltage() / 6.0); // Light On
+			SetCompLight(VC_MAT_L18_CompLight7_BatFault, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L18_CompLight7_BatFault, 0.0); // Light Off
@@ -2235,14 +2235,14 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_SEQ_LIGHTS:
 		if (scera1.GetVoltage(12, 11) > 2.5 && stage < 2 || LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L19_StageSeq_SysA, lca.Fixed_5_5VDC_Output.Voltage() / 6.0); // Light On
+			SetCompLight(VC_MAT_L19_StageSeq_SysA, lca.Fixed_5_5VDC_Output.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L19_StageSeq_SysA, 0.0); // Light Off
 		}
 
 		if (scera1.GetVoltage(12, 12) > 2.5 || LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L20_StageSeq_SysB, lca.Fixed_5_5VDC_Output.Voltage() / 6.0); // Light On
+			SetCompLight(VC_MAT_L20_StageSeq_SysB, lca.Fixed_5_5VDC_Output.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L20_StageSeq_SysB, 0.0); // Light Off
@@ -3786,12 +3786,15 @@ void LEM::InitFDAI(UINT mesh) {
 	AddAnimationComponent(anim_attflag_lmp, 0.0f, 1.0f, &mgt_attflag_lmp);
 }
 
-void LEM::SetCompLight(int m, double state) {
+void LEM::SetCompLight(int m, double voltage) {
 
 	if (!vcmesh)
 		return;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
+
+	// Expected input voltage is 0-6V
+	double state = voltage / 6.0;
 
 	// TBD: There should be special code for ON vs. OFF
     if (state > 0.0)
