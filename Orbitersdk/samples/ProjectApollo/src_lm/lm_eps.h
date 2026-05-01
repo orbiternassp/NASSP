@@ -337,22 +337,31 @@ public:
 	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h);
 	void SystemTimestep(double simdt);
 
-	double GetCompDockVoltage();
-	double GetAnnunVoltage();
-	double GetFixedAnnunOutput();
-	double GetVariableAnnunOutput();
 	double GetNumericVoltage();
 	double GetNumericOutput();
 	double GetIntegralVoltage();
 	double GetIntegralOutput();
 
-	DCbus AnnunPower;
+	// DC
+	// Fixed 5.5VDC output (component lights, C/W PWR light)
+	FixedVoltageTransformer Fixed_5_5VDC_Output;
+	// Fixed 6VDC output to annun override switch
+	e_object_extended Fixed_6VDC_Output;
+	// Variable 2-5VDC output to annun override switch
+	RotVariableVoltageTransformer Variable_2_5VDC_Output;
+
 	ACbus NumericsPower;
 	ACbus IntegralPower;
 protected:
 	LEM *lem;
 	h_HeatLoad *LCAHeat;
 
+	// Internal annunciator wiring
+	// CDR bus 28VDC to 6VDC converter
+	FixedVoltageTransformer CDR_Bus_28V_6V_Converter;
+	// CDR bus 28VDC to 6VDC converter
+	FixedVoltageTransformer LMP_Bus_28V_6V_Converter;
+	// CDR and LMP DC bus power merge
 	PowerMerge NumDockCompLTGFeeder;
 };
 

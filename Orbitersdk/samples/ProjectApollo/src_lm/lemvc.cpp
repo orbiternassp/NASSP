@@ -2180,7 +2180,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_RR_NOTRACK:
 		if (RR.GetNoTrackSignal() || LampToneTestRotary.GetState() == 6) { // The AC side is only needed for the transmitter
-			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, lca.GetVariableAnnunOutput()); // Light On
+			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, LtgORideAnunSwitch.Voltage() / 6.0); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, 0.0); // Light Off
@@ -2189,28 +2189,28 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_PANEL2_COMPLIGHTS:
 		if (scera2.GetSwitch(12, 2)->IsClosed() || PrimGlycolPumpController.GetPressureSwitch() == true || LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L13_CompLight2_Glycol, lca.GetVariableAnnunOutput()); // Light On
+			SetCompLight(VC_MAT_L13_CompLight2_Glycol, LtgORideAnunSwitch.Voltage() / 6.0); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L13_CompLight2_Glycol, 0.0); // Light Off
 		}
 
 		if (SuitFanDPSensor.GetSuitFanFail() == true || LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, lca.GetVariableAnnunOutput()); // Light On
+			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, LtgORideAnunSwitch.Voltage() / 6.0); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, 0.0); // Light Off
 		}
 
 		if (CWEA.IsCO2PartialPressureHigh() || CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L15_CompLight4_CO2, lca.GetVariableAnnunOutput()); // Light On
+			SetCompLight(VC_MAT_L15_CompLight4_CO2, LtgORideAnunSwitch.Voltage() / 6.0); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L15_CompLight4_CO2, 0.0); // Light Off
 		}
 
 		if (INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < (792.5 / 720.0) || LampToneTestRotary.GetState() == 6)) {
-			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, lca.GetVariableAnnunOutput()); // Light On
+			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, LtgORideAnunSwitch.Voltage() / 6.0); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, 0.0); // Light Off
@@ -2219,14 +2219,14 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_PANEL14_COMPLIGHTS:
 		if (LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L17_CompLight6_DCBus, lca.GetFixedAnnunOutput()); // Light On
+			SetCompLight(VC_MAT_L17_CompLight6_DCBus, lca.Fixed_5_5VDC_Output.Voltage() / 6.0); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L17_CompLight6_DCBus, 0.0); // Light Off
 		}
 
 		if (LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L18_CompLight7_BatFault, lca.GetVariableAnnunOutput()); // Light On
+			SetCompLight(VC_MAT_L18_CompLight7_BatFault, LtgORideAnunSwitch.Voltage() / 6.0); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L18_CompLight7_BatFault, 0.0); // Light Off
@@ -2235,14 +2235,14 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_SEQ_LIGHTS:
 		if (scera1.GetVoltage(12, 11) > 2.5 && stage < 2 || LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L19_StageSeq_SysA, lca.GetFixedAnnunOutput()); // Light On
+			SetCompLight(VC_MAT_L19_StageSeq_SysA, lca.Fixed_5_5VDC_Output.Voltage() / 6.0); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L19_StageSeq_SysA, 0.0); // Light Off
 		}
 
 		if (scera1.GetVoltage(12, 12) > 2.5 || LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L20_StageSeq_SysB, lca.GetFixedAnnunOutput()); // Light On
+			SetCompLight(VC_MAT_L20_StageSeq_SysB, lca.Fixed_5_5VDC_Output.Voltage() / 6.0); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L20_StageSeq_SysB, 0.0); // Light Off
@@ -2250,21 +2250,21 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_PWRFAIL_LIGHTS_P1:
-		if (!pfira.GetCDRXPointerRelay() && lca.GetAnnunVoltage() > 2.25) {
+		if (!pfira.GetCDRXPointerRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
 			SetPowerFailureLight(VC_MAT_L01_PwrFail_XpointerL, true); // Light On
 		}
 		else {
 			SetPowerFailureLight(VC_MAT_L01_PwrFail_XpointerL, false); // Light Off
 		}
 
-		if (!pfira.GetThrustIndRelay() && lca.GetAnnunVoltage() > 2.25) {
+		if (!pfira.GetThrustIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
 			SetPowerFailureLight(VC_MAT_L02_PwrFail_Thrust, true); // Light On
 		}
 		else {
 			SetPowerFailureLight(VC_MAT_L02_PwrFail_Thrust, false); // Light Off
 		}
 
-		if (!pfira.GetPropPressIndRelay() && lca.GetAnnunVoltage() > 2.25) {
+		if (!pfira.GetPropPressIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
 			SetPowerFailureLight(VC_MAT_L03_PwrFail_DPSpress, true); // Light On
 		}
 		else {
@@ -2281,42 +2281,42 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_VC_PWRFAIL_LIGHTS_P2:
 
-		if (!pfira.GetRCSPressIndRelay() && lca.GetAnnunVoltage() > 2.25) {
+		if (!pfira.GetRCSPressIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
 			SetPowerFailureLight(VC_MAT_L04_PwrFail_RCSpress, true); // Light On
 		}
 		else {
 			SetPowerFailureLight(VC_MAT_L04_PwrFail_RCSpress, false); // Light Off
 		}
 
-		if (!pfira.GetRCSQtyIndRelay() && lca.GetAnnunVoltage() > 2.25) {
+		if (!pfira.GetRCSQtyIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
 			SetPowerFailureLight(VC_MAT_L05_PwrFail_RCSquan, true); // Light On
 		}
 		else {
 			SetPowerFailureLight(VC_MAT_L05_PwrFail_RCSquan, false); // Light Off
 		}
 
-		if (!pfira.GetSuitCabinPressIndRelay() && lca.GetAnnunVoltage() > 2.25) {
+		if (!pfira.GetSuitCabinPressIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
 			SetPowerFailureLight(VC_MAT_L06_PwrFail_ECSpress, true); // Light On
 		}
 		else {
 			SetPowerFailureLight(VC_MAT_L06_PwrFail_ECSpress, false); // Light Off
 		}
 
-		if (!pfira.GetGlyTempPressIndRelay() && lca.GetAnnunVoltage() > 2.25) {
+		if (!pfira.GetGlyTempPressIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
 			SetPowerFailureLight(VC_MAT_L07_PwrFail_Glycol, true); // Light On
 		}
 		else {
 			SetPowerFailureLight(VC_MAT_L07_PwrFail_Glycol, false); // Light Off
 		}
 
-		if (!pfira.GetO2H2OQtyIndRelay() && lca.GetAnnunVoltage() > 2.25) {
+		if (!pfira.GetO2H2OQtyIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
 			SetPowerFailureLight(VC_MAT_L08_PwrFail_ECSquan, true); // Light On
 		}
 		else {
 			SetPowerFailureLight(VC_MAT_L08_PwrFail_ECSquan, false); // Light Off
 		}
 
-		if (!pfira.GetLMPXPointerRelay() && lca.GetAnnunVoltage() > 2.25) {
+		if (!pfira.GetLMPXPointerRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
 			SetPowerFailureLight(VC_MAT_L09_PwrFail_XpointerR, true); // Light On
 		}
 		else {

@@ -1177,7 +1177,7 @@ void LEM_DockLights::Init(LEM *l, e_object *dockpwr, ThreePosSwitch *docksw)
 
 bool LEM_DockLights::IsPowered()
 {
-	if (lem->lca.GetCompDockVoltage() > 2.0 && DockSwitch->GetState() == THREEPOSSWITCH_UP) {
+	if (lem->lca.Fixed_5_5VDC_Output.Voltage() > 2.0 && DockSwitch->GetState() == THREEPOSSWITCH_UP) {
 		return true;
 	}
 	return false;
@@ -1206,13 +1206,23 @@ void LEM_DockLights::SystemTimestep(double simdt)
 //LIGHTING CONTROL ASSEMBLY
 
 LEM_LCA::LEM_LCA(PanelSDK& p) :
-	AnnunPower("AnnumPower", NULL),
 	NumericsPower("NumericsPower", NULL, NULL),
 	IntegralPower("IntegralPower", NULL, NULL),
-	NumDockCompLTGFeeder("NumDockCompLTGFeeder", p)
+	CDR_Bus_28V_6V_Converter("LCA CDR Bus Converter", 6.0),
+	LMP_Bus_28V_6V_Converter("LCA LMP Bus Converter", 6.0),
+	NumDockCompLTGFeeder("NumDockCompLTGFeeder", p),
+	Fixed_5_5VDC_Output("LCA 5.5VDC Output Converter", 5.5),
+	Fixed_6VDC_Output("LCA 6.0VDC Output"),
+	Variable_2_5VDC_Output("LCA Variable DC Output Converter", 2.0, 5.0)
 {
 	lem = NULL;
 	LCAHeat = 0;
+
+	p.AddElectrical(&CDR_Bus_28V_6V_Converter, false);
+	p.AddElectrical(&LMP_Bus_28V_6V_Converter, false);
+	p.AddElectrical(&Fixed_5_5VDC_Output, false);
+	p.AddElectrical(&Fixed_6VDC_Output, false);
+	p.AddElectrical(&Variable_2_5VDC_Output, false);
 }
 
 void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h)
@@ -1220,55 +1230,17 @@ void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, 
 	lem = l;
 	LCAHeat = lca_h;
 
-	NumDockCompLTGFeeder.WireToBuses(cdrcb, lmpcb);
-	AnnunPower.WireTo(&NumDockCompLTGFeeder);
+	// Internal wiring
+	CDR_Bus_28V_6V_Converter.WireTo(cdrcb);
+	LMP_Bus_28V_6V_Converter.WireTo(lmpcb);
+	NumDockCompLTGFeeder.WireToBuses(&CDR_Bus_28V_6V_Converter, &LMP_Bus_28V_6V_Converter);
+	Fixed_5_5VDC_Output.WireTo(&NumDockCompLTGFeeder);
+	Fixed_6VDC_Output.WireTo(&NumDockCompLTGFeeder);
+	Variable_2_5VDC_Output.Init(&lem->LtgAnunNumKnob);
+	Variable_2_5VDC_Output.WireTo(&NumDockCompLTGFeeder);
+
 	NumericsPower.WireTo(acnumcb);
 	IntegralPower.WireTo(acintcb);
-}
-
-double LEM_LCA::GetCompDockVoltage()
-{
-	if (NumDockCompLTGFeeder.Voltage() > SP_MIN_DCVOLTAGE)
-	{
-		return 5.5;
-	}
-	return 0.0;
-}
-
-double LEM_LCA::GetAnnunVoltage() //Returns annunciator voltage (transformed 28V to 6V)
-{
-	if (NumDockCompLTGFeeder.Voltage() > SP_MIN_DCVOLTAGE)
-	{
-		if (lem->LtgORideAnunSwitch.IsUp())
-		{
-			//6V
-			return 6.0;
-		}
-		else
-		{
-			//2-5V
-			return (3.0 * lem->LtgAnunNumKnob.GetOutput() + 2.0);
-		}
-	}
-	return 0.0;
-}
-
-double LEM_LCA::GetFixedAnnunOutput()
-{
-	if (GetCompDockVoltage() > 2.0)
-	{
-		return GetCompDockVoltage() / 6.0; //6V maximum input
-	}
-	return 0.0;
-}
-
-double LEM_LCA::GetVariableAnnunOutput()
-{
-	if (GetAnnunVoltage() > 2.0)
-	{
-		return GetAnnunVoltage() / 6.0;  //6V maximum input
-	}
-	return 0.0;
 }
 
 double LEM_LCA::GetNumericVoltage()
@@ -1344,14 +1316,18 @@ void LEM_LCA::SystemTimestep(double simdt)
 	//sprintf(oapiDebugString(), "Integral %lf Anun %lf Num %lf", IntegralPower.PowerLoad(), AnnunPower.PowerLoad(), NumericsPower.PowerLoad());
 	//sprintf(oapiDebugString(), "Integral %lf Annun Fixed %lf Annun Var %lf Num %lf", GetIntegralOutput(), GetFixedAnnunOutput(), GetVariableAnnunOutput(), GetNumericOutput());
 
-	double AnnunHeat = AnnunPower.PowerLoad() * 0.5337;
+	//sprintf(oapiDebugString(), "Voltages: CDR %.1lf, LMP %.1lf, Merge %.1lf, 5.5VDC Out %.1lf, 6VDC Out %.1lf, 2-5VDC Out %.1lf",
+	//	CDR_Bus_28V_6V_Converter.Voltage(), LMP_Bus_28V_6V_Converter.Voltage(), NumDockCompLTGFeeder.Voltage(), Fixed_5_5VDC_Output.Voltage(), Fixed_6VDC_Output.Voltage(), Variable_2_5VDC_Output.Voltage());
+
+	//sprintf(oapiDebugString(), "Power Load: 5.5VDC Out %.1lf, 6.0VDC Out %.1lf, 2-5VDC Out %.1lf", Fixed_5_5VDC_Output.GetLastPowerLoad(), Fixed_6VDC_Output.GetLastPowerLoad(), Variable_2_5VDC_Output.GetLastPowerLoad());
+
+	double AnnunHeat = (Fixed_5_5VDC_Output.GetLastPowerLoad() + Fixed_6VDC_Output.GetLastPowerLoad() + Variable_2_5VDC_Output.GetLastPowerLoad()) * 0.5337;
 	double IntHeat = IntegralPower.PowerLoad() * 0.2056;
 	double NumHeat = NumericsPower.PowerLoad() * 0.6285;
 
 	LCAHeat->GenerateHeat(AnnunHeat + IntHeat + NumHeat); //LCA Heat
 
 	// Reset power load
-	AnnunPower.UpdateFlow(simdt);
 	NumericsPower.UpdateFlow(simdt);
 	IntegralPower.UpdateFlow(simdt);
 }
