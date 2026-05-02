@@ -758,7 +758,7 @@ protected:
 	void AddDust();
 	void SetCompLight(int m, double voltage);
 	void SetContactLight(int m, bool state);
-	void SetPowerFailureLight(int m, bool state);
+	void SetPowerFailureLight(int m, double voltage);
 
 	void DoMeshAnimation(AnimState &, UINT &, double, double);
 

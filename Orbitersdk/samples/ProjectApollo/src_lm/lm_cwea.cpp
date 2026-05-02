@@ -89,14 +89,14 @@ bool LEM_CWEA::IsMAPowered() {
 }
 
 bool LEM_CWEA::IsLTGPowered() {
-	if (lem->LtgORideAnunSwitch.Voltage() > 2.25)
+	if (lem->LtgORideAnunSwitch.Voltage() > 1.8)
 		return true;
 
 	return false;
 }
 
 bool LEM_CWEA::IsCWPWRLTGPowered() {
-	if (lem->lca.Fixed_5_5VDC_Output.Voltage() > 2.25)
+	if (lem->lca.Fixed_5_5VDC_Output.Voltage() > 1.8)
 		return true;
 
 	return false;

@@ -1792,6 +1792,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		
 		/// Hardcode Materials with no Texture
 		SetVCLighting(vcidx, VC_MAT_FDAI_errorneedle, MAT_LIGHT, floodRotaryValue, 1);
+		//SetVCLighting(vcidx, VC_MAT_L07_PwrFail_Glycol, MAT_LIGHT, floodRotaryValue, 1);  /// Add Additional power failure lights here if needed
 
 		// MAT_LIGHT changes the Brightness of the Material
 		// MAT_EMISSION changes the Brightness of the Material controlled by its _emis Texture
@@ -2250,77 +2251,77 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_PWRFAIL_LIGHTS_P1:
-		if (!pfira.GetCDRXPointerRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
-			SetPowerFailureLight(VC_MAT_L01_PwrFail_XpointerL, true); // Light On
+		if (!pfira.GetCDRXPointerRelay()) {
+			SetPowerFailureLight(VC_MAT_L01_PwrFail_XpointerL, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
-			SetPowerFailureLight(VC_MAT_L01_PwrFail_XpointerL, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L01_PwrFail_XpointerL, 0.0); // Light Off
 		}
 
-		if (!pfira.GetThrustIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
-			SetPowerFailureLight(VC_MAT_L02_PwrFail_Thrust, true); // Light On
+		if (!pfira.GetThrustIndRelay()) {
+			SetPowerFailureLight(VC_MAT_L02_PwrFail_Thrust, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
-			SetPowerFailureLight(VC_MAT_L02_PwrFail_Thrust, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L02_PwrFail_Thrust, 0.0); // Light Off
 		}
 
-		if (!pfira.GetPropPressIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
-			SetPowerFailureLight(VC_MAT_L03_PwrFail_DPSpress, true); // Light On
+		if (!pfira.GetPropPressIndRelay()) {
+			SetPowerFailureLight(VC_MAT_L03_PwrFail_DPSpress, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
-			SetPowerFailureLight(VC_MAT_L03_PwrFail_DPSpress, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L03_PwrFail_DPSpress, 0.0); // Light Off
 		}
 
-		if (RadarTape.PowerSignalMonOn() == true) {
-			SetPowerFailureLight(VC_MAT_L21_PwrFail_RangeRate, true); // Light On
+		if (RadarTape.PowerSignalMonOn() == true) { // Power comes internally, not dimmable
+			SetPowerFailureLight(VC_MAT_L21_PwrFail_RangeRate, 5.0); // Light On
 		}
 		else {
-			SetPowerFailureLight(VC_MAT_L21_PwrFail_RangeRate, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L21_PwrFail_RangeRate, 0.0); // Light Off
 		}
 		return true;
 
 	case AID_VC_PWRFAIL_LIGHTS_P2:
 
-		if (!pfira.GetRCSPressIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
-			SetPowerFailureLight(VC_MAT_L04_PwrFail_RCSpress, true); // Light On
+		if (!pfira.GetRCSPressIndRelay()) {
+			SetPowerFailureLight(VC_MAT_L04_PwrFail_RCSpress, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
-			SetPowerFailureLight(VC_MAT_L04_PwrFail_RCSpress, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L04_PwrFail_RCSpress, 0.0); // Light Off
 		}
 
-		if (!pfira.GetRCSQtyIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
-			SetPowerFailureLight(VC_MAT_L05_PwrFail_RCSquan, true); // Light On
+		if (!pfira.GetRCSQtyIndRelay()) {
+			SetPowerFailureLight(VC_MAT_L05_PwrFail_RCSquan, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
-			SetPowerFailureLight(VC_MAT_L05_PwrFail_RCSquan, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L05_PwrFail_RCSquan, 0.0); // Light Off
 		}
 
-		if (!pfira.GetSuitCabinPressIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
-			SetPowerFailureLight(VC_MAT_L06_PwrFail_ECSpress, true); // Light On
+		if (!pfira.GetSuitCabinPressIndRelay()) {
+			SetPowerFailureLight(VC_MAT_L06_PwrFail_ECSpress, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
-			SetPowerFailureLight(VC_MAT_L06_PwrFail_ECSpress, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L06_PwrFail_ECSpress, 0.0); // Light Off
 		}
 
-		if (!pfira.GetGlyTempPressIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
-			SetPowerFailureLight(VC_MAT_L07_PwrFail_Glycol, true); // Light On
+		if (!pfira.GetGlyTempPressIndRelay()) {
+			SetPowerFailureLight(VC_MAT_L07_PwrFail_Glycol, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
-			SetPowerFailureLight(VC_MAT_L07_PwrFail_Glycol, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L07_PwrFail_Glycol, 0.0); // Light Off
 		}
 
-		if (!pfira.GetO2H2OQtyIndRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
-			SetPowerFailureLight(VC_MAT_L08_PwrFail_ECSquan, true); // Light On
+		if (!pfira.GetO2H2OQtyIndRelay()) {
+			SetPowerFailureLight(VC_MAT_L08_PwrFail_ECSquan, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
-			SetPowerFailureLight(VC_MAT_L08_PwrFail_ECSquan, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L08_PwrFail_ECSquan, 0.0); // Light Off
 		}
 
-		if (!pfira.GetLMPXPointerRelay() && LtgORideAnunSwitch.Voltage() > 2.25) {
-			SetPowerFailureLight(VC_MAT_L09_PwrFail_XpointerR, true); // Light On
+		if (!pfira.GetLMPXPointerRelay()) {
+			SetPowerFailureLight(VC_MAT_L09_PwrFail_XpointerR, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
-			SetPowerFailureLight(VC_MAT_L09_PwrFail_XpointerR, false); // Light Off
+			SetPowerFailureLight(VC_MAT_L09_PwrFail_XpointerR, 0.0); // Light Off
 		}
 		return true;
 
@@ -3850,32 +3851,39 @@ void LEM::SetContactLight(int m, bool state) {
 	oapiSetMaterial(vcmesh, m, mat);
 }
 
-void LEM::SetPowerFailureLight(int m, bool state) {
+void LEM::SetPowerFailureLight(int m, double voltage) {
 
 	if (!vcmesh)
 		return;
 
 	MATERIAL *mat = oapiMeshMaterial(hLMVC, m);
 
-	if (state == true)
+	// Expected input voltage is 0-6V
+	double state = voltage / 6.0;
+
+	if (state > 0.0)
 	{   // ON
-		mat->diffuse.r = 1;
-		mat->diffuse.g = 0;
-		mat->diffuse.b = 0;
-		mat->emissive.r = 1;
-		mat->emissive.g = 0;
-		mat->emissive.b = 0;
-		//mat->power = 2;
+		mat->diffuse.r = 1.0f * float(state);
+		mat->diffuse.g = 0.0f;
+		mat->diffuse.b = 0.0f;
+		mat->diffuse.a = 1.0f;
+
+		mat->emissive.r = 1.0f * float(state);
+		mat->emissive.g = 0.0f;
+		mat->emissive.b = 0.0f;
+		mat->emissive.a = 1.0f;
 	}
 	else
 	{   // OFF
 		mat->diffuse.r = 0.125f;
-		mat->diffuse.g = 0;
-		mat->diffuse.b = 0;
-		mat->emissive.r = 0;
-		mat->emissive.g = 0;
-		mat->emissive.b = 0;
-		//mat->power = 1;
+		mat->diffuse.g = 0.0f;
+		mat->diffuse.b = 0.0f;
+		mat->diffuse.a = 1.0f;
+
+		mat->emissive.r = 0.125f;
+		mat->emissive.g = 0.0f;
+		mat->emissive.b = 0.0f;
+		mat->emissive.a = 1.0f;
 	}
 
 	oapiSetMaterial(vcmesh, m, mat);

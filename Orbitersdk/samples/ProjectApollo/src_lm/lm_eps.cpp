@@ -1177,7 +1177,7 @@ void LEM_DockLights::Init(LEM *l, e_object *dockpwr, ThreePosSwitch *docksw)
 
 bool LEM_DockLights::IsPowered()
 {
-	if (lem->lca.Fixed_5_5VDC_Output.Voltage() > 2.0 && DockSwitch->GetState() == THREEPOSSWITCH_UP) {
+	if (lem->lca.Fixed_5_5VDC_Output.Voltage() > 1.8 && DockSwitch->GetState() == THREEPOSSWITCH_UP) {
 		return true;
 	}
 	return false;

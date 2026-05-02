@@ -1075,7 +1075,7 @@ bool LEM_DEDA::IsPowered()
 
 bool LEM_DEDA::HasAnnunPower()
 {
-	if (lem->LtgORideAnunSwitch.Voltage() > 2.25)
+	if (lem->LtgORideAnunSwitch.Voltage() > 1.8)
 		return true;
 
 	return false;
