@@ -5679,7 +5679,7 @@ void DSE::LoadState(char *line) {
 	/// \todo DSE Chunks
 
 	int inttemp[9];
-	sscanf(line + 12, "%lf %lf %d %d %d %d %d %d %d", &tapeSpeed, &tapePosition, &inttemp[0], &inttemp[1], &inttemp[2], &inttemp[3], &inttemp[4], &inttemp[5], &inttemp[6], &inttemp[7], &inttemp[8]);
+	sscanf(line + 12, "%lf %lf %d %d %d %d %d %d %d %d %d", &tapeSpeed, &tapePosition, &inttemp[0], &inttemp[1], &inttemp[2], &inttemp[3], &inttemp[4], &inttemp[5], &inttemp[6], &inttemp[7], &inttemp[8]);
 	K1 = (inttemp[0] != 0);
 	K2 = (inttemp[1] != 0);
 	K3 = (inttemp[2] != 0);

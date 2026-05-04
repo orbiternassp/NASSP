@@ -551,6 +551,11 @@ void IMU::SystemTimestep(double simdt)
 	}
 }
 
+void IMU::clbkPostCreation()
+{
+	//Get attitude
+	OurVessel->GetRotationMatrix(Orbiter.Attitude_v2g);
+}
 
 void IMU::PulsePIPA(int RegPIPA, int pulses) 
 

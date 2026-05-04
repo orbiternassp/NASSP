@@ -1953,11 +1953,16 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		std::vector<UINT> indices;
 		CueCards.GetMeshIndexList(indices);
 		//Assume cue cards only have material 0
-		DWORD ccmat[1] = { 0 };
+		//added another material index for the clips
+		DWORD ccmat[2] = { 0, 1 };
 
 		for (unsigned i = 0; i < indices.size(); i++)
 		{
-			SetVCLighting(indices[i], ccmat, MAT_LIGHT, floodRotaryValue, 1);
+			SetVCLighting(indices[i], ccmat[0], MAT_LIGHT, floodRotaryValue, 1);
+			// Each cue card has usually only one material
+			// except for those with a clip, which have two.
+			if (oapiMeshMaterialCount(GetMeshTemplate(indices[i]))>1)
+				SetVCLighting(indices[i], ccmat[1], MAT_LIGHT, floodRotaryValue, 1);
 		}
 
 		return true;
