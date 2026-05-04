@@ -45,12 +45,10 @@ public:
 	virtual ~DSKY();
 
 	void Init(
-		e_object *statuslightpower, 
-		e_object *segmentlightpower, 
-		ContinuousRotationalSwitch *dimmer, 
-		ContinuousRotationalSwitch *integralDimmer,
-		ToggleSwitch *anunOverride,
-		ToggleSwitch *integralOverride
+		e_object *statuslightpower,
+		e_object *segmentlightpower,
+		ContinuousRotationalSwitch *dimmer,
+		ContinuousRotationalSwitch *integralDimmer
 	);
 	void Reset();
 
@@ -164,10 +162,8 @@ public:
 	void ProcessChannel11(ChannelValue val);
 	void ProcessChannel163(ChannelValue val);
 
-// by JK
 	bool GetStatusPower();
 	bool GetSegmentPower();
-// end by JK
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
@@ -185,6 +181,7 @@ protected:
 
 	bool IsStatusPowered();
 	bool IsSegmentPowered();
+	double PowerRail250VAC();
 	void SendKeyCode(int val);
 
 	//
@@ -294,8 +291,6 @@ protected:
 	bool FirstTimeStep;
 	e_object *StatusPower;
 	e_object *SegmentPower;
-	ToggleSwitch *LtgORideAnunSwitch;
-	ToggleSwitch *LtgORideIntegralSwitch;
 	ContinuousRotationalSwitch *DimmerRotationalSwitch;
 	ContinuousRotationalSwitch *IntegralRotationalSwitch;
 

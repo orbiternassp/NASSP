@@ -156,8 +156,6 @@ static int SegmentCount[] = {6, 2, 5, 5, 4, 5, 6, 3, 7, 5 };
 DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel) : soundlib(s), agc(computer)
 
 {
-	LtgORideAnunSwitch = NULL;
-	LtgORideIntegralSwitch = NULL;
 	DimmerRotationalSwitch = NULL;
 	IntegralRotationalSwitch = NULL;
 
@@ -214,12 +212,10 @@ DSKY::~DSKY()
 }
 
 void DSKY::Init(
-	e_object *statuslightpower, 
-	e_object *segmentlightpower, 
-	ContinuousRotationalSwitch *dimmer, 
-	ContinuousRotationalSwitch *integralDimmer,
-	ToggleSwitch *anunOverride,
-	ToggleSwitch *integralOverride
+	e_object *statuslightpower,
+	e_object *segmentlightpower,
+	ContinuousRotationalSwitch *dimmer,
+	ContinuousRotationalSwitch *integralDimmer
 )
 
 {
@@ -227,32 +223,28 @@ void DSKY::Init(
 	SegmentPower = segmentlightpower;
 	DimmerRotationalSwitch = dimmer;
 	IntegralRotationalSwitch = integralDimmer;
-	LtgORideAnunSwitch = anunOverride;
-	LtgORideIntegralSwitch = integralOverride;
 	Reset();
 	FirstTimeStep = true;
 }
 
 bool DSKY::IsStatusPowered() {
-	if (StatusPower->Voltage() < 2.25){ return false; } //Used 2.25V for now as input voltage can be 0-5V AC or DC here
+	if (StatusPower->Voltage() < 1.8) { return false; }
 
-	if (DimmerRotationalSwitch != NULL) {
-		if (DimmerRotationalSwitch->GetOutput() < 0.00001) {
-			return false;
-		}
-	}
 	return true;
 }
 
 bool DSKY::IsSegmentPowered() {
-	if (SegmentPower->Voltage() < SP_MIN_DCVOLTAGE) { return false; }
+	if (SegmentPower->Voltage() < 20.0) { return false; }
 
-	if (DimmerRotationalSwitch != NULL) {
-		if (DimmerRotationalSwitch->GetOutput() < 0.00001) {
-			return false;
-		}
-	}
 	return true;
+}
+
+double DSKY::PowerRail250VAC() // Internal transformer used to power segment lights, dimmed with numerics rheostat lug
+{
+	if (IsSegmentPowered() && DimmerRotationalSwitch != NULL) {
+		return DimmerRotationalSwitch->GetOutput() * 250.0;
+	}
+	return 0.0;
 }
 
 void DSKY::Timestep(double simt)
@@ -339,17 +331,7 @@ void DSKY::Timestep(double simt)
 }
 
 void DSKY::SystemTimestep(double simdt)
-
 {
-	if (!IsStatusPowered() || !IsSegmentPowered()){ return; }
-	//
-	// The DSKY power consumption is a little bit hard to figure out. According 
-	// to the Systems Handbook the complete interior lightning draws about 30W, so
-	// we assume one DSKY draws 10W max, for now. We DO NOT rely on the render code to
-	// track the number of lights that are lit, because during pause the still called render 
-	// code causes wrong power loads
-	//
-
 	if (IsStatusPowered())
 	{
 		//
@@ -369,7 +351,7 @@ void DSKY::SystemTimestep(double simdt)
 		if (TrackerLit()) LightsLit++;
 
 		// 10 lights with together max. 6W, 
-		StatusPower->DrawPower(LightsLit * 0.6);
+		StatusPower->DrawPower((StatusPower->Voltage() / 5.0) * (LightsLit * 0.6));
 	}
 
 	if (IsSegmentPowered())
@@ -391,7 +373,7 @@ void DSKY::SystemTimestep(double simdt)
 		SegmentsLit += SixDigitDisplaySegmentsLit(R3, ELOff);
 
 		// 184 segments with together max. 4W  
-		SegmentPower->DrawPower(SegmentsLit * 0.022);
+		SegmentPower->DrawPower((PowerRail250VAC() / 250.0) * (SegmentsLit * 0.022));
 	}
 
 	//sprintf(oapiDebugString(), "DSKY %f", (LightsLit * 0.6) + (SegmentsLit * 0.022));
@@ -1575,17 +1557,9 @@ void DSKY::SendNetworkPacketDSKY()
 		char numLvl[256] = "";
 		char intLvl[256] = "";
 
-		sprintf(anunLvl, "%lf", DimmerRotationalSwitch->GetOutput());
-		sprintf(numLvl, "%lf", DimmerRotationalSwitch->GetOutput());
+		sprintf(anunLvl, "%lf", SegmentPower->Voltage() / 5.0);
+		sprintf(numLvl, "%lf", PowerRail250VAC() / 250.0);
 		sprintf(intLvl, "%lf", IntegralRotationalSwitch->GetOutput());
-
-		if(LtgORideAnunSwitch && LtgORideAnunSwitch->IsUp()){
-			sprintf(anunLvl, "1.0");
-		}
-
-		if(LtgORideIntegralSwitch && LtgORideIntegralSwitch->IsUp()){
-			sprintf(intLvl, "1.0");
-		}
 
 		anun = anun + "\"" + anunLvl + "\",";
 		numerics = numerics + "\"" + numLvl + "\",";

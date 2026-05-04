@@ -337,7 +337,6 @@ public:
 	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h);
 	void SystemTimestep(double simdt);
 
-	double GetNumericVoltage();
 	double GetNumericOutput();
 	double GetIntegralVoltage();
 	double GetIntegralOutput();
@@ -350,7 +349,10 @@ public:
 	// Variable 2-5VDC output to annun override switch
 	RotVariableVoltageTransformer Variable_2_5VDC_Output;
 
-	ACbus NumericsPower;
+	// AC
+	// Variable 20-110VAC numerics transformer
+	RotVariableVoltageTransformer Variable_20_110VAC_Output;
+
 	ACbus IntegralPower;
 protected:
 	LEM *lem;

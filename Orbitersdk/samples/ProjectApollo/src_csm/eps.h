@@ -111,11 +111,15 @@ protected:
 class NumericLights
 {
 public:
-	NumericLights();
+	NumericLights(PanelSDK& p);
 	virtual ~NumericLights();
 	void NumericLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *rty);
 	double GetOutput();
 	void SystemTimestep(double simdt);
+
+	// Variable 115-5VAC output to DSKY
+	RotVariableVoltageTransformer Variable_115_5VAC_Output;
+	RotVariableVoltageTransformer Variable_0_115VAC_Output;
 
 protected:
 	Saturn *saturn;

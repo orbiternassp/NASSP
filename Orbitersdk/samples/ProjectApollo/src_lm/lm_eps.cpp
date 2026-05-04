@@ -1206,14 +1206,15 @@ void LEM_DockLights::SystemTimestep(double simdt)
 //LIGHTING CONTROL ASSEMBLY
 
 LEM_LCA::LEM_LCA(PanelSDK& p) :
-	NumericsPower("NumericsPower", NULL, NULL),
 	IntegralPower("IntegralPower", NULL, NULL),
 	CDR_Bus_28V_6V_Converter("LCA CDR Bus Converter", 6.0),
 	LMP_Bus_28V_6V_Converter("LCA LMP Bus Converter", 6.0),
 	NumDockCompLTGFeeder("NumDockCompLTGFeeder", p),
 	Fixed_5_5VDC_Output("LCA 5.5VDC Output Converter", 5.5),
 	Fixed_6VDC_Output("LCA 6.0VDC Output"),
-	Variable_2_5VDC_Output("LCA Variable DC Output Converter", 2.0, 5.0)
+	Variable_2_5VDC_Output("LCA Variable DC Output Converter", 2.0, 5.0),
+
+	Variable_20_110VAC_Output("LCA Variable Numerics AC Output Converter", 20.0, 110.0)
 {
 	lem = NULL;
 	LCAHeat = 0;
@@ -1223,6 +1224,8 @@ LEM_LCA::LEM_LCA(PanelSDK& p) :
 	p.AddElectrical(&Fixed_5_5VDC_Output, false);
 	p.AddElectrical(&Fixed_6VDC_Output, false);
 	p.AddElectrical(&Variable_2_5VDC_Output, false);
+
+	p.AddElectrical(&Variable_20_110VAC_Output, false);
 }
 
 void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h)
@@ -1231,6 +1234,7 @@ void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, 
 	LCAHeat = lca_h;
 
 	// Internal wiring
+	// DC
 	CDR_Bus_28V_6V_Converter.WireTo(cdrcb);
 	LMP_Bus_28V_6V_Converter.WireTo(lmpcb);
 	NumDockCompLTGFeeder.WireToBuses(&CDR_Bus_28V_6V_Converter, &LMP_Bus_28V_6V_Converter);
@@ -1239,35 +1243,16 @@ void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, 
 	Variable_2_5VDC_Output.Init(&lem->LtgAnunNumKnob);
 	Variable_2_5VDC_Output.WireTo(&NumDockCompLTGFeeder);
 
-	NumericsPower.WireTo(acnumcb);
+	// AC
+	Variable_20_110VAC_Output.Init(&lem->LtgAnunNumKnob);
+	Variable_20_110VAC_Output.WireTo(acnumcb);
+
 	IntegralPower.WireTo(acintcb);
 }
 
-double LEM_LCA::GetNumericVoltage()
+double LEM_LCA::GetNumericOutput()  //Provides scaling for VC lighting and power draw
 {
-	if (NumericsPower.Voltage() > SP_MIN_ACVOLTAGE)
-	{
-		if (lem->LtgORideNumSwitch.IsUp())
-		{
-			//115V
-			return NumericsPower.Voltage();
-		}
-		else
-		{
-			//20-110V
-			return (90.0 * lem->LtgAnunNumKnob.GetOutput() + 20.0);
-		}
-	}
-	return 0.0;
-}
-
-double LEM_LCA::GetNumericOutput()
-{
-	if (GetNumericVoltage() > 20.0)
-	{
-		return GetNumericVoltage() / 110.0;
-	}
-	return 0.0;
+	return Variable_20_110VAC_Output.Voltage() / 115.0;
 }
 
 double LEM_LCA::GetIntegralVoltage()
@@ -1288,7 +1273,7 @@ double LEM_LCA::GetIntegralVoltage()
 	return 0.0;
 }
 
-double LEM_LCA::GetIntegralOutput()
+double LEM_LCA::GetIntegralOutput()  //Provides scaling for VC lighting and power draw
 {
 	if (GetIntegralVoltage() > 20.0)
 	{
@@ -1313,8 +1298,11 @@ void LEM_LCA::SystemTimestep(double simdt)
 		IntegralPower.DrawPower(16.073 * GetIntegralOutput());
 	}
 
-	//sprintf(oapiDebugString(), "Integral %lf Anun %lf Num %lf", IntegralPower.PowerLoad(), AnnunPower.PowerLoad(), NumericsPower.PowerLoad());
-	//sprintf(oapiDebugString(), "Integral %lf Annun Fixed %lf Annun Var %lf Num %lf", GetIntegralOutput(), GetFixedAnnunOutput(), GetVariableAnnunOutput(), GetNumericOutput());
+	// Numerics power draw from numeric text on CDR XPTR (6), LM XPTR (6), Tapemeter (2), and RCS x10 display (1)
+	// DSKY, mission timer, and event timer are drawn elsewhere
+
+	// Assume all 15 on for now, TBD: figure out how to tie to actual state of displays
+	Variable_20_110VAC_Output.DrawPower(15.0 * (Variable_20_110VAC_Output.Voltage() / 115.0));
 
 	//sprintf(oapiDebugString(), "Voltages: CDR %.1lf, LMP %.1lf, Merge %.1lf, 5.5VDC Out %.1lf, 6VDC Out %.1lf, 2-5VDC Out %.1lf",
 	//	CDR_Bus_28V_6V_Converter.Voltage(), LMP_Bus_28V_6V_Converter.Voltage(), NumDockCompLTGFeeder.Voltage(), Fixed_5_5VDC_Output.Voltage(), Fixed_6VDC_Output.Voltage(), Variable_2_5VDC_Output.Voltage());
@@ -1322,13 +1310,12 @@ void LEM_LCA::SystemTimestep(double simdt)
 	//sprintf(oapiDebugString(), "Power Load: 5.5VDC Out %.1lf, 6.0VDC Out %.1lf, 2-5VDC Out %.1lf", Fixed_5_5VDC_Output.GetLastPowerLoad(), Fixed_6VDC_Output.GetLastPowerLoad(), Variable_2_5VDC_Output.GetLastPowerLoad());
 
 	double AnnunHeat = (Fixed_5_5VDC_Output.GetLastPowerLoad() + Fixed_6VDC_Output.GetLastPowerLoad() + Variable_2_5VDC_Output.GetLastPowerLoad()) * 0.5337;
+	double NumHeat = Variable_20_110VAC_Output.GetLastPowerLoad() * 0.6285;
 	double IntHeat = IntegralPower.PowerLoad() * 0.2056;
-	double NumHeat = NumericsPower.PowerLoad() * 0.6285;
 
 	LCAHeat->GenerateHeat(AnnunHeat + IntHeat + NumHeat); //LCA Heat
 
 	// Reset power load
-	NumericsPower.UpdateFlow(simdt);
 	IntegralPower.UpdateFlow(simdt);
 }
 

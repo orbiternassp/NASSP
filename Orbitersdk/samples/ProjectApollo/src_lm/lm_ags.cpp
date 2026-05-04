@@ -1082,7 +1082,7 @@ bool LEM_DEDA::HasAnnunPower()
 }
 bool LEM_DEDA::HasNumPower()
 {
-	if (lem->lca.GetNumericVoltage() > 25.0)
+	if (lem->lca.Variable_20_110VAC_Output.Voltage() > 20.0)
 		return true;
 
 	return false;

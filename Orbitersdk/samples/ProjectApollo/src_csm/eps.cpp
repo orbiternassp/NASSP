@@ -370,11 +370,16 @@ void IntegralLights::SystemTimestep(double simdt)
 }
 
 //Numeric Lights
-NumericLights::NumericLights()
+NumericLights::NumericLights(PanelSDK& p) :
+	Variable_115_5VAC_Output("DSKY Variable AC Transformer", 0.0, 5.0),
+	Variable_0_115VAC_Output("Variable Numerics AC Output Converter", 0.0, 115.0)
 {
 	saturn = NULL;
 	Numericscb = NULL;
 	Rotary = NULL;
+
+	p.AddElectrical(&Variable_115_5VAC_Output, false);
+	p.AddElectrical(&Variable_0_115VAC_Output, false);
 }
 
 NumericLights::~NumericLights()
@@ -387,20 +392,26 @@ void NumericLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *rt
 	saturn = s;
 	Numericscb = cb;
 	Rotary = rty;
+
+	// DSKY status lights transformer
+	Variable_115_5VAC_Output.Init(Rotary);
+	Variable_115_5VAC_Output.WireTo(Numericscb);
+
+	// Numerics transformer
+	Variable_0_115VAC_Output.Init(Rotary);
+	Variable_0_115VAC_Output.WireTo(Numericscb);
 }
 
 double NumericLights::GetOutput() //Provides scaling for VC lighting and power draw
 {
-	if (Numericscb->Voltage() > SP_MIN_ACVOLTAGE)
-	{
-		return (Numericscb->Voltage() / 115.0) * Rotary->GetOutput(); //returns bus voltage scaled by rotary position (0-1)
-	}
-	return 0.0;
+	return (Variable_0_115VAC_Output.Voltage() / 115.0); //returns bus voltage scaled by rotary position (0-1)
 }
 
 void NumericLights::SystemTimestep(double simdt)
 {
-	Numericscb->DrawPower(GetOutput() * 9.0); //9W per segment not including mission timer or DSKY which are drawn elsewhere
+	//Power Drawn from mission timer and DSKY
+
+	//sprintf(oapiDebugString(), "DSKY %lf Num %lf Rot %lf", Variable_115_5VAC_Output.Voltage(), Variable_0_115VAC_Output.Voltage(), Rotary->GetOutput());
 }
 
 //Exterior Lights
