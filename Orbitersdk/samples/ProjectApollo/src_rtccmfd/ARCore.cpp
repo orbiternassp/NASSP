@@ -6200,7 +6200,7 @@ void ARCore::menuCalculateIMUParkingAngles(agc_t* agc)
 
 	IG = 0.0;
 	MG = asin(GravVecDec[0]);
-	OG = fmod(atan2(GravVecDec[1] / cos(MG), (-GravVecDec[2]) / cos(MG)) + 2 * PI, 2 * PI); //fmod needed to keep range between 0 and 360 deg
+	OG = fmod(atan2(-GravVecDec[2], GravVecDec[1]) + 2 * PI, 2 * PI); //fmod needed to keep range between 0 and 360 deg
 
 	IMUParkingAngles = _V(OG, IG, MG);
 }
