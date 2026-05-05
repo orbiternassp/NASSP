@@ -1908,7 +1908,7 @@ public:
 	RotVariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt);
 	virtual void Init(ContinuousSwitch* rot);
 
-	virtual double GetValue();
+	double GetValue();
 protected:
 	ContinuousSwitch* rotary;
 };
@@ -1920,7 +1920,7 @@ public:
 	RotVoltageTransformerOverride(char* i_name, double MinVolt, double MaxVolt);
 	void Init(ContinuousSwitch* rot, ToggleSwitch* ovrdsw);
 
-	double GetValue();
+	void UpdateFlow(double dt);
 protected:
 	ToggleSwitch* OverrideSwitch;
 };
