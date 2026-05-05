@@ -2583,7 +2583,7 @@ void LEM::SetSwitches(int panel) {
 	TimerSlewSeconds.Init(477, 64, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel5SwitchRow, this, 3);
 	LtgORideAnunSwitch.Init(323, 168, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow, &lca.Fixed_6VDC_Output, &lca.Variable_2_5VDC_Output);
 	LtgORideNumSwitch.Init(380, 168, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow, &NUM_LTG_AC_CB, &lca.Variable_20_110VAC_Output);
-	LtgORideIntegralSwitch.Init(437, 168, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow);
+	LtgORideIntegralSwitch.Init(437, 168, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow, &INTGL_LTG_AC_CB, &lca.Variable_15_75VAC_Output);
 	LtgSidePanelsSwitch.Init(494, 168, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel5SwitchRow);
 	LtgFloodOhdFwdKnob.Init(173, 243, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);
 	LtgAnunNumKnob.Init(333, 243, 84, 84, srf[SRF_LEMROTARY], srf[SRF_BORDER_84x84], Panel5SwitchRow);

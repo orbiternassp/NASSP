@@ -48,7 +48,7 @@ public:
 		e_object *statuslightpower,
 		e_object *segmentlightpower,
 		ContinuousRotationalSwitch *dimmer,
-		ContinuousRotationalSwitch *integralDimmer
+		e_object *integralsource
 	);
 	void Reset();
 
@@ -292,7 +292,7 @@ protected:
 	e_object *StatusPower;
 	e_object *SegmentPower;
 	ContinuousRotationalSwitch *DimmerRotationalSwitch;
-	ContinuousRotationalSwitch *IntegralRotationalSwitch;
+	e_object *IntegralPower;
 
 	//
 	//DSKY output stuff

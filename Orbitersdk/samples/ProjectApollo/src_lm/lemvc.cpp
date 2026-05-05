@@ -1931,7 +1931,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			}
 		}		
 
-        if (TempPressMonRotary.GetState() == 0) {
+		if (TempPressMonRotary.GetState() == 0) {											 // He Press x10 On
             SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, XP_LIT_ON, 1);
         }
         else {

@@ -94,11 +94,14 @@ protected:
 class IntegralLights
 {
 public:
-	IntegralLights(double watts);
+	IntegralLights(PanelSDK& p, double watts);
 	virtual ~IntegralLights();
 	void IntegralLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *rty);
 	double GetOutput();
 	void SystemTimestep(double simdt);
+
+	// Variable 0-115VAC integral transformer
+	RotVariableVoltageTransformer Variable_0_115VAC_Int_Output;
 
 protected:
 	Saturn *saturn;
@@ -119,7 +122,9 @@ public:
 
 	// Variable 115-5VAC output to DSKY
 	RotVariableVoltageTransformer Variable_115_5VAC_Output;
-	RotVariableVoltageTransformer Variable_0_115VAC_Output;
+
+	// Variable 0-115VAC numerics transformer
+	RotVariableVoltageTransformer Variable_0_115VAC_Num_Output;
 
 protected:
 	Saturn *saturn;

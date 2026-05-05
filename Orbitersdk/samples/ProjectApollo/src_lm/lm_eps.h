@@ -338,7 +338,6 @@ public:
 	void SystemTimestep(double simdt);
 
 	double GetNumericOutput();
-	double GetIntegralVoltage();
 	double GetIntegralOutput();
 
 	// DC
@@ -353,7 +352,9 @@ public:
 	// Variable 20-110VAC numerics transformer
 	RotVariableVoltageTransformer Variable_20_110VAC_Output;
 
-	ACbus IntegralPower;
+	//Variable 15-75VAC integral transformer
+	RotVariableVoltageTransformer Variable_15_75VAC_Output;
+
 protected:
 	LEM *lem;
 	h_HeatLoad *LCAHeat;

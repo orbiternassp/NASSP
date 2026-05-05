@@ -383,7 +383,7 @@ void LEM::SystemsInit()
 	agc.WirePower(&LGC_DSKY_CB, NULL);
 	// The DSKY brightness IS controlled by the ANUN/NUM knob on panel 5, but by means of an isolated section of it.
 	// The source of the isolated section is coming from the LGC supply.
-	dsky.Init(&LtgORideAnunSwitch, &LGC_DSKY_CB, &LtgAnunNumKnob, &LtgIntegralKnob);
+	dsky.Init(&LtgORideAnunSwitch, &LGC_DSKY_CB, &LtgAnunNumKnob, &LtgORideIntegralSwitch);
 	agc.InitHeat((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT"));
 
 	//Optics

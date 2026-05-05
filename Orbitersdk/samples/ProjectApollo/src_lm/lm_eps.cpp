@@ -1206,7 +1206,6 @@ void LEM_DockLights::SystemTimestep(double simdt)
 //LIGHTING CONTROL ASSEMBLY
 
 LEM_LCA::LEM_LCA(PanelSDK& p) :
-	IntegralPower("IntegralPower", NULL, NULL),
 	CDR_Bus_28V_6V_Converter("LCA CDR Bus Converter", 6.0),
 	LMP_Bus_28V_6V_Converter("LCA LMP Bus Converter", 6.0),
 	NumDockCompLTGFeeder("NumDockCompLTGFeeder", p),
@@ -1214,7 +1213,8 @@ LEM_LCA::LEM_LCA(PanelSDK& p) :
 	Fixed_6VDC_Output("LCA 6.0VDC Output"),
 	Variable_2_5VDC_Output("LCA Variable DC Output Converter", 2.0, 5.0),
 
-	Variable_20_110VAC_Output("LCA Variable Numerics AC Output Converter", 20.0, 110.0)
+	Variable_20_110VAC_Output("LCA Variable Numerics AC Output Converter", 20.0, 110.0),
+	Variable_15_75VAC_Output("LCA Variable Integral AC Output Converter", 15.0, 75.0)
 {
 	lem = NULL;
 	LCAHeat = 0;
@@ -1226,6 +1226,7 @@ LEM_LCA::LEM_LCA(PanelSDK& p) :
 	p.AddElectrical(&Variable_2_5VDC_Output, false);
 
 	p.AddElectrical(&Variable_20_110VAC_Output, false);
+	p.AddElectrical(&Variable_15_75VAC_Output, false);
 }
 
 void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h)
@@ -1244,58 +1245,39 @@ void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, 
 	Variable_2_5VDC_Output.WireTo(&NumDockCompLTGFeeder);
 
 	// AC
+	// Numerics
 	Variable_20_110VAC_Output.Init(&lem->LtgAnunNumKnob);
 	Variable_20_110VAC_Output.WireTo(acnumcb);
 
-	IntegralPower.WireTo(acintcb);
+	//Integral
+	Variable_15_75VAC_Output.Init(&lem->LtgIntegralKnob);
+	Variable_15_75VAC_Output.WireTo(acintcb);
 }
 
 double LEM_LCA::GetNumericOutput()  //Provides scaling for VC lighting and power draw
 {
-	return Variable_20_110VAC_Output.Voltage() / 115.0;
-}
-
-double LEM_LCA::GetIntegralVoltage()
-{
-	if (IntegralPower.Voltage() > SP_MIN_ACVOLTAGE)
-	{
-		if (lem->LtgORideIntegralSwitch.IsUp())
-		{
-			//115V
-			return IntegralPower.Voltage();
-		}
-		else
-		{
-			//15-75V
-			return (60.0 * lem->LtgIntegralKnob.GetOutput() + 15.0);
-		}
-	}
-	return 0.0;
+	return lem->LtgORideNumSwitch.Voltage() / 115.0;
 }
 
 double LEM_LCA::GetIntegralOutput()  //Provides scaling for VC lighting and power draw
 {
-	if (GetIntegralVoltage() > 20.0)
-	{
-		return GetIntegralVoltage() / 110.0;
-	}
-	return 0.0;
+	return lem->LtgORideIntegralSwitch.Voltage() / 115.0;
 }
 
 void LEM_LCA::SystemTimestep(double simdt)
 {
 	//Integral power draw (46 total EL strips at 1.005W per strip)
 
-	IntegralPower.DrawPower(17.078 * GetIntegralOutput()); //17 EL Strips
+	Variable_15_75VAC_Output.DrawPower(17.078 * GetIntegralOutput()); //17 EL Strips
 
 	if (lem->LtgSidePanelsSwitch.IsUp()) //CDR Side Panel (13 EL Strips)
 	{
-		IntegralPower.DrawPower(13.065 * GetIntegralOutput());
+		Variable_15_75VAC_Output.DrawPower(13.065 * GetIntegralOutput());
 	}
 
 	if (lem->SidePanelsSwitch.IsUp()) //LMP Side Panel (16 EL Strips)
 	{
-		IntegralPower.DrawPower(16.073 * GetIntegralOutput());
+		Variable_15_75VAC_Output.DrawPower(16.073 * GetIntegralOutput());
 	}
 
 	// Numerics power draw from numeric text on CDR XPTR (6), LM XPTR (6), Tapemeter (2), and RCS x10 display (1), EL segments from PQGS and helium displays
@@ -1314,12 +1296,9 @@ void LEM_LCA::SystemTimestep(double simdt)
 
 	double AnnunHeat = (Fixed_5_5VDC_Output.GetLastPowerLoad() + Fixed_6VDC_Output.GetLastPowerLoad() + Variable_2_5VDC_Output.GetLastPowerLoad()) * 0.5337;
 	double NumHeat = Variable_20_110VAC_Output.GetLastPowerLoad() * 0.6285;
-	double IntHeat = IntegralPower.PowerLoad() * 0.2056;
+	double IntHeat = Variable_15_75VAC_Output.PowerLoad() * 0.2056;
 
 	LCAHeat->GenerateHeat(AnnunHeat + IntHeat + NumHeat); //LCA Heat
-
-	// Reset power load
-	IntegralPower.UpdateFlow(simdt);
 }
 
 //Utility Lights

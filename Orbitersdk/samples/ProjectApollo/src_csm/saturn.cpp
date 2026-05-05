@@ -792,8 +792,8 @@ void Saturn::initSaturn()
 
 	agc.ControlVessel(this);
 	imu.SetVessel(this, false);
-	dsky.Init(&LeftNumericLights.Variable_115_5VAC_Output, &CMCDCBusFeeder, &NumericRotarySwitch, &IntegralRotarySwitch);
-	dsky2.Init(&LEBNumericLights.Variable_115_5VAC_Output, &CMCDCBusFeeder, &Panel100NumericRotarySwitch, &Panel100IntegralRotarySwitch);
+	dsky.Init(&LeftNumericLights.Variable_115_5VAC_Output, &CMCDCBusFeeder, &NumericRotarySwitch, &LeftIntegralLights.Variable_0_115VAC_Int_Output);
+	dsky2.Init(&LEBNumericLights.Variable_115_5VAC_Output, &CMCDCBusFeeder, &Panel100NumericRotarySwitch, &LEBIntegralLights.Variable_0_115VAC_Int_Output);
 
 	//
 	// Configure SECS.
@@ -805,8 +805,8 @@ void Saturn::initSaturn()
 	//
 	// Wire up timers.
 	//
-	MissionTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &LeftNumericLights.Variable_0_115VAC_Output, &cte);
-	MissionTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &LEBNumericLights.Variable_0_115VAC_Output, &cte);
+	MissionTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &LeftNumericLights.Variable_0_115VAC_Num_Output, &cte);
+	MissionTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &LEBNumericLights.Variable_0_115VAC_Num_Output, &cte);
 
 	EventTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, NULL);
 	EventTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, NULL);

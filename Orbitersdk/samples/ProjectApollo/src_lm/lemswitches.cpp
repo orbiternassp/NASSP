@@ -1793,7 +1793,7 @@ void LEMDPSDigitalMeter::InitVC(SURFHANDLE surf)
 void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	if (lem->stage > 1) return;
-	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->lca.Variable_20_110VAC_Output.Voltage() <= 20.0) return;
+	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->LtgORideNumSwitch.Voltage() < 20.0) return;
 
 	double percent = v * 100.0;
 
@@ -1809,7 +1809,7 @@ void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 void LEMDPSDigitalMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
 	if (lem->stage > 1) return;
-	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->lca.Variable_20_110VAC_Output.Voltage() <= 20.0) return;
+	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->LtgORideNumSwitch.Voltage() < 20.0) return;
 
 	double percent = GetDisplayValue() * 100.0;
 
@@ -1881,7 +1881,7 @@ double LEMDigitalHeliumPressureMeter::QueryValue()
 
 void LEMDigitalHeliumPressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.Variable_20_110VAC_Output.Voltage() <= 20.0) return;
+	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->LtgORideNumSwitch.Voltage() < 20.0) return;
 
 	const int DigitWidth = 21;
 	const int DigitHeight = 23;
@@ -1901,7 +1901,7 @@ void LEMDigitalHeliumPressureMeter::InitVC(SURFHANDLE surf)
 
 void LEMDigitalHeliumPressureMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
-	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.Variable_20_110VAC_Output.Voltage() <= 20.0) return;
+	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->LtgORideNumSwitch.Voltage() < 20.0) return;
 
 	double v = GetDisplayValue();
 

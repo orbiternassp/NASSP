@@ -157,8 +157,7 @@ DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel) : soundlib(s), 
 
 {
 	DimmerRotationalSwitch = NULL;
-	IntegralRotationalSwitch = NULL;
-
+	IntegralPower = NULL;
 	StatusPower = NULL;
 	SegmentPower = NULL;
 	Reset();
@@ -215,14 +214,15 @@ void DSKY::Init(
 	e_object *statuslightpower,
 	e_object *segmentlightpower,
 	ContinuousRotationalSwitch *dimmer,
-	ContinuousRotationalSwitch *integralDimmer
+	e_object *integralsource
 )
 
 {
 	StatusPower = statuslightpower;
 	SegmentPower = segmentlightpower;
 	DimmerRotationalSwitch = dimmer;
-	IntegralRotationalSwitch = integralDimmer;
+	IntegralPower = integralsource;
+
 	Reset();
 	FirstTimeStep = true;
 }
@@ -1559,7 +1559,7 @@ void DSKY::SendNetworkPacketDSKY()
 
 		sprintf(anunLvl, "%lf", SegmentPower->Voltage() / 5.0);
 		sprintf(numLvl, "%lf", PowerRail250VAC() / 250.0);
-		sprintf(intLvl, "%lf", IntegralRotationalSwitch->GetOutput());
+		sprintf(intLvl, "%lf", IntegralPower->Voltage() / 115.0);
 
 		anun = anun + "\"" + anunLvl + "\",";
 		numerics = numerics + "\"" + numLvl + "\",";
