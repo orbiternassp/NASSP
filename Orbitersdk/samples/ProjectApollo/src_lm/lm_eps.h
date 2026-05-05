@@ -350,10 +350,10 @@ public:
 
 	// AC
 	// Variable 20-110VAC numerics transformer
-	RotVariableVoltageTransformer Variable_20_110VAC_Output;
+	RotVoltageTransformerOverride Num_Override_20_110VAC_Output;
 
 	//Variable 15-75VAC integral transformer
-	RotVariableVoltageTransformer Variable_15_75VAC_Output;
+	RotVoltageTransformerOverride Int_Override_15_75VAC_Output;
 
 protected:
 	LEM *lem;
@@ -436,6 +436,7 @@ public:
 	LEM_PFIRA();
 	void Init(LEM *l);
 	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
 
 	bool GetPropPressIndRelay() { return K1; }
 	bool GetCDRXPointerRelay() { return K2; }
@@ -469,4 +470,66 @@ protected:
 	bool K8;
 	//LMP cross pointer
 	bool K9;
+
+	double GetLightsLit();
+};
+
+//Component Lights Power
+
+class LEM_ComponentLights
+{
+public:
+	LEM_ComponentLights(PanelSDK& p);
+	void Init(LEM *l, e_object *switchpwr, e_object *fixedpwr, e_object *cdr_btb, e_object *lmp_btb);
+	bool FeederFault();
+	double GetDimmableLightsLit();
+	double GetNonDimmableLightsLit();
+	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
+
+	PowerMerge BatFeedTieFeeder;
+	FixedVoltageTransformer Feeder_6VDC_Output;
+
+	bool GetNoTrackCompLt() { return NoTrack; }
+	bool GetCO2CompLt() { return CO2; }
+	bool GetGlycolCompLt() { return Glycol; }
+	bool GetSuitFanCompLt() { return SuitFan; }
+	bool GetH2OSepCompLt() { return H2OSep; }
+	bool GetBatFaultCompLt() { return BatFault; }
+	bool GetFeederFaultCompLt() { return FeedFault; }
+	bool GetStageSeqACompLt() { return StageSeqA; }
+	bool GetStageSeqBCompLt() { return StageSeqB; }
+	bool GetCDRContactLt() { return CDRContact; }
+	bool GetLMPContactLt() { return LMPContact; }
+
+protected:
+	LEM *lem;
+
+	//No track light
+	bool NoTrack;
+	//CO2 light
+	bool CO2;
+	//Glycol light
+	bool Glycol;
+	//Suit/fan light
+	bool SuitFan;
+	//H2O sep light
+	bool H2OSep;
+	//Battery fault light
+	bool BatFault;
+	//Feeder fault light
+	bool FeedFault;
+	//Stage seq A light
+	bool StageSeqA;
+	//Stage seq B light
+	bool StageSeqB;
+	//CDR Contact light
+	bool CDRContact;
+	//LMP Contact light
+	bool LMPContact;
+
+	e_object *SwitchPower;
+	e_object *FixedPower;
+	e_object *CDR_Feed;
+	e_object *LMP_Feed;
 };

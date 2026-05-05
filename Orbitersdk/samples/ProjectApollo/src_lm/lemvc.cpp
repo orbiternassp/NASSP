@@ -1841,18 +1841,18 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 #define XP_LIT_ON  (std::max)(lca.GetNumericOutput(), 0.25)
 #define XP_LIT_OFF  0.25
 
-        //Tapemeter Lights
-        if (AltRngMonSwitch.GetState() == TOGGLESWITCH_DOWN) {
-            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, XP_LIT_ON, 1);
-            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, XP_LIT_OFF, 1);
+		// Tapemeter Lights
+		if (AltRngMonSwitch.GetState() == TOGGLESWITCH_DOWN) {
+			SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, XP_LIT_ON, 1);
+			SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, XP_LIT_OFF, 1);
 		}
-        else {
-            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, XP_LIT_ON, 1);
-            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, XP_LIT_OFF, 1);
+		else {
+			SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, XP_LIT_ON, 1);
+			SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, XP_LIT_OFF, 1);
 		}
 
 		// XPointer Lights CDR
-        if (RateErrorMonSwitch.GetState() == TOGGLESWITCH_UP) {								// RATE ERR MON -> RNDZ RADAR
+		if (!crossPointerLeft.GetRateErrorRelay()) {								// RATE ERR MON -> RNDZ RADAR
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_ON, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_ON, 1);
 
@@ -1868,13 +1868,13 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 				SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_X1, MAT_EMISSION, XP_LIT_OFF, 1);
 			}
 		}
-        else {																				// RATE ERR MON -> LDR RDR/CMPTR
+		else {																				// RATE ERR MON -> LDR RDR/CMPTR
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_LAT_VEL, MAT_EMISSION, XP_LIT_ON, 1);
 
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 
-			if ((ModeSelSwitch.GetState() != THREEPOSSWITCH_DOWN)){							// MODE SEL -> LDG RADAR or PGNS
+			if (!crossPointerLeft.GetModeSelectRelay()) {									// MODE SEL -> LDG RADAR or PGNS
 				SetVCLighting(vcidx, VC_MAT_Panel1_Bulbs_FWD_VEL, MAT_EMISSION, XP_LIT_ON, 1);
 			}
 			else {																			// MODE SEL -> AGS
@@ -1889,10 +1889,10 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 				SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_X10, MAT_EMISSION, XP_LIT_OFF, 1);
 				SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_X1, MAT_EMISSION, XP_LIT_OFF, 1);
 			}
-		}		
+		}
 
 		// XPointer Lights LMP
-        if (RightRateErrorMonSwitch.GetState() == TOGGLESWITCH_UP) {						// RATE ERR MON -> RNDZ RADAR
+		if (!crossPointerRight.GetRateErrorRelay()) {								// RATE ERR MON -> RNDZ RADAR
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_ON, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_ON, 1);
 
@@ -1908,13 +1908,13 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 				SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_X1, MAT_EMISSION, XP_LIT_OFF, 1);
 			}
 		}
-        else {																				// RATE ERR MON -> LDR RDR/CMPTR
+		else {																				// RATE ERR MON -> LDR RDR/CMPTR
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_LAT_VEL, MAT_EMISSION, XP_LIT_ON, 1);
 
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 
-			if ((ModeSelSwitch.GetState() != THREEPOSSWITCH_DOWN)){							// MODE SEL -> LDG RADAR or PGNS
+			if (!crossPointerRight.GetModeSelectRelay()) {							// MODE SEL -> LDG RADAR or PGNS
 				SetVCLighting(vcidx, VC_MAT_Panel2_Bulbs_FWD_VEL, MAT_EMISSION, XP_LIT_ON, 1);
 			}
 			else {																			// MODE SEL -> AGS
@@ -1929,14 +1929,14 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 				SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_X10, MAT_EMISSION, XP_LIT_OFF, 1);
 				SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_X1, MAT_EMISSION, XP_LIT_OFF, 1);
 			}
-		}		
+		}
 
-		if (TempPressMonRotary.GetState() == 0) {											 // He Press x10 On
-            SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, XP_LIT_ON, 1);
-        }
-        else {
-            SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, XP_LIT_OFF, 1);
-        }
+		if (LMRCSAPressInd.GetHeX10Lt()) {											 // He Press x10 On
+			SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, XP_LIT_ON, 1);
+		}
+		else {
+			SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, XP_LIT_OFF, 1);
+		}
 
 		return true;
 	}
@@ -2028,22 +2028,22 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_CONTACTLIGHT1:
-		if (SCS_ENG_CONT_CB.IsPowered() && (scca3.GetContactLightLogic() || LampToneTestRotary.GetState() == 6)) {
+		if (ComponentLights.GetCDRContactLt()) {
 			SetContactLight(VC_MAT_L10_ContactLight1, true); // Light On
 		}
 		else
 		{
-			SetContactLight(VC_MAT_L10_ContactLight1, false); // Light On
+			SetContactLight(VC_MAT_L10_ContactLight1, false); // Light Off
 		}
 		return true;
 
 	case AID_VC_CONTACTLIGHT2:
-		if (SCS_ATCA_CB.IsPowered() && (scca3.GetContactLightLogic() || LampToneTestRotary.GetState() == 6)) {
+		if (ComponentLights.GetLMPContactLt()) {
 			SetContactLight(VC_MAT_L11_ContactLight2, true); // Light On
 		}
 		else
 		{
-			SetContactLight(VC_MAT_L11_ContactLight2, false); // Light On
+			SetContactLight(VC_MAT_L11_ContactLight2, false); // Light Off
 		}
 		return true;
 
@@ -2180,7 +2180,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_RR_NOTRACK:
-		if (RR.GetNoTrackSignal() || LampToneTestRotary.GetState() == 6) { // The AC side is only needed for the transmitter
+		if (ComponentLights.GetNoTrackCompLt()) {
 			SetCompLight(VC_MAT_L12_CompLight1_RRnottrack, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
@@ -2189,28 +2189,28 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_PANEL2_COMPLIGHTS:
-		if (scera2.GetSwitch(12, 2)->IsClosed() || PrimGlycolPumpController.GetPressureSwitch() == true || LampToneTestRotary.GetState() == 6) {
+		if (ComponentLights.GetGlycolCompLt()) {
 			SetCompLight(VC_MAT_L13_CompLight2_Glycol, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L13_CompLight2_Glycol, 0.0); // Light Off
 		}
 
-		if (SuitFanDPSensor.GetSuitFanFail() == true || LampToneTestRotary.GetState() == 6) {
+		if (ComponentLights.GetSuitFanCompLt()) {
 			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L14_CompLight3_SuitFan, 0.0); // Light Off
 		}
 
-		if (CWEA.IsCO2PartialPressureHigh() || CO2CanisterSelectSwitch.GetState() == 0 || LampToneTestRotary.GetState() == 6) {
+		if (ComponentLights.GetCO2CompLt()) {
 			SetCompLight(VC_MAT_L15_CompLight4_CO2, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L15_CompLight4_CO2, 0.0); // Light Off
 		}
 
-		if (INST_CWEA_CB.IsPowered() && (scera1.GetVoltage(5, 3) < (792.5 / 720.0) || LampToneTestRotary.GetState() == 6)) {
+		if (ComponentLights.GetH2OSepCompLt()) {
 			SetCompLight(VC_MAT_L16_CompLight5_H2Osep, LtgORideAnunSwitch.Voltage()); // Light On
 		}
 		else {
@@ -2219,15 +2219,15 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_PANEL14_COMPLIGHTS:
-		if (LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L17_CompLight6_DCBus, lca.Fixed_5_5VDC_Output.Voltage()); // Light On
+		if (ComponentLights.GetFeederFaultCompLt()) {
+			SetCompLight(VC_MAT_L17_CompLight6_DCBus, ComponentLights.Feeder_6VDC_Output.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L17_CompLight6_DCBus, 0.0); // Light Off
 		}
 
-		if (LampToneTestRotary.GetState() == 6) {
-			SetCompLight(VC_MAT_L18_CompLight7_BatFault, LtgORideAnunSwitch.Voltage()); // Light On
+		if (ComponentLights.GetBatFaultCompLt()) {
+			SetCompLight(VC_MAT_L18_CompLight7_BatFault, lca.Fixed_5_5VDC_Output.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L18_CompLight7_BatFault, 0.0); // Light Off
@@ -2235,14 +2235,14 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		return true;
 
 	case AID_VC_SEQ_LIGHTS:
-		if (scera1.GetVoltage(12, 11) > 2.5 && stage < 2 || LampToneTestRotary.GetState() == 6) {
+		if (ComponentLights.GetStageSeqACompLt()) {
 			SetCompLight(VC_MAT_L19_StageSeq_SysA, lca.Fixed_5_5VDC_Output.Voltage()); // Light On
 		}
 		else {
 			SetCompLight(VC_MAT_L19_StageSeq_SysA, 0.0); // Light Off
 		}
 
-		if (scera1.GetVoltage(12, 12) > 2.5 || LampToneTestRotary.GetState() == 6) {
+		if (ComponentLights.GetStageSeqBCompLt()) {
 			SetCompLight(VC_MAT_L20_StageSeq_SysB, lca.Fixed_5_5VDC_Output.Voltage()); // Light On
 		}
 		else {

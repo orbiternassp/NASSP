@@ -166,7 +166,7 @@ class CrossPointer
 public:
 	CrossPointer();
 	virtual ~CrossPointer();
-	void Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon);
+	void Init(LEM *s, e_object *dc_src, e_object *ltg, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon);
 	void SaveState(FILEHANDLE scn, char *start_str);
 	void LoadState(char *line);
 	void Timestep(double simdt);
@@ -183,9 +183,22 @@ public:
 	void DefineMeshGroup(UINT _grpX, UINT _grpY);
 
 	bool IsPowered();
+	void RelayBox();
+
+	bool GetRateErrorRelay() { return RateErrorRelay; };
+	bool GetModeSelectRelay() { return ModeSelectRelay; };
+
+	bool GetElevRtLt() { return ElevRt; };
+	bool GetAzRtLt() { return AzRt; };
+	bool GetLatVelLt() { return LatVel; };
+	bool GetFwdVelLt() { return FwdVel; };
+	bool GetX01Lt() { return X01; };
+	bool GetX10Lt() { return X10; };
+
 protected:
 	LEM *lem;
 	e_object *dc_source;
+	e_object *ltg_source;
 	ToggleSwitch *scaleSwitch;
 	ToggleSwitch *rateErrMonSw;
 
@@ -193,6 +206,17 @@ protected:
 	double display_vel_x, display_vel_y;
 	double lgc_forward, lgc_lateral;
 	double callout_x, callout_y;
+
+	bool RateErrorRelay;
+	bool ModeSelectRelay;
+	bool ElevRt;
+	bool AzRt;
+	bool LatVel;
+	bool FwdVel;
+	bool X01;
+	bool X10;
+
+	double GetDimmableLightsLit();
 
 	UINT anim_xpointerx, anim_xpointery;
 	UINT grpX, grpY;
@@ -1260,8 +1284,8 @@ protected:
 	LEMMissionTimerSwitch TimerSlewMinutes;
 	LEMMissionTimerSwitch TimerSlewSeconds;
 	TwoSourceSwitch LtgORideAnunSwitch;
-	TwoSourceSwitch LtgORideNumSwitch;
-	TwoSourceSwitch LtgORideIntegralSwitch;
+	ToggleSwitch LtgORideNumSwitch;
+	ToggleSwitch LtgORideIntegralSwitch;
 	ToggleSwitch LtgSidePanelsSwitch;
 	ContinuousRotationalSwitch LtgFloodOhdFwdKnob;
 	ContinuousRotationalSwitch LtgAnunNumKnob;
@@ -2020,6 +2044,7 @@ protected:
 	LEM_COASLights COASLights;
 	LEM_FloodLights FloodLights;
 	LEM_PFIRA pfira;
+	LEM_ComponentLights ComponentLights;
 
 	// ECS
 	LEM_ECS ecs;
@@ -2169,6 +2194,7 @@ protected:
 	friend class EngineStartButton;
 	friend class LEM_LCA;
 	friend class LEM_PFIRA;
+	friend class LEM_ComponentLights;
 	friend class LEMCrewStatus;
 	friend class CDRCOASPowerSwitch;
 	friend class LMMalfunctionSimulation;

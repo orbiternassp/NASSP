@@ -1213,8 +1213,8 @@ LEM_LCA::LEM_LCA(PanelSDK& p) :
 	Fixed_6VDC_Output("LCA 6.0VDC Output"),
 	Variable_2_5VDC_Output("LCA Variable DC Output Converter", 2.0, 5.0),
 
-	Variable_20_110VAC_Output("LCA Variable Numerics AC Output Converter", 20.0, 110.0),
-	Variable_15_75VAC_Output("LCA Variable Integral AC Output Converter", 15.0, 75.0)
+	Num_Override_20_110VAC_Output("LCA Variable Numerics AC Output Converter", 20.0, 110.0),
+	Int_Override_15_75VAC_Output("LCA Variable Integral AC Output Converter", 15.0, 75.0)
 {
 	lem = NULL;
 	LCAHeat = 0;
@@ -1225,8 +1225,8 @@ LEM_LCA::LEM_LCA(PanelSDK& p) :
 	p.AddElectrical(&Fixed_6VDC_Output, false);
 	p.AddElectrical(&Variable_2_5VDC_Output, false);
 
-	p.AddElectrical(&Variable_20_110VAC_Output, false);
-	p.AddElectrical(&Variable_15_75VAC_Output, false);
+	p.AddElectrical(&Num_Override_20_110VAC_Output, false);
+	p.AddElectrical(&Int_Override_15_75VAC_Output, false);
 }
 
 void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h)
@@ -1246,59 +1246,53 @@ void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, 
 
 	// AC
 	// Numerics
-	Variable_20_110VAC_Output.Init(&lem->LtgAnunNumKnob);
-	Variable_20_110VAC_Output.WireTo(acnumcb);
+	Num_Override_20_110VAC_Output.Init(&lem->LtgAnunNumKnob, &lem->LtgORideNumSwitch);
+	Num_Override_20_110VAC_Output.WireTo(acnumcb);
 
 	//Integral
-	Variable_15_75VAC_Output.Init(&lem->LtgIntegralKnob);
-	Variable_15_75VAC_Output.WireTo(acintcb);
+	Int_Override_15_75VAC_Output.Init(&lem->LtgIntegralKnob, &lem->LtgORideIntegralSwitch);
+	Int_Override_15_75VAC_Output.WireTo(acintcb);
 }
 
 double LEM_LCA::GetNumericOutput()  //Provides scaling for VC lighting and power draw
 {
-	return lem->LtgORideNumSwitch.Voltage() / 115.0;
+	return Num_Override_20_110VAC_Output.Voltage() / 115.0;
 }
 
 double LEM_LCA::GetIntegralOutput()  //Provides scaling for VC lighting and power draw
 {
-	return lem->LtgORideIntegralSwitch.Voltage() / 115.0;
+	return Int_Override_15_75VAC_Output.Voltage() / 115.0;
 }
 
 void LEM_LCA::SystemTimestep(double simdt)
 {
 	//Integral power draw (46 total EL strips at 1.005W per strip)
 
-	Variable_15_75VAC_Output.DrawPower(17.078 * GetIntegralOutput()); //17 EL Strips
+	Int_Override_15_75VAC_Output.DrawPower(17.078 * GetIntegralOutput()); //17 EL Strips
 
 	if (lem->LtgSidePanelsSwitch.IsUp()) //CDR Side Panel (13 EL Strips)
 	{
-		Variable_15_75VAC_Output.DrawPower(13.065 * GetIntegralOutput());
+		Int_Override_15_75VAC_Output.DrawPower(13.065 * GetIntegralOutput());
 	}
 
 	if (lem->SidePanelsSwitch.IsUp()) //LMP Side Panel (16 EL Strips)
 	{
-		Variable_15_75VAC_Output.DrawPower(16.073 * GetIntegralOutput());
+		Int_Override_15_75VAC_Output.DrawPower(16.073 * GetIntegralOutput());
 	}
-
-	// Numerics power draw from numeric text on CDR XPTR (6), LM XPTR (6), Tapemeter (2), and RCS x10 display (1), EL segments from PQGS and helium displays
-	// DSKY, mission timer, and event timer are drawn elsewhere
-
-	// Assume all 15 on for now, TBD: figure out how to tie to actual state of displays
-	double text = 7.5; // Assumes .5W per lamp 
-	double EL = (8.0 * 7.0 * 0.022); // Assumes .022W per segment
-
-	Variable_20_110VAC_Output.DrawPower((text + EL) * (Variable_20_110VAC_Output.Voltage() / 115.0));
 
 	//sprintf(oapiDebugString(), "Voltages: CDR %.1lf, LMP %.1lf, Merge %.1lf, 5.5VDC Out %.1lf, 6VDC Out %.1lf, 2-5VDC Out %.1lf",
 	//	CDR_Bus_28V_6V_Converter.Voltage(), LMP_Bus_28V_6V_Converter.Voltage(), NumDockCompLTGFeeder.Voltage(), Fixed_5_5VDC_Output.Voltage(), Fixed_6VDC_Output.Voltage(), Variable_2_5VDC_Output.Voltage());
 
 	//sprintf(oapiDebugString(), "Power Load: 5.5VDC Out %.1lf, 6.0VDC Out %.1lf, 2-5VDC Out %.1lf", Fixed_5_5VDC_Output.GetLastPowerLoad(), Fixed_6VDC_Output.GetLastPowerLoad(), Variable_2_5VDC_Output.GetLastPowerLoad());
+	//sprintf(oapiDebugString(), "Power Load: Num %.1lf, Int %.1lf", Num_Override_20_110VAC_Output.GetLastPowerLoad(), Int_Override_15_75VAC_Output.GetLastPowerLoad());
 
 	double AnnunHeat = (Fixed_5_5VDC_Output.GetLastPowerLoad() + Fixed_6VDC_Output.GetLastPowerLoad() + Variable_2_5VDC_Output.GetLastPowerLoad()) * 0.5337;
-	double NumHeat = Variable_20_110VAC_Output.GetLastPowerLoad() * 0.6285;
-	double IntHeat = Variable_15_75VAC_Output.PowerLoad() * 0.2056;
+	double NumHeat = Num_Override_20_110VAC_Output.GetLastPowerLoad() * 0.6285;
+	double IntHeat = Int_Override_15_75VAC_Output.GetLastPowerLoad() * 0.2056;
 
 	LCAHeat->GenerateHeat(AnnunHeat + IntHeat + NumHeat); //LCA Heat
+
+	//sprintf(oapiDebugString(), "Heat: Load %lf Anun %lf Num %lf Int %lf", LCAHeat->heat_load, AnnunHeat, NumHeat, IntHeat);
 }
 
 //Utility Lights
@@ -1511,6 +1505,21 @@ void LEM_PFIRA::Init(LEM *l)
 	lem = l;
 }
 
+double LEM_PFIRA::GetLightsLit()
+{
+	double lights_lit = 0.0;
+	if (!K1) lights_lit += 1.0;
+	if (!K2) lights_lit += 1.0;
+	if (!K3) lights_lit += 1.0;
+	if (!K4) lights_lit += 1.0;
+	if (!K5) lights_lit += 1.0;
+	if (!K6) lights_lit += 1.0;
+	if (!K7) lights_lit += 1.0;
+	if (!K8) lights_lit += 1.0;
+	if (!K9) lights_lit += 1.0;
+	return lights_lit;
+}
+
 void LEM_PFIRA::Timestep(double simdt)
 {
 	if (lem == NULL) return;
@@ -1574,5 +1583,214 @@ void LEM_PFIRA::Timestep(double simdt)
 	else
 	{
 		K9 = false;
+	}
+}
+
+void LEM_PFIRA::SystemTimestep(double simdt)
+{
+	lem->LtgORideAnunSwitch.DrawPower((GetLightsLit() * 0.5) * (lem->LtgORideAnunSwitch.Voltage() / 6.0)); //Assumes 0.5W per lamp, needs to be checked
+
+	//sprintf(oapiDebugString(), "Lights lit: %f", GetLightsLit());
+}
+
+LEM_ComponentLights::LEM_ComponentLights(PanelSDK& p) :
+
+	BatFeedTieFeeder("FeedTieFeeder", p),
+	Feeder_6VDC_Output("Feeder 6.0VDC Output", 6.0)
+{
+	lem = NULL;
+	SwitchPower = NULL;
+	FixedPower = NULL;
+	CDR_Feed = NULL;
+	LMP_Feed = NULL;
+
+	p.AddElectrical(&Feeder_6VDC_Output, false);
+
+	NoTrack = false;
+	CO2 = false;
+	Glycol = false;
+	SuitFan = false;
+	H2OSep = false;
+	BatFault = false;
+	FeedFault = false;
+	StageSeqA = false;
+	StageSeqB = false;
+
+	CDRContact = false;
+	LMPContact = false;
+}
+
+void LEM_ComponentLights::Init(LEM *l, e_object *switchpwr, e_object *fixedpwr, e_object *cdr_btb, e_object *lmp_btb)
+{
+	lem = l;
+	SwitchPower = switchpwr;
+	FixedPower = fixedpwr;
+	CDR_Feed = cdr_btb;
+	LMP_Feed = lmp_btb;
+
+	BatFeedTieFeeder.WireToBuses(CDR_Feed, LMP_Feed);
+	Feeder_6VDC_Output.WireTo(&BatFeedTieFeeder);
+}
+
+bool LEM_ComponentLights::FeederFault()
+{
+	if (std::abs(CDR_Feed->Voltage() - LMP_Feed->Voltage()) > 18) {
+		return true;
+	}
+	return false;
+}
+
+double LEM_ComponentLights::GetDimmableLightsLit()
+{
+	double lights_lit = 0.0;
+	if (NoTrack) lights_lit += 1.0;
+	if (CO2) lights_lit += 1.0;
+	if (Glycol) lights_lit += 1.0;
+	if (SuitFan) lights_lit += 1.0;
+	if (H2OSep) lights_lit += 1.0;
+	if (BatFault) lights_lit += 1.0;
+	return lights_lit;
+}
+
+double LEM_ComponentLights::GetNonDimmableLightsLit()
+{
+	double lights_lit = 0.0;
+	if (StageSeqA) lights_lit += 1.0;
+	if (StageSeqB) lights_lit += 1.0;
+	return lights_lit;
+}
+
+void LEM_ComponentLights::Timestep(double simdt)
+{
+	if (lem == NULL) return;
+
+	if (SwitchPower->Voltage() > 1.8)
+	{
+		if (lem->RR.GetNoTrackSignal() || lem->LampToneTestRotary.GetState() == 6)
+		{
+			NoTrack = true;
+		}
+		else
+		{
+			NoTrack = false;
+		}
+
+		if (lem->scera2.GetSwitch(12, 2)->IsClosed() || lem->PrimGlycolPumpController.GetPressureSwitch() == true || lem->LampToneTestRotary.GetState() == 6)
+		{
+			Glycol = true;
+		}
+		else
+		{
+			Glycol = false;
+		}
+
+		if (lem->SuitFanDPSensor.GetSuitFanFail() == true || lem->LampToneTestRotary.GetState() == 6)
+		{
+			SuitFan = true;
+		}
+		else
+		{
+			SuitFan = false;
+		}
+
+		if (lem->CWEA.IsCO2PartialPressureHigh() || lem->CO2CanisterSelectSwitch.GetState() == 0 || lem->LampToneTestRotary.GetState() == 6)
+		{
+			CO2 = true;
+		}
+		else
+		{
+			CO2 = false;
+		}
+
+		if (lem->INST_CWEA_CB.IsPowered() && (lem->scera1.GetVoltage(5, 3) < (792.5 / 720.0) || lem->LampToneTestRotary.GetState() == 6))
+		{
+			H2OSep = true;
+		}
+		else
+		{
+			H2OSep = false;
+		}
+
+		if (lem->scera2.GetBatFaultLogic() || lem->LampToneTestRotary.GetState() == 6)
+		{
+			BatFault = true;
+		}
+		else
+		{
+			BatFault = false;
+		}
+	}
+	if (FixedPower->Voltage() > 1.8)
+	{
+		if ((lem->scera1.GetVoltage(12, 11) > 2.5 && lem->stage < 2) || lem->LampToneTestRotary.GetState() == 6)
+		{
+			StageSeqA = true;
+		}
+		else
+		{
+			StageSeqA = false;
+		}
+
+		if (lem->scera1.GetVoltage(12, 12) > 2.5 || lem->LampToneTestRotary.GetState() == 6)
+		{
+			StageSeqB = true;
+		}
+		else
+		{
+			StageSeqB = false;
+		}
+	}
+	if (Feeder_6VDC_Output.Voltage() > 1.8)
+	{
+		if (FeederFault() || lem->LampToneTestRotary.GetState() == 6)
+		{
+			FeedFault = true;
+		}
+		else
+		{
+			FeedFault = false;
+		}
+	}
+
+	// Contact Light Power
+	if ((lem->SCS_ENG_CONT_CB.IsPowered() && lem->scca3.GetContactLightLogic()) || lem->LampToneTestRotary.GetState() == 6)
+	{
+		CDRContact = true;
+	}
+	else
+	{
+		CDRContact = false;
+	}
+
+	if ((lem->SCS_ATCA_CB.IsPowered() && lem->scca3.GetContactLightLogic()) || lem->LampToneTestRotary.GetState() == 6)
+	{
+		LMPContact = true;
+	}
+	else
+	{
+		LMPContact = false;
+	}
+
+	//sprintf(oapiDebugString(), "Feeder voltage: %lf, Feeder lit: %i Bus lit %i", Feeder_6VDC_Output.Voltage(), FeedFault, BatFault);
+}
+
+void LEM_ComponentLights::SystemTimestep(double simdt)
+{
+	SwitchPower->DrawPower(GetDimmableLightsLit() * 0.5 * (SwitchPower->Voltage() / 6.0)); //Assumes 0.5W per lamp, needs to be checked
+	FixedPower->DrawPower(GetNonDimmableLightsLit() * 0.5); //Assumes 0.5W per lamp, needs to be checked
+
+	if (FeedFault)
+	{
+		Feeder_6VDC_Output.DrawPower(0.5); //Assumes 0.5W per lamp, needs to be checked
+	}
+
+	if (CDRContact)
+	{
+		lem->SCS_ENG_CONT_CB.DrawPower(0.5); //Assumes 0.5W per lamp, needs to be checked
+	}
+
+	if (LMPContact)
+	{
+		lem->SCS_ATCA_CB.DrawPower(0.5); //Assumes 0.5W per lamp, needs to be checked
 	}
 }

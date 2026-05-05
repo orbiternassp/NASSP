@@ -412,7 +412,7 @@ double NumericLights::GetOutput() //Provides scaling for VC lighting and power d
 
 void NumericLights::SystemTimestep(double simdt)
 {
-	//Power Drawn from mission timer and DSKY
+	//Power Drawn from mission timer and DSKY classes, keeping timestep function to utilize debug string for now
 
 	//sprintf(oapiDebugString(), "DSKY %lf Num %lf Rot %lf", Variable_115_5VAC_Output.Voltage(), Variable_0_115VAC_Num_Output.Voltage(), Rotary->GetOutput());
 }

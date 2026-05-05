@@ -378,12 +378,13 @@ void LEM::SystemsInit()
 	FloodLights.Init(this, &LTG_FLOOD_CB, &FloodSwitch, &FloodRotary, &LtgFloodOhdFwdKnob, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	AOTLampFeeder.WireToBuses(&AOT_LAMP_ACA_CB, &AOT_LAMP_ACB_CB);
 	pfira.Init(this);
+	ComponentLights.Init(this, &LtgORideAnunSwitch, &lca.Fixed_5_5VDC_Output, &BTB_CDR_B, &BTB_LMP_B);
 
 	// LGC and DSKY
 	agc.WirePower(&LGC_DSKY_CB, NULL);
 	// The DSKY brightness IS controlled by the ANUN/NUM knob on panel 5, but by means of an isolated section of it.
 	// The source of the isolated section is coming from the LGC supply.
-	dsky.Init(&LtgORideAnunSwitch, &LGC_DSKY_CB, &LtgAnunNumKnob, &LtgORideIntegralSwitch);
+	dsky.Init(&LtgORideAnunSwitch, &LGC_DSKY_CB, &LtgAnunNumKnob, &lca.Int_Override_15_75VAC_Output);
 	agc.InitHeat((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT"));
 
 	//Optics
@@ -397,7 +398,7 @@ void LEM::SystemsInit()
 
 	aea.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:AEAHEAT"));
 	aea.WireToBuses(&CDR_SCS_AEA_CB, &SCS_AEA_CB, &AGSOperateSwitch);
-	deda.Init(&SCS_AEA_CB);
+	deda.Init(&SCS_AEA_CB, &lca.Num_Override_20_110VAC_Output, &LtgORideAnunSwitch);
 	rga.Init(this, &SCS_ATCA_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RGAHEAT"));
 
 	// Set up IMU heater stuff
@@ -441,7 +442,7 @@ void LEM::SystemsInit()
 	LMP_FDAI_AC_CB.MaxAmps = 2.0;
 	LMP_FDAI_AC_CB.WireTo(&ACBusB);
 	fdaiRight.WireTo(&LMP_EVT_TMR_FDAI_DC_CB,&LMP_FDAI_AC_CB);
-	EventTimerDisplay.Init(&LMP_EVT_TMR_FDAI_DC_CB, NULL, &LtgORideNumSwitch);
+	EventTimerDisplay.Init(&LMP_EVT_TMR_FDAI_DC_CB, NULL, &lca.Num_Override_20_110VAC_Output);
 
 	// HEATERS
 	TempMonitorInd.WireTo(&HTR_DISP_CB);
@@ -451,8 +452,10 @@ void LEM::SystemsInit()
 
 	// Rdz Radar
 	RR.Init(this, &PGNS_RNDZ_RDR_CB, &RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-StbyHeater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RRHEAT"));
-	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
-	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
+	
+	// Cross Pointers
+	crossPointerLeft.Init(this, &CDR_XPTR_CB, &lca.Num_Override_20_110VAC_Output, &LeftXPointerSwitch, &RateErrorMonSwitch);
+	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &lca.Num_Override_20_110VAC_Output, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 
 	// CWEA
 	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CWEAHEAT"));
@@ -620,7 +623,7 @@ void LEM::SystemsInit()
 	// Mission timer.
 	MISSION_TIMER_CB.MaxAmps = 2.0;
 	MISSION_TIMER_CB.WireTo(&CDRs28VBus);
-	MissionTimerDisplay.Init(&MISSION_TIMER_CB, NULL, &LtgORideNumSwitch, &PCM);
+	MissionTimerDisplay.Init(&MISSION_TIMER_CB, NULL, &lca.Num_Override_20_110VAC_Output, &PCM);
 
 	// Pyro Buses
 	Panelsdk.AddElectrical(&ED28VBusA, false);
@@ -1440,6 +1443,8 @@ void LEM::SystemsInternalTimestep(double simdt)
 		MissionTimerDisplay.SystemTimestep(tFactor);
 		EventTimerDisplay.SystemTimestep(tFactor);
 		CWEA.SystemTimestep(tFactor);
+		pfira.SystemTimestep(tFactor);
+		ComponentLights.SystemTimestep(tFactor);
 		if (stage < 2)
 		{
 			ECA_1.SystemTimestep(tFactor);
@@ -1455,6 +1460,13 @@ void LEM::SystemsInternalTimestep(double simdt)
 		FloodLights.SystemTimestep(tFactor);
 		INV_1.SystemTimestep(tFactor);
 		INV_2.SystemTimestep(tFactor);
+		LMRCSAPressInd.SystemTimestep(tFactor);
+		MainHeliumPressureMeter.SystemTimestep(tFactor);
+		DPSOxidPercentMeter.SystemTimestep(tFactor);
+		DPSFuelPercentMeter.SystemTimestep(tFactor);
+		ManualEngineStart.SystemTimestep(tFactor);
+		CDRManualEngineStop.SystemTimestep(tFactor);
+		LMPManualEngineStop.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
@@ -1494,9 +1506,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		// IMU is not operating.
 		if(imublower->h_pump != 0){ imublower->SetPumpOff(); }
 	}
-
-	// FIXME: Draw power for lighting system.
-	// This will be done in the LCA and individual lighting components
 
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
@@ -1617,6 +1626,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	tle.Timestep(simdt);
 	DockLights.Timestep(simdt);
 	pfira.Timestep(simdt);
+	ComponentLights.Timestep(simdt);
 
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();
@@ -2555,7 +2565,7 @@ void LEM_RadarTape::Init(LEM* s, e_object* dc_src, e_object* ac_src, SURFHANDLE 
 
 bool LEM_RadarTape::PowerSignalMonOn()
 {
-	if ((dc_source->Voltage() > 2 || ac_source->Voltage() > SP_MIN_ACVOLTAGE) && (PowerFailure() == true || SignalFailure() == true || TimingFailure() == true)) { //Checks if DC power (2V to light the lamp) is present and the logic for power/signal/timing present
+	if ((dc_source->Voltage() > 1.8 || ac_source->Voltage() > SP_MIN_ACVOLTAGE) && (PowerFailure() == true || SignalFailure() == true || TimingFailure() == true)) { //Checks if DC power (2V to light the lamp) is present and the logic for power/signal/timing present
 		return true;
 	}
 	return false;
@@ -2758,6 +2768,14 @@ void LEM_RadarTape::TapeDrive(double &Angle, double AngleCmd, double RateLimit, 
 	Angle += dpos;
 }
 
+bool LEM_RadarTape::IsPowered()
+{
+	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE || ac_source->Voltage() < SP_MIN_ACVOLTAGE) {
+		return false;
+	}
+	return true;
+}
+
 void LEM_RadarTape::SystemTimestep(double simdt) {
 	if (!IsPowered())
 		return;
@@ -2766,17 +2784,20 @@ void LEM_RadarTape::SystemTimestep(double simdt) {
 		ac_source->DrawPower(2.0);
 
 	if (dc_source)
-		dc_source->DrawPower(2.1);
+	{
+		if (PowerSignalMonOn())
+		{
+			dc_source->DrawPower(2.1 + 0.5);
+		}
+		else
+		{
+			dc_source->DrawPower(2.1);
+		}
+	}
+
+	lem->lca.Num_Override_20_110VAC_Output.DrawPower(1.0 * lem->lca.Num_Override_20_110VAC_Output.Voltage() / 115.0); // Either range rate or altitude rate light will be lit
 
 	//sprintf(oapiDebugString(), "SimTime %1f LGC Alt Time %.5f LGC AltRate Time %.5f AGS Alt Time %.5f AGS AltRate Time %.5f", oapiGetSimTime(), LGCaltUpdateTime, LGCaltRateUpdateTime, AGSaltUpdateTime, AGSaltRateUpdateTime);
-}
-
-bool LEM_RadarTape::IsPowered()
-{
-	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE || ac_source->Voltage() < SP_MIN_ACVOLTAGE) {
-		return false;
-	}
-	return true;
 }
 
 void LEM_RadarTape::SetLGCAltitude(int val) {
@@ -2925,6 +2946,7 @@ CrossPointer::CrossPointer()
 	rateErrMonSw = NULL;
 	scaleSwitch = NULL;
 	dc_source = NULL;
+	ltg_source = NULL;
 	vel_x = display_vel_x = callout_x = 0;
 	vel_y = display_vel_y = callout_y = 0;
 	lgc_forward = 0;
@@ -2936,6 +2958,16 @@ CrossPointer::CrossPointer()
 	grpX = 0;
 	grpY = 0;
 	xtrans = ytrans = NULL;
+
+	RateErrorRelay = false;
+	ModeSelectRelay = false;
+
+	ElevRt = false;
+	AzRt = false;
+	LatVel = false;
+	FwdVel = false;
+	X01 = false;
+	X10 = false;
 }
 
 CrossPointer::~CrossPointer()
@@ -2944,10 +2976,11 @@ CrossPointer::~CrossPointer()
 	if (ytrans) delete ytrans;
 }
 
-void CrossPointer::Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon)
+void CrossPointer::Init(LEM *s, e_object *dc_src, e_object *ltg, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon)
 {
 	lem = s;
 	dc_source = dc_src;
+	ltg_source = ltg;
 	scaleSwitch = scaleSw;
 	rateErrMonSw = rateErrMon;
 }
@@ -2960,10 +2993,39 @@ bool CrossPointer::IsPowered()
 	return true;
 }
 
-void CrossPointer::SystemTimestep(double simdt)
+void CrossPointer::RelayBox()
 {
-	if (IsPowered() && dc_source)
-		dc_source->DrawPower(8.0);  // take DC power
+	//Rate Error Monitor CDR (9K32B) and LMP (9K30B)
+	if (IsPowered() && rateErrMonSw->IsDown())
+	{
+		RateErrorRelay = true;
+	}
+	else
+	{
+		RateErrorRelay = false;
+	}
+
+	//Mode Select Switch (9K34A)
+	if (lem->CDR_XPTR_CB.IsPowered() && lem->ModeSelSwitch.IsDown())
+	{
+		ModeSelectRelay = true;
+	}
+	else
+	{
+		ModeSelectRelay = false;
+	}
+}
+
+double CrossPointer::GetDimmableLightsLit()
+{
+	double lights_lit = 0.0;
+	if (ElevRt) lights_lit += 1.0;
+	if (AzRt) lights_lit += 1.0;
+	if (LatVel) lights_lit += 1.0;
+	if (FwdVel) lights_lit += 1.0;
+	if (X01) lights_lit += 1.0;
+	if (X10) lights_lit += 1.0;
+	return lights_lit;
 }
 
 void CrossPointer::Timestep(double simdt)
@@ -2980,8 +3042,8 @@ void CrossPointer::Timestep(double simdt)
 	{
 		if (lem->RR.IsPowered())
 		{
-			vel_x = lem->RR.GetRadarShaftVel()*1000.0;
-			vel_y = lem->RR.GetRadarTrunnionVel()*1000.0;
+			vel_x = lem->RR.GetRadarShaftVel() * 1000.0;
+			vel_y = lem->RR.GetRadarTrunnionVel() * 1000.0;
 		}
 		else
 		{
@@ -3014,11 +3076,11 @@ void CrossPointer::Timestep(double simdt)
 		}
 		else if (lem->ModeSelSwitch.IsCenter())	//PGNS
 		{
-			lgc_forward = 0.5571*(double)lem->scdu.GetAltOutput();
-			lgc_lateral = 0.5571*(double)lem->tcdu.GetAltOutput();
+			lgc_forward = 0.5571 * (double)lem->scdu.GetAltOutput();
+			lgc_lateral = 0.5571 * (double)lem->tcdu.GetAltOutput();
 
-			vx = lgc_forward*0.3048;
-			vy = lgc_lateral*0.3048;
+			vx = lgc_forward * 0.3048;
+			vy = lgc_lateral * 0.3048;
 
 			//Apollo 15 and later had this inversed
 			if (lem->pMission->GetCrossPointerReversePolarity())
@@ -3029,7 +3091,7 @@ void CrossPointer::Timestep(double simdt)
 		else //AGS
 		{
 			vx = 0;
-			vy = lem->aea.GetLateralVelocity()*0.3048;
+			vy = lem->aea.GetLateralVelocity() * 0.3048;
 		}
 		vel_x = callout_x = vx / 0.3048 * 20.0 / 200.0;
 		vel_y = callout_y = vy / 0.3048 * 20.0 / 200.0;
@@ -3044,6 +3106,66 @@ void CrossPointer::Timestep(double simdt)
 
 	//The output scaling is 20 for full deflection.
 	UpdateDisplayValues(simdt);
+
+	//Lighting
+	RelayBox();
+
+	if (!RateErrorRelay)
+	{
+		ElevRt = true;
+		AzRt = true;
+		LatVel = false;
+		FwdVel = false;
+
+		if (scaleSwitch->IsUp())
+		{
+			X01 = false;
+			X10 = false;
+		}
+		else
+		{
+			X01 = true;
+			X10 = false;
+		}
+	}
+	else
+	{
+		ElevRt = false;
+		AzRt = false;
+		LatVel = true;
+
+		if (!ModeSelectRelay)
+		{
+			FwdVel = true;
+		}
+		else
+		{
+			FwdVel = false;
+		}
+
+		if (scaleSwitch->IsUp())
+		{
+			X01 = false;
+			X10 = true;
+		}
+		else
+		{
+			X01 = false;
+			X10 = false;
+		}
+	}
+}
+
+void CrossPointer::SystemTimestep(double simdt)
+{
+	if (IsPowered() && dc_source)
+	{
+		dc_source->DrawPower(8.0);  // Crosspointer power
+	}
+
+	ltg_source->DrawPower(GetDimmableLightsLit() * 0.5 * (ltg_source->Voltage() / 115.0)); //Assumes 0.5W per lamp, needs to be checked
+
+	//sprintf(oapiDebugString(), "Lit: %1f Elev: %d Az %d Lat %d Fwd %d X0.1 %d X10 %d", GetDimmableLightsLit(), ElevRt, AzRt, LatVel, FwdVel, X01, X10);
 }
 
 void CrossPointer::GetVelocities(double &vx, double &vy)
