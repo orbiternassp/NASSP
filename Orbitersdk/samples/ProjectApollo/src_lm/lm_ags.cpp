@@ -988,8 +988,8 @@ void LEM_DEDA::Init(e_object *powered, e_object *segmentlightpower, e_object *an
 
 {
 	WireTo(powered);
-	OpErrLtPower = anunpower;
 	SegmentPower = segmentlightpower;
+	OpErrLtPower = anunpower;
 	Reset();
 	ResetKeyDown();
 	FirstTimeStep = true;
@@ -1070,7 +1070,7 @@ void LEM_DEDA::LoadState(FILEHANDLE scn,char *end_str){
 }
 
 bool LEM_DEDA::IsPowered()
-{ 
+{
 	if (Voltage() > 25.0)
 		return true;
 
@@ -1079,14 +1079,14 @@ bool LEM_DEDA::IsPowered()
 
 bool LEM_DEDA::HasAnnunPower()
 {
-	if (lem->LtgORideAnunSwitch.Voltage() > 1.8)
+	if (OpErrLtPower->Voltage() > 1.8)
 		return true;
 
 	return false;
 }
 bool LEM_DEDA::HasNumPower()
 {
-	if (lem->lca.Num_Override_20_110VAC_Output.Voltage() > 20.0)
+	if (SegmentPower->Voltage() > 20.0)
 		return true;
 
 	return false;
