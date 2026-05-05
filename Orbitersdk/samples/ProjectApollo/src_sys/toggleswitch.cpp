@@ -5681,6 +5681,28 @@ double RotVariableVoltageTransformer::GetValue()
 	else return 0.0;
 }
 
+RotVoltageTransformerOverride::RotVoltageTransformerOverride(char* i_name, double MinVolt, double MaxVolt) : RotVariableVoltageTransformer(i_name, MinVolt, MaxVolt)
+{
+	OverrideSwitch = NULL;
+}
+
+void RotVoltageTransformerOverride::Init(ContinuousSwitch* rot, ToggleSwitch* ovrdsw)
+{
+	RotVariableVoltageTransformer::Init(rot);
+
+	OverrideSwitch = ovrdsw;
+}
+
+double RotVoltageTransformerOverride::GetValue()
+{
+	// If toggle switch is up, return maximum value (1.0). Otherwise the selected output from the rotational switch:
+	if (OverrideSwitch->IsUp())
+	{
+		return 1.0;
+	}
+	return RotVariableVoltageTransformer::GetValue();
+}
+
 PanelGroup::~PanelGroup()
 {
 	while (!panels.empty()) {

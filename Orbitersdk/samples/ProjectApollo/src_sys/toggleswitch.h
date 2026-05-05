@@ -1906,11 +1906,23 @@ class RotVariableVoltageTransformer : public VariableVoltageTransformer
 {
 public:
 	RotVariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt);
-	void Init(ContinuousSwitch* rot);
+	virtual void Init(ContinuousSwitch* rot);
+
+	virtual double GetValue();
+protected:
+	ContinuousSwitch* rotary;
+};
+
+// Variable voltage transformer using a rotational switch as control and a toggle switch as override
+class RotVoltageTransformerOverride : public RotVariableVoltageTransformer
+{
+public:
+	RotVoltageTransformerOverride(char* i_name, double MinVolt, double MaxVolt);
+	void Init(ContinuousSwitch* rot, ToggleSwitch* ovrdsw);
 
 	double GetValue();
 protected:
-	ContinuousSwitch* rotary;
+	ToggleSwitch* OverrideSwitch;
 };
 
 ///
