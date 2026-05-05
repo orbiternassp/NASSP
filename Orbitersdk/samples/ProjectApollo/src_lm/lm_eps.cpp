@@ -1293,7 +1293,7 @@ void LEM_LCA::SystemTimestep(double simdt)
 	//	CDR_Bus_28V_6V_Converter.Voltage(), LMP_Bus_28V_6V_Converter.Voltage(), NumDockCompLTGFeeder.Voltage(), Fixed_5_5VDC_Output.Voltage(), Fixed_6VDC_Output.Voltage(), Variable_2_5VDC_Output.Voltage());
 
 	//sprintf(oapiDebugString(), "Power Load: 5.5VDC Out %.1lf, 6.0VDC Out %.1lf, 2-5VDC Out %.1lf", Fixed_5_5VDC_Output.GetLastPowerLoad(), Fixed_6VDC_Output.GetLastPowerLoad(), Variable_2_5VDC_Output.GetLastPowerLoad());
-	sprintf(oapiDebugString(), "Power Load: Num %.1lf, Int %.1lf", Num_Override_20_110VAC_Output.GetLastPowerLoad(), Int_Override_15_75VAC_Output.GetLastPowerLoad());
+	//sprintf(oapiDebugString(), "Power Load: Num %.1lf, Int %.1lf", Num_Override_20_110VAC_Output.GetLastPowerLoad(), Int_Override_15_75VAC_Output.GetLastPowerLoad());
 
 	double AnnunHeat = (Fixed_5_5VDC_Output.GetLastPowerLoad() + Fixed_6VDC_Output.GetLastPowerLoad() + Variable_2_5VDC_Output.GetLastPowerLoad()) * 0.5337;
 	double NumHeat = Num_Override_20_110VAC_Output.GetLastPowerLoad() * 0.6285;
