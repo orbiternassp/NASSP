@@ -1082,14 +1082,14 @@ bool LEM_DEDA::HasAnnunPower()
 }
 bool LEM_DEDA::HasNumPower()
 {
-	if (lem->LtgORideNumSwitch.Voltage() > 20.0)
+	if (lem->lca.Num_Override_20_110VAC_Output.Voltage() > 20.0)
 		return true;
 
 	return false;
 }
 bool LEM_DEDA::HasIntglPower()
 {
-	if (lem->LtgORideIntegralSwitch.Voltage() > 15.0)
+	if (lem->lca.Int_Override_15_75VAC_Output.Voltage() > 15.0)
 		return true;
 
 	return false;

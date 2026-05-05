@@ -350,10 +350,10 @@ public:
 
 	// AC
 	// Variable 20-110VAC numerics transformer
-	RotVariableVoltageTransformer Variable_20_110VAC_Output;
+	RotVoltageTransformerOverride Num_Override_20_110VAC_Output;
 
 	//Variable 15-75VAC integral transformer
-	RotVariableVoltageTransformer Variable_15_75VAC_Output;
+	RotVoltageTransformerOverride Int_Override_15_75VAC_Output;
 
 protected:
 	LEM *lem;

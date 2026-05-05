@@ -383,7 +383,7 @@ void LEM::SystemsInit()
 	agc.WirePower(&LGC_DSKY_CB, NULL);
 	// The DSKY brightness IS controlled by the ANUN/NUM knob on panel 5, but by means of an isolated section of it.
 	// The source of the isolated section is coming from the LGC supply.
-	dsky.Init(&LtgORideAnunSwitch, &LGC_DSKY_CB, &LtgAnunNumKnob, &LtgORideIntegralSwitch);
+	dsky.Init(&LtgORideAnunSwitch, &LGC_DSKY_CB, &LtgAnunNumKnob, &lca.Int_Override_15_75VAC_Output);
 	agc.InitHeat((h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT"));
 
 	//Optics
@@ -441,7 +441,7 @@ void LEM::SystemsInit()
 	LMP_FDAI_AC_CB.MaxAmps = 2.0;
 	LMP_FDAI_AC_CB.WireTo(&ACBusB);
 	fdaiRight.WireTo(&LMP_EVT_TMR_FDAI_DC_CB,&LMP_FDAI_AC_CB);
-	EventTimerDisplay.Init(&LMP_EVT_TMR_FDAI_DC_CB, NULL, &LtgORideNumSwitch);
+	EventTimerDisplay.Init(&LMP_EVT_TMR_FDAI_DC_CB, NULL, &lca.Num_Override_20_110VAC_Output);
 
 	// HEATERS
 	TempMonitorInd.WireTo(&HTR_DISP_CB);
@@ -620,7 +620,7 @@ void LEM::SystemsInit()
 	// Mission timer.
 	MISSION_TIMER_CB.MaxAmps = 2.0;
 	MISSION_TIMER_CB.WireTo(&CDRs28VBus);
-	MissionTimerDisplay.Init(&MISSION_TIMER_CB, NULL, &LtgORideNumSwitch, &PCM);
+	MissionTimerDisplay.Init(&MISSION_TIMER_CB, NULL, &lca.Num_Override_20_110VAC_Output, &PCM);
 
 	// Pyro Buses
 	Panelsdk.AddElectrical(&ED28VBusA, false);
