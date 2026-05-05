@@ -397,7 +397,7 @@ void LEM::SystemsInit()
 
 	aea.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:AEAHEAT"));
 	aea.WireToBuses(&CDR_SCS_AEA_CB, &SCS_AEA_CB, &AGSOperateSwitch);
-	deda.Init(&SCS_AEA_CB);
+	deda.Init(&SCS_AEA_CB, &lca.Num_Override_20_110VAC_Output, &LtgORideAnunSwitch);
 	rga.Init(this, &SCS_ATCA_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RGAHEAT"));
 
 	// Set up IMU heater stuff
@@ -1494,9 +1494,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		// IMU is not operating.
 		if(imublower->h_pump != 0){ imublower->SetPumpOff(); }
 	}
-
-	// FIXME: Draw power for lighting system.
-	// This will be done in the LCA and individual lighting components
 
 	// Allow ATCA to operate between the FDAI and AGC/AEA so that any changes the FDAI makes
 	// can be shown on the FDAI, but any changes the AGC/AEA make are visible to the ATCA.
