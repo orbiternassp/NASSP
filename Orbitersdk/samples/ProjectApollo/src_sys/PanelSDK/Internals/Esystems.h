@@ -695,7 +695,7 @@ class VariableVoltageTransformer : public VoltageTransformer
 public:
 	VariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt);
 
-	void UpdateFlow(double dt);
+	virtual void UpdateFlow(double dt);
 
 	virtual double GetValue() = 0; // Should return 0-1 for MinVolt-MaxVolt
 protected:

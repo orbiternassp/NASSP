@@ -5693,14 +5693,32 @@ void RotVoltageTransformerOverride::Init(ContinuousSwitch* rot, ToggleSwitch* ov
 	OverrideSwitch = ovrdsw;
 }
 
-double RotVoltageTransformerOverride::GetValue()
+void RotVoltageTransformerOverride::UpdateFlow(double dt)
 {
-	// If toggle switch is up, return maximum value (1.0). Otherwise the selected output from the rotational switch:
-	if (OverrideSwitch->IsUp())
+	if (SRC)
 	{
-		return 1.0;
+		// If override switch is up, pass through input voltage without change. Otherwise use rotational switch control.
+		if (OverrideSwitch->IsUp())
+		{
+			Volts = SRC->Voltage();
+		}
+		else
+		{
+			double DesVolts = min_output_voltage + (max_output_voltage - min_output_voltage) * GetValue();
+			Volts = min(SRC->Voltage(), DesVolts);
+		}
 	}
-	return RotVariableVoltageTransformer::GetValue();
+	else
+	{
+		Volts = 0.0;
+	}
+
+	if (Volts > 0.0) {
+		Amperes = (power_load / Volts);
+	}
+
+	last_power_load = power_load;
+	power_load = 0.0;
 }
 
 PanelGroup::~PanelGroup()
