@@ -1514,6 +1514,21 @@ void LEM_PFIRA::Init(LEM *l)
 	lem = l;
 }
 
+double LEM_PFIRA::GetLightsLit()
+{
+	double lights_lit = 0.0;
+	if (!K1) lights_lit += 1.0;
+	if (!K2) lights_lit += 1.0;
+	if (!K3) lights_lit += 1.0;
+	if (!K4) lights_lit += 1.0;
+	if (!K5) lights_lit += 1.0;
+	if (!K6) lights_lit += 1.0;
+	if (!K7) lights_lit += 1.0;
+	if (!K8) lights_lit += 1.0;
+	if (!K9) lights_lit += 1.0;
+	return lights_lit;
+}
+
 void LEM_PFIRA::Timestep(double simdt)
 {
 	if (lem == NULL) return;
@@ -1578,4 +1593,205 @@ void LEM_PFIRA::Timestep(double simdt)
 	{
 		K9 = false;
 	}
+}
+
+void LEM_PFIRA::SystemTimestep(double simdt)
+{
+	lem->LtgORideAnunSwitch.DrawPower((GetLightsLit() * 0.5) * (lem->LtgORideAnunSwitch.Voltage() / 6.0)); //Assumes 0.5W per lamp, needs to be checked
+
+	//sprintf(oapiDebugString(), "Lights lit: %f", GetLightsLit());
+}
+
+LEM_ComponentLights::LEM_ComponentLights(PanelSDK& p) :
+
+	BatFeedTieFeeder("FeedTieFeeder", p),
+	Feeder_6VDC_Output("Feeder 6.0VDC Output", 6.0)
+{
+	lem = NULL;
+	SwitchPower = NULL;
+	FixedPower = NULL;
+	CDR_Feed = NULL;
+	LMP_Feed = NULL;
+
+	p.AddElectrical(&Feeder_6VDC_Output, false);
+
+	NoTrack = false;
+	CO2 = false;
+	Glycol = false;
+	SuitFan = false;
+	H2OSep = false;
+	BatFault = false;
+	FeedFault = false;
+	StageSeqA = false;
+	StageSeqB = false;
+
+	CDRContact = false;
+	LMPContact = false;
+}
+
+void LEM_ComponentLights::Init(LEM *l, e_object *switchpwr, e_object *fixedpwr, e_object *cdr_cb, e_object *lmp_cb)
+{
+	lem = l;
+	SwitchPower = switchpwr;
+	FixedPower = fixedpwr;
+	CDR_Feed = cdr_cb;
+	LMP_Feed = lmp_cb;
+
+	BatFeedTieFeeder.WireToBuses(CDR_Feed, LMP_Feed);
+	Feeder_6VDC_Output.WireTo(&BatFeedTieFeeder);
+}
+
+bool LEM_ComponentLights::FeederFault()
+{
+	if (std::abs(CDR_Feed->Voltage() - LMP_Feed->Voltage()) > 18) {
+		return true;
+	}
+	return false;
+}
+
+double LEM_ComponentLights::GetDimmableLightsLit()
+{
+	double lights_lit = 0.0;
+	if (NoTrack) lights_lit += 1.0;
+	if (CO2) lights_lit += 1.0;
+	if (Glycol) lights_lit += 1.0;
+	if (SuitFan) lights_lit += 1.0;
+	if (H2OSep) lights_lit += 1.0;
+	if (BatFault) lights_lit += 1.0;
+	return lights_lit;
+}
+
+double LEM_ComponentLights::GetNonDimmableLightsLit()
+{
+	double lights_lit = 0.0;
+	if (StageSeqA) lights_lit += 1.0;
+	if (StageSeqB) lights_lit += 1.0;
+	return lights_lit;
+}
+
+double LEM_ComponentLights::GetContactLightsLit()
+{
+	double lights_lit = 0.0;
+	if (CDRContact) lights_lit += 1.0;
+	if (LMPContact) lights_lit += 1.0;
+	return lights_lit;
+}
+
+void LEM_ComponentLights::Timestep(double simdt)
+{
+	if (lem == NULL) return;
+
+	if (SwitchPower->Voltage() > 1.8)
+	{
+		if (lem->RR.GetNoTrackSignal() || lem->LampToneTestRotary.GetState() == 6)
+		{
+			NoTrack = true;
+		}
+		else
+		{
+			NoTrack = false;
+		}
+
+		if (lem->scera2.GetSwitch(12, 2)->IsClosed() || lem->PrimGlycolPumpController.GetPressureSwitch() == true || lem->LampToneTestRotary.GetState() == 6)
+		{
+			Glycol = true;
+		}
+		else
+		{
+			Glycol = false;
+		}
+
+		if (lem->SuitFanDPSensor.GetSuitFanFail() == true || lem->LampToneTestRotary.GetState() == 6)
+		{
+			SuitFan = true;
+		}
+		else
+		{
+			SuitFan = false;
+		}
+
+		if (lem->CWEA.IsCO2PartialPressureHigh() || lem->CO2CanisterSelectSwitch.GetState() == 0 || lem->LampToneTestRotary.GetState() == 6)
+		{
+			CO2 = true;
+		}
+		else
+		{
+			CO2 = false;
+		}
+
+		if (lem->INST_CWEA_CB.IsPowered() && (lem->scera1.GetVoltage(5, 3) < (792.5 / 720.0) || lem->LampToneTestRotary.GetState() == 6))
+		{
+			H2OSep = true;
+		}
+		else
+		{
+			H2OSep = false;
+		}
+
+		if (lem->scera2.GetBatFaultLogic() || lem->LampToneTestRotary.GetState() == 6)
+		{
+			BatFault = true;
+		}
+		else
+		{
+			BatFault = false;
+		}
+	}
+	if (FixedPower->Voltage() > 1.8)
+	{
+		if ((lem->scera1.GetVoltage(12, 11) > 2.5 && lem->stage < 2) || lem->LampToneTestRotary.GetState() == 6)
+		{
+			StageSeqA = true;
+		}
+		else
+		{
+			StageSeqA = false;
+		}
+
+		if (lem->scera1.GetVoltage(12, 12) > 2.5 || lem->LampToneTestRotary.GetState() == 6)
+		{
+			StageSeqB = true;
+		}
+		else
+		{
+			StageSeqB = false;
+		}
+	}
+	if (Feeder_6VDC_Output.Voltage() > 1.8)
+	{
+		if (FeederFault() || lem->LampToneTestRotary.GetState() == 6)
+		{
+			FeedFault = true;
+		}
+		else
+		{
+			FeedFault = false;
+		}
+	}
+
+	// Contact Light Power
+	if ((lem->SCS_ENG_CONT_CB.IsPowered() && lem->scca3.GetContactLightLogic()) || lem->LampToneTestRotary.GetState() == 6)
+	{
+		CDRContact = true;
+	}
+	else
+	{
+		CDRContact = false;
+	}
+
+	if ((lem->SCS_ATCA_CB.IsPowered() && lem->scca3.GetContactLightLogic()) || lem->LampToneTestRotary.GetState() == 6)
+	{
+		LMPContact = true;
+	}
+	else
+	{
+		LMPContact = false;
+	}
+
+	sprintf(oapiDebugString(), "Feeder voltage: %f, Feeder lit: %i Bus Lit %i", Feeder_6VDC_Output.Voltage(), FeedFault, BatFault);
+}
+
+void LEM_ComponentLights::SystemTimestep(double simdt)
+{
+	//sprintf(oapiDebugString(), "Lights lit: %f", GetLightsLit());
 }

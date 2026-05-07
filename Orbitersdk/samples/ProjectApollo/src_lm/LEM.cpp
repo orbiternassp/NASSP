@@ -458,6 +458,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	AscentECAContFeeder("Ascent-ECA-Cont-Feeder", Panelsdk),
 	vesim(&cbLMVesim, this),
 	lca(Panelsdk),
+	ComponentLights(Panelsdk),
 
 	Failures(this),
 	CueCards(vcidx, this, 25)

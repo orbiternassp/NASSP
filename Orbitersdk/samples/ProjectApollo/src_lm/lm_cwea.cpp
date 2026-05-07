@@ -1056,23 +1056,10 @@ double LEM_CWEA::GetNumberLightsOn()	//Counts number of CW lights lit minus the 
 	return GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank3Lights() + GetCWBank4Lights();
 }
 
-double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the CW power light is lit or a lamp test is active
+double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the CW power light
 {
 	if (LightStatus[3][6] == 1 && lem->LampToneTestRotary != 5) {
 		return 1.18;
-	}
-	
-	if (lem->LampToneTestRotary == 2) {
-		return GetCWBank1Lights() * 1.18;
-	}
-	else if (lem->LampToneTestRotary == 3) {
-		return GetCWBank2Lights() * 1.18;
-	}
-	else if (lem->LampToneTestRotary == 4) {
-		return GetCWBank3Lights() * 1.18;
-	}
-	else if (lem->LampToneTestRotary == 5) {
-		return GetCWBank4Lights() * 1.18;
 	}
 	return 0.0;
 }

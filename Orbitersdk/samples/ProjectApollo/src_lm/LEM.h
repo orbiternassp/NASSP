@@ -2020,6 +2020,7 @@ protected:
 	LEM_COASLights COASLights;
 	LEM_FloodLights FloodLights;
 	LEM_PFIRA pfira;
+	LEM_ComponentLights ComponentLights;
 
 	// ECS
 	LEM_ECS ecs;
@@ -2169,6 +2170,7 @@ protected:
 	friend class EngineStartButton;
 	friend class LEM_LCA;
 	friend class LEM_PFIRA;
+	friend class LEM_ComponentLights;
 	friend class LEMCrewStatus;
 	friend class CDRCOASPowerSwitch;
 	friend class LMMalfunctionSimulation;
