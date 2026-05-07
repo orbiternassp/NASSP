@@ -1629,13 +1629,13 @@ LEM_ComponentLights::LEM_ComponentLights(PanelSDK& p) :
 	LMPContact = false;
 }
 
-void LEM_ComponentLights::Init(LEM *l, e_object *switchpwr, e_object *fixedpwr, e_object *cdr_cb, e_object *lmp_cb)
+void LEM_ComponentLights::Init(LEM *l, e_object *switchpwr, e_object *fixedpwr, e_object *cdr_btb, e_object *lmp_btb)
 {
 	lem = l;
 	SwitchPower = switchpwr;
 	FixedPower = fixedpwr;
-	CDR_Feed = cdr_cb;
-	LMP_Feed = lmp_cb;
+	CDR_Feed = cdr_btb;
+	LMP_Feed = lmp_btb;
 
 	BatFeedTieFeeder.WireToBuses(CDR_Feed, LMP_Feed);
 	Feeder_6VDC_Output.WireTo(&BatFeedTieFeeder);
@@ -1666,14 +1666,6 @@ double LEM_ComponentLights::GetNonDimmableLightsLit()
 	double lights_lit = 0.0;
 	if (StageSeqA) lights_lit += 1.0;
 	if (StageSeqB) lights_lit += 1.0;
-	return lights_lit;
-}
-
-double LEM_ComponentLights::GetContactLightsLit()
-{
-	double lights_lit = 0.0;
-	if (CDRContact) lights_lit += 1.0;
-	if (LMPContact) lights_lit += 1.0;
 	return lights_lit;
 }
 
@@ -1788,10 +1780,26 @@ void LEM_ComponentLights::Timestep(double simdt)
 		LMPContact = false;
 	}
 
-	sprintf(oapiDebugString(), "Feeder voltage: %f, Feeder lit: %i Bus Lit %i", Feeder_6VDC_Output.Voltage(), FeedFault, BatFault);
+	//sprintf(oapiDebugString(), "Feeder voltage: %lf, Feeder lit: %i Bus lit %i", Feeder_6VDC_Output.Voltage(), FeedFault, BatFault);
 }
 
 void LEM_ComponentLights::SystemTimestep(double simdt)
 {
-	//sprintf(oapiDebugString(), "Lights lit: %f", GetLightsLit());
+	SwitchPower->DrawPower(GetDimmableLightsLit() * 0.5 * (SwitchPower->Voltage() / 6.0)); //Assumes 0.5W per lamp, needs to be checked
+	FixedPower->DrawPower(GetNonDimmableLightsLit() * 0.5); //Assumes 0.5W per lamp, needs to be checked
+
+	if (FeedFault)
+	{
+		Feeder_6VDC_Output.DrawPower(0.5); //Assumes 0.5W per lamp, needs to be checked
+	}
+
+	if (CDRContact)
+	{
+		lem->SCS_ENG_CONT_CB.DrawPower(0.5); //Assumes 0.5W per lamp, needs to be checked
+	}
+
+	if (LMPContact)
+	{
+		lem->SCS_ATCA_CB.DrawPower(0.5); //Assumes 0.5W per lamp, needs to be checked
+	}
 }

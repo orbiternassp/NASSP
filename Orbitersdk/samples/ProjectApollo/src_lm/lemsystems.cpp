@@ -378,8 +378,7 @@ void LEM::SystemsInit()
 	FloodLights.Init(this, &LTG_FLOOD_CB, &FloodSwitch, &FloodRotary, &LtgFloodOhdFwdKnob, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CABINHEAT"));
 	AOTLampFeeder.WireToBuses(&AOT_LAMP_ACA_CB, &AOT_LAMP_ACB_CB);
 	pfira.Init(this);
-	//ComponentLights.Init(this, &LtgORideAnunSwitch, &lca.Fixed_5_5VDC_Output, &BTB_CDR_B, &BTB_LMP_B);
-	ComponentLights.Init(this, &LtgORideAnunSwitch, &lca.Fixed_5_5VDC_Output, &CDRBatteryFeedTieCB1, &LMPBatteryFeedTieCB1);
+	ComponentLights.Init(this, &LtgORideAnunSwitch, &lca.Fixed_5_5VDC_Output, &BTB_CDR_B, &BTB_LMP_B);
 
 	// LGC and DSKY
 	agc.WirePower(&LGC_DSKY_CB, NULL);

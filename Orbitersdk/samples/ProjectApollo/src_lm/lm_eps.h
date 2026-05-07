@@ -480,11 +480,10 @@ class LEM_ComponentLights
 {
 public:
 	LEM_ComponentLights(PanelSDK& p);
-	void Init(LEM *l, e_object *switchpwr, e_object *fixedpwr, e_object *cdr_cb, e_object *lmp_cb);
+	void Init(LEM *l, e_object *switchpwr, e_object *fixedpwr, e_object *cdr_btb, e_object *lmp_btb);
 	bool FeederFault();
 	double GetDimmableLightsLit();
 	double GetNonDimmableLightsLit();
-	double GetContactLightsLit();
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
