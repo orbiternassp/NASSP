@@ -63,9 +63,6 @@ public:
 	bool Update (oapi::Sketchpad *skp);
 	bool ConsumeButton(int bt, int event);
 	bool ConsumeKeyBuffered(DWORD key);
-	void WriteStatus(FILEHANDLE scn) const;
-	void ReadStatus(FILEHANDLE scn);
-	void RecallStatus(void);
 
 	void Text_Double(oapi::Sketchpad *skp, int x, int y, char *format, double val);
 	void Text_Int(oapi::Sketchpad *skp, int x, int y, char *format, int val);
@@ -904,6 +901,7 @@ private:
 
 	UINT ID;
 	ARCore* G;
+	AR_GlobalData* GD;
 	AR_GCore* GC;
 	ApolloRTCCMFDButtons coreButtons;
 
