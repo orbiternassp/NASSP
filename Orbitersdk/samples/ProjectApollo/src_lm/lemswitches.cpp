@@ -602,6 +602,20 @@ void LMRCSAPressInd::OnPostStep(double SimT, double DeltaT, double MJD) {
 	lem->SetAnimation(anim_switch, v);
 }
 
+bool LMRCSAPressInd::GetHeX10Lt() // Only one X10 light on the display, so this check and power draw will only be in the RCS A meter
+{
+	if (lem->TempPressMonRotary.GetState() == 0) return true; // Helium is x10
+	return false;
+}
+
+void LMRCSAPressInd::SystemTimestep(double simdt)
+{
+	if (GetHeX10Lt())
+	{
+		lem->lca.Num_Override_20_110VAC_Output.DrawPower(0.5 * (lem->lca.Num_Override_20_110VAC_Output.Voltage() / 115.0)); //Assumes 0.5W per lamp, needs to be checked
+	}
+}
+
 // RCS indicator, RCS B Press
 LMRCSBPressInd::LMRCSBPressInd()
 

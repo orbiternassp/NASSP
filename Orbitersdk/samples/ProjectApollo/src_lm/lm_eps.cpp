@@ -1280,14 +1280,12 @@ void LEM_LCA::SystemTimestep(double simdt)
 		Int_Override_15_75VAC_Output.DrawPower(16.073 * GetIntegralOutput());
 	}
 
-	// Numerics power draw from numeric text on CDR XPTR (6), LM XPTR (6), Tapemeter (2), and RCS x10 display (1), EL segments from PQGS and helium displays
-	// DSKY, mission timer, and event timer are drawn elsewhere
+	// Numerics power draw from numeric text on EL segments from PQGS and helium displays
+	// Crosspointer, Tapemeter, RCS He x10, DSKY, mission timer, and event timer are drawn elsewhere
 
-	// Assume all 15 on for now, TBD: figure out how to tie to actual state of displays
-	double text = 7.5; // Assumes .5W per lamp 
 	double EL = (8.0 * 7.0 * 0.022); // Assumes .022W per segment
 
-	Num_Override_20_110VAC_Output.DrawPower((text + EL) * (Num_Override_20_110VAC_Output.Voltage() / 115.0));
+	Num_Override_20_110VAC_Output.DrawPower((EL) * (Num_Override_20_110VAC_Output.Voltage() / 115.0));
 
 	//sprintf(oapiDebugString(), "Voltages: CDR %.1lf, LMP %.1lf, Merge %.1lf, 5.5VDC Out %.1lf, 6VDC Out %.1lf, 2-5VDC Out %.1lf",
 	//	CDR_Bus_28V_6V_Converter.Voltage(), LMP_Bus_28V_6V_Converter.Voltage(), NumDockCompLTGFeeder.Voltage(), Fixed_5_5VDC_Output.Voltage(), Fixed_6VDC_Output.Voltage(), Variable_2_5VDC_Output.Voltage());

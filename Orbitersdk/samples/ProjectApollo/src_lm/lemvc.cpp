@@ -1841,18 +1841,18 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 #define XP_LIT_ON  (std::max)(lca.GetNumericOutput(), 0.25)
 #define XP_LIT_OFF  0.25
 
-        //Tapemeter Lights
-        if (AltRngMonSwitch.GetState() == TOGGLESWITCH_DOWN) {
-            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, XP_LIT_ON, 1);
-            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, XP_LIT_OFF, 1);
+		//Tapemeter Lights
+		if (AltRngMonSwitch.GetState() == TOGGLESWITCH_DOWN) {
+			SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, XP_LIT_ON, 1);
+			SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, XP_LIT_OFF, 1);
 		}
-        else {
-            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, XP_LIT_ON, 1);
-            SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, XP_LIT_OFF, 1);
+		else {
+			SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, XP_LIT_ON, 1);
+			SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, XP_LIT_OFF, 1);
 		}
 
 		// XPointer Lights CDR
-        if (RateErrorMonSwitch.GetState() == TOGGLESWITCH_UP) {								// RATE ERR MON -> RNDZ RADAR
+		if (crossPointerLeft.GetRateErrorRelay()) {								// RATE ERR MON -> RNDZ RADAR
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_ON, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_ON, 1);
 
@@ -1868,13 +1868,13 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 				SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_X1, MAT_EMISSION, XP_LIT_OFF, 1);
 			}
 		}
-        else {																				// RATE ERR MON -> LDR RDR/CMPTR
+		else {																				// RATE ERR MON -> LDR RDR/CMPTR
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_LAT_VEL, MAT_EMISSION, XP_LIT_ON, 1);
 
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 
-			if ((ModeSelSwitch.GetState() != THREEPOSSWITCH_DOWN)){							// MODE SEL -> LDG RADAR or PGNS
+			if (!crossPointerLeft.GetModeSelectRelay()) {									// MODE SEL -> LDG RADAR or PGNS
 				SetVCLighting(vcidx, VC_MAT_Panel1_Bulbs_FWD_VEL, MAT_EMISSION, XP_LIT_ON, 1);
 			}
 			else {																			// MODE SEL -> AGS
@@ -1889,10 +1889,10 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 				SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_X10, MAT_EMISSION, XP_LIT_OFF, 1);
 				SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_X1, MAT_EMISSION, XP_LIT_OFF, 1);
 			}
-		}		
+		}
 
 		// XPointer Lights LMP
-        if (RightRateErrorMonSwitch.GetState() == TOGGLESWITCH_UP) {						// RATE ERR MON -> RNDZ RADAR
+		if (crossPointerRight.GetRateErrorRelay()) {								// RATE ERR MON -> RNDZ RADAR
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_ON, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_ON, 1);
 
@@ -1908,13 +1908,13 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 				SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_X1, MAT_EMISSION, XP_LIT_OFF, 1);
 			}
 		}
-        else {																				// RATE ERR MON -> LDR RDR/CMPTR
+		else {																				// RATE ERR MON -> LDR RDR/CMPTR
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_LAT_VEL, MAT_EMISSION, XP_LIT_ON, 1);
 
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 
-			if ((ModeSelSwitch.GetState() != THREEPOSSWITCH_DOWN)){							// MODE SEL -> LDG RADAR or PGNS
+			if (!crossPointerRight.GetModeSelectRelay()) {							// MODE SEL -> LDG RADAR or PGNS
 				SetVCLighting(vcidx, VC_MAT_Panel2_Bulbs_FWD_VEL, MAT_EMISSION, XP_LIT_ON, 1);
 			}
 			else {																			// MODE SEL -> AGS
@@ -1929,14 +1929,14 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 				SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_X10, MAT_EMISSION, XP_LIT_OFF, 1);
 				SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_X1, MAT_EMISSION, XP_LIT_OFF, 1);
 			}
-		}		
+		}
 
-		if (TempPressMonRotary.GetState() == 0) {											 // He Press x10 On
-            SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, XP_LIT_ON, 1);
-        }
-        else {
-            SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, XP_LIT_OFF, 1);
-        }
+		if (LMRCSAPressInd.GetHeX10Lt()) {											 // He Press x10 On
+			SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, XP_LIT_ON, 1);
+		}
+		else {
+			SetVCLighting(vcidx, VC_MAT_RCS_HE_PRESS_x10, MAT_EMISSION, XP_LIT_OFF, 1);
+		}
 
 		return true;
 	}

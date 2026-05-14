@@ -452,8 +452,10 @@ void LEM::SystemsInit()
 
 	// Rdz Radar
 	RR.Init(this, &PGNS_RNDZ_RDR_CB, &RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-StbyHeater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RRHEAT"));
-	crossPointerLeft.Init(this, &CDR_XPTR_CB, &LeftXPointerSwitch, &RateErrorMonSwitch);
-	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &RightXPointerSwitch, &RightRateErrorMonSwitch);
+	
+	// Cross Pointers
+	crossPointerLeft.Init(this, &CDR_XPTR_CB, &lca.Num_Override_20_110VAC_Output, &LeftXPointerSwitch, &RateErrorMonSwitch);
+	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &lca.Num_Override_20_110VAC_Output, &RightXPointerSwitch, &RightRateErrorMonSwitch);
 
 	// CWEA
 	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CWEAHEAT"));
@@ -1458,6 +1460,7 @@ void LEM::SystemsInternalTimestep(double simdt)
 		FloodLights.SystemTimestep(tFactor);
 		INV_1.SystemTimestep(tFactor);
 		INV_2.SystemTimestep(tFactor);
+		LMRCSAPressInd.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
@@ -2556,7 +2559,7 @@ void LEM_RadarTape::Init(LEM* s, e_object* dc_src, e_object* ac_src, SURFHANDLE 
 
 bool LEM_RadarTape::PowerSignalMonOn()
 {
-	if ((dc_source->Voltage() > 2 || ac_source->Voltage() > SP_MIN_ACVOLTAGE) && (PowerFailure() == true || SignalFailure() == true || TimingFailure() == true)) { //Checks if DC power (2V to light the lamp) is present and the logic for power/signal/timing present
+	if ((dc_source->Voltage() > 1.8 || ac_source->Voltage() > SP_MIN_ACVOLTAGE) && (PowerFailure() == true || SignalFailure() == true || TimingFailure() == true)) { //Checks if DC power (2V to light the lamp) is present and the logic for power/signal/timing present
 		return true;
 	}
 	return false;
@@ -2759,6 +2762,14 @@ void LEM_RadarTape::TapeDrive(double &Angle, double AngleCmd, double RateLimit, 
 	Angle += dpos;
 }
 
+bool LEM_RadarTape::IsPowered()
+{
+	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE || ac_source->Voltage() < SP_MIN_ACVOLTAGE) {
+		return false;
+	}
+	return true;
+}
+
 void LEM_RadarTape::SystemTimestep(double simdt) {
 	if (!IsPowered())
 		return;
@@ -2767,17 +2778,20 @@ void LEM_RadarTape::SystemTimestep(double simdt) {
 		ac_source->DrawPower(2.0);
 
 	if (dc_source)
-		dc_source->DrawPower(2.1);
+	{
+		if (PowerSignalMonOn())
+		{
+			dc_source->DrawPower(2.1 + 0.5);
+		}
+		else
+		{
+			dc_source->DrawPower(2.1);
+		}
+	}
+
+	lem->lca.Num_Override_20_110VAC_Output.DrawPower(1.0 * lem->lca.Num_Override_20_110VAC_Output.Voltage() / 115.0); // Either range rate or altitude rate light will be lit
 
 	//sprintf(oapiDebugString(), "SimTime %1f LGC Alt Time %.5f LGC AltRate Time %.5f AGS Alt Time %.5f AGS AltRate Time %.5f", oapiGetSimTime(), LGCaltUpdateTime, LGCaltRateUpdateTime, AGSaltUpdateTime, AGSaltRateUpdateTime);
-}
-
-bool LEM_RadarTape::IsPowered()
-{
-	if (dc_source->Voltage() < SP_MIN_DCVOLTAGE || ac_source->Voltage() < SP_MIN_ACVOLTAGE) {
-		return false;
-	}
-	return true;
 }
 
 void LEM_RadarTape::SetLGCAltitude(int val) {
@@ -2926,6 +2940,7 @@ CrossPointer::CrossPointer()
 	rateErrMonSw = NULL;
 	scaleSwitch = NULL;
 	dc_source = NULL;
+	ltg_source = NULL;
 	vel_x = display_vel_x = callout_x = 0;
 	vel_y = display_vel_y = callout_y = 0;
 	lgc_forward = 0;
@@ -2937,6 +2952,16 @@ CrossPointer::CrossPointer()
 	grpX = 0;
 	grpY = 0;
 	xtrans = ytrans = NULL;
+
+	RateErrorRelay = false;
+	ModeSelectRelay = false;
+
+	ElevRt = false;
+	AzRt = false;
+	LatVel = false;
+	FwdVel = false;
+	X01 = false;
+	X10 = false;
 }
 
 CrossPointer::~CrossPointer()
@@ -2945,10 +2970,11 @@ CrossPointer::~CrossPointer()
 	if (ytrans) delete ytrans;
 }
 
-void CrossPointer::Init(LEM *s, e_object *dc_src, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon)
+void CrossPointer::Init(LEM *s, e_object *dc_src, e_object *ltg, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon)
 {
 	lem = s;
 	dc_source = dc_src;
+	ltg_source = ltg;
 	scaleSwitch = scaleSw;
 	rateErrMonSw = rateErrMon;
 }
@@ -2961,10 +2987,49 @@ bool CrossPointer::IsPowered()
 	return true;
 }
 
+void CrossPointer::RelayBox()
+{
+	//Rate Error Monitor CDR (9K32B) and LMP (9K30B)
+	if (IsPowered() && rateErrMonSw->IsDown())
+	{
+		RateErrorRelay = true;
+	}
+	else
+	{
+		RateErrorRelay = false;
+	}
+
+	//Mode Select Switch (9K34A)
+	if (lem->CDR_XPTR_CB.IsPowered() && lem->ModeSelSwitch.IsDown())
+	{
+		ModeSelectRelay = true;
+	}
+	else
+	{
+		ModeSelectRelay = false;
+	}
+}
+
+double CrossPointer::GetDimmableLightsLit()
+{
+	double lights_lit = 0.0;
+	if (ElevRt) lights_lit += 1.0;
+	if (AzRt) lights_lit += 1.0;
+	if (LatVel) lights_lit += 1.0;
+	if (FwdVel) lights_lit += 1.0;
+	if (X01) lights_lit += 1.0;
+	if (X10) lights_lit += 1.0;
+	return lights_lit;
+}
+
 void CrossPointer::SystemTimestep(double simdt)
 {
 	if (IsPowered() && dc_source)
-		dc_source->DrawPower(8.0);  // take DC power
+	{
+		dc_source->DrawPower(8.0);  // Crosspointer power
+	}
+
+	ltg_source->DrawPower(GetDimmableLightsLit() * 0.5 * (ltg_source->Voltage() / 115.0)); //Assumes 0.5W per lamp, needs to be checked
 }
 
 void CrossPointer::Timestep(double simdt)
@@ -3045,6 +3110,66 @@ void CrossPointer::Timestep(double simdt)
 
 	//The output scaling is 20 for full deflection.
 	UpdateDisplayValues(simdt);
+
+	//Lighting
+	RelayBox();
+
+	if (ltg_source->Voltage() > 1.8)
+	{
+		if (!RateErrorRelay)
+		{
+			ElevRt = true;
+			AzRt = true;
+			LatVel = false;
+			FwdVel = false;
+
+			if (scaleSwitch->IsUp())
+			{
+				X01 = false;
+				X10 = false;
+			}
+			else
+			{
+				X01 = true;
+				X10 = false;
+			}
+		}
+		else if (RateErrorRelay)
+		{
+			ElevRt = false;
+			AzRt = false;
+			LatVel = true;
+
+			if (ModeSelectRelay)
+			{
+				FwdVel = true;
+			}
+			else
+			{
+				FwdVel = false;
+
+				if (scaleSwitch->IsUp())
+				{
+					X01 = false;
+					X10 = true;
+				}
+				else
+				{
+					X01 = false;
+					X10 = false;
+				}
+			}
+		}
+		else
+		{
+			ElevRt = false;
+			AzRt = false;
+			LatVel = false;
+			FwdVel = false;
+			X01 = false;
+			X10 = false;
+		}
+	}
 }
 
 void CrossPointer::GetVelocities(double &vx, double &vy)

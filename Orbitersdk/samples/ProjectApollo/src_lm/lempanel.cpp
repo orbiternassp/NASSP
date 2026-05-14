@@ -3621,7 +3621,7 @@ bool LEM::clbkPanelRedrawEvent (int id, int event, SURFHANDLE surf)
 		}
 		return true;
 
-	case AID_LEM_PWRFAIL_RNGALTRATE: //FIXME
+	case AID_LEM_PWRFAIL_RNGALTRATE:
 		if (RadarTape.PowerSignalMonOn() == true) {
 			oapiBlt(surf, srf[SRF_PWRFAIL_LIGHT], 0, 0, 3, 0, 7, 12);
 		}

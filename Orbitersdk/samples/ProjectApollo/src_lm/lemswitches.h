@@ -256,6 +256,8 @@ public:
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	void OnPostStep(double SimT, double DeltaT, double MJD);
+	bool GetHeX10Lt();
+	void SystemTimestep(double simdt);
 
 protected:
 	LEM *lem;
