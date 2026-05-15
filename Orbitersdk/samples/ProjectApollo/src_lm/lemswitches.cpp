@@ -1335,6 +1335,14 @@ void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 	lem = l;
 }
 
+void EngineStartButton::SystemTimestep(double simdt)
+{
+	if (LightLogic())
+	{
+		lem->LtgORideAnunSwitch.DrawPower(0.5 * (lem->LtgORideAnunSwitch.Voltage() / 6.0)); //Assumes 0.5W per lamp, needs to be checked
+	}
+}
+
 bool EngineStopButton::CheckMouseClick(int event, int mx, int my) {
 	
 	int OldState = state;
@@ -1369,8 +1377,20 @@ bool EngineStopButton::Push()
 		Sclick.play();
 		return true;
 	}
-
 	return false;
+}
+
+bool EngineStopButton::LightLogic()
+{
+	return (lem->LtgORideAnunSwitch.Voltage() > 1.8 && (lem->LampToneTestRotary.GetState() == 3 || IsUp()));
+}
+
+void EngineStopButton::SystemTimestep(double simdt)
+{
+	if (LightLogic())
+	{
+		lem->LtgORideAnunSwitch.DrawPower(0.5 * (lem->LtgORideAnunSwitch.Voltage() / 6.0)); //Assumes 0.5W per lamp, needs to be checked
+	}
 }
 
 void EngineStopButton::DoDrawSwitch(SURFHANDLE DrawSurface) {

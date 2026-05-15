@@ -413,6 +413,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
 	void DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface, int xTexMul = 1);
+	void SystemTimestep(double simdt);
 protected:
 	bool LightLogic();
 	LEM *lem;
@@ -427,7 +428,9 @@ public:
 	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	bool Push();
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
+	void SystemTimestep(double simdt);
 protected:
+	bool LightLogic();
 	LEM *lem;
 };
 

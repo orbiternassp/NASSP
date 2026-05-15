@@ -1464,6 +1464,9 @@ void LEM::SystemsInternalTimestep(double simdt)
 		MainHeliumPressureMeter.SystemTimestep(tFactor);
 		DPSOxidPercentMeter.SystemTimestep(tFactor);
 		DPSFuelPercentMeter.SystemTimestep(tFactor);
+		ManualEngineStart.SystemTimestep(tFactor);
+		CDRManualEngineStop.SystemTimestep(tFactor);
+		LMPManualEngineStop.SystemTimestep(tFactor);
 
 		simdt -= tFactor;
 		tFactor = __min(mintFactor, simdt);
