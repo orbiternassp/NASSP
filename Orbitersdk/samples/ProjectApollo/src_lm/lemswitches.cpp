@@ -1804,10 +1804,20 @@ void LEMDPSDigitalMeter::InitVC(SURFHANDLE surf)
 	DigitsVC = surf;
 }
 
+bool LEMDPSDigitalMeter::IsPowered()
+{
+	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->lca.Num_Override_20_110VAC_Output.Voltage() < 20.0)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	if (lem->stage > 1) return;
-	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->lca.Num_Override_20_110VAC_Output.Voltage() < 20.0) return;
+	if (!IsPowered()) return;
 
 	double percent = v * 100.0;
 
@@ -1823,12 +1833,12 @@ void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 void LEMDPSDigitalMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
 	if (lem->stage > 1) return;
-	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->lca.Num_Override_20_110VAC_Output.Voltage() < 20.0) return;
+	if (!IsPowered()) return;
 
 	double percent = GetDisplayValue() * 100.0;
 
-	const int DigitWidth = 21*TexMul;
-	const int DigitHeight = 23*TexMul;
+	const int DigitWidth = 21 * TexMul;
+	const int DigitHeight = 23 * TexMul;
 	int Curdigit2 = (int)percent % 10;
 	int Curdigit = (int)(percent / 10) % 10;
 
@@ -1836,11 +1846,22 @@ void LEMDPSDigitalMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 	oapiBlt(surf, DigitsVC, DigitWidth, 0, DigitWidth * Curdigit2, 0, DigitWidth, DigitHeight);
 }
 
+void LEMDPSDigitalMeter::SystemTimestep(double simdt)
+{
+	double EL = (4.0 * 7.0 * 0.022); // Assumes .022W per segment
+
+	if (IsPowered())
+	{
+		lem->lca.Num_Override_20_110VAC_Output.DrawPower((EL) * (lem->lca.Num_Override_20_110VAC_Output.Voltage() / 115.0));
+	}
+
+	//sprintf(oapiDebugString(), "EL %lf Power %lf", EL, (EL * (lem->lca.Num_Override_20_110VAC_Output.Voltage() / 115.0)));
+}
+
 double LEMDPSOxidPercentMeter::QueryValue()
 {
 	return lem->GetDPSPropellant()->GetOxidPercent();
 }
-
 
 double LEMDPSFuelPercentMeter::QueryValue()
 {
@@ -1862,6 +1883,16 @@ void LEMDigitalHeliumPressureMeter::Init(SURFHANDLE surf, SwitchRow &row, Rotati
 	Digits = surf;
 	lem = l;
 	minMaxTime = 0;	// Don't animate/interpolate between reported values
+}
+
+bool LEMDigitalHeliumPressureMeter::IsPowered()
+{
+	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.Num_Override_20_110VAC_Output.Voltage() < 20.0)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 double LEMDigitalHeliumPressureMeter::QueryValue()
@@ -1895,7 +1926,7 @@ double LEMDigitalHeliumPressureMeter::QueryValue()
 
 void LEMDigitalHeliumPressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.Num_Override_20_110VAC_Output.Voltage() < 20.0) return;
+	if (!IsPowered()) return;
 
 	const int DigitWidth = 21;
 	const int DigitHeight = 23;
@@ -1915,12 +1946,12 @@ void LEMDigitalHeliumPressureMeter::InitVC(SURFHANDLE surf)
 
 void LEMDigitalHeliumPressureMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
-	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.Num_Override_20_110VAC_Output.Voltage() < 20.0) return;
+	if (!IsPowered()) return;
 
 	double v = GetDisplayValue();
 
-	const int DigitWidth = 21*TexMul;
-	const int DigitHeight = 23*TexMul;
+	const int DigitWidth = 21 * TexMul;
+	const int DigitHeight = 23 * TexMul;
 	int divisor = 1000;
 
 	for (int i = 0; i < 4; ++i) {
@@ -1928,6 +1959,18 @@ void LEMDigitalHeliumPressureMeter::DrawSwitchVC(int id, int event, SURFHANDLE s
 		oapiBlt(surf, DigitsVC, (int)(DigitWidth * i * 1.15), 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 		divisor /= 10;
 	}
+}
+
+void LEMDigitalHeliumPressureMeter::SystemTimestep(double simdt)
+{
+	double EL = (4.0 * 7.0 * 0.022); // Assumes .022W per segment
+
+	if (IsPowered())
+	{
+		lem->lca.Num_Override_20_110VAC_Output.DrawPower((EL) * (lem->lca.Num_Override_20_110VAC_Output.Voltage() / 115.0));
+	}
+
+	//sprintf(oapiDebugString(), "EL %lf Power %lf", EL, (EL * (lem->lca.Num_Override_20_110VAC_Output.Voltage() / 115.0)));
 }
 
 void DEDAPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {

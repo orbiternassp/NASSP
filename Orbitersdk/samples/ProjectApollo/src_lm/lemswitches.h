@@ -560,8 +560,10 @@ class LEMDPSDigitalMeter : public MeterSwitch {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *l);
 	void InitVC(SURFHANDLE surf);
+	bool IsPowered();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
+	void SystemTimestep(double simdt);
 
 protected:
 	virtual double AdjustForPower(double val) { return val; };
@@ -585,9 +587,11 @@ public:
 	LEMDigitalHeliumPressureMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, RotationalSwitch *s, LEM *l);
 	void InitVC(SURFHANDLE surf);
+	bool IsPowered();
 	double QueryValue();
 	virtual void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	virtual void DrawSwitchVC(int id, int event, SURFHANDLE surf);
+	void SystemTimestep(double simdt);
 
 protected:
 	virtual double AdjustForPower(double val) { return val; };
