@@ -1841,7 +1841,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 #define XP_LIT_ON  (std::max)(lca.GetNumericOutput(), 0.25)
 #define XP_LIT_OFF  0.25
 
-		//Tapemeter Lights
+		// Tapemeter Lights
 		if (AltRngMonSwitch.GetState() == TOGGLESWITCH_DOWN) {
 			SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_AltAltRate, MAT_EMISSION, XP_LIT_ON, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel1_Tapemeter_RangeRangeRate, MAT_EMISSION, XP_LIT_OFF, 1);
@@ -1852,7 +1852,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 
 		// XPointer Lights CDR
-		if (crossPointerLeft.GetRateErrorRelay()) {								// RATE ERR MON -> RNDZ RADAR
+		if (!crossPointerLeft.GetRateErrorRelay()) {								// RATE ERR MON -> RNDZ RADAR
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_ON, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_ON, 1);
 
@@ -1892,7 +1892,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 
 		// XPointer Lights LMP
-		if (crossPointerRight.GetRateErrorRelay()) {								// RATE ERR MON -> RNDZ RADAR
+		if (!crossPointerRight.GetRateErrorRelay()) {								// RATE ERR MON -> RNDZ RADAR
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_ON, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_ON, 1);
 

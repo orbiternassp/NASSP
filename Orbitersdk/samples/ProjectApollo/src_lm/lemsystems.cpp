@@ -3022,16 +3022,6 @@ double CrossPointer::GetDimmableLightsLit()
 	return lights_lit;
 }
 
-void CrossPointer::SystemTimestep(double simdt)
-{
-	if (IsPowered() && dc_source)
-	{
-		dc_source->DrawPower(8.0);  // Crosspointer power
-	}
-
-	ltg_source->DrawPower(GetDimmableLightsLit() * 0.5 * (ltg_source->Voltage() / 115.0)); //Assumes 0.5W per lamp, needs to be checked
-}
-
 void CrossPointer::Timestep(double simdt)
 {
 	if (!IsPowered())
@@ -3046,8 +3036,8 @@ void CrossPointer::Timestep(double simdt)
 	{
 		if (lem->RR.IsPowered())
 		{
-			vel_x = lem->RR.GetRadarShaftVel()*1000.0;
-			vel_y = lem->RR.GetRadarTrunnionVel()*1000.0;
+			vel_x = lem->RR.GetRadarShaftVel() * 1000.0;
+			vel_y = lem->RR.GetRadarTrunnionVel() * 1000.0;
 		}
 		else
 		{
@@ -3080,11 +3070,11 @@ void CrossPointer::Timestep(double simdt)
 		}
 		else if (lem->ModeSelSwitch.IsCenter())	//PGNS
 		{
-			lgc_forward = 0.5571*(double)lem->scdu.GetAltOutput();
-			lgc_lateral = 0.5571*(double)lem->tcdu.GetAltOutput();
+			lgc_forward = 0.5571 * (double)lem->scdu.GetAltOutput();
+			lgc_lateral = 0.5571 * (double)lem->tcdu.GetAltOutput();
 
-			vx = lgc_forward*0.3048;
-			vy = lgc_lateral*0.3048;
+			vx = lgc_forward * 0.3048;
+			vy = lgc_lateral * 0.3048;
 
 			//Apollo 15 and later had this inversed
 			if (lem->pMission->GetCrossPointerReversePolarity())
@@ -3095,7 +3085,7 @@ void CrossPointer::Timestep(double simdt)
 		else //AGS
 		{
 			vx = 0;
-			vy = lem->aea.GetLateralVelocity()*0.3048;
+			vy = lem->aea.GetLateralVelocity() * 0.3048;
 		}
 		vel_x = callout_x = vx / 0.3048 * 20.0 / 200.0;
 		vel_y = callout_y = vy / 0.3048 * 20.0 / 200.0;
@@ -3114,62 +3104,62 @@ void CrossPointer::Timestep(double simdt)
 	//Lighting
 	RelayBox();
 
-	if (ltg_source->Voltage() > 1.8)
+	if (!RateErrorRelay)
 	{
-		if (!RateErrorRelay)
+		ElevRt = true;
+		AzRt = true;
+		LatVel = false;
+		FwdVel = false;
+
+		if (scaleSwitch->IsUp())
 		{
-			ElevRt = true;
-			AzRt = true;
-			LatVel = false;
-			FwdVel = false;
-
-			if (scaleSwitch->IsUp())
-			{
-				X01 = false;
-				X10 = false;
-			}
-			else
-			{
-				X01 = true;
-				X10 = false;
-			}
-		}
-		else if (RateErrorRelay)
-		{
-			ElevRt = false;
-			AzRt = false;
-			LatVel = true;
-
-			if (ModeSelectRelay)
-			{
-				FwdVel = true;
-			}
-			else
-			{
-				FwdVel = false;
-
-				if (scaleSwitch->IsUp())
-				{
-					X01 = false;
-					X10 = true;
-				}
-				else
-				{
-					X01 = false;
-					X10 = false;
-				}
-			}
+			X01 = false;
+			X10 = false;
 		}
 		else
 		{
-			ElevRt = false;
-			AzRt = false;
-			LatVel = false;
+			X01 = true;
+			X10 = false;
+		}
+	}
+	else
+	{
+		ElevRt = false;
+		AzRt = false;
+		LatVel = true;
+
+		if (!ModeSelectRelay)
+		{
+			FwdVel = true;
+		}
+		else
+		{
 			FwdVel = false;
+		}
+
+		if (scaleSwitch->IsUp())
+		{
+			X01 = false;
+			X10 = true;
+		}
+		else
+		{
 			X01 = false;
 			X10 = false;
 		}
 	}
+}
+
+void CrossPointer::SystemTimestep(double simdt)
+{
+	if (IsPowered() && dc_source)
+	{
+		dc_source->DrawPower(8.0);  // Crosspointer power
+	}
+
+	ltg_source->DrawPower(GetDimmableLightsLit() * 0.5 * (ltg_source->Voltage() / 115.0)); //Assumes 0.5W per lamp, needs to be checked
+
+	//sprintf(oapiDebugString(), "Lit: %1f Elev: %d Az %d Lat %d Fwd %d X0.1 %d X10 %d", GetDimmableLightsLit(), ElevRt, AzRt, LatVel, FwdVel, X01, X10);
 }
 
 void CrossPointer::GetVelocities(double &vx, double &vy)
