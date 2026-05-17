@@ -1847,6 +1847,13 @@ void e_object_extended::DrawPower(double watts)
 		SRC->DrawPower(watts);
 }
 
+void e_object_extended::UpdateFlow(double dt)
+{
+	last_power_load = power_load;
+
+	e_object::UpdateFlow(dt);
+}
+
 double e_object_extended::GetLastPowerLoad()
 {
 	if (IsEnabled())

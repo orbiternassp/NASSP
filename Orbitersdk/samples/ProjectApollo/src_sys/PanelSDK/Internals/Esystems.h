@@ -666,7 +666,7 @@ class e_object_extended : public e_object
 public:
 	e_object_extended(char* i_name);
 	void DrawPower(double watts);
-
+	void UpdateFlow(double dt);
 	double GetLastPowerLoad();
 protected:
 	double last_power_load;
