@@ -6877,6 +6877,12 @@ void ApolloRTCCMFD::menuVECPOINTCalc()
 	G->VecPointCalc(IsCSM);
 }
 
+void ApolloRTCCMFD::RecallStatus(void)
+{
+	//MFD data got reloaded in LoadState from the constructor, but resetting the MFD buttons crashes there. Do it here instead
+	SelectPage(screen);
+}
+
 void ApolloRTCCMFD::GetREFSMMATfromAGC()
 {
 	agc_t *vagc = G->GetAGCPointer(IsCSM);
