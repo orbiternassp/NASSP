@@ -1664,6 +1664,7 @@ void LEM_ComponentLights::Timestep(double simdt)
 {
 	if (lem == NULL) return;
 
+	// Bulb lighting logic
 	if (SwitchPower->Voltage() > 1.8)
 	{
 		if (lem->RR.GetNoTrackSignal() || lem->LampToneTestRotary.GetState() == 6)
@@ -1720,6 +1721,16 @@ void LEM_ComponentLights::Timestep(double simdt)
 			BatFault = false;
 		}
 	}
+	else
+	{
+		NoTrack = false;
+		Glycol = false;
+		SuitFan = false;
+		CO2 = false;
+		H2OSep = false;
+		BatFault = false;
+	}
+
 	if (FixedPower->Voltage() > 1.8)
 	{
 		if ((lem->scera1.GetVoltage(12, 11) > 2.5 && lem->stage < 2) || lem->LampToneTestRotary.GetState() == 6)
@@ -1740,6 +1751,12 @@ void LEM_ComponentLights::Timestep(double simdt)
 			StageSeqB = false;
 		}
 	}
+	else
+	{
+		StageSeqA = false;
+		StageSeqB = false;
+	}
+
 	if (Feeder_6VDC_Output.Voltage() > 1.8)
 	{
 		if (FeederFault() || lem->LampToneTestRotary.GetState() == 6)
@@ -1750,6 +1767,10 @@ void LEM_ComponentLights::Timestep(double simdt)
 		{
 			FeedFault = false;
 		}
+	}
+	else
+	{
+		FeedFault = false;
 	}
 
 	// Contact Light Power
