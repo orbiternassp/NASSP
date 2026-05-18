@@ -2051,7 +2051,8 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 
 		// Numerics Lights Panel 8
 //      SetVCLighting(vcidx,NumericLights_P8, MAT_LIGHT,NumericRotarySwitch.GetOutput(), NUM_ELEMENTS(NumericLights_P8));
-		SetVCLighting(vcidx, NumericLights_P8_NTex, MAT_LIGHT, LeftNumericLights.GetOutput() + floodRotaryValue, NUM_ELEMENTS(NumericLights_P8_NTex));
+		SetVCLighting(vcidx, NumericLights_P8_NTex, MAT_LIGHT, LeftNumericLights.GetOutput(), NUM_ELEMENTS(NumericLights_P8_NTex));
+		SetVCLighting(vcidx, VC_MAT_DSKY_P8_t, MAT_LIGHT, dsky.Variable_250VAC_Output.Voltage() / 250.0, 1);
 
 		// Integral Lights Panel 5
 		SetVCLighting(vcidx, IntegralLights_P5, MAT_EMISSION, RightIntegralLights.GetOutput(), NUM_ELEMENTS(IntegralLights_P5));
@@ -2067,7 +2068,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		floodLight_P100->SetIntensity(LEBFloodLights.GetCombinedOutput());
 
 		// Numerics Lights Panel 100
-		SetVCLighting(vcidx, NumericLights_P100, MAT_LIGHT, LEBNumericLights.GetOutput() + floodRotaryValue, NUM_ELEMENTS(NumericLights_P100));
+		SetVCLighting(vcidx, NumericLights_P100, MAT_LIGHT, LEBNumericLights.GetOutput(), NUM_ELEMENTS(NumericLights_P100));
 
 		// DSKY and Caution & Warning Lights
 		std::vector<DWORD> DSKY_Lights;
@@ -2138,8 +2139,8 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		 }
 
 		if (CW_Lights.size() > 0) SetVCLighting(vcidx, &CW_Lights[0], MAT_LIGHT, 1, CW_Lights.size()); 	//Caution & Warning Lights
-		if (DSKY_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_Lights[0], MAT_LIGHT, (LeftNumericLights.Variable_115_5VAC_Output.Voltage()) + floodRotaryValue, DSKY_Lights.size());
-		if (DSKY_LEB_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_LEB_Lights[0], MAT_LIGHT, (LEBNumericLights.Variable_115_5VAC_Output.Voltage()) + floodRotaryValue, DSKY_LEB_Lights.size());
+		if (DSKY_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_Lights[0], MAT_LIGHT, LeftNumericLights.Variable_115_5VAC_Output.Voltage(), DSKY_Lights.size());
+		if (DSKY_LEB_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_LEB_Lights[0], MAT_LIGHT, LEBNumericLights.Variable_115_5VAC_Output.Voltage(), DSKY_LEB_Lights.size());
 
 /*
 		// LEB Conditional Lamps

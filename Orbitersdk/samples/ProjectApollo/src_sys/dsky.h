@@ -165,8 +165,8 @@ public:
 	void ProcessChannel11(ChannelValue val);
 	void ProcessChannel163(ChannelValue val);
 
-	bool GetStatusPower();
-	bool GetSegmentPower();
+	bool GetStatusLtPower();
+	bool GetDSKYPower();
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);

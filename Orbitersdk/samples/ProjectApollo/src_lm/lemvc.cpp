@@ -1757,7 +1757,8 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 				if (CWEA.GetCWLightStatus(i, j)==1 && CWEA.IsCWPWRLTGPowered() == true && CWEA.IsLTGPowered() == true) { DSKY_CW_Lights.push_back(LMVC_CW_Lights[i][j]); }
 			}
 		}
-		if (dsky.GetStatusPower() == true && dsky.GetSegmentPower() == true)
+
+		if (dsky.GetStatusLtPower() && dsky.GetDSKYPower())
 		{
 			if (dsky.UplinkLit())     { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_UPLINK_ACTY); }
 			if (dsky.NoAttLit())      { DSKY_CW_Lights.push_back(VC_MAT_DSKY_LIGHTS_NO_ATT); }
@@ -1822,24 +1823,25 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		// LMVC Ordeal Lighting Switch
 		SetVCLighting(vcidx, IntegralLights_LMVC_Ordeal, MAT_EMISSION, ordeal.LightingPower(), NUM_ELEMENTS(IntegralLights_LMVC_Ordeal));
 
-		SetVCLighting(vcidx, NumericLights_LMVC,  MAT_LIGHT, lca.GetNumericOutput() + floodRotaryValue, NUM_ELEMENTS(NumericLights_LMVC));
+		SetVCLighting(vcidx, NumericLights_LMVC, MAT_LIGHT, lca.GetNumericOutput(), NUM_ELEMENTS(NumericLights_LMVC));
+		SetVCLighting(vcidx, VC_MAT_Panel4_DSKY, MAT_LIGHT, dsky.Variable_250VAC_Output.Voltage() / 250.0, 1);
 
 		if (CWEA.GetMasterAlarm()) {
-			SetVCLighting(vcidx, MasterAlarm_NoTex,  MAT_LIGHT, 1, NUM_ELEMENTS(MasterAlarm_NoTex));
+			SetVCLighting(vcidx, MasterAlarm_NoTex, MAT_LIGHT, 1, NUM_ELEMENTS(MasterAlarm_NoTex));
 		}
 
-		if (DSKY_CW_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_CW_Lights[0], MAT_LIGHT, (LtgORideAnunSwitch.Voltage() / 6.0) + floodRotaryValue, DSKY_CW_Lights.size());
+		if (DSKY_CW_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_CW_Lights[0], MAT_LIGHT, LtgORideAnunSwitch.Voltage() / 6.0, DSKY_CW_Lights.size());
 
 		//External Meshes ***If Second parameter is 0 then the mesh contains only one Material***
 		SetVCLighting(xpointershadesidx, 0, MAT_LIGHT, floodRotaryValue, 1); // FloodLights_XPointer_Shades
 		SetVCLighting(windowshadesidx, 0, MAT_LIGHT, floodRotaryValue, 1); // FloodLights_WindowShades
 
 		if (deda.OprErrLit()) {
-			SetVCLighting(vcidx, VC_MAT_DEDA_Light,  MAT_LIGHT, 1, 1);
+			SetVCLighting(vcidx, VC_MAT_DEDA_Light, MAT_LIGHT, LtgORideAnunSwitch.Voltage() / 6.0, 1);
 		}
 
-#define XP_LIT_ON  (std::max)(lca.GetNumericOutput(), 0.25)
-#define XP_LIT_OFF  0.25
+#define XP_LIT_ON  (std::max)(lca.GetNumericOutput(), 0.15)
+#define XP_LIT_OFF  0.15
 
 		// Tapemeter Lights
 		if (AltRngMonSwitch.GetState() == TOGGLESWITCH_DOWN) {

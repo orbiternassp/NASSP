@@ -1571,12 +1571,19 @@ void DSKY::SendNetworkPacketDSKY()
 	}
 }
 
-bool DSKY::GetStatusPower()
+bool DSKY::GetStatusLtPower()
 {
 	return IsStatusPowered();
 }
 
-bool DSKY::GetSegmentPower()
-{	
-	return IsSegmentPowered();
+bool DSKY::GetDSKYPower()
+{
+	if (SegmentPower->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

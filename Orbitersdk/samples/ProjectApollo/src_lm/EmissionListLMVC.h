@@ -172,7 +172,7 @@ DWORD IntegralLights_LMVC_NoTex[] = {
 };
 
 DWORD NumericLights_LMVC[] = {
-	VC_MAT_Panel4_DSKY,
+	//VC_MAT_Panel4_DSKY,
 	VC_MAT_Panel1_Numerics_Timer,
 	VC_MAT_DEDA_Display,
 /*	VC_MAT_L01_PwrFail_XpointerL,
