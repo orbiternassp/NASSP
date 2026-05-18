@@ -1913,7 +1913,6 @@ void VariableVoltageTransformer::UpdateFlow(double dt)
 	double DesVolts = min_output_voltage + (max_output_voltage - min_output_voltage) * GetValue();
 	if (SRC && !DCtoAC)
 	{
-		double DesVolts = min_output_voltage + (max_output_voltage - min_output_voltage) * GetValue();
 		Volts = min(SRC->Voltage(), DesVolts);
 	}
 	else if (SRC && DCtoAC && SRC->Voltage() > SP_MIN_DCVOLTAGE)
