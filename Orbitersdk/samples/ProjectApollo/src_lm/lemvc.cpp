@@ -1828,7 +1828,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, MasterAlarm_NoTex,  MAT_LIGHT, 1, NUM_ELEMENTS(MasterAlarm_NoTex));
 		}
 
-		if (DSKY_CW_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_CW_Lights[0],  MAT_LIGHT, lca.GetIntegralOutput() + floodRotaryValue, DSKY_CW_Lights.size());
+		if (DSKY_CW_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_CW_Lights[0], MAT_LIGHT, (LtgORideAnunSwitch.Voltage() / 6.0) + floodRotaryValue, DSKY_CW_Lights.size());
 
 		//External Meshes ***If Second parameter is 0 then the mesh contains only one Material***
 		SetVCLighting(xpointershadesidx, 0, MAT_LIGHT, floodRotaryValue, 1); // FloodLights_XPointer_Shades
@@ -1838,7 +1838,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, VC_MAT_DEDA_Light,  MAT_LIGHT, 1, 1);
 		}
 
-#define XP_LIT_ON  (std::max)(lca.GetNumericOutput(), 0.25)
+#define XP_LIT_ON  (std::max)(LtgORideAnunSwitch.Voltage() / 6.0, 0.25)
 #define XP_LIT_OFF  0.25
 
 		// Tapemeter Lights

@@ -2083,7 +2083,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		// ... and Read them
 		cws.GetCWLightStates(LightStates);
 
-		if (NumericRotarySwitch.GetOutput()) {
+		if (LeftNumericLights.Variable_115_5VAC_Output.Voltage() / 5.0) {
 			if (dsky.UplinkLit())		{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_UPLINK_ACTY); }
 			if (dsky.NoAttLit())		{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_NO_ATT); }
 			if (dsky.StbyLit())			{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_STBY); }
@@ -2096,7 +2096,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 			if (dsky.TrackerLit())		{ DSKY_Lights.push_back(VC_MAT_DSKY_Lights_TRACKER); }
 		}
 
-		if (Panel100NumericRotarySwitch.GetOutput()) {
+		if (LEBNumericLights.Variable_115_5VAC_Output.Voltage() / 5.0) {
 			if (dsky.UplinkLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_UPLINK_ACTY); }
 			if (dsky.NoAttLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_NO_ATT); }
 			if (dsky.StbyLit())			{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_STBY); }
@@ -2138,8 +2138,8 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		 }
 
 		if (CW_Lights.size() > 0) SetVCLighting(vcidx, &CW_Lights[0], MAT_LIGHT, 1, CW_Lights.size()); 	//Caution & Warning Lights
-		if (DSKY_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_Lights[0], MAT_LIGHT, NumericRotarySwitch.GetOutput() + floodRotaryValue, DSKY_Lights.size());
-		if (DSKY_LEB_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_LEB_Lights[0], MAT_LIGHT, Panel100NumericRotarySwitch.GetOutput() + floodRotaryValue, DSKY_LEB_Lights.size());
+		if (DSKY_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_Lights[0], MAT_LIGHT, (dsky.PowerRail250VAC() / 250.0) + floodRotaryValue, DSKY_Lights.size());
+		if (DSKY_LEB_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_LEB_Lights[0], MAT_LIGHT, (dsky2.PowerRail250VAC() / 250.0) + floodRotaryValue, DSKY_LEB_Lights.size());
 
 /*
 		// LEB Conditional Lamps

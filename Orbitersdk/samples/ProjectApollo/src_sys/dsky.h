@@ -164,6 +164,7 @@ public:
 
 	bool GetStatusPower();
 	bool GetSegmentPower();
+	double PowerRail250VAC();
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
@@ -181,7 +182,6 @@ protected:
 
 	bool IsStatusPowered();
 	bool IsSegmentPowered();
-	double PowerRail250VAC();
 	void SendKeyCode(int val);
 
 	//
