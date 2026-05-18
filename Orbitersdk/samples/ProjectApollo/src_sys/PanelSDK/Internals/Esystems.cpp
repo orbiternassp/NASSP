@@ -1901,18 +1901,24 @@ void FixedVoltageTransformer::UpdateFlow(double dt)
 	power_load = 0.0;
 }
 
-VariableVoltageTransformer::VariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt) : VoltageTransformer(i_name)
+VariableVoltageTransformer::VariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt, bool DCAC) : VoltageTransformer(i_name)
 {
 	min_output_voltage = MinVolt;
 	max_output_voltage = MaxVolt;
+	DCtoAC = DCAC;
 }
 
 void VariableVoltageTransformer::UpdateFlow(double dt)
 {
-	if (SRC)
+	double DesVolts = min_output_voltage + (max_output_voltage - min_output_voltage) * GetValue();
+	if (SRC && !DCtoAC)
 	{
 		double DesVolts = min_output_voltage + (max_output_voltage - min_output_voltage) * GetValue();
 		Volts = min(SRC->Voltage(), DesVolts);
+	}
+	else if (SRC && DCtoAC && SRC->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		Volts = DesVolts;
 	}
 	else
 	{

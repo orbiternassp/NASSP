@@ -693,7 +693,7 @@ protected:
 class VariableVoltageTransformer : public VoltageTransformer
 {
 public:
-	VariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt);
+	VariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt, bool DCAC = false);
 
 	virtual void UpdateFlow(double dt);
 
@@ -701,6 +701,7 @@ public:
 protected:
 	double min_output_voltage;
 	double max_output_voltage;
+	bool DCtoAC; // DC to AC voltage conversion
 };
 
 #endif

@@ -2138,8 +2138,8 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		 }
 
 		if (CW_Lights.size() > 0) SetVCLighting(vcidx, &CW_Lights[0], MAT_LIGHT, 1, CW_Lights.size()); 	//Caution & Warning Lights
-		if (DSKY_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_Lights[0], MAT_LIGHT, (dsky.PowerRail250VAC() / 250.0) + floodRotaryValue, DSKY_Lights.size());
-		if (DSKY_LEB_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_LEB_Lights[0], MAT_LIGHT, (dsky2.PowerRail250VAC() / 250.0) + floodRotaryValue, DSKY_LEB_Lights.size());
+		if (DSKY_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_Lights[0], MAT_LIGHT, (LeftNumericLights.Variable_115_5VAC_Output.Voltage()) + floodRotaryValue, DSKY_Lights.size());
+		if (DSKY_LEB_Lights.size() > 0) SetVCLighting(vcidx, &DSKY_LEB_Lights[0], MAT_LIGHT, (LEBNumericLights.Variable_115_5VAC_Output.Voltage()) + floodRotaryValue, DSKY_LEB_Lights.size());
 
 /*
 		// LEB Conditional Lamps

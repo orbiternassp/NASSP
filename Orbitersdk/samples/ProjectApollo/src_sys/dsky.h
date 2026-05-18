@@ -41,7 +41,7 @@ class DSKY : public e_object
 {
 public:
 
-	DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel = 015);
+	DSKY(SoundLib &s, ApolloGuidance &computer, PanelSDK& p, int IOChannel = 015);
 	virtual ~DSKY();
 
 	void Init(
@@ -51,6 +51,9 @@ public:
 		e_object *integralsource
 	);
 	void Reset();
+
+	// Variable 0-250VAC DSKY transformer
+	RotVariableVoltageTransformer Variable_250VAC_Output;
 
 	//
 	// Light status.
@@ -164,7 +167,6 @@ public:
 
 	bool GetStatusPower();
 	bool GetSegmentPower();
-	double PowerRail250VAC();
 
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);

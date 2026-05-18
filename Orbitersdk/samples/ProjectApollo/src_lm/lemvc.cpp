@@ -1838,7 +1838,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, VC_MAT_DEDA_Light,  MAT_LIGHT, 1, 1);
 		}
 
-#define XP_LIT_ON  (std::max)(LtgORideAnunSwitch.Voltage() / 6.0, 0.25)
+#define XP_LIT_ON  (std::max)(lca.GetNumericOutput(), 0.25)
 #define XP_LIT_OFF  0.25
 
 		// Tapemeter Lights

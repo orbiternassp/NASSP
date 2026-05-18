@@ -5665,7 +5665,7 @@ void DSKYPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	}
 }
 
-RotVariableVoltageTransformer::RotVariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt) : VariableVoltageTransformer(i_name, MinVolt, MaxVolt)
+RotVariableVoltageTransformer::RotVariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt, bool DCAC) : VariableVoltageTransformer(i_name, MinVolt, MaxVolt, DCAC)
 {
 	rotary = NULL;
 }
@@ -5681,7 +5681,7 @@ double RotVariableVoltageTransformer::GetValue()
 	else return 0.0;
 }
 
-RotVoltageTransformerOverride::RotVoltageTransformerOverride(char* i_name, double MinVolt, double MaxVolt) : RotVariableVoltageTransformer(i_name, MinVolt, MaxVolt)
+RotVoltageTransformerOverride::RotVoltageTransformerOverride(char* i_name, double MinVolt, double MaxVolt, bool DCAC) : RotVariableVoltageTransformer(i_name, MinVolt, MaxVolt, DCAC)
 {
 	OverrideSwitch = NULL;
 }

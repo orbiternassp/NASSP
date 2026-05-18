@@ -1905,7 +1905,7 @@ protected:
 class RotVariableVoltageTransformer : public VariableVoltageTransformer
 {
 public:
-	RotVariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt);
+	RotVariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt, bool DCAC = false);
 	virtual void Init(ContinuousSwitch* rot);
 
 	double GetValue();
@@ -1917,7 +1917,7 @@ protected:
 class RotVoltageTransformerOverride : public RotVariableVoltageTransformer
 {
 public:
-	RotVoltageTransformerOverride(char* i_name, double MinVolt, double MaxVolt);
+	RotVoltageTransformerOverride(char* i_name, double MinVolt, double MaxVolt, bool DCAC = false);
 	void Init(ContinuousSwitch* rot, ToggleSwitch* ovrdsw);
 
 	void UpdateFlow(double dt);

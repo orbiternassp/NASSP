@@ -153,7 +153,8 @@ static char SixSpace[] = "      ";
 
 static int SegmentCount[] = {6, 2, 5, 5, 4, 5, 6, 3, 7, 5 };
 
-DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel) : soundlib(s), agc(computer)
+DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, PanelSDK& p, int IOChannel) : soundlib(s), agc(computer),
+Variable_250VAC_Output("Variable 250VAC DSKY Transformer", 0.0, 250.0, true)
 
 {
 	DimmerRotationalSwitch = NULL;
@@ -163,6 +164,8 @@ DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel) : soundlib(s), 
 	Reset();
 	ResetKeyDown();
 	KeyCodeIOChannel = IOChannel;
+
+	p.AddElectrical(&Variable_250VAC_Output, false);
 }
 
 void DSKY::Reset()
@@ -223,6 +226,10 @@ void DSKY::Init(
 	DimmerRotationalSwitch = dimmer;
 	IntegralPower = integralsource;
 
+	// DSKY segment light transformer
+	Variable_250VAC_Output.Init(DimmerRotationalSwitch);
+	Variable_250VAC_Output.WireTo(SegmentPower);
+
 	Reset();
 	FirstTimeStep = true;
 }
@@ -234,17 +241,9 @@ bool DSKY::IsStatusPowered() {
 }
 
 bool DSKY::IsSegmentPowered() {
-	if (SegmentPower->Voltage() < 20.0) { return false; }
+	if (Variable_250VAC_Output.Voltage() < 20.0) { return false; }
 
 	return true;
-}
-
-double DSKY::PowerRail250VAC() // Internal transformer used to power segment lights, dimmed with numerics rheostat lug
-{
-	if (IsSegmentPowered() && DimmerRotationalSwitch != NULL) {
-		return DimmerRotationalSwitch->GetOutput() * 250.0;
-	}
-	return 0.0;
 }
 
 void DSKY::Timestep(double simt)
@@ -373,7 +372,7 @@ void DSKY::SystemTimestep(double simdt)
 		SegmentsLit += SixDigitDisplaySegmentsLit(R3, ELOff);
 
 		// 184 segments with together max. 4W  
-		SegmentPower->DrawPower((PowerRail250VAC() / 250.0) * (SegmentsLit * 0.022));
+		SegmentPower->DrawPower((Variable_250VAC_Output.Voltage() / 250.0) * (SegmentsLit * 0.022));
 	}
 
 	//sprintf(oapiDebugString(), "DSKY %f", (LightsLit * 0.6) + (SegmentsLit * 0.022));
@@ -1558,7 +1557,7 @@ void DSKY::SendNetworkPacketDSKY()
 		char intLvl[256] = "";
 
 		sprintf(anunLvl, "%lf", SegmentPower->Voltage() / 5.0);
-		sprintf(numLvl, "%lf", PowerRail250VAC() / 250.0);
+		sprintf(numLvl, "%lf", Variable_250VAC_Output.Voltage() / 250.0);
 		sprintf(intLvl, "%lf", IntegralPower->Voltage() / 115.0);
 
 		anun = anun + "\"" + anunLvl + "\",";
