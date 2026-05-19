@@ -42,10 +42,40 @@ struct MEDInputPage
 	int display = -1;
 };
 
+// Global data storage. Always exists when the RTCC MFD module is activated.
+class AR_GlobalData
+{
+public:
+	AR_GlobalData();
+
+	void SaveState(FILEHANDLE scn);
+	void LoadState(FILEHANDLE scn);
+
+	// GLOBAL VARIABLES
+	
+	// true = MPT is used, false = MPT is not used
+	bool MissionPlanningActive;
+
+	//Vessel pointers to be used exclusively by the RTCC MFD
+	VESSEL* pCSM, * pLM;
+	char CSMName[64];
+	char LEMName[64];
+
+	// Time of lunar liftoff
+	double t_LunarLiftoff;
+
+	// Time from TIG of sextant star check
+	double sxtstardtime;
+
+	// Generally used TPI time
+	double t_TPI;
+};
+
+// Global RTCC MFD class. Gets created when RTCC MFD is first opened in an Orbiter session.
 class AR_GCore
 {
 public:
-	AR_GCore(VESSEL* v);
+	AR_GCore(AR_GlobalData* GD, VESSEL* v);
 	~AR_GCore();
 
 	void SetMissionSpecificParameters(int mission);
@@ -55,12 +85,11 @@ public:
 	bool AGOP_CSM_REFSMMAT_Required();
 	bool AGOP_LM_REFSMMAT_Required();
 
-	bool MissionPlanningActive;
-
 	int mptInitError;
 
 	double REFSMMAT_PTC_MJD;
 
+	AR_GlobalData* GD;
 	RTCC* rtcc;
 
 	//MANEUVER PAD PAGE
@@ -116,9 +145,6 @@ public:
 	int DEDA224, DEDA225, DEDA226, DEDA227, DEDA305, DEDA662, DEDA673, PDAP_ErrorCode;
 	double PDAP_J1, PDAP_K1, PDAP_J2, PDAP_K2, PDAP_Theta_LIM, PDAP_R_amin, PDAP_V_hmin, PDAP_A_min, PDAP_A_max;
 
-	//GENERAL PARAMETERS
-	double t_TPI;				// Generally used TPI time
-
 	//MANUAL ENTRY DEVICE
 	std::vector<MEDInputPage> MEDInputData;
 
@@ -131,7 +157,7 @@ protected:
 
 class ARCore {
 public:
-	ARCore(VESSEL* v, AR_GCore* gcin);
+	ARCore(VESSEL* v, AR_GCore* gcin, AR_GlobalData* gdin);
 	~ARCore();
 	void LunarLaunchTargetingCalc();
 	void LDPPalc();
@@ -306,8 +332,6 @@ public:
 
 	//ENTRY PAGE
 	double entryrange;
-	int landingzone; //0 = Mid Pacific, 1 = East Pacific, 2 = Atlantic Ocean, 3 = Indian Ocean, 4 = West Pacific
-	int entryprecision; //0 = conic, 1 = precision, 2 = PeA=-30 solution
 	double RTEReentryTime; //Desired landing time
 	int RTECalcMode; // 0 = ATP Tradeoff, 1 = ATP Search, 2 = ATP Discrete, 3 = UA Search, 4 = UA Discrete
 	int RTETradeoffMode; //0 = Near-Earth (F70), 1 = Remote-Earth (F71)
@@ -324,7 +348,6 @@ public:
 	//MANEUVER PAD PAGE
 	bool HeadsUp;
 	int manpadopt; //0 = CSM Maneuver PAD, 1 = LM Maneuver PAD, 2 = TPI PAD, 3 = TLI PAD, 4 = PDI PAD
-	double sxtstardtime;
 	double manpad_ullage_dt;
 	bool manpad_ullage_opt; //true = 4 jets, false = 2 jets
 	int manpad_pref_GDC_stars; // Preferred star set for the GDC backup alignment. 0 = Deneb, Vega, 1 = Navi, Polaris, 2 = Acrux, Atria, 3 = Sirius, Rigel
@@ -354,7 +377,6 @@ public:
 
 	//LM Ascent PAD
 	AP11LMASCPAD lmascentpad;
-	double t_LunarLiftoff;
 	int AscentPADVersion; //0 = Apollo 11-13, 1 = Apollo 14-17
 	double LAP_Phase, LAP_CR;
 
@@ -412,6 +434,7 @@ public:
 
 private:
 
+	AR_GlobalData* GD;
 	AR_GCore* GC;
 };
 

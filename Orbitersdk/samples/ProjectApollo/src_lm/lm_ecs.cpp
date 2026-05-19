@@ -160,7 +160,7 @@ void LEMCrewStatus::Timestep(double simdt) {
 	}
 
 	// Suit/Cabin CO2 above 10 mmHg for 30 minutes
-	if (lem->ecs.GetECSSensorCO2MMHg() > 10 && (lem->CrewInCabin->number > 0 || (lem->CDRSuited->number + lem->LMPSuited->number > 0))) {
+	if ((lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->CrewInCabin->number > 0) || (lem->ecs.GetECSCDRSuitCO2MMHg() > 10 && lem->CDRSuited->number > 0) || (lem->ecs.GetECSLMPSuitCO2MMHg() > 10 && lem->LMPSuited->number > 0)) {
 		if (CO2Time <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play();
@@ -1488,7 +1488,7 @@ LEM_ECS::LEM_ECS(PanelSDK &p) : sdk(p)
 	// For simplicity's sake, we'll use a docked LM as it would be at IVT, at first docking the LM is empty!
 	Cabin_Press = 0; Cabin_Temp = 0;
 	Suit_Press = 0; SGD_Press = 0;  Suit_Temp = 0;
-	SuitCircuit_CO2 = 0; SGD_CO2 = 0;
+	SuitCircuit_CO2 = 0; CDRSuit_CO2 = 0; LMPSuit_CO2 = 0; SGD_CO2 = 0; Cabin_CO2 = 0;
 	Water_Sep1_RPM = 0; Water_Sep2_RPM = 0;
 	Suit_Circuit_Relief = 0;
 	Cabin_Gas_Return = 0;
@@ -1984,13 +1984,26 @@ double LEM_ECS::GetECSCabinPSI() {
 	return *Cabin_Press * PSI;
 }
 
-double LEM_ECS::GetECSSensorCO2MMHg() {
+double LEM_ECS::GetECSCabinCO2MMHg() {
 
-	if (!SuitCircuit_CO2) {
-		SuitCircuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT:CO2_PPRESS");
+	if (!Cabin_CO2) {
+		Cabin_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:CABIN:CO2_PPRESS");
 	}
-	if (!SGD_CO2) {
-		SGD_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:SUITGASDIVERTER:CO2_PPRESS");
+	return *Cabin_CO2 * MMHG;
+}
+
+double LEM_ECS::GetECSCDRSuitCO2MMHg() {
+
+	if (!CDRSuit_CO2) {
+		CDRSuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:CDRSUIT:CO2_PPRESS");
 	}
-	return ((*SuitCircuit_CO2 + *SGD_CO2) / 2.0) * MMHG;
+	return (*CDRSuit_CO2 * MMHG);
+}
+
+double LEM_ECS::GetECSLMPSuitCO2MMHg() {
+
+	if (!LMPSuit_CO2) {
+		LMPSuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:LMPSUIT:CO2_PPRESS");
+	}
+	return (*LMPSuit_CO2 * MMHG);
 }
