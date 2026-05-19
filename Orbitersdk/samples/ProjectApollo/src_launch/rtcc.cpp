@@ -1805,10 +1805,6 @@ RTCC::RTCC() :
 	calcParams.SVSTORE1.R = _V(0, 0, 0);
 	calcParams.SVSTORE1.V = _V(0, 0, 0);
 
-	pCSM = pLM = NULL;
-	CSMName[0] = 0;
-	LEMName[0] = 0;
-
 	EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	EZJGMTX3.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	EZJGMTX3.data[RTCC_REFSMMAT_TYPE_AGS - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
@@ -6578,6 +6574,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("PZLTRT_DT_Ins_TPI", PZLTRT.DT_Ins_TPI);
 	SAVE_DOUBLE("PZLTRT_PoweredFlightArc", PZLTRT.PoweredFlightArc);
 	SAVE_DOUBLE("PZLTRT_PoweredFlightTime", PZLTRT.PoweredFlightTime);
+	SAVE_DOUBLE("PZLTRT_InsertionHorizontalVelocity", PZLTRT.InsertionHorizontalVelocity);
+	SAVE_DOUBLE("PZLTRT_InsertionRadialVelocity", PZLTRT.InsertionRadialVelocity);
 
 	SAVE_DOUBLE("RZC1RCNS_GLevel", RZC1RCNS.entry.GLevel);
 	SAVE_DOUBLE("RZC1RCNS_GNInitialBank", RZC1RCNS.entry.GNInitialBank);
@@ -6781,14 +6779,6 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	RZJCTTC.SaveState(scn, "RZJCTTC_BEGIN", "RZJCTTC_END");
 	EZGSTMED.SaveState(scn, "EZGSTMED_BEGIN", "EZGSTMED_END");
 
-	if (pCSM)
-	{
-		oapiWriteScenario_string(scn, "RTCCMFD_CSM", pCSM->GetName());
-	}
-	if (pLM)
-	{
-		oapiWriteScenario_string(scn, "RTCCMFD_LM", pLM->GetName());
-	}
 	//MED
 	sprintf(Buffer, "%.2lf %.2lf %.0lf %.0lf %.2lf %.2lf %.2lf",
 		med_k18.HALOI1, med_k18.HPLOI1, med_k18.DVMAXp, med_k18.DVMAXm, med_k18.psi_DS, med_k18.psi_MX, med_k18.psi_MN);
@@ -6952,6 +6942,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("PZLTRT_DT_Ins_TPI", PZLTRT.DT_Ins_TPI);
 		LOAD_DOUBLE("PZLTRT_PoweredFlightArc", PZLTRT.PoweredFlightArc);
 		LOAD_DOUBLE("PZLTRT_PoweredFlightTime", PZLTRT.PoweredFlightTime);
+		LOAD_DOUBLE("PZLTRT_InsertionHorizontalVelocity", PZLTRT.InsertionHorizontalVelocity);
+		LOAD_DOUBLE("PZLTRT_InsertionRadialVelocity", PZLTRT.InsertionRadialVelocity);
 
 		LOAD_DOUBLE("RZC1RCNS_GLevel", RZC1RCNS.entry.GLevel);
 		LOAD_DOUBLE("RZC1RCNS_GNInitialBank", RZC1RCNS.entry.GNInitialBank);
@@ -7129,8 +7121,6 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp(line, "EZGSTMED_BEGIN", sizeof("EZGSTMED_BEGIN"))) {
 			EZGSTMED.LoadState(scn, "EZGSTMED_END");
 		}
-		papiReadScenario_string(line, "RTCCMFD_CSM", CSMName);
-		papiReadScenario_string(line, "RTCCMFD_LM", LEMName);
 
 		if (!strnicmp(line, "MED_K18", 7))
 		{
@@ -7171,22 +7161,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 
 void RTCC::clbkPostCreation()
 {
-	if (CSMName[0])
-	{
-		OBJHANDLE hVessel = oapiGetObjectByName(CSMName);
-		if (hVessel)
-		{
-			pCSM = oapiGetVesselInterface(hVessel);
-		}
-	}
-	if (LEMName[0])
-	{
-		OBJHANDLE hVessel = oapiGetObjectByName(LEMName);
-		if (hVessel)
-		{
-			pLM = oapiGetVesselInterface(hVessel);
-		}
-	}
+	
 }
 
 void RTCC::SetManeuverData(double TIG, VECTOR3 DV)

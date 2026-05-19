@@ -5340,12 +5340,6 @@ protected:
 	std::ofstream rtccdebug;
 
 public:
-
-	//Vessel pointers to be used exclusively by the RTCC MFD
-	VESSEL *pCSM, *pLM;
-	char CSMName[64];
-	char LEMName[64];
-
 	RTCCSystemParameters SystemParameters;
 	rtcc::RTCCDynamicDisplayData DynamicDisplayData;
 };
