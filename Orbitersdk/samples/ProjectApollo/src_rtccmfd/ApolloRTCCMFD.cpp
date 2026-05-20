@@ -1481,6 +1481,13 @@ void ApolloRTCCMFD::menuSetRecoveryZonesDisplayPage()
 	SelectPage(136);
 }
 
+void ApolloRTCCMFD::menuSetExpendablesTable(int subpage)
+{
+	subscreen = subpage;
+	subscreenmax = 2;
+	SelectPage(137);
+}
+
 void ApolloRTCCMFD::menuPerigeeAdjustCalc()
 {
 	G->PerigeeAdjustCalc();
@@ -2700,6 +2707,87 @@ void ApolloRTCCMFD::menuSpacecraftPointingDisplayCalc()
 	sprintf_s(Buffer, "G42,%s,%s,%s;", Buff1, Buff2, Buff3);
 
 	menuGeneralMEDRequest("Queue S/C point display. Format: G42, GET1, GET5, GETT;", Buffer);
+}
+
+void ApolloRTCCMFD::menuExpendablesTableAdd()
+{
+	bool ExpendablesTableAddInput(void* id, char* str, void* data);
+
+	oapiOpenInputBox("Add entry to table. Format: Time Weight-Loss Vehicle. Notes: Time = HHH:MM:SS, Weight-Loss = Positive is a loss, negative a gain, Vehicle = C, S, A or D", ExpendablesTableAddInput, "000:00:00 0.0 C", 30, (void*)this);
+}
+
+bool ExpendablesTableAddInput(void* id, char* str, void* data)
+{
+	return ((ApolloRTCCMFD*)data)->set_ExpendablesTabeEntry(1, str);
+}
+
+void ApolloRTCCMFD::menuExpendablesTableReplace()
+{
+	bool ExpendablesTableReplaceInput(void* id, char* str, void* data);
+
+	oapiOpenInputBox("Replace entry in table. Format: Entry-Number Time Weight-Loss Vehicle. Entry-Number = 1-20, Notes: Time = HHH:MM:SS, Weight-Loss = Positive is a loss, negative a gain, Vehicle = C, S, A or D", ExpendablesTableReplaceInput, "1 000:00:00 0.0 C", 30, (void*)this);
+}
+
+bool ExpendablesTableReplaceInput(void* id, char* str, void* data)
+{
+	return ((ApolloRTCCMFD*)data)->set_ExpendablesTabeEntry(2, str);
+}
+
+void ApolloRTCCMFD::menuExpendablesTableDelete()
+{
+	bool ExpendablesTableDeleteInput(void* id, char* str, void* data);
+
+	oapiOpenInputBox("Delete entry in table. Format: Entry-Number. Notes: Entry-Number = 1-20 or 0 to delete all entries.", ExpendablesTableDeleteInput, "1", 30, (void*)this);
+}
+
+bool ExpendablesTableDeleteInput(void* id, char* str, void* data)
+{
+	return ((ApolloRTCCMFD*)data)->set_ExpendablesTabeEntry(3, str);
+}
+
+bool ApolloRTCCMFD::set_ExpendablesTabeEntry(int type, char* str)
+{
+	char Buff1[64], Buff2[64], Buff3[64], Buff4[64], Veh[4];
+
+	if (subscreen == 0)
+	{
+		sprintf(Veh, "CSM");
+	}
+	else
+	{
+		sprintf(Veh, "LEM");
+	}
+
+	if (type == 1)
+	{
+		// Add
+		if (sscanf(str, "%s %s %s", Buff1, Buff2, Buff3) != 3)
+		{
+			return false;
+		}
+		sprintf(Buffer, "M47,%s,A,,%s,%s,%s;", Veh, Buff1, Buff2, Buff3);
+	}
+	else if (type == 2)
+	{
+		// Replace
+		if (sscanf(str, "%s %s %s %s", Buff1, Buff2, Buff3, Buff4) != 4)
+		{
+			return false;
+		}
+		sprintf(Buffer, "M47,%s,R,%s,%s,%s,%s;", Veh, Buff1, Buff2, Buff3, Buff4);
+	}
+	else
+	{
+		// Delete
+		if (sscanf(str, "%s", Buff1) != 1)
+		{
+			return false;
+		}
+		sprintf(Buffer, "M47,%s,D,%s;", Veh, Buff1);
+	}
+	GeneralMEDRequest(Buffer);
+
+	return true;
 }
 
 void ApolloRTCCMFD::menuSaveDODREFSMMAT()
@@ -7590,12 +7678,12 @@ void ApolloRTCCMFD::menuSetLLWPVectorID()
 
 void ApolloRTCCMFD::menuTMLat()
 {
-	GenericDoubleInput(&G->TMLat, "Latitude in degrees:", RAD);
+	GenericDoubleInput(&G->TMLat, "Latitude in degrees (-90 to +90):", RAD);
 }
 
 void ApolloRTCCMFD::menuTMLng()
 {
-	GenericDoubleInput(&G->TMLng, "Longitude in degrees:", RAD);
+	GenericDoubleInput(&G->TMLng, "Longitude in degrees (-180 to 180):", RAD);
 }
 
 void ApolloRTCCMFD::menuTMAzi()
@@ -9968,6 +10056,8 @@ void ApolloRTCCMFD::SelectMCCScreen(int num)
 	case 1597: menuSetSkeletonFlightPlanPage(); break;
 	case 1619: menuSetCheckoutMonitorPage(); break;
 	case 1629: menuSetOnlineMonitorPage(); break;
+	case 2321: menuSetExpendablesTable(0); break;
+	case 2322: menuSetExpendablesTable(1); break;
 	}
 }
 

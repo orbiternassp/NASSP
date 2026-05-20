@@ -3570,6 +3570,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, x, y, "1597 SKEL FLT PLN"); y++;
 		Text(skp, x, y, "1619 CHECKO MONIT"); y++;
 		Text(skp, x, y, "1629 ONLINE MONIT"); y++;
+		Text(skp, x, y, "2321 CSM EXPENDBL"); y++;
+		Text(skp, x, y, "2322 LEM EXPENDBL"); y++;
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		//TBD: Channel numbers, these could confuse people right now which number to input
 		/*
@@ -9603,6 +9605,46 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			}
 		}
 		Text(skp, 35, 27, GC->rtcc->RZPAGE.ErrorMessage);
+		break;
+	case 137:
+	{
+		RTCC::ExpendableWeightsTable* tab;
+
+		SetMOCRFont(skp, 3, false);
+		GetCharSize(skp, CW, CH);
+		SetMOCRDisplayCentered(3);
+		if (subscreen == 0)
+		{
+			Text(skp, 8, 0, "CSM EXPENDABLES WEIGHT LOSS TABLE");
+			Text(skp, 52, 0, "2321");
+			tab = &GC->rtcc->PZEXPCSM;
+		}
+		else
+		{
+			Text(skp, 8, 0, "LEM EXPENDABLES WEIGHT LOSS TABLE");
+			Text(skp, 52, 0, "2322");
+			tab = &GC->rtcc->PZEXPLEM;
+		}
+		Text(skp, 1, 2, "SET     GET          GMT      WEIGHT LOSS  VEHICLE");
+		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
+		SetMOCRFont(skp, 3, true);
+
+		for (unsigned int i = 0; i < tab->data.size(); i++)
+		{
+			Text(skp, 4, 4 + i, "%d", (int)(i + 1));
+			Text_GET_HHHMMSSCS(skp, 17, 4 + i, tab->data[i].GET);
+			Text_GET_HHHMMSSCS(skp, 30, 4 + i, GC->rtcc->GMTfromGET(tab->data[i].GET));
+			Text(skp, 41, 4 + i, "%.1lf", tab->data[i].WeightLoss / 0.45359237);
+			switch (tab->data[i].Veh)
+			{
+			case 0: sprintf(Buffer, "C"); break;
+			case 1: sprintf(Buffer, "S"); break;
+			case 2: sprintf(Buffer, "A"); break;
+			case 3: sprintf(Buffer, "D"); break;
+			}
+			Text(skp, 48, 4 + i, Buffer);
+		}
+	}
 		break;
 	}
 
