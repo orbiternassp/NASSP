@@ -1218,15 +1218,6 @@ LEM_LCA::LEM_LCA(PanelSDK& p) :
 {
 	lem = NULL;
 	LCAHeat = 0;
-
-	p.AddElectrical(&CDR_Bus_28V_6V_Converter, false);
-	p.AddElectrical(&LMP_Bus_28V_6V_Converter, false);
-	p.AddElectrical(&Fixed_5_5VDC_Output, false);
-	p.AddElectrical(&Fixed_6VDC_Output, false);
-	p.AddElectrical(&Variable_2_5VDC_Output, false);
-
-	p.AddElectrical(&Num_Override_20_110VAC_Output, false);
-	p.AddElectrical(&Int_Override_15_75VAC_Output, false);
 }
 
 void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h)
@@ -1603,8 +1594,6 @@ LEM_ComponentLights::LEM_ComponentLights(PanelSDK& p) :
 	FixedPower = NULL;
 	CDR_Feed = NULL;
 	LMP_Feed = NULL;
-
-	p.AddElectrical(&Feeder_6VDC_Output, false);
 
 	NoTrack = false;
 	CO2 = false;
