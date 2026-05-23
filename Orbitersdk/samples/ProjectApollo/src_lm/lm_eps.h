@@ -355,10 +355,6 @@ public:
 	//Variable 15-75VAC integral transformer
 	RotVoltageTransformerOverride Int_Override_15_75VAC_Output;
 
-protected:
-	LEM *lem;
-	h_HeatLoad *LCAHeat;
-
 	// Internal annunciator wiring
 	// CDR bus 28VDC to 6VDC converter
 	FixedVoltageTransformer CDR_Bus_28V_6V_Converter;
@@ -366,6 +362,10 @@ protected:
 	FixedVoltageTransformer LMP_Bus_28V_6V_Converter;
 	// CDR and LMP DC bus power merge
 	PowerMerge NumDockCompLTGFeeder;
+
+protected:
+	LEM *lem;
+	h_HeatLoad *LCAHeat;
 };
 
 class LEM_UtilLights

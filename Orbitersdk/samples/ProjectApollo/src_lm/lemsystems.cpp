@@ -690,6 +690,18 @@ void LEM::SystemsInit()
 	Panelsdk.AddElectrical(&INV_1, false);
 	Panelsdk.AddElectrical(&INV_2, false);
 
+	// Lighting wiring
+	Panelsdk.AddElectrical(&lca.CDR_Bus_28V_6V_Converter, false);
+	Panelsdk.AddElectrical(&lca.LMP_Bus_28V_6V_Converter, false);
+	Panelsdk.AddElectrical(&lca.Fixed_5_5VDC_Output, false);
+	Panelsdk.AddElectrical(&lca.Fixed_6VDC_Output, false);
+	Panelsdk.AddElectrical(&lca.Variable_2_5VDC_Output, false);
+
+	Panelsdk.AddElectrical(&lca.Num_Override_20_110VAC_Output, false);
+	Panelsdk.AddElectrical(&lca.Int_Override_15_75VAC_Output, false);
+
+	Panelsdk.AddElectrical(&ComponentLights.Feeder_6VDC_Output, false);
+
 	// ECS
 	CabinPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), 4.70/PSI, 4.07/PSI);
 	SuitPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), 3.50/PSI, 2.90/PSI);
