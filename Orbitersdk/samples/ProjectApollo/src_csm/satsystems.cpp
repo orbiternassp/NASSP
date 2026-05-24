@@ -357,6 +357,10 @@ void Saturn::SystemsInit() {
 	LogicPowerSwitch.WireSourcesToBuses(1, &SCSLogicBus2Feeder, &SCSLogicBus2);
 	LogicPowerSwitch.WireSourcesToBuses(2, &SCSLogicBus3Feeder, &SCSLogicBus3);
 
+	// Lighting
+	Panelsdk.AddElectrical(&dsky.Variable_250VAC_Output, false);
+	Panelsdk.AddElectrical(&dsky2.Variable_250VAC_Output, false);
+
 	//
 	// Generic power source for switches, tied to both Bus A and
 	// Bus B.

@@ -164,8 +164,6 @@ Variable_250VAC_Output("Variable 250VAC DSKY Transformer", 0.0, 250.0, true)
 	Reset();
 	ResetKeyDown();
 	KeyCodeIOChannel = IOChannel;
-
-	p.AddElectrical(&Variable_250VAC_Output, false);
 }
 
 void DSKY::Reset()
