@@ -1411,7 +1411,7 @@ bool LEM_FloodLights::IsHatchOpen()
 
 double LEM_FloodLights::GetLMPRotaryVoltage()
 {
-	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
+	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() != THREEPOSSWITCH_CENTER))
 	{
 		return LMPRotary->GetOutput() * FloodCB->Voltage();
 	}
@@ -1425,7 +1425,7 @@ double LEM_FloodLights::GetLMPOutput() //Used to light LMP floods
 
 double LEM_FloodLights::GetCDRRotaryVoltage()
 {
-	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
+	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() != THREEPOSSWITCH_CENTER))
 	{
 		return CDRRotary->GetOutput() * FloodCB->Voltage();
 	}
