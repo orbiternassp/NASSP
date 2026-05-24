@@ -702,6 +702,8 @@ void LEM::SystemsInit()
 
 	Panelsdk.AddElectrical(&ComponentLights.Feeder_6VDC_Output, false);
 
+	Panelsdk.AddElectrical(&dsky.Variable_250VAC_Output, false);
+
 	// ECS
 	CabinPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CABIN"), 4.70/PSI, 4.07/PSI);
 	SuitPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), 3.50/PSI, 2.90/PSI);
