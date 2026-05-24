@@ -1415,10 +1415,6 @@ double LEM_FloodLights::GetLMPRotaryVoltage()
 	{
 		return LMPRotary->GetOutput() * FloodCB->Voltage();
 	}
-	else if (IsPowered() && FloodSwitch->GetState() == THREEPOSSWITCH_DOWN)
-	{
-		return FloodCB->Voltage();
-	}
 	return 0.0;
 }
 
@@ -1432,10 +1428,6 @@ double LEM_FloodLights::GetCDRRotaryVoltage()
 	if (IsPowered() && (IsHatchOpen() || FloodSwitch->GetState() == THREEPOSSWITCH_UP))
 	{
 		return CDRRotary->GetOutput() * FloodCB->Voltage();
-	}
-	else if (IsPowered() && FloodSwitch->GetState() == THREEPOSSWITCH_DOWN)
-	{
-		return FloodCB->Voltage();
 	}
 	return 0.0;
 }
