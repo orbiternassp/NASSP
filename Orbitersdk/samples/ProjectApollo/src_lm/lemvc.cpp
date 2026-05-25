@@ -1798,8 +1798,8 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		// MAT_LIGHT changes the Brightness of the Material
 		// MAT_EMISSION changes the Brightness of the Material controlled by its _emis Texture
 		SetVCLighting(vcidx, FloodLights_LMVC, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(FloodLights_LMVC));
-		floodLight_Left->SetIntensity(FloodLights.GetCDROutput()); // Need to add side panel floods
-		floodLight_Right->SetIntensity(FloodLights.GetLMPOutput()); // Need to add side panel floods
+		floodLight_Left->SetIntensity(FloodLights.GetCDROutput() + (FloodLights.GetSideOutput() * 0.25)); // Need to add actual side panel floods
+		floodLight_Right->SetIntensity(FloodLights.GetLMPOutput() + (FloodLights.GetSideOutput() * 0.25)); // Need to add actual side panel floods
 		SetVCLighting(vcidx, IntegralLights_LMVC, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
 		SetVCLighting(vcidx, IntegralLights_LMVC_NoTex, MAT_LIGHT, lca.GetIntegralOutput() + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC_NoTex));
 
@@ -1854,7 +1854,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 
 		// XPointer Lights CDR
-		if (!crossPointerLeft.GetRateErrorRelay()) {								// RATE ERR MON -> RNDZ RADAR
+		if (!Panel1RelayBox.Get9K32B()) {								// RATE ERR MON -> RNDZ RADAR
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_ON, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_ON, 1);
 
@@ -1876,11 +1876,11 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 
-			if (!crossPointerLeft.GetModeSelectRelay()) {									// MODE SEL -> LDG RADAR or PGNS
-				SetVCLighting(vcidx, VC_MAT_Panel1_Bulbs_FWD_VEL, MAT_EMISSION, XP_LIT_ON, 1);
-			}
-			else {																			// MODE SEL -> AGS
+			if (Panel2RelayBox.Get9K34A()) {									// MODE SEL -> AGS
 				SetVCLighting(vcidx, VC_MAT_Panel1_Bulbs_FWD_VEL, MAT_EMISSION, XP_LIT_OFF, 1);
+			}
+			else {																			// MODE SEL -> LDG RADAR or PGNS
+				SetVCLighting(vcidx, VC_MAT_Panel1_Bulbs_FWD_VEL, MAT_EMISSION, XP_LIT_ON, 1);
 			}
 
 			if (LeftXPointerSwitch.GetState() == TOGGLESWITCH_UP) {							// X-POINTER SCALE -> HI MULT
@@ -1894,7 +1894,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 
 		// XPointer Lights LMP
-		if (!crossPointerRight.GetRateErrorRelay()) {								// RATE ERR MON -> RNDZ RADAR
+		if (!Panel2RelayBox.Get9K30B()) {								// RATE ERR MON -> RNDZ RADAR
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_ON, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_ON, 1);
 
@@ -1916,11 +1916,11 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 
-			if (!crossPointerRight.GetModeSelectRelay()) {							// MODE SEL -> LDG RADAR or PGNS
-				SetVCLighting(vcidx, VC_MAT_Panel2_Bulbs_FWD_VEL, MAT_EMISSION, XP_LIT_ON, 1);
-			}
-			else {																			// MODE SEL -> AGS
+			if (Panel2RelayBox.Get9K34A()) {								// MODE SEL -> AGS
 				SetVCLighting(vcidx, VC_MAT_Panel2_Bulbs_FWD_VEL, MAT_EMISSION, XP_LIT_OFF, 1);
+			}
+			else {																			// MODE SEL -> LDG RADAR or PGNS
+				SetVCLighting(vcidx, VC_MAT_Panel2_Bulbs_FWD_VEL, MAT_EMISSION, XP_LIT_ON, 1);
 			}
 
 			if (RightXPointerSwitch.GetState() == TOGGLESWITCH_UP) {						// X-POINTER SCALE -> HI MULT

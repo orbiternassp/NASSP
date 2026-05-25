@@ -1998,7 +1998,7 @@ void LEM::SetSwitches(int panel) {
 
 	GuidContSwitchRow.Init(AID_GUIDCONTSWITCHROW, MainPanel);
 	GuidContSwitch.Init(0, 0, 34, 39, srf[SRF_LMTWOPOSLEVER], srf[SRF_BORDER_34x39], GuidContSwitchRow);
-	ModeSelSwitch.Init(0, 83, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], GuidContSwitchRow, &agc);
+	ModeSelSwitch.Init(0, 83, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], GuidContSwitchRow);
 	AltRngMonSwitch.Init(0, 167, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], GuidContSwitchRow);
 
 	LeftMasterAlarmSwitchRow.Init(AID_LEM_MA_LEFT, MainPanel);

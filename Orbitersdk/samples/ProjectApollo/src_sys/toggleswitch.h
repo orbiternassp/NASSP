@@ -936,11 +936,6 @@ public:
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
 };
 
-class ModeSelectSwitch : public AGCThreePoswitch {
-public:
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-};
-
 class SwitchCover
 {
 public:

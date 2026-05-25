@@ -2003,6 +2003,12 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "LEM_LR_START", sizeof("LEM_LR_START"))) {
 			LR.LoadState(scn, "LEM_LR_END");
 		}
+		else if (!strnicmp(line, "PANEL1RELAYBOX", 14)) {
+		Panel1RelayBox.LoadState(line);
+		}
+		else if (!strnicmp(line, "PANEL2RELAYBOX", 14)) {
+		Panel2RelayBox.LoadState(line);
+		}
 		else if (!strnicmp(line, "RADARTAPE_START", sizeof("RADARTAPE_START"))) {
 			RadarTape.LoadState(scn, "RADARTAPE_END");
 		}
@@ -2511,6 +2517,10 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	papiWriteScenario_bool(scn, "CMPowerToCDRBusRelayA", CMPowerToCDRBusRelayA);
 	papiWriteScenario_bool(scn, "CMPowerToCDRBusRelayB", CMPowerToCDRBusRelayB);
 	papiWriteScenario_bool(scn, "SLADockingLightPressureSwitchRelay", SLADockingLightPressureSwitchRelay);
+
+	// Save Relay Boxes
+	Panel1RelayBox.SaveState(scn);
+	Panel2RelayBox.SaveState(scn);
 
 	// Save COMM
 	SBand.SaveState(scn);

@@ -1395,7 +1395,7 @@ void LEM_FloodLights::Init(LEM *l, e_object *flood_cb, ThreePosSwitch *flood_sw,
 
 bool LEM_FloodLights::IsPowered()
 {
-	if (FloodCB->Voltage() > SP_MIN_DCVOLTAGE) {
+	if (FloodCB->Voltage() > 1.8) { //1.8 VDC turn on limit
 		return true;
 	}
 	return false;
@@ -1420,7 +1420,11 @@ double LEM_FloodLights::GetLMPRotaryVoltage()
 
 double LEM_FloodLights::GetLMPOutput() //Used to light LMP floods
 {
-	return GetLMPRotaryVoltage() / 28.0;
+	if (GetLMPRotaryVoltage() > 1.8) //1.8 VDC turn on limit
+	{
+		return GetLMPRotaryVoltage() / 28.0;
+	}
+	return 0.0;
 }
 
 double LEM_FloodLights::GetCDRRotaryVoltage()
@@ -1434,7 +1438,11 @@ double LEM_FloodLights::GetCDRRotaryVoltage()
 
 double LEM_FloodLights::GetCDROutput() //Used to light CDR floods
 {
-	return GetCDRRotaryVoltage() / 28.0;
+	if (GetCDRRotaryVoltage() > 1.8) //1.8 VDC turn on limit
+	{
+		return GetCDRRotaryVoltage() / 28.0;
+	}
+	return 0.0;
 }
 
 double LEM_FloodLights::GetSideOutput() //Can be used to light Panel 11, 14, 16 floods

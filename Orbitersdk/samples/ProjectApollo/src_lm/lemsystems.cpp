@@ -453,9 +453,13 @@ void LEM::SystemsInit()
 	// Rdz Radar
 	RR.Init(this, &PGNS_RNDZ_RDR_CB, &RDZ_RDR_AC_CB, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:LEM-RR-Antenna"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-Heater"), (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:LEM-RR-Antenna-StbyHeater"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RREHEAT"), (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:RRHEAT"));
 	
+	// Panel Relay Boxes
+	Panel1RelayBox.Init(this, &THRUST_DISP_CB, &CDR_XPTR_CB, &THRContSwitch, &RateErrorMonSwitch);
+	Panel2RelayBox.Init(this, &CDR_XPTR_CB, &SE_XPTR_DC_CB, &LMP_EVT_TMR_FDAI_DC_CB, &RightRateErrorMonSwitch, &ModeSelSwitch);
+
 	// Cross Pointers
-	crossPointerLeft.Init(this, &CDR_XPTR_CB, &lca.Num_Override_20_110VAC_Output, &LeftXPointerSwitch, &RateErrorMonSwitch);
-	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &lca.Num_Override_20_110VAC_Output, &RightXPointerSwitch, &RightRateErrorMonSwitch);
+	crossPointerLeft.Init(this, &CDR_XPTR_CB, &lca.Num_Override_20_110VAC_Output, &LeftXPointerSwitch, Panel1RelayBox.Get9K32B(), Panel1RelayBox.Get9K32A());
+	crossPointerRight.Init(this, &SE_XPTR_DC_CB, &lca.Num_Override_20_110VAC_Output, &RightXPointerSwitch, Panel2RelayBox.Get9K30B(), Panel2RelayBox.Get9K30A());
 
 	// CWEA
 	CWEA.Init(this, &INST_CWEA_CB, &LTG_MASTER_ALARM_CB, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CWEAHEAT"));
@@ -1503,6 +1507,10 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	SystemsInternalTimestep(simdt);
 	Failures.Timestep();
 
+	//Display relays
+	Panel1RelayBox.Timestep(simdt);
+	Panel2RelayBox.Timestep(simdt);
+
 	// After that come all other systems simesteps
 	agc.Timestep(MissionTime, simdt);						// Do work
 	dsky.Timestep(MissionTime);								// Do work
@@ -1724,6 +1732,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	//Lighting Debug Lines
 	//sprintf(oapiDebugString(), "DSKY VAC: %lf ANUN: %lf NUM %lf", dsky.Variable_250VAC_Output.Voltage(), LtgORideAnunSwitch.Voltage(), lca.Num_Override_20_110VAC_Output.Voltage());
+	//sprintf(oapiDebugString(), "9K28 %d 9K32A %d 9K32B %d 9K29A %d 9K29B %d 9K30A %d 9K30B %d 9K31A %d 9K31B %d 9K34A %d 9K34B %d", Panel1RelayBox.Get9K28(), Panel1RelayBox.Get9K32A(), Panel1RelayBox.Get9K32B(),Panel2RelayBox.Get9K29A(),
+		//Panel2RelayBox.Get9K29B(), Panel2RelayBox.Get9K30A(), Panel2RelayBox.Get9K30B(), Panel2RelayBox.Get9K31A(), Panel2RelayBox.Get9K31B(), Panel2RelayBox.Get9K34A(), Panel2RelayBox.Get9K34B());
 
 	//ECS Debug Lines//
 	//sprintf(oapiDebugString(), "CDRinPLSS %i CDRsuited %i LMPinPLSS %i LMPsuited %i CrewInCabin %i", CDRinPLSS, CDRSuited->number, LMPinPLSS, LMPSuited->number, CrewInCabin->number);
@@ -2544,6 +2554,189 @@ void LEM::CreateMissionSpecificSystems()
 
 // SYSTEMS COMPONENTS
 
+//Display Switching Relay Boxes
+
+Panel1RelayBox::Panel1RelayBox()
+{
+	lem = NULL;
+	cdr_xptr_cb = NULL;
+	thrust_cb = NULL;
+	thrustSw = NULL;
+	CDRRateErrMonSw = NULL;
+
+	K28 = false;
+	K32A = false;
+	K32B = false;
+}
+
+Panel1RelayBox::~Panel1RelayBox()
+{
+
+}
+
+void Panel1RelayBox::Init(LEM *l, e_object *thrust_src, e_object *cdr_xptr_src, ToggleSwitch *thrust, ToggleSwitch *rateErrMon)
+{
+	lem = l;
+	thrust_cb = thrust_src;
+	cdr_xptr_cb = cdr_xptr_src;
+	thrustSw = thrust;
+	CDRRateErrMonSw = rateErrMon;
+}
+
+void Panel1RelayBox::Timestep(double simdt)
+{
+	//Thrust Switch Relay (9K28)
+	if (thrust_cb->Voltage() > SP_MIN_DCVOLTAGE && thrustSw->IsDown())
+	{
+		K28 = true;
+	}
+	else
+	{
+		K28 = false;
+	}
+
+	//CDR Rate Error Switch Relay (9K32A & 9K32B)
+	if (cdr_xptr_cb->Voltage() > SP_MIN_DCVOLTAGE && CDRRateErrMonSw->IsDown())
+	{
+		K32A = true;
+		K32B = true;
+	}
+	else
+	{
+		K32A = false;
+		K32B = false;
+	}
+}
+
+void Panel1RelayBox::LoadState(char *line)
+{
+	int inttemp[3];
+	sscanf(line + 14, "%d %d %d", &inttemp[0], &inttemp[1], &inttemp[2]);
+	K28 = (inttemp[0] != 0);
+	K32A = (inttemp[1] != 0);
+	K32B = (inttemp[2] != 0);
+}
+
+void Panel1RelayBox::SaveState(FILEHANDLE scn)
+{
+	char buffer[128];
+
+	sprintf(buffer, "%d %d %d", K28, K32A, K32B);
+	oapiWriteScenario_string(scn, "PANEL1RELAYBOX", buffer);
+}
+
+Panel2RelayBox::Panel2RelayBox()
+{
+	lem = NULL;
+	cdr_xptr_cb = NULL;
+	lmp_xptr_cb = NULL;
+	lmp_fdai_cb = NULL;
+	LMPRateErrMonSw = NULL;
+	ModeSelSw = NULL;
+
+	K29A = false;
+	K29B = false;
+	K30A = false;
+	K30B = false;
+	K31A = false;
+	K31B = false;
+	K34A = false;
+	K34B = false;
+}
+
+Panel2RelayBox::~Panel2RelayBox()
+{
+
+}
+
+void Panel2RelayBox::Init(LEM *l, e_object *cdr_xptr_src, e_object *lmp_xptr_src, e_object *lmp_fdai_src, ToggleSwitch *rateErrMonLMP, ThreePosSwitch *ModeSel)
+{
+	lem = l;
+	cdr_xptr_cb = cdr_xptr_src;
+	lmp_xptr_cb = lmp_xptr_src;
+	lmp_fdai_cb = lmp_fdai_src;
+	LMPRateErrMonSw = rateErrMonLMP;
+	ModeSelSw = ModeSel;
+}
+
+void Panel2RelayBox::Timestep(double simdt)
+{
+	//Mode Select Switch Landing Radar Relay (9K29A & 9K29B)
+	if (cdr_xptr_cb->Voltage() > SP_MIN_DCVOLTAGE && ModeSelSw->IsUp())
+	{
+		K29A = true;
+		K29B = true;
+	}
+	else
+	{
+		K29A = false;
+		K29B = false;
+	}
+
+	//LMP Rate Error Relay (9K30A & 9K30B)
+	if (lmp_xptr_cb->Voltage() > SP_MIN_DCVOLTAGE && LMPRateErrMonSw->IsDown())
+	{
+		K30A = true;
+		K30B = true;
+	}
+	else
+	{
+		K30A = false;
+		K30B = false;
+	}
+
+	//LMP FDAI Rate Error Relay (9K31A & 9K31B)
+	if (lmp_fdai_cb->Voltage() > SP_MIN_DCVOLTAGE && LMPRateErrMonSw->IsDown())
+	{
+		K31A = true;
+		K31B = true;
+	}
+	else
+	{
+		K31A = false;
+		K31B = false;
+	}
+
+	//Mode Select Switch AGS Relay (9K34A & 9K34B)
+	if (cdr_xptr_cb->Voltage() > SP_MIN_DCVOLTAGE && ModeSelSw->IsDown())
+	{
+		K34A = true;
+		K34B = true;
+	}
+	else
+	{
+		K34A = false;
+		K34B = false;
+	}
+
+	//Set/Reset LGC Input Bit
+	lem->agc.SetInputChannelBit(030, DisplayInertialData, !K29A && !K34A);
+}
+
+void Panel2RelayBox::LoadState(char *line)
+{
+	int inttemp[8];
+	sscanf(line + 14, "%d %d %d %d %d %d %d %d", &inttemp[0], &inttemp[1], &inttemp[2], &inttemp[3], &inttemp[4], &inttemp[5], &inttemp[6], &inttemp[7]);
+	K29A = (inttemp[0] != 0);
+	K29B = (inttemp[1] != 0);
+	K30A = (inttemp[2] != 0);
+	K30B = (inttemp[3] != 0);
+	K31A = (inttemp[4] != 0);
+	K31B = (inttemp[5] != 0);
+	K34A = (inttemp[6] != 0);
+	K34B = (inttemp[7] != 0);
+}
+
+void Panel2RelayBox::SaveState(FILEHANDLE scn)
+{
+	char buffer[128];
+
+	sprintf(buffer, "%d %d %d %d %d %d %d %d", K29A, K29B, K30A, K30B, K31A, K31B, K34A, K34B);
+	oapiWriteScenario_string(scn, "PANEL2RELAYBOX", buffer);
+}
+
+//Radar Tapemeter
+
 LEM_RadarTape::LEM_RadarTape()
 {
 	lem = NULL;
@@ -2606,27 +2799,28 @@ bool LEM_RadarTape::SignalFailure() //TODO: Light needs to flash progressively f
 		}
 	}
 	else {
-		if (lem->ModeSelSwitch.IsUp()) // LR
+		if (lem->Panel2RelayBox.Get9K29A()) // LR
 		{
 			if (lem->LR.IsRangeDataGood() == false || lem->LR.IsVelocityDataGood() == false || lem->LR.GetAltitude() == 0.0 || abs(lem->LR.GetAltitudeRate()) < 1.524) //5 ft/s = 1.524 m/s
 			{
 				return true; //Needs to check landing radar rate and range signals and return true if not present
 			}
 		}
-		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
-		{
-			if ((LGCaltUpdateTime + 1.0) < oapiGetSimTime() || (LGCaltRateUpdateTime + 1.0) < oapiGetSimTime() || lgc_alt == 0.0 || abs(lgc_altrate) < 1.524) //5 ft/s = 1.524 m/s
-			{
-				return true; //Needs to check LGC rate and range signals and return true if not present
-			}
-		}
-		else //AGS
+		else if (lem->Panel2RelayBox.Get9K34A()) //AGS
 		{
 			if ((AGSaltUpdateTime + 1.0) < oapiGetSimTime() || (AGSaltRateUpdateTime + 1.0) < oapiGetSimTime() || ags_alt == 0.0 || abs(ags_altrate) < 1.524) //5 ft/s = 1.524 m/s
 			{
 				return true; //Needs to check AGS rate and range signals and return true if not present
 			}
 		}
+		else //PGNS
+		{
+			if ((LGCaltUpdateTime + 1.0) < oapiGetSimTime() || (LGCaltRateUpdateTime + 1.0) < oapiGetSimTime() || lgc_alt == 0.0 || abs(lgc_altrate) < 1.524) //5 ft/s = 1.524 m/s
+			{
+				return true; //Needs to check LGC rate and range signals and return true if not present
+			}
+		}
+
 		return false;
 	}
 	return false;
@@ -2638,24 +2832,24 @@ bool LEM_RadarTape::TimingFailure()
 	{
 		return true; //Needs to check for 512 KHz PCMTEA timing signal
 	}
-		return false;
+	return false;
 }
 
 double LEM_RadarTape::GetLRAltitude() //Applies roundoff error for LR data into tapemeter
 {
 	if (lem->LR.GetAltitude() < 2500.0 * 0.3048)
 	{
-		return (lem->LR.GetAltitude() * (11.583/11.6));
+		return (lem->LR.GetAltitude() * (11.583 / 11.6));
 	}
 	else
 	{
-		return (lem->LR.GetAltitude() * (2.316/2.32));
+		return (lem->LR.GetAltitude() * (2.316 / 2.32));
 	}
 }
 
 double LEM_RadarTape::GetLRAltitudeRate() //Applies roundoff error for LR data into tapemeter
 {
-	return (lem->LR.GetAltitudeRate() * (-19.41/-20.0));
+	return (lem->LR.GetAltitudeRate() * (-19.41 / -20.0));
 }
 
 double LEM_RadarTape::GetRRRange() //Returns RR Range, no scale factor applied currently
@@ -2665,7 +2859,7 @@ double LEM_RadarTape::GetRRRange() //Returns RR Range, no scale factor applied c
 
 double LEM_RadarTape::GetRRRate() //Applies roundoff error for RR data into tapemeter
 {
-	return (lem->RR.GetRadarRate() * (-19.9/-20.0));
+	return (lem->RR.GetRadarRate() * (-19.9 / -20.0));
 }
 
 void LEM_RadarTape::Timestep(double simdt) {
@@ -2675,18 +2869,18 @@ void LEM_RadarTape::Timestep(double simdt) {
 		return;
 	}
 
-	if (lem->AltRngMonSwitch.GetState()==TOGGLESWITCH_UP) 
+	if (lem->AltRngMonSwitch.GetState() == TOGGLESWITCH_UP)
 	{
 		setRange(GetRRRange());
 		setRate(GetRRRate());
 	}
-	else 
+	else
 	{
-		if (lem->ModeSelSwitch.IsUp()) // LR
+		if (lem->Panel2RelayBox.Get9K29A()) //LR
 		{
 			if (lem->LR.IsRangeDataGood())
 			{
-				setRange(GetLRAltitude() * cos(Radians(15))); // Tapemeter slant range bias, multiplied by cos 15 deg
+				setRange(GetLRAltitude() * cos(Radians(15))); //Tapemeter slant range bias, multiplied by cos 15 deg
 			}
 			else
 			{
@@ -2696,7 +2890,7 @@ void LEM_RadarTape::Timestep(double simdt) {
 			{
 				if ((lem->pMission->GetLMNumber()) == 3)
 				{
-					setRate(lem->LR.GetAltitudeRate() * 1.82388664); // Generates seen rate signal from LM-3 \\FIXME: This is a hack, need to investigate why LM-3 generates this rate signal. LM-4 might need similar adjustment later
+					setRate(lem->LR.GetAltitudeRate() * 1.82388664); //Generates seen rate signal from LM-3 \\FIXME: This is a hack, need to investigate why LM-3 generates this rate signal. LM-4 might need similar adjustment later
 				}
 				else
 				{
@@ -2704,20 +2898,20 @@ void LEM_RadarTape::Timestep(double simdt) {
 				}
 			}
 		}
-		else if (lem->ModeSelSwitch.IsCenter()) //PGNS
-		{
-			setRange(lgc_alt);
-			setRate(lgc_altrate);
-		}
-		else //AGS
+		else if (lem->Panel2RelayBox.Get9K34A()) //AGS
 		{
 			setRange(ags_alt);
 			setRate(ags_altrate);
 		}
+		else //PGNS
+		{
+			setRange(lgc_alt);
+			setRate(lgc_altrate);
+		}
 	}
 
 	// Altitude/Range
-	reqRange = fmod(reqRange, 405.0*1852.0);
+	reqRange = fmod(reqRange, 405.0 * 1852.0);
 
 	if (reqRange < (1000.0 * 0.3048))
 	{
@@ -2729,7 +2923,7 @@ void LEM_RadarTape::Timestep(double simdt) {
 	}
 	else
 	{
-		desRange = 81.0 + 1642.0 - 82.0 - ((reqRange * 0.000539956803*100.0)  * 40.0 / 1000.0);
+		desRange = 81.0 + 1642.0 - 82.0 - ((reqRange * 0.000539956803 * 100.0) * 40.0 / 1000.0);
 	}
 
 	TapeDrive(dispRange, desRange, 500.0, simdt);
@@ -2774,9 +2968,9 @@ void LEM_RadarTape::TapeDrive(double &Angle, double AngleCmd, double RateLimit, 
 
 	dposcmd = AngleCmd - Angle;
 
-	if (abs(dposcmd) > RateLimit*simdt)
+	if (abs(dposcmd) > RateLimit * simdt)
 	{
-		dpos = sign(AngleCmd - Angle)*RateLimit*simdt;
+		dpos = sign(AngleCmd - Angle) * RateLimit * simdt;
 	}
 	else
 	{
@@ -2827,10 +3021,10 @@ void LEM_RadarTape::SetLGCAltitude(int val) {
 	//	pulses = -((~val) & 077777);
 	//}
 	//else {
-		pulses = val & 077777;
+	pulses = val & 077777;
 	//}
 
-	lgc_alt = (2.345*0.3048*pulses);
+	lgc_alt = (2.345 * 0.3048 * pulses);
 
 	LGCaltUpdateTime = oapiGetSimTime();
 }
@@ -2849,7 +3043,7 @@ void LEM_RadarTape::SetLGCAltitudeRate(int val) {
 		pulses = val & 077777;
 	}
 
-	lgc_altrate = -(0.5*0.3048*pulses);
+	lgc_altrate = -(0.5 * 0.3048 * pulses);
 
 	LGCaltRateUpdateTime = oapiGetSimTime();
 }
@@ -2858,55 +3052,55 @@ void LEM_RadarTape::AGSAltitudeAltitudeRate(int Data) {
 
 	if (!IsPowered()) { return; }
 
-		int DataVal;
+	int DataVal;
 
-		AGSChannelValue40 val = lem->aea.GetOutputChannel(IO_ODISCRETES);
+	AGSChannelValue40 val = lem->aea.GetOutputChannel(IO_ODISCRETES);
 
-		if (val[AGSAltitude] == 0)
-		{
+	if (val[AGSAltitude] == 0)
+	{
+		DataVal = Data & 0777777;
+
+		ags_alt = (double)DataVal * ALTSCALEFACTOR;
+
+		AGSaltUpdateTime = oapiGetSimTime();
+	}
+	else if (val[AGSAltitudeRate] == 0)
+	{
+		if (Data & 0400000) { // Negative
+			DataVal = -((~Data) & 0777777);
+			DataVal = -0400000 - DataVal;
+		}
+		else {
 			DataVal = Data & 0777777;
-
-			ags_alt = (double)DataVal * ALTSCALEFACTOR;
-
-			AGSaltUpdateTime = oapiGetSimTime();
 		}
-		else if (val[AGSAltitudeRate] == 0)
-		{
-			if (Data & 0400000) { // Negative
-				DataVal = -((~Data) & 0777777);
-				DataVal = -0400000 - DataVal;
-			}
-			else {
-				DataVal = Data & 0777777;
-			}
 
-			ags_altrate = -(double)DataVal * ALTRATESCALEFACTOR;
+		ags_altrate = -(double)DataVal * ALTRATESCALEFACTOR;
 
-			AGSaltRateUpdateTime = oapiGetSimTime();
-		}
+		AGSaltRateUpdateTime = oapiGetSimTime();
+	}
 }
 
-void LEM_RadarTape::SaveState(FILEHANDLE scn,char *start_str,char *end_str){
+void LEM_RadarTape::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {
 	oapiWriteLine(scn, start_str);
 	papiWriteScenario_double(scn, "RDRTAPE_RANGE", dispRange);
 	oapiWriteScenario_float(scn, "RDRTAPE_RATE", dispRate);
 	oapiWriteLine(scn, end_str);
 }
 
-void LEM_RadarTape::LoadState(FILEHANDLE scn,char *end_str){
+void LEM_RadarTape::LoadState(FILEHANDLE scn, char *end_str) {
 	char *line;
 	int value = 0;
 	double lfValue = 0.0;
 	int end_len = strlen(end_str);
 
-	while (oapiReadScenario_nextline (scn, line)) {
+	while (oapiReadScenario_nextline(scn, line)) {
 		if (!strnicmp(line, end_str, end_len))
 			return;
-		if (!strnicmp (line, "RDRTAPE_RANGE", 13)) {
+		if (!strnicmp(line, "RDRTAPE_RANGE", 13)) {
 			sscanf(line + 13, "%lf", &lfValue);
 			dispRange = lfValue;
 		}
-		if (!strnicmp (line, "RDRTAPE_RATE", 12)) {
+		if (!strnicmp(line, "RDRTAPE_RATE", 12)) {
 			sscanf(line + 12, "%d", &value);
 			dispRate = value;
 		}
@@ -2916,7 +3110,7 @@ void LEM_RadarTape::LoadState(FILEHANDLE scn,char *end_str){
 void LEM_RadarTape::RenderRange(SURFHANDLE surf) {
 	if (dispRange > 6321.0)
 	{
-		oapiBlt(surf, tape2, 0, 0, 0, (int)(dispRange) - 6317, 43, 163, SURF_PREDEF_CK);
+		oapiBlt(surf, tape2, 0, 0, 0, (int)(dispRange)-6317, 43, 163, SURF_PREDEF_CK);
 	}
 	else
 	{
@@ -2926,21 +3120,21 @@ void LEM_RadarTape::RenderRange(SURFHANDLE surf) {
 
 void LEM_RadarTape::RenderRate(SURFHANDLE surf)
 {
-    oapiBlt(surf,tape1,0,0,42, (int)(dispRate) ,35,163, SURF_PREDEF_CK);
+	oapiBlt(surf, tape1, 0, 0, 42, (int)(dispRate), 35, 163, SURF_PREDEF_CK);
 }
 
 void LEM_RadarTape::RenderRangeVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE surf1b, SURFHANDLE surf2, int TexMul) {
 	if (dispRange > 6321.0)
 	{
-		oapiBlt(surf, surf2, 0, 0, 0, (int)(dispRange)*TexMul-6317*TexMul, 43*TexMul, 163*TexMul, SURF_PREDEF_CK);
+		oapiBlt(surf, surf2, 0, 0, 0, (int)(dispRange)*TexMul - 6317 * TexMul, 43 * TexMul, 163 * TexMul, SURF_PREDEF_CK);
 	}
 	else if (dispRange > 3181.0)
 	{
-		oapiBlt(surf, surf1b, 0, 0, 0, (int)(dispRange)*TexMul-3026*TexMul, 43*TexMul, 163*TexMul, SURF_PREDEF_CK);
+		oapiBlt(surf, surf1b, 0, 0, 0, (int)(dispRange)*TexMul - 3026 * TexMul, 43 * TexMul, 163 * TexMul, SURF_PREDEF_CK);
 	}
 	else
 	{
-		oapiBlt(surf, surf1a, 0, 0, 0, (int)(dispRange)*TexMul, 43*TexMul, 163*TexMul, SURF_PREDEF_CK);
+		oapiBlt(surf, surf1a, 0, 0, 0, (int)(dispRange)*TexMul, 43 * TexMul, 163 * TexMul, SURF_PREDEF_CK);
 	}
 }
 
@@ -2948,10 +3142,10 @@ void LEM_RadarTape::RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE 
 {
 	if (dispRate > 3181.0) {
 
-		oapiBlt(surf, surf1b, 0, 0, 42*TexMul, (int)(dispRate)*TexMul - 3026*TexMul, 35*TexMul, 163*TexMul, SURF_PREDEF_CK);
+		oapiBlt(surf, surf1b, 0, 0, 42 * TexMul, (int)(dispRate)*TexMul - 3026 * TexMul, 35 * TexMul, 163 * TexMul, SURF_PREDEF_CK);
 	}
 	else {
-		oapiBlt(surf, surf1a, 0, 0, 42*TexMul, (int)(dispRate)*TexMul, 35*TexMul, 163*TexMul, SURF_PREDEF_CK);
+		oapiBlt(surf, surf1a, 0, 0, 42 * TexMul, (int)(dispRate)*TexMul, 35 * TexMul, 163 * TexMul, SURF_PREDEF_CK);
 	}
 }
 
@@ -2960,7 +3154,6 @@ void LEM_RadarTape::RenderRateVC(SURFHANDLE surf, SURFHANDLE surf1a, SURFHANDLE 
 CrossPointer::CrossPointer()
 {
 	lem = NULL;
-	rateErrMonSw = NULL;
 	scaleSwitch = NULL;
 	dc_source = NULL;
 	ltg_source = NULL;
@@ -2976,8 +3169,12 @@ CrossPointer::CrossPointer()
 	grpY = 0;
 	xtrans = ytrans = NULL;
 
-	RateErrorRelay = false;
-	ModeSelectRelay = false;
+	RateErrorLtRelay = false;
+	ModeSelAGSLtRelay = false;
+
+	RateErrorDispRelay = false;
+	ModeSelLRDispRelay = false;
+	ModeSelAGSDispRelay = false;
 
 	ElevRt = false;
 	AzRt = false;
@@ -2993,13 +3190,22 @@ CrossPointer::~CrossPointer()
 	if (ytrans) delete ytrans;
 }
 
-void CrossPointer::Init(LEM *s, e_object *dc_src, e_object *ltg, ToggleSwitch *scaleSw, ToggleSwitch *rateErrMon)
+void CrossPointer::Init(LEM *s, e_object *dc_src, e_object *ltg, ToggleSwitch *scaleSw, bool ltgRly, bool dispRly)
 {
+
 	lem = s;
 	dc_source = dc_src;
 	ltg_source = ltg;
 	scaleSwitch = scaleSw;
-	rateErrMonSw = rateErrMon;
+
+	//Lighting relays
+	RateErrorLtRelay = ltgRly;
+	ModeSelAGSLtRelay = lem->Panel2RelayBox.Get9K34A();
+
+	//Display relays
+	RateErrorDispRelay = dispRly;
+	ModeSelLRDispRelay = lem->Panel2RelayBox.Get9K29B();
+	ModeSelAGSDispRelay = lem->Panel2RelayBox.Get9K34B();
 }
 
 bool CrossPointer::IsPowered()
@@ -3008,29 +3214,6 @@ bool CrossPointer::IsPowered()
 		return false;
 	}
 	return true;
-}
-
-void CrossPointer::RelayBox()
-{
-	//Rate Error Monitor CDR (9K32B) and LMP (9K30B)
-	if (IsPowered() && rateErrMonSw->IsDown())
-	{
-		RateErrorRelay = true;
-	}
-	else
-	{
-		RateErrorRelay = false;
-	}
-
-	//Mode Select Switch (9K34A)
-	if (lem->CDR_XPTR_CB.IsPowered() && lem->ModeSelSwitch.IsDown())
-	{
-		ModeSelectRelay = true;
-	}
-	else
-	{
-		ModeSelectRelay = false;
-	}
 }
 
 double CrossPointer::GetDimmableLightsLit()
@@ -3055,7 +3238,7 @@ void CrossPointer::Timestep(double simdt)
 		return;
 	}
 
-	if (rateErrMonSw->IsUp()) //Rendezvous Radar
+	if (RateErrorDispRelay) //Rendezvous Radar
 	{
 		if (lem->RR.IsPowered())
 		{
@@ -3072,7 +3255,7 @@ void CrossPointer::Timestep(double simdt)
 	{
 		double vx = 0, vy = 0;
 
-		if (lem->ModeSelSwitch.IsUp()) //Landing Radar
+		if (ModeSelLRDispRelay) //Landing Radar
 		{
 			if (lem->LR.IsVelocityDataGood())
 			{
@@ -3091,7 +3274,12 @@ void CrossPointer::Timestep(double simdt)
 				vy = 0;
 			}
 		}
-		else if (lem->ModeSelSwitch.IsCenter())	//PGNS
+		else if (ModeSelAGSDispRelay) //AGS
+		{
+			vx = 0;
+			vy = lem->aea.GetLateralVelocity() * 0.3048;
+		}
+		else	//PGNS
 		{
 			lgc_forward = 0.5571 * (double)lem->scdu.GetAltOutput();
 			lgc_lateral = 0.5571 * (double)lem->tcdu.GetAltOutput();
@@ -3105,11 +3293,7 @@ void CrossPointer::Timestep(double simdt)
 				vy *= -1.0;
 			}
 		}
-		else //AGS
-		{
-			vx = 0;
-			vy = lem->aea.GetLateralVelocity() * 0.3048;
-		}
+
 		vel_x = callout_x = vx / 0.3048 * 20.0 / 200.0;
 		vel_y = callout_y = vy / 0.3048 * 20.0 / 200.0;
 	}
@@ -3124,10 +3308,7 @@ void CrossPointer::Timestep(double simdt)
 	//The output scaling is 20 for full deflection.
 	UpdateDisplayValues(simdt);
 
-	//Lighting
-	RelayBox();
-
-	if (!RateErrorRelay)
+	if (!RateErrorLtRelay)
 	{
 		ElevRt = true;
 		AzRt = true;
@@ -3151,7 +3332,7 @@ void CrossPointer::Timestep(double simdt)
 		AzRt = false;
 		LatVel = true;
 
-		if (!ModeSelectRelay)
+		if (!ModeSelAGSLtRelay)
 		{
 			FwdVel = true;
 		}
