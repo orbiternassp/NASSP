@@ -1870,7 +1870,7 @@ RTCC_PLAWDT_2_D:
 		K = K - 1;
 		goto RTCC_PLAWDT_2_D;
 	}
-	T_AW = mpt->TimeToEndManeuver[K - 1];
+	T_AW = mpt->TimeToEndManeuver[K - 1] - GetGMTLO() * 3600.0;
 RTCC_PLAWDT_3_F:
 	if (CC == 0)
 	{
