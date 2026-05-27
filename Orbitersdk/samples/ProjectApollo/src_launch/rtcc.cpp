@@ -36997,22 +36997,34 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		F = mptman->CommonBlock.SIVBFuelRemaining;
 	}
 
-	//Mass Maintenance
+	// Areas maintenance
 	for (int i = 0; i < 4; i++)
 	{
 		if (mptman->CommonBlock.ConfigCode[i])
 		{
-			mptman->CommonBlock.Masses[i] = CommonBlockBefore->Masses[i];
 			mptman->CommonBlock.Areas[i] = CommonBlockBefore->Areas[i];
 		}
 		else
 		{
-			mptman->CommonBlock.Masses[i] = 0.0;
 			mptman->CommonBlock.Areas[i] = 0.0;
 		}
 	}
 
-	//Account for mass loss
+	// Preburn mass maintenance
+	mptman->CommonBlock.Masses[0] = aux->W_CSM;
+	mptman->CommonBlock.Masses[1] = aux->W_SIVB;
+	mptman->CommonBlock.Masses[2] = aux->W_LMA;
+	mptman->CommonBlock.Masses[3] = aux->W_LMD;
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (!(mptman->CommonBlock.ConfigCode[i]))
+		{
+			mptman->CommonBlock.Masses[i] = 0.0;
+		}
+	}
+
+	//Account for mass loss during burn
 	if (mptman->TVC == RTCC_MANVEHICLE_CSM)
 	{
 		mptman->CommonBlock.CSMMass = aux->W_CSM - aux->MainFuelUsed - aux->RCSFuelUsed;
