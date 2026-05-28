@@ -25084,12 +25084,21 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 		}
 	}
 
+	PLAWDTInput in;
+	PLAWDTOutput out;
+
+	in.TableCode = MPT_ID;
+	in.T_UP = table->TimeToBeginManeuver[ManNo - 1];
+	in.VentingOpt = true;
+
+	PLAWDT(in, out);
+
+	res.WT = out.ConfigWeight / 0.45359237;
+	res.WC = out.CSMWeight / 0.45359237;
+	res.WL = (out.LMAscWeight + out.LMDscWeight) / 0.45359237;
+
 	if (ManNo == 1)
 	{
-		res.WT = table->TotalInitMass / 0.45359237;
-		res.WC = table->CommonBlock.CSMMass / 0.45359237;
-		res.WL = (table->CommonBlock.LMAscentMass + table->CommonBlock.LMDescentMass) / 0.45359237;
-
 		switch (man->Thruster)
 		{
 		case RTCC_ENGINETYPE_CSMSPS:
@@ -25123,9 +25132,6 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	}
 	else
 	{
-		res.WT = table->mantable[ManNo - 2].TotalMassAfter / 0.45359237;
-		res.WC = table->mantable[ManNo - 2].CommonBlock.CSMMass / 0.45359237;
-		res.WL = (table->mantable[ManNo - 2].CommonBlock.LMAscentMass + table->mantable[ManNo - 2].CommonBlock.LMDescentMass) / 0.45359237;
 		switch (man->Thruster)
 		{
 		case RTCC_ENGINETYPE_CSMSPS:

@@ -3245,44 +3245,29 @@ int ARCore::subThread()
 				break;
 			}
 
-			MPTVehicleDataBlock *CommonBlock;
-
 			//Load data
 			sv_A.R = man->R_1;
 			sv_A.V = man->V_1;
 			sv_A.GMT = man->GMT_1;
 			sv_A.RBI = man->RefBodyInd;
 
-			if (num == 0)
+			PLAWDTInput in;
+			PLAWDTOutput out;
+
+			in.TableCode = ManPADMPT;
+			in.T_UP = mpt->TimeToBeginManeuver[num];
+			in.KFactorOpt = true;
+			in.VentingOpt = true;
+
+			GC->rtcc->PLAWDT(in, out);
+
+			if (out.Err)
 			{
-				CommonBlock = &mpt->CommonBlock;
-			}
-			else
-			{
-				CommonBlock = &mpt->mantable[num - 1].CommonBlock;
+				Result = DONE;
+				break;
 			}
 
-			WeightsTable.CC = CommonBlock->ConfigCode;
-			WeightsTable.CSMArea = CommonBlock->CSMArea;
-			WeightsTable.CSMWeight = CommonBlock->CSMMass;
-			WeightsTable.KFactor = mpt->KFactor;
-			WeightsTable.LMAscArea = CommonBlock->LMAscentArea;
-			WeightsTable.LMAscWeight = CommonBlock->LMAscentMass;
-			WeightsTable.LMDscArea = CommonBlock->LMDescentArea;
-			WeightsTable.LMDscWeight = CommonBlock->LMDescentMass;
-			WeightsTable.SIVBArea = CommonBlock->SIVBArea;
-			WeightsTable.SIVBWeight = CommonBlock->SIVBMass;
-
-			if (num == 0)
-			{
-				WeightsTable.ConfigArea = mpt->ConfigurationArea;
-				WeightsTable.ConfigWeight = mpt->TotalInitMass;
-			}
-			else
-			{
-				WeightsTable.ConfigArea = mpt->mantable[num - 1].TotalAreaAfter;
-				WeightsTable.ConfigWeight = mpt->mantable[num - 1].TotalMassAfter;
-			}
+			WeightsTable = out;
 
 			P30TIG = GC->rtcc->GETfromGMT(man->GMT_BI);
 			dV_LVLH = man->dV_LVLH;
