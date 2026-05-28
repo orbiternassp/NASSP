@@ -1769,6 +1769,37 @@ void RTCC::GMEDSaveTable::LoadState(FILEHANDLE scn, char* end_str)
 	}
 }
 
+void RTCC::ExpendableWeightsTable::SaveState(FILEHANDLE scn, char* start_str, char* end_str)
+{
+	char buffer[256];
+
+	oapiWriteLine(scn, start_str);
+
+	for (unsigned int i = 0; i < data.size(); i++)
+	{
+		sprintf_s(buffer, "%lf %lf %d", data[i].GET, data[i].WeightLoss, data[i].Veh);
+		oapiWriteScenario_string(scn, "Entry", buffer);
+	}
+
+	oapiWriteLine(scn, end_str);
+}
+
+void RTCC::ExpendableWeightsTable::LoadState(FILEHANDLE scn, char* end_str)
+{
+	char* line;
+	ExpendableWeightsTableEntry temp;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, sizeof(end_str))) {
+			break;
+		}
+		if (sscanf_s(line + 5, "%lf %lf %d", &temp.GET, &temp.WeightLoss, &temp.Veh) == 3)
+		{
+			data.push_back(temp);
+		}
+	}
+}
+
 RTCC::RTCC() :
 	pmmlaeg(this)
 {
@@ -6774,6 +6805,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 
 	PZMPTCSM.SaveState(scn, "MPTCSM_BEGIN", "MPTCSM_END");
 	PZMPTLEM.SaveState(scn, "MPTLEM_BEGIN", "MPTLEM_END");
+	if (PZEXPCSM.data.size() > 0U) PZEXPCSM.SaveState(scn, "PZEXPCSM_BEGIN", "PZEXPCSM_END");
+	if (PZEXPLEM.data.size() > 0U) PZEXPLEM.SaveState(scn, "PZEXPLEM_BEGIN", "PZEXPLEM_END");
 	RZDBSC1.SaveState(scn, "RZDBSC1_BEGIN", "RZDBSC1_END");
 	PZMARM.SaveState(scn, "PZMARM_BEGIN", "PZMARM_END");
 	RZJCTTC.SaveState(scn, "RZJCTTC_BEGIN", "RZJCTTC_END");
@@ -7108,6 +7141,12 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		}
 		else if (!strnicmp(line, "MPTLEM_BEGIN", sizeof("MPTLEM_BEGIN"))) {
 			PZMPTLEM.LoadState(scn, "MPTLEM_END");
+		}
+		else if (!strnicmp(line, "PZEXPCSM_BEGIN", sizeof("PZEXPCSM_BEGIN"))) {
+			PZEXPCSM.LoadState(scn, "PZEXPCSM_END");
+		}
+		else if (!strnicmp(line, "PZEXPLEM_BEGIN", sizeof("PZEXPLEM_BEGIN"))) {
+			PZEXPLEM.LoadState(scn, "PZEXPLEM_END");
 		}
 		else if (!strnicmp(line, "RZDBSC1_BEGIN", sizeof("RZDBSC1_BEGIN"))) {
 			RZDBSC1.LoadState(scn, "RZDBSC1_END");
@@ -25045,12 +25084,21 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 		}
 	}
 
+	PLAWDTInput in;
+	PLAWDTOutput out;
+
+	in.TableCode = MPT_ID;
+	in.T_UP = table->TimeToBeginManeuver[ManNo - 1];
+	in.VentingOpt = true;
+
+	PLAWDT(in, out);
+
+	res.WT = out.ConfigWeight / 0.45359237;
+	res.WC = out.CSMWeight / 0.45359237;
+	res.WL = (out.LMAscWeight + out.LMDscWeight) / 0.45359237;
+
 	if (ManNo == 1)
 	{
-		res.WT = table->TotalInitMass / 0.45359237;
-		res.WC = table->CommonBlock.CSMMass / 0.45359237;
-		res.WL = (table->CommonBlock.LMAscentMass + table->CommonBlock.LMDescentMass) / 0.45359237;
-
 		switch (man->Thruster)
 		{
 		case RTCC_ENGINETYPE_CSMSPS:
@@ -25084,9 +25132,6 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	}
 	else
 	{
-		res.WT = table->mantable[ManNo - 2].TotalMassAfter / 0.45359237;
-		res.WC = table->mantable[ManNo - 2].CommonBlock.CSMMass / 0.45359237;
-		res.WL = (table->mantable[ManNo - 2].CommonBlock.LMAscentMass + table->mantable[ManNo - 2].CommonBlock.LMDescentMass) / 0.45359237;
 		switch (man->Thruster)
 		{
 		case RTCC_ENGINETYPE_CSMSPS:
@@ -31590,6 +31635,169 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 			PZBURN.P4_DV = dv * 0.3048;
 		}
 	}
+	// Input of expendable weights
+	else if (med == "47")
+	{
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+
+		int Table;
+
+		if (data[0] == "CSM")
+		{
+			Table = RTCC_MPT_CSM;
+		}
+		else if (data[0] == "LEM")
+		{
+			Table = RTCC_MPT_LM;
+		}
+		else
+		{
+			return 2;
+		}
+
+		int ActionCode;
+
+		if (data[1] == "A")
+		{
+			// Add
+			ActionCode = 0;
+		}
+		else if (data[1] == "R")
+		{
+			// Replace
+			ActionCode = 1;
+		}
+		else if (data[1] == "D")
+		{
+			// Delete
+			ActionCode = 2;
+		}
+		else
+		{
+			return 2;
+		}
+
+		ExpendableWeightsTable* tab;
+
+		if (Table == RTCC_MPT_CSM)
+		{
+			tab = &PZEXPCSM;
+		}
+		else
+		{
+			tab = &PZEXPLEM;
+		}
+
+		double Time, WeightLoss;
+		unsigned int EntryNumber;
+		int VEH;
+
+		// Read data
+		if (ActionCode != 2)
+		{
+			if (data.size() < 6)
+			{
+				return 1;
+			}
+			if (rtcc::MEDTimeInputHHMMSS(data[3], Time))
+			{
+				return 2;
+			}
+			Time *= 3600.0;
+
+			if (sscanf(data[4].c_str(), "%lf", &WeightLoss) != 1)
+			{
+				return 2;
+			}
+			WeightLoss *= 0.45359237;
+
+			if (data[5] == "C")
+			{
+				VEH = 0;
+			}
+			else if (data[5] == "S")
+			{
+				VEH = 1;
+			}
+			else if (data[5] == "A")
+			{
+				VEH = 2;
+			}
+			else if (data[5] == "D")
+			{
+				VEH = 3;
+			}
+			else
+			{
+				return 2;
+			}
+		}
+
+		if (ActionCode == 0)
+		{
+			// Add
+			if (tab->data.size() >= 20)
+			{
+				return 2;
+			}
+			ExpendableWeightsTableEntry entry;
+
+			entry.GET = Time;
+			entry.Veh = VEH;
+			entry.WeightLoss = WeightLoss;
+
+			tab->data.push_back(entry);
+		}
+		else if (ActionCode == 1)
+		{
+			// Replace
+			if (sscanf(data[2].c_str(), "%d", &EntryNumber) != 1)
+			{
+				return 2;
+			}
+
+			if (EntryNumber < 1U || EntryNumber > tab->data.size())
+			{
+				return 2;
+			}
+
+			ExpendableWeightsTableEntry entry;
+
+			entry.GET = Time;
+			entry.Veh = VEH;
+			entry.WeightLoss = WeightLoss;
+
+			tab->data[EntryNumber - 1U] = entry;
+		}
+		else
+		{
+			// Delete
+			if (sscanf(data[2].c_str(), "%d", &EntryNumber) != 1)
+			{
+				return 2;
+			}
+
+			if (EntryNumber < 0 || EntryNumber > tab->data.size())
+			{
+				return 2;
+			}
+
+			if (EntryNumber == 0)
+			{
+				// Delete all
+				tab->data.clear();
+			}
+			else
+			{
+				tab->data.erase(tab->data.begin() + (EntryNumber - 1U));
+			}
+		}
+		// Perform trajectory update
+		PMSVCT(8, Table);
+	}
 	//Change fuel remaining for specified thruster
 	else if (med == "49")
 	{
@@ -36795,22 +37003,34 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		F = mptman->CommonBlock.SIVBFuelRemaining;
 	}
 
-	//Mass Maintenance
+	// Areas maintenance
 	for (int i = 0; i < 4; i++)
 	{
 		if (mptman->CommonBlock.ConfigCode[i])
 		{
-			mptman->CommonBlock.Masses[i] = CommonBlockBefore->Masses[i];
 			mptman->CommonBlock.Areas[i] = CommonBlockBefore->Areas[i];
 		}
 		else
 		{
-			mptman->CommonBlock.Masses[i] = 0.0;
 			mptman->CommonBlock.Areas[i] = 0.0;
 		}
 	}
 
-	//Account for mass loss
+	// Preburn mass maintenance
+	mptman->CommonBlock.Masses[0] = aux->W_CSM;
+	mptman->CommonBlock.Masses[1] = aux->W_SIVB;
+	mptman->CommonBlock.Masses[2] = aux->W_LMA;
+	mptman->CommonBlock.Masses[3] = aux->W_LMD;
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (!(mptman->CommonBlock.ConfigCode[i]))
+		{
+			mptman->CommonBlock.Masses[i] = 0.0;
+		}
+	}
+
+	//Account for mass loss during burn
 	if (mptman->TVC == RTCC_MANVEHICLE_CSM)
 	{
 		mptman->CommonBlock.CSMMass = aux->W_CSM - aux->MainFuelUsed - aux->RCSFuelUsed;
