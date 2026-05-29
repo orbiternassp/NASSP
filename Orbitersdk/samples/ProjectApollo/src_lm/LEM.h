@@ -103,8 +103,8 @@ enum LMRCSThrusters
 typedef struct {
 	int crewNumber;
 	int crewStatus;
-	int cdrStatus;	//0 = cabin, 1 = suit, 2 = EVA, 3 = PLSS
-	int lmpStatus;
+	int cdrStatus;	//0 = cabin, 1 = suit with helmet/gloves, 2 = EVA, 3 = PLSS, 4 = suit without helmet/gloves
+	int lmpStatus;	//0 = cabin, 1 = suit with helmet/gloves, 2 = EVA, 3 = PLSS, 4 = suit without helmet/gloves
 	double UCTAStatus;
 } LEMECSStatus;
 
@@ -642,6 +642,8 @@ public:
 	virtual void SetCrewNumber(int number);
 	virtual void SetCDRInSuit();
 	virtual void SetLMPInSuit();
+	virtual void CDRHelmetGloves();
+	virtual void LMPHelmetGloves();
 	virtual void StartEVA();
 	void StartSeparationPyros();
 	void StopSeparationPyros();
@@ -667,6 +669,8 @@ public:
 	h_crew *CrewInCabin;
 	h_crew *CDRSuited;
 	h_crew *LMPSuited;
+	h_Tank *CDRSuit;
+	h_Tank *LMPSuit;
 	Pump *CabinFan1;
 	Pump *SuitFan1;
 	Pump *SuitFan2;

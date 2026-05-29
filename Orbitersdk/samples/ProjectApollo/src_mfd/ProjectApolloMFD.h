@@ -89,6 +89,8 @@ public:
 	void menuSetCrewNumber();
 	void menuSetCDRInSuit();
 	void menuSetLMPInSuit();
+	void menuCDRHelmetGloves();
+	void menuLMPHelmetGloves();
 	void menuStartEVA();
 	void menuConnectCSMO2Hose();
 	void menuJettisonEquipment();

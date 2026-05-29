@@ -63,6 +63,7 @@ void LEMCrewStatus::Timestep(double simdt) {
 		if (status == ECS_CREWSTATUS_DEAD) {
 			crewDeadSound.play();
 		}
+		lem->ecs.SetHelmetValveSizes(); //Temporary function call to force old saves to use new valve sizes, can be removed after a few versions when old saves are no longer used.
 		firstTimestepDone = true;
 	}
 
@@ -2006,4 +2007,15 @@ double LEM_ECS::GetECSLMPSuitCO2MMHg() {
 		LMPSuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:LMPSUIT:CO2_PPRESS");
 	}
 	return (*LMPSuit_CO2 * MMHG);
+}
+void LEM_ECS::SetHelmetValveSizes()
+{
+	if (!CDRHelmetValve) {
+		CDRHelmetValve = (h_Pipe*)sdk.GetPointerByString("HYDRAULIC:CDRHELMET");
+		CDRHelmetValve->in->size = 2.0f;
+	}
+	if (!LMPHelmetValve) {
+		LMPHelmetValve = (h_Pipe*)sdk.GetPointerByString("HYDRAULIC:LMPHELMET");
+		LMPHelmetValve->in->size = 2.0f;
+	}
 }

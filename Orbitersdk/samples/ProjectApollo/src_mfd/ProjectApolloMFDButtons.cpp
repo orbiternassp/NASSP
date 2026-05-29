@@ -61,8 +61,8 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "Connect CSM O2 Hose to LM",0,'H' },
 		{ "Jettison LM Equipment",0,'J' },
 		{ 0,0,0 },
-		{ 0,0,0 },
-		{ 0,0,0 },
+		{ "CDR Helmet & Gloves",0,'Y' },
+		{ "LMP Helmet & Gloves",0,'X' },
 		{ 0,0,0 },
 		{ "ECS Debug", 0, 'D' }
 	};
@@ -78,8 +78,8 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 
 	RegisterFunction("JET", OAPI_KEY_J, &ProjectApolloMFD::menuJettisonEquipment);
 	RegisterFunction("", OAPI_KEY_Z, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_Y, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_X, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("HMT", OAPI_KEY_Y, &ProjectApolloMFD::menuCDRHelmetGloves);
+	RegisterFunction("HMT", OAPI_KEY_X, &ProjectApolloMFD::menuLMPHelmetGloves);
 	RegisterFunction("", OAPI_KEY_W, &ProjectApolloMFD::menuVoid);
 	RegisterFunction("DBG", OAPI_KEY_D, &ProjectApolloMFD::menuSetECSDebugPage);
 

@@ -430,6 +430,8 @@ public:
 	bool IsCabinGasReturnValveOpen();
 	bool GetGlycolPump2Failure();
 
+	void SetHelmetValveSizes(); //Temporary function call to force old saves to use new valve sizes, can be removed after a few versions when old saves are no longer used.
+
 	LEM *lem;													// Pointer at LEM
 	double *Cabin_Press, *Cabin_Temp;					// Cabin Atmosphere
 	double *Suit_Press, *SGD_Press, *Suit_Temp, *SuitCircuit_CO2, *SGD_CO2, *Cabin_CO2, *CDRSuit_CO2, *LMPSuit_CO2;					// Suit Circuit Atmosphere
@@ -481,4 +483,6 @@ public:
 
 protected:
 	PanelSDK &sdk;
+
+	h_Pipe *CDRHelmetValve, *LMPHelmetValve;						// Helmet valve positions
 };

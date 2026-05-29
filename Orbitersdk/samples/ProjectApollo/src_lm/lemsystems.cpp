@@ -575,6 +575,9 @@ void LEM::SystemsInit()
 	SecGlyPumpHeat = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:GLYPUMPSECHEAT");
 	LCGPump = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:LCGPUMP");
 
+	CDRSuit = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUIT");
+	LMPSuit = (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT");
+
 	PrimGlyPump1->WireTo(&ECS_GLYCOL_PUMP_1_CB);
 	PrimGlyPump2->WireTo(&ECS_GLYCOL_PUMP_2_CB);
 	CabinFan1->WireTo(&ECS_CABIN_FAN_1_CB);
@@ -2035,6 +2038,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	double *CabFan = (double*)Panelsdk.GetPointerByString("ELECTRIC:CABINFAN:ISON");
 
+	int *cdrhelmetvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUIT:LEAK:ISOPEN");
+	int *lmphelmetvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:LEAK:ISOPEN");
+
 	//Prim Loop 1 Heat
 	double *LGCHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT:HEAT");
 	double *CDUHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CDUHEAT:HEAT");
@@ -2166,6 +2172,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double* IMUHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LM-IMU-Heater:ISON");
 	
 	double* ASAFineHtrPWM = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FineHeater:PWMCYC");
+
+	//sprintf(oapiDebugString(), "CDR: %lf LMP: %lf CDRsuited %i LMPsuited %i CDRPLSS %i LMPPLSS %i CDRHelmet %i LMPHelmet %i", CDRSuit->LEAK_valve.size, LMPSuit->LEAK_valve.size, CDRSuited->number, LMPSuited->number, CDRinPLSS, LMPinPLSS, *cdrhelmetvlv, *lmphelmetvlv);
 	
 	//sprintf(oapiDebugString(), "Cabin T: %.4f Suit T: %.4f Loop T: %.4f ASA T: %.4f ASASelfHEat W: %.4f FastHtr: %1f FineHtr: %1f FineHtrPWM: %.4f IMUHtr: %1f IMU T: %.4f", KelvinToFahrenheit(*CabinTemp), KelvinToFahrenheit(*hxheatingTemp), 
 		//KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*ASARad), *ASASelfHeat, *ASAFastHtr, *ASAFineHtr, *ASAFineHtrPWM, *IMUHtr, KelvinToFahrenheit(*IMURad));
@@ -2352,7 +2360,14 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 	}
 	else if (CDRSuited->number == 1)
 	{
-		ecs.cdrStatus = 1;
+		if (CDRSuit->LEAK_valve.IsOpen())
+		{
+			ecs.cdrStatus = 4;
+		}
+		else
+		{
+			ecs.cdrStatus = 1;
+		}
 	}
 	else
 	{
@@ -2369,7 +2384,14 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 	}
 	else if (LMPSuited->number == 1)
 	{
-		ecs.lmpStatus = 1;
+		if (LMPSuit->LEAK_valve.IsOpen())
+		{
+			ecs.lmpStatus = 4;
+		}
+		else
+		{
+			ecs.lmpStatus = 1;
+		}
 	}
 	else
 	{
@@ -2405,6 +2427,7 @@ void LEM::SetCDRInSuit()
 	{
 		CDRSuited->number = 0;
 		CDRinPLSS = 2;
+		CDRSuit->LEAK_valve.Close();
 	}
 	else if (CrewInCabin->number >= 1 && CDRSuited->number == 0)
 	{
@@ -2416,6 +2439,7 @@ void LEM::SetCDRInSuit()
 	{
 		CrewInCabin->number++;
 		CDRSuited->number = 0;
+		CDRSuit->LEAK_valve.Open();
 	}
 	SetCrewMesh();
 }
@@ -2432,6 +2456,7 @@ void LEM::SetLMPInSuit()
 	{
 		LMPSuited->number = 0;
 		LMPinPLSS = 2;
+		LMPSuit->LEAK_valve.Close();
 	}
 	else if (CrewInCabin->number >= 1 && LMPSuited->number == 0)
 	{
@@ -2443,8 +2468,47 @@ void LEM::SetLMPInSuit()
 	{
 		CrewInCabin->number++;
 		LMPSuited->number = 0;
+		LMPSuit->LEAK_valve.Open();
 	}
 	SetCrewMesh();
+}
+
+void LEM::CDRHelmetGloves()
+{
+	if (CDRSuited->number == 1 && CDRinPLSS != 2)
+	{
+		if (CDRSuit->LEAK_valve.IsOpen())
+		{
+			CDRSuit->LEAK_valve.Close();
+		}
+		else if (!CDRSuit->LEAK_valve.IsOpen() && ecs.GetECSCabinPSI() > 3.0)
+		{
+			CDRSuit->LEAK_valve.Open();
+		}
+		else
+		{
+			CDRSuit->LEAK_valve.Close();
+		}
+	}
+}
+
+void LEM::LMPHelmetGloves()
+{
+	if (LMPSuited->number == 1 && LMPinPLSS != 2)
+	{
+		if (LMPSuit->LEAK_valve.IsOpen())
+		{
+			LMPSuit->LEAK_valve.Close();
+		}
+		else if (!LMPSuit->LEAK_valve.IsOpen() && ecs.GetECSCabinPSI() > 3.0)
+		{
+			LMPSuit->LEAK_valve.Open();
+		}
+		else
+		{
+			LMPSuit->LEAK_valve.Close();
+		}
+	}
 }
 
 void LEM::StartEVA()
