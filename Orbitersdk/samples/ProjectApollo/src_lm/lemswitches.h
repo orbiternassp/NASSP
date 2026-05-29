@@ -256,6 +256,8 @@ public:
 	double QueryValue();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	void OnPostStep(double SimT, double DeltaT, double MJD);
+	bool GetHeX10Lt();
+	void SystemTimestep(double simdt);
 
 protected:
 	LEM *lem;
@@ -411,6 +413,7 @@ public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l);
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
 	void DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface, int xTexMul = 1);
+	void SystemTimestep(double simdt);
 protected:
 	bool LightLogic();
 	LEM *lem;
@@ -425,7 +428,9 @@ public:
 	bool CheckMouseClickVC(int event, VECTOR3 &p);
 	bool Push();
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
+	void SystemTimestep(double simdt);
 protected:
+	bool LightLogic();
 	LEM *lem;
 };
 
@@ -558,8 +563,10 @@ class LEMDPSDigitalMeter : public MeterSwitch {
 public:
 	void Init(SURFHANDLE surf, SwitchRow &row, LEM *l);
 	void InitVC(SURFHANDLE surf);
+	bool IsPowered();
 	void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	void DrawSwitchVC(int id, int event, SURFHANDLE surf);
+	void SystemTimestep(double simdt);
 
 protected:
 	virtual double AdjustForPower(double val) { return val; };
@@ -583,9 +590,11 @@ public:
 	LEMDigitalHeliumPressureMeter();
 	void Init(SURFHANDLE surf, SwitchRow &row, RotationalSwitch *s, LEM *l);
 	void InitVC(SURFHANDLE surf);
+	bool IsPowered();
 	double QueryValue();
 	virtual void DoDrawSwitch(double v, SURFHANDLE drawSurface);
 	virtual void DrawSwitchVC(int id, int event, SURFHANDLE surf);
+	void SystemTimestep(double simdt);
 
 protected:
 	virtual double AdjustForPower(double val) { return val; };

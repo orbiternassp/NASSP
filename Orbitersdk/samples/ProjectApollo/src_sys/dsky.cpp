@@ -153,14 +153,12 @@ static char SixSpace[] = "      ";
 
 static int SegmentCount[] = {6, 2, 5, 5, 4, 5, 6, 3, 7, 5 };
 
-DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, int IOChannel) : soundlib(s), agc(computer)
+DSKY::DSKY(SoundLib &s, ApolloGuidance &computer, PanelSDK& p, int IOChannel) : soundlib(s), agc(computer),
+Variable_250VAC_Output("Variable 250VAC DSKY Transformer", 0.0, 250.0, true)
 
 {
-	LtgORideAnunSwitch = NULL;
-	LtgORideIntegralSwitch = NULL;
 	DimmerRotationalSwitch = NULL;
-	IntegralRotationalSwitch = NULL;
-
+	IntegralPower = NULL;
 	StatusPower = NULL;
 	SegmentPower = NULL;
 	Reset();
@@ -214,44 +212,35 @@ DSKY::~DSKY()
 }
 
 void DSKY::Init(
-	e_object *statuslightpower, 
-	e_object *segmentlightpower, 
-	ContinuousRotationalSwitch *dimmer, 
-	ContinuousRotationalSwitch *integralDimmer,
-	ToggleSwitch *anunOverride,
-	ToggleSwitch *integralOverride
+	e_object *statuslightpower,
+	e_object *segmentlightpower,
+	ContinuousRotationalSwitch *dimmer,
+	e_object *integralsource
 )
 
 {
 	StatusPower = statuslightpower;
 	SegmentPower = segmentlightpower;
 	DimmerRotationalSwitch = dimmer;
-	IntegralRotationalSwitch = integralDimmer;
-	LtgORideAnunSwitch = anunOverride;
-	LtgORideIntegralSwitch = integralOverride;
+	IntegralPower = integralsource;
+
+	// DSKY segment light transformer
+	Variable_250VAC_Output.Init(DimmerRotationalSwitch);
+	Variable_250VAC_Output.WireTo(SegmentPower);
+
 	Reset();
 	FirstTimeStep = true;
 }
 
 bool DSKY::IsStatusPowered() {
-	if (StatusPower->Voltage() < 2){ return false; } //Used 2V for now as input voltage can be 0-5V AC or DC here
+	if (StatusPower->Voltage() < 1.8) { return false; }
 
-	if (DimmerRotationalSwitch != NULL) {
-		if (DimmerRotationalSwitch->GetOutput() < 0.00001) {
-			return false;
-		}
-	}
 	return true;
 }
 
 bool DSKY::IsSegmentPowered() {
-	if (SegmentPower->Voltage() < SP_MIN_DCVOLTAGE) { return false; }
+	if (Variable_250VAC_Output.Voltage() < 20.0) { return false; }
 
-	if (DimmerRotationalSwitch != NULL) {
-		if (DimmerRotationalSwitch->GetOutput() < 0.00001) {
-			return false;
-		}
-	}
 	return true;
 }
 
@@ -339,17 +328,7 @@ void DSKY::Timestep(double simt)
 }
 
 void DSKY::SystemTimestep(double simdt)
-
 {
-	if (!IsStatusPowered() || !IsSegmentPowered()){ return; }
-	//
-	// The DSKY power consumption is a little bit hard to figure out. According 
-	// to the Systems Handbook the complete interior lightning draws about 30W, so
-	// we assume one DSKY draws 10W max, for now. We DO NOT rely on the render code to
-	// track the number of lights that are lit, because during pause the still called render 
-	// code causes wrong power loads
-	//
-
 	if (IsStatusPowered())
 	{
 		//
@@ -369,7 +348,7 @@ void DSKY::SystemTimestep(double simdt)
 		if (TrackerLit()) LightsLit++;
 
 		// 10 lights with together max. 6W, 
-		StatusPower->DrawPower(LightsLit * 0.6);
+		StatusPower->DrawPower((StatusPower->Voltage() / 5.0) * (LightsLit * 0.6));
 	}
 
 	if (IsSegmentPowered())
@@ -391,7 +370,7 @@ void DSKY::SystemTimestep(double simdt)
 		SegmentsLit += SixDigitDisplaySegmentsLit(R3, ELOff);
 
 		// 184 segments with together max. 4W  
-		SegmentPower->DrawPower(SegmentsLit * 0.022);
+		SegmentPower->DrawPower((Variable_250VAC_Output.Voltage() / 250.0) * (SegmentsLit * 0.022));
 	}
 
 	//sprintf(oapiDebugString(), "DSKY %f", (LightsLit * 0.6) + (SegmentsLit * 0.022));
@@ -1575,17 +1554,9 @@ void DSKY::SendNetworkPacketDSKY()
 		char numLvl[256] = "";
 		char intLvl[256] = "";
 
-		sprintf(anunLvl, "%lf", DimmerRotationalSwitch->GetOutput());
-		sprintf(numLvl, "%lf", DimmerRotationalSwitch->GetOutput());
-		sprintf(intLvl, "%lf", IntegralRotationalSwitch->GetOutput());
-
-		if(LtgORideAnunSwitch && LtgORideAnunSwitch->IsUp()){
-			sprintf(anunLvl, "1.0");
-		}
-
-		if(LtgORideIntegralSwitch && LtgORideIntegralSwitch->IsUp()){
-			sprintf(intLvl, "1.0");
-		}
+		sprintf(anunLvl, "%lf", SegmentPower->Voltage() / 5.0);
+		sprintf(numLvl, "%lf", Variable_250VAC_Output.Voltage() / 250.0);
+		sprintf(intLvl, "%lf", IntegralPower->Voltage() / 115.0);
 
 		anun = anun + "\"" + anunLvl + "\",";
 		numerics = numerics + "\"" + numLvl + "\",";
@@ -1598,12 +1569,19 @@ void DSKY::SendNetworkPacketDSKY()
 	}
 }
 
-bool DSKY::GetStatusPower()
+bool DSKY::GetStatusLtPower()
 {
 	return IsStatusPowered();
 }
 
-bool DSKY::GetSegmentPower()
-{	
-	return IsSegmentPowered();
+bool DSKY::GetDSKYPower()
+{
+	if (SegmentPower->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
 }

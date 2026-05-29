@@ -970,8 +970,10 @@ void LEM_AEA::LoadState(FILEHANDLE scn,char *end_str)
 
 // Data Entry and Display Assembly
 
-LEM_DEDA::LEM_DEDA(LEM *lm, SoundLib &s,LEM_AEA &computer) :  lem(lm), soundlib(s), ags(computer)
+LEM_DEDA::LEM_DEDA(LEM *lm, SoundLib &s, LEM_AEA &computer) : lem(lm), soundlib(s), ags(computer)
 {
+	OpErrLtPower = NULL;
+	SegmentPower = NULL;
 	Reset();
 }
 
@@ -982,10 +984,12 @@ LEM_DEDA::~LEM_DEDA()
 	//
 }
 
-void LEM_DEDA::Init(e_object *powered)
+void LEM_DEDA::Init(e_object *powered, e_object *segmentlightpower, e_object *anunpower)
 
 {
 	WireTo(powered);
+	SegmentPower = segmentlightpower;
+	OpErrLtPower = anunpower;
 	Reset();
 	ResetKeyDown();
 	FirstTimeStep = true;
@@ -1066,7 +1070,7 @@ void LEM_DEDA::LoadState(FILEHANDLE scn,char *end_str){
 }
 
 bool LEM_DEDA::IsPowered()
-{ 
+{
 	if (Voltage() > 25.0)
 		return true;
 
@@ -1075,21 +1079,21 @@ bool LEM_DEDA::IsPowered()
 
 bool LEM_DEDA::HasAnnunPower()
 {
-	if (lem->lca.GetAnnunVoltage() > 2.25)
+	if (OpErrLtPower->Voltage() > 1.8)
 		return true;
 
 	return false;
 }
 bool LEM_DEDA::HasNumPower()
 {
-	if (lem->lca.GetNumericVoltage() > 25.0)
+	if (SegmentPower->Voltage() > 20.0)
 		return true;
 
 	return false;
 }
 bool LEM_DEDA::HasIntglPower()
 {
-	if (lem->lca.GetIntegralVoltage() > 20.0)
+	if (lem->lca.Int_Override_15_75VAC_Output.Voltage() > 15.0)
 		return true;
 
 	return false;
@@ -1105,7 +1109,6 @@ void LEM_DEDA::Reset()
 
 {
 	OprErrLight = false;
-	LightsLit = 0;
 	SegmentsLit = 0;
 	State = 0;
 
@@ -1150,7 +1153,7 @@ void LEM_DEDA::SystemTimestep(double simdt)
 {
 	if (!IsPowered())
 		return;
-	
+
 	// We will use a similar scan as the DSKY power consumption
 
 	// The DSKY power consumption is a little bit hard to figure out. According 
@@ -1165,8 +1168,11 @@ void LEM_DEDA::SystemTimestep(double simdt)
 	//
 
 	SegmentsLit = 0;
-	LightsLit = 0;
-	if (OprErrLit()) LightsLit++;
+	if (OprErrLit())
+	{
+		OpErrLtPower->DrawPower((OpErrLtPower->Voltage() / 5.0) * 0.6);
+	}
+
 	//
 	// Check the segments
 	//
@@ -1175,9 +1181,7 @@ void LEM_DEDA::SystemTimestep(double simdt)
 	SegmentsLit += SixDigitDisplaySegmentsLit(Data);
 
 	// 10 lights with together max. 6W, 184 segments with together max. 4W  
-	DrawPower((LightsLit * 0.6) + (SegmentsLit * 0.022));
-
-	//sprintf(oapiDebugString(), "DSKY %f", (LightsLit * 0.6) + (SegmentsLit * 0.022));
+	SegmentPower->DrawPower((SegmentPower->Voltage() / 115.0) * (SegmentsLit * 0.022));
 }
 
 int LEM_DEDA::ThreeDigitDisplaySegmentsLit(char *Str)

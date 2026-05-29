@@ -602,6 +602,20 @@ void LMRCSAPressInd::OnPostStep(double SimT, double DeltaT, double MJD) {
 	lem->SetAnimation(anim_switch, v);
 }
 
+bool LMRCSAPressInd::GetHeX10Lt() // Only one X10 light on the display, so this check and power draw will only be in the RCS A meter
+{
+	if (lem->TempPressMonRotary.GetState() == 0) return true; // Helium is x10
+	return false;
+}
+
+void LMRCSAPressInd::SystemTimestep(double simdt)
+{
+	if (GetHeX10Lt())
+	{
+		lem->lca.Num_Override_20_110VAC_Output.DrawPower(0.5 * (lem->lca.Num_Override_20_110VAC_Output.Voltage() / 115.0)); //Assumes 0.5W per lamp, needs to be checked
+	}
+}
+
 // RCS indicator, RCS B Press
 LMRCSBPressInd::LMRCSBPressInd()
 
@@ -1313,12 +1327,20 @@ void EngineStartButton::DoDrawSwitchVC(SURFHANDLE surf, SURFHANDLE DrawSurface, 
 
 bool EngineStartButton::LightLogic()
 {
-	return (lem->lca.GetAnnunVoltage() > 2.25 && (lem->LampToneTestRotary.GetState() == 3 || lem->scca2.GetK15()));
+	return (lem->LtgORideAnunSwitch.Voltage() > 1.8 && (lem->LampToneTestRotary.GetState() == 3 || lem->scca2.GetK15()));
 }
 
 void EngineStopButton::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, int xoffset, int yoffset, LEM *l) {
 	ToggleSwitch::Init(xp, yp, w, h, surf, bsurf, row, xoffset, yoffset);
 	lem = l;
+}
+
+void EngineStartButton::SystemTimestep(double simdt)
+{
+	if (LightLogic())
+	{
+		lem->LtgORideAnunSwitch.DrawPower(0.5 * (lem->LtgORideAnunSwitch.Voltage() / 6.0)); //Assumes 0.5W per lamp, needs to be checked
+	}
 }
 
 bool EngineStopButton::CheckMouseClick(int event, int mx, int my) {
@@ -1355,13 +1377,25 @@ bool EngineStopButton::Push()
 		Sclick.play();
 		return true;
 	}
-
 	return false;
+}
+
+bool EngineStopButton::LightLogic()
+{
+	return (lem->LtgORideAnunSwitch.Voltage() > 1.8 && (lem->LampToneTestRotary.GetState() == 3 || IsUp()));
+}
+
+void EngineStopButton::SystemTimestep(double simdt)
+{
+	if (LightLogic())
+	{
+		lem->LtgORideAnunSwitch.DrawPower(0.5 * (lem->LtgORideAnunSwitch.Voltage() / 6.0)); //Assumes 0.5W per lamp, needs to be checked
+	}
 }
 
 void EngineStopButton::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	
-	if (lem->lca.GetAnnunVoltage() > 2.25 && (lem->LampToneTestRotary.GetState() == 3 || IsUp())){
+	if (lem->LtgORideAnunSwitch.Voltage() > 1.8 && (lem->LampToneTestRotary.GetState() == 3 || IsUp())){
 		if (IsUp())
 		{
 			oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset + height, width, height, SURF_PREDEF_CK);
@@ -1790,10 +1824,20 @@ void LEMDPSDigitalMeter::InitVC(SURFHANDLE surf)
 	DigitsVC = surf;
 }
 
+bool LEMDPSDigitalMeter::IsPowered()
+{
+	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->lca.Num_Override_20_110VAC_Output.Voltage() < 20.0)
+	{
+		return false;
+	}
+
+	return true;
+}
+
 void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
 	if (lem->stage > 1) return;
-	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE ||  lem->lca.GetNumericVoltage() < 25.0) return;
+	if (!IsPowered()) return;
 
 	double percent = v * 100.0;
 
@@ -1809,12 +1853,12 @@ void LEMDPSDigitalMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 void LEMDPSDigitalMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
 	if (lem->stage > 1) return;
-	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->lca.GetNumericVoltage() < 25.0) return;
+	if (!IsPowered()) return;
 
 	double percent = GetDisplayValue() * 100.0;
 
-	const int DigitWidth = 21*TexMul;
-	const int DigitHeight = 23*TexMul;
+	const int DigitWidth = 21 * TexMul;
+	const int DigitHeight = 23 * TexMul;
 	int Curdigit2 = (int)percent % 10;
 	int Curdigit = (int)(percent / 10) % 10;
 
@@ -1822,11 +1866,22 @@ void LEMDPSDigitalMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 	oapiBlt(surf, DigitsVC, DigitWidth, 0, DigitWidth * Curdigit2, 0, DigitWidth, DigitHeight);
 }
 
+void LEMDPSDigitalMeter::SystemTimestep(double simdt)
+{
+	double EL = (4.0 * 7.0 * 0.022); // Assumes .022W per segment
+
+	if (IsPowered())
+	{
+		lem->lca.Num_Override_20_110VAC_Output.DrawPower((EL) * (lem->lca.Num_Override_20_110VAC_Output.Voltage() / 115.0));
+	}
+
+	//sprintf(oapiDebugString(), "EL %lf Power %lf", EL, (EL * (lem->lca.Num_Override_20_110VAC_Output.Voltage() / 115.0)));
+}
+
 double LEMDPSOxidPercentMeter::QueryValue()
 {
 	return lem->GetDPSPropellant()->GetOxidPercent();
 }
-
 
 double LEMDPSFuelPercentMeter::QueryValue()
 {
@@ -1848,6 +1903,16 @@ void LEMDigitalHeliumPressureMeter::Init(SURFHANDLE surf, SwitchRow &row, Rotati
 	Digits = surf;
 	lem = l;
 	minMaxTime = 0;	// Don't animate/interpolate between reported values
+}
+
+bool LEMDigitalHeliumPressureMeter::IsPowered()
+{
+	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.Num_Override_20_110VAC_Output.Voltage() < 20.0)
+	{
+		return false;
+	}
+
+	return true;
 }
 
 double LEMDigitalHeliumPressureMeter::QueryValue()
@@ -1881,7 +1946,7 @@ double LEMDigitalHeliumPressureMeter::QueryValue()
 
 void LEMDigitalHeliumPressureMeter::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.GetNumericVoltage() < 25.0) return;
+	if (!IsPowered()) return;
 
 	const int DigitWidth = 21;
 	const int DigitHeight = 23;
@@ -1901,12 +1966,12 @@ void LEMDigitalHeliumPressureMeter::InitVC(SURFHANDLE surf)
 
 void LEMDigitalHeliumPressureMeter::DrawSwitchVC(int id, int event, SURFHANDLE surf)
 {
-	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.GetNumericVoltage() < 25.0) return;
+	if (!IsPowered()) return;
 
 	double v = GetDisplayValue();
 
-	const int DigitWidth = 21*TexMul;
-	const int DigitHeight = 23*TexMul;
+	const int DigitWidth = 21 * TexMul;
+	const int DigitHeight = 23 * TexMul;
 	int divisor = 1000;
 
 	for (int i = 0; i < 4; ++i) {
@@ -1914,6 +1979,18 @@ void LEMDigitalHeliumPressureMeter::DrawSwitchVC(int id, int event, SURFHANDLE s
 		oapiBlt(surf, DigitsVC, (int)(DigitWidth * i * 1.15), 0, DigitWidth * Curdigit, 0, DigitWidth, DigitHeight);
 		divisor /= 10;
 	}
+}
+
+void LEMDigitalHeliumPressureMeter::SystemTimestep(double simdt)
+{
+	double EL = (4.0 * 7.0 * 0.022); // Assumes .022W per segment
+
+	if (IsPowered())
+	{
+		lem->lca.Num_Override_20_110VAC_Output.DrawPower((EL) * (lem->lca.Num_Override_20_110VAC_Output.Voltage() / 115.0));
+	}
+
+	//sprintf(oapiDebugString(), "EL %lf Power %lf", EL, (EL * (lem->lca.Num_Override_20_110VAC_Output.Voltage() / 115.0)));
 }
 
 void DEDAPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {

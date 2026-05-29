@@ -318,63 +318,70 @@ class LEM_DockLights
 {
 public:
 	LEM_DockLights();
-	void Init(LEM *l, ThreePosSwitch *docksw);
+	void Init(LEM *l, e_object *dockpwr, ThreePosSwitch *docksw);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
 	bool IsPowered();
 protected:
 	LEM *lem;
+	e_object *DockPower;
 	ThreePosSwitch *DockSwitch;
 
 };
 
-class LEM_LCA : public e_object
+class LEM_LCA
 {
 public:
-	LEM_LCA();
-	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, h_HeatLoad *lca_h);
-	void UpdateFlow(double dt);
+	LEM_LCA(PanelSDK& p);
+	void Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, e_object *acintcb, h_HeatLoad *lca_h);
 	void SystemTimestep(double simdt);
-	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
-	void LoadState(FILEHANDLE scn, char *end_str);
 
-	void DrawDCPower(double watts);
-	void DrawACPower(double watts);
+	double GetNumericOutput();
+	double GetIntegralOutput();
 
-	double GetCompDockVoltage();
-	double GetAnnunVoltage();
-	double GetAnnunDimPct();
-	double GetNumericVoltage();
-	double GetIntegralVoltage();
+	// DC
+	// Fixed 5.5VDC output (component lights, C/W PWR light)
+	FixedVoltageTransformer Fixed_5_5VDC_Output;
+	// Fixed 6VDC output to annun override switch
+	e_object_extended Fixed_6VDC_Output;
+	// Variable 2-5VDC output to annun override switch
+	RotVariableVoltageTransformer Variable_2_5VDC_Output;
+
+	// AC
+	// Variable 20-110VAC numerics transformer
+	RotVoltageTransformerOverride Num_Override_20_110VAC_Output;
+
+	//Variable 15-75VAC integral transformer
+	RotVoltageTransformerOverride Int_Override_15_75VAC_Output;
+
+	// Internal annunciator wiring
+	// CDR bus 28VDC to 6VDC converter
+	FixedVoltageTransformer CDR_Bus_28V_6V_Converter;
+	// CDR bus 28VDC to 6VDC converter
+	FixedVoltageTransformer LMP_Bus_28V_6V_Converter;
+	// CDR and LMP DC bus power merge
+	PowerMerge NumDockCompLTGFeeder;
+
 protected:
-	bool HasDCPower;
-	double DCOutputVoltage;
-
 	LEM *lem;
-	e_object *CDRAnnunDockCompCB;
-	e_object *LMPAnnunDockCompCB;
 	h_HeatLoad *LCAHeat;
-
-	double AC_power_load;
-
 };
 
 class LEM_UtilLights
 {
 public:
-LEM_UtilLights();
-void Init(LEM *l, e_object *utl_cb, ThreePosSwitch *cdr_sw, ThreePosSwitch *lmp_sw, h_HeatLoad *util_h);
-void Timestep(double simdt);
-void SystemTimestep(double simdt);
+	LEM_UtilLights();
+	void Init(LEM *l, e_object *utl_cb, ThreePosSwitch *cdr_sw, ThreePosSwitch *lmp_sw, h_HeatLoad *util_h);
+	void SystemTimestep(double simdt);
 
-bool IsPowered();
+	bool IsPowered();
 protected:
-LEM *lem;
-e_object *UtlCB;
-ThreePosSwitch *CDRSwitch;
-ThreePosSwitch *LMPSwitch;
-h_HeatLoad *UtlLtgHeat;
+	LEM *lem;
+	e_object *UtlCB;
+	ThreePosSwitch *CDRSwitch;
+	ThreePosSwitch *LMPSwitch;
+	h_HeatLoad *UtlLtgHeat;
 
 };
 
@@ -383,7 +390,6 @@ class LEM_COASLights
 public:
 	LEM_COASLights();
 	void Init(LEM *l, e_object *coas_cb, ThreePosSwitch *coas_sw, h_HeatLoad *coas_h);
-	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
 
 	bool IsPowered();
@@ -406,7 +412,10 @@ public:
 	bool IsHatchOpen();
 	double GetLMPRotaryVoltage();
 	double GetCDRRotaryVoltage();
-	double GetALLPowerDraw();
+	double GetLMPOutput();
+	double GetCDROutput();
+	double GetSideOutput();
+	double GetSidePowerDraw();
 	double GetOVHDFWDPowerDraw();
 	double GetPowerDraw();
 protected:
@@ -427,6 +436,7 @@ public:
 	LEM_PFIRA();
 	void Init(LEM *l);
 	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
 
 	bool GetPropPressIndRelay() { return K1; }
 	bool GetCDRXPointerRelay() { return K2; }
@@ -460,4 +470,66 @@ protected:
 	bool K8;
 	//LMP cross pointer
 	bool K9;
+
+	double GetLightsLit();
+};
+
+//Component Lights Power
+
+class LEM_ComponentLights
+{
+public:
+	LEM_ComponentLights(PanelSDK& p);
+	void Init(LEM *l, e_object *switchpwr, e_object *fixedpwr, e_object *cdr_btb, e_object *lmp_btb);
+	bool FeederFault();
+	double GetDimmableLightsLit();
+	double GetNonDimmableLightsLit();
+	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
+
+	PowerMerge BatFeedTieFeeder;
+	FixedVoltageTransformer Feeder_6VDC_Output;
+
+	bool GetNoTrackCompLt() { return NoTrack; }
+	bool GetCO2CompLt() { return CO2; }
+	bool GetGlycolCompLt() { return Glycol; }
+	bool GetSuitFanCompLt() { return SuitFan; }
+	bool GetH2OSepCompLt() { return H2OSep; }
+	bool GetBatFaultCompLt() { return BatFault; }
+	bool GetFeederFaultCompLt() { return FeedFault; }
+	bool GetStageSeqACompLt() { return StageSeqA; }
+	bool GetStageSeqBCompLt() { return StageSeqB; }
+	bool GetCDRContactLt() { return CDRContact; }
+	bool GetLMPContactLt() { return LMPContact; }
+
+protected:
+	LEM *lem;
+
+	//No track light
+	bool NoTrack;
+	//CO2 light
+	bool CO2;
+	//Glycol light
+	bool Glycol;
+	//Suit/fan light
+	bool SuitFan;
+	//H2O sep light
+	bool H2OSep;
+	//Battery fault light
+	bool BatFault;
+	//Feeder fault light
+	bool FeedFault;
+	//Stage seq A light
+	bool StageSeqA;
+	//Stage seq B light
+	bool StageSeqB;
+	//CDR Contact light
+	bool CDRContact;
+	//LMP Contact light
+	bool LMPContact;
+
+	e_object *SwitchPower;
+	e_object *FixedPower;
+	e_object *CDR_Feed;
+	e_object *LMP_Feed;
 };
