@@ -161,14 +161,18 @@ void LEMCrewStatus::Timestep(double simdt) {
 	}
 
 	// Suit/Cabin CO2 above 10 mmHg for 30 minutes
-	if ((lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->CrewInCabin->number > 0) || (lem->ecs.GetECSCDRSuitCO2MMHg() > 10 && lem->CDRSuited->number > 0) || (lem->ecs.GetECSLMPSuitCO2MMHg() > 10 && lem->LMPSuited->number > 0)) {
+	if ((lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->CrewInCabin->number > 0) ||
+		(lem->ecs.GetECSCDRSuitCO2MMHg() > 10 && lem->CDRSuited->number > 0 && !lem->ecs.CDRHelmetOpen()) || //Fully Suited, checks suit CO2
+		(lem->ecs.GetECSLMPSuitCO2MMHg() > 10 && lem->LMPSuited->number > 0 && !lem->ecs.LMPHelmetOpen()) || //Fully Suited, checks suit CO2
+		(lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->CDRSuited->number > 0 && lem->ecs.CDRHelmetOpen()) || //Partially suited, checks cabin CO2
+		(lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->LMPSuited->number > 0 && lem->ecs.LMPHelmetOpen())) { //Partially suited, checks cabin CO2
 		if (CO2Time <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play();
 			return;
 		}
 		else {
-			status = ECS_CREWSTATUS_CRITICAL;
+			status = ECS_CREWSTATUS_CRITICAL_CO2;
 			CO2Time -= simdt;
 		}
 	}
@@ -2010,12 +2014,12 @@ double LEM_ECS::GetECSLMPSuitCO2MMHg() {
 }
 void LEM_ECS::SetHelmetValveSizes()
 {
-	if (!CDRHelmetValve) {
-		CDRHelmetValve = (h_Pipe*)sdk.GetPointerByString("HYDRAULIC:CDRHELMET");
-		CDRHelmetValve->in->size = 2.0f;
+	if (!CDRHelmet) {
+		CDRHelmet = (h_Pipe*)sdk.GetPointerByString("HYDRAULIC:CDRHELMET");
+		CDRHelmet->in->size = 2.0f;
 	}
-	if (!LMPHelmetValve) {
-		LMPHelmetValve = (h_Pipe*)sdk.GetPointerByString("HYDRAULIC:LMPHELMET");
-		LMPHelmetValve->in->size = 2.0f;
+	if (!LMPHelmet) {
+		LMPHelmet = (h_Pipe*)sdk.GetPointerByString("HYDRAULIC:LMPHELMET");
+		LMPHelmet->in->size = 2.0f;
 	}
 }

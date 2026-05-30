@@ -201,8 +201,8 @@ protected:
 
 #define ECS_CREWSTATUS_OK			0
 #define ECS_CREWSTATUS_CRITICAL		1
-#define ECS_CREWSTATUS_DEAD			2
-
+#define ECS_CREWSTATUS_CRITICAL_CO2	2
+#define ECS_CREWSTATUS_DEAD			3
 
 class CrewStatus {
 

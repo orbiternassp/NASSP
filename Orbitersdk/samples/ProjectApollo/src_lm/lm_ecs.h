@@ -34,7 +34,8 @@
 
 #define ECS_CREWSTATUS_OK			0
 #define ECS_CREWSTATUS_CRITICAL		1
-#define ECS_CREWSTATUS_DEAD			2
+#define ECS_CREWSTATUS_CRITICAL_CO2	2
+#define ECS_CREWSTATUS_DEAD			3
 
 
 class LEMCrewStatus {
@@ -481,8 +482,11 @@ public:
 	int *Suit_IsolationLMP;										// LMP suit isolation valves
 	int *Cabin_Gas_Return;										// Cabin gas return valve
 
+	bool CDRHelmetOpen() { return CDRHelmet->in->open; }
+	bool LMPHelmetOpen() { return LMPHelmet->in->open; }
+
 protected:
 	PanelSDK &sdk;
 
-	h_Pipe *CDRHelmetValve, *LMPHelmetValve;						// Helmet valve positions
+	h_Pipe *CDRHelmet, *LMPHelmet;						// Helmet valve positions
 };
