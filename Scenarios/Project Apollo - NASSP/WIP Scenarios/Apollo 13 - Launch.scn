@@ -2,10 +2,13 @@ BEGIN_DESC
 Take part in the bravery of the Apollo 13 crew as you use your LEM aquarius to save your life from death in the translunar gulf. Using NASSP's Apollo 13 vehicle. April 11, 1970. (AS-508)
 END_DESC
 
+BEGIN_URLDESC
+  NASSP/508
+END_URLDESC
+
 BEGIN_ENVIRONMENT
   System ProjectApollo\Sol_VirtualAGC
   Date MJD 40687.634028
-  Help NASSP/508
 END_ENVIRONMENT
 
 BEGIN_FOCUS

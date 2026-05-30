@@ -2,10 +2,13 @@ BEGIN_DESC
 Al Shepard, Stu Roosa and Ed Mitchel make man's fourth landing attempt on the moon at Fra Mauro. Jan 31 1971. The scenario starts at T-4h00min, crew ingress is at T-1h40min. (AS-509)
 END_DESC
 
+BEGIN_URLDESC
+  NASSP/509
+END_URLDESC
+
 BEGIN_ENVIRONMENT
   System ProjectApollo\Sol_VirtualAGC
   Date MJD 40982.6826388889
-  Help NASSP/509
 END_ENVIRONMENT
 
 BEGIN_FOCUS
