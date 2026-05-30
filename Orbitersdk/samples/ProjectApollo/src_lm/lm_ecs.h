@@ -66,6 +66,25 @@ protected:
 	bool firstTimestepDone;
 };
 
+class LMSuit
+{
+public:
+	LMSuit();
+	void Init(LEM *l, h_Tank *suittank, h_Pipe *helmetpipe);
+	void SetHelmetValveSizes();
+	double GetHelmetSize() { return helmet->in->size; } //For debugging
+	void OpenHelmetGloves();
+	void CloseHelmetGloves();
+	bool IsHelmetOpen() { return helmet->in->open; }
+	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
+
+protected:
+	LEM *lem;
+	h_Tank *suit;
+	h_Pipe *helmet;
+};
+
 class LEMOverheadHatch
 {
 public:
@@ -431,8 +450,6 @@ public:
 	bool IsCabinGasReturnValveOpen();
 	bool GetGlycolPump2Failure();
 
-	void SetHelmetValveSizes(); //Temporary function call to force old saves to use new valve sizes, can be removed after a few versions when old saves are no longer used.
-
 	LEM *lem;													// Pointer at LEM
 	double *Cabin_Press, *Cabin_Temp;					// Cabin Atmosphere
 	double *Suit_Press, *SGD_Press, *Suit_Temp, *SuitCircuit_CO2, *SGD_CO2, *Cabin_CO2, *CDRSuit_CO2, *LMPSuit_CO2;					// Suit Circuit Atmosphere
@@ -482,11 +499,6 @@ public:
 	int *Suit_IsolationLMP;										// LMP suit isolation valves
 	int *Cabin_Gas_Return;										// Cabin gas return valve
 
-	bool CDRHelmetOpen() { return CDRHelmet->in->open; }
-	bool LMPHelmetOpen() { return LMPHelmet->in->open; }
-
 protected:
 	PanelSDK &sdk;
-
-	h_Pipe *CDRHelmet, *LMPHelmet;						// Helmet valve positions
 };

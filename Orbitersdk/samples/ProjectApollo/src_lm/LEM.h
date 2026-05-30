@@ -669,8 +669,6 @@ public:
 	h_crew *CrewInCabin;
 	h_crew *CDRSuited;
 	h_crew *LMPSuited;
-	h_Tank *CDRSuit;
-	h_Tank *LMPSuit;
 	Pump *CabinFan1;
 	Pump *SuitFan1;
 	Pump *SuitFan2;
@@ -2119,6 +2117,8 @@ protected:
 
 	// ECS
 	LEM_ECS ecs;
+	LMSuit CDRSuit;
+	LMSuit LMPSuit;
 	LEMPressureSwitch CabinPressureSwitch;
 	LEMPressureSwitch SuitPressureSwitch;
 	LEMSuitIsolValve CDRIsolValve;
@@ -2261,6 +2261,7 @@ protected:
 	friend class MainOxidizerTempInd;
 	friend class RCS_TCA;
 	friend class LEM_ECS;
+	friend class LMSuit;
 	friend class LEMCabinRepressValve;
 	friend class LEMSuitIsolValve;
 	friend class LEMDigitalHeliumPressureMeter;

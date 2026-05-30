@@ -63,7 +63,8 @@ void LEMCrewStatus::Timestep(double simdt) {
 		if (status == ECS_CREWSTATUS_DEAD) {
 			crewDeadSound.play();
 		}
-		lem->ecs.SetHelmetValveSizes(); //Temporary function call to force old saves to use new valve sizes, can be removed after a few versions when old saves are no longer used.
+		lem->CDRSuit.SetHelmetValveSizes(); //Temporary function call to force old saves to use new valve sizes, can be removed after a few versions when old saves are no longer used.
+		lem->LMPSuit.SetHelmetValveSizes(); //Temporary function call to force old saves to use new valve sizes, can be removed after a few versions when old saves are no longer used.
 		firstTimestepDone = true;
 	}
 
@@ -162,10 +163,10 @@ void LEMCrewStatus::Timestep(double simdt) {
 
 	// Suit/Cabin CO2 above 10 mmHg for 30 minutes
 	if ((lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->CrewInCabin->number > 0) ||
-		(lem->ecs.GetECSCDRSuitCO2MMHg() > 10 && lem->CDRSuited->number > 0 && !lem->ecs.CDRHelmetOpen()) || //Fully Suited, checks suit CO2
-		(lem->ecs.GetECSLMPSuitCO2MMHg() > 10 && lem->LMPSuited->number > 0 && !lem->ecs.LMPHelmetOpen()) || //Fully Suited, checks suit CO2
-		(lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->CDRSuited->number > 0 && lem->ecs.CDRHelmetOpen()) || //Partially suited, checks cabin CO2
-		(lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->LMPSuited->number > 0 && lem->ecs.LMPHelmetOpen())) { //Partially suited, checks cabin CO2
+		(lem->ecs.GetECSCDRSuitCO2MMHg() > 10 && lem->CDRSuited->number > 0 && !lem->CDRSuit.IsHelmetOpen()) || //Fully Suited, checks suit CO2
+		(lem->ecs.GetECSLMPSuitCO2MMHg() > 10 && lem->LMPSuited->number > 0 && !lem->LMPSuit.IsHelmetOpen()) || //Fully Suited, checks suit CO2
+		(lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->CDRSuited->number > 0 && lem->CDRSuit.IsHelmetOpen()) || //Partially suited, checks cabin CO2
+		(lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->LMPSuited->number > 0 && lem->LMPSuit.IsHelmetOpen())) { //Partially suited, checks cabin CO2
 		if (CO2Time <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play();
@@ -227,6 +228,52 @@ void LEMCrewStatus::SaveState(FILEHANDLE scn) {
 	sprintf(buffer, "%d %lf %lf %lf %lf %lf %lf %lf %lf %lf", status, SuitPressureLowTime, PressureLowTime, SuitPressureHighTime,
 		PressureHighTime, SuitTemperatureTime, TemperatureTime, CO2Time, accelerationTime, lastVerticalVelocity);
 	oapiWriteScenario_string(scn, "CREWSTATUS", buffer);
+}
+
+LMSuit::LMSuit()
+{
+	lem = NULL;
+	suit = NULL;
+	helmet = NULL;
+
+}
+
+void LMSuit::Init(LEM *l, h_Tank *suittank, h_Pipe *helmetpipe)
+{
+	lem = l;
+	suit = suittank;
+	helmet = helmetpipe;
+}
+
+void LMSuit::OpenHelmetGloves()
+{
+	if (!helmet->in->IsOpen())
+	{
+		helmet->in->Open();
+	}
+}
+
+void LMSuit::CloseHelmetGloves()
+{
+	if (helmet->in->IsOpen())
+	{
+		helmet->in->Close();
+	}
+}
+
+void LMSuit::SetHelmetValveSizes()
+{
+	helmet->in->size = 2.0f;
+}
+
+void LMSuit::Timestep(double simdt)
+{
+	// Can be used for expansion of class features
+}
+
+void LMSuit::SystemTimestep(double simdt)
+{
+	// Can be used for expansion of class features
 }
 
 LEMOverheadHatch::LEMOverheadHatch(Sound &opensound, Sound &closesound) :
@@ -2011,15 +2058,4 @@ double LEM_ECS::GetECSLMPSuitCO2MMHg() {
 		LMPSuit_CO2 = (double*)sdk.GetPointerByString("HYDRAULIC:LMPSUIT:CO2_PPRESS");
 	}
 	return (*LMPSuit_CO2 * MMHG);
-}
-void LEM_ECS::SetHelmetValveSizes()
-{
-	if (!CDRHelmet) {
-		CDRHelmet = (h_Pipe*)sdk.GetPointerByString("HYDRAULIC:CDRHELMET");
-		CDRHelmet->in->size = 2.0f;
-	}
-	if (!LMPHelmet) {
-		LMPHelmet = (h_Pipe*)sdk.GetPointerByString("HYDRAULIC:LMPHELMET");
-		LMPHelmet->in->size = 2.0f;
-	}
 }
