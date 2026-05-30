@@ -120,9 +120,9 @@ public:
 	void LoadState(char *line);
 	void Timestep(double simdt);
 
-	bool Get9K28() { return K28; }; //Thrust Control Relay
-	bool Get9K32A() { return K32A; }; //CDR Rate Error Relay A
-	bool Get9K32B() { return K32B; }; //CDR Rate Error Relay B (Lighting)
+	bool *Get9K28() { return &K28; }; //Thrust Control Relay
+	bool *Get9K32A() { return &K32A; }; //CDR Rate Error Relay A
+	bool *Get9K32B() { return &K32B; }; //CDR Rate Error Relay B (Lighting)
 
 protected:
 	LEM *lem;
@@ -146,14 +146,14 @@ public:
 	void LoadState(char *line);
 	void Timestep(double simdt);
 
-	bool Get9K29A() { return K29A; }; //Mode Select Landing Radar Relay A
-	bool Get9K29B() { return K29B; }; //Mode Select Landing Radar Relay B
-	bool Get9K30A() { return K30A; }; //LMP Rate Error Relay A
-	bool Get9K30B() { return K30B; }; //LMP Rate Error Relay B (Lighting)
-	bool Get9K31A() { return K31A; }; //LMP FDAI Rate Error Relay A 
-	bool Get9K31B() { return K31B; }; //LMP FDAI Rate Error Relay B
-	bool Get9K34A() { return K34A; }; //Mode Select AGS Relay A (Lighting)
-	bool Get9K34B() { return K34B; }; //Mode Select AGS Relay B
+	bool *Get9K29A() { return &K29A; }; //Mode Select Landing Radar Relay A
+	bool *Get9K29B() { return &K29B; }; //Mode Select Landing Radar Relay B
+	bool *Get9K30A() { return &K30A; }; //LMP Rate Error Relay A
+	bool *Get9K30B() { return &K30B; }; //LMP Rate Error Relay B (Lighting)
+	bool *Get9K31A() { return &K31A; }; //LMP FDAI Rate Error Relay A 
+	bool *Get9K31B() { return &K31B; }; //LMP FDAI Rate Error Relay B
+	bool *Get9K34A() { return &K34A; }; //Mode Select AGS Relay A (Lighting)
+	bool *Get9K34B() { return &K34B; }; //Mode Select AGS Relay B
 
 protected:
 	LEM *lem;
@@ -229,7 +229,7 @@ class CrossPointer
 public:
 	CrossPointer();
 	virtual ~CrossPointer();
-	void Init(LEM *s, e_object *dc_src, e_object *ltg, ToggleSwitch *scaleSw, bool ltgRly, bool dispRly);
+	void Init(LEM *s, e_object *dc_src, e_object *ltg, ToggleSwitch *scaleSw, bool *ltgRly, bool *dispRly);
 	void SaveState(FILEHANDLE scn, char *start_str);
 	void LoadState(char *line);
 	void Timestep(double simdt);
@@ -265,12 +265,12 @@ protected:
 	double lgc_forward, lgc_lateral;
 	double callout_x, callout_y;
 
-	bool RateErrorLtRelay; //9K32B (CDR) 9K30B (LMP)
-	bool ModeSelAGSLtRelay; //9K34A
+	bool *RateErrorLtRelay; //9K32B (CDR) 9K30B (LMP)
+	bool *ModeSelAGSLtRelay; //9K34A
 
-	bool RateErrorDispRelay; //9K32A (CDR) 9K30A (LMP)
-	bool ModeSelLRDispRelay; //9K29B
-	bool ModeSelAGSDispRelay; //9K34B
+	bool *RateErrorDispRelay; //9K32A (CDR) 9K30A (LMP)
+	bool *ModeSelLRDispRelay; //9K29B
+	bool *ModeSelAGSDispRelay; //9K34B
 
 	bool ElevRt;
 	bool AzRt;

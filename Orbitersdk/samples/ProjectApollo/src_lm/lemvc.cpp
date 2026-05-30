@@ -1854,7 +1854,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 
 		// XPointer Lights CDR
-		if (!Panel1RelayBox.Get9K32B()) {								// RATE ERR MON -> RNDZ RADAR
+		if (!(*Panel1RelayBox.Get9K32B())) {								// RATE ERR MON -> RNDZ RADAR
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_ON, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_ON, 1);
 
@@ -1876,7 +1876,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel1_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 
-			if (Panel2RelayBox.Get9K34A()) {									// MODE SEL -> AGS
+			if (*Panel2RelayBox.Get9K34A()) {									// MODE SEL -> AGS
 				SetVCLighting(vcidx, VC_MAT_Panel1_Bulbs_FWD_VEL, MAT_EMISSION, XP_LIT_OFF, 1);
 			}
 			else {																			// MODE SEL -> LDG RADAR or PGNS
@@ -1894,7 +1894,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		}
 
 		// XPointer Lights LMP
-		if (!Panel2RelayBox.Get9K30B()) {								// RATE ERR MON -> RNDZ RADAR
+		if (!(*Panel2RelayBox.Get9K30B())) {								// RATE ERR MON -> RNDZ RADAR
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_ON, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_ON, 1);
 
@@ -1916,7 +1916,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_ELEV_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 			SetVCLighting(vcidx, VC_MAT_Panel2_Bulb_AZ_RT, MAT_EMISSION, XP_LIT_OFF, 1);
 
-			if (Panel2RelayBox.Get9K34A()) {								// MODE SEL -> AGS
+			if (*Panel2RelayBox.Get9K34A()) {								// MODE SEL -> AGS
 				SetVCLighting(vcidx, VC_MAT_Panel2_Bulbs_FWD_VEL, MAT_EMISSION, XP_LIT_OFF, 1);
 			}
 			else {																			// MODE SEL -> LDG RADAR or PGNS
