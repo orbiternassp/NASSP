@@ -841,6 +841,11 @@ public:
 	void menuRTCCTimesInput();
 	void menuSetStarSightingTablePage();
 	void menuSetSpacecraftPointingDisplayPage();
+	void menuSetExpendablesTable(int subpage);
+	void menuExpendablesTableAdd();
+	void menuExpendablesTableReplace();
+	void menuExpendablesTableDelete();
+	bool set_ExpendablesTabeEntry(int type, char* str);
 
 	void SetMEDInputPageM75();
 	void SetMEDInputPageP13();

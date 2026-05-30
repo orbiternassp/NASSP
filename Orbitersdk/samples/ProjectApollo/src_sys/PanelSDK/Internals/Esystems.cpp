@@ -1832,3 +1832,102 @@ void ElectricLight::Save(FILEHANDLE scn) {
 	sprintf(cbuf, "%s %d", name, enabled);
 	oapiWriteScenario_string(scn, "    <LIGHT> ", cbuf);
 }
+
+e_object_extended::e_object_extended(char* i_name)
+{
+	strcpy(name, i_name);
+	last_power_load = 0.0;
+}
+
+void e_object_extended::DrawPower(double watts)
+{
+	// Keep track of power load (as opposed to e_object class)
+	power_load += watts;
+	if (SRC)
+		SRC->DrawPower(watts);
+}
+
+void e_object_extended::UpdateFlow(double dt)
+{
+	last_power_load = power_load;
+
+	e_object::UpdateFlow(dt);
+}
+
+double e_object_extended::GetLastPowerLoad()
+{
+	if (IsEnabled())
+		return last_power_load;
+
+	return 0.0;
+}
+
+VoltageTransformer::VoltageTransformer(char* i_name) : e_object_extended(i_name)
+{
+
+}
+
+double VoltageTransformer::Voltage()
+{
+	if (IsEnabled())
+	{
+		return Volts;
+	}
+
+	return 0.0;
+}
+
+FixedVoltageTransformer::FixedVoltageTransformer(char* i_name, double out_voltage) : VoltageTransformer(i_name)
+{
+	output_voltage = out_voltage;
+}
+
+void FixedVoltageTransformer::UpdateFlow(double dt)
+{
+	if (SRC)
+	{
+		Volts = min(SRC->Voltage(), output_voltage);
+	}
+	else
+	{
+		Volts = 0.0;
+	}
+
+	if (Volts > 0.0) {
+		Amperes = (power_load / Volts);
+	}
+
+	last_power_load = power_load;
+	power_load = 0.0;
+}
+
+VariableVoltageTransformer::VariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt, bool DCAC) : VoltageTransformer(i_name)
+{
+	min_output_voltage = MinVolt;
+	max_output_voltage = MaxVolt;
+	DCtoAC = DCAC;
+}
+
+void VariableVoltageTransformer::UpdateFlow(double dt)
+{
+	double DesVolts = min_output_voltage + (max_output_voltage - min_output_voltage) * GetValue();
+	if (SRC && !DCtoAC)
+	{
+		Volts = min(SRC->Voltage(), DesVolts);
+	}
+	else if (SRC && DCtoAC && SRC->Voltage() > SP_MIN_DCVOLTAGE)
+	{
+		Volts = DesVolts;
+	}
+	else
+	{
+		Volts = 0.0;
+	}
+
+	if (Volts > 0.0) {
+		Amperes = (power_load / Volts);
+	}
+
+	last_power_load = power_load;
+	power_load = 0.0;
+}

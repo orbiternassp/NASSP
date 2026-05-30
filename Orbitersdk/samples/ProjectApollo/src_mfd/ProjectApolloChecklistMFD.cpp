@@ -206,13 +206,13 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"More Information","About This Step",'N'},
 		{"Toggle Automatic", "Checklist execution", 'E'},
 		{"Toggle Flashing",0,'L'},
-		{"Toggle AutoComplete",0,'A'},
-		{"Scroll Up","One Page",'<'},
+		{"Toggle AutoComplete",0,';'},
+		{"Scroll Up","One Page",'['},
 		{"Scroll Up","One Line",'U'},
 		{"Back To", "Active Item", 'B'},
 		{"Go To","Highlighted Step",'R'},
-		{"Scroll Down","One Line",'D'},
-		{"Scroll Down","One Page",'>'}
+		{"Scroll Down","One Line",'J'},
+		{"Scroll Down","One Page",']'}
 	};
 	static const MFDBUTTONMENU mnuCHKLSTActiveItem[12] = {
 		{"Go to","Checklist Navigation",'N'},
@@ -221,13 +221,13 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"More Information","About This Step",'N'},
 		{"Toggle Automatic", "Checklist execution", 'E'},
 		{"Toggle Flashing",0,'L'},
-		{"Toggle AutoComplete",0,'A'},
-		{"Scroll Up","One Page",'<'},
+		{"Toggle AutoComplete",0,';'},
+		{"Scroll Up","One Page",'['},
 		{"Scroll Up","One Line",'U'},
-		{"Step Succeeds",0,'S'},
+		{"Step Succeeds",0,'P'},
 		{"Step Fails",0,'F'},
-		{"Scroll Down","One Line",'D'},
-		{"Scroll Down","One Page",'>'}
+		{"Scroll Down","One Line",'J'},
+		{"Scroll Down","One Page",']'}
 	};
 	static const MFDBUTTONMENU mnuCHKLSTNAV[12] = {
 		{"Go back to","the Current Checklist",'C'},
@@ -236,13 +236,13 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{"More Information","About This Checklist",'N'},
 		{"Toggle Automatic", "Checklist execution", 'E'},
 		{"Toggle Flashing",0,'L'},
-		{"Toggle AutoComplete",0,'A'},
-		{"Scroll Up","One Page",'<'},
+		{"Toggle AutoComplete",0,';'},
+		{"Scroll Up","One Page",'['},
 		{"Scroll Up","One Line",'U'},
-		{"Select Checklist",0,'S'},
+		{"Select Checklist",0,'P'},
 		{"Review Checklist",0,'R'},
-		{"Scroll Down","One Line",'D'},
-		{"Scroll Down","One Page",'>'}
+		{"Scroll Down","One Line",'J'},
+		{"Scroll Down","One Page",']'}
 	};
 	static const MFDBUTTONMENU mnuCHKLSTREV[12] = {
 		{"Return to","Checklist Navigation",'C'},
@@ -252,12 +252,12 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		{0,0,0},
 		{0,0,0},
 		{"Toggle Hints",0,'H'},
-		{"Scroll Up","One Page",'<'},
+		{"Scroll Up","One Page",'['},
 		{"Scroll Up","One Line",'U'},
 		{0,0,0},
 		{0,0,0},
-		{"Scroll Down","One Line",'D'},
-		{"Scroll Down","One Page",'>'}
+		{"Scroll Down","One Line",'J'},
+		{"Scroll Down","One Page",']'}
 	};
 	static const MFDBUTTONMENU mnuCHKLSTINFO[12] = {
 		{"Back to","Checklist",'B'},
@@ -304,10 +304,10 @@ bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 {
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
-	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,0,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_B,OAPI_KEY_R,OAPI_KEY_D,OAPI_KEY_NEXT };
-	static const DWORD btkeyCHKLSTActiveItem[12] = { OAPI_KEY_C,OAPI_KEY_B,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_F,OAPI_KEY_D,OAPI_KEY_NEXT};
-	static const DWORD btkeyCHKLSTNAV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,OAPI_KEY_S,OAPI_KEY_R,OAPI_KEY_D,OAPI_KEY_NEXT};
-	static const DWORD btkeyCHKLSTREV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,0,0,OAPI_KEY_A,OAPI_KEY_PRIOR,OAPI_KEY_U,0,0,OAPI_KEY_D,OAPI_KEY_NEXT};
+	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,0,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_SEMICOLON,OAPI_KEY_LBRACKET,OAPI_KEY_U,OAPI_KEY_B,OAPI_KEY_R,OAPI_KEY_J,OAPI_KEY_RBRACKET };
+	static const DWORD btkeyCHKLSTActiveItem[12] = { OAPI_KEY_C,OAPI_KEY_B,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_SEMICOLON,OAPI_KEY_LBRACKET,OAPI_KEY_U,OAPI_KEY_P,OAPI_KEY_F,OAPI_KEY_J,OAPI_KEY_RBRACKET};
+	static const DWORD btkeyCHKLSTNAV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_SEMICOLON,OAPI_KEY_LBRACKET,OAPI_KEY_U,OAPI_KEY_P,OAPI_KEY_R,OAPI_KEY_J,OAPI_KEY_RBRACKET};
+	static const DWORD btkeyCHKLSTREV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,0,0,OAPI_KEY_SEMICOLON,OAPI_KEY_LBRACKET,OAPI_KEY_U,0,0,OAPI_KEY_J,OAPI_KEY_RBRACKET};
 	static const DWORD btkeyCHKLSTINFO[12] = { OAPI_KEY_B,OAPI_KEY_M,0,0,0,0,0,0,0,0,0,0};
 
 	if (screen == PROG_CHKLST)
@@ -365,7 +365,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateDisplay();
 			return true;
 		}
-		if (key == OAPI_KEY_A)
+		if (key == OAPI_KEY_SEMICOLON)
 		{
 			ChkLstAutoOn = conn.ChecklistAutocomplete();
 			if (conn.ChecklistAutocomplete(!(ChkLstAutoOn)))
@@ -374,7 +374,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateDisplay();
 			return true;
 		}
-		if (key == OAPI_KEY_PRIOR)
+		if (key == OAPI_KEY_LBRACKET)
 		{
 			for (int i = 0; i < 9; i++) {
 				CurrentStep--;
@@ -397,7 +397,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 		}
-		if (key == OAPI_KEY_S)
+		if (key == OAPI_KEY_P)
 		{
 			if (CurrentStep == 0) {
 				item = conn.GetChecklistItem(-1, CurrentStep);
@@ -450,7 +450,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			return true;
 		}
 		
-		if (key == OAPI_KEY_D)
+		if (key == OAPI_KEY_J)
 		{
 			CurrentStep++;
 			if (!conn.GetChecklistItem(-1, CurrentStep))
@@ -460,7 +460,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 		}
-		if (key == OAPI_KEY_NEXT)
+		if (key == OAPI_KEY_RBRACKET)
 		{
 			for (int i = 0; i < 9; i++) {
 				CurrentStep++;
@@ -516,7 +516,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateDisplay();
 			return true;
 		}
-		if (key == OAPI_KEY_A)
+		if (key == OAPI_KEY_SEMICOLON)
 		{
 			ChkLstAutoOn = conn.ChecklistAutocomplete();
 			if (conn.ChecklistAutocomplete(!(ChkLstAutoOn)))
@@ -525,7 +525,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateDisplay();
 			return true;
 		}
-		if (key == OAPI_KEY_PRIOR)
+		if (key == OAPI_KEY_LBRACKET)
 		{
 			TopStep -= NLINES/2;
 			CurrentStep -= NLINES/2;
@@ -556,7 +556,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 		}
-		if (key == OAPI_KEY_S)
+		if (key == OAPI_KEY_P)
 		{			
 			// This spawns the group, if possible
 			conn.GetChecklistItem(CurrentStep, 0);
@@ -581,7 +581,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 		}
-		if (key == OAPI_KEY_D)
+		if (key == OAPI_KEY_J)
 		{
 			if (!HiLghtdLineDown) {
 				HiLghtdLine++;
@@ -601,7 +601,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 		}
-		if (key == OAPI_KEY_NEXT)
+		if (key == OAPI_KEY_RBRACKET)
 		{
 			TopStep = TopStep + NLINES/2;
 			CurrentStep = CurrentStep + NLINES/2;
@@ -667,7 +667,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateDisplay();
 			return true;
 		}
-		if (key == OAPI_KEY_A)
+		if (key == OAPI_KEY_SEMICOLON)
 		{
 			ChkLstAutoOn = conn.ChecklistAutocomplete();
 			if (conn.ChecklistAutocomplete(!(ChkLstAutoOn)))
@@ -676,7 +676,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateDisplay();
 			return true;
 		}
-		if (key == OAPI_KEY_PRIOR)
+		if (key == OAPI_KEY_LBRACKET)
 		{
 			CurrentStep -= 6;
 			if (CurrentStep < 0)
@@ -694,7 +694,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 		}
-		if (key == OAPI_KEY_D)
+		if (key == OAPI_KEY_J)
 		{
 			CurrentStep++;
 			//TODO: Prevent overrunning max number of items
@@ -702,7 +702,7 @@ bool ProjectApolloChecklistMFD::ConsumeKeyBuffered (DWORD key)
 			InvalidateButtons();
 			return true;
 		}
-		if (key == OAPI_KEY_NEXT)
+		if (key == OAPI_KEY_RBRACKET)
 		{
 			CurrentStep += 9;
 			//TODO: Prevent overrunning max number of items
