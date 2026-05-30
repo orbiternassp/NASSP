@@ -3237,7 +3237,7 @@ void CrossPointer::Timestep(double simdt)
 		return;
 	}
 
-	if (*RateErrorDispRelay) //Rendezvous Radar
+	if (!(*RateErrorDispRelay)) //Rendezvous Radar
 	{
 		if (lem->RR.IsPowered())
 		{
@@ -3351,6 +3351,7 @@ void CrossPointer::Timestep(double simdt)
 			X10 = false;
 		}
 	}
+	//sprintf(oapiDebugString(), "9K32B/9K30B: %d 9K34A: %d 9K32A/9K30A: %d 9K29B %d 9K34B %d", *RateErrorLtRelay, *ModeSelAGSLtRelay, *RateErrorDispRelay, *ModeSelLRDispRelay, *ModeSelAGSDispRelay);
 }
 
 void CrossPointer::SystemTimestep(double simdt)
