@@ -14978,7 +14978,11 @@ void RTCC::EMDGPING()
 
 	//Process instrument ID
 	SCPointingInstrument inst;
-	bool found = false;
+	bool found;
+
+	found = false;
+	InstrVessel = 0;
+
 	strtemp.assign(EZGSTMED.G40_InstrID);
 	for (int i = 0; i < 12; i++)
 	{
@@ -14991,24 +14995,27 @@ void RTCC::EMDGPING()
 		}
 	}
 
-	if (found == false)
+	if (found == false || strtemp.size() < 3U)
 	{
 		error |= 1;
-	}
-	//Check if CSM or LEM
-	strtemp = strtemp.substr(strtemp.size() - 3U, 3);
-	//Orbiting object
-	if (strtemp == "CSM")
-	{
-		InstrVessel = RTCC_MPT_CSM;
-	}
-	else if (strtemp == "LEM")
-	{
-		InstrVessel = RTCC_MPT_LM;
 	}
 	else
 	{
-		error |= 1;
+		//Check if CSM or LEM
+		strtemp = strtemp.substr(strtemp.size() - 3U, 3);
+		//Orbiting object
+		if (strtemp == "CSM")
+		{
+			InstrVessel = RTCC_MPT_CSM;
+		}
+		else if (strtemp == "LEM")
+		{
+			InstrVessel = RTCC_MPT_LM;
+		}
+		else
+		{
+			error |= 1;
+		}
 	}
 
 	//Process target ID
@@ -15016,7 +15023,11 @@ void RTCC::EMDGPING()
 	if (EZGSTMED.G40_Mode == 1)
 	{
 		//Ground. Last character is E or M
-		if (strtemp.back() == 'E')
+		if (strtemp.size() == 0)
+		{
+			error |= 2;
+		}
+		else if (strtemp.back() == 'E')
 		{
 			RBI = BODY_EARTH;
 		}
