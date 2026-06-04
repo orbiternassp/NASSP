@@ -199,7 +199,6 @@ public:
 	void TransferPoweredAscentToMPT();
 	void TransferGPMToMPT();
 	void MPTDirectInputCalc();
-	void MPTTLIDirectInput();
 	void AbortScanTableCalc();
 	void TransferLOIorMCCtoMPT();
 	void TransferRTEToMPT();

@@ -1531,12 +1531,12 @@ void ApolloRTCCMFD::menuPerigeeAdjustThresholdTime()
 
 void ApolloRTCCMFD::menuPerigeeAdjustTimeIncrement()
 {
-	GenericDoubleInput(&GC->rtcc->med_k28.TimeIncrement, "Time increment in seconds:", 1.0);
+	GenericDoubleInput(&GC->rtcc->med_k28.TimeIncrement, "Time increment in seconds:", "%.0lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuPerigeeAdjustHeight()
 {
-	GenericDoubleInput(&GC->rtcc->med_k28.H_P, "Perigee height in nautical miles:", 1.0);
+	GenericDoubleInput(&GC->rtcc->med_k28.H_P, "Perigee height in nautical miles:", "%.0lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuPerigeeAdjustVectorID()
@@ -1666,7 +1666,7 @@ void ApolloRTCCMFD::menuSetAGOPInput()
 		GenericGETInput(&GC->AGOP_StopTime, "Enter desired stop GET (Format: HH:MM:SS)");
 		break;
 	case 4: //Input time step
-		GenericDoubleInput(&GC->AGOP_TimeStep, "Enter desired time step in minutes");
+		GenericDoubleInput(&GC->AGOP_TimeStep, "Enter desired time step in minutes", "%.1lf");
 		break;
 	case 5: //CSM REFSMMAT
 		if (GC->AGOP_CSM_REFSMMAT < 11)
@@ -1691,7 +1691,7 @@ void ApolloRTCCMFD::menuSetAGOPInput()
 	case 7: //Input star
 		if (GC->AGOP_Option == 1 || GC->AGOP_Option == 3 || (GC->AGOP_Option == 7 && GC->AGOP_Mode == 5))
 		{
-			GenericIntInput(&GC->AGOP_Stars[0], "Enter star ID in decimal format (1-400):", NULL, 1, 400);
+			GenericIntInput(&GC->AGOP_Stars[0], "Enter star ID in decimal format (1-400):", "%d", NULL, 1, 400);
 		}
 		else if (GC->AGOP_Option == 4 || GC->AGOP_Option == 6)
 		{
@@ -1699,17 +1699,17 @@ void ApolloRTCCMFD::menuSetAGOPInput()
 		}
 		else if (GC->AGOP_Option == 7 && GC->AGOP_Mode == 3)
 		{
-			GenericInt2Input(&GC->AGOP_Stars[0], &GC->AGOP_Stars[1], "Enter two star IDs in decimal format (1-400):", 1, 400, 1, 400, NULL);
+			GenericInt2Input(&GC->AGOP_Stars[0], &GC->AGOP_Stars[1], "Enter two star IDs in decimal format (1-400):", "%d %d", 1, 400, 1, 400, NULL);
 		}
 		break;
 	case 8: //Landmark latitude
-		GenericDoubleInput(&GC->AGOP_Lat, "Enter landmark latitude in degrees:", RAD);
+		GenericDoubleInput(&GC->AGOP_Lat, "Enter landmark latitude in degrees:", "%.3lf", RAD);
 		break;
 	case 9: //Landmark longitude
-		GenericDoubleInput(&GC->AGOP_Lng, "Enter landmark longitude in degrees:", RAD);
+		GenericDoubleInput(&GC->AGOP_Lng, "Enter landmark longitude in degrees:", "%.3lf", RAD);
 		break;
 	case 10: //Landmark altitude
-		GenericDoubleInput(&GC->AGOP_Alt, "Enter landmark height in nautical miles:", 1852.0);
+		GenericDoubleInput(&GC->AGOP_Alt, "Enter landmark height in nautical miles:", "%.2lf", 1852.0);
 		break;
 	case 11: //CSM vs LM IMU
 		if (GC->AGOP_Option == 4 || GC->AGOP_Option == 7)
@@ -1718,29 +1718,29 @@ void ApolloRTCCMFD::menuSetAGOPInput()
 		}
 		break;
 	case 12: //IMU Angles
-		GenericVectorInput(&GC->AGOP_Attitudes[0], "Input IMU angles in degrees:", RAD, NULL);
+		GenericVectorInput(&GC->AGOP_Attitudes[0], "Input IMU angles in degrees:", "%+07.2lf %+07.2lf %+07.2lf", RAD, NULL);
 		break;
 	case 13: //IMU Angles (second set for option 7, mode 3)
-		GenericVectorInput(&GC->AGOP_Attitudes[1], "Input IMU angles in degrees:", RAD, NULL);
+		GenericVectorInput(&GC->AGOP_Attitudes[1], "Input IMU angles in degrees:", "%+07.2lf %+07.2lf %+07.2lf", RAD, NULL);
 		break;
 	case 14: //Antenna Pitch
 		if (GC->AGOP_Option == 7 && GC->AGOP_Mode == 3)
 		{
-			GenericDouble2Input(&GC->AGOP_InstrumentAngles1[0], &GC->AGOP_InstrumentAngles1[1], "Input instrument angles:", RAD, RAD);
+			GenericDouble2Input(&GC->AGOP_InstrumentAngles1[0], &GC->AGOP_InstrumentAngles1[1], "Input instrument angles:", "%.2lf %.2lf", RAD, RAD);
 		}
 		else
 		{
-			GenericDoubleInput(&GC->AGOP_AntennaPitch, "Input antenna pitch angle in degrees:", RAD);
+			GenericDoubleInput(&GC->AGOP_AntennaPitch, "Input antenna pitch angle in degrees:", "%.2lf", RAD);
 		}
 		break;
 	case 15: //Antenna Yaw
 		if (GC->AGOP_Option == 7 && GC->AGOP_Mode == 3)
 		{
-			GenericDouble2Input(&GC->AGOP_InstrumentAngles2[0], &GC->AGOP_InstrumentAngles2[1], "Input instrument angles:", RAD, RAD);
+			GenericDouble2Input(&GC->AGOP_InstrumentAngles2[0], &GC->AGOP_InstrumentAngles2[1], "Input instrument angles:", "%.2lf %.2lf", RAD, RAD);
 		}
 		else
 		{
-			GenericDoubleInput(&GC->AGOP_AntennaYaw, "Input antenna yaw angle in degrees:", RAD);
+			GenericDoubleInput(&GC->AGOP_AntennaYaw, "Input antenna yaw angle in degrees:", "%.2lf", RAD);
 		}
 		break;
 	case 16: //Instrument
@@ -1825,52 +1825,52 @@ void ApolloRTCCMFD::menuSetLWPInput()
 			}
 			break;
 		case 3:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.CKFACT, "Chaser vehicle K-Factor:");
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.CKFACT, "Chaser vehicle K-Factor:", "%.2lf");
 			break;
 		case 4:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.CAREA, "Chaser vehicle reference area:", pow(0.3048, 2));
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.CAREA, "Chaser vehicle reference area:", "%.1lf", pow(0.3048, 2));
 			break;
 		case 5:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.CWHT, "Chaser vehicle weight at insertion:", LBS2KG);
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.CWHT, "Chaser vehicle weight at insertion:", "%.1lf", LBS2KG);
 			break;
 		case 6:
 			GC->rtcc->PZSLVCON.NS = 1 - GC->rtcc->PZSLVCON.NS;
 			break;
 		case 7:
-			GenericIntInput(&GC->rtcc->PZSLVCON.DAY, "Day on which launch window times are computed, relative to base date:");
+			GenericIntInput(&GC->rtcc->PZSLVCON.DAY, "Day on which launch window times are computed, relative to base date:", "%d");
 			break;
 		case 8:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.PFT, "Powered flight time:");
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.PFT, "Powered flight time:", "%.1lf");
 			break;
 		case 9:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.PFA, "Powered flight arc:", RAD);
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.PFA, "Powered flight arc:", "%.3lf", RAD);
 			break;
 		case 10:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.YSMAX, "Yaw steering limit:", RAD);
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.YSMAX, "Yaw steering limit:", "%.1lf", RAD);
 			break;
 		case 11:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.DTOPT, "Delta time to be subtracted from analyticial inplane launch time to obtain empirical inplane launch time:");
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.DTOPT, "Delta time to be subtracted from analyticial inplane launch time to obtain empirical inplane launch time:", "%.1lf");
 			break;
 		case 12:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.DTGRR, "DT from lift-off which defines the time of guidance reference release:");
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.DTGRR, "DT from lift-off which defines the time of guidance reference release:", "%.1lf");
 			break;
 		case 13:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.RINS, "Radius of insertion:", 1.0);
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.RINS, "Radius of insertion:", "%.2lf", 1.0);
 			break;
 		case 14:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.VINS, "Velocity of insertion:", 1.0);
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.VINS, "Velocity of insertion:", "%.2lf", 1.0);
 			break;
 		case 15:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.GAMINS, "Flight-path angle of insertion:", RAD);
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.GAMINS, "Flight-path angle of insertion:", "%.3lf", RAD);
 			break;
 		case 16:
 			GenericGETInput(&GC->rtcc->PZSLVCON.GMTLOR, "Enter desired GMT of liftoff (Format: HH:MM:SS)");
 			break;
 		case 17:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.OFFSET, "Phase angle desired at insertion:", RAD);
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.OFFSET, "Phase angle desired at insertion:", "%.3lf", RAD);
 			break;
 		case 18:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.BIAS, "Bias that is added to GMTLO* (zero phase angle) to produce lift-off time:");
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.BIAS, "Bias that is added to GMTLO* (zero phase angle) to produce lift-off time:", "%.1lf");
 			break;
 		}
 	}
@@ -1879,7 +1879,7 @@ void ApolloRTCCMFD::menuSetLWPInput()
 		switch (marker)
 		{
 		case 0:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.TRANS, "Delta time added to inplane time to obtain lift-off time:");
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.TRANS, "Delta time added to inplane time to obtain lift-off time:", "%.1lf");
 			break;
 		case 1:
 			if (GC->rtcc->PZSLVCON.INSCO < 3)
@@ -1892,19 +1892,19 @@ void ApolloRTCCMFD::menuSetLWPInput()
 			}
 			break;
 		case 2:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.DHW, "Desired height difference between chaser and target, or altitude of chaser, at input angle from insertion:", 1852.0);
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.DHW, "Desired height difference between chaser and target, or altitude of chaser, at input angle from insertion:", "%.1lf", 1852.0);
 			break;
 		case 3:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.DU, "Angle from insertion to obtain a given altitude, or delta altitude:", RAD);
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.DU, "Angle from insertion to obtain a given altitude, or delta altitude:", "%.1lf", RAD);
 			break;
 		case 4:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.ANOM, "Nominal semimajor axis at insertion:", 1852.0);
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.ANOM, "Nominal semimajor axis at insertion:", "%.1lf", 1852.0);
 			break;
 		case 5:
 			GC->rtcc->PZSLVCON.DELNOF = !GC->rtcc->PZSLVCON.DELNOF;
 			break;
 		case 6:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.DELNO, "Differential nodal regression in degrees:", RAD);
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.DELNO, "Differential nodal regression in degrees:", "%.3lf", RAD);
 			break;
 		case 7:
 			if (GC->rtcc->PZSLVCON.NEGTIV == 2 && GC->rtcc->PZSLVCON.WRAP == 0)
@@ -1934,16 +1934,16 @@ void ApolloRTCCMFD::menuSetLWPInput()
 			}
 			break;
 		case 8:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.LAZCOE[0], "Change first value in launch azimuth polynomial:");
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.LAZCOE[0], "Change first value in launch azimuth polynomial:", "%.4lf");
 			break;
 		case 9:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.LAZCOE[1], "Change second value in launch azimuth polynomial:");
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.LAZCOE[1], "Change second value in launch azimuth polynomial:", "%.4lf");
 			break;
 		case 10:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.LAZCOE[2], "Change third value in launch azimuth polynomial:");
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.LAZCOE[2], "Change third value in launch azimuth polynomial:", "%.4lf");
 			break;
 		case 11:
-			GenericDoubleInput(&GC->rtcc->PZSLVCON.LAZCOE[3], "Change fourth value in launch azimuth polynomial:");
+			GenericDoubleInput(&GC->rtcc->PZSLVCON.LAZCOE[3], "Change fourth value in launch azimuth polynomial:", "%.4lf");
 			break;
 		}
 	}
@@ -1984,19 +1984,19 @@ void ApolloRTCCMFD::menuSetLUNTARInput()
 		GenericGETInput(&G->LUNTAR_Input.tig_guess, "Enter time of ignition in GET (Format: HH:MM:SS):");
 		break;
 	case 2:
-		GenericDoubleInput(&G->LUNTAR_Input.bt_guess, "Enter (estimated) burn time in seconds:");
+		GenericDoubleInput(&G->LUNTAR_Input.bt_guess, "Enter (estimated) burn time in seconds:", "%.1lf");
 		break;
 	case 3:
-		GenericDoubleInput(&G->LUNTAR_Input.pitch_guess, "Enter (estimated) pitch in degrees:");
+		GenericDoubleInput(&G->LUNTAR_Input.pitch_guess, "Enter (estimated) pitch in degrees:", "%.2lf");
 		break;
 	case 4:
-		GenericDoubleInput(&G->LUNTAR_Input.yaw_guess, "Enter (estimated) yaw in degrees:");
+		GenericDoubleInput(&G->LUNTAR_Input.yaw_guess, "Enter (estimated) yaw in degrees:", "%.2lf");
 		break;
 	case 5:
-		GenericDoubleInput(&G->LUNTAR_Input.lat_tgt, "Enter desired impact latitude in degrees:");
+		GenericDoubleInput(&G->LUNTAR_Input.lat_tgt, "Enter desired impact latitude in degrees:", "%.2lf");
 		break;
 	case 6:
-		GenericDoubleInput(&G->LUNTAR_Input.lng_tgt, "Enter desired impact longitude in degrees:");
+		GenericDoubleInput(&G->LUNTAR_Input.lng_tgt, "Enter desired impact longitude in degrees:", "%.2lf");
 		break;
 	case 7:
 		G->LUNTAR_Input.bOptimize = !G->LUNTAR_Input.bOptimize;
@@ -2019,7 +2019,7 @@ void ApolloRTCCMFD::menuRetroShapingGET()
 
 void ApolloRTCCMFD::menuRetroSepDeltaTTIG()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.R30_DeltaT_Sep, "Enter Delta T of separation maneuver in minutes:", 60.0);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.R30_DeltaT_Sep, "Enter Delta T of separation maneuver in minutes:", "%.1lf", 60.0);
 }
 
 void ApolloRTCCMFD::menuRetroSepThruster()
@@ -2041,12 +2041,12 @@ bool ApolloRTCCMFD::set_RetroSepThruster(std::string th)
 
 void ApolloRTCCMFD::menuRetroSepDeltaT()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.R30_DeltaT, "Enter burn time of separation maneuver in seconds (only choose DT or DV, not both):", 1.0);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.R30_DeltaT, "Enter burn time of separation maneuver in seconds (only choose DT or DV, not both):", "%.1lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuRetroSepDeltaV()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.R30_DeltaV, "Enter Delta V of separation maneuver in ft/s (only choose DT or DV, not both):", 0.3048);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.R30_DeltaV, "Enter Delta V of separation maneuver in ft/s (only choose DT or DV, not both):", "%.1lf", 0.3048);
 }
 
 void ApolloRTCCMFD::menuRetroSepUllageOptions()
@@ -2068,7 +2068,7 @@ void ApolloRTCCMFD::menuRetroSepGimbalIndicator()
 
 void ApolloRTCCMFD::menuRetroSepAtt()
 {
-	GenericVectorInput(&GC->rtcc->RZJCTTC.R30_Att, "Enter attitude of sep/shaping maneuver:", RAD);
+	GenericVectorInput(&GC->rtcc->RZJCTTC.R30_Att, "Enter attitude of sep/shaping maneuver:", "%+07.2lf %+07.2lf %+07.2lf", RAD);
 }
 
 void ApolloRTCCMFD::GenericGETInput(double *get, char *message, void (ApolloRTCCMFD::*func)(void), double factor)
@@ -2080,8 +2080,11 @@ void ApolloRTCCMFD::GenericGETInput(double *get, char *message, void (ApolloRTCC
 	tempData.func = func;
 	data2 = &tempData;
 
+	// Initial state of input string
+	GET_Display2(Buffer, (*get));
+
 	bool GenericGETInputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericGETInputBox, 0, 25, data2);
+	oapiOpenInputBox(message, GenericGETInputBox, Buffer, 25, data2);
 }
 
 bool GenericGETInputBox(void *id, char *str, void *data)
@@ -2111,7 +2114,7 @@ bool GenericGETInputBox(void *id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::GenericDoubleInput(double *val, char *message, double factor)
+void ApolloRTCCMFD::GenericDoubleInput(double *val, char *message, char* format, double factor)
 {
 	void *data2;
 
@@ -2119,8 +2122,11 @@ void ApolloRTCCMFD::GenericDoubleInput(double *val, char *message, double factor
 	tempData.factor = factor;
 	data2 = &tempData;
 
+	// Initial state of input string
+	sprintf(Buffer, format, (*val) / factor);
+
 	bool GenericDoubleInputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericDoubleInputBox, 0, 25, data2);
+	oapiOpenInputBox(message, GenericDoubleInputBox, Buffer, 25, data2);
 }
 
 bool GenericDoubleInputBox(void *id, char *str, void *data)
@@ -2136,7 +2142,7 @@ bool GenericDoubleInputBox(void *id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::GenericDouble2Input(double *val1, double *val2, char* message, double factor1, double factor2)
+void ApolloRTCCMFD::GenericDouble2Input(double *val1, double *val2, char* message, char* format, double factor1, double factor2)
 {
 	void *data2;
 
@@ -2146,8 +2152,11 @@ void ApolloRTCCMFD::GenericDouble2Input(double *val1, double *val2, char* messag
 	tempData.factor2 = factor2;
 	data2 = &tempData;
 
+	// Initial state of input string
+	sprintf(Buffer, format, (*val1) / factor1, (*val2) / factor2);
+
 	bool GenericDouble2InputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericDouble2InputBox, 0, 30, data2);
+	oapiOpenInputBox(message, GenericDouble2InputBox, Buffer, 30, data2);
 }
 
 bool GenericDouble2InputBox(void *id, char *str, void *data)
@@ -2164,7 +2173,7 @@ bool GenericDouble2InputBox(void *id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::GenericIntInput(int *val, char *message, void (ApolloRTCCMFD::*func)(void), int min, int max)
+void ApolloRTCCMFD::GenericIntInput(int *val, char *message, char* format, void (ApolloRTCCMFD::*func)(void), int min, int max)
 {
 	void *data2;
 
@@ -2175,8 +2184,11 @@ void ApolloRTCCMFD::GenericIntInput(int *val, char *message, void (ApolloRTCCMFD
 	tempData.func = func;
 	data2 = &tempData;
 
+	// Initial state of input string
+	sprintf(Buffer, format, (*val));
+
 	bool GenericIntInputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericIntInputBox, 0, 25, data2);
+	oapiOpenInputBox(message, GenericIntInputBox, Buffer, 25, data2);
 }
 
 bool GenericIntInputBox(void *id, char *str, void *data)
@@ -2206,7 +2218,7 @@ bool GenericIntInputBox(void *id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::GenericInt2Input(int *val1, int *val2, char* message, int min1, int max1, int min2, int max2, void (ApolloRTCCMFD::*func)(void))
+void ApolloRTCCMFD::GenericInt2Input(int *val1, int *val2, char* message, char* format, int min1, int max1, int min2, int max2, void (ApolloRTCCMFD::*func)(void))
 {
 	void *data2;
 
@@ -2220,8 +2232,11 @@ void ApolloRTCCMFD::GenericInt2Input(int *val1, int *val2, char* message, int mi
 	tempData.func = func;
 	data2 = &tempData;
 
+	// Initial state of input string
+	sprintf(Buffer, format, (*val1), (*val2));
+
 	bool GenericInt2InputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericInt2InputBox, 0, 25, data2);
+	oapiOpenInputBox(message, GenericInt2InputBox, Buffer, 25, data2);
 }
 
 bool GenericInt2InputBox(void *id, char *str, void *data)
@@ -2251,7 +2266,7 @@ bool GenericInt2InputBox(void *id, char *str, void *data)
 	return false;
 }
 
-void ApolloRTCCMFD::GenericVectorInput(VECTOR3 *val, char* message, double factor, void(ApolloRTCCMFD::*func)(void))
+void ApolloRTCCMFD::GenericVectorInput(VECTOR3 *val, char* message, char* format, double factor, void(ApolloRTCCMFD::*func)(void))
 {
 	void *data2;
 
@@ -2261,8 +2276,11 @@ void ApolloRTCCMFD::GenericVectorInput(VECTOR3 *val, char* message, double facto
 	tempData.func = func;
 	data2 = &tempData;
 
+	// Initial state of input string
+	sprintf(Buffer, format, (*val).x / factor, (*val).y / factor, (*val).z / factor);
+
 	bool GenericVectorInputBox(void *id, char *str, void *data);
-	oapiOpenInputBox(message, GenericVectorInputBox, 0, 25, data2);
+	oapiOpenInputBox(message, GenericVectorInputBox, Buffer, 25, data2);
 }
 
 bool GenericVectorInputBox(void *id, char *str, void *data)
@@ -2404,10 +2422,10 @@ void ApolloRTCCMFD::menuSetGroundtrackDigitalsInput()
 		GenericGETInput(&GC->rtcc->EZETVMED.GrndTrkDigitalsTime, "Enter threshold time:");
 		break;
 	case 3:
-		GenericDoubleInput(&GC->rtcc->EZETVMED.GrndTrkDigitalsLongitude, "Enter initial longitude in degrees:", RAD);
+		GenericDoubleInput(&GC->rtcc->EZETVMED.GrndTrkDigitalsLongitude, "Enter initial longitude in degrees:", "%.2lf", RAD);
 		break;
 	case 4:
-		GenericIntInput(&GC->rtcc->EZETVMED.GrndTrkDigitalsRev, "Enter revolution for calculation:");
+		GenericIntInput(&GC->rtcc->EZETVMED.GrndTrkDigitalsRev, "Enter revolution for calculation:", "%d");
 		break;
 	case 5:
 		if (GC->rtcc->EZETVMED.GrndTrkDigitalsCoordinates == RTCC_COORDINATES_ECT) GC->rtcc->EZETVMED.GrndTrkDigitalsCoordinates = RTCC_COORDINATES_MCT;
@@ -2438,10 +2456,10 @@ void ApolloRTCCMFD::menuSetRecoveryAscendingNodeDisplayInput()
 		GenericGETInput(&GC->rtcc->EZETVMED.RecovAscNodeEndTime, "Enter end time:");
 		break;
 	case 4:
-		GenericIntInput(&GC->rtcc->EZETVMED.RecovAscNodeBeginRev, "Enter begin revolution:");
+		GenericIntInput(&GC->rtcc->EZETVMED.RecovAscNodeBeginRev, "Enter begin revolution:", "%d");
 		break;
 	case 5:
-		GenericIntInput(&GC->rtcc->EZETVMED.RecovAscNodeEndRev, "Enter begin revolution:");
+		GenericIntInput(&GC->rtcc->EZETVMED.RecovAscNodeEndRev, "Enter begin revolution:", "%d");
 		break;
 	case 6:
 		if (GC->rtcc->EZETVMED.RecovAscNodeCoordinates < 3) GC->rtcc->EZETVMED.RecovAscNodeCoordinates++;
@@ -2581,16 +2599,16 @@ void ApolloRTCCMFD::menuSetStarSightingTableInput()
 		}
 		break;
 	case 4:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Lat, "Enter ground target latitude in degrees:", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Lat, "Enter ground target latitude in degrees:", "%+06.2lf", RAD);
 		break;
 	case 5:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Lng, "Enter ground target longitude in degrees:", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Lng, "Enter ground target longitude in degrees:", "%+05.2lf", RAD);
 		break;
 	case 6:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Alt, "Enter ground target height in feet:", 0.3048);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Alt, "Enter ground target height in feet:", "%.0lf", 0.3048);
 		break;
 	case 7:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Elev, "Enter elevation of spacecraft above ground target's local horizontal plane in degrees (0 - 90):", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Elev, "Enter elevation of spacecraft above ground target's local horizontal plane in degrees (0 - 90):", "%.0lf", RAD);
 		break;
 	case 8:
 		GenericGETInput(&GC->rtcc->EZGSTMED.G30_RA, "Celestial target right ascension (Format: hr:min:sec)", NULL, OrbMech::RASEC_TO_RADIANS);
@@ -2599,19 +2617,19 @@ void ApolloRTCCMFD::menuSetStarSightingTableInput()
 		GenericGETInput(&GC->rtcc->EZGSTMED.G30_DEC, "Celestial target declination (Format: deg:min:sec)", NULL, OrbMech::ARCSEC_TO_RADIANS);
 		break;
 	case 10:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.x, "Enter roll angle in degrees", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.x, "Enter roll angle in degrees", "%06.2lf", RAD);
 		break;
 	case 11:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.y, "Enter pitch angle in degrees", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.y, "Enter pitch angle in degrees", "%06.2lf", RAD);
 		break;
 	case 12:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.z, "Enter yaw angle in degrees", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_Att.z, "Enter yaw angle in degrees", "%06.2lf", RAD);
 		break;
 	case 13:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_SFT, "Enter sextant shaft angle in degrees", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_SFT, "Enter sextant shaft angle in degrees", "%06.2lf", RAD);
 		break;
 	case 14:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_TRN, "Enter sextant trunnion angle in degrees", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G30_TRN, "Enter sextant trunnion angle in degrees", "%06.2lf", RAD);
 		break;
 	}
 }
@@ -2652,13 +2670,13 @@ void ApolloRTCCMFD::menuSetSpacecraftPointingDisplayInput()
 		GenericStringInput(&GC->rtcc->EZGSTMED.G40_TargetName, Buffer, NULL, 5, 8);
 		break;
 	case 3:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Lat, "Enter ground target latitude in degrees:", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Lat, "Enter ground target latitude in degrees:", "%+06.2lf", RAD);
 		break;
 	case 4:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Lng, "Enter ground target longitude in degrees:", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Lng, "Enter ground target longitude in degrees:", "%+05.2lf", RAD);
 		break;
 	case 5:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Ht, "Enter ground target height in nautical miles:", 1852.0);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_Ht, "Enter ground target height in nautical miles:", "%+.2lf", 1852.0);
 		break;
 	case 6:
 		GenericGETInput(&GC->rtcc->EZGSTMED.G40_RA, "Celestial target right ascension (Format: hr:min:sec)", NULL, OrbMech::RASEC_TO_RADIANS);
@@ -2687,7 +2705,7 @@ void ApolloRTCCMFD::menuSetSpacecraftPointingDisplayInput()
 		}
 		break;
 	case 10:
-		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_DokAngle, "Enter docking angle in degrees:", RAD);
+		GenericDoubleInput(&GC->rtcc->EZGSTMED.G40_DokAngle, "Enter docking angle in degrees:", "%+.5lf", RAD);
 		break;
 	}
 }
@@ -3775,66 +3793,12 @@ void ApolloRTCCMFD::menuManPADTIG()
 
 void ApolloRTCCMFD::menuManPADDV()
 {
-	bool ManPADDVInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the DV for the maneuver (Format: +XX.X -XX.X +XX.X)", ManPADDVInput, 0, 20, (void*)this);
-}
-
-bool ManPADDVInput(void *id, char *str, void *data)
-{
-	int test;
-	test = 0;
-	for (unsigned int h = 0; h < strlen(str); h++)
-	{
-		if (str[h] == ' ')
-		{
-			test++;
-		}
-	}
-	if (test != 2)
-	{
-		return false;
-	}
-	if (strlen(str) > 4)
-	{
-		char dvx[10], dvy[10], dvz[10];
-		int i,j;
-		for (i = 0; str[i]!=' '; i++);
-		strncpy(dvx, str, i);
-		for (j = i+1; str[j] != ' '; j++);
-		strncpy(dvy, str+i+1, j - i - 1);
-		//for (k = j+1; str[i] != '\0'; k++);
-		strncpy(dvz, str + j+1, strlen(str)-j-1);
-		((ApolloRTCCMFD*)data)->set_P30DV(_V(atof(dvx),atof(dvy),atof(dvz)));
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_P30DV(VECTOR3 dv)
-{
-	G->dV_LVLH = dv*0.3048;
+	GenericVectorInput(&G->dV_LVLH, "Choose the DV for the maneuver (Format: +XX.X -XX.X +XX.X)", "%+.1lf %+.1lf %+.1lf", 0.3048);
 }
 
 void ApolloRTCCMFD::menuREFSMMATAtt()
 {
-	bool REFSMMATAttInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Choose the attitude for the REFSMMAT (Format: XX.X XX.X XX.X)", REFSMMATAttInput, 0, 20, (void*)this);
-}
-
-bool REFSMMATAttInput(void *id, char *str, void *data)
-{
-	VECTOR3 att;
-	if (sscanf(str, "%lf %lf %lf", &att.x, &att.y, &att.z) == 3)
-	{
-		((ApolloRTCCMFD*)data)->set_REFSMMATAtt(att);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_REFSMMATAtt(VECTOR3 att)
-{
-	G->VECangles = att * RAD;
+	GenericVectorInput(&G->VECangles, "Choose the attitude for the REFSMMAT (Format: XX.X XX.X XX.X)", "%.2lf %.2lf %.2lf", RAD);
 }
 
 void ApolloRTCCMFD::menuSetTIMultipleSolutionInput()
@@ -3879,10 +3843,10 @@ void ApolloRTCCMFD::menuSetTIMultipleSolutionInput()
 		GenericGETInput(&GC->rtcc->med_k30.EndTime, "Choose the GET for the arrival (Format: hhh:mm:ss), negative time for TPF search");
 		break;
 	case 6:
-		GenericDoubleInput(&GC->rtcc->med_k30.TimeStep, "Enter the time increment between the variable maneuver times:", 1.0);
+		GenericDoubleInput(&GC->rtcc->med_k30.TimeStep, "Enter the time increment between the variable maneuver times:", "%.0lf", 1.0);
 		break;
 	case 7:
-		GenericDoubleInput(&GC->rtcc->med_k30.TimeRange, "Enter the range of time for the variable maneuver times:", 1.0);
+		GenericDoubleInput(&GC->rtcc->med_k30.TimeRange, "Enter the range of time for the variable maneuver times:", "%.0lf", 1.0);
 		break;
 	case 8:
 		GenericStringInput(&GC->rtcc->med_k30.ChaserVectorID, "Enter Vector ID for chaser if desired (otherwise leave blank):");
@@ -3895,12 +3859,12 @@ void ApolloRTCCMFD::menuSetTIMultipleSolutionInput()
 
 void ApolloRTCCMFD::OrbAdjRevDialogue()
 {
-	GenericIntInput(&G->GMPRevs, "Number of revolutions:");
+	GenericIntInput(&G->GMPRevs, "Number of revolutions:", "%d");
 }
 
 void ApolloRTCCMFD::menuRTEDASTCodeDialogue()
 {
-	GenericIntInput(&GC->rtcc->med_f80.ASTCode, "Choose the AST code (enter 0 for manual entry):");
+	GenericIntInput(&GC->rtcc->med_f80.ASTCode, "Choose the AST code (enter 0 for manual entry):", "%d");
 }
 
 void ApolloRTCCMFD::menuRTED_REFSMMAT()
@@ -4013,28 +3977,28 @@ void ApolloRTCCMFD::menuSetRTEConstraints()
 	switch (marker)
 	{
 	case 0:
-		GenericDoubleInput(&GC->rtcc->PZREAP.DVMAX, "Maximum allowable DV for the RTE maneuver in feet per second:");
+		GenericDoubleInput(&GC->rtcc->PZREAP.DVMAX, "Maximum allowable DV for the RTE maneuver in feet per second:", "%.0lf");
 		break;
 	case 1:
-		GenericDoubleInput(&GC->rtcc->PZREAP.TZMIN, "Enter the minimum landing time in hours:");
+		GenericDoubleInput(&GC->rtcc->PZREAP.TZMIN, "Enter the minimum landing time in hours:", "%.0lf");
 		break;
 	case 2:
-		GenericDoubleInput(&GC->rtcc->PZREAP.TZMAX, "Enter the maximum landing time in hours:");
+		GenericDoubleInput(&GC->rtcc->PZREAP.TZMAX, "Enter the maximum landing time in hours:", "%.0lf");
 		break;
 	case 3:
-		GenericDoubleInput(&GC->rtcc->PZREAP.GMAX, "Constant g-level for use in return-to-earth digitals:");
+		GenericDoubleInput(&GC->rtcc->PZREAP.GMAX, "Constant g-level for use in return-to-earth digitals:", "%.1lf");
 		break;
 	case 4:
-		GenericDoubleInput(&GC->rtcc->PZREAP.HMINMC, "Minimum height of pericynthion in nautical miles:");
+		GenericDoubleInput(&GC->rtcc->PZREAP.HMINMC, "Minimum height of pericynthion in nautical miles:", "%.1lf");
 		break;
 	case 5:
-		GenericDoubleInput(&GC->rtcc->PZREAP.IRMAX, "Maximum return inclination in degrees:");
+		GenericDoubleInput(&GC->rtcc->PZREAP.IRMAX, "Maximum return inclination in degrees:", "%.2lf");
 		break;
 	case 6:
-		GenericDoubleInput(&GC->rtcc->PZREAP.RRBIAS, "Relative range override in nautical miles:");
+		GenericDoubleInput(&GC->rtcc->PZREAP.RRBIAS, "Relative range override in nautical miles:", "%.0lf");
 		break;
 	case 7:
-		GenericDoubleInput(&GC->rtcc->PZREAP.VRMAX, "Maximum return velocity in feet per second:");
+		GenericDoubleInput(&GC->rtcc->PZREAP.VRMAX, "Maximum return velocity in feet per second:", "%.0lf");
 		break;
 	case 8:
 		if (GC->rtcc->PZREAP.MOTION < 2) GC->rtcc->PZREAP.MOTION++;
@@ -4207,7 +4171,7 @@ void ApolloRTCCMFD::menuCycleRTEDColumn()
 
 void ApolloRTCCMFD::menusextantstartime()
 {
-	GenericDoubleInput(&GD->sxtstardtime, "Minutes before Maneuver for sextant/boresight star check:", -60.0);
+	GenericDoubleInput(&GD->sxtstardtime, "Minutes before Maneuver for sextant/boresight star check:", "%.0lf", -60.0);
 }
 
 void ApolloRTCCMFD::menuCyclePreferredGDCStarSet()
@@ -4228,7 +4192,7 @@ void ApolloRTCCMFD::REFSMMATTimeDialogue()
 	{
 		if (GD->MissionPlanningActive)
 		{
-			GenericIntInput(&G->REFSMMAT_ManNum, "Enter maneuver number (1-15):", NULL, 1, 15);
+			GenericIntInput(&G->REFSMMAT_ManNum, "Enter maneuver number (1-15):", "%d", NULL, 1, 15);
 		}
 	}
 	else if (G->REFSMMATopt == 2)
@@ -4238,7 +4202,7 @@ void ApolloRTCCMFD::REFSMMATTimeDialogue()
 	}
 	else if (G->REFSMMATopt == 6)
 	{
-		GenericDoubleInput(&GC->REFSMMAT_PTC_MJD, "Enter MJD of average time of TEI:");
+		GenericDoubleInput(&GC->REFSMMAT_PTC_MJD, "Enter MJD of average time of TEI:", "%.4lf");
 	}
 	else if (G->REFSMMATopt == 5 || G->REFSMMATopt == 8)
 	{
@@ -4295,7 +4259,7 @@ void ApolloRTCCMFD::menuSetM70Inputs()
 	switch (marker)
 	{
 	case 0:
-		GenericIntInput(&GC->rtcc->med_m70.Plan, "-1 for descent plan, 0 for SPQ, 1-7 for DKI:", NULL, -1, 7);
+		GenericIntInput(&GC->rtcc->med_m70.Plan, "-1 for descent plan, 0 for SPQ, 1-7 for DKI:", "%d", NULL, -1, 7);
 		break;
 	case 1:
 		GenericGETInput(&GC->rtcc->med_m70.DeleteGET, "Delete all maneuvers in both MPTs after GET (Format: hhh:mm:ss, or negative number for no delete)");
@@ -4327,10 +4291,10 @@ void ApolloRTCCMFD::menuSetM70Inputs()
 		GC->rtcc->med_m70.ManData[num].Iteration = !GC->rtcc->med_m70.ManData[num].Iteration;
 		break;
 	case 7:
-		GenericDoubleInput(&GC->rtcc->med_m70.ManData[num].TenPercentDT, "Delta T of 10% thrust for DPS (negative to ignore short burn test):");
+		GenericDoubleInput(&GC->rtcc->med_m70.ManData[num].TenPercentDT, "Delta T of 10% thrust for DPS (negative to ignore short burn test):", "%.1lf");
 		break;
 	case 8:
-		GenericDoubleInput(&GC->rtcc->med_m70.ManData[num].DPSThrustFactor, "DPS thrust scaling factor (0 to 1):");
+		GenericDoubleInput(&GC->rtcc->med_m70.ManData[num].DPSThrustFactor, "DPS thrust scaling factor (0 to 1):", "%.3lf");
 		break;
 	case 9:
 		GC->rtcc->med_m70.ManData[num].TimeFlag = !GC->rtcc->med_m70.ManData[num].TimeFlag;
@@ -4360,7 +4324,7 @@ void ApolloRTCCMFD::menuSetM72Inputs()
 		GC->rtcc->med_m72.Table = 3 - GC->rtcc->med_m72.Table;
 		break;
 	case 1:
-		GenericIntInput(&GC->rtcc->med_m72.Plan, "Choose plan from multiple solution table (1-13):", 0, 1, 13);
+		GenericIntInput(&GC->rtcc->med_m72.Plan, "Choose plan from multiple solution table (1-13):", "%d", 0, 1, 13);
 		break;
 	case 2:
 		GenericGETInput(&GC->rtcc->med_m72.DeleteGET, "Delete all maneuvers in both MPTs after GET (Format: hhh:mm:ss, or negative number for no delete)");
@@ -4389,10 +4353,10 @@ void ApolloRTCCMFD::menuSetM72Inputs()
 		GC->rtcc->med_m72.ManData[num].Iteration = !GC->rtcc->med_m72.ManData[num].Iteration;
 		break;
 	case 8:
-		GenericDoubleInput(&GC->rtcc->med_m72.ManData[num].TenPercentDT, "Delta T of 10% thrust for DPS (negative to ignore short burn test):");
+		GenericDoubleInput(&GC->rtcc->med_m72.ManData[num].TenPercentDT, "Delta T of 10% thrust for DPS (negative to ignore short burn test):", "%.1lf");
 		break;
 	case 9:
-		GenericDoubleInput(&GC->rtcc->med_m72.ManData[num].DPSThrustFactor, "DPS thrust scaling factor (0 to 1):");
+		GenericDoubleInput(&GC->rtcc->med_m72.ManData[num].DPSThrustFactor, "DPS thrust scaling factor (0 to 1):", "%.3lf");
 		break;
 	case 10:
 		GC->rtcc->med_m72.ManData[num].TimeFlag = !GC->rtcc->med_m72.ManData[num].TimeFlag;
@@ -4792,13 +4756,13 @@ void ApolloRTCCMFD::menuSetMPTInitInput()
 		switch (G->mptinitmode)
 		{
 		case 0: //M49: SPS Fuel Remaining
-			GenericDoubleInput(&GC->rtcc->med_m49.SPSFuelRemaining, "Input SPS fuel in lbs (negative number for no update):", 0.45359237);
+			GenericDoubleInput(&GC->rtcc->med_m49.SPSFuelRemaining, "Input SPS fuel in lbs (negative number for no update):", "%.0lf", 0.45359237);
 			break;
 		case 1: //M50: CSM Weight
-			GenericDoubleInput(&GC->rtcc->med_m50.CSMWT, "Input CSM mass in lbs (negative number for no update):", 0.45359237);
+			GenericDoubleInput(&GC->rtcc->med_m50.CSMWT, "Input CSM mass in lbs (negative number for no update):", "%.0lf", 0.45359237);
 			break;
 		case 2: //M51: CSM Area
-			GenericDoubleInput(&GC->rtcc->med_m51.CSMArea, "Input CSM area in square feet (negative number for no update):", 0.3048*0.3048);
+			GenericDoubleInput(&GC->rtcc->med_m51.CSMArea, "Input CSM area in square feet (negative number for no update):", "%.0lf", 0.3048*0.3048);
 			break;
 		case 3: //M55: Config
 		{
@@ -4812,13 +4776,13 @@ void ApolloRTCCMFD::menuSetMPTInitInput()
 		switch (G->mptinitmode)
 		{
 		case 0: //M49: CSM RCS Fuel Remaining
-			GenericDoubleInput(&GC->rtcc->med_m49.CSMRCSFuelRemaining, "Input CSM RCS fuel in lbs (negative number for no update):", 0.45359237);
+			GenericDoubleInput(&GC->rtcc->med_m49.CSMRCSFuelRemaining, "Input CSM RCS fuel in lbs (negative number for no update):", "%.0lf", 0.45359237);
 			break;
 		case 1: //M50: S-IVB Weight
-			GenericDoubleInput(&GC->rtcc->med_m50.SIVBWT, "Input S-IVB stage mass in lbs (negative number for no update):", 0.45359237);
+			GenericDoubleInput(&GC->rtcc->med_m50.SIVBWT, "Input S-IVB stage mass in lbs (negative number for no update):", "%.0lf", 0.45359237);
 			break;
 		case 2: //M51: S-IVB Area
-			GenericDoubleInput(&GC->rtcc->med_m51.SIVBArea, "Input S-IVB area in square feet (negative number for no update):", 0.3048*0.3048);
+			GenericDoubleInput(&GC->rtcc->med_m51.SIVBArea, "Input S-IVB area in square feet (negative number for no update):", "%.2lf", 0.3048*0.3048);
 			break;
 		case 3: //M55: GET to start venting/initial weights
 			GenericGETInput(&GC->rtcc->med_m55.VentingGET, "Time of initial weights/start of S-IVB venting (negative number for no update):");
@@ -4829,16 +4793,16 @@ void ApolloRTCCMFD::menuSetMPTInitInput()
 		switch (G->mptinitmode)
 		{
 		case 0: //M49: S-IVB Fuel Remaining
-			GenericDoubleInput(&GC->rtcc->med_m49.SIVBFuelRemaining, "Input S-IVB fuel in lbs (negative number for no update):", 0.45359237);
+			GenericDoubleInput(&GC->rtcc->med_m49.SIVBFuelRemaining, "Input S-IVB fuel in lbs (negative number for no update):", "%.0lf", 0.45359237);
 			break;
 		case 1: //M50: LM Total Weight
-			GenericDoubleInput(&GC->rtcc->med_m50.LMWT, "Input LM total mass in lbs (negative number for no update):", 0.45359237);
+			GenericDoubleInput(&GC->rtcc->med_m50.LMWT, "Input LM total mass in lbs (negative number for no update):", "%.0lf", 0.45359237);
 			break;
 		case 2: //M51: LM Ascent Area
-			GenericDoubleInput(&GC->rtcc->med_m51.LMAscentArea, "Input LM ascent stage area in square feet (negative number for no update):", 0.3048*0.3048);
+			GenericDoubleInput(&GC->rtcc->med_m51.LMAscentArea, "Input LM ascent stage area in square feet (negative number for no update):", "%.2lf", 0.3048*0.3048);
 			break;
 		case 3: //M55: Delta Docking Angle
-			GenericDoubleInput(&GC->rtcc->med_m55.DeltaDockingAngle, "Delta docking angle (smaller than -360° for no update):", RAD);
+			GenericDoubleInput(&GC->rtcc->med_m55.DeltaDockingAngle, "Delta docking angle (smaller than -360° for no update):", "%.2lf", RAD);
 			break;
 		}
 		break;
@@ -4846,13 +4810,13 @@ void ApolloRTCCMFD::menuSetMPTInitInput()
 		switch (G->mptinitmode)
 		{
 		case 0: //M49: LM APS Fuel Remaining
-			GenericDoubleInput(&GC->rtcc->med_m49.LMAPSFuelRemaining, "Input LM APS fuel in lbs (negative number for no update):", 0.45359237);
+			GenericDoubleInput(&GC->rtcc->med_m49.LMAPSFuelRemaining, "Input LM APS fuel in lbs (negative number for no update):", "%.0lf", 0.45359237);
 			break;
 		case 1: //M50: LM Ascent Weight
-			GenericDoubleInput(&GC->rtcc->med_m50.LMASCWT, "Input LM ascent stage mass in lbs (negative number for no update):", 0.45359237);
+			GenericDoubleInput(&GC->rtcc->med_m50.LMASCWT, "Input LM ascent stage mass in lbs (negative number for no update):", "%.0lf", 0.45359237);
 			break;
 		case 2: //M51: LM Descent Area
-			GenericDoubleInput(&GC->rtcc->med_m51.LMDescentArea, "Input LM descent stage area in square feet (negative number for no update):", 0.3048*0.3048);
+			GenericDoubleInput(&GC->rtcc->med_m51.LMDescentArea, "Input LM descent stage area in square feet (negative number for no update):", "%.2lf", 0.3048*0.3048);
 			break;
 		}
 		break;
@@ -4860,13 +4824,13 @@ void ApolloRTCCMFD::menuSetMPTInitInput()
 		switch (G->mptinitmode)
 		{
 		case 0: //M49: LM RCS Fuel Remaining
-			GenericDoubleInput(&GC->rtcc->med_m49.LMRCSFuelRemaining, "Input LM RCS fuel in lbs (negative number for no update):", 0.45359237);
+			GenericDoubleInput(&GC->rtcc->med_m49.LMRCSFuelRemaining, "Input LM RCS fuel in lbs (negative number for no update):", "%.0lf", 0.45359237);
 			break;
 		case 1: //M50: Time of weights
 			GenericGETInput(&GC->rtcc->med_m50.WeightGET, "GET when weights are valid:");
 			break;
 		case 2: //M51: K-Factor
-			GenericDoubleInput(&GC->rtcc->med_m51.KFactor, "Input K-Factor feet (-30 to +30):", 1.0);
+			GenericDoubleInput(&GC->rtcc->med_m51.KFactor, "Input K-Factor feet (-30 to +30):", "%.2lf", 1.0);
 			break;
 		}
 		break;
@@ -4874,7 +4838,7 @@ void ApolloRTCCMFD::menuSetMPTInitInput()
 		switch (G->mptinitmode)
 		{
 		case 0: //M49: LM DPS Fuel Remaining
-			GenericDoubleInput(&GC->rtcc->med_m49.LMDPSFuelRemaining, "Input DPS fuel in lbs (negative number for no update):", 0.45359237);
+			GenericDoubleInput(&GC->rtcc->med_m49.LMDPSFuelRemaining, "Input DPS fuel in lbs (negative number for no update):", "%.0lf", 0.45359237);
 			break;
 		}
 		break;
@@ -5587,12 +5551,12 @@ void ApolloRTCCMFD::set_GMPInput4(double val)
 
 void ApolloRTCCMFD::menuDKINSRDHInput()
 {
-	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIDeltaH_NSR, "Enter DH at NSR:", 1852.0);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIDeltaH_NSR, "Enter DH at NSR:", "%.1lf", 1852.0);
 }
 
 void ApolloRTCCMFD::menuDKINCCDHInput()
 {
-	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIDeltaH_NCC, "Enter DH at NCC:", 1852.0);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIDeltaH_NCC, "Enter DH at NCC:", "%.1lf", 1852.0);
 }
 
 void ApolloRTCCMFD::SPQDHdialogue()
@@ -5718,13 +5682,13 @@ void ApolloRTCCMFD::menuSetCorrectiveCombinationInput()
 		GenericGETInput(&GC->rtcc->med_k32.T_NCC, "Choose the NCC time (Format: hhh:mm:ss)");
 		break;
 	case 5:
-		GenericDoubleInput(&GC->rtcc->med_k32.DH_min, "Minimum Delta H at the second maneuver point:");
+		GenericDoubleInput(&GC->rtcc->med_k32.DH_min, "Minimum Delta H at the second maneuver point:", "%.1lf");
 		break;
 	case 6:
-		GenericDoubleInput(&GC->rtcc->med_k32.DH_max, "Maximum Delta H at the second maneuver point:");
+		GenericDoubleInput(&GC->rtcc->med_k32.DH_max, "Maximum Delta H at the second maneuver point:", "%.1lf");
 		break;
 	case 7:
-		GenericDoubleInput(&GC->rtcc->med_k32.DH_inc, "Height increment between minimum and maximum heigh offset:");
+		GenericDoubleInput(&GC->rtcc->med_k32.DH_inc, "Height increment between minimum and maximum heigh offset:", "%.1lf");
 		break;
 	case 8:
 		GenericGETInput(&GC->rtcc->med_k32.T2_min, "Minimum time for second maneuver (Format: hhh:mm:ss)");
@@ -5733,10 +5697,10 @@ void ApolloRTCCMFD::menuSetCorrectiveCombinationInput()
 		GenericGETInput(&GC->rtcc->med_k32.T2_max, "Maximum time for second maneuver (Format: hhh:mm:ss)");
 		break;
 	case 10:
-		GenericDoubleInput(&GC->rtcc->med_k32.TimeStep, "Time increment for slipping TPI time (mode 0) or for incrementing the time of the second maneuver (mode 1):");
+		GenericDoubleInput(&GC->rtcc->med_k32.TimeStep, "Time increment for slipping TPI time (mode 0) or for incrementing the time of the second maneuver (mode 1):", "%.1lf");
 		break;
 	case 11:
-		GenericDoubleInput(&GC->rtcc->med_k32.dt_TPI_slip, "The amount by which TPI time is allowed to be slipped on either side of the nominal time:");
+		GenericDoubleInput(&GC->rtcc->med_k32.dt_TPI_slip, "The amount by which TPI time is allowed to be slipped on either side of the nominal time:", "%.1lf");
 		break;
 	case 12:
 		GenericStringInput(&GC->rtcc->med_k32.ChaserVectorID, "Enter Vector ID for chaser if desired (otherwise leave blank):");
@@ -5765,7 +5729,7 @@ void ApolloRTCCMFD::menuSetTwoImpulseSingleSolutionInput()
 		GC->rtcc->med_k31.TableIndicator = 3 - GC->rtcc->med_k31.TableIndicator;
 		break;
 	case 1:
-		GenericIntInput(&GC->rtcc->med_k31.PlanNumber, "Solution number:", NULL, 1, 13);
+		GenericIntInput(&GC->rtcc->med_k31.PlanNumber, "Solution number:", "%d", NULL, 1, 13);
 		break;
 	case 2:
 		GC->rtcc->med_k31.UllageQuads = !GC->rtcc->med_k31.UllageQuads;
@@ -5774,10 +5738,10 @@ void ApolloRTCCMFD::menuSetTwoImpulseSingleSolutionInput()
 		GC->rtcc->med_k31.LOSMode = 3 - GC->rtcc->med_k31.LOSMode;
 		break;
 	case 4:
-		GenericDoubleInput(&GC->rtcc->med_k31.DeltaPitch, "Pitch angle between line-of-sight and X-body axis:");
+		GenericDoubleInput(&GC->rtcc->med_k31.DeltaPitch, "Pitch angle between line-of-sight and X-body axis:", "%.1lf");
 		break;
 	case 5:
-		GenericDoubleInput(&GC->rtcc->med_k31.TimeStep, "Time step for approach data:");
+		GenericDoubleInput(&GC->rtcc->med_k31.TimeStep, "Time step for approach data:", "%.1lf");
 		break;
 	}
 }
@@ -5943,12 +5907,12 @@ void ApolloRTCCMFD::menuRetrofireGETIDialogue()
 
 void ApolloRTCCMFD::menuRetrofireLatDialogue()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.R32_lat_T, "Latitude in degree (°), enter -720 or less for no iteration on latitude:", RAD);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.R32_lat_T, "Latitude in degree (°), enter -720 or less for no iteration on latitude:", "%.2lf", RAD);
 }
 
 void ApolloRTCCMFD::menuRetrofireLngDialogue()
 {
-	GenericDoubleInput(&GC->rtcc->RZJCTTC.R32_lng_T, "Longitude in degree (°):", RAD);
+	GenericDoubleInput(&GC->rtcc->RZJCTTC.R32_lng_T, "Longitude in degree (°):", "%.2lf", RAD);
 }
 
 void ApolloRTCCMFD::menuSwitchRetrofireEngine()
@@ -6318,7 +6282,7 @@ void ApolloRTCCMFD::ProcessMEDInputFromFile(char *str)
 
 void ApolloRTCCMFD::EntryRangeDialogue()
 {
-	GenericDoubleInput(&G->entryrange, "Choose the Entry Range in NM:", 1.0);
+	GenericDoubleInput(&G->entryrange, "Choose the Entry Range in NM:", "%.1lf", 1.0);
 }
 
 void ApolloRTCCMFD::set_SVPageTarget()
@@ -6681,7 +6645,7 @@ void ApolloRTCCMFD::menuSetSPQInput()
 		GenericGETInput(&GC->rtcc->med_k01.t_CSI, "Choose the GET for the CSI maneuver (Format: hhh:mm:ss):");
 		break;
 	case 5:
-		GenericDoubleInput(&GC->rtcc->med_k01.dt_CSI_Range, "CSI range in minutes (0 to 15):");
+		GenericDoubleInput(&GC->rtcc->med_k01.dt_CSI_Range, "CSI range in minutes (0 to 15):", "%.0lf");
 		break;
 	case 6:
 		if (GC->rtcc->med_k01.I_CDH < 5)
@@ -6700,15 +6664,15 @@ void ApolloRTCCMFD::menuSetSPQInput()
 		}
 		else if (GC->rtcc->med_k01.I_CDH == 3)
 		{
-			GenericDoubleInput(&GC->rtcc->med_k01.CDH_Angle, "Angle from CSI to CDH:", RAD);
+			GenericDoubleInput(&GC->rtcc->med_k01.CDH_Angle, "Angle from CSI to CDH:", "%.1lf", RAD);
 		}
 		else if (GC->rtcc->med_k01.I_CDH == 5)
 		{
-			GenericIntInput(&GC->rtcc->med_k01.CDH_Apsis, "No. of half revolutions since CSI:");
+			GenericIntInput(&GC->rtcc->med_k01.CDH_Apsis, "No. of half revolutions since CSI:", "%d");
 		}
 		else
 		{
-			GenericIntInput(&GC->rtcc->med_k01.CDH_Apsis, "No. of apsis since CSI:");
+			GenericIntInput(&GC->rtcc->med_k01.CDH_Apsis, "No. of apsis since CSI:", "%d");
 		}
 		break;
 	case 8:
@@ -6918,13 +6882,13 @@ void ApolloRTCCMFD::menuVECPOINTSelectAttitude()
 {
 	if (G->VECdirection == 4)
 	{
-		GenericDouble2Input(&G->VECBodyVector.x, &G->VECBodyVector.y, "Select body yaw and pitch:", RAD, RAD);
+		GenericDouble2Input(&G->VECBodyVector.x, &G->VECBodyVector.y, "Select body yaw and pitch:", "+07.2lf +07.2lf", RAD, RAD);
 	}
 }
 
 void ApolloRTCCMFD::menuVECPOINTOmicron()
 {
-	GenericDoubleInput(&G->VECBodyVector.z, "Select omicron (SEF = 180, BEF = 0):", RAD);
+	GenericDoubleInput(&G->VECBodyVector.z, "Select omicron (SEF = 180, BEF = 0):", "+07.2lf", RAD);
 }
 
 void ApolloRTCCMFD::cycleVECPOINTOpt()
@@ -7050,12 +7014,12 @@ void ApolloRTCCMFD::set_RTEReentryTime(double t)
 
 void ApolloRTCCMFD::menuEnterSplashdownLat()
 {
-	GenericDoubleInput(&GC->rtcc->RZDBSC1.lat_T, "Choose the splashdown latitude:", RAD);
+	GenericDoubleInput(&GC->rtcc->RZDBSC1.lat_T, "Choose the splashdown latitude:", "%.2lf", RAD);
 }
 
 void ApolloRTCCMFD::menuEnterSplashdownLng()
 {
-	GenericDoubleInput(&GC->rtcc->RZDBSC1.lng_T, "Choose the splashdown longitude:", RAD);
+	GenericDoubleInput(&GC->rtcc->RZDBSC1.lng_T, "Choose the splashdown longitude:", "%.2lf", RAD);
 }
 
 void ApolloRTCCMFD::menuTransferLOIMCCtoMPT()
@@ -7148,7 +7112,7 @@ void ApolloRTCCMFD::menuSetTLCCDesiredInclination()
 {
 	if (GC->rtcc->PZMCCPLN.Mode >= 8)
 	{
-		GenericDoubleInput(&GC->rtcc->PZMCCPLN.incl_fr, "Choose the desired return inclination (+ for ascending, - for descending, 0 for optimized mode 9):", RAD);
+		GenericDoubleInput(&GC->rtcc->PZMCCPLN.incl_fr, "Choose the desired return inclination (+ for ascending, - for descending, 0 for optimized mode 9):", "%.2lf", RAD);
 	}
 }
 
@@ -7264,56 +7228,20 @@ void ApolloRTCCMFD::set_TLMCCMaxInclination(double inc)
 
 void ApolloRTCCMFD::menuSetTLMCCLOIEllipseHeights()
 {
-	bool TLMCCLOIEllipseHeightsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Apolune and perilune heights of the LOI ellipse (Format: HA HP)", TLMCCLOIEllipseHeightsInput, 0, 20, (void*)this);
-}
-
-bool TLMCCLOIEllipseHeightsInput(void *id, char *str, void *data)
-{
-	double ha, hp;
-
-	if (sscanf(str, "%lf %lf", &ha, &hp) == 2)
-	{
-		((ApolloRTCCMFD*)data)->set_TLMCCLOIEllipseHeights(ha, hp);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TLMCCLOIEllipseHeights(double ha, double hp)
-{
-	GC->rtcc->PZMCCPLN.H_A_LPO1 = ha * 1852.0;
-	GC->rtcc->PZMCCPLN.H_P_LPO1 = hp * 1852.0;
+	GenericDouble2Input(&GC->rtcc->PZMCCPLN.H_A_LPO1, &GC->rtcc->PZMCCPLN.H_P_LPO1, "Apolune and perilune heights of the LOI ellipse (Format: HA HP)", "%.1lf %.1lf", 1852.0, 1852.0);
 }
 
 void ApolloRTCCMFD::menuSetTLMCCDOIEllipseHeights()
 {
-	bool TLMCCDOIEllipseHeightsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Apolune and perilune heights of the DOI ellipse (Format: HA HP)", TLMCCDOIEllipseHeightsInput, 0, 20, (void*)this);
-}
-
-bool TLMCCDOIEllipseHeightsInput(void *id, char *str, void *data)
-{
-	double ha, hp;
-
-	if (sscanf(str, "%lf %lf", &ha, &hp) == 2)
-	{
-		((ApolloRTCCMFD*)data)->set_TLMCCDOIEllipseHeights(ha, hp);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TLMCCDOIEllipseHeights(double ha, double hp)
-{
-	GC->rtcc->PZMCCPLN.H_A_LPO2 = ha * 1852.0;
-	GC->rtcc->PZMCCPLN.H_P_LPO2 = hp * 1852.0;
+	GenericDouble2Input(&GC->rtcc->PZMCCPLN.H_A_LPO2, &GC->rtcc->PZMCCPLN.H_P_LPO2, "Apolune and perilune heights of the DOI ellipse (Format: HA HP)", "%.1lf %.2lf", 1852.0, 1852.0);
 }
 
 void ApolloRTCCMFD::menuSetTLMCCLOIDOIRevs()
 {
+	sprintf(Buffer, "%.3lf %d", GC->rtcc->PZMCCPLN.REVS1, GC->rtcc->PZMCCPLN.REVS2);
+
 	bool TLMCCLOIDOIRevsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Revolutions in LOI and DOI ellipses (Format: REVS1 REVS2)", TLMCCLOIDOIRevsInput, 0, 20, (void*)this);
+	oapiOpenInputBox("Revolutions in LOI and DOI ellipses (Format: REVS1 REVS2)", TLMCCLOIDOIRevsInput, Buffer, 20, (void*)this);
 }
 
 bool TLMCCLOIDOIRevsInput(void *id, char *str, void *data)
@@ -7347,50 +7275,12 @@ void ApolloRTCCMFD::set_TLMCCLOIDOIRevs(double revs1, int revs2)
 
 void ApolloRTCCMFD::menuSetTLMCCLSRotation()
 {
-	bool TLMCCLSRotationInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Rotation of orbit at LS and estimate of true anomaly of LOI on ellipse (Format: SITEROT ETA)", TLMCCLSRotationInput, 0, 20, (void*)this);
-}
-
-bool TLMCCLSRotationInput(void *id, char *str, void *data)
-{
-	double rot, eta;
-
-	if (sscanf(str, "%lf %lf", &rot, &eta) == 2)
-	{
-		((ApolloRTCCMFD*)data)->set_TLMCCLSRotation(rot, eta);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TLMCCLSRotation(double rot, double eta)
-{
-	GC->rtcc->PZMCCPLN.SITEROT = rot * RAD;
-	GC->rtcc->PZMCCPLN.ETA1 = eta * RAD;
+	GenericDouble2Input(&GC->rtcc->PZMCCPLN.SITEROT, &GC->rtcc->PZMCCPLN.ETA1, "Rotation of orbit at LS and estimate of true anomaly of LOI on ellipse (Format: SITEROT ETA)", "%.1lf %.3lf", RAD, RAD);
 }
 
 void ApolloRTCCMFD::menuSetTLMCCLOPCRevs()
 {
-	bool TLMCCLOPCRevsInput(void *id, char *str, void *data);
-	oapiOpenInputBox("Revolutions before and after LOPC (Format: m n)", TLMCCLOPCRevsInput, 0, 20, (void*)this);
-}
-
-bool TLMCCLOPCRevsInput(void *id, char *str, void *data)
-{
-	int m, n;
-
-	if (sscanf(str, "%d %d", &m, &n) == 2)
-	{
-		((ApolloRTCCMFD*)data)->set_TLMCCLOPCRevs(m, n);
-		return true;
-	}
-	return false;
-}
-
-void ApolloRTCCMFD::set_TLMCCLOPCRevs(int m, int n)
-{
-	GC->rtcc->PZMCCPLN.LOPC_M = m;
-	GC->rtcc->PZMCCPLN.LOPC_N = n;
+	GenericInt2Input(&GC->rtcc->PZMCCPLN.LOPC_M, &GC->rtcc->PZMCCPLN.LOPC_N, "Revolutions before and after LOPC (Format: m n)", "%d %d", 0, 100, 0, 100);
 }
 
 void ApolloRTCCMFD::menuSetLOIVectorTime()
@@ -7407,52 +7297,52 @@ void ApolloRTCCMFD::menuSetLOIVectorTime()
 
 void ApolloRTCCMFD::menuSetLOIApo()
 {
-	GenericDoubleInput(&GC->rtcc->med_k18.HALOI1, "Choose the apocynthion altitude:", 1.0);
+	GenericDoubleInput(&GC->rtcc->med_k18.HALOI1, "Choose the apocynthion altitude:", "%.1lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIPeri()
 {
-	GenericDoubleInput(&GC->rtcc->med_k18.HPLOI1, "Choose the perilune altitude:", 1.0);
+	GenericDoubleInput(&GC->rtcc->med_k18.HPLOI1, "Choose the perilune altitude:", "%.2lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIMaxDVPos()
 {
-	GenericDoubleInput(&GC->rtcc->med_k18.DVMAXp, "Choose max DV for positive solution:", 1.0);
+	GenericDoubleInput(&GC->rtcc->med_k18.DVMAXp, "Choose max DV for positive solution:", "%.0lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIMaxDVNeg()
 {
-	GenericDoubleInput(&GC->rtcc->med_k18.DVMAXm, "Choose max DV for negative solution:", 1.0);
+	GenericDoubleInput(&GC->rtcc->med_k18.DVMAXm, "Choose max DV for negative solution:", "%.0lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOI_HALLS()
 {
-	GenericDoubleInput(&GC->rtcc->PZLOIPLN.HA_LLS, "Choose the apolune altitude at the landing site:", 1.0);
+	GenericDoubleInput(&GC->rtcc->PZLOIPLN.HA_LLS, "Choose the apolune altitude at the landing site:", "%.1lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOI_HPLLS()
 {
-	GenericDoubleInput(&GC->rtcc->PZLOIPLN.HP_LLS, "Choose the perilune altitude at the landing site:", 1.0);
+	GenericDoubleInput(&GC->rtcc->PZLOIPLN.HP_LLS, "Choose the perilune altitude at the landing site:", "%.1lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIDW()
 {
-	GenericDoubleInput(&GC->rtcc->PZLOIPLN.DW, "Angle of perilune from the landing site (negative if site is post-perilune):", 1.0);
+	GenericDoubleInput(&GC->rtcc->PZLOIPLN.DW, "Angle of perilune from the landing site (negative if site is post-perilune):", "%.1lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIDHBias()
 {
-	GenericDoubleInput(&GC->rtcc->PZLOIPLN.dh_bias, "Altitude bias of intersection solutions:", 1.0);
+	GenericDoubleInput(&GC->rtcc->PZLOIPLN.dh_bias, "Altitude bias of intersection solutions:", "%.1lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIRevs1()
 {
-	GenericDoubleInput(&GC->rtcc->PZLOIPLN.REVS1, "Number of revolutions in first lunar orbit (may have fractional part):", 1.0);
+	GenericDoubleInput(&GC->rtcc->PZLOIPLN.REVS1, "Number of revolutions in first lunar orbit (may have fractional part):", "%.3lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIRevs2()
 {
-	GenericIntInput(&GC->rtcc->PZLOIPLN.REVS2, "Number of revolutions in second lunar orbit:");
+	GenericIntInput(&GC->rtcc->PZLOIPLN.REVS2, "Number of revolutions in second lunar orbit:", "%d");
 }
 
 void ApolloRTCCMFD::menuCycleLOIInterSolnFlag()
@@ -7467,17 +7357,17 @@ void ApolloRTCCMFD::menuSetLOIVectorID()
 
 void ApolloRTCCMFD::menuSetLOIEta1()
 {
-	GenericDoubleInput(&GC->rtcc->PZLOIPLN.eta_1, "True anomaly on LPO-1 for transferring from hyperbola to LPO-1:", 1.0);
+	GenericDoubleInput(&GC->rtcc->PZLOIPLN.eta_1, "True anomaly on LPO-1 for transferring from hyperbola to LPO-1:", "%.1lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetTLCCAlt()
 {
-	GenericDoubleInput(&GC->rtcc->PZMCCPLN.h_PC, "Choose the perilune altitude (Either 0 or 50+ NM):", 1852.0);
+	GenericDoubleInput(&GC->rtcc->PZMCCPLN.h_PC, "Choose the perilune altitude (Either 0 or 50+ NM):", "%.2lf", 1852.0);
 }
 
 void ApolloRTCCMFD::menuSetTLCCAltMode5()
 {
-	GenericDoubleInput(&GC->rtcc->PZMCCPLN.h_PC_mode5, "Choose the pericynthion height for mode 5 (negative number to use data table value):", 1852.0);
+	GenericDoubleInput(&GC->rtcc->PZMCCPLN.h_PC_mode5, "Choose the pericynthion height for mode 5 (negative number to use data table value):", "%.2lf", 1852.0);
 }
 
 void ApolloRTCCMFD::menuSetTLCCVectorID()
@@ -7487,17 +7377,17 @@ void ApolloRTCCMFD::menuSetTLCCVectorID()
 
 void ApolloRTCCMFD::menuSetLOIDesiredAzi()
 {
-	GenericDoubleInput(&GC->rtcc->med_k18.psi_DS, "Choose the desired approach azimuth:", 1.0);
+	GenericDoubleInput(&GC->rtcc->med_k18.psi_DS, "Choose the desired approach azimuth:", "%.1lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIMinAzi()
 {
-	GenericDoubleInput(&GC->rtcc->med_k18.psi_MN, "Choose the minimum approach azimuth:", 1.0);
+	GenericDoubleInput(&GC->rtcc->med_k18.psi_MN, "Choose the minimum approach azimuth:", "%.1lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuSetLOIMaxAzi()
 {
-	GenericDoubleInput(&GC->rtcc->med_k18.psi_MX, "Choose the maximum approach azimuth:", 1.0);
+	GenericDoubleInput(&GC->rtcc->med_k18.psi_MX, "Choose the maximum approach azimuth:", "%.1lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuLOICalc()
@@ -7517,17 +7407,17 @@ void ApolloRTCCMFD::menuSetLmkTime()
 
 void ApolloRTCCMFD::menuSetLmkElevation()
 {
-	GenericDoubleInput(&GC->LmkElevation, "Choose the T2 elevation in degrees (0-90°):", RAD);
+	GenericDoubleInput(&GC->LmkElevation, "Choose the T2 elevation in degrees (0-90°):", "%.3lf", RAD);
 }
 
 void ApolloRTCCMFD::menuSetLmkLat()
 {
-	GenericDoubleInput(&GC->LmkLat, "Choose the landmark latitude:", RAD);
+	GenericDoubleInput(&GC->LmkLat, "Choose the landmark latitude:", "%.3lf", RAD);
 }
 
 void ApolloRTCCMFD::menuSetLmkLng()
 {
-	GenericDoubleInput(&GC->LmkLng, "Choose the landmark longitude:", RAD);
+	GenericDoubleInput(&GC->LmkLng, "Choose the landmark longitude:", "%.3lf", RAD);
 }
 
 void ApolloRTCCMFD::menuLmkUseLandingSite()
@@ -7539,27 +7429,27 @@ void ApolloRTCCMFD::menuLmkUseLandingSite()
 
 void ApolloRTCCMFD::menuLSRadius()
 {
-	GenericDoubleInput(&GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST], "Choose the landing site radius:", 1852.0);
+	GenericDoubleInput(&GC->rtcc->BZLAND.rad[RTCC_LMPOS_BEST], "Choose the landing site radius:", "%.2lf", 1852.0);
 }
 
 void ApolloRTCCMFD::menuSetLDPPDwellOrbits()
 {
-	GenericIntInput(&GC->rtcc->GZGENCSN.LDPPDwellOrbits, "Choose the number of revolutions:");
+	GenericIntInput(&GC->rtcc->GZGENCSN.LDPPDwellOrbits, "Choose the number of revolutions:", "%d");
 }
 
 void ApolloRTCCMFD::menuSetLDPPLandingSiteOffset()
 {
-	GenericDoubleInput(&GC->rtcc->GZGENCSN.LDPPLandingSiteOffset, "Choose the angle from perilune to landing site:", RAD);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.LDPPLandingSiteOffset, "Choose the angle from perilune to landing site:", "%.2lf", RAD);
 }
 
 void ApolloRTCCMFD::menuSetLDPPDescentFlightArc()
 {
-	GenericDoubleInput(&GC->rtcc->GZGENCSN.LDPPDescentFlightArc, "Choose the powered descent flight arc:", RAD);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.LDPPDescentFlightArc, "Choose the powered descent flight arc:", "%.2lf", RAD);
 }
 
 void ApolloRTCCMFD::menuSetLDPPDescIgnHeight()
 {
-	GenericDoubleInput(&GC->rtcc->GZGENCSN.LDPPHeightofPDI, "Choose the perilune altitude above the landing site:", 0.3048);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.LDPPHeightofPDI, "Choose the perilune altitude above the landing site:", "%.0lf", 0.3048);
 }
 
 void ApolloRTCCMFD::cycleLDPPPoweredDescSimFlag()
@@ -7617,7 +7507,7 @@ void ApolloRTCCMFD::menuLLWPVectorTime()
 
 void ApolloRTCCMFD::menuSetLLWPCSIFlag()
 {
-	GenericDoubleInput(&GC->rtcc->med_k15.CSI_Flag, "CSI Flag: 0: CSI done 90° from insertion, negative value: CSI done at LM apolune, positive value: CSI done at X mins after insertion", 60.0);
+	GenericDoubleInput(&GC->rtcc->med_k15.CSI_Flag, "CSI Flag: 0: CSI done 90° from insertion, negative value: CSI done at LM apolune, positive value: CSI done at X mins after insertion", "%.1lf", 60.0);
 }
 
 void ApolloRTCCMFD::menuSetLLWPCDHFlag()
@@ -7678,27 +7568,27 @@ void ApolloRTCCMFD::menuSetLLWPVectorID()
 
 void ApolloRTCCMFD::menuTMLat()
 {
-	GenericDoubleInput(&G->TMLat, "Latitude in degrees (-90 to +90):", RAD);
+	GenericDoubleInput(&G->TMLat, "Latitude in degrees (-90 to +90):", "%.3lf", RAD);
 }
 
 void ApolloRTCCMFD::menuTMLng()
 {
-	GenericDoubleInput(&G->TMLng, "Longitude in degrees (-180 to 180):", RAD);
+	GenericDoubleInput(&G->TMLng, "Longitude in degrees (-180 to 180):", "%.3lf", RAD);
 }
 
 void ApolloRTCCMFD::menuTMAzi()
 {
-	GenericDoubleInput(&G->TMAzi, "Approach azimuth in degrees:", RAD);
+	GenericDoubleInput(&G->TMAzi, "Approach azimuth in degrees:", "%.3lf", RAD);
 }
 
 void ApolloRTCCMFD::menuTMDistance()
 {
-	GenericDoubleInput(&G->TMDistance, "Distance in feet:", 0.3048);
+	GenericDoubleInput(&G->TMDistance, "Distance in feet:", "%.1lf", 0.3048);
 }
 
 void ApolloRTCCMFD::menuTMStepSize()
 {
-	GenericDoubleInput(&G->TMStepSize, "Step size in feet:", 0.3048);
+	GenericDoubleInput(&G->TMStepSize, "Step size in feet:", "%.1lf", 0.3048);
 }
 
 void ApolloRTCCMFD::menuTerrainModelCalc()
@@ -7750,15 +7640,15 @@ void ApolloRTCCMFD::menuSetTLIProcessorInput()
 	case 6:
 		if (GC->rtcc->PZTLIPLN.Mode == 3)
 		{
-			GenericDoubleInput(&GC->rtcc->PZTLIPLN.dv_available, "Available Delta V for TLI (0 to 10000 ft/s):");
+			GenericDoubleInput(&GC->rtcc->PZTLIPLN.dv_available, "Available Delta V for TLI (0 to 10000 ft/s):", "%.0lf");
 		}
 		else if (GC->rtcc->PZTLIPLN.Mode == 4)
 		{
-			GenericDoubleInput(&GC->rtcc->PZTLIPLN.h_ap, "Input height of apogee (2700 to 7000 NM):");
+			GenericDoubleInput(&GC->rtcc->PZTLIPLN.h_ap, "Input height of apogee (2700 to 7000 NM):", "%.0lf");
 		}
 		else if (GC->rtcc->PZTLIPLN.Mode == 6)
 		{
-			GenericVectorInput(&GC->rtcc->PZTLIPLN.dV_LVLH, "Input Delta V vector in feet per second:", 0.3048);
+			GenericVectorInput(&GC->rtcc->PZTLIPLN.dV_LVLH, "Input Delta V vector in feet per second:", "%.1lf %.1lf %.1lf", 0.3048);
 		}
 		else
 		{
@@ -7814,12 +7704,12 @@ void ApolloRTCCMFD::menuLLTPVectorTime()
 
 void ApolloRTCCMFD::menuLunarLiftoffVHorInput()
 {
-	GenericDoubleInput(&GC->rtcc->PZLTRT.InsertionHorizontalVelocity, "Input horizontal velocity in ft/s (LGC default is 5509.5):", 0.3048);
+	GenericDoubleInput(&GC->rtcc->PZLTRT.InsertionHorizontalVelocity, "Input horizontal velocity in ft/s (LGC default is 5509.5):", "%.1lf", 0.3048);
 }
 
 void ApolloRTCCMFD::menuLunarLiftoffVVertInput()
 {
-	GenericDoubleInput(&GC->rtcc->PZLTRT.InsertionRadialVelocity, "Input vertical velocity in ft/s (LGC default is 19.5):", 0.3048);
+	GenericDoubleInput(&GC->rtcc->PZLTRT.InsertionRadialVelocity, "Input vertical velocity in ft/s (LGC default is 19.5):", "%.1lf", 0.3048);
 }
 
 void ApolloRTCCMFD::menuLunarLiftoffSaveInsertionSV()
@@ -7842,7 +7732,7 @@ void ApolloRTCCMFD::menuSetEMPUplinkNumber()
 {
 	if (G->EMPUplinkMaxNumber > 0)
 	{
-		GenericIntInput(&G->EMPUplinkNumber, "Enter load number:", NULL, 1, G->EMPUplinkMaxNumber);
+		GenericIntInput(&G->EMPUplinkNumber, "Enter load number:", "%d", NULL, 1, G->EMPUplinkMaxNumber);
 	}
 }
 
@@ -7995,12 +7885,12 @@ void ApolloRTCCMFD::menuSetNavCheckGET()
 
 void ApolloRTCCMFD::menuDKINC1Line()
 {
-	GenericDoubleInput(&GC->rtcc->med_k00.NC1, "Enter NC1 maneuver line point:");
+	GenericDoubleInput(&GC->rtcc->med_k00.NC1, "Enter NC1 maneuver line point:", "%.2lf");
 }
 
 void ApolloRTCCMFD::menuDKINHLine()
 {
-	GenericDoubleInput(&GC->rtcc->med_k00.NH, "Enter NH maneuver line point:");
+	GenericDoubleInput(&GC->rtcc->med_k00.NH, "Enter NH maneuver line point:", "%.2lf");
 }
 
 void  ApolloRTCCMFD::menuCycleDKIChaserVehicle()
@@ -8034,17 +7924,17 @@ void ApolloRTCCMFD::menuDKINSRLine()
 {
 	if (GC->rtcc->med_k00.I4)
 	{
-		GenericDoubleInput(&GC->rtcc->med_k00.NCC, "Enter NCC maneuver line point:");
+		GenericDoubleInput(&GC->rtcc->med_k00.NCC, "Enter NCC maneuver line point:", "%.2lf");
 	}
 	else
 	{
-		GenericDoubleInput(&GC->rtcc->med_k00.NSR, "Enter NSR maneuver line point:");
+		GenericDoubleInput(&GC->rtcc->med_k00.NSR, "Enter NSR maneuver line point:", "%.2lf");
 	}
 }
 
 void ApolloRTCCMFD::menuDKIMILine()
 {
-	GenericDoubleInput(&GC->rtcc->med_k00.MI, "Enter approximate TPI maneuver line point:");
+	GenericDoubleInput(&GC->rtcc->med_k00.MI, "Enter approximate TPI maneuver line point:", "%.0lf");
 }
 
 void ApolloRTCCMFD::menuDKIAdditionalMLines()
@@ -8059,7 +7949,7 @@ void ApolloRTCCMFD::menuDKINHPlacement()
 
 void ApolloRTCCMFD::menuDKINPCLine()
 {
-	GenericDoubleInput(&GC->rtcc->med_k00.NPC, "Enter NPC maneuver line point:");
+	GenericDoubleInput(&GC->rtcc->med_k00.NPC, "Enter NPC maneuver line point:", "%.2lf");
 }
 
 void ApolloRTCCMFD::menuCycleDKIManeuverLineDefinition()
@@ -8107,12 +7997,12 @@ void ApolloRTCCMFD::set_SPQElevation(double elev)
 
 void ApolloRTCCMFD::menuSetSPQTerminalPhaseAngle()
 {
-	GenericDoubleInput(&GC->rtcc->GZGENCSN.SPQTerminalPhaseAngle, "Terminal phase angle in degrees:", RAD);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.SPQTerminalPhaseAngle, "Terminal phase angle in degrees:", "%.2lf", RAD);
 }
 
 void ApolloRTCCMFD::menuSetSPQMinimumPeriapsisAlt()
 {
-	GenericDoubleInput(&GC->rtcc->GZGENCSN.SPQMinimumPerifocus, "Minimum periapsis altitude in nautical miles:", 1852.0);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.SPQMinimumPerifocus, "Minimum periapsis altitude in nautical miles:", "%.1lf", 1852.0);
 }
 
 void ApolloRTCCMFD::menuSetSPQTPIDefinitionValue()
@@ -8141,27 +8031,27 @@ void ApolloRTCCMFD::set_SPQTPIDefinitionValue(double get)
 
 void ApolloRTCCMFD::menuSetDKIElevation()
 {
-	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIElevationAngle, "Elevation in degrees:", RAD);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIElevationAngle, "Elevation in degrees:", "%.2lf", RAD);
 }
 
 void ApolloRTCCMFD::menuSetDKITerminalPhaseAngle()
 {
-	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKITerminalPhaseAngle, "Terminal phase angle in degrees:", RAD);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKITerminalPhaseAngle, "Terminal phase angle in degrees:", "%.2lf", RAD);
 }
 
 void ApolloRTCCMFD::menuSetDKIMinimumPerigee()
 {
-	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIMinPerigee, "Minimum perigee in nautical miles:", 1852.0);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.DKIMinPerigee, "Minimum perigee in nautical miles:", "%.1lf", 1852.0);
 }
 
 void ApolloRTCCMFD::menuDKIManeuverLineValue()
 {
-	GenericDoubleInput(&GC->rtcc->med_k10.MLDValue, "Choose the maneuver line at TIG:", 1.0);
+	GenericDoubleInput(&GC->rtcc->med_k10.MLDValue, "Choose the maneuver line at TIG:", "%.1lf", 1.0);
 }
 
 void ApolloRTCCMFD::menuDKIInitialPhaseFlag()
 {
-	GenericIntInput(&GC->rtcc->GZGENCSN.DKIPhaseAngleSetting, "Control flag for initial phase angle wrapping. 0 = -180 to 180. 1 = 0 to 360. -1 = -360 to 0 and so on...");
+	GenericIntInput(&GC->rtcc->GZGENCSN.DKIPhaseAngleSetting, "Control flag for initial phase angle wrapping. 0 = -180 to 180. 1 = 0 to 360. -1 = -360 to 0 and so on...", "%d");
 }
 
 void ApolloRTCCMFD::menuCycleDKITerminalPhaseOption()
@@ -8184,7 +8074,7 @@ void ApolloRTCCMFD::menuDKITerminalPhaseDefinitionValue()
 	switch (GC->rtcc->GZGENCSN.DKI_TP_Definition)
 	{
 	case 0: //TPI phase angle
-		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "Choose the phase angle at TPI:", RAD);
+		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "Choose the phase angle at TPI:", "%.2lf", RAD);
 		break;
 	case 1: //TPI TIG input
 		GenericGETInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "Choose the time of TPI (Format HHH:MM:SS)");
@@ -8193,16 +8083,16 @@ void ApolloRTCCMFD::menuDKITerminalPhaseDefinitionValue()
 		GenericGETInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "Choose the time of TPF (Format HHH:MM:SS)");
 		break;
 	case 3: //TPI at X minutes into night
-		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPI at X minutes into night:", 1.0);
+		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPI at X minutes into night:", "%.1lf", 1.0);
 		break;
 	case 4: //TPI at X minutes into day
-		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPI at X minutes into day:", 1.0);
+		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPI at X minutes into day:", "%.1lf", 1.0);
 		break;
 	case 5: //TPF at X minutes into night
-		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPF at X minutes into night:", 1.0);
+		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPF at X minutes into night:", "%.1lf", 1.0);
 		break;
 	case 6: //TPF at X minutes into day
-		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPF at X minutes into day:", 1.0);
+		GenericDoubleInput(&GC->rtcc->GZGENCSN.DKI_TPDefinitionValue, "TPF at X minutes into day:", "%.1lf", 1.0);
 		break;
 	}
 }
@@ -8249,7 +8139,7 @@ void ApolloRTCCMFD::TPIDTDialogue()
 {
 	if (G->TPI_Mode == 2)
 	{
-		GenericDoubleInput(&G->dt_TPI_sunrise, "Choose the TPI time before sunrise in minutes", 60.0);
+		GenericDoubleInput(&G->dt_TPI_sunrise, "Choose the TPI time before sunrise in minutes", "%.1lf", 60.0);
 	}
 }
 
@@ -8349,37 +8239,37 @@ void ApolloRTCCMFD::menuSetPDAPInputs()
 		}
 		break;
 	case 4:
-		GenericDoubleInput(&GC->PDAPOptions.h_amin, "Minimum apolune altitude limit for the insertion orbit; referenced from the landing site radius:", 1852.0);
+		GenericDoubleInput(&GC->PDAPOptions.h_amin, "Minimum apolune altitude limit for the insertion orbit; referenced from the landing site radius:", "%.1lf", 1852.0);
 		break;
 	case 5:
-		GenericDoubleInput(&GC->PDAPOptions.DH_D, "Desired altitude differential between the LM and CSM orbits at CDH:", 1852.0);
+		GenericDoubleInput(&GC->PDAPOptions.DH_D, "Desired altitude differential between the LM and CSM orbits at CDH:", "%.1lf", 1852.0);
 		break;
 	case 6:
 		GC->PDAPOptions.K4 = 1 - GC->PDAPOptions.K4;
 		break;
 	case 7:
-		GenericDoubleInput(&GC->PDAPOptions.theta_TARG, "Phase angle at insertion used to determine the end of the first segment:", RAD);
+		GenericDoubleInput(&GC->PDAPOptions.theta_TARG, "Phase angle at insertion used to determine the end of the first segment:", "%.2lf", RAD);
 		break;
 	case 8:
-		GenericDoubleInput(&GC->PDAPOptions.dt_CAN, "DT between orbit insertion and the canned maneuver:", 60.0);
+		GenericDoubleInput(&GC->PDAPOptions.dt_CAN, "DT between orbit insertion and the canned maneuver:", "%.1lf", 60.0);
 		break;
 	case 9:
-		GenericVectorInput(&GC->PDAPOptions.DV_CAN, "DV of the canned maneuver:", 0.3048);
+		GenericVectorInput(&GC->PDAPOptions.DV_CAN, "DV of the canned maneuver:", "%.1lf %.1lf %.1lf", 0.3048);
 		break;
 	case 10:
-		GenericDoubleInput(&GC->PDAPOptions.dt_CSI, "DT between the canned maneuver and CSI:", 60.0);
+		GenericDoubleInput(&GC->PDAPOptions.dt_CSI, "DT between the canned maneuver and CSI:", "%.1lf", 60.0);
 		break;
 	case 11:
 		GenericGETInput(&GC->PDAPOptions.GMT_TPI, "TPI time used to generate the first set of targeting coefficients:");
 		break;
 	case 12:
-		GenericDoubleInput(&GC->PDAPOptions.dt_2CAN, "Value of DTCAN used to generate the second set of targeting coefficients:", 60.0);
+		GenericDoubleInput(&GC->PDAPOptions.dt_2CAN, "Value of DTCAN used to generate the second set of targeting coefficients:", "%.1lf", 60.0);
 		break;
 	case 13:
-		GenericVectorInput(&GC->PDAPOptions.DV_2CAN, "Value of DVCAN used to generate the second set of targeting coefficients:", 0.3048);
+		GenericVectorInput(&GC->PDAPOptions.DV_2CAN, "Value of DVCAN used to generate the second set of targeting coefficients:", "%.1lf %.1lf %.1lf", 0.3048);
 		break;
 	case 14:
-		GenericDoubleInput(&GC->PDAPOptions.dt_2CSI, "Value of DTCSI used to generate the second set of targeting coefficients:", 60.0);
+		GenericDoubleInput(&GC->PDAPOptions.dt_2CSI, "Value of DTCSI used to generate the second set of targeting coefficients:", "%.1lf", 60.0);
 		break;
 	case 15:
 		GenericGETInput(&GC->PDAPOptions.GMT_2TPI, "TPI time used to generate the second set of targeting coefficients:");
@@ -8609,20 +8499,7 @@ bool MPTVehicleOrientationChangeInput(void* id, char *str, void *data)
 
 void ApolloRTCCMFD::menuMPTTLIDirectInput()
 {
-	bool MPTTLIDirectInputInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Format: M68, CSM or LEM, Opportunity (1 or 2);", MPTTLIDirectInputInput, 0, 50, (void*)this);
-}
-
-bool MPTTLIDirectInputInput(void* id, char *str, void *data)
-{
-	((ApolloRTCCMFD*)data)->set_MPTTLIDirectInput(str);
-	return true;
-}
-
-void ApolloRTCCMFD::set_MPTTLIDirectInput(char *str)
-{
-	sprintf_s(GC->rtcc->RTCCMEDBUFFER, 256, str);
-	G->MPTTLIDirectInput();
+	menuGeneralMEDRequest("Format: M68, CSM or LEM, Opportunity (1 or 2);");
 }
 
 void ApolloRTCCMFD::menuNextStationContactLunar()
@@ -8813,7 +8690,7 @@ bool ChooseRETPlanInput(void* id, char *str, void *data)
 
 void ApolloRTCCMFD::menuSetLDPPAzimuth()
 {
-	GenericDoubleInput(&GC->rtcc->GZGENCSN.LDPPAzimuth, "Approach azimuth at the landing site (0 for optimal):", RAD);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.LDPPAzimuth, "Approach azimuth at the landing site (0 for optimal):", "%.2lf", RAD);
 }
 
 void ApolloRTCCMFD::menuSetLDPPPoweredDescTime()
@@ -8839,7 +8716,7 @@ void ApolloRTCCMFD::menuLDPPThresholdTimesCheck()
 
 void ApolloRTCCMFD::menuSetLDPPDescentFlightTime()
 {
-	GenericDoubleInput(&GC->rtcc->GZGENCSN.LDPPDescentFlightTime, "Descent flight time in minutes:", 60.0);
+	GenericDoubleInput(&GC->rtcc->GZGENCSN.LDPPDescentFlightTime, "Descent flight time in minutes:", "%.2lf", 60.0);
 }
 
 void ApolloRTCCMFD::menuSetLDPPInput()
@@ -8907,7 +8784,7 @@ void ApolloRTCCMFD::menuSetLDPPInput()
 		GenericGETInput(&GC->rtcc->med_k16.GETTH4, "Threshold time 4 (Format: hhh:mm:ss)", &ApolloRTCCMFD::menuLDPPThresholdTimesCheck);
 		break;
 	case 8:
-		GenericDoubleInput(&GC->rtcc->med_k16.DesiredHeight, "Desired height in NM:", 1852.0);
+		GenericDoubleInput(&GC->rtcc->med_k16.DesiredHeight, "Desired height in NM:", "%.1lf", 1852.0);
 		break;
 	case 9:
 		GenericStringInput(&GC->rtcc->med_k16.VectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
@@ -9488,15 +9365,15 @@ void ApolloRTCCMFD::menuLOSTAttitude1()
 {
 	if (GC->rtcc->EZJGSTBL.MODE == 2)
 	{
-		GenericVectorInput(&GC->rtcc->EZJGSTBL.LM_ATT, "Enter LM attitude:", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
+		GenericVectorInput(&GC->rtcc->EZJGSTBL.LM_ATT, "Enter LM attitude:", "%.2lf %.2lf %.2lf", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
 	}
 	else if (GC->rtcc->EZJGSTBL.MODE == 4)
 	{
-		GenericVectorInput(&GC->rtcc->EZJGSTBL.Att1, "Enter attitude for alignment:", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
+		GenericVectorInput(&GC->rtcc->EZJGSTBL.Att1, "Enter attitude for alignment:", "%.2lf %.2lf %.2lf", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
 	}
 	else if (GC->rtcc->EZJGSTBL.MODE == 7)
 	{
-		GenericVectorInput(&GC->rtcc->EZJGSTBL.StoredAttMED, "Enter attitude for star check:", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
+		GenericVectorInput(&GC->rtcc->EZJGSTBL.StoredAttMED, "Enter attitude for star check:", "%.2lf %.2lf %.2lf", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
 	}
 }
 
@@ -9504,11 +9381,11 @@ void ApolloRTCCMFD::menuLOSTAttitude2()
 {
 	if (GC->rtcc->EZJGSTBL.MODE == 2)
 	{
-		GenericVectorInput(&GC->rtcc->EZJGSTBL.CSM_ATT, "Enter CSM attitude:", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
+		GenericVectorInput(&GC->rtcc->EZJGSTBL.CSM_ATT, "Enter CSM attitude:", "%.2lf %.2lf %.2lf", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
 	}
 	else if (GC->rtcc->EZJGSTBL.MODE == 4)
 	{
-		GenericVectorInput(&GC->rtcc->EZJGSTBL.Att2, "Enter attitude for alignment:", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
+		GenericVectorInput(&GC->rtcc->EZJGSTBL.Att2, "Enter attitude for alignment:", "%.2lf %.2lf %.2lf", RAD, &ApolloRTCCMFD::UpdateLOSTDisplay);
 	}
 }
 
@@ -9573,7 +9450,7 @@ void ApolloRTCCMFD::menuLOSTOptics1()
 {
 	if (GC->rtcc->EZJGSTBL.MODE == 4)
 	{
-		GenericInt2Input(&GC->rtcc->EZJGSTBL.star1, &GC->rtcc->EZJGSTBL.D1, "Enter star and detent. Format: Star Detent. Limits. Star: 1-400, Detent: 1-6", 1, 400, 1, 6, &ApolloRTCCMFD::UpdateLOSTDisplay);
+		GenericInt2Input(&GC->rtcc->EZJGSTBL.star1, &GC->rtcc->EZJGSTBL.D1, "Enter star and detent. Format: Star Detent. Limits. Star: 1-400, Detent: 1-6", "%d %d", 1, 400, 1, 6, &ApolloRTCCMFD::UpdateLOSTDisplay);
 	}
 	else if (GC->rtcc->EZJGSTBL.MODE == 5)
 	{
@@ -9638,7 +9515,7 @@ void ApolloRTCCMFD::menuCalcLOST()
 {
 	if (GC->rtcc->EZJGSTBL.MODE == 2)
 	{
-		GenericIntInput(&GC->rtcc->EZGSTMED.G23_Option, "Docking Alignment. Option: 1 = Calculate LM REFSMMAT, 2 = LM gimbal angles, 3 = CSM gimbal angles", &ApolloRTCCMFD::CalculateLOSTDOKOption);
+		GenericIntInput(&GC->rtcc->EZGSTMED.G23_Option, "Docking Alignment. Option: 1 = Calculate LM REFSMMAT, 2 = LM gimbal angles, 3 = CSM gimbal angles", "%d", &ApolloRTCCMFD::CalculateLOSTDOKOption);
 	}
 	else if (GC->rtcc->EZJGSTBL.MODE == 4)
 	{

@@ -1136,11 +1136,6 @@ void ARCore::TransferGPMToMPT()
 	startSubthread(45);
 }
 
-void ARCore::MPTTLIDirectInput()
-{
-	startSubthread(46);
-}
-
 void ARCore::AbortScanTableCalc()
 {
 	startSubthread(47);
@@ -4937,19 +4932,8 @@ int ARCore::subThread()
 		Result = DONE;
 	}
 	break;
-	case 46: //TLI Direct Input
+	case 46: //Spare
 	{
-		if (!GD->MissionPlanningActive)
-		{
-			Result = DONE;
-			break;
-		}
-
-		//UpdateTLITargetTable();
-
-		//MED string was previously saved
-		GC->rtcc->GMGMED(GC->rtcc->RTCCMEDBUFFER);
-
 		Result = DONE;
 	}
 	break;
