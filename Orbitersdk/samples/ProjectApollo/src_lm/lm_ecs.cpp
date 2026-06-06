@@ -263,7 +263,7 @@ void LMSuit::CloseHelmetGloves()
 
 void LMSuit::SetHelmetValveSizes()
 {
-	helmet->in->size = 2.0f;
+	helmet->in->size = 5.0f;
 }
 
 void LMSuit::Timestep(double simdt)

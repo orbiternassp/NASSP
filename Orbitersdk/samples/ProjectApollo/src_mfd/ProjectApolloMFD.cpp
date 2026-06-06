@@ -1034,7 +1034,7 @@ bool ProjectApolloMFD::Update (oapi::Sketchpad* skp)
 			}
 			else if (ecs.crewStatus == ECS_CREWSTATUS_CRITICAL_CO2) {
 				skp->SetTextColor(RGB(255, 255, 0));
-				skp->Text((int)(width * 0.6), (int)(height * 0.4), "CRITICAL CO2", 12);
+				skp->Text((int)(width * 0.7), (int)(height * 0.4), "CRITICAL CO2", 12);
 				skp->SetTextColor(RGB(0, 255, 0));
 			}
 			else {
