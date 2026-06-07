@@ -34,12 +34,6 @@
 #include "nasspdefs.h"
 #include "nassputils.h"
 
-#ifdef _OPENORBITER
-#include <gcCoreAPI.h>
-#else
-#include <gcConst.h>
-#endif
-
 #include "Mission.h"
 #include "nasspsound.h"
 #include "toggleswitch.h"
@@ -647,12 +641,14 @@ void Saturn::InitVC()
 	srf[SRF_VC_DIGITAL90] = oapiLoadTexture("ProjectApollo/VC/digitaldisp90.dds");
 	srf[SRF_VC_EVENT_TIMER_DIGITS90] = oapiLoadTexture("ProjectApollo/VC/event_timer90.dds");
 	srf[SRF_VC_ABORT] = oapiLoadTexture("ProjectApollo/VC/abort.dds");
+	srf[SRF_VC_OPTICS_DSKY] = oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 3);
+	srf[SRF_VC_OPTICS_P122] = oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 4);
+	srf[SRF_VC_OPTICS_CUSTOMCAM] = oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 5);
+	srf[SRF_VC_4DSKY_LEB] = oapiGetTextureHandle(hCMVC, VC_TEX_CMVCTex2_dds);
 
-//	srfFDAICamTexture = oapiLoadTexture("ProjectApollo/VC/FDAI_CustomCamera.dds");
-//	hFDAISurf = oapiCreateSurfaceEx(1024, 1024, OAPISURFACE_RENDER3D | OAPISURFACE_TEXTURE | OAPISURFACE_RENDERTARGET | OAPISURFACE_NOMIPMAPS);
+	srfOpticsCustomCam = oapiCreateSurfaceEx(2048, 2048, OAPISURFACE_TEXTURE | OAPISURFACE_RENDERTARGET | OAPISURFACE_SKETCHPAD | OAPISURFACE_NOMIPMAPS | OAPISURFACE_ALPHA | OAPISURFACE_RENDER3D);
 
 	// Set Colour Key
-
 	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP2], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_DSKYDISP], ck);
@@ -916,13 +912,66 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_GNPANEL:
 		viewpos = SATVIEW_GNPANEL;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
-		oapiVCSetNeighbours(SATVIEW_LEBLEFT, SATVIEW_LEBRIGHT, SATVIEW_TUNNEL, -1);
+		oapiVCSetNeighbours(SATVIEW_LEBLEFT, SATVIEW_LEBRIGHT, SATVIEW_TUNNEL, SATVIEW_OPTICS_SCT);
 		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
-
+		if (FovSaveVCOptics) oapiCameraSetAperture(FovSaveVCOptics);	// Restore FOV from going back from Sextant View
+		FovSaveVCOptics = 0;											// Set it back to Zero
 		SetView(true);
 
 		PanelId = SATPANEL_TELESCOPE;
 
+		RegisterActiveAreas();
+
+		return true;
+
+	case SATVIEW_OPTICS_SCT:
+		CMVCOpticsInitP122Switches();
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SCT_EYEPIECE,	false);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_EYEPIECE,	true);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_DSKY,		!ViewOpticsPanels);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_P122,		!ViewOpticsPanels);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_CLKPNTS,	true);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM,	true);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SCT_RETICLE,		false);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_RETICLE,		true);
+
+		viewpos = SATVIEW_OPTICS_SCT;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
+		oapiVCSetNeighbours(SATVIEW_OPTICS_SXT, -1, SATVIEW_GNPANEL, -1);
+		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
+		if (!FovSaveVCOptics) FovSaveVCOptics = oapiCameraAperture(); // Save FOV for going back from Sextant to LEB
+		oapiCameraSetAperture(39.7132281*RAD); // Telescope FOV 79°
+		SetCameraDefaultDirection(_V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN));
+		oapiCameraSetCockpitDir(0,0);
+		SetCameraCatchAngle(0.0);
+		SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);
+		SetView(true);
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case SATVIEW_OPTICS_SXT:
+		CMVCOpticsInitP122Switches();
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SCT_EYEPIECE,	true);	
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_EYEPIECE,	false);	
+		HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_DSKY,		!ViewOpticsPanels);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_P122,		!ViewOpticsPanels);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_CLKPNTS,	true);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM,	true);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SCT_RETICLE,		true);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_RETICLE,		false);
+
+		viewpos = SATVIEW_OPTICS_SXT;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.8 * PI, 0.4 * PI);
+		oapiVCSetNeighbours(-1, SATVIEW_OPTICS_SCT, SATVIEW_GNPANEL, -1);
+		SetCameraMovement(_V(0.0, -0.2, 0.0), 0, 0, _V(-0.4, -0.2, 0.0), 0, 0, _V(0.4, -0.2, 0.0), 0, 0);
+		oapiCameraSetAperture(1.29476537*RAD); // Sextant FOV 3°
+		SetCameraDefaultDirection(_V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN));
+		oapiCameraSetCockpitDir(0,0);
+		SetCameraCatchAngle(0.0);
+		SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);
+		SetView(true);
 		RegisterActiveAreas();
 
 		return true;
@@ -1029,7 +1078,7 @@ void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
 //		seatsunfoldedmesh = GetDevMesh(vis, seatsunfoldedidx);
 //		seatsfoldedmesh = GetDevMesh(vis, seatsfoldedidx);
 
-//		InitFDAICustomCamera();
+//		UpdateOpticsCustomCam();
 	}
 
 	bool A15Pan230Msh = true, A17Pan230Msh = true, OtherPan230Msh = true;	// First Set all Panel 230 meshes to TRUE (hide) -> HideMeshGroup
@@ -1758,6 +1807,26 @@ void Saturn::RegisterActiveAreas() {
 	// Above window 5
 	oapiVCRegisterArea(AID_VC_CUE_CARD_LOCATION_17, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_CUE_CARD_LOCATION_17, _V(0.95, 0.953, 0.08) + ofs, _V(1.02, 0.885, 0.06) + ofs, _V(1.026, 1.06, -0.117) + ofs, _V(1.12, 0.964, -0.144) + ofs);
+
+	// VC OPTICS
+	// DSKY 
+	for (int i = AID_VC_OPTICS_DSKY_VERB; i < AID_VC_OPTICS_DSKY_RESET+1; i++) {
+		oapiVCRegisterArea(i, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP);
+	}
+	// SWITCHES
+	for (int i = AID_VC_OPTICS_ZERO_UP; i < AID_VC_OPTICS_SPEED_DOWN+1; i++) {
+		oapiVCRegisterArea(i, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+	}
+	// SPRINGLOADED
+	for (int i = AID_VC_OPTICS_LEFT_STICK_UP; i < AID_VC_OPTICS_REJECT_BUTTON+1; i++) {
+		oapiVCRegisterArea(i, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBDOWN | PANEL_MOUSE_LBUP);
+	}
+	// For hiding the Optics Panel 122 and DSKY
+	oapiVCRegisterArea(AID_VC_OPTICS_HIDEPANELS, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+
+	oapiVCRegisterArea(AID_VC_OPTICS_DUALVIEW_FLASHING, PANEL_REDRAW_NEVER, PANEL_MOUSE_DOWN);
+	oapiVCRegisterArea(AID_VC_OPTICS_RETICLE_PLUS, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBPRESSED);
+	oapiVCRegisterArea(AID_VC_OPTICS_RETICLE_MINUS, PANEL_REDRAW_NEVER, PANEL_MOUSE_LBPRESSED);
 }
 
 // --------------------------------------------------------------
@@ -1999,6 +2068,460 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 	case AID_VC_CUE_CARD_LOCATION_17:
 		CueCards.CycleCueCard(id - AID_VC_CUE_CARD_LOCATION_1);
 		return true;
+
+	case AID_VC_OPTICS_HIDEPANELS:
+		if (ViewOpticsPanels) {
+			HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_DSKY, true);
+			HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_P122, true);
+			ViewOpticsPanels = false;
+		}
+		else {
+			HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_DSKY, false);
+			HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_P122, false);
+			ViewOpticsPanels = true;
+		}
+		return true;
+
+	case AID_VC_OPTICS_DUALVIEW_FLASHING:
+		OpticsVCDualViewFlashing = !OpticsVCDualViewFlashing;
+		return true;
+
+	case AID_VC_OPTICS_RETICLE_PLUS:
+#ifdef _OPENORBITER
+		VCOpticsRetAlpha = (std::clamp((int)(VCOpticsRetAlpha >> 24) + 1, 1, 255) << 24) | 0xFFFFFF;
+#else
+		VCOpticsRetAlpha = ((std::max)(1, (std::min)((int)(VCOpticsRetAlpha >> 24) + 1, 255)) << 24) | 0xFFFFFF;
+#endif
+		return true;
+
+	case AID_VC_OPTICS_RETICLE_MINUS:
+#ifdef _OPENORBITER
+		VCOpticsRetAlpha = (std::clamp((int)(VCOpticsRetAlpha >> 24) - 1, 1, 255) << 24) | 0xFFFFFF;
+#else
+		VCOpticsRetAlpha = ((std::max)(1, (std::min)((int)(VCOpticsRetAlpha >> 24) - 1, 255)) << 24) | 0xFFFFFF;
+#endif
+		return true;
+	}
+
+	// Now check if any switch in the optics panels is clicked
+	// Do this only if panels are not hidden
+	if(ViewOpticsPanels && id >= AID_VC_OPTICS_DSKY_VERB && id <= AID_VC_OPTICS_REJECT_BUTTON){
+		switch (id) {
+			case AID_VC_OPTICS_ZERO_UP:
+				oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 120, 120, 0, 1408, 144, 240);
+//				oapiBlt(oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 4), oapiGetTextureHandle(GetMeshTemplate(hCMVCOpticsidx), 4), 120, 120, 0, 1408, 144, 240);
+				OpticsZeroSwitch.SetState(TOGGLESWITCH_UP);
+				return true;
+
+			case AID_VC_OPTICS_ZERO_DOWN:
+				oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 120, 120, 144, 1408, 144, 240);
+				OpticsZeroSwitch.SetState(TOGGLESWITCH_DOWN);
+				return true;
+
+			case AID_VC_OPTICS_TEL_TRUN_UP:
+				if (ControllerTelescopeTrunnionSwitch.IsUp() || ControllerTelescopeTrunnionSwitch.IsCenter()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 442, 120, 288, 1408, 144, 240);
+					ControllerTelescopeTrunnionSwitch.SetState(THREEPOSSWITCH_UP);
+				}
+				if (ControllerTelescopeTrunnionSwitch.IsDown()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 442, 120, 432, 1408, 144, 240);
+					ControllerTelescopeTrunnionSwitch.SetState(THREEPOSSWITCH_CENTER);
+				}
+				return true;
+
+			case AID_VC_OPTICS_TEL_TRUN_DOWN:
+				if (ControllerTelescopeTrunnionSwitch.IsCenter() || ControllerTelescopeTrunnionSwitch.IsDown()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 442, 120, 576, 1408, 144, 240);
+					ControllerTelescopeTrunnionSwitch.SetState(THREEPOSSWITCH_DOWN);
+				}
+				if (ControllerTelescopeTrunnionSwitch.IsUp()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 442, 120, 432, 1408, 144, 240);
+					ControllerTelescopeTrunnionSwitch.SetState(THREEPOSSWITCH_CENTER);
+				}
+				return true;
+
+			case AID_VC_OPTICS_COUPLING_UP:
+				oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 708, 122, 720, 1408, 144, 240);
+				ControllerCouplingSwitch.SetState(TOGGLESWITCH_UP);
+				return true;
+
+			case AID_VC_OPTICS_COUPLING_DOWN:
+				oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 708, 122, 864, 1408, 144, 240);
+				ControllerCouplingSwitch.SetState(TOGGLESWITCH_DOWN);
+				return true;
+
+			case AID_VC_OPTICS_MODE_UP:
+				oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 450, 462, 1008, 1408, 144, 240);
+				OpticsModeSwitch.SetState(TOGGLESWITCH_UP);
+				return true;
+
+			case AID_VC_OPTICS_MODE_DOWN:
+				oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 450, 462, 1152, 1408, 144, 240);
+				OpticsModeSwitch.SetState(TOGGLESWITCH_DOWN);
+				return true;
+
+			case AID_VC_OPTICS_SPEED_UP:
+				if (ControllerSpeedSwitch.IsUp() || ControllerSpeedSwitch.IsCenter()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 716, 462, 1296, 1408, 144, 240);
+					ControllerSpeedSwitch.SetState(THREEPOSSWITCH_UP);
+				}
+				if (ControllerSpeedSwitch.IsDown()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 716, 462, 1440, 1408, 144, 240);
+					ControllerSpeedSwitch.SetState(THREEPOSSWITCH_CENTER);
+				}
+				return true;
+
+			case AID_VC_OPTICS_SPEED_DOWN:
+				if (ControllerSpeedSwitch.IsCenter() || ControllerSpeedSwitch.IsDown()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 716, 462, 1584, 1408, 144, 240);
+					ControllerSpeedSwitch.SetState(THREEPOSSWITCH_DOWN);
+				}
+				if (ControllerSpeedSwitch.IsUp()) {
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 716, 462, 1440, 1408, 144, 240);
+					ControllerSpeedSwitch.SetState(THREEPOSSWITCH_CENTER);
+				}
+				return true;
+
+			case AID_VC_OPTICS_LEFT_STICK_UP:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 01;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 0, 1648, 200, 200);			// UP
+				}
+				else {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 0;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_LEFT_STICK_DOWN:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 02;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 400, 1648, 200, 200);		// DOWN
+				}
+				else {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 0;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_LEFT_STICK_RIGHT:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 020;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 600, 1648, 200, 200);		// RIGHT
+				}
+				else {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 0;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_LEFT_STICK_LEFT:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 040;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 800, 1648, 200, 200);		// LEFT
+				}
+				else {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 0;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_LEFT_STICK_ROTLEFT:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 010;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 1200, 1648, 200, 200);		// LEFT
+				}
+				else {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 0;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_LEFT_STICK_ROTRIGHT:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 04;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 1000, 1648, 200, 200);		// RIGHT
+				}
+				else {
+					unsigned int c = agc.GetInputChannel(032);
+					c &= 077700;
+					c |= 0;
+					agc.SetInputChannel(032, c);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 200, 1648, 200, 200);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_RIGHT_STICK_UP:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					optics.OpticsManualMovement |= 0x01;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1400, 1648, 208, 208);		// UP
+				}
+				else {
+					optics.OpticsManualMovement = 0;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1608, 1648, 208, 208);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_RIGHT_STICK_DOWN:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					optics.OpticsManualMovement |= 0x02;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1816, 1648, 208, 208);		// DOWN
+				}
+				else {
+					optics.OpticsManualMovement = 0;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1608, 1648, 208, 208);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_RIGHT_STICK_RIGHT:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					optics.OpticsManualMovement |= 0x08;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 2024, 1648, 208, 208);		// RIGHT
+				}
+				else {
+					optics.OpticsManualMovement = 0;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1608, 1648, 208, 208);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_RIGHT_STICK_LEFT:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					optics.OpticsManualMovement |= 0x04;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 2232, 1648, 208, 208);		// LEFT
+				}
+				else {
+					optics.OpticsManualMovement = 0;
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1608, 1648, 208, 208);		// CENTER
+				}
+				return true;
+
+			case AID_VC_OPTICS_MARK_BUTTON:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					agc.SetInputChannelBit(016, 5, 1);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2166, 1012, 1728, 1512, 104, 104);	// DOWN
+				}
+				else {
+					agc.SetInputChannelBit(016, 5, 0);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2166, 1012, 1728, 1408, 104, 104);	// UP
+				}
+				return true;
+
+			case AID_VC_OPTICS_REJECT_BUTTON:
+				if (event == PANEL_MOUSE_LBDOWN) {
+					agc.SetInputChannelBit(016, 6, 1);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2302, 1066, 1832, 1512, 104, 104);	// DOWN
+				}
+				else {
+					agc.SetInputChannelBit(016, 6, 0);
+					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2302, 1066, 1832, 1408, 104, 104);	// UP
+				}
+				return true;
+
+			case AID_VC_OPTICS_DSKY_ZERO:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 597, 76, 846, 76, 76);		// DOWN
+					dsky2.NumberPressed(0);
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 597, 76, 1074, 76, 76);		// UP
+				return true;
+
+			case AID_VC_OPTICS_DSKY_ONE:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 597, 152, 846, 76, 76);
+					dsky2.NumberPressed(1);
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 597, 152, 1074, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_TWO:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 597, 228, 846, 76, 76);
+					dsky2.NumberPressed(2);
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 597, 228, 1074, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_THREE:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 597, 304, 846, 76, 76);
+					dsky2.NumberPressed(3);
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 597, 304, 1074, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_FOUR:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 517, 152, 770, 76, 76);
+					dsky2.NumberPressed(4);
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 517, 152, 998, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_FIVE:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 517, 228, 770, 76, 76);
+					dsky2.NumberPressed(5);
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 517, 228, 998, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_SIX:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 517, 304, 770, 76, 76);
+					dsky2.NumberPressed(6);
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 517, 304, 998, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_SEVEN:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 436, 152, 694, 76, 76);
+					dsky2.NumberPressed(7);
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 184, 436, 152, 922, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_EIGHT:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 436, 228, 694, 76, 76);
+					dsky2.NumberPressed(8);
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 267, 436, 228, 922, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_NINE:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 436, 304, 694, 76, 76);
+					dsky2.NumberPressed(9);
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 349, 436, 304, 922, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_PLUS:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 436, 76, 694, 76, 76);
+					dsky2.PlusPressed();
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 436, 76, 922, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_MINUS:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 517, 76, 770, 76, 76);
+					dsky2.MinusPressed();
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 103, 517, 76, 998, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_CLR:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 436, 380, 694, 76, 76);
+					dsky2.ClearPressed();
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 436, 380, 922, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_PRO:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 517, 380, 770, 76, 76);
+					dsky2.ProceedPressed();
+				}else{
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 517, 380, 998, 76, 76);
+					dsky2.ProceedReleased();
+				}
+				return true;
+
+			case AID_VC_OPTICS_DSKY_KEYREL:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 597, 380, 846, 76, 76);
+					dsky2.KeyRel();
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 431, 597, 380, 1074, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_VERB:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 477, 0, 694, 76, 76);
+					dsky2.VerbPressed();
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 477, 0, 922, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_NOUN:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 557, 0, 770, 76, 76);
+					dsky2.NounPressed();
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 20, 557, 0, 998, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_ENTR:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 477, 456, 694, 76, 76);
+					dsky2.EnterPressed();
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 477, 456, 922, 76, 76);
+				return true;
+
+			case AID_VC_OPTICS_DSKY_RESET:
+				if (event == PANEL_MOUSE_LBDOWN){
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 557, 456, 770, 76, 76);
+					dsky2.ResetPressed();
+				}
+				else
+					oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_OPTICS_DSKY], 512, 557, 456, 998, 76, 76);
+				return true;
+		}
 	}
 
 	return MainPanelVC.VCMouseEvent(id, event, p);
@@ -2301,6 +2824,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 	case AID_CMVC_POINTINGARROW:
 		UpdatePointingArrow();
 		SetVCCueCardsArrows();
+		if (viewpos == SATVIEW_OPTICS_SXT || viewpos == SATVIEW_OPTICS_SCT)	UpdateCMVCOptics();
 		return true;
 
 	case AID_VC_CUE_CARDS_LIGHTING:
@@ -2790,6 +3314,20 @@ void Saturn::SetView(double offset, bool update_direction)
 				//v.z += vcFreeCamz;
 				break;
 
+			case SATVIEW_OPTICS_SCT:
+				v = _V(0.135, -1.5, 0.732 + ofs_vc.z);
+				//v.x += vcFreeCamx;
+				//v.y += vcFreeCamy;
+				//v.z += vcFreeCamz;
+				break;
+	
+			case SATVIEW_OPTICS_SXT:
+				v = _V(-0.143, -1.5, 0.732 + ofs_vc.z);
+				//v.x += vcFreeCamx;
+				//v.y += vcFreeCamy;
+				//v.z += vcFreeCamz;
+				break;
+
 			case SATVIEW_GNPANEL:
 				v = _V(-0.05, -0.15, 0.3 + ofs_vc.z);
 				v.x += vcFreeCamx;
@@ -2837,6 +3375,10 @@ void Saturn::SetView(double offset, bool update_direction)
 			SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 			if (viewpos == SATVIEW_GNPANEL) {
 				SetCameraDefaultDirection(_V(0.0,-1.0, 0.0));
+			} else if (viewpos == SATVIEW_OPTICS_SCT) {
+				SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
+			} else if (viewpos == SATVIEW_OPTICS_SXT) {
+				SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
 			} else if (viewpos == SATVIEW_LEBRIGHT) {
 				SetCameraDefaultDirection(_V(1.0, 0.0, 0.0));
 			} else if (viewpos == SATVIEW_LEBLEFT) {
@@ -5938,45 +6480,20 @@ void Saturn::InitFDAI(UINT mesh)
 	AddAnimationComponent(anim_fdaiYrate_R, 0.0f, 1.0f, &mgt_yawrate_R);
 }
 
-/**** CUSTOM CAMERA DOESNT WORK IN VC, BUT I LEAVE THE CODE HERE FOR THE FUTURE ****
-// Search in code for the following and uncomment if Custom Camera works in VC in future
-// InitFDAICustomCamera
-// hFDAICam
-// hFDAISurf
-// srfFDAICamTexture
-// 
-// The Projection Plane is also Disabled in the Mesh File
-
-// CustomCamera
-void Saturn::InitFDAICustomCamera(void) {
-
-//	VECTOR3 FDAICamPos = _V(-0.673253, 0.62611, 0.20);	// From BlendFile
-	VECTOR3 FDAICamPos = _V(-0.673253, 0.62611, 43.5);  // From VC Camera Position
-	VECTOR3 FDAICamDir = _V(0.0, -0.314605, 0.949223);
-	VECTOR3 FDAICamUp  = _V(0.0, 0.949223, 0.314605);
-
-	gcCore *pCore = gcGetCoreInterface();
-//	gcInitialize();
-
+// CustomCamera for Optics
+void Saturn::UpdateOpticsCustomCam(VECTOR3 camPos, VECTOR3 camDir, VECTOR3 camUp) {
+	gcCore* pCore = gcGetCoreInterface();
 	if (pCore) {
-//		oapiClearSurface(hFDAISurf);
-//		hFDAICam = pCore->SetupCustomCamera(hFDAICam, oapiGetFocusObject(), FDAICamPos, FDAICamDir, FDAICamUp, 30 * RAD, hFDAISurf, CUSTOMCAM_DEFAULTS);
-//		hFDAICam = pCore->SetupCustomCamera(hFDAICam, GetHandle(), FDAICamPos, FDAICamDir, FDAICamUp, 30 * RAD, hFDAISurf, CUSTOMCAM_DEFAULTS);
-		hFDAICam = pCore->SetupCustomCamera(hFDAICam, oapiCameraTarget(), FDAICamPos, FDAICamDir, FDAICamUp, 30 * RAD, hFDAISurf, CUSTOMCAM_DEFAULTS);
-		
-		pCore->CustomCameraOnOff(hFDAICam, true);
-
-		DEVMESHHANDLE hMeshVis = GetDevMesh(vis, vcidx);
-		oapiSetTexture(hMeshVis, VC_TEX_FDAI_CustomCamera_dds, hFDAISurf);
-//		oapiBlt(srfFDAICamTexture, hFDAISurf, 0, 0, 0, 0, 256, 256);
-//		oapiSetTexture(hMeshVis, VC_TEX_FDAI_CustomCamera_dds, srf[SRF_FDAI]);
-//		oapiBlt(srfFDAICamTexture, srf[SRF_FDAI], 0, 0, 0, 0, 186, 186);
-
+		// (1.073 * RAD) This should be normaly (1.5 * RAD) but it's not working
+//		hOpticsCustomCam = pCore->SetupCustomCamera(hOpticsCustomCam, oapiCameraTarget(), camPos, camDir, camUp, 1.073 * RAD, srfOpticsCustomCam, CUSTOMCAM_DEFAULTS);
+		hOpticsCustomCam = pCore->SetupCustomCamera(hOpticsCustomCam, oapiCameraTarget(), camPos, camDir, camUp, 0.9 * RAD, srfOpticsCustomCam, CUSTOMCAM_DEFAULTS);
+		static bool CustomCam = true;
+		if (CustomCam) {
+			pCore->CustomCameraOnOff(hOpticsCustomCam, true);
+			CustomCam = false;
+		}
 	}
 }
-****************************************************************************************************/
-
-
 
 #ifdef _OPENORBITER
 void Saturn::SetVCLighting(UINT meshidx, DWORD *matList, MatProp EmissionMode, double state, int cnt)
@@ -6153,6 +6670,7 @@ void Saturn::UpdateForwardHatchClickspots(const VECTOR3 &ofs)
 	oapiVCSetAreaClickmode_Spherical(AID_VC_FWDHATCH_PRESS_EQU_VLV, FwdHatch_Equal_ValveLocation + ofs, rad);
 }
 
+// Hides mesh group true=hide, false=show(unhide)
 void Saturn::HideMeshGroup(int meshidx, int meshgrp, bool hide){
 	DEVMESHHANDLE hmesh = GetDevMesh (vis, meshidx);	
 	if (hmesh){
@@ -6239,4 +6757,287 @@ void Saturn::updateOrdealMshGrp(int tgtGrpIdx, int srcGrpIdx, VECTOR3 axis, VECT
 
     // 6. Cleanup allocated memory
 	if(ges.Vtx) delete [] ges.Vtx;
+}
+
+//
+// This is the VC Optics stuff.
+//
+void Saturn::UpdateCMVCOptics() {
+	auto setVCCameraLOS = [](double shaft, double trunnion) noexcept {
+		const double cosShaft = cos(shaft), sinShaft = sin(shaft);
+		const double cosTrun = cos(trunnion), sinTrun = sin(trunnion);
+		const double uzx = cosShaft * sinTrun, uzy = sinShaft * sinTrun, uzz = cosTrun;
+		const double azimuth = asin(uzx), polar = -atan2(uzy, uzz);
+		oapiCameraSetCockpitDir(polar, azimuth, false);
+	};
+
+	// If we are not in Optics view, Sextant or Teleskop, hide the VC Optics mesh
+	if (viewpos != SATVIEW_OPTICS_SCT && viewpos != SATVIEW_OPTICS_SXT) {
+		SetMeshVisibilityMode(hCMVCOpticsidx, MESHVIS_NEVER);
+		return;
+	}
+
+	// struct for storing the original vertices from the mesh
+	// We do this to avoid rounding errors in every calculation.
+	// For this, we use the original vertices from the mesh.
+	struct OpticsMeshGroup {
+		std::vector<VECTOR3> data;
+		std::vector<VECTOR3> datanew;		// This is for storing the transformed vertices, not the original ones.
+		std::vector<NTVERTEX> vertexdata;	// This is for sending the transformad vertices to D3D9 client
+		int vtxcnt;
+		MESHGROUP* mshgrp;
+		GROUPREQUESTSPEC grp{0};
+		int ordernr;
+	};
+
+	// If we are not in VC return
+	if (!vcmesh) return;
+	if (oapiGetFocusInterface() != this) return;
+
+	VECTOR3 camPosGlobal, camPos, camDir, camPointing, opticsPos, final_vertex;
+	double aperture = 0.0;
+
+	SetCameraDefaultDirection(_V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN));
+	oapiCameraSetCockpitDir(0,0);
+	SetCameraCatchAngle(0.0);
+	SetCameraRotationRange( PI/2., PI/2., PI/2., PI/2.);
+	bool isSextant = (viewpos == SATVIEW_OPTICS_SXT);
+
+	if (isSextant) { // Sextant
+		bool isFlashing = OpticsVCDualViewFlashing;
+		bool dualView = optics.SextDualView;
+		bool dvLOSTog = optics.SextDVLOSTog;
+
+		if (isFlashing && dualView && dvLOSTog) {
+			setVCCameraLOS(optics.SextShaft, 0.0);
+			HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, true);
+		} else {
+			setVCCameraLOS(optics.SextShaft, optics.SextTrunion);
+			HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, isFlashing || !dualView);
+		}
+//		aperture = oapiCameraAperture() * multiplicator; // 1.2282;
+		aperture = oapiCameraAperture() * 1.230;
+	} else { // Telescope
+		setVCCameraLOS(optics.TeleShaft, optics.TeleTrunion);
+//		aperture = oapiCameraAperture() * multiplicator2; //1.4637;
+		aperture = oapiCameraAperture() * 1.467;
+		// aperture = 1;	
+	}
+
+	// Get global camera position and direction. Is set in SATVIEW_OPTICS_SCT and SATVIEW_OPTICS_SXT
+	oapiCameraGlobalPos(&camPosGlobal);
+	oapiCameraGlobalDir(&camDir);
+
+	MATRIX3 mRot;
+	oapiCameraRotationMatrix(&mRot);
+	// The up vector is the second column of the camera matrix.
+	VECTOR3 gCamUp = _V(mRot.m12, mRot.m22, mRot.m32);
+
+	// Transformation into the local ship system
+	Global2Local(camPosGlobal, camPos);
+
+	// Local viewing direction
+	VECTOR3 gTarget = camPosGlobal + camDir;
+	VECTOR3 lTarget;
+	Global2Local(gTarget, lTarget);
+	VECTOR3 lCamDir = lTarget - camPos;
+	normalise(lCamDir);
+
+	// Local Up Vector
+	VECTOR3 gUpPos = camPosGlobal + gCamUp;
+	VECTOR3 lUpPos;
+	Global2Local(gUpPos, lUpPos);
+	VECTOR3 lCamUp = lUpPos - camPos;
+	normalise(lCamUp);
+
+	// Local Right Vector
+	VECTOR3 lCamRight = crossp(lCamUp, lCamDir);
+	normalise(lCamRight);
+
+	VECTOR3 ofs;
+	GetMeshOffset(vcidx, ofs);
+	DEVMESHHANDLE hOpticsMesh = GetDevMesh(vis, hCMVCOpticsidx);
+
+	static std::vector<OpticsMeshGroup> cmvcOptics(NUM_MSHGRPS + NUM_RTCL); // 8 meshgroups from mesh + 3 extra for the reticles
+	static bool initVCOptics = true;
+
+	if (optics.SextDualView) {
+		// local custom camera direction
+		VECTOR3 localDir = _V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN);
+
+		// Calculate Local Up Vector to prevent image distortion
+		// Since localDir only has Y and Z components,
+		// we swap these and reverse one sign
+		VECTOR3 localUp  = _V(0.0, OPTICS_BASE_SIN, OPTICS_BASE_COS);
+
+		// normalise the vectors
+		normalise(localDir);
+		normalise(localUp);
+
+		UpdateOpticsCustomCam(camPos, localDir, localUp);
+
+		// Superimposing using Sketchpad3 in Orbiter2016Beta or Sketchpad(DrawAPi) in OpenOrbiter
+#ifdef _OPENORBITER
+		oapi::Sketchpad* skp = oapiGetSketchpad(srfOpticsCustomCam);
+#else
+		oapi::Sketchpad3* skp = (oapi::Sketchpad3*)oapiGetSketchpad(srfOpticsCustomCam);
+#endif // _OPENORBITER
+		if (skp) {
+			oapi::Brush* pBrush = oapiCreateBrush(VCOpticsRetAlpha);
+			skp->SetBrush(pBrush);
+			skp->SetBlendState(SKP_COPY_ALPHA);
+			skp->Rectangle(0, 0, 2048, 2048);
+			oapiReleaseBrush(pBrush);
+			oapiReleaseSketchpad(skp);
+		}
+		oapiBlt(srf[SRF_VC_OPTICS_CUSTOMCAM], srfOpticsCustomCam, 0, 0, 0, 0, 2048, 2048);
+	}
+
+	// Make copies of the mesh Vertices 
+	if (initVCOptics) {
+		MESHHANDLE hCVOptics = GetMeshTemplate(hCMVCOpticsidx); // handle for VC Optics Mesh
+
+		// Order of mesh groups. This must be the same in the mesh
+		// 0=Telescope eyepiece, 1=Sextant eyepiece, 2=dsky, 3=CMVCOptics_Panel_122, 4=Optics Clickpoints
+		// 5=Custom Camera, 6=Telescope reticle,  7=Sextant reticle
+		for (int i = FIRSTMSHGRP; i < NUM_MSHGRPS; i++) {
+			cmvcOptics[i].mshgrp = oapiMeshGroup(hCVOptics, i);
+			cmvcOptics[i].vtxcnt = cmvcOptics[i].mshgrp->nVtx;
+			cmvcOptics[i].data.resize(cmvcOptics[i].vtxcnt);
+			cmvcOptics[i].datanew.resize(cmvcOptics[i].vtxcnt);
+			if (i > LASTMSHGRP) cmvcOptics[i + NUM_RTCL].data.resize(cmvcOptics[i].vtxcnt);
+
+			for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
+				VECTOR3 vtx = _V(cmvcOptics[i].mshgrp->Vtx[j].x, cmvcOptics[i].mshgrp->Vtx[j].y, cmvcOptics[i].mshgrp->Vtx[j].z);
+				cmvcOptics[i].data[j] = vtx;
+
+				// We copy all the original mesh reticle vertices from the positions 6/7 of the mesh array to positions 8/9
+				// This is needed for the rotation of the reticles. We need only the vertices. 
+				if (i > LASTMSHGRP) cmvcOptics[i + NUM_RTCL].data[j] = vtx;
+			}
+			cmvcOptics[i].vertexdata.resize(cmvcOptics[i].vtxcnt);
+			cmvcOptics[i].grp.Vtx = cmvcOptics[i].vertexdata.data();
+			cmvcOptics[i].grp.nVtx = cmvcOptics[i].vtxcnt;
+		}
+
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SCT_EYEPIECE,	isSextant);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_EYEPIECE,	!isSextant);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_DSKY,		!ViewOpticsPanels);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_P122,		!ViewOpticsPanels);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SCT_RETICLE,		isSextant);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_RETICLE,		!isSextant);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_CLKPNTS,	true);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM,	true);
+		FovSaveVCOptics = 30 * RAD;
+
+		initVCOptics = false;
+		CMVCOpticsInitP122Switches(); // Sync Panel 122 switches with the VC.
+	}
+
+	// Rotate Reticle
+	if (!oapiGetPause()) { // *** oapiGetPause() maybe unnecessary ***
+		double cos_a = std::cos(-optics.TeleShaft);
+		double sin_a = std::sin(-optics.TeleShaft);
+		for (int i = FIRSTRTCL; i < NUM_MSHGRPS; i++) { // If we wand also to rotate the reticle for the Custom camera we need to change i<7 to i<8
+			for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
+				double rx = cmvcOptics[i + NUM_RTCL].data[j].x;
+				double ry = cmvcOptics[i + NUM_RTCL].data[j].y;
+				cmvcOptics[i].data[j].x = rx * cos_a - ry * sin_a;
+				cmvcOptics[i].data[j].y = rx * sin_a + ry * cos_a;
+				cmvcOptics[i].data[j].z = cmvcOptics[i + NUM_RTCL].data[j].z;
+			}
+		}
+	}
+
+	// Position the Opticsmesh 15cm in front of the camera
+	opticsPos = camPos - ofs + (lCamDir * 0.15);
+
+	GROUPEDITSPEC ges;
+	ges.flags = GRPEDIT_VTXCRD;
+	ges.vIdx = 0;
+
+	// OPTIMIZATION: Multiply direction vectors once per frame by aperture to accelerate the loop
+	VECTOR3 rScaled = lCamRight * aperture;
+	VECTOR3 uScaled = lCamUp    * aperture;
+	VECTOR3 dScaled = lCamDir   * aperture;
+
+	// Transform Vertices
+	for (int i = FIRSTMSHGRP; i < NUM_MSHGRPS; i++) {
+		for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
+			VECTOR3 vtx = cmvcOptics[i].data[j];
+
+			// Linear combination using pre-scaled vectors saves explicit vector multiplications
+			final_vertex = rScaled * vtx.x + uScaled * vtx.y + dScaled * vtx.z;
+			final_vertex += opticsPos;
+			cmvcOptics[i].datanew[j] = final_vertex;
+
+			cmvcOptics[i].grp.Vtx[j].x = (float)final_vertex.x;
+			cmvcOptics[i].grp.Vtx[j].y = (float)final_vertex.y;
+			cmvcOptics[i].grp.Vtx[j].z = (float)final_vertex.z;
+		}
+
+		// Send Mesh-Update to Orbiter
+		ges.nVtx = cmvcOptics[i].vtxcnt;
+		ges.Vtx = cmvcOptics[i].grp.Vtx;
+		oapiEditMeshGroup(hOpticsMesh, i, &ges);
+	}
+
+	// UPDATE CLICKPOINTS
+	double ClkArea = 0.0015 * aperture;     // Smaller CLickarea for the Switches
+	double ClkAreaDSKY = 0.005 * aperture;  // Bigger for the DSKY
+
+	for (int i = AID_VC_OPTICS_DSKY_VERB; i <= AID_VC_OPTICS_DSKY_RESET; i++) {
+		oapiVCSetAreaClickmode_Spherical(i, cmvcOptics[CMVC_OPTICS_CLKPNTS].datanew[i - AID_VC_OPTICS_DSKY_VERB] + ofs, ClkAreaDSKY);
+	}
+
+	for (int i = AID_VC_OPTICS_ZERO_UP; i <= AID_VC_OPTICS_REJECT_BUTTON; i++) {
+		oapiVCSetAreaClickmode_Spherical(i, cmvcOptics[CMVC_OPTICS_CLKPNTS].datanew[i - AID_VC_OPTICS_DSKY_VERB] + ofs, ClkArea);
+	}
+    
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OPTICS_HIDEPANELS, cmvcOptics[CMVC_OPTICS_CLKPNTS].datanew[AID_VC_OPTICS_HIDEPANELS - AID_VC_OPTICS_DSKY_VERB] + ofs, 0.015 * aperture);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OPTICS_DUALVIEW_FLASHING, cmvcOptics[CMVC_OPTICS_CLKPNTS].datanew[AID_VC_OPTICS_DUALVIEW_FLASHING - AID_VC_OPTICS_DSKY_VERB] + ofs, 0.015 * aperture);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OPTICS_RETICLE_PLUS, cmvcOptics[CMVC_OPTICS_CLKPNTS].datanew[AID_VC_OPTICS_RETICLE_PLUS - AID_VC_OPTICS_DSKY_VERB] + ofs, ClkArea);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OPTICS_RETICLE_MINUS, cmvcOptics[CMVC_OPTICS_CLKPNTS].datanew[AID_VC_OPTICS_RETICLE_MINUS - AID_VC_OPTICS_DSKY_VERB] + ofs, ClkArea);
+
+	// Update the DSKY. Instead of blitting every light and digits we simply blit the whole DSKY
+	// from the other texture which all the lights and digits are already blittet.
+	// This is done for every frame. I think it would be enough to do it at every timestep instead.
+	oapiBlt(srf[SRF_VC_OPTICS_DSKY], srf[SRF_VC_4DSKY_LEB], 0, 0, 1754, 2107, 606, 400);
+
+	SetMeshVisibilityMode(hCMVCOpticsidx, MESHVIS_VC);
+}
+
+void Saturn::CMVCOpticsInitP122Switches() {
+	// Lambda helper function: Does NOT require a declaration in the header!
+	// Automatically calculates the source Y-coordinate based on the switch index.
+	auto BlitSwitchByIndex = [this](int destX, int destY, int textureIndex) {
+		const int SRC_X_POS  = 1408; // Fixed X-position from the texture
+		const int SWITCH_W   = 144;
+		const int SWITCH_H   = 240;
+		const int STEP_Y     = 144;;  // Distance the Y-coordinate jumps per step
+
+		int srcY = textureIndex * STEP_Y;
+
+		oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 
+				destX, destY, srcY, SRC_X_POS, SWITCH_W, SWITCH_H);
+	};
+
+	// 1. OpticsZeroSwitch (Uses Y-entries: 0 and 144 -> Index 0 and 1)
+	BlitSwitchByIndex(120, 120, OpticsZeroSwitch.IsUp() ? 0 : 1);
+
+	// 2. ControllerTelescopeTrunnionSwitch (Uses Y-entries: 288, 432 and 576 -> Index 2, 3 and 4)
+	int trunnionIdx = ControllerTelescopeTrunnionSwitch.IsUp() ? 2 :
+						(ControllerTelescopeTrunnionSwitch.IsCenter() ? 3 : 4);
+	BlitSwitchByIndex(442, 120, trunnionIdx);
+
+	// 3. ControllerCouplingSwitch (Uses Y-entries: 720 and 864 -> Index 5 and 6)
+	BlitSwitchByIndex(708, 122, ControllerCouplingSwitch.IsUp() ? 5 : 6);
+
+	// 4. OpticsModeSwitch (Uses Y-entries: 1008 and 1152 -> Index 7 and 8)
+	BlitSwitchByIndex(450, 462, OpticsModeSwitch.IsUp() ? 7 : 8);
+
+	// 5. ControllerSpeedSwitch (Uses Y-entries: 1296, 1440 and 1584 -> Index 9, 10 and 11)
+	int speedIdx = ControllerSpeedSwitch.IsUp() ? 9 :
+					(ControllerSpeedSwitch.IsCenter() ? 10 : 11);
+	BlitSwitchByIndex(716, 462, speedIdx);
 }
