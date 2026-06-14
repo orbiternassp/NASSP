@@ -71,7 +71,7 @@ class LMSuit
 public:
 	LMSuit();
 	void Init(LEM *l, h_Tank *suittank, h_Pipe *helmetpipe);
-	void SetHelmetValveSizes();
+	void SetHelmetValveSizes(float s);
 	double GetHelmetSize() { return helmet->in->size; } //For debugging
 	void OpenHelmetGloves();
 	void CloseHelmetGloves();

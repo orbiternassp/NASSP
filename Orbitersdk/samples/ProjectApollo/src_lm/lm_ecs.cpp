@@ -63,8 +63,8 @@ void LEMCrewStatus::Timestep(double simdt) {
 		if (status == ECS_CREWSTATUS_DEAD) {
 			crewDeadSound.play();
 		}
-		lem->CDRSuit.SetHelmetValveSizes(); //Temporary function call to force old saves to use new valve sizes, can be removed after a few versions when old saves are no longer used.
-		lem->LMPSuit.SetHelmetValveSizes(); //Temporary function call to force old saves to use new valve sizes, can be removed after a few versions when old saves are no longer used.
+		lem->CDRSuit.SetHelmetValveSizes(6.0f); //Temporary function call to force old saves to use new valve sizes, can be removed after a few versions when old saves are no longer used.
+		lem->LMPSuit.SetHelmetValveSizes(6.0f); //Temporary function call to force old saves to use new valve sizes, can be removed after a few versions when old saves are no longer used.
 		firstTimestepDone = true;
 	}
 
@@ -261,9 +261,9 @@ void LMSuit::CloseHelmetGloves()
 	}
 }
 
-void LMSuit::SetHelmetValveSizes()
+void LMSuit::SetHelmetValveSizes(float s)
 {
-	helmet->in->size = 5.0f;
+	helmet->in->size = s;
 }
 
 void LMSuit::Timestep(double simdt)
