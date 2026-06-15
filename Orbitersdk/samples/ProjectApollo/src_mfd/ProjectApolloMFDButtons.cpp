@@ -55,14 +55,14 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	static const MFDBUTTONMENU mnuECS[12] = {
 		{ "Back", 0, 'B' },
 		{ "Crew number", 0, 'N' },
-		{ "CDR in suit", 0, 'C' },
-		{ "LMP in suit", 0, 'L' },
+		{ "CDR location (LM Only)", 0, 'C' },
+		{ "LMP location (LM Only)", 0, 'L' },
 		{ "Start EVA",0,'E' },
 		{ "Connect CSM O2 Hose to LM",0,'H' },
 		{ "Jettison LM Equipment",0,'J' },
 		{ 0,0,0 },
-		{ "CDR Helmet & Gloves",0,'Y' },
-		{ "LMP Helmet & Gloves",0,'X' },
+		{ "CDR Helmet/Gloves (LM Only)",0,'Y' },
+		{ "LMP Helmet/Gloves (LM Only)",0,'X' },
 		{ 0,0,0 },
 		{ "ECS Debug", 0, 'D' }
 	};
