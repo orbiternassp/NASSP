@@ -107,7 +107,7 @@ public:
 
 	//LANDMARK TRACKING PAGE
 	AP11LMARKTRKPAD landmarkpad;
-	double LmkLat, LmkLng;
+	double LmkLat, LmkLng, LmkAlt;
 	double LmkTime;
 	double LmkElevation;
 

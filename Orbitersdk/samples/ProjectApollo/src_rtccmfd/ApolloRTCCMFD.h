@@ -320,6 +320,7 @@ public:
 	void menuSetLmkElevation();
 	void menuSetLmkLat();
 	void menuSetLmkLng();
+	void menuSetLmkAlt();
 	void menuLmkUseLandingSite();
 	void menuLmkPADCalc();
 	void menuSetTargetingMenu();
