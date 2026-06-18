@@ -1734,6 +1734,8 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		skp->Text(CW, 8 * H / 14, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%.3f°", GC->LmkLng*DEG);
 		skp->Text(CW, 10 * H / 14, Buffer, strlen(Buffer));
+		sprintf(Buffer, "%.2lf", GC->LmkAlt / 1852.0);
+		skp->Text(CW, 12 * H / 14, Buffer, strlen(Buffer));
 		
 		GET_Display(Buffer2, GC->landmarkpad.T1[0]);
 		sprintf(Buffer, "T1: %s (HOR)", Buffer2);

@@ -7420,11 +7420,17 @@ void ApolloRTCCMFD::menuSetLmkLng()
 	GenericDoubleInput(&GC->LmkLng, "Choose the landmark longitude:", "%.3lf", RAD);
 }
 
+void ApolloRTCCMFD::menuSetLmkAlt()
+{
+	GenericDoubleInput(&GC->LmkAlt, "Choose the landmark altitude (in nautical miles):", "%.2lf", 1852.0);
+}
+
 void ApolloRTCCMFD::menuLmkUseLandingSite()
 {
 	//Load RTCC stored landing site coordinates into input for P22 PAD
 	GC->LmkLat = GC->rtcc->BZLAND.lat[0];
 	GC->LmkLng = GC->rtcc->BZLAND.lng[0];
+	GC->LmkAlt = GC->rtcc->BZLAND.rad[0] - OrbMech::R_Moon;
 }
 
 void ApolloRTCCMFD::menuLSRadius()

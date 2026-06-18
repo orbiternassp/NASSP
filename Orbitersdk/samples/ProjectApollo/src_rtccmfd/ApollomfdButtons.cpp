@@ -454,12 +454,12 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "T2 elevation", 0, ' ' },
 		{ "Landmark Latitude", 0, 'A' },
 		{ "Landmark Longitude", 0, 'O' },
-		{ "Load landing site coordinates", 0, 'D' },
+		{ "Landmark Altitude", 0, 'G' },
 
 		{ "Calculate PAD", 0, 'C' },
 		{ "", 0, ' ' },
 		{ "", 0, ' ' },
-		{ "", 0, ' ' },
+		{ "Load landing site coordinates", 0, 'D' },
 		{ "", 0, ' ' },
 		{ "Back to menu", 0, 'B' },
 	};
@@ -471,10 +471,10 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("EL", OAPI_KEY_F, &ApolloRTCCMFD::menuSetLmkElevation);
 	RegisterFunction("LAT", OAPI_KEY_A, &ApolloRTCCMFD::menuSetLmkLat);
 	RegisterFunction("LNG", OAPI_KEY_O, &ApolloRTCCMFD::menuSetLmkLng);
-	RegisterFunction("LLS", OAPI_KEY_D, &ApolloRTCCMFD::menuLmkUseLandingSite);
+	RegisterFunction("ALT", OAPI_KEY_G, &ApolloRTCCMFD::menuSetLmkAlt);
 
 	RegisterFunction("CLC", OAPI_KEY_C, &ApolloRTCCMFD::menuLmkPADCalc);
-	RegisterFunction("", OAPI_KEY_G, &ApolloRTCCMFD::menuVoid);
+	RegisterFunction("LLS", OAPI_KEY_D, &ApolloRTCCMFD::menuLmkUseLandingSite);
 	RegisterFunction("", OAPI_KEY_H, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_I, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("", OAPI_KEY_J, &ApolloRTCCMFD::menuVoid);
