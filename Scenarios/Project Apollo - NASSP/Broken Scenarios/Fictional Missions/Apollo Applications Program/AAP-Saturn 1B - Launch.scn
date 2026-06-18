@@ -3,7 +3,7 @@ AAP - Saturn 1B - Launch. Testing scenario in which a Saturn 1b launches a CSM i
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System ProjectApollo/Sol
+  System ProjectApollo/Sol_VirtualAGC
   Date MJD 41951.543565
 END_ENVIRONMENT
 

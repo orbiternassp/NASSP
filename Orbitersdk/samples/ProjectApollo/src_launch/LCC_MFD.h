@@ -28,6 +28,11 @@
 #include "LCC.h"
 #include "LCCMFDButtons.h"
 
+
+#ifndef OAPI_MSGTYPE
+typedef int OAPI_MSGTYPE;
+#endif
+
 class LCC_MFD :public MFD2
 {
 private:
@@ -50,7 +55,7 @@ public:
 	void set_SLCCDiscreteInput(int n, bool set);
 	void LoadCheckoutProgram(const char *str);
 
-	static int MsgProc(UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
+	static OAPI_MSGTYPE MsgProc(UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 protected:
 	const LCCMFDButtons m_buttonPages;
 

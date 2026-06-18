@@ -64,7 +64,6 @@ public:
 	int  Done();
     int  LoadMissionLandingSoundArray(const SoundLib &soundlib,char *soundname);
     int  LoadMissionTimeSoundArray(const SoundLib &soundlib, char *soundname, double MissionTime);
-    int  InitDirectSound();
     int  PlaySound(char *filenames,int newbuffer,double offset);
     int	IsPlaying();
 	int	Finish(double offsetfinish);

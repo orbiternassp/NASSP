@@ -27,6 +27,10 @@
 
 class MCC;
 
+#ifndef OAPI_MSGTYPE
+typedef int OAPI_MSGTYPE;
+#endif
+
 class ProjectApolloChecklistMFD: public MFD2 {
 public:
 	ProjectApolloChecklistMFD (DWORD w, DWORD h, VESSEL *vessel);
@@ -42,7 +46,7 @@ public:
 	void RecallStatus (void);
 	void substituteVariables(char *buffer,int buflen);
 
-	static int MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
+	static OAPI_MSGTYPE MsgProc (UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
 	MFDConnector conn;
 	vector<ChecklistGroup> groups;

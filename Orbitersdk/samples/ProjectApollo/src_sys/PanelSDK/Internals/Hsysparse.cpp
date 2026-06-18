@@ -551,7 +551,7 @@ void H_system::Create_h_ExteriorVentPipe(char* line) {
 	if (!out) {
 		char errorBuffer[255];
 		sprintf_s(errorBuffer, sizeof(errorBuffer), "Fatal Error, could not connect %s to EXTERIOR_ENVIRONMENT:IN", name);
-		oapiWriteLogError(errorBuffer);
+		oapiWriteLogError(errorBuffer, "%s");
 	}
 
 	int two_way = 1;

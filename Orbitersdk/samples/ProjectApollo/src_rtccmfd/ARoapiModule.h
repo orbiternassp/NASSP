@@ -26,6 +26,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "Orbitersdk.h"
 
+#ifndef OAPI_MSGTYPE
+typedef int OAPI_MSGTYPE;
+#endif
+
 class ARoapiModule : public oapi::Module {
 public:
 	ARoapiModule(HINSTANCE hDLL);
@@ -35,6 +39,6 @@ public:
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
 	void clbkDeleteVessel(OBJHANDLE hVessel);
-	static int MsgProc(UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
+	static OAPI_MSGTYPE MsgProc(UINT msg, UINT mfd, WPARAM wparam, LPARAM lparam);
 
 };

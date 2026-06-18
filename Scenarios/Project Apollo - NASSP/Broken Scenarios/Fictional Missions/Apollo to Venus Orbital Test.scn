@@ -6,7 +6,7 @@ Be prepared for random failures during the launch and flight.
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System ProjectApollo/Sol
+  System ProjectApollo/Sol_VirtualAGC
   Date MJD 40995.52222222
 END_ENVIRONMENT
 

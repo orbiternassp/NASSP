@@ -6,7 +6,7 @@ TLI occurs at GET 02:46:44. LOI occurs around GET 69:17:53.
 END_DESC
 
 BEGIN_ENVIRONMENT
-  System ProjectApollo/Sol
+  System ProjectApollo/Sol_VirtualAGC
   Date MJD 39982.7305557871
 END_ENVIRONMENT
 

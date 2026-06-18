@@ -8,10 +8,9 @@ This guide is a work in progress and will be updated in the future.
 ## Building
 To build the project you will need a working installation of Orbiter developed by Martin Schweiger.
 These are all the requirements for a working development environment
-* [Orbiter Beta](http://orbit.medphys.ucl.ac.uk/betainstall.html)
-* [D3D9 Client for orbiter](https://www.orbiter-forum.com/showthread.php?t=18431)
-* NASSP Orbiter2016 (or derivative) branch checked out inside the Orbiter installation
-* Visual Studio (2017, 2019, or 2022)
+* [Orbiter 2024 x64](https://github.com/orbitersim/orbiter/releases/tag/2024)
+* NASSP Orbiter2024 (or derivative) branch checked out inside the Orbiter installation
+* Visual Studio 2019 or 2022 (2022 is preferred)
 
 ## Submitting changes
 To get your work included in the project we ask you to make a pull request with a brief summary of the changes you did followed by details of your implementation.
