@@ -61,10 +61,10 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 		{ "Connect CSM O2 Hose to LM",0,'H' },
 		{ "Jettison LM Equipment",0,'J' },
 		{ 0,0,0 },
-		{ "CDR Helmet/Gloves (LM Only)",0,'Y' },
-		{ "LMP Helmet/Gloves (LM Only)",0,'X' },
+		{ "CDR Helmet/Gloves (LM Only)",0,'F' },
+		{ "LMP Helmet/Gloves (LM Only)",0,'G' },
 		{ 0,0,0 },
-		{ "ECS Debug", 0, 'D' }
+		{ "ECS Debug", 0, 'P' }
 	};
 
 	page.ECS = RegisterPage(mnuECS, sizeof(mnuECS) / sizeof(MFDBUTTONMENU));
@@ -78,10 +78,10 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 
 	RegisterFunction("JET", OAPI_KEY_J, &ProjectApolloMFD::menuJettisonEquipment);
 	RegisterFunction("", OAPI_KEY_Z, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("HMT", OAPI_KEY_Y, &ProjectApolloMFD::menuCDRHelmetGloves);
-	RegisterFunction("HMT", OAPI_KEY_X, &ProjectApolloMFD::menuLMPHelmetGloves);
+	RegisterFunction("HMT", OAPI_KEY_F, &ProjectApolloMFD::menuCDRHelmetGloves);
+	RegisterFunction("HMT", OAPI_KEY_G, &ProjectApolloMFD::menuLMPHelmetGloves);
 	RegisterFunction("", OAPI_KEY_W, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("DBG", OAPI_KEY_D, &ProjectApolloMFD::menuSetECSDebugPage);
+	RegisterFunction("DBG", OAPI_KEY_P, &ProjectApolloMFD::menuSetECSDebugPage);
 
 
 	static const MFDBUTTONMENU mnuECSDBG[8] = {
