@@ -713,6 +713,8 @@ void LEM::SystemsInit()
 	SuitPressureSwitch.Init((h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUIT"), 3.50/PSI, 2.90/PSI);
 	CabinRepressValve.Init(this, (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CABINREPRESS"),
 		&ECS_CABIN_REPRESS_CB, &CabinRepressValveSwitch, &PressRegAValve, &PressRegBValve);
+	CDRSuit.Init(this, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUIT"), (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:CDRHELMET"));
+	LMPSuit.Init(this, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT"), (h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:LMPHELMET"));
 	CDRIsolValve.Init(this, &CDRSuitIsolValve, &CDRActuatorOvrd);
 	LMPIsolValve.Init(this, &LMPSuitIsolValve, &LMPActuatorOvrd);
 	SuitCircuitPressureRegulatorA.Init((h_Pipe *)Panelsdk.GetPointerByString("HYDRAULIC:PRESSREGAOUT"),
@@ -1437,6 +1439,8 @@ void LEM::SystemsInternalTimestep(double simdt)
 		CabinRepressValve.SystemTimestep(tFactor);
 		SuitCircuitPressureRegulatorA.SystemTimestep(tFactor);
 		SuitCircuitPressureRegulatorB.SystemTimestep(tFactor);
+		CDRSuit.SystemTimestep(tFactor);
+		LMPSuit.SystemTimestep(tFactor);
 		CDRIsolValve.SystemTimestep(tFactor);
 		LMPIsolValve.SystemTimestep(tFactor);
 		OVHDCabinReliefDumpValve.SystemTimestep(tFactor);
@@ -1584,6 +1588,8 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	SBand.Timestep(simt);
 	VHF.Timestep(simt);
 	ecs.Timestep(simdt);
+	CDRSuit.Timestep(simdt);
+	LMPSuit.Timestep(simdt);
 	OverheadHatch.Timestep(simdt);
 	ForwardHatch.Timestep(simdt);
 	CrewStatus.Timestep(simdt);
@@ -2035,6 +2041,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 
 	double *CabFan = (double*)Panelsdk.GetPointerByString("ELECTRIC:CABINFAN:ISON");
 
+	int *cdrhelmetvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:CDRSUIT:LEAK:ISOPEN");
+	int *lmphelmetvlv = (int*)Panelsdk.GetPointerByString("HYDRAULIC:LMPSUIT:LEAK:ISOPEN");
+
 	//Prim Loop 1 Heat
 	double *LGCHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:LGCHEAT:HEAT");
 	double *CDUHeat = (double*)Panelsdk.GetPointerByString("HYDRAULIC:CDUHEAT:HEAT");
@@ -2166,6 +2175,9 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	double* IMUHtr = (double*)Panelsdk.GetPointerByString("ELECTRIC:LM-IMU-Heater:ISON");
 	
 	double* ASAFineHtrPWM = (double*)Panelsdk.GetPointerByString("ELECTRIC:LEM-ASA-FineHeater:PWMCYC");
+
+	//sprintf(oapiDebugString(), "CDR: %lf LMP: %lf CDRsuited %i LMPsuited %i CDRPLSS %i LMPPLSS %i CDRHelmet %i LMPHelmet %i CDRHelmetFn %i LMPHelmetFn %i", CDRSuit.GetHelmetSize(), LMPSuit.GetHelmetSize(), CDRSuited->number, LMPSuited->number, CDRinPLSS, LMPinPLSS,
+		//*cdrhelmetvlv, *lmphelmetvlv, CDRSuit.IsHelmetOpen(), LMPSuit.IsHelmetOpen());
 	
 	//sprintf(oapiDebugString(), "Cabin T: %.4f Suit T: %.4f Loop T: %.4f ASA T: %.4f ASASelfHEat W: %.4f FastHtr: %1f FineHtr: %1f FineHtrPWM: %.4f IMUHtr: %1f IMU T: %.4f", KelvinToFahrenheit(*CabinTemp), KelvinToFahrenheit(*hxheatingTemp), 
 		//KelvinToFahrenheit(*primloop1temp), KelvinToFahrenheit(*ASARad), *ASASelfHeat, *ASAFastHtr, *ASAFineHtr, *ASAFineHtrPWM, *IMUHtr, KelvinToFahrenheit(*IMURad));
@@ -2243,7 +2255,6 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	//sprintf(oapiDebugString(), "DO2Q %lf DO2P %lf DO2T %lf DO2VM %lf DO2E %lf DO2PP %lf", ecs.DescentOxyTankQuantity(), ecs.DescentOxyTankPressurePSI(), *DESO2TankTemp, *DESO2VapMass, *DESO2Energy, (*DESO2PP*PSI));
 	//sprintf(oapiDebugString(), "DO2TP %lf DO2MP %lf O2MP %lf PREGA %lf SUITP %lf", ecs.DescentOxyTankPressurePSI(), (*DESO2ManifoldPress*PSI), (*O2ManifoldPress*PSI), (*PressRegAPress*PSI), ecs.GetSuitPressurePSI());
 	//sprintf(oapiDebugString(), "DO2TP %lf DO2TM %lf DO2MP %lf DO2MM %lf O2MP %lf O2MM %lf DESO2 %d ASCO21 %d ASCO22 %d", ecs.DescentOxyTankPressurePSI(), ecs.DescentOxyTankQuantity(), (*DESO2ManifoldPress*PSI), *DESO2ManifoldMass, (*O2ManifoldPress*PSI), *O2ManifoldMass, *deso2manifoldoutvlv, *asco2out1vlv, *asco2out2vlv);
-	
 
 	/*
 	double CDRAmps=0,LMPAmps=0;
@@ -2254,9 +2265,7 @@ void LEM::SystemsTimestep(double simt, double simdt)
 		CDRVolts,CDRAmps,ACBusA.Voltage(), ACBusB.Voltage());
 	*/
 
-
 	//Water Tank Debug Lines
-
 /*
 	double *PLSSH2OMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:MASS");
 	double *PLSSH2OVapMass = (double *)Panelsdk.GetPointerByString("HYDRAULIC:PLSSH2OFILL:H2O_VAPORMASS");
@@ -2352,7 +2361,14 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 	}
 	else if (CDRSuited->number == 1)
 	{
-		ecs.cdrStatus = 1;
+		if (CDRSuit.IsHelmetOpen())
+		{
+			ecs.cdrStatus = 4;
+		}
+		else
+		{
+			ecs.cdrStatus = 1;
+		}
 	}
 	else
 	{
@@ -2369,7 +2385,14 @@ void LEM::GetECSStatus(LEMECSStatus &ecs)
 	}
 	else if (LMPSuited->number == 1)
 	{
-		ecs.lmpStatus = 1;
+		if (LMPSuit.IsHelmetOpen())
+		{
+			ecs.lmpStatus = 4;
+		}
+		else
+		{
+			ecs.lmpStatus = 1;
+		}
 	}
 	else
 	{
@@ -2405,6 +2428,7 @@ void LEM::SetCDRInSuit()
 	{
 		CDRSuited->number = 0;
 		CDRinPLSS = 2;
+		CDRSuit.CloseHelmetGloves();
 	}
 	else if (CrewInCabin->number >= 1 && CDRSuited->number == 0)
 	{
@@ -2416,6 +2440,7 @@ void LEM::SetCDRInSuit()
 	{
 		CrewInCabin->number++;
 		CDRSuited->number = 0;
+		CDRSuit.OpenHelmetGloves();
 	}
 	SetCrewMesh();
 }
@@ -2432,6 +2457,7 @@ void LEM::SetLMPInSuit()
 	{
 		LMPSuited->number = 0;
 		LMPinPLSS = 2;
+		LMPSuit.CloseHelmetGloves();
 	}
 	else if (CrewInCabin->number >= 1 && LMPSuited->number == 0)
 	{
@@ -2443,8 +2469,45 @@ void LEM::SetLMPInSuit()
 	{
 		CrewInCabin->number++;
 		LMPSuited->number = 0;
+		LMPSuit.OpenHelmetGloves();
 	}
 	SetCrewMesh();
+}
+
+void LEM::CDRHelmetGloves()
+{
+	if (CDRSuited->number == 1 && CDRinPLSS != 2)
+	{
+		if (CDRSuit.IsHelmetOpen()) //If helmet/gloves are off
+		{
+			CDRSuit.CloseHelmetGloves(); //Put helmet/gloves on
+		}
+		else //If helmet/gloves are on
+		{
+			if (ecs.GetECSCabinPSI() > 3.0) //Cabin pressure check, prevents accidental removal of helmet/gloves in depressurized cabin
+			{
+				CDRSuit.OpenHelmetGloves(); //Take helmet/gloves off
+			}
+		}
+	}
+}
+
+void LEM::LMPHelmetGloves()
+{
+	if (LMPSuited->number == 1 && LMPinPLSS != 2)
+	{
+		if (LMPSuit.IsHelmetOpen()) //If helmet/gloves are off
+		{
+			LMPSuit.CloseHelmetGloves(); //Put helmet/gloves on
+		}
+		else //If helmet/gloves are on
+		{
+			if (ecs.GetECSCabinPSI() > 3.0) //Cabin pressure check, prevents accidental removal of helmet/gloves in depressurized cabin
+			{
+				LMPSuit.OpenHelmetGloves(); //Take helmet/gloves off
+			}
+		}
+	}
 }
 
 void LEM::StartEVA()

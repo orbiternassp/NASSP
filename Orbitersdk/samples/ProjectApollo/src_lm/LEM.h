@@ -103,8 +103,8 @@ enum LMRCSThrusters
 typedef struct {
 	int crewNumber;
 	int crewStatus;
-	int cdrStatus;	//0 = cabin, 1 = suit, 2 = EVA, 3 = PLSS
-	int lmpStatus;
+	int cdrStatus;	//0 = cabin, 1 = suit with helmet/gloves, 2 = EVA, 3 = PLSS, 4 = suit without helmet/gloves
+	int lmpStatus;	//0 = cabin, 1 = suit with helmet/gloves, 2 = EVA, 3 = PLSS, 4 = suit without helmet/gloves
 	double UCTAStatus;
 } LEMECSStatus;
 
@@ -642,6 +642,8 @@ public:
 	virtual void SetCrewNumber(int number);
 	virtual void SetCDRInSuit();
 	virtual void SetLMPInSuit();
+	virtual void CDRHelmetGloves();
+	virtual void LMPHelmetGloves();
 	virtual void StartEVA();
 	void StartSeparationPyros();
 	void StopSeparationPyros();
@@ -2115,6 +2117,8 @@ protected:
 
 	// ECS
 	LEM_ECS ecs;
+	LMSuit CDRSuit;
+	LMSuit LMPSuit;
 	LEMPressureSwitch CabinPressureSwitch;
 	LEMPressureSwitch SuitPressureSwitch;
 	LEMSuitIsolValve CDRIsolValve;
@@ -2257,6 +2261,7 @@ protected:
 	friend class MainOxidizerTempInd;
 	friend class RCS_TCA;
 	friend class LEM_ECS;
+	friend class LMSuit;
 	friend class LEMCabinRepressValve;
 	friend class LEMSuitIsolValve;
 	friend class LEMDigitalHeliumPressureMeter;

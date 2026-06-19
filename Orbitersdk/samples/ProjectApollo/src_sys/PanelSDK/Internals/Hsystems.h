@@ -136,8 +136,9 @@ public:
 	float pz;			//pz is used as "pozition" of the closing valve,0 is stationary
 	int h_open;			//handle for switches
 	float size;			//grams / second at full open..
-	void Close();		//for autmation,
+	void Close();		//for automation,
 	void Open();
+	bool IsOpen() { return open; };
 	double GetPress();	//press is used by Pipe to compute flow
 	double GetTemp();
 	void thermic(double _en);
