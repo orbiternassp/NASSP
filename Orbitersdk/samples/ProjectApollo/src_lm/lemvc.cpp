@@ -425,7 +425,7 @@ const VECTOR3 UtilityLights_LMPLocation = { 0.1030, 1.0318, 0.8908 };
 
 // AOT
 const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
-const VECTOR3 AOT_ShaftSelectorLocation = { 0.0640, 0.8800, 1.4792 };
+const VECTOR3 AOT_ShaftSelectorLocation = { 0.064288, 0.88006, 1.47924 };
 
 // Flood lights
 const VECTOR3 floodLightPos_Right = { 0.238, 0.89, 1.2 };
@@ -1069,6 +1069,15 @@ void LEM::RegisterActiveAreas()
 	oapiVCRegisterArea(AID_VC_AOT_ReticleKnobRotBottom, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_AOT_ReticleKnobRotBottom, AOTReticleDetentLocationRotBottom + ofs, 0.01);
 
+	// AOT Detent
+	const VECTOR3 AOT_ShaftSelectorLocationTop ={ 0.07355, 0.8965, 1.47925 };
+	oapiVCRegisterArea(AID_VC_AOT_ShaftSelectorTop, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_AOT_ShaftSelectorTop, AOT_ShaftSelectorLocationTop + ofs, 0.01);
+
+	const VECTOR3 AOT_ShaftSelectorLocationBottom ={ 0.07355, 0.8636, 1.47925 };
+	oapiVCRegisterArea(AID_VC_AOT_ShaftSelectorBottom, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_AOT_ShaftSelectorBottom, AOT_ShaftSelectorLocationBottom + ofs, 0.01);
+
 	// LMVC Lighting
 	oapiVCRegisterArea(AID_LMVC_LIGHTING,  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
 
@@ -1685,6 +1694,34 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 				if (AOT_ReticleKnobRotState.pos < 0.0) AOT_ReticleKnobRotState.pos = 1.0;
 				if (event & PANEL_MOUSE_UP) optics.ReticleMoved = 0;
 			}
+			return true;
+
+		case AID_VC_AOT_ShaftSelectorTop:
+			optics.OpticsShaft++;
+			if (optics.OpticsShaft > 5) {
+				optics.OpticsShaft = 0; // Clobber
+			}
+			AOT_ShaftSelectorRotState.pos = optics.OpticsShaft * 0.16666;
+			AOT_ShaftSelectorRotState.action = AnimState::CLOSING;
+			DoMeshAnimation(AOT_ShaftSelectorRotState, AOT_ShaftSelectorAnimRot, 0.5, oapiGetSimStep());
+//			SetAnimation(AOT_ShaftSelectorAnimRot, AOT_ShaftSelectorRotState.pos = optics.OpticsShaft * 0.16666);
+			if (AOT_ShaftSelectorRotState.pos > 1.0) AOT_ShaftSelectorRotState.pos = 0.0;
+			AOT_ShaftSelectorRotState.action = AnimState::CLOSED;
+			ButtonClick();
+			return true;
+
+		case AID_VC_AOT_ShaftSelectorBottom:
+			optics.OpticsShaft--;
+			if (optics.OpticsShaft < 0) {
+				optics.OpticsShaft = 5; // Clobber
+			}
+			AOT_ShaftSelectorRotState.pos = optics.OpticsShaft * 0.16666;
+			AOT_ShaftSelectorRotState.action = AnimState::CLOSING;
+			DoMeshAnimation(AOT_ShaftSelectorRotState, AOT_ShaftSelectorAnimRot, 0.5, oapiGetSimStep());
+//			SetAnimation(AOT_ShaftSelectorAnimRot, AOT_ShaftSelectorRotState.pos = optics.OpticsShaft * 0.16666);
+			if (AOT_ShaftSelectorRotState.pos < 0.0) AOT_ShaftSelectorRotState.pos = 1.0;
+			AOT_ShaftSelectorRotState.action = AnimState::CLOSED;
+			ButtonClick();
 			return true;
 
 		case AID_VC_OVERHEADHATCH:
@@ -2399,6 +2436,12 @@ void LEM::DefineVCAnimations()
 	static MGROUP_ROTATE AOT_ReticleKnobMeshRot(vcidx, AOT_ReticleKnob, 1, AOTReticleDetentLocation, _V(-1, 0, 0), (float)(-360.0 * RAD));
 	AOT_ReticleKnobAnimRot = CreateAnimation(1.0);
 	AddAnimationComponent(AOT_ReticleKnobAnimRot, 0.0,  1.0, &AOT_ReticleKnobMeshRot);
+
+	// AOT_ShaftSelector Rotation
+	static UINT AOT_ShaftSelectorKnob[1] = { VC_GRP_AOT_ShaftSelector };
+	static MGROUP_ROTATE AOT_ShaftSelectorMeshRot(vcidx, AOT_ShaftSelectorKnob, 1, AOT_ShaftSelectorLocation, _V(-1, 0, 0), (float)(-360.0 * RAD));
+	AOT_ShaftSelectorAnimRot = CreateAnimation(1.0);
+	AddAnimationComponent(AOT_ShaftSelectorAnimRot, 0.0,  1.0, &AOT_ShaftSelectorMeshRot);
 
 	//Panel 1
 

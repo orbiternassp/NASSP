@@ -1927,6 +1927,10 @@ protected:
 	UINT AOT_ReticleKnobAnimRot;
 	AnimState AOT_ReticleKnobRotState;
 
+	UINT AOT_ShaftSelectorAnimRot;
+	AnimState AOT_ShaftSelectorRotState;
+
+
 	//
 	// Failures.
 	//

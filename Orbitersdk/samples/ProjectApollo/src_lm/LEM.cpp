@@ -1377,6 +1377,7 @@ void LEM::SetAnimations(double simdt) {
 	if (AOTReticleDetent.GetState() == 0) AOT_ReticleKnobState.action = AnimState::CLOSING;
 	else AOT_ReticleKnobState.action = AnimState::OPENING;
 	DoMeshAnimation(AOT_ReticleKnobState, AOT_ReticleKnobAnimTrans, 0.1, simdt);
+//	DoMeshAnimation(AOT_ShaftSelectorRotState, AOT_ShaftSelectorAnimRot, 0.5, simdt);
 }
 
 //
