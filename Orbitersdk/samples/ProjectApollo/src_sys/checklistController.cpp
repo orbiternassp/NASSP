@@ -293,6 +293,13 @@ bool ChecklistController::gotoChecklistItem(ChecklistItem* input)
 	return true;
 }
 bool ChecklistController::undoChecklistItem() {
+
+	ChecklistItem* curItem = getChecklistItem(-1, 0);
+	if (curItem) {
+		active.set[curItem->index].status = PENDING;
+		active.set[curItem->index].setFlashing(&conn, false);
+	}
+	
 	ChecklistItem* lastItem = getChecklistItem(-1, -1);
 
 	// No last item, i.e. this checklist has just begun.
@@ -314,6 +321,7 @@ bool ChecklistController::undoChecklistItem() {
 			// N.B. We (probably) don't need to guard on curItem here as,
 			// excepting odd race conditions, we should have a current item.
 			active.set[curItem->index].status = PENDING;
+			active.set[curItem->index].setFlashing(&conn, false);
 		}
 	}
 	else {
