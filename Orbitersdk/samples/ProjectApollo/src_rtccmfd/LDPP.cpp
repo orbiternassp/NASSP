@@ -236,8 +236,8 @@ void LDPP::Mode1_2()
 {
 	//Mode 1, Sequence 4-5
 
-	VECTOR3 DV, DV_aapo, DV_apo;
-	double dt, deltaw_s, xi;
+	VECTOR3 DV, DV_aapo, DV_apo, DV_aaapo;
+	double dt, xi;
 	int iter;
 	bool stop;
 	
@@ -273,7 +273,6 @@ void LDPP::Mode1_2()
 	DV_aapo = SAC(0.0, true, sv_CSM);
 
 	//Prepare iteration
-	deltaw_s = 0.0;
 	DV_apo = _V(0, 0, 0);
 	iter = 0;
 	stop = false;
@@ -300,7 +299,8 @@ void LDPP::Mode1_2()
 		else
 		{
 			//Calculate plane change
-			CHAPLA_FixedTIG(sv_V, sv_LM, t_TD - 1000.0, deltaw_s, DV_apo);
+			CHAPLA_FixedTIG(sv_V, sv_LM, t_TD - 1000.0, DV_aaapo);
+			DV_apo += DV_aaapo;
 		}
 	} while (stop == false);
 
@@ -557,13 +557,12 @@ void LDPP::Mode4()
 	{
 		//Plane change
 
-		VECTOR3 DV_apo, DV_aapo, DV;
-		double deltaw_s, xi;
+		VECTOR3 DV_apo, DV_aapo, DV_aaapo, DV;
+		double xi;
 		int iter;
 		bool stop;
 
 		//Prepare iteration
-		deltaw_s = 0.0;
 		DV_apo = _V(0, 0, 0);
 		DV_aapo = DeltaV_LVLH[0];
 		iter = 0;
@@ -589,7 +588,8 @@ void LDPP::Mode4()
 			else
 			{
 				//Calculate plane change
-				CHAPLA_FixedTIG(sv_V, sv_LM, t_TD - 1000.0, deltaw_s, DV_apo);
+				CHAPLA_FixedTIG(sv_V, sv_LM, t_TD - 1000.0, DV_aaapo);
+				DV_apo += DV_aaapo;
 			}
 		} while (stop == false);
 
@@ -1160,12 +1160,13 @@ void LDPP::CHAPLA(EphemerisData sv_L, bool IWA, bool IGO, double TH, double &t_m
 	//TBD: Errors 8 and 9
 }
 
-void LDPP::CHAPLA_FixedTIG(EphemerisData sv_TIG, EphemerisData sv_L, double TH, double &deltaw_s, VECTOR3 &DV) const
+void LDPP::CHAPLA_FixedTIG(EphemerisData sv_TIG, EphemerisData sv_L, double TH, VECTOR3 &DV) const
 {
-	//INPUTS:
-	//sv_TIG: State vector at plane change ignition
-	//sv_L: State vector before landing site passage
-	//TH: Threshold time for landing site passage
+	// INPUTS:
+	// sv_TIG: State vector at plane change ignition
+	// sv_L: State vector before landing site passage
+	// TH: Threshold time for landing site passage
+
 	EphemerisData sv_CA;
 	VECTOR3 r_LS, r_P, Q, c, R_P, h_L;
 	double nu, delta_nu, delta_w, u_CA, u_MAN, cos_delta_nu, v_L, dv_PC, dv_Z, dv_R, dv_H, u_DUM, u_SIGN;
@@ -1194,9 +1195,6 @@ void LDPP::CHAPLA_FixedTIG(EphemerisData sv_TIG, EphemerisData sv_L, double TH, 
 	cos_delta_nu = cos(delta_nu);
 	delta_w = delta_w * cos_delta_nu / abs(cos_delta_nu);
 
-	//Update wedge angle
-	delta_w = deltaw_s + delta_w;
-
 	//Calculate plane change
 	v_L = length(sv_TIG.V);
 	dv_PC = 2.0*v_L*sin(abs(delta_w) / 2.0);
@@ -1218,9 +1216,6 @@ void LDPP::CHAPLA_FixedTIG(EphemerisData sv_TIG, EphemerisData sv_L, double TH, 
 	DV.x = dv_H;
 	DV.y = dv_Z;
 	DV.z = dv_R;
-
-	//Save new wedge angle
-	deltaw_s = delta_w;
 }
 
 EphemerisData LDPP::APPLY(EphemerisData sv0, VECTOR3 dV_LVLH)
