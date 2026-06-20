@@ -1697,32 +1697,14 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 			return true;
 
 		case AID_VC_AOT_ShaftSelectorTop:
-			optics.OpticsShaft++;
-			if (optics.OpticsShaft > 5) {
-				optics.OpticsShaft = 0; // Clobber
-			}
-			AOT_ShaftSelectorRotState.pos = optics.OpticsShaft * 0.16666;
-			AOT_ShaftSelectorRotState.action = AnimState::CLOSING;
-			DoMeshAnimation(AOT_ShaftSelectorRotState, AOT_ShaftSelectorAnimRot, 0.5, oapiGetSimStep());
-//			SetAnimation(AOT_ShaftSelectorAnimRot, AOT_ShaftSelectorRotState.pos = optics.OpticsShaft * 0.16666);
-			if (AOT_ShaftSelectorRotState.pos > 1.0) AOT_ShaftSelectorRotState.pos = 0.0;
-			AOT_ShaftSelectorRotState.action = AnimState::CLOSED;
-			ButtonClick();
-			return true;
+			optics.OpticsShaft = (optics.OpticsShaft + 1) % 6;
+			AOT_ShaftSelectorRotState.action = AnimState::OPENING;
+			return ButtonClick(), true;
 
 		case AID_VC_AOT_ShaftSelectorBottom:
-			optics.OpticsShaft--;
-			if (optics.OpticsShaft < 0) {
-				optics.OpticsShaft = 5; // Clobber
-			}
-			AOT_ShaftSelectorRotState.pos = optics.OpticsShaft * 0.16666;
+			optics.OpticsShaft = (optics.OpticsShaft + 5) % 6;
 			AOT_ShaftSelectorRotState.action = AnimState::CLOSING;
-			DoMeshAnimation(AOT_ShaftSelectorRotState, AOT_ShaftSelectorAnimRot, 0.5, oapiGetSimStep());
-//			SetAnimation(AOT_ShaftSelectorAnimRot, AOT_ShaftSelectorRotState.pos = optics.OpticsShaft * 0.16666);
-			if (AOT_ShaftSelectorRotState.pos < 0.0) AOT_ShaftSelectorRotState.pos = 1.0;
-			AOT_ShaftSelectorRotState.action = AnimState::CLOSED;
-			ButtonClick();
-			return true;
+			return ButtonClick(), true;
 
 		case AID_VC_OVERHEADHATCH:
 			OverheadHatch.Toggle();
