@@ -737,6 +737,10 @@ bool LEM::clbkLoadVC (int id)
 	// Calling InitPanel(LMPANEL_MAIN) also works, since that function calls SetSwitches() as well.
 	SetSwitches(LMPANEL_MAIN);	// Use main panel as a placeholder, it doesn't actually matter
 
+	// Change LM Optics Shaft Selector Texture with Numbers for mission A15 and above
+	if (pMission->GetLMNumber() >9)
+		oapiBlt(srf[SRF_LMVC2_TEXTURE], srf[SRF_LMVC2_TEXTURE], 363*TexMul, 1712*TexMul, 363*TexMul, 1621*TexMul, 372*TexMul, 90*TexMul, SURF_PREDEF_CK);
+
 	//Reset VC free camera to default
 	vcFreeCamx = 0;
 	vcFreeCamy = 0;
@@ -989,6 +993,7 @@ void LEM::InitPanelVC() {
 	srf[SRF_DEDA_LIGHTSVC] = oapiLoadTexture("ProjectApollo/VC/ags_lights.dds");
 	srf[SRF_AOTFONT_VC] = oapiLoadTexture("ProjectApollo/VC/aot_font.dds");
 	srf[SRF_ENGSTARTSTOP_VC] = oapiLoadTexture("ProjectApollo/VC/LMEngStartStop.dds");
+	srf[SRF_LMVC2_TEXTURE] = oapiGetTextureHandle(GetMeshTemplate(vcidx), VC_TEX_LMVC_2_dds);
 
 	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP2], ck);
