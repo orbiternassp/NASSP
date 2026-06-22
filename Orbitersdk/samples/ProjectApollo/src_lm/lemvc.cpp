@@ -1852,20 +1852,23 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		SetVCLighting(vcidx, IntegralLights_LMVC, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
 		SetVCLighting(vcidx, IntegralLights_LMVC_NoTex, MAT_LIGHT, lca.GetIntegralOutput() + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC_NoTex));
 
+		// Switches uses radioluminescant so they are allways lit
+		SetVCLighting(vcidx, VC_MAT_LMVC_Switches_t, MAT_EMISSION, 1, 1);
+
 		if (LtgSidePanelsSwitch.GetState() == TOGGLESWITCH_UP){	// Panel 8, 11
 			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_8_11, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
-			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
+//			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
 		}else{
 			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_8_11, MAT_EMISSION, 0, 1);
-			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, 0, 1);
+//			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, 0, 1);
 		}
 		if (SidePanelsSwitch.GetState() == TOGGLESWITCH_UP){ // Panel 12, 14, 16
 			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_12_14_16, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
-			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
+//			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
 			SetVCLighting(vcidx, VC_MAT_Rotary_LM_Panel_12_14, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
 		}else{
 			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_12_14_16, MAT_EMISSION, 0, 1);
-			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, 0, 1);
+//			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, 0, 1);
 			SetVCLighting(vcidx, VC_MAT_Rotary_LM_Panel_12_14, MAT_EMISSION, 0, 1);
 		}
 
