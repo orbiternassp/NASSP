@@ -87,7 +87,6 @@ LVDC1B::LVDC1B(LVDA &lvd) : LVDC(lvd)
 	// chars
 	FSPFileName[0] = '\0';
 	// bool
-	alpha_D_op = false;
 	BOOST = false;
 	CountPIPA = false;
 	GATE = false;
@@ -584,7 +583,6 @@ void LVDC1B::Init(){
 	ddotG_last=_V(0,0,0);					// last computed acceleration from gravity
 	DotG_last=_V(0,0,0);					// last computed velocity from gravity
 	alpha_D=0;								// Angle from perigee to DN vector
-	alpha_D_op=true;						// Option to determine alpha_D or load it
 	G_T= -9.255;							// Magnitude of desired terminal gravitational acceleration
 	xi_T=0;									// Desired position component in the terminal reference system
 	PosXEZ=_V(0,0,0);						// Position components in the terminal reference system
@@ -1690,7 +1688,6 @@ void LVDC1B::SaveState(FILEHANDLE scn) {
 	// Thank heaven for text processing.
 	oapiWriteScenario_string(scn, "LVDC_FSPFileName", FSPFileName);
 	// bool
-	oapiWriteScenario_int(scn, "LVDC_alpha_D_op", alpha_D_op);
 	oapiWriteScenario_int(scn, "LVDC_BOOST", BOOST);
 	oapiWriteScenario_int(scn, "LVDC_CountPIPA", CountPIPA);
 	oapiWriteScenario_int(scn, "LVDC_GATE", GATE);
@@ -2072,7 +2069,6 @@ void LVDC1B::LoadState(FILEHANDLE scn){
 		papiReadScenario_int(line, "LVDC_UP", UP);
 		papiReadScenario_int(line, "LVDC_FMANT", FMANT);
 		// BOOL
-		papiReadScenario_bool(line, "LVDC_alpha_D_op", alpha_D_op);
 		papiReadScenario_bool(line, "LVDC_BOOST", BOOST);
 		papiReadScenario_bool(line, "LVDC_CountPIPA", CountPIPA);
 		papiReadScenario_bool(line, "LVDC_GATE", GATE);
@@ -3985,6 +3981,9 @@ void LVDCSV::Init(){
 	TABLE15[0].dV_BR = 3.7; //Estimated value for S-IVB in NASSP
 	TABLE15[1].dV_BR = 3.7;
 
+	// Direct ascent tables
+	TABLE15[0].target[0].alpha_D = 49.0;
+
 	MRS = false;						// MR Shift
 	dotM_1 = 1221.1489;					// Mass flowrate of S2 from approximately LET jettison to second MRS
 	dotM_2 = 950.4154;					// Mass flowrate of S2 after second MRS
@@ -4472,6 +4471,24 @@ void LVDCSV::SaveState(FILEHANDLE scn) {
 	papiWriteScenario_double(scn, "LVDC_alpha_TS", alpha_TS);
 	papiWriteScenario_double(scn, "LVDC_ALFTSA", TABLE15[0].alphaS_TS);
 	papiWriteScenario_double(scn, "LVDC_ALFTSB", TABLE15[1].alphaS_TS);
+	if (Direct_Ascent)
+	{
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF0", TABLE15[0].target[0].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF1", TABLE15[0].target[1].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF2", TABLE15[0].target[2].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF3", TABLE15[0].target[3].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF4", TABLE15[0].target[4].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF5", TABLE15[0].target[5].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF6", TABLE15[0].target[6].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF7", TABLE15[0].target[7].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF8", TABLE15[0].target[8].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF9", TABLE15[0].target[9].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF10", TABLE15[0].target[10].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF11", TABLE15[0].target[11].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF12", TABLE15[0].target[12].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF13", TABLE15[0].target[13].alpha_D);
+		papiWriteScenario_double(scn, "LVDC_TABLE15_ALF14", TABLE15[0].target[14].alpha_D);
+	}
 	papiWriteScenario_double(scn, "LVDC_ART", ART);
 	papiWriteScenario_double(scn, "LVDC_Azimuth", Azimuth);
 	papiWriteScenario_double(scn, "LVDC_AZO", Azo);
@@ -5235,6 +5252,21 @@ void LVDCSV::LoadState(FILEHANDLE scn) {
 		papiReadScenario_double(line, "LVDC_alpha_TS", alpha_TS);
 		papiReadScenario_double(line, "LVDC_ALFTSA", TABLE15[0].alphaS_TS);
 		papiReadScenario_double(line, "LVDC_ALFTSB", TABLE15[1].alphaS_TS);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF0", TABLE15[0].target[0].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF1", TABLE15[0].target[1].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF2", TABLE15[0].target[2].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF3", TABLE15[0].target[3].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF4", TABLE15[0].target[4].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF5", TABLE15[0].target[5].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF6", TABLE15[0].target[6].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF7", TABLE15[0].target[7].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF8", TABLE15[0].target[8].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF9", TABLE15[0].target[9].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF10", TABLE15[0].target[10].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF11", TABLE15[0].target[11].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF12", TABLE15[0].target[12].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF13", TABLE15[0].target[13].alpha_D);
+		papiReadScenario_double(line, "LVDC_TABLE15_ALF14", TABLE15[0].target[14].alpha_D);
 		papiReadScenario_double(line, "LVDC_ART", ART);
 		papiReadScenario_double(line, "LVDC_Azimuth", Azimuth);
 		papiReadScenario_double(line, "LVDC_AZO", Azo);
@@ -6237,25 +6269,49 @@ void LVDCSV::TimeStep(double simdt) {
 
 			if (TerminalConditions == false)
 			{
-				if (Direct_Ascent) {
-					C_3 = TABLE15[0].target[0].C_3;
-					e = TABLE15[0].target[0].e_N;
-					f = TABLE15[0].f;
-					alpha_D = TABLE15[0].target[0].alpha_D;
-					eps_3 = 0;
-					//sprintf(oapiDebugString(), "LVDC: DIRECT-ASCENT"); // STOP
+				if (Direct_Ascent)
+				{
+					//Linear interpolation for C3, e and alpha_D
+					tgt_index = 0;
+					while (tgt_index < 14 && t_D > TABLE15[0].target[tgt_index].t_D)
+					{
+						tgt_index++;
+					}
+					if (tgt_index < 1)
+					{
+						tgt_index = 1;
+					}
+					fprintf(lvlog, "Target index = %d \r\n", tgt_index);
+
+					double tdint0, tdint1;
+
+					tdint0 = TABLE15[0].target[tgt_index - 1].t_D;
+					tdint1 = TABLE15[0].target[tgt_index].t_D;
+
+					C_3 = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].C_3, TABLE15[0].target[tgt_index].C_3, t_D);
+					e = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].e_N, TABLE15[0].target[tgt_index].e_N, t_D);
+					alpha_D = LinInter(tdint0, tdint1, TABLE15[0].target[tgt_index - 1].alpha_D * RAD, TABLE15[0].target[tgt_index].alpha_D * RAD, t_D);
+
+					f = TABLE15[0].f * RAD;
+
+					eps_3 = 0.0;
+					ROT = true;
+					dV_B = TABLE15[0].dV_BR;
+
+					fprintf(lvlog, "Direct Ascent Targeting Parameters: \r\n");
+					fprintf(lvlog, "C_3 = %f, e = %f, alpha_D = %f, f = %f \r\n", C_3, e, alpha_D * DEG, f * DEG);
 				}
 
 				// p is the semi-latus rectum of the desired terminal ellipse.
-				p = (mu / C_3)*(pow(e, 2) - 1);
+				p = (mu / C_3)*(pow(e, 2) - 1.0);
 				fprintf(lvlog, "p = %f, mu = %f, e2 = %f, mu/C_3 = %f\r\n", p, mu, pow(e, 2), mu / C_3);
 
 				// K_5 is the IGM terminal velocity constant
 				K_5 = sqrt(mu / p);
 				fprintf(lvlog, "K_5 = %f\r\n", K_5);
 
-				R_T = p / (1 + e*cos(f));
-				V_T = K_5*sqrt((1 + 2 * e*cos(f) + pow(e, 2)));
+				R_T = p / (1.0 + e*cos(f));
+				V_T = K_5*sqrt((1.0 + 2.0 * e*cos(f) + pow(e, 2)));
 				gamma_T = atan2((e*(sin(f))), (1 + (e*(cos(f)))));
 				G_T = -mu / pow(R_T, 2);
 			}
@@ -9318,16 +9374,27 @@ void LVDCSV::CheckTimeBase57()
 
 	if (cut >= 2)
 	{
-		if (LVDC_Timebase == 4 || LVDC_Timebase == 40)
+		if (Direct_Ascent)
 		{
-			//Start TB5
-			//fprintf(lvlog, "Timebase 5 started from CheckTimeBase57\r\n");
-			StartTimebase5();
-		}
-		else if (LVDC_Timebase == 6)
-		{
+			//Set signals for EPO and TLI start
+			lvda.SetStage(STAGE_ORBIT_SIVB);
+			lvda.TLIBegun();
 			//Start TB7
 			StartTimebase7();
+		}
+		else
+		{
+			if (LVDC_Timebase == 4 || LVDC_Timebase == 40)
+			{
+				//Start TB5
+				//fprintf(lvlog, "Timebase 5 started from CheckTimeBase57\r\n");
+				StartTimebase5();
+			}
+			else if (LVDC_Timebase == 6)
+			{
+				//Start TB7
+				StartTimebase7();
+			}
 		}
 	}
 }

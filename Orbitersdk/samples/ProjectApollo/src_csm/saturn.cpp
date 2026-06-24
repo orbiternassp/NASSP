@@ -363,8 +363,8 @@ BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSat
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
 	inertialData(this),
 	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk),
-	dsky(soundlib, agc, 015),
-	dsky2(soundlib, agc, 016),
+	dsky(soundlib, agc, Panelsdk, 015),
+	dsky2(soundlib, agc, Panelsdk, 016),
 	CMCDCBusFeeder("CMC-DCBus-Feeder", Panelsdk),
 	imu(agc, Panelsdk, inertialData),
 	scdu(agc, RegOPTX, 0140, 2),
@@ -372,9 +372,11 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	mechanicalAccelerometer(inertialData),
 	cws(SMasterAlarm, Bclick, Panelsdk),
 	dockingprobe(0, SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
-	LeftIntegralLights(11.0), //LH Integral Power (watts)
-	RightIntegralLights(13.1), //RH Integral Power (watts)
-	LEBIntegralLights(7.1), //LEB Integral Power (watts)
+	LeftIntegralLights(Panelsdk, 11.0), //LH Integral Power (watts)
+	RightIntegralLights(Panelsdk, 13.1), //RH Integral Power (watts)
+	LEBIntegralLights(Panelsdk, 7.1), //LEB Integral Power (watts)
+	LeftNumericLights(Panelsdk),
+	LEBNumericLights(Panelsdk),
 	MissionTimerDisplay(Panelsdk),
 	MissionTimer306Display(Panelsdk),
 	EventTimerDisplay(Panelsdk),
@@ -790,8 +792,8 @@ void Saturn::initSaturn()
 
 	agc.ControlVessel(this);
 	imu.SetVessel(this, false);
-	dsky.Init(&LightingNumIntLMDCCB, &CMCDCBusFeeder, &NumericRotarySwitch, &IntegralRotarySwitch, NULL, NULL);
-	dsky2.Init(&LightingNumIntLEBCB, &CMCDCBusFeeder, &Panel100NumericRotarySwitch, &Panel100IntegralRotarySwitch, NULL, NULL);
+	dsky.Init(&LeftNumericLights.Variable_115_5VAC_Output, &CMCDCBusFeeder, &NumericRotarySwitch, &LeftIntegralLights.Variable_0_115VAC_Int_Output);
+	dsky2.Init(&LEBNumericLights.Variable_115_5VAC_Output, &CMCDCBusFeeder, &Panel100NumericRotarySwitch, &LEBIntegralLights.Variable_0_115VAC_Int_Output);
 
 	//
 	// Configure SECS.
@@ -803,10 +805,11 @@ void Saturn::initSaturn()
 	//
 	// Wire up timers.
 	//
-	MissionTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB, NULL, &cte);
-	MissionTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &Panel100NumericRotarySwitch, &LightingNumIntLEBCB, NULL, &cte);
-	EventTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLEBCB, NULL);
-	EventTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &Panel100NumericRotarySwitch, &LightingNumIntLEBCB, NULL);
+	MissionTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &LeftNumericLights.Variable_0_115VAC_Num_Output, &cte);
+	MissionTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &LEBNumericLights.Variable_0_115VAC_Num_Output, &cte);
+
+	EventTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, NULL);
+	EventTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, NULL);
 
 	//
 	// Configure connectors.
@@ -1285,6 +1288,9 @@ void Saturn::clbkPostCreation()
 	//Set Animation States
 	hga.clbkPostCreation();
 	SPSEngine.clbkPostCreation();
+
+	//Set up systems
+	imu.clbkPostCreation();
 
 	// Connect to the Checklist controller.
 	checkControl.linktoVessel(this);

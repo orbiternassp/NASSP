@@ -936,11 +936,6 @@ public:
 	void DoDrawSwitch(SURFHANDLE DrawSurface);
 };
 
-class ModeSelectSwitch : public AGCThreePoswitch {
-public:
-	virtual bool SwitchTo(int newState, bool dontspring = false);
-};
-
 class SwitchCover
 {
 public:
@@ -1899,6 +1894,30 @@ public:
 class DSKYPushSwitch: public PushSwitch {
 protected:
 	virtual void DoDrawSwitch(SURFHANDLE DrawSurface);
+};
+
+// Variable voltage transformer using a rotational switch as control
+class RotVariableVoltageTransformer : public VariableVoltageTransformer
+{
+public:
+	RotVariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt, bool DCAC = false);
+	virtual void Init(ContinuousSwitch* rot);
+
+	double GetValue();
+protected:
+	ContinuousSwitch* rotary;
+};
+
+// Variable voltage transformer using a rotational switch as control and a toggle switch as override
+class RotVoltageTransformerOverride : public RotVariableVoltageTransformer
+{
+public:
+	RotVoltageTransformerOverride(char* i_name, double MinVolt, double MaxVolt, bool DCAC = false);
+	void Init(ContinuousSwitch* rot, ToggleSwitch* ovrdsw);
+
+	void UpdateFlow(double dt);
+protected:
+	ToggleSwitch* OverrideSwitch;
 };
 
 ///

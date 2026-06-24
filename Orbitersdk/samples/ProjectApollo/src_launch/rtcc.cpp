@@ -1769,6 +1769,37 @@ void RTCC::GMEDSaveTable::LoadState(FILEHANDLE scn, char* end_str)
 	}
 }
 
+void RTCC::ExpendableWeightsTable::SaveState(FILEHANDLE scn, char* start_str, char* end_str)
+{
+	char buffer[256];
+
+	oapiWriteLine(scn, start_str);
+
+	for (unsigned int i = 0; i < data.size(); i++)
+	{
+		sprintf_s(buffer, "%lf %lf %d", data[i].GET, data[i].WeightLoss, data[i].Veh);
+		oapiWriteScenario_string(scn, "Entry", buffer);
+	}
+
+	oapiWriteLine(scn, end_str);
+}
+
+void RTCC::ExpendableWeightsTable::LoadState(FILEHANDLE scn, char* end_str)
+{
+	char* line;
+	ExpendableWeightsTableEntry temp;
+
+	while (oapiReadScenario_nextline(scn, line)) {
+		if (!strnicmp(line, end_str, sizeof(end_str))) {
+			break;
+		}
+		if (sscanf_s(line + 5, "%lf %lf %d", &temp.GET, &temp.WeightLoss, &temp.Veh) == 3)
+		{
+			data.push_back(temp);
+		}
+	}
+}
+
 RTCC::RTCC() :
 	pmmlaeg(this)
 {
@@ -1804,10 +1835,6 @@ RTCC::RTCC() :
 	calcParams.SVSTORE1.MJD = 0.0;
 	calcParams.SVSTORE1.R = _V(0, 0, 0);
 	calcParams.SVSTORE1.V = _V(0, 0, 0);
-
-	pCSM = pLM = NULL;
-	CSMName[0] = 0;
-	LEMName[0] = 0;
 
 	EZJGMTX1.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
 	EZJGMTX3.data[RTCC_REFSMMAT_TYPE_CUR - 1].REFSMMAT = _M(1, 0, 0, 0, 1, 0, 0, 0, 1);
@@ -6578,6 +6605,8 @@ void RTCC::SaveState(FILEHANDLE scn) {
 	SAVE_DOUBLE("PZLTRT_DT_Ins_TPI", PZLTRT.DT_Ins_TPI);
 	SAVE_DOUBLE("PZLTRT_PoweredFlightArc", PZLTRT.PoweredFlightArc);
 	SAVE_DOUBLE("PZLTRT_PoweredFlightTime", PZLTRT.PoweredFlightTime);
+	SAVE_DOUBLE("PZLTRT_InsertionHorizontalVelocity", PZLTRT.InsertionHorizontalVelocity);
+	SAVE_DOUBLE("PZLTRT_InsertionRadialVelocity", PZLTRT.InsertionRadialVelocity);
 
 	SAVE_DOUBLE("RZC1RCNS_GLevel", RZC1RCNS.entry.GLevel);
 	SAVE_DOUBLE("RZC1RCNS_GNInitialBank", RZC1RCNS.entry.GNInitialBank);
@@ -6776,19 +6805,13 @@ void RTCC::SaveState(FILEHANDLE scn) {
 
 	PZMPTCSM.SaveState(scn, "MPTCSM_BEGIN", "MPTCSM_END");
 	PZMPTLEM.SaveState(scn, "MPTLEM_BEGIN", "MPTLEM_END");
+	if (PZEXPCSM.data.size() > 0U) PZEXPCSM.SaveState(scn, "PZEXPCSM_BEGIN", "PZEXPCSM_END");
+	if (PZEXPLEM.data.size() > 0U) PZEXPLEM.SaveState(scn, "PZEXPLEM_BEGIN", "PZEXPLEM_END");
 	RZDBSC1.SaveState(scn, "RZDBSC1_BEGIN", "RZDBSC1_END");
 	PZMARM.SaveState(scn, "PZMARM_BEGIN", "PZMARM_END");
 	RZJCTTC.SaveState(scn, "RZJCTTC_BEGIN", "RZJCTTC_END");
 	EZGSTMED.SaveState(scn, "EZGSTMED_BEGIN", "EZGSTMED_END");
 
-	if (pCSM)
-	{
-		oapiWriteScenario_string(scn, "RTCCMFD_CSM", pCSM->GetName());
-	}
-	if (pLM)
-	{
-		oapiWriteScenario_string(scn, "RTCCMFD_LM", pLM->GetName());
-	}
 	//MED
 	sprintf(Buffer, "%.2lf %.2lf %.0lf %.0lf %.2lf %.2lf %.2lf",
 		med_k18.HALOI1, med_k18.HPLOI1, med_k18.DVMAXp, med_k18.DVMAXm, med_k18.psi_DS, med_k18.psi_MX, med_k18.psi_MN);
@@ -6952,6 +6975,8 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("PZLTRT_DT_Ins_TPI", PZLTRT.DT_Ins_TPI);
 		LOAD_DOUBLE("PZLTRT_PoweredFlightArc", PZLTRT.PoweredFlightArc);
 		LOAD_DOUBLE("PZLTRT_PoweredFlightTime", PZLTRT.PoweredFlightTime);
+		LOAD_DOUBLE("PZLTRT_InsertionHorizontalVelocity", PZLTRT.InsertionHorizontalVelocity);
+		LOAD_DOUBLE("PZLTRT_InsertionRadialVelocity", PZLTRT.InsertionRadialVelocity);
 
 		LOAD_DOUBLE("RZC1RCNS_GLevel", RZC1RCNS.entry.GLevel);
 		LOAD_DOUBLE("RZC1RCNS_GNInitialBank", RZC1RCNS.entry.GNInitialBank);
@@ -6964,7 +6989,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		LOAD_DOUBLE("RTCC_TLCC_AZ_max", PZMCCPLN.AZ_max);
 		LOAD_DOUBLE("RTCC_TLCC_ETA1", PZMCCPLN.ETA1);
 		LOAD_DOUBLE("RTCC_TLCC_REVS1", PZMCCPLN.REVS1);
-		LOAD_INT("RTCC_TLCC_REVS1", PZMCCPLN.REVS2);
+		LOAD_INT("RTCC_TLCC_REVS2", PZMCCPLN.REVS2);
 		if (papiReadScenario_double(line, "RTCC_TLCC_H_A_LPO1", darrtemp[0])) PZMCCPLN.H_A_LPO1 = darrtemp[0] * 1852.0;
 		if (papiReadScenario_double(line, "RTCC_TLCC_H_P_LPO1", darrtemp[0])) PZMCCPLN.H_P_LPO1 = darrtemp[0] * 1852.0;
 		if (papiReadScenario_double(line, "RTCC_TLCC_H_A_LPO2", darrtemp[0])) PZMCCPLN.H_A_LPO2 = darrtemp[0] * 1852.0;
@@ -7117,6 +7142,12 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp(line, "MPTLEM_BEGIN", sizeof("MPTLEM_BEGIN"))) {
 			PZMPTLEM.LoadState(scn, "MPTLEM_END");
 		}
+		else if (!strnicmp(line, "PZEXPCSM_BEGIN", sizeof("PZEXPCSM_BEGIN"))) {
+			PZEXPCSM.LoadState(scn, "PZEXPCSM_END");
+		}
+		else if (!strnicmp(line, "PZEXPLEM_BEGIN", sizeof("PZEXPLEM_BEGIN"))) {
+			PZEXPLEM.LoadState(scn, "PZEXPLEM_END");
+		}
 		else if (!strnicmp(line, "RZDBSC1_BEGIN", sizeof("RZDBSC1_BEGIN"))) {
 			RZDBSC1.LoadState(scn, "RZDBSC1_END");
 		}
@@ -7129,8 +7160,6 @@ void RTCC::LoadState(FILEHANDLE scn) {
 		else if (!strnicmp(line, "EZGSTMED_BEGIN", sizeof("EZGSTMED_BEGIN"))) {
 			EZGSTMED.LoadState(scn, "EZGSTMED_END");
 		}
-		papiReadScenario_string(line, "RTCCMFD_CSM", CSMName);
-		papiReadScenario_string(line, "RTCCMFD_LM", LEMName);
 
 		if (!strnicmp(line, "MED_K18", 7))
 		{
@@ -7171,22 +7200,7 @@ void RTCC::LoadState(FILEHANDLE scn) {
 
 void RTCC::clbkPostCreation()
 {
-	if (CSMName[0])
-	{
-		OBJHANDLE hVessel = oapiGetObjectByName(CSMName);
-		if (hVessel)
-		{
-			pCSM = oapiGetVesselInterface(hVessel);
-		}
-	}
-	if (LEMName[0])
-	{
-		OBJHANDLE hVessel = oapiGetObjectByName(LEMName);
-		if (hVessel)
-		{
-			pLM = oapiGetVesselInterface(hVessel);
-		}
-	}
+	
 }
 
 void RTCC::SetManeuverData(double TIG, VECTOR3 DV)
@@ -14964,7 +14978,11 @@ void RTCC::EMDGPING()
 
 	//Process instrument ID
 	SCPointingInstrument inst;
-	bool found = false;
+	bool found;
+
+	found = false;
+	InstrVessel = 0;
+
 	strtemp.assign(EZGSTMED.G40_InstrID);
 	for (int i = 0; i < 12; i++)
 	{
@@ -14977,24 +14995,27 @@ void RTCC::EMDGPING()
 		}
 	}
 
-	if (found == false)
+	if (found == false || strtemp.size() < 3U)
 	{
 		error |= 1;
-	}
-	//Check if CSM or LEM
-	strtemp = strtemp.substr(strtemp.size() - 3U, 3);
-	//Orbiting object
-	if (strtemp == "CSM")
-	{
-		InstrVessel = RTCC_MPT_CSM;
-	}
-	else if (strtemp == "LEM")
-	{
-		InstrVessel = RTCC_MPT_LM;
 	}
 	else
 	{
-		error |= 1;
+		//Check if CSM or LEM
+		strtemp = strtemp.substr(strtemp.size() - 3U, 3);
+		//Orbiting object
+		if (strtemp == "CSM")
+		{
+			InstrVessel = RTCC_MPT_CSM;
+		}
+		else if (strtemp == "LEM")
+		{
+			InstrVessel = RTCC_MPT_LM;
+		}
+		else
+		{
+			error |= 1;
+		}
 	}
 
 	//Process target ID
@@ -15002,7 +15023,11 @@ void RTCC::EMDGPING()
 	if (EZGSTMED.G40_Mode == 1)
 	{
 		//Ground. Last character is E or M
-		if (strtemp.back() == 'E')
+		if (strtemp.size() == 0)
+		{
+			error |= 2;
+		}
+		else if (strtemp.back() == 'E')
 		{
 			RBI = BODY_EARTH;
 		}
@@ -19719,7 +19744,7 @@ int RTCC::PMMWTC(int med)
 		else
 		{
 			//No, total weight equals ascent stage weight (can override input from LMASCWT earlier)
-			WTV[3] = med_m50.LMWT;
+			WTV[2] = med_m50.LMWT;
 		}
 	RTCC_PMMWTC_16:
 		W = W + WTV[2];
@@ -25070,12 +25095,21 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 		}
 	}
 
+	PLAWDTInput in;
+	PLAWDTOutput out;
+
+	in.TableCode = MPT_ID;
+	in.T_UP = table->TimeToBeginManeuver[ManNo - 1];
+	in.VentingOpt = true;
+
+	PLAWDT(in, out);
+
+	res.WT = out.ConfigWeight / 0.45359237;
+	res.WC = out.CSMWeight / 0.45359237;
+	res.WL = (out.LMAscWeight + out.LMDscWeight) / 0.45359237;
+
 	if (ManNo == 1)
 	{
-		res.WT = table->TotalInitMass / 0.45359237;
-		res.WC = table->CommonBlock.CSMMass / 0.45359237;
-		res.WL = (table->CommonBlock.LMAscentMass + table->CommonBlock.LMDescentMass) / 0.45359237;
-
 		switch (man->Thruster)
 		{
 		case RTCC_ENGINETYPE_CSMSPS:
@@ -25109,9 +25143,6 @@ void RTCC::PMDDMT(int MPT_ID, unsigned ManNo, int REFSMMAT_ID, bool HeadsUp, Det
 	}
 	else
 	{
-		res.WT = table->mantable[ManNo - 2].TotalMassAfter / 0.45359237;
-		res.WC = table->mantable[ManNo - 2].CommonBlock.CSMMass / 0.45359237;
-		res.WL = (table->mantable[ManNo - 2].CommonBlock.LMAscentMass + table->mantable[ManNo - 2].CommonBlock.LMDescentMass) / 0.45359237;
 		switch (man->Thruster)
 		{
 		case RTCC_ENGINETYPE_CSMSPS:
@@ -31615,6 +31646,169 @@ int RTCC::PMMMED(std::string med, std::vector<std::string> data)
 			PZBURN.P4_DV = dv * 0.3048;
 		}
 	}
+	// Input of expendable weights
+	else if (med == "47")
+	{
+		if (data.size() < 3)
+		{
+			return 1;
+		}
+
+		int Table;
+
+		if (data[0] == "CSM")
+		{
+			Table = RTCC_MPT_CSM;
+		}
+		else if (data[0] == "LEM")
+		{
+			Table = RTCC_MPT_LM;
+		}
+		else
+		{
+			return 2;
+		}
+
+		int ActionCode;
+
+		if (data[1] == "A")
+		{
+			// Add
+			ActionCode = 0;
+		}
+		else if (data[1] == "R")
+		{
+			// Replace
+			ActionCode = 1;
+		}
+		else if (data[1] == "D")
+		{
+			// Delete
+			ActionCode = 2;
+		}
+		else
+		{
+			return 2;
+		}
+
+		ExpendableWeightsTable* tab;
+
+		if (Table == RTCC_MPT_CSM)
+		{
+			tab = &PZEXPCSM;
+		}
+		else
+		{
+			tab = &PZEXPLEM;
+		}
+
+		double Time, WeightLoss;
+		unsigned int EntryNumber;
+		int VEH;
+
+		// Read data
+		if (ActionCode != 2)
+		{
+			if (data.size() < 6)
+			{
+				return 1;
+			}
+			if (rtcc::MEDTimeInputHHMMSS(data[3], Time))
+			{
+				return 2;
+			}
+			Time *= 3600.0;
+
+			if (sscanf(data[4].c_str(), "%lf", &WeightLoss) != 1)
+			{
+				return 2;
+			}
+			WeightLoss *= 0.45359237;
+
+			if (data[5] == "C")
+			{
+				VEH = 0;
+			}
+			else if (data[5] == "S")
+			{
+				VEH = 1;
+			}
+			else if (data[5] == "A")
+			{
+				VEH = 2;
+			}
+			else if (data[5] == "D")
+			{
+				VEH = 3;
+			}
+			else
+			{
+				return 2;
+			}
+		}
+
+		if (ActionCode == 0)
+		{
+			// Add
+			if (tab->data.size() >= 20)
+			{
+				return 2;
+			}
+			ExpendableWeightsTableEntry entry;
+
+			entry.GET = Time;
+			entry.Veh = VEH;
+			entry.WeightLoss = WeightLoss;
+
+			tab->data.push_back(entry);
+		}
+		else if (ActionCode == 1)
+		{
+			// Replace
+			if (sscanf(data[2].c_str(), "%d", &EntryNumber) != 1)
+			{
+				return 2;
+			}
+
+			if (EntryNumber < 1U || EntryNumber > tab->data.size())
+			{
+				return 2;
+			}
+
+			ExpendableWeightsTableEntry entry;
+
+			entry.GET = Time;
+			entry.Veh = VEH;
+			entry.WeightLoss = WeightLoss;
+
+			tab->data[EntryNumber - 1U] = entry;
+		}
+		else
+		{
+			// Delete
+			if (sscanf(data[2].c_str(), "%d", &EntryNumber) != 1)
+			{
+				return 2;
+			}
+
+			if (EntryNumber < 0 || EntryNumber > tab->data.size())
+			{
+				return 2;
+			}
+
+			if (EntryNumber == 0)
+			{
+				// Delete all
+				tab->data.clear();
+			}
+			else
+			{
+				tab->data.erase(tab->data.begin() + (EntryNumber - 1U));
+			}
+		}
+		// Perform trajectory update
+		PMSVCT(8, Table);
+	}
 	//Change fuel remaining for specified thruster
 	else if (med == "49")
 	{
@@ -36820,22 +37014,34 @@ void RTCC::PMMDMT(int L, unsigned man, RTCCNIAuxOutputTable *aux)
 		F = mptman->CommonBlock.SIVBFuelRemaining;
 	}
 
-	//Mass Maintenance
+	// Areas maintenance
 	for (int i = 0; i < 4; i++)
 	{
 		if (mptman->CommonBlock.ConfigCode[i])
 		{
-			mptman->CommonBlock.Masses[i] = CommonBlockBefore->Masses[i];
 			mptman->CommonBlock.Areas[i] = CommonBlockBefore->Areas[i];
 		}
 		else
 		{
-			mptman->CommonBlock.Masses[i] = 0.0;
 			mptman->CommonBlock.Areas[i] = 0.0;
 		}
 	}
 
-	//Account for mass loss
+	// Preburn mass maintenance
+	mptman->CommonBlock.Masses[0] = aux->W_CSM;
+	mptman->CommonBlock.Masses[1] = aux->W_SIVB;
+	mptman->CommonBlock.Masses[2] = aux->W_LMA;
+	mptman->CommonBlock.Masses[3] = aux->W_LMD;
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (!(mptman->CommonBlock.ConfigCode[i]))
+		{
+			mptman->CommonBlock.Masses[i] = 0.0;
+		}
+	}
+
+	//Account for mass loss during burn
 	if (mptman->TVC == RTCC_MANVEHICLE_CSM)
 	{
 		mptman->CommonBlock.CSMMass = aux->W_CSM - aux->MainFuelUsed - aux->RCSFuelUsed;

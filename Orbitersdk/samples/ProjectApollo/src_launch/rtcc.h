@@ -3507,6 +3507,21 @@ public:
 	LWPInputTable PZSLVCON;
 	SLVTargetingParametersTable PZSLVTAR;
 
+	struct ExpendableWeightsTableEntry
+	{
+		double GET;
+		double WeightLoss;
+		int Veh; // 0 = CSM, 1 = S-IVB, 2 = LM Ascent Stage, 3 = LM Descent Stage
+	};
+
+	struct ExpendableWeightsTable
+	{
+		void SaveState(FILEHANDLE scn, char* start_str, char* end_str);
+		void LoadState(FILEHANDLE scn, char* end_str);
+
+		std::vector<ExpendableWeightsTableEntry> data;
+	} PZEXPCSM, PZEXPLEM;
+
 	struct PerigeeAdjustTableEntry
 	{
 		double Pitch = 0.0;
@@ -5340,12 +5355,6 @@ protected:
 	std::ofstream rtccdebug;
 
 public:
-
-	//Vessel pointers to be used exclusively by the RTCC MFD
-	VESSEL *pCSM, *pLM;
-	char CSMName[64];
-	char LEMName[64];
-
 	RTCCSystemParameters SystemParameters;
 	rtcc::RTCCDynamicDisplayData DynamicDisplayData;
 };

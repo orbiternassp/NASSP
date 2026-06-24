@@ -1961,7 +1961,7 @@ protected:
 
 	SwitchRow TelecomTBRow;
 	IndicatorSwitch PwrAmplTB;
-	DSEIndicatorSwitch DseTapeTB;
+	DSETalkback DseTapeTB;
 
 	ThreePosSwitch SBandNormalXPDRSwitch;
 	ToggleSwitch SBandNormalPwrAmpl1Switch;
@@ -4073,7 +4073,7 @@ protected:
 	int opticscoveridx;
 	int cmdocktgtidx;
 	int simbaypanelidx;
-	int vcidx;
+	UINT vcidx;
 	int seatsfoldedidx;
 	int seatsunfoldedidx;
 	int coascdridx;

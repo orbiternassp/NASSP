@@ -753,8 +753,6 @@ private:								// Saturn LV
 	}TABLE15[2];
 	int tgt_index;				// Non-LVDC variable to enable selecting the correct set of injection parameters
 
-	// TABLE25 is apparently only used on direct-ascent
-
 	//Interrupts
 	enum SV_Interrupt_Bits
 	{
@@ -1157,7 +1155,6 @@ private:
 	double D;										// coefficient for fourth zonal gravity harmonic
 	double CG;
 	double alpha_D;									// Angle from perigee to DN vector
-	bool alpha_D_op;								// Option to determine alpha_D or load it
 	double G_T;										// Magnitude of desired terminal gravitational acceleration
 	double xi_T;									// Desired position component in the terminal reference system
 	VECTOR3 PosXEZ;									// Position components in the terminal reference system

@@ -1723,6 +1723,7 @@ void RTCC::PLAWDT(const PLAWDTInput &in, PLAWDTOutput &out)
 	unsigned int J, N, K, BLK;
 
 	MissionPlanTable *mpt;
+	ExpendableWeightsTable* exptab;
 
 	//No error yet...
 	out.Err = 0;
@@ -1869,7 +1870,7 @@ RTCC_PLAWDT_2_D:
 		K = K - 1;
 		goto RTCC_PLAWDT_2_D;
 	}
-	T_AW = mpt->TimeToEndManeuver[K - 1];
+	T_AW = mpt->TimeToEndManeuver[K - 1] - GetGMTLO() * 3600.0;
 RTCC_PLAWDT_3_F:
 	if (CC == 0)
 	{
@@ -1918,9 +1919,38 @@ RTCC_PLAWDT_3_G:
 		out.CC = in.Num;
 	}
 	//Read Expendables Table
+	if (abs(in.TableCode) == RTCC_MPT_CSM)
+	{
+		exptab = &PZEXPCSM;
+	}
+	else
+	{
+		exptab = &PZEXPLEM;
+	}
+
 	//Make T_UP a GET
-	T_UP = T_UP - GetGMTLO()*3600.0;
-	//TBD: Expendables stuff
+	T_UP = T_UP - GetGMTLO() * 3600.0;
+
+	// Number of expendables?
+	if (exptab->data.size() != 0)
+	{
+		for (K = 0; K < exptab->data.size(); K++)
+		{
+			// Time in between T_AW and T_UP?
+			if (T_AW <= exptab->data[K].GET && T_UP >= exptab->data[K].GET)
+			{
+				// Yes
+				// Adjust indicated weight by weight loss
+				switch (exptab->data[K].Veh)
+				{
+				case 0: out.CSMWeight -= exptab->data[K].WeightLoss; break;
+				case 1: out.SIVBWeight -= exptab->data[K].WeightLoss; break;
+				case 2: out.LMAscWeight -= exptab->data[K].WeightLoss; break;
+				case 3: out.LMDscWeight -= exptab->data[K].WeightLoss; break;
+				}
+			}
+		}
+	}
 	dt = T_UP - T_AW;
 RTCC_PLAWDT_M_5:
 	if (CC[RTCC_CONFIG_C])

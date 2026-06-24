@@ -44,8 +44,6 @@ MissionTimer::MissionTimer(PanelSDK &p) : DCPower(0, p)
 	Running = false;
 	CountUp = TIMER_COUNT_UP;
 	TimerTrash = false;
-	DimmerRotationalSwitch = NULL;
-	DimmerOverride = NULL;
 	srand((unsigned int) time(NULL));
 
 	ResetFlag = false;
@@ -61,12 +59,10 @@ MissionTimer::~MissionTimer()
 	// Nothing for now.
 }
 
-void MissionTimer::Init(e_object *a, e_object *b, ContinuousRotationalSwitch *dimmer, e_object *c, ToggleSwitch *override, TimingEquipment* extTiming)
+void MissionTimer::Init(e_object *a, e_object *b, e_object *ltg, TimingEquipment* extTiming)
 {
 	DCPower.WireToBuses(a, b);
-	WireTo(c);
-	DimmerRotationalSwitch = dimmer;
-	DimmerOverride = override;
+	WireTo(ltg);
 	externalTimingEquipment = extTiming;
 }
 
@@ -169,16 +165,7 @@ bool MissionTimer::IsPowered()
 
 bool MissionTimer::IsDisplayPowered()
 {
-	if (Voltage() < SP_MIN_ACVOLTAGE) return false;
-
-	if (DimmerOverride && DimmerOverride->GetState() == 1)
-	{
-		//Do nothing
-	}
-	else if (DimmerRotationalSwitch->GetOutput() < 0.00001)
-	{
-		return false;
-	}
+	if (Voltage() < 20.0) { return false; }
 
 	return true;
 }
@@ -186,10 +173,14 @@ bool MissionTimer::IsDisplayPowered()
 void MissionTimer::SystemTimestep(double simdt)
 {
 	if (IsPowered())
+	{
 		DCPower.DrawPower(11.2);
+	}
 
 	if (IsDisplayPowered())
-		DrawPower(7.0 * 7.0 * 0.022);
+	{
+		DrawPower((7.0 * 7.0 * 0.022) * (Voltage() / 115.0));
+	}
 }
 
 void EventTimer::SystemTimestep(double simdt)
@@ -202,14 +193,17 @@ void EventTimer::SystemTimestep(double simdt)
 	}
 }
 
-
 void LEMEventTimer::SystemTimestep(double simdt)
 {
 	if (IsPowered())
+	{
 		DCPower.DrawPower(11.2);
+	}
 
 	if (IsDisplayPowered())
-		DrawPower(4.0 * 7.0 * 0.022);
+	{
+		DrawPower((4.0 * 7.0 * 0.022) * (Voltage() / 115.0));
+	}
 }
 
 //
@@ -487,12 +481,10 @@ EventTimer::~EventTimer()
 	//
 }
 
-void EventTimer::Init(e_object* a, e_object* b, ContinuousRotationalSwitch* dimmer, e_object* c, ToggleSwitch* override)
+void EventTimer::Init(e_object* a, e_object* b, e_object* ltg)
 {
 	DCPower.WireToBuses(a, b);
-	WireTo(c);
-	DimmerRotationalSwitch = dimmer;
-	DimmerOverride = override;
+	WireTo(ltg);
 }
 
 void EventTimer::Render(SURFHANDLE surf, SURFHANDLE digits, int TexMul)

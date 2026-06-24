@@ -357,6 +357,10 @@ void Saturn::SystemsInit() {
 	LogicPowerSwitch.WireSourcesToBuses(1, &SCSLogicBus2Feeder, &SCSLogicBus2);
 	LogicPowerSwitch.WireSourcesToBuses(2, &SCSLogicBus3Feeder, &SCSLogicBus3);
 
+	// Lighting
+	Panelsdk.AddElectrical(&dsky.Variable_250VAC_Output, false);
+	Panelsdk.AddElectrical(&dsky2.Variable_250VAC_Output, false);
+
 	//
 	// Generic power source for switches, tied to both Bus A and
 	// Bus B.
@@ -502,7 +506,7 @@ void Saturn::SystemsInit() {
 	omnib.Init(this);
 	omnic.Init(this);
 	omnid.Init(this);
-	dataRecorder.Init(this);
+	dataRecorder.Init(this, &SBandFMXMTRGroup1CB, &SBandFMXMTRFLTBusCB);
 	pcm.Init(this);
 	udl.Init(this);
 	vhfranging.Init(this, &VHFStationAudioRCB, &VHFRangingSwitch, &VHFRNGSwitch, &vhftransceiver);
@@ -885,7 +889,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 		if (pMission->CSMHasVHFRanging()) vhfranging.TimeStep(simdt);
 		vhftransceiver.Timestep();
 		sce.Timestep();
-		dataRecorder.TimeStep( SimulatedTime, simdt );
+		dataRecorder.TimeStep(simdt);
 		RRTsystem.TimeStep(simdt);
 
 		//
@@ -1203,6 +1207,8 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f", LeftFloodLights.GetCombinedOutput(), RightFloodLights.GetCombinedOutput(), LEBFloodLights.GetCombinedOutput());
 	//sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f PWR: LH %.2f RH %.2f LEB %.2f", LeftIntegralLights.GetOutput(), RightIntegralLights.GetOutput(), LEBIntegralLights.GetOutput(), LightingNumIntLMDCCB.PowerLoad(), LightingNumIntRMDCCB.PowerLoad(), LightingNumIntLEBCB.PowerLoad());
 	//sprintf(oapiDebugString(), "LH %.2f LEB %.2f PWR: LH %.2f LEB %.2f", LeftNumericLights.GetOutput(), LEBNumericLights.GetOutput(), LightingNumIntLMDCCB.PowerLoad(), LightingNumIntLEBCB.PowerLoad());
+
+	//sprintf(oapiDebugString(), "DSKY1 VAC: %lf NUM: %lf DSKY2 VAC %lf", dsky.Variable_250VAC_Output.Voltage(), LeftNumericLights.GetOutput(), dsky2.Variable_250VAC_Output.Voltage());
 	*/
 
 //Scaling Debug Lines
@@ -1883,6 +1889,7 @@ void Saturn::SystemsInternalTimestep(double simdt)
 		tvsa.SystemTimestep(tFactor);
 		optics.SystemTimestep(tFactor);
 		pcm.SystemTimestep(tFactor);
+		dataRecorder.SystemTimestep(tFactor);
 		pmp.SystemTimestep(tFactor);
 		usb.SystemTimestep(tFactor);
 		hga.SystemTimestep(tFactor);

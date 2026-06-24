@@ -2337,13 +2337,13 @@ bool MinImpulseHandcontrollerSwitch::CheckMouseClick(int event, int mx, int my)
 	return false;
 }
 
-void DSEIndicatorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DSE *d, bool failopen)
+void DSETalkback::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DSE *d, bool failopen)
 {
 	dse = d;
 	IndicatorSwitch::Init(xp, yp, w, h, surf, row, failopen);
 }
 
-int DSEIndicatorSwitch::GetState()
+int DSETalkback::GetState()
 {
 	return dse->TapeMotion() ? 1 : 0;
 }

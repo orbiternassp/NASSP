@@ -63,8 +63,6 @@ public:
 	bool Update (oapi::Sketchpad *skp);
 	bool ConsumeButton(int bt, int event);
 	bool ConsumeKeyBuffered(DWORD key);
-	void WriteStatus(FILEHANDLE scn) const;
-	void ReadStatus(FILEHANDLE scn);
 	void RecallStatus(void);
 
 	void Text_Double(oapi::Sketchpad *skp, int x, int y, char *format, double val);
@@ -238,9 +236,7 @@ public:
 	void menusextantstartime();
 	void menuCyclePreferredGDCStarSet();
 	void menuManPADDV();
-	void set_P30DV(VECTOR3 dv);
 	void menuREFSMMATAtt();
-	void set_REFSMMATAtt(VECTOR3 att);
 	void menuSwitchManPADEngine();
 	void CycleThrusterOption(int &thruster);
 	void set_lambertelev(double elev);
@@ -293,15 +289,11 @@ public:
 	void menuSetTLMCCMaxInclination();
 	void set_TLMCCMaxInclination(double inc);
 	void menuSetTLMCCLOIEllipseHeights();
-	void set_TLMCCLOIEllipseHeights(double ha, double hp);
 	void menuSetTLMCCDOIEllipseHeights();
-	void set_TLMCCDOIEllipseHeights(double ha, double hp);
 	void menuSetTLMCCLOIDOIRevs();
 	void set_TLMCCLOIDOIRevs(double revs1, int revs2);
 	void menuSetTLMCCLSRotation();
-	void set_TLMCCLSRotation(double rot, double eta);
 	void menuSetTLMCCLOPCRevs();
-	void set_TLMCCLOPCRevs(int m, int n);
 	void menuSetLOIVectorTime();
 	void menuSetLOIApo();
 	void menuSetLOIPeri();
@@ -477,7 +469,6 @@ public:
 	void menuMPTCycleActive();
 	void menuMPTDeleteManeuver();
 	void menuMPTTLIDirectInput();
-	void set_MPTTLIDirectInput(char *str);
 	void menuMPTCopyEphemeris();
 	void menuMPTVehicleOrientationChange();
 	void menuSetMPTInitPage();
@@ -843,6 +834,11 @@ public:
 	void menuRTCCTimesInput();
 	void menuSetStarSightingTablePage();
 	void menuSetSpacecraftPointingDisplayPage();
+	void menuSetExpendablesTable(int subpage);
+	void menuExpendablesTableAdd();
+	void menuExpendablesTableReplace();
+	void menuExpendablesTableDelete();
+	bool set_ExpendablesTabeEntry(int type, char* str);
 
 	void SetMEDInputPageM75();
 	void SetMEDInputPageP13();
@@ -856,11 +852,11 @@ public:
 	void menuReturnToMEDInput();
 
 	void GenericGETInput(double *get, char *message, void (ApolloRTCCMFD::*func)(void) = NULL, double factor = 1.0);
-	void GenericDoubleInput(double *val, char* message, double factor = 1.0);
-	void GenericDouble2Input(double *val1, double *val2, char* message, double factor1 = 1.0, double factor2 = 1.0);
-	void GenericIntInput(int *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL, int min = 1, int max = 0);
-	void GenericInt2Input(int *val1, int *val2, char* message, int min1, int max1, int min2, int max2, void (ApolloRTCCMFD::*func)(void) = NULL);
-	void GenericVectorInput(VECTOR3 *val, char* message, double factor = 1.0, void (ApolloRTCCMFD::*func)(void) = NULL);
+	void GenericDoubleInput(double *val, char* message, char* format, double factor = 1.0);
+	void GenericDouble2Input(double *val1, double *val2, char* message, char* format, double factor1 = 1.0, double factor2 = 1.0);
+	void GenericIntInput(int *val, char* message, char* format, void (ApolloRTCCMFD::*func)(void) = NULL, int min = 1, int max = 0);
+	void GenericInt2Input(int *val1, int *val2, char* message, char* format, int min1, int max1, int min2, int max2, void (ApolloRTCCMFD::*func)(void) = NULL);
+	void GenericVectorInput(VECTOR3 *val, char* message, char* format, double factor = 1.0, void (ApolloRTCCMFD::*func)(void) = NULL);
 	void GenericStringInput(std::string *val, char* message, void (ApolloRTCCMFD::*func)(void) = NULL, unsigned int minlen = 0, unsigned int maxlen = 64);
 	void GenericUllageInput(bool *Use4Jets, double *UllageDuration, bool AllowDefault = true);
 protected:
@@ -904,6 +900,7 @@ private:
 
 	UINT ID;
 	ARCore* G;
+	AR_GlobalData* GD;
 	AR_GCore* GC;
 	ApolloRTCCMFDButtons coreButtons;
 
