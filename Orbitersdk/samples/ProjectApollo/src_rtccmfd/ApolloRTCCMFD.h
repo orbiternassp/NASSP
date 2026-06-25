@@ -110,7 +110,6 @@ public:
 	void menuDKINCCDHInput();
 	void SPQDHdialogue();
 	void set_SPQDH(double DH);
-	void set_Vessel();
 	void set_CSMVessel();
 	void set_LMVessel();
 	void set_IUVessel();
@@ -216,7 +215,6 @@ public:
 	void menuMEDInputFromFile();
 	void ProcessMEDInputFromFile(char *str);
 	void EntryRangeDialogue();
-	void set_SVPageTarget();
 	void menuSVCalc();
 	void menuSVUpload();
 	void menuLSCalc();
@@ -586,7 +584,6 @@ public:
 	void set_MPTInitM55Config(char *cfg);
 	void menuMPTUpdate();
 	void menuMPTInitAutoUpdate();
-	void menuMPTInitM50M55Vehicle();
 	void menuMPTTrajectoryUpdateCSM();
 	void menuMPTTrajectoryUpdateLEM();
 	bool set_DifferentialCorrectionSolution(char *str, bool csm);

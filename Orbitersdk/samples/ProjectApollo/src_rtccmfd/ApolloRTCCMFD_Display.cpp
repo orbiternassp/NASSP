@@ -1860,13 +1860,13 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, x + dx, y, Buffer);
 		y++;
 		Text(skp, x, y, "MOD:");
-		if (GC->rtcc->med_k16.Mode == 1) Text(skp, x + dx, y, "CSM Phase Change");
-		else if (GC->rtcc->med_k16.Mode == 2) Text(skp, x + dx, y, "Single CSM Maneuver");
-		else if (GC->rtcc->med_k16.Mode == 3) Text(skp, x + dx, y, "Double CSM Maneuver");
-		else if (GC->rtcc->med_k16.Mode == 4) Text(skp, x + dx, y, "Descent Orbit Insertion");
-		else if (GC->rtcc->med_k16.Mode == 5) Text(skp, x + dx, y, "Double Hohmann, PC");
-		else if (GC->rtcc->med_k16.Mode == 6) Text(skp, x + dx, y, "LM Powered Descent");
-		else if (GC->rtcc->med_k16.Mode == 7) Text(skp, x + dx, y, "CSM Prelaunch Plane Change");
+		if (GC->rtcc->med_k16.Mode == 1) Text(skp, x + dx, y, "1: CSM Phase Change");
+		else if (GC->rtcc->med_k16.Mode == 2) Text(skp, x + dx, y, "2: Single CSM Maneuver");
+		else if (GC->rtcc->med_k16.Mode == 3) Text(skp, x + dx, y, "3: Double CSM Maneuver");
+		else if (GC->rtcc->med_k16.Mode == 4) Text(skp, x + dx, y, "4: Descent Orbit Insertion");
+		else if (GC->rtcc->med_k16.Mode == 5) Text(skp, x + dx, y, "5: Double Hohmann, PC");
+		else if (GC->rtcc->med_k16.Mode == 6) Text(skp, x + dx, y, "6: LM Powered Descent");
+		else if (GC->rtcc->med_k16.Mode == 7) Text(skp, x + dx, y, "7: CSM Prelaunch Plane Change");
 		y++;
 
 		Text(skp, x, y, "SEQ:");
@@ -3003,16 +3003,16 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		sprintf(Buffer, "%+07.1f ft/s", GC->rtcc->PZLTRT.InsertionRadialVelocity / 0.3048);
 		skp->Text(CW, 6 * H / 14, Buffer, strlen(Buffer));
 
-		skp->Text(CW, CH * 15, "Cross range:", 12);
+		skp->Text(CW, CH * 14, "Cross range:", 12);
 		sprintf(Buffer, "%.3f NM", G->LAP_CR / 1852.0);
-		skp->Text(CW, CH * 16, Buffer, strlen(Buffer));
-		skp->Text(CW, CH * 17, "Powered Flight Arc:", 19);
+		skp->Text(CW, CH * 15, Buffer, strlen(Buffer));
+		skp->Text(CW, CH * 16, "Powered Flight Arc:", 19);
 		sprintf(Buffer, "%.3f°", GC->rtcc->PZLTRT.PoweredFlightArc*DEG);
-		skp->Text(CW, CH * 18, Buffer, strlen(Buffer));
-		skp->Text(CW, CH * 19, "Powered Flight Time:", 20);
+		skp->Text(CW, CH * 17, Buffer, strlen(Buffer));
+		skp->Text(CW, CH * 18, "Powered Flight Time:", 20);
 		sprintf(Buffer, "%.1f s", GC->rtcc->PZLTRT.PoweredFlightTime);
-		skp->Text(CW, CH * 20, Buffer, strlen(Buffer));
-		skp->Text(CW, CH * 21, "Insertion GET:", 14);
+		skp->Text(CW, CH * 19, Buffer, strlen(Buffer));
+		skp->Text(CW, CH * 20, "Insertion GET:", 14);
 		{
 			double get = GC->rtcc->GETfromGMT(GC->rtcc->JZLAI.sv_Insertion.GMT);
 			if (get < 0)
@@ -3020,18 +3020,22 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 				get = 0.0;
 			}
 			GET_Display(Buffer, get, false);
-			skp->Text(CW, CH * 22, Buffer, strlen(Buffer));
+			skp->Text(CW, CH * 21, Buffer, strlen(Buffer));
 		}
-		skp->Text(CW, CH * 23, "Phase Angle:", 12);
+		skp->Text(CW, CH * 22, "Phase Angle:", 12);
 		sprintf(Buffer, "%.3f°", G->LAP_Phase*DEG);
-		skp->Text(CW, CH * 24, Buffer, strlen(Buffer));
-		skp->Text(W - CW * 17, CH * 18, "X", 1);
-		skp->Text(W - CW * 17, CH * 19, "Y", 1);
-		skp->Text(W - CW * 17, CH * 20, "Z", 1);
-		skp->Text(W - CW * 17, CH * 21, "XD", 2);
-		skp->Text(W - CW * 17, CH * 22, "YD", 2);
-		skp->Text(W - CW * 17, CH * 23, "ZD", 2);
-		skp->Text(W - CW * 17, CH * 24, "T", 1);
+		skp->Text(CW, CH * 23, Buffer, strlen(Buffer));
+		if (G->LAP_Error)
+		{
+			skp->Text(CW, CH * 24, "Error: Weight is below minimum allowed", 38);
+		}
+		skp->Text(W - CW * 17, CH * 17, "X", 1);
+		skp->Text(W - CW * 17, CH * 18, "Y", 1);
+		skp->Text(W - CW * 17, CH * 19, "Z", 1);
+		skp->Text(W - CW * 17, CH * 20, "XD", 2);
+		skp->Text(W - CW * 17, CH * 21, "YD", 2);
+		skp->Text(W - CW * 17, CH * 22, "ZD", 2);
+		skp->Text(W - CW * 17, CH * 23, "T", 1);
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		if (!GD->MissionPlanningActive)
 		{
@@ -3041,19 +3045,20 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 			skp->Text(W - CW, 3 * H / 14, Buffer, strlen(Buffer));
 		}
 		sprintf(Buffer, "%f", GC->rtcc->JZLAI.sv_Insertion.R.x);
-		skp->Text(W - CW, CH * 18, Buffer, strlen(Buffer));
+		skp->Text(W - CW, CH * 17, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%f", GC->rtcc->JZLAI.sv_Insertion.R.y);
-		skp->Text(W - CW, CH * 19, Buffer, strlen(Buffer));
+		skp->Text(W - CW, CH * 18, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%f", GC->rtcc->JZLAI.sv_Insertion.R.z);
-		skp->Text(W - CW, CH * 20, Buffer, strlen(Buffer));
+		skp->Text(W - CW, CH * 19, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%f", GC->rtcc->JZLAI.sv_Insertion.V.x);
-		skp->Text(W - CW, CH * 21, Buffer, strlen(Buffer));
+		skp->Text(W - CW, CH * 20, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%f", GC->rtcc->JZLAI.sv_Insertion.V.y);
-		skp->Text(W - CW, CH * 22, Buffer, strlen(Buffer));
+		skp->Text(W - CW, CH * 21, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%f", GC->rtcc->JZLAI.sv_Insertion.V.z);
-		skp->Text(W - CW, CH * 23, Buffer, strlen(Buffer));
+		skp->Text(W - CW, CH * 22, Buffer, strlen(Buffer));
 		sprintf(Buffer, "%f", GC->rtcc->JZLAI.sv_Insertion.GMT);
-		skp->Text(W - CW, CH * 24, Buffer, strlen(Buffer));
+		skp->Text(W - CW, CH * 23, Buffer, strlen(Buffer));
+
 		break;
 	case 39:
 		skp->SetTextAlign(oapi::Sketchpad::CENTER);

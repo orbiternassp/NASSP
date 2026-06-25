@@ -1511,17 +1511,6 @@ void ApolloRTCCMFD::menuPerigeeAdjustVectorTime()
 	{
 		GenericGETInput(&GC->rtcc->med_k28.VectorTime, "Enter desired vector GET (Format: HH:MM:SS)");
 	}
-	else
-	{
-		if (GC->rtcc->med_k28.VEH == RTCC_MPT_CSM)
-		{
-			set_CSMVessel();
-		}
-		else
-		{
-			set_LMVessel();
-		}
-	}
 }
 
 void ApolloRTCCMFD::menuPerigeeAdjustThresholdTime()
@@ -3144,10 +3133,6 @@ void ApolloRTCCMFD::menuASTVectorTime()
 	{
 		GenericGETInput(&GC->rtcc->med_f75_f77.T_V, "Choose the vector GET (Format: hhh:mm:ss)");
 	}
-	else
-	{
-		set_CSMVessel();
-	}
 }
 
 void ApolloRTCCMFD::menuASTAbortTime()
@@ -3730,17 +3715,6 @@ void ApolloRTCCMFD::menuSetGMPInput()
 		{
 			GenericGETInput(&GC->rtcc->med_k20.VectorTime, "Choose the vector GET (Format: hhh:mm:ss), 0 or smaller for present time");
 		}
-		else
-		{
-			if (GC->rtcc->med_k20.Vehicle == 1)
-			{
-				set_CSMVessel();
-			}
-			else
-			{
-				set_LMVessel();
-			}
-		}
 		break;
 	case 3:
 		GenericGETInput(&GC->rtcc->med_k20.ThresholdTime, "Choose the GET for the maneuver (Format: hhh:mm:ss)");
@@ -3819,21 +3793,11 @@ void ApolloRTCCMFD::menuSetTIMultipleSolutionInput()
 		{
 			GenericGETInput(&GC->rtcc->med_k30.ChaserVectorTime, "Choose the chaser vector GET (Format: hhh:mm:ss), 0 or smaller for present time");
 		}
-		else
-		{
-			if (GC->rtcc->med_k30.Vehicle == 1) set_CSMVessel();
-			else set_LMVessel();
-		}
 		break;
 	case 3:
 		if (GD->MissionPlanningActive)
 		{
 			GenericGETInput(&GC->rtcc->med_k30.TargetVectorTime, "Choose the target vector GET (Format: hhh:mm:ss), 0 or smaller for present time");
-		}
-		else
-		{
-			if (GC->rtcc->med_k30.Vehicle == 1) set_LMVessel();
-			else set_CSMVessel();
 		}
 		break;
 	case 4:
@@ -5226,18 +5190,6 @@ void ApolloRTCCMFD::menuMPTInitAutoUpdate()
 	}
 }
 
-void ApolloRTCCMFD::menuMPTInitM50M55Vehicle()
-{
-	if (GC->rtcc->med_m49.Table == RTCC_MPT_CSM)
-	{
-		set_CSMVessel();
-	}
-	else
-	{
-		set_LMVessel();
-	}
-}
-
 void ApolloRTCCMFD::CheckoutMonitorCalc()
 {
 	bool CheckoutMonitorCalcInput(void* id, char *str, void *data);
@@ -5661,21 +5613,11 @@ void ApolloRTCCMFD::menuSetCorrectiveCombinationInput()
 		{
 			GenericGETInput(&GC->rtcc->med_k32.ChaserVectorTime, "Choose the chaser vector time (Format: hhh:mm:ss), 0 or smaller for present time");
 		}
-		else
-		{
-			if (GC->rtcc->med_k32.Vehicle == 1) set_CSMVessel();
-			else set_LMVessel();
-		}
 		break;
 	case 3:
 		if (GD->MissionPlanningActive)
 		{
 			GenericGETInput(&GC->rtcc->med_k32.TargetVectorTime, "Choose the target vector time (Format: hhh:mm:ss), 0 or smaller for present time");
-		}
-		else
-		{
-			if (GC->rtcc->med_k32.Vehicle == 1) set_LMVessel();
-			else set_CSMVessel();
 		}
 		break;
 	case 4:
@@ -5793,17 +5735,6 @@ void ApolloRTCCMFD::menuSLVTLITargetingUplink()
 	G->SaturnVTLITargetUplink();
 }
 
-void ApolloRTCCMFD::set_Vessel()
-{
-	if (IsCSM)
-	{
-		set_CSMVessel();
-	}
-	else
-	{
-		set_LMVessel();
-	}
-}
 
 void ApolloRTCCMFD::set_CSMVessel()
 {
@@ -6285,23 +6216,6 @@ void ApolloRTCCMFD::EntryRangeDialogue()
 	GenericDoubleInput(&G->entryrange, "Choose the Entry Range in NM:", "%.1lf", 1.0);
 }
 
-void ApolloRTCCMFD::set_SVPageTarget()
-{
-	if (GD->MissionPlanningActive == false)
-	{
-		if (subscreen == 0 || subscreen == 2)
-		{
-			//CSM
-			set_CSMVessel();
-		}
-		else
-		{
-			//LM
-			set_LMVessel();
-		}
-	}
-}
-
 int AGCSVUplinkType(int subscreen)
 {
 	//Small utility function to convert
@@ -6602,33 +6516,11 @@ void ApolloRTCCMFD::menuSetSPQInput()
 		{
 			GenericGETInput(&GC->rtcc->med_k01.ChaserThresholdGET, "Choose the SPQ chaser threshold (Format: hhh:mm:ss)");
 		}
-		else
-		{
-			if (GC->rtcc->med_k01.ChaserVehicle == 1)
-			{
-				set_CSMVessel();
-			}
-			else
-			{
-				set_LMVessel();
-			}
-		}
 		break;
 	case 2:
 		if (GD->MissionPlanningActive)
 		{
 			GenericGETInput(&GC->rtcc->med_k01.TargetThresholdGET, "Choose the SPQ target threshold (Format: hhh:mm:ss)");
-		}
-		else
-		{
-			if (GC->rtcc->med_k01.ChaserVehicle == 1)
-			{
-				set_LMVessel();
-			}
-			else
-			{
-				set_CSMVessel();
-			}
 		}
 		break;
 	case 3:
@@ -7033,10 +6925,6 @@ void ApolloRTCCMFD::menuTLCCVectorTime()
 	{
 		GenericGETInput(&GC->rtcc->PZMCCPLN.VectorGET, "Choose the vector time for the maneuver (Format: hhh:mm:ss)");
 	}
-	else
-	{
-		set_CSMVessel();
-	}
 }
 
 void ApolloRTCCMFD::menuCycleTLCCColumnNumber()
@@ -7289,10 +7177,6 @@ void ApolloRTCCMFD::menuSetLOIVectorTime()
 	{
 		GenericGETInput(&GC->rtcc->med_k18.VectorTime, "Choose the vector time for LOI computation:");
 	}
-	else
-	{
-		set_CSMVessel();
-	}
 }
 
 void ApolloRTCCMFD::menuSetLOIApo()
@@ -7504,10 +7388,6 @@ void ApolloRTCCMFD::menuLLWPVectorTime()
 	if (GD->MissionPlanningActive)
 	{
 		GenericGETInput(&GC->rtcc->med_k15.CSMVectorTime, "Choose the CSM vector time (Format: hhh:mm:ss)");
-	}
-	else
-	{
-		set_CSMVessel();
 	}
 }
 
@@ -8109,11 +7989,6 @@ void ApolloRTCCMFD::menuChooseDKIChaser()
 	{
 		GenericStringInput(&GC->rtcc->med_k10.ChaserVectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
 	}
-	else
-	{
-		if (GC->rtcc->med_k00.ChaserVehicle == RTCC_MPT_CSM) set_CSMVessel();
-		else set_LMVessel();
-	}
 }
 
 void ApolloRTCCMFD::menuChooseDKITarget()
@@ -8121,11 +7996,6 @@ void ApolloRTCCMFD::menuChooseDKITarget()
 	if (GD->MissionPlanningActive)
 	{
 		GenericStringInput(&GC->rtcc->med_k10.TargetVectorID, "Enter Vector ID from VPS if desired (otherwise leave blank):");
-	}
-	else
-	{
-		if (GC->rtcc->med_k00.ChaserVehicle == RTCC_MPT_LM) set_CSMVessel();
-		else set_LMVessel();
 	}
 }
 
@@ -8229,19 +8099,11 @@ void ApolloRTCCMFD::menuSetPDAPInputs()
 		{
 			GenericGETInput(&GC->PDAP_CSM_VectorTime, "Enter the CSM vector time:");
 		}
-		else
-		{
-			set_CSMVessel();
-		}
 		break;
 	case 3:
 		if (GD->MissionPlanningActive)
 		{
 			GenericGETInput(&GC->PDAP_LM_VectorTime, "Enter the LM vector time:");
-		}
-		else
-		{
-			set_LMVessel();
 		}
 		break;
 	case 4:
@@ -8743,17 +8605,6 @@ void ApolloRTCCMFD::menuSetLDPPInput()
 		if (GD->MissionPlanningActive)
 		{
 			GenericGETInput(&GC->rtcc->med_k16.VectorTime, "Choose the vector time (Format: hhh:mm:ss)");
-		}
-		else
-		{
-			if (GC->rtcc->med_k16.Vehicle == RTCC_MPT_LM)
-			{
-				set_LMVessel();
-			}
-			else
-			{
-				set_CSMVessel();
-			}
 		}
 		break;
 	case 2:

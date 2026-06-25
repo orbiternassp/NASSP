@@ -842,6 +842,8 @@ ARCore::ARCore(VESSEL* v, AR_GCore* gcin, AR_GlobalData* gdin)
 
 	LAP_Phase = 0.0;
 	LAP_CR = 0.0;
+	LAP_Error = 0;
+
 	AscentPADVersion = 0;
 	t_TPIguess = 0.0;
 
@@ -3931,20 +3933,25 @@ int ARCore::subThread()
 
 		GC->rtcc->LunarAscentProcessor(asc_in, asc_out);
 
-		GC->rtcc->PZLTRT.PoweredFlightArc = asc_out.theta;
-		GC->rtcc->PZLTRT.PoweredFlightTime = asc_out.dt_asc;
+		LAP_Error = asc_out.ErrorCode;
 
-		GC->rtcc->JZLAI.t_launch = GD->t_LunarLiftoff;
-		GC->rtcc->JZLAI.R_D = 60000.0*0.3048;
-		GC->rtcc->JZLAI.Y_D = 0.0;
-		GC->rtcc->JZLAI.R_D_dot = GC->rtcc->PZLTRT.InsertionRadialVelocity;
-		GC->rtcc->JZLAI.Y_D_dot = 0.0;
-		GC->rtcc->JZLAI.Z_D_dot = GC->rtcc->PZLTRT.InsertionHorizontalVelocity;
+		if (LAP_Error == 0)
+		{
+			GC->rtcc->PZLTRT.PoweredFlightArc = asc_out.theta;
+			GC->rtcc->PZLTRT.PoweredFlightTime = asc_out.dt_asc;
 
-		GC->rtcc->JZLAI.sv_Insertion = asc_out.sv_Ins;
+			GC->rtcc->JZLAI.t_launch = GD->t_LunarLiftoff;
+			GC->rtcc->JZLAI.R_D = 60000.0 * 0.3048;
+			GC->rtcc->JZLAI.Y_D = 0.0;
+			GC->rtcc->JZLAI.R_D_dot = GC->rtcc->PZLTRT.InsertionRadialVelocity;
+			GC->rtcc->JZLAI.Y_D_dot = 0.0;
+			GC->rtcc->JZLAI.Z_D_dot = GC->rtcc->PZLTRT.InsertionHorizontalVelocity;
 
-		LAP_Phase = asc_out.phase;
-		LAP_CR = asc_out.CR;
+			GC->rtcc->JZLAI.sv_Insertion = asc_out.sv_Ins;
+
+			LAP_Phase = asc_out.phase;
+			LAP_CR = asc_out.CR;
+		}
 
 		Result = DONE;
 	}
