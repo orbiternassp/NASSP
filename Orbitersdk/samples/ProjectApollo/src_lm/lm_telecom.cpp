@@ -2745,10 +2745,16 @@ void LEM_SteerableAnt::Init(LEM *s, h_Radiator *an, Boiler *anheat, h_HeatLoad* 
 
 void LEM_SteerableAnt::AngleInit(int LMNumber)
 {
-	if (LMNumber < 6)
+	if (LMNumber < 6 && LMNumber != 3) //LM-4 and LM-5
 	{
-		pitch = 225.0 * RAD;
+		pitch = 255.0 * RAD;
 		yaw = 0.0 * RAD;
+	}
+
+	else if (LMNumber == 3) //LM-3
+	{
+		pitch = 255.0 * RAD;
+		yaw = -30.0 * RAD;
 	}
 }
 
