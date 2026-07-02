@@ -511,13 +511,13 @@ void LEM::InitSwitches() {
 	Panel12SBandAntSelKnob.AddPosition(3, 30);
 	Panel12SBandAntSelKnob.Register(PSH, "Panel12SBandAntSelKnob", 1);
 
-	Panel12AntPitchKnob.Register(PSH, "Panel12AntPitchKnob", 0.0, 0.0, 22.0); //For now retain the 0-22 scaling of the bitmaps for checklist backwards compatibility
-	Panel12AntPitchKnob.SetRotationRange(330.0*RAD);
-	Panel12AntPitchKnob.SetOffset(-165.0*RAD);
+	Panel12AntPitchKnob.Register(PSH, "Panel12AntPitchKnob", 0.0, 0.0, 22.0); //-75 degrees for LM-6+, for now retain the 0-22 scaling of the bitmaps for checklist backwards compatibility
+	Panel12AntPitchKnob.SetRotationRange(330.0 * RAD);
+	Panel12AntPitchKnob.SetOffset(-165.0 * RAD);
 
-	Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 5.2, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
+	Panel12AntYawKnob.Register(PSH, "Panel12AntYawKnob", 5.2, 0.0, 12.0); //-12 degrees for LM-6+, for now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
 	Panel12AntYawKnob.SetRotationRange(PI);
-	Panel12AntYawKnob.SetOffset(-90.0*RAD);
+	Panel12AntYawKnob.SetOffset(-90.0 * RAD);
 
 	ComPitchMeter.Register(PSH, "ComPitchMeter", -75, 255, 5, -75);
 	Panel12SignalStrengthMeter.Register(PSH, "Panel12SignalStrengthMeter", 0, 100, 5);

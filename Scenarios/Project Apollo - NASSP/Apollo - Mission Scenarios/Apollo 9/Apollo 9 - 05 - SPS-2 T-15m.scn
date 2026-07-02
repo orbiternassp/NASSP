@@ -12930,7 +12930,7 @@ PANELSWITCHES_BEGIN
   ComYawMeter -75.000000 -75.000000
   Panel12SignalStrengthMeter 0.000000 0.000000
   ComPitchMeter -75.000000 -75.000000
-  Panel12AntYawKnob 0.5
+  Panel12AntYawKnob 0.333333
   Panel12AntPitchKnob 1.0
   Panel12SBandAntSelKnob 1
   Panel12VHFAntSelKnob 0

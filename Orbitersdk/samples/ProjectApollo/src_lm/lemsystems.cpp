@@ -2596,10 +2596,17 @@ void LEM::CreateMissionSpecificSystems()
 	EventTimerDisplay.SetReverseAtZero(pMission->IsLMEventTimerReversingAtZero());
 	SBandSteerable.AngleInit(pMission->GetLMNumber()); //Initializes S Band Antenna To Proper Closeout Angles
 
-	if (pMission->GetLMNumber() < 6) // LM-5 And Earlier
+	if (pMission->GetLMNumber() < 6 && pMission->GetLMNumber() != 3) //LM-4 and LM-5
 	{
-		Panel12AntPitchKnob.SetInitValue(22.0); //Initializes S Band Antenna Pitch Knob To Proper Closeout Angles
-		Panel12AntYawKnob.SetInitValue(6.0); //Initializes S Band Antenna Yaw Knob To Proper Closeout Angles
+		Panel12AntPitchKnob.SetInitValue(22.0); //Initializes S Band Antenna Pitch Knob To Proper Closeout Angles (255 degrees)
+		Panel12AntYawKnob.SetInitValue(6.0); //Initializes S Band Antenna Yaw Knob To Proper Closeout Angles (0 degrees)
+		LandingAntSwitch.SetState(1); //Initializes LDG ANT Switch To Proper Closeout Position (DES)
+	}
+
+	else if (pMission->GetLMNumber() == 3) //LM-3
+	{
+		Panel12AntPitchKnob.SetInitValue(22.0); //Initializes S Band Antenna Pitch Knob To Proper Closeout Angles (255 degrees)
+		Panel12AntYawKnob.SetInitValue(4.0); //Initializes S Band Antenna Yaw Knob To Proper Closeout Angles (-30 degrees)
 		LandingAntSwitch.SetState(1); //Initializes LDG ANT Switch To Proper Closeout Position (DES)
 	}
 
