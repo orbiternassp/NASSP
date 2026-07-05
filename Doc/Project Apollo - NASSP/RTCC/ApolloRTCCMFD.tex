@@ -137,12 +137,14 @@ The targeting menu consists of the many maneuver calculation pages:\\
 
 \subsection{Rendezvous}
 
-This MFD page contains the three main calculation tools for rendezvous maneuvers, as well as a separate section for the Skylab rendezvous profile:\\
+This MFD page contains the three main calculation tools for rendezvous maneuvers, as well as a separate section for calculating TPI times:\\
 
-\textbf{LAM:} Lambert targeting. Contains the inputs and display for the Two-Impulse (TI) processor.\\ 
-\textbf{CDH:} CDH/NSR maneuver. Contains the inputs and display for the Coelliptic Rendezvous processor (SPQ).\\ 
-\textbf{DKI:} Docking initiate. Contains the inputs and display for the Docking Initiation Processor (DKI)\\ 
-\textbf{SKY:} Skylab rendezvous. Replicates the rendezvous programs of the onboard software in the AGC of the Skylab missions.\\ 
+\textbf{MS:} Two Impulse Processor - Multiple Solution.\\ 
+\textbf{CC:} Two Impulse Processor - Corrective Combination.\\ 
+\textbf{SS:}  Two Impulse Processor - Single Solution.\\ 
+\textbf{SPQ:} Coelliptic Rendezvous Processor.\\
+\textbf{DKI:} Docking initiate. Contains the inputs and display for the Docking Initiation Processor (DKI).\\ 
+\textbf{TPI:} Calculate TPI times.\\ 
 
 \newpage
 \subsubsection{Two-Impulse Processor (TI)}
@@ -311,6 +313,23 @@ plane whenever the astronaut's LOS is to the target or the horizon, deg\\
 \textbf{R DOT:} range rate between chaser and the target, fps\\
 \textbf{X, Y, Z:} position coordinates of the chaser vehicle in a target-centered curvilinear coordinate system, NM The letters L or T, R or L, and U or D are to be printed out with the position coordinates X, Y, and Z, respectively, to indicate whether the target vehicle is leading or trailing, to the right or to the left of, and above or below, the chaser vehicle\\
 \newpage
+\paragraph{Two Impulse Transfer}\mbox{} \\
+
+The Two Impulse transfer page converts an impulsive maneuver to a finite burn with selected thruster and thrust profile.\\
+
+\textbf{TAB:} Source for the maneuver solution. The two options are Multiple Solution or Corrective Combination.\\
+\textbf{PLN:} Number of the plan from either of the two possible solutions.\\
+\textbf{DEL:} If the MPT is active, choose the time after which all maneuvers in both MPTs are going to be deleted before the maneuvers are transferred.\\
+ \textbf{MAN:} Choose the maneuver (1 or 2) for which the following inputs are then used in the transferred.\\
+\textbf{THR:} Choose the thruster for the maneuver.\\
+\textbf{ATT:} Choose the attitude mode for the maneuver. The possible options are AGS External DV, PGNS External DV, Manual or Inertial.\\
+\textbf{ULL:} Choose the ullage options for the maneuver.\\
+\textbf{ITE:} The iterate flag may be set to either iterate or do not iterate. If Do Not Iterate is selected, the maneuver will be transferred as is, taking into account the Time flag below. If Iterate is chosen, the maneuver's attitude and delta velocity will be altered such that the post-burn orbital elements match the calculated impulsive post-burn elements to within specified tolerances.\\
+\textbf{10P:} If the maneuver is performed with the DPS, choose the duration for which 10\% thrust is used before throttle up. If this parameter is set to the negative of its desired value then the PGNS short burn test is ignored. The PGNS, when using auto throttle, normally decides for short burns to not throttle up from 10\% at all. This can be used to simulate a manual, early throttle up.\\
+\textbf{DPS:} Choose the DPS thrust setting after throttle up.\\
+\textbf{TIM:} The impulsive flag may be set to either Impulsive (IMP) or Optimize (OPT) to control TIG selection during the calculation of the actual TIG and DV. If Optimum is chosen, the maneuver's burn arc is taken into account by "splitting the TIG". That is, the transferred TIG is set equal to the impulsive TIG minus one-half of the length of the burn. The impulsive delta velocities, converted to the inertial frame, are then applied to the burn. When Impulsive is chosen, the transferred TIG is the same as the computed TIG, resulting in a net difference in LVLH burn components due to the finite burn arc. In normal practice, the impulsive flag is set to Optimum for any non-Lambert burns in order to center the burn arc about the impulsive TIG. This is extremely important for big burns ($\gg$ 50 fps) that have a significant burn arc.\\
+\textbf{SAV:} Use the settings for the current maneuver and apply them to all to-be-transferred maneuvers.\\
+\newpage
 \subsubsection{Coelliptic Maneuver Processor (SPQ)}
 
 \paragraph{Explanation}\mbox{} \\
@@ -356,6 +375,22 @@ There are five options for the computation of the CDH maneuver:
 \paragraph{Display}\mbox{} \\
 
 See Rendezvous Evaluation Display \ref{RED} under MOCR Displays.\\
+\newpage
+\paragraph{SPQ Transfer Page}\mbox{} \\
+
+The transfer page converts an impulsive maneuver to a finite burn with selected thruster and thrust profile.\\
+
+\textbf{PLN:} Choose if a DKI, SPQ or lunar descent plan is supposed to be transferred. In the case of the DKI, the multiple available plans can be selected by inputting 1-7.\\
+\textbf{DEL:} If the MPT is active, choose the time after which all maneuvers in both MPTs are going to be deleted before the maneuvers are transferred.\\
+ \textbf{MAN:} Choose the maneuver in the plan for which the following inputs are then used in the transferred.\\
+\textbf{THR:} Choose the thruster for the maneuver.\\
+\textbf{ATT:} Choose the attitude mode for the maneuver. The possible options are AGS External DV, PGNS External DV, Manual or Inertial.\\
+\textbf{ULL:} Choose the ullage options for the maneuver.\\
+\textbf{ITE:} The iterate flag may be set to either iterate or do not iterate. If Do Not Iterate is selected, the maneuver will be transferred as is, taking into account the Time flag below. If Iterate is chosen, the maneuver's attitude and delta velocity will be altered such that the post-burn orbital elements match the calculated impulsive post-burn elements to within specified tolerances.\\
+\textbf{10P:} If the maneuver is performed with the DPS, choose the duration for which 10\% thrust is used before throttle up. If this parameter is set to the negative of its desired value then the PGNS short burn test is ignored. The PGNS, when using auto throttle, normally decides for short burns to not throttle up from 10\% at all. This can be used to simulate a manual, early throttle up.\\
+\textbf{DPS:} Choose the DPS thrust setting after throttle up.\\
+\textbf{TIM:} The impulsive flag may be set to either Impulsive (IMP) or Optimize (OPT) to control TIG selection during the calculation of the actual TIG and DV. If Optimum is chosen, the maneuver's burn arc is taken into account by "splitting the TIG". That is, the transferred TIG is set equal to the impulsive TIG minus one-half of the length of the burn. The impulsive delta velocities, converted to the inertial frame, are then applied to the burn. When Impulsive is chosen, the transferred TIG is the same as the computed TIG, resulting in a net difference in LVLH burn components due to the finite burn arc. In normal practice, the impulsive flag is set to Optimum for any non-Lambert burns in order to center the burn arc about the impulsive TIG. This is extremely important for big burns ($\gg$ 50 fps) that have a significant burn arc.\\
+\textbf{SAV:} Use the settings for the current maneuver and apply them to all to-be-transferred maneuvers.\\
 \newpage
 
 \subsubsection{Docking Initiation Processor (DKI)}
@@ -420,7 +455,10 @@ On this page the time of ignition and time of the TPI maneuver are defined.
 \paragraph{Example: Apollo 10 PDI Abort}\mbox{} \\
 
 A simple example for a DKI targeted maneuver is the Apollo 10 PDI Abort. Similar in concept to the PDI+12 maneuvers of the lunar landing missions, Apollo 10 would have done an abort maneuver at perilune after DOI to return to the CSM one orbit earlier than in the normal rendezvous plan. The sequence of maneuvers would be the abort initiation 0.5 revolutions after DOI, targeted as a phasing (NC1) maneuver. CSI or NH would follow another half revolution later, and again the CDH or NSR maneuver would be half an orbit after that. If we assign 1.0 as the maneuver line to the DOI maneuver then we would have NC1 = 1.5, NH = 2.0, NSR = 2.5, M = 3. The maneuver line definition is using the time option with the DOI TIG as input.
+\newpage
+\paragraph{DKI Transfer Page}\mbox{} \\
 
+See SPQ Transfer Page.
 \newpage
 \subsection{General Purpose Maneuver (GPM)}
 
@@ -485,6 +523,20 @@ Error codes:\\
 8&PMMAPD error for resultant apoapsis/periapsis\\ 
 9&Resultant orbit non-elliptical\\
 \end{tabular}
+\newpage
+\subsubsection{Transfer Page} 
+
+The transfer page converts an impulsive maneuver to a finite burn with selected thruster and thrust profile.\\
+
+\textbf{TAB:} Choose if the transfer is for the CSM or LM.\\
+\textbf{REP:} Choose the maneuver to be replaced (if MPT is active).\\
+\textbf{THR:} Choose the thruster for the maneuver.\\
+\textbf{ATT:} Choose the attitude mode for the maneuver. The possible options are AGS External DV, PGNS External DV, Manual or Inertial.\\
+\textbf{ULL:} Choose the ullage options for the maneuver.\\
+\textbf{ITE:} The iterate flag may be set to either iterate or do not iterate. If Do Not Iterate is selected, the maneuver will be transferred as is, taking into account the Time flag below. If Iterate is chosen, the maneuver's attitude and delta velocity will be altered such that the post-burn orbital elements match the calculated impulsive post-burn elements to within specified tolerances.\\
+\textbf{DT:} If the maneuver is performed with the DPS, choose the duration for which 10\% thrust is used before throttle up. If this parameter is set to the negative of its desired value then the PGNS short burn test is ignored. The PGNS, when using auto throttle, normally decides for short burns to not throttle up from 10\% at all. This can be used to simulate a manual, early throttle up.\\
+\textbf{PCT:} Choose the DPS thrust setting after throttle up.\\
+\textbf{TIM:} The impulsive flag may be set to either Impulsive (IMP) or Optimize (OPT) to control TIG selection during the calculation of the actual TIG and DV. If Optimum is chosen, the maneuver's burn arc is taken into account by "splitting the TIG". That is, the transferred TIG is set equal to the impulsive TIG minus one-half of the length of the burn. The impulsive delta velocities, converted to the inertial frame, are then applied to the burn. When Impulsive is chosen, the transferred TIG is the same as the computed TIG, resulting in a net difference in LVLH burn components due to the finite burn arc. In normal practice, the impulsive flag is set to Optimum for any non-Lambert burns in order to center the burn arc about the impulsive TIG. This is extremely important for big burns ($\gg$ 50 fps) that have a significant burn arc.\\
 \newpage
 \subsection{TLI Planning}
 \subsubsection{Introduction}
@@ -638,6 +690,21 @@ The SFP page contains the skeleton flight plan table (SFP) parameters that are i
 \textbf{LNG IP:} Longitude of splashdown (impact point).\\
 \textbf{DV PC:} Total DV of lunar orbit plane change maneuver.\\
 \newpage
+\subsubsection{Transfer Page} 
+
+The transfer page converts an impulsive maneuver to a finite burn with selected thruster and thrust profile.\\
+
+\textbf{TAB:} Choose if the transfer is for the CSM or LM.\\
+\textbf{REP:} Choose the maneuver to be replaced (if MPT is active).\\
+\textbf{NUM:} Choose the solution to be transferred.\\
+\textbf{THR:} Choose the thruster for the maneuver.\\
+\textbf{ATT:} Choose the attitude mode for the maneuver. The possible options are AGS External DV, PGNS External DV, Manual or Inertial.\\
+\textbf{UDT:} Choose the ullage options for the maneuver.\\
+\textbf{ITE:} The iterate flag may be set to either iterate or do not iterate. If Do Not Iterate is selected, the maneuver will be transferred as is, taking into account the Time flag below. If Iterate is chosen, the maneuver's attitude and delta velocity will be altered such that the post-burn orbital elements match the calculated impulsive post-burn elements to within specified tolerances.\\
+\textbf{DT:} If the maneuver is performed with the DPS, choose the duration for which 10\% thrust is used before throttle up. If this parameter is set to the negative of its desired value then the PGNS short burn test is ignored. The PGNS, when using auto throttle, normally decides for short burns to not throttle up from 10\% at all. This can be used to simulate a manual, early throttle up.\\
+\textbf{PCT:} Choose the DPS thrust setting after throttle up.\\
+\textbf{TIM:} The impulsive flag may be set to either Impulsive (IMP) or Optimize (OPT) to control TIG selection during the calculation of the actual TIG and DV. If Optimum is chosen, the maneuver's burn arc is taken into account by "splitting the TIG". That is, the transferred TIG is set equal to the impulsive TIG minus one-half of the length of the burn. The impulsive delta velocities, converted to the inertial frame, are then applied to the burn. When Impulsive is chosen, the transferred TIG is the same as the computed TIG, resulting in a net difference in LVLH burn components due to the finite burn arc. In normal practice, the impulsive flag is set to Optimum for any non-Lambert burns in order to center the burn arc about the impulsive TIG. This is extremely important for big burns ($\gg$ 50 fps) that have a significant burn arc.\\
+\newpage
 \subsection{Lunar Orbit Insertion (LOI) Processor}
 
 \subsubsection{Introduction}
@@ -725,6 +792,9 @@ This display is based on the actual display used by the flight controllers for A
 \textbf{HPC:} Height of perilune on the first lunar orbit.\\
 \textbf{THETA:} Angle between the desired lunar orbit plane and the actual achieved plane.\\
 \textbf{FND/E:} True anomaly at LOI on the first ellipse (post LOI).\\
+\newpage
+\subsubsection{Transfer Page} 
+See Midcourse Correction Processor Transfer Page.\\
 \newpage
 \subsection{Lunar Descent Planning Processor}
 The LDPP computes maneuver sequences to be executed by the CSM and the LM to yield a set of desired orbital conditions at the point of LM descent ignition or a desired CSM orbital plane at the time of LM liftoff. There are seven modes of operations from which to choose. Each of these modes may contain more than one sequence. Each sequence may or maybe not have more than one maneuver. The following table presents a list of maneuver sequences in each mode:\\
@@ -974,6 +1044,9 @@ Bit&Description\\
 \hline
 \end{tabular}
 \end{center}
+\newpage
+\subsubsection{Transfer Page}
+See SPQ Transfer Page.
 \newpage
 \subsection{Lunar Launch Window Processor}
 \subsubsection{Introduction}
@@ -1378,7 +1451,6 @@ Error codes:\\
 13&Invalid number of ullage quads\\
 14&Invalid entry mode\\
 \end{tabular}
-
 \newpage
 \subsection{Skylab Launch Window Processor}
 
@@ -1472,6 +1544,23 @@ The launch window processor (LWP) can be used to calculate the optimal liftoff t
 \textbf{DH:} Delta height between chaser and target, at insertion\\
 \textbf{TIME:} Greenwich mean time of lift-off\\
 
+\newpage
+\subsection{Perigee Adjust}
+The function of the Perigee Adjust Processor is to compute a series of maneuvers, each of which will raise perigee to a specified height while keeping the thrust direction at a constant angle to the horizon. A threshold time, desired perigee height, and a desired time increment are the main inputs; while the main display values are the begin-burn time, the required velocity increment, and the resultant apogee and perigee values for each of the six maneuvers computed. A table containing the elements before and after each of the maneuvers is also provided so that a selected maneuver can be transferred if so desired.\\
+\subsubsection{Inputs}
+\textbf{VEH:} Calculate the maneuvers for the CSM or for the LM.\\
+\textbf{VEC:} If the MPT is active, select the vector time.\\
+\textbf{THT:} Threshold time for the maneuver calculations. This time will be the time of the first maneuver.\\
+\textbf{INC:} Time increment between maneuvers.\\
+\textbf{HP:} Desired periapsis altitude to which the maneuvers will raise the orbit.\\
+\textbf{VID:} Vector ID. If something is entered here then the calculation will try to use this state vector from the Vector Panel Summary instead of the current trajectory or ephemeris of the selected vehicle.\\
+\subsubsection{Display}
+\textbf{TIG:} Time of ignition in Ground Elapsed Time.\\
+\textbf{DV:} Delta V of the maneuver in feet per second.\\
+\textbf{BT:} Burn time of the maneuver.\\
+\textbf{TAA:} True anomaly at TIG in degrees.\\
+\textbf{H:} Height at TIG in nautical miles.\\
+\textbf{HA:} Height of apoapsis after the maneuver in nautical miles.\\
 \newpage
 \section{Pre-Advisory Data}
 \subsection{Maneuver PAD}
