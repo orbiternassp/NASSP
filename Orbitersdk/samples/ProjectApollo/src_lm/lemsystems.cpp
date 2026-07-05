@@ -1652,15 +1652,17 @@ void LEM::SystemsTimestep(double simt, double simdt)
 	ECA_3.Timestep(simdt);
 	ECA_4.Timestep(simdt);
 	tle.Timestep(simdt);
-	DockLights.Timestep(simdt);
 	pfira.Timestep(simdt);
-	ComponentLights.Timestep(simdt);
 
 	// Do this toward the end so we can see current system state
 	scera1.Timestep();
 	scera2.Timestep();
 	CWEA.Timestep(simdt);
 	DSEA.Timestep(simdt);
+
+	// Anything that is purely for display and doesn't affect other systems should come last
+	DockLights.Timestep(simdt);
+	ComponentLights.Timestep(simdt);
 
 	//Treat LM O2 as gas every timestep
 	DesO2Tank->BoilAllAndSetTemp(294.261);
