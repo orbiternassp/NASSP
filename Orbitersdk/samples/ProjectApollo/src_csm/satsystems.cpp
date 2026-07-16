@@ -4201,7 +4201,7 @@ void Saturn::EnginesSoundTimestep() {
 
 void Saturn::StartCMPEVA()
 {
-	if (SideHatch.IsOpen() && !cmpeva && !GroundContact)
+	if (SideHatch.IsOpen() && !cmpeva && !GroundContact())
 	{
 		ToggleCMPEVA();
 	}
