@@ -2146,7 +2146,9 @@ void Saturn::JettisonOpticsCover()
 	char VName[256];
 
 	// Use VC offset to calculate the optics cover offset
-	VECTOR3 ofs = _V(0, 0, CurrentViewOffset + 0.25);
+	VECTOR3 ofs;
+	if(!InVC) ofs = _V(0, 0, CurrentViewOffset + 0.25);	// 2D
+	else ofs = _V(0, -0.4, CurrentViewOffset);			// VC
 	VECTOR3 vel = {0.0, -0.16, 0.1};
 	VESSELSTATUS vs4b;
 	GetStatus (vs4b);

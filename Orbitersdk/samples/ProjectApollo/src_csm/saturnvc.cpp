@@ -6484,9 +6484,9 @@ void Saturn::InitFDAI(UINT mesh)
 void Saturn::UpdateOpticsCustomCam(VECTOR3 camPos, VECTOR3 camDir, VECTOR3 camUp) {
 	gcCore* pCore = gcGetCoreInterface();
 	if (pCore) {
-		// (1.073 * RAD) This should be normaly (1.5 * RAD) but it's not working
-//		hOpticsCustomCam = pCore->SetupCustomCamera(hOpticsCustomCam, oapiCameraTarget(), camPos, camDir, camUp, 1.073 * RAD, srfOpticsCustomCam, CUSTOMCAM_DEFAULTS);
-		hOpticsCustomCam = pCore->SetupCustomCamera(hOpticsCustomCam, oapiCameraTarget(), camPos, camDir, camUp, 0.9 * RAD, srfOpticsCustomCam, CUSTOMCAM_DEFAULTS);
+		// Scaling factor for the Superimposing Custom Camera best match so far is 0.905
+		// This should be normaly (1.5 * RAD) but it's not working. Earlier tests was 1.073, but this was before i matched the 3D FOV to the 2D.
+		hOpticsCustomCam = pCore->SetupCustomCamera(hOpticsCustomCam, oapiCameraTarget(), camPos, camDir, camUp, 0.905 * RAD, srfOpticsCustomCam, CUSTOMCAM_DEFAULTS);
 		static bool CustomCam = true;
 		if (CustomCam) {
 			pCore->CustomCameraOnOff(hOpticsCustomCam, true);
@@ -6704,58 +6704,58 @@ void Saturn::updateOrdealMshGrp(int tgtGrpIdx, int srcGrpIdx, VECTOR3 axis, VECT
 
 	DWORD vertexCnt = srcGroup->nVtx;
 	
-    // 2. Prepare Transformation Matrices using Orbiter SDK helpers
-    double rad = deg * RAD;
-    VECTOR3 nAxis = unit(axis); 
+	// 2. Prepare Transformation Matrices using Orbiter SDK helpers
+	double rad = deg * RAD;
+	VECTOR3 nAxis = unit(axis); 
 
 	// Use SDK internal rotm for 3x3 rotation (Rodrigues equivalent)
-    MATRIX3 R3 = rotm(nAxis, rad);
+	MATRIX3 R3 = rotm(nAxis, rad);
 
-    // Embed 3x3 rotation into a 4x4 MATRIX4 using the _M macro
-    MATRIX4 R = _M(R3.m11, R3.m12, R3.m13, 0,
-                   R3.m21, R3.m22, R3.m23, 0,
-                   R3.m31, R3.m32, R3.m33, 0,
-                   0,      0,      0,      1);
+	// Embed 3x3 rotation into a 4x4 MATRIX4 using the _M macro
+	MATRIX4 R = _M(R3.m11,	R3.m12,	R3.m13,	0,
+				   R3.m21,	R3.m22,	R3.m23,	0,
+				   R3.m31,	R3.m32,	R3.m33,	0,
+				   0,		0,		0,		1);
 
-    // Define Translation matrices for the Pivot point
-    MATRIX4 T1 = _M(1, 0, 0, -pivot.x,
-                    0, 1, 0, -pivot.y,
-                    0, 0, 1, -pivot.z,
-                    0, 0, 0, 1);
+	// Define Translation matrices for the Pivot point
+	MATRIX4 T1 = _M(1, 0, 0, -pivot.x,
+					0, 1, 0, -pivot.y,
+					0, 0, 1, -pivot.z,
+					0, 0, 0, 1);
 
     MATRIX4 T2 = _M(1, 0, 0, pivot.x,
-                    0, 1, 0, pivot.y,
-                    0, 0, 1, pivot.z,
-                    0, 0, 0, 1);
+					0, 1, 0, pivot.y,
+					0, 0, 1, pivot.z,
+					0, 0, 0, 1);
 
-    // Combine: Total Matrix M = T2 * R * T1
-    MATRIX4 M = mul(T2, mul(R, T1));
+	// Combine: Total Matrix M = T2 * R * T1
+	MATRIX4 M = mul(T2, mul(R, T1));
 
 	// 3. Setup Mesh-Update structure (GROUPEDITSPEC)
 	GROUPEDITSPEC ges;
-    ges.flags  = GRPEDIT_VTXCRD | GRPEDIT_VTXNML;	// Flags for Vertex Coordinate and Normal manipulation
-    ges.nVtx   = vertexCnt;							// Vertex Count
-    ges.vIdx   = 0;									// We change all Vertices
-	ges.Vtx    = new NTVERTEX[ges.nVtx];
+	ges.flags	= GRPEDIT_VTXCRD | GRPEDIT_VTXNML;	// Flags for Vertex Coordinate and Normal manipulation
+	ges.nVtx	= vertexCnt;							// Vertex Count
+	ges.vIdx	= 0;									// We change all Vertices
+	ges.Vtx	= new NTVERTEX[ges.nVtx];
 
 	// 4. Transform Vertices (Positions and Normals)
-    for (DWORD i = 0; i < vertexCnt; i++) {
+	for (DWORD i = 0; i < vertexCnt; i++) {
 
-        // Position: Full transform (Rotation around Pivot)
-        ges.Vtx[i].x = (float)(M.m11 * srcGroup->Vtx[i].x + M.m12 * srcGroup->Vtx[i].y + M.m13 * srcGroup->Vtx[i].z + M.m14);
-        ges.Vtx[i].y = (float)(M.m21 * srcGroup->Vtx[i].x + M.m22 * srcGroup->Vtx[i].y + M.m23 * srcGroup->Vtx[i].z + M.m24);
-        ges.Vtx[i].z = (float)(M.m31 * srcGroup->Vtx[i].x + M.m32 * srcGroup->Vtx[i].y + M.m33 * srcGroup->Vtx[i].z + M.m34);
+		// Position: Full transform (Rotation around Pivot)
+		ges.Vtx[i].x = (float)(M.m11 * srcGroup->Vtx[i].x + M.m12 * srcGroup->Vtx[i].y + M.m13 * srcGroup->Vtx[i].z + M.m14);
+		ges.Vtx[i].y = (float)(M.m21 * srcGroup->Vtx[i].x + M.m22 * srcGroup->Vtx[i].y + M.m23 * srcGroup->Vtx[i].z + M.m24);
+		ges.Vtx[i].z = (float)(M.m31 * srcGroup->Vtx[i].x + M.m32 * srcGroup->Vtx[i].y + M.m33 * srcGroup->Vtx[i].z + M.m34);
 
-        // Normals: Rotation only (for correct lighting/shading)
-        ges.Vtx[i].nx = (float)(R.m11 * srcGroup->Vtx[i].nx + R.m12 * srcGroup->Vtx[i].ny + R.m13 * srcGroup->Vtx[i].nz);
-        ges.Vtx[i].ny = (float)(R.m21 * srcGroup->Vtx[i].nx + R.m22 * srcGroup->Vtx[i].ny + R.m23 * srcGroup->Vtx[i].nz);
-        ges.Vtx[i].nz = (float)(R.m31 * srcGroup->Vtx[i].nx + R.m32 * srcGroup->Vtx[i].ny + R.m33 * srcGroup->Vtx[i].nz);
-    }
+		// Normals: Rotation only (for correct lighting/shading)
+		ges.Vtx[i].nx = (float)(R.m11 * srcGroup->Vtx[i].nx + R.m12 * srcGroup->Vtx[i].ny + R.m13 * srcGroup->Vtx[i].nz);
+		ges.Vtx[i].ny = (float)(R.m21 * srcGroup->Vtx[i].nx + R.m22 * srcGroup->Vtx[i].ny + R.m23 * srcGroup->Vtx[i].nz);
+		ges.Vtx[i].nz = (float)(R.m31 * srcGroup->Vtx[i].nx + R.m32 * srcGroup->Vtx[i].ny + R.m33 * srcGroup->Vtx[i].nz);
+	}
 
-    // 5. Tell D3D9Client to Update the GPU-Buffer
-    oapiEditMeshGroup(hMesh, tgtGrpIdx, &ges);
+	// 5. Tell D3D9Client to Update the GPU-Buffer
+	oapiEditMeshGroup(hMesh, tgtGrpIdx, &ges);
 
-    // 6. Cleanup allocated memory
+	// 6. Cleanup allocated memory
 	if(ges.Vtx) delete [] ges.Vtx;
 }
 
