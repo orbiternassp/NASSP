@@ -2109,7 +2109,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 
 		DockingAlignmentProcessor(dockopt);
 		CSM_IMU = OrbMech::imulimit(dockopt.CSMAngles * DEG);
-		sprintf(form->remarks, "CSM IMU angles: Roll %.0f, pitch %.0f, yaw %.0f", CSM_IMU.x, CSM_IMU.y, CSM_IMU.z);
+		sprintf(form->remarks, "CSM IMU angles: Roll %.0f, Pitch %.0f, Yaw %.0f", CSM_IMU.x, CSM_IMU.y, CSM_IMU.z);
 		sprintf(form->purpose, "APS Depletion");
 
 		sprintf(uplinkdata, "%s", buffer1);
