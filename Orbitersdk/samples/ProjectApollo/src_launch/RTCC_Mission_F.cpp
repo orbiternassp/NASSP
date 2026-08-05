@@ -2054,7 +2054,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManPADOpt opt;
 		SV sv, sv1, sv2;
 		MATRIX3 Q_Xx;
-		VECTOR3 UX, UY, UZ, DV, DV_P, DV_C, V_G, dV_LVLH;
+		VECTOR3 UX, UY, UZ, DV, DV_P, DV_C, V_G, dV_LVLH, CSM_IMU;
 		double GETbase, MJD_depletion, t_Depletion_guess, t_Depletion, dv, theta_T;
 		char buffer1[1000];
 
@@ -2108,7 +2108,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		dockopt.type = 3;
 
 		DockingAlignmentProcessor(dockopt);
-		sprintf(form->remarks, "CSM IMU angles. Roll %.0f, pitch %.0f, yaw %.0f", dockopt.CSMAngles.x*DEG, dockopt.CSMAngles.y*DEG, dockopt.CSMAngles.z*DEG);
+		CSM_IMU = OrbMech::imulimit(dockopt.CSMAngles * DEG);
+		sprintf(form->remarks, "CSM IMU angles: Roll %.0f, Pitch %.0f, Yaw %.0f", CSM_IMU.x, CSM_IMU.y, CSM_IMU.z);
 		sprintf(form->purpose, "APS Depletion");
 
 		sprintf(uplinkdata, "%s", buffer1);
