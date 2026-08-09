@@ -419,19 +419,20 @@ void LEM_CWEA::Timestep(double simdt) {
 
 		// LR Antenna
 		// LM-3: < -15.0F or > 150.0F 
-		// LM-4 and subsequent: < 15.6F or > 148.9F, cut and capped
+		// LM-4 and subsequent: < 15.6F or > 148.9F
 		if (lem->pMission->GetLMNumber() < 3)
 		{
 			min = 2.313; // -15.0F
 			max = 4.375; // 150.0F
-			voltage = lem->scera1.GetVoltage(21, 3);
 		}
 		else
 		{
 			min = 2.305; // -15.6F
 			max = 4.361; // 148.9F
-			voltage = 0.0;
 		}
+
+		// Cut and capped on LM-4 exclusively
+		lem->pMission->GetLMNumber() == 4 ? voltage = 0 : voltage = lem->scera1.GetVoltage(21, 3);
 
 		LRHeaterCautFF.Set(voltage < min || voltage > max);
 		LRHeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 1);
@@ -456,32 +457,48 @@ void LEM_CWEA::Timestep(double simdt) {
 			max = 4.703; // 241.0F
 		}
 
+		double RCSVoltage1 = 0.0;
+		double RCSVoltage2 = 0.0;
+		double RCSVoltage3 = 0.0;
+		double RCSVoltage4 = 0.0;
+
+		if (lem->pMission->GetLMNumber() <= 3)
+		{
+			RCSVoltage1 = lem->scera1.GetVoltage(20, 4);
+			RCSVoltage2 = lem->scera1.GetVoltage(20, 3);
+			RCSVoltage3 = lem->scera1.GetVoltage(20, 2);
+			RCSVoltage4 = lem->scera1.GetVoltage(20, 1);
+		}
+		else if (lem->pMission->GetLMNumber() >= 8)
+		{
+			// Constant voltage from master alarm reset circuit. Voltage unknown at this point, assumed somewhere between min and max
+			RCSVoltage1 = RCSVoltage2 = RCSVoltage3 = RCSVoltage4 = IsCWEAPowered() ? 4.0 : 0.0;
+		}
+		// Otherwise LM-4 through LM-7 remain 0.0, cut and capped
+
+
 		//Quad 1
-		voltage = lem->pMission->GetLMNumber() <= 4 ? lem->scera1.GetVoltage(20, 4) : 0.0;
-		QD1HeaterCautFF.Set(voltage < min || voltage > max);
+		QD1HeaterCautFF.Set(RCSVoltage1 < min || RCSVoltage1 > max);
 		QD1HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 2);
 
 		//Quad 2
-		voltage = lem->pMission->GetLMNumber() <= 4 ? lem->scera1.GetVoltage(20, 3) : 0.0;
-		QD2HeaterCautFF.Set(voltage < min || voltage > max);
+		QD2HeaterCautFF.Set(RCSVoltage2 < min || RCSVoltage2 > max);
 		QD2HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 3);
 
 		//Quad 3
-		voltage = lem->pMission->GetLMNumber() <= 4 ? lem->scera1.GetVoltage(20, 2) : 0.0;
-		QD3HeaterCautFF.Set(voltage < min || voltage > max);
+		QD3HeaterCautFF.Set(RCSVoltage3 < min || RCSVoltage3 > max);
 		QD3HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 4);
 
 		//Quad 4
-		voltage = lem->pMission->GetLMNumber() <= 4 ? lem->scera1.GetVoltage(20, 1) : 0.0;
-		QD4HeaterCautFF.Set(voltage < min || voltage > max);
+		QD4HeaterCautFF.Set(RCSVoltage4 < min || RCSVoltage4 > max);
 		QD4HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 5);
 
 		// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
 		SBDHeaterCautFF.Set(lem->scera2.GetVoltage(21, 2) < 1.743 || lem->scera2.GetVoltage(21, 2) > 4.421);
 		SBDHeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 6);
 
-		//Set CW Light
-		if (LRHeaterCautFF.IsSet() || RRHeaterCautFF.IsSet() || SBDHeaterCautFF.IsSet() || QD1HeaterCautFF.IsSet() || QD2HeaterCautFF.IsSet() || QD3HeaterCautFF.IsSet() || QD4HeaterCautFF.IsSet())
+		//Set CW Light (LR Heater FF can still be set on all missions, but is ignored on LM-5 and subsequent)
+		if ((lem->pMission->GetLMNumber() <= 4 && LRHeaterCautFF.IsSet()) || RRHeaterCautFF.IsSet() || SBDHeaterCautFF.IsSet() || QD1HeaterCautFF.IsSet() || QD2HeaterCautFF.IsSet() || QD3HeaterCautFF.IsSet() || QD4HeaterCautFF.IsSet())
 			SetLight(2, 6, 1);
 		else
 			SetLight(2, 6, 0);
