@@ -591,10 +591,16 @@ void LEM_CWEA::Timestep(double simdt) {
 		WaterCautFF3.Set((abs(lem->scera1.GetVoltage(8, 1) - lem->scera1.GetVoltage(8, 2)) / ((lem->scera1.GetVoltage(8, 1) + lem->scera1.GetVoltage(8, 2)) / 2.0)) >= 0.15);
 		WaterCautFF3.Reset(lem->QtyMonRotary.GetState() == 0);
 
-		if ((lem->stage < 2 && (WaterCautFF1.IsSet() || WaterCautFF2.IsSet())) || WaterCautFF3.IsSet())
-			SetLight(3, 7, 1);
-		else
-			SetLight(3, 7, 0);
+		// Warning light was removed on LM-9+
+		if (lem->pMission->GetLMNumber() >= 9) {
+			SetLight(3, 7, 2);
+		}
+		else {
+			if ((lem->stage < 2 && (WaterCautFF1.IsSet() || WaterCautFF2.IsSet())) || WaterCautFF3.IsSet())
+				SetLight(3, 7, 1);
+			else
+				SetLight(3, 7, 0);
+		}
 
 		// 6DS40 S-BAND RECEIVER FAILURE CAUTION
 		// On when reciever signal lost.
@@ -614,6 +620,12 @@ void LEM_CWEA::Timestep(double simdt) {
 
 		//Only for LM10+
 		SetLight(3, 5, 2);
+
+		//Disable light for LM-9+
+		if (lem->pMission->GetLMNumber() >= 9)
+		{
+			SetLight(3, 7, 2);
+		}
 
 		//CWEA PWR
 		SetLight(3, 6, 1);
@@ -670,7 +682,8 @@ void LEM_CWEA::Timestep(double simdt) {
 		LightStatus[0][7] = 1;
 		LightStatus[1][7] = 1;
 		LightStatus[2][7] = 1;
-		LightStatus[3][7] = 1;
+		if (lem->pMission->GetLMNumber() <= 8)
+			LightStatus[3][7] = 1;
 		LightStatus[4][7] = 1;
 		break;
 	case 6: // COMPNT
