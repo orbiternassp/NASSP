@@ -144,7 +144,7 @@ protected:
 	VECTOR3 SAC(double h_W, bool J, EphemerisData sv_L, int Integrated = false);
 	//Compute a maneuver to place CSM orbital track over a desired landing site with or without a specified azimuth
 	void CHAPLA(EphemerisData sv_L, bool IWA, bool IGO, double TH, double &t_m, VECTOR3 &DV);
-	void CHAPLA_FixedTIG(EphemerisData sv_TIG, EphemerisData sv_L, double TH, double &deltaw_s, VECTOR3 &DV) const;
+	void CHAPLA_FixedTIG(EphemerisData sv_TIG, EphemerisData sv_L, double TH, VECTOR3& DV) const;
 	//Compute the time of the DOI maneuver based on a desired landing site and a CSM vector before the maneuver
 	void LLTPR(double T_H, EphemerisData sv_L, EphemerisData &sv_DOI, VECTOR3 &DV_LVLH, double &t_IGN, double &t_TD, bool Integrated = false);
 	//Calculate argument of latitude

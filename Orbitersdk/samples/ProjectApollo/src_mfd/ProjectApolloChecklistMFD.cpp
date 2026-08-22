@@ -1071,6 +1071,15 @@ bool ProjectApolloChecklistMFD::Update (oapi::Sketchpad* skp)
 		skp->SetTextAlign(oapi::Sketchpad::LEFT);
 		skp->Text((int)(width * .5), (int)(height * .95), " FLASH:  ON  OFF", 16);
 
+		// Check if any checklist groups are available
+		if (NumChkLsts == 0)
+		{
+			skp->SetTextColor(RGB(0, 255, 0));
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			skp->Text((int)(width * .5), (int)(height * .4), "(No checklists available)", 25);
+			return true;
+		}
+
 		//TODO: Handle Writing Text
 		/*
 		sprintf(buffer, "%d", groups.size());

@@ -63,6 +63,8 @@ void LEMCrewStatus::Timestep(double simdt) {
 		if (status == ECS_CREWSTATUS_DEAD) {
 			crewDeadSound.play();
 		}
+		lem->CDRSuit.SetHelmetValveSizes(6.0f); //Temporary function call to force old saves to use new valve sizes, can be removed after a few versions when old saves are no longer used.
+		lem->LMPSuit.SetHelmetValveSizes(6.0f); //Temporary function call to force old saves to use new valve sizes, can be removed after a few versions when old saves are no longer used.
 		firstTimestepDone = true;
 	}
 
@@ -160,14 +162,18 @@ void LEMCrewStatus::Timestep(double simdt) {
 	}
 
 	// Suit/Cabin CO2 above 10 mmHg for 30 minutes
-	if ((lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->CrewInCabin->number > 0) || (lem->ecs.GetECSCDRSuitCO2MMHg() > 10 && lem->CDRSuited->number > 0) || (lem->ecs.GetECSLMPSuitCO2MMHg() > 10 && lem->LMPSuited->number > 0)) {
+	if ((lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->CrewInCabin->number > 0) ||
+		(lem->ecs.GetECSCDRSuitCO2MMHg() > 10 && lem->CDRSuited->number > 0 && !lem->CDRSuit.IsHelmetOpen()) || //Fully Suited, checks suit CO2
+		(lem->ecs.GetECSLMPSuitCO2MMHg() > 10 && lem->LMPSuited->number > 0 && !lem->LMPSuit.IsHelmetOpen()) || //Fully Suited, checks suit CO2
+		(lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->CDRSuited->number > 0 && lem->CDRSuit.IsHelmetOpen()) || //Partially suited, checks cabin CO2
+		(lem->ecs.GetECSCabinCO2MMHg() > 10 && lem->LMPSuited->number > 0 && lem->LMPSuit.IsHelmetOpen())) { //Partially suited, checks cabin CO2
 		if (CO2Time <= 0) {
 			status = ECS_CREWSTATUS_DEAD;
 			crewDeadSound.play();
 			return;
 		}
 		else {
-			status = ECS_CREWSTATUS_CRITICAL;
+			status = ECS_CREWSTATUS_CRITICAL_CO2;
 			CO2Time -= simdt;
 		}
 	}
@@ -222,6 +228,52 @@ void LEMCrewStatus::SaveState(FILEHANDLE scn) {
 	sprintf(buffer, "%d %lf %lf %lf %lf %lf %lf %lf %lf %lf", status, SuitPressureLowTime, PressureLowTime, SuitPressureHighTime,
 		PressureHighTime, SuitTemperatureTime, TemperatureTime, CO2Time, accelerationTime, lastVerticalVelocity);
 	oapiWriteScenario_string(scn, "CREWSTATUS", buffer);
+}
+
+LMSuit::LMSuit()
+{
+	lem = NULL;
+	suit = NULL;
+	helmet = NULL;
+
+}
+
+void LMSuit::Init(LEM *l, h_Tank *suittank, h_Pipe *helmetpipe)
+{
+	lem = l;
+	suit = suittank;
+	helmet = helmetpipe;
+}
+
+void LMSuit::OpenHelmetGloves()
+{
+	if (!helmet->in->IsOpen())
+	{
+		helmet->in->Open();
+	}
+}
+
+void LMSuit::CloseHelmetGloves()
+{
+	if (helmet->in->IsOpen())
+	{
+		helmet->in->Close();
+	}
+}
+
+void LMSuit::SetHelmetValveSizes(float s)
+{
+	helmet->in->size = s;
+}
+
+void LMSuit::Timestep(double simdt)
+{
+	// Can be used for expansion of class features
+}
+
+void LMSuit::SystemTimestep(double simdt)
+{
+	// Can be used for expansion of class features
 }
 
 LEMOverheadHatch::LEMOverheadHatch(Sound &opensound, Sound &closesound) :

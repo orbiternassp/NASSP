@@ -34,7 +34,8 @@
 
 #define ECS_CREWSTATUS_OK			0
 #define ECS_CREWSTATUS_CRITICAL		1
-#define ECS_CREWSTATUS_DEAD			2
+#define ECS_CREWSTATUS_CRITICAL_CO2	2
+#define ECS_CREWSTATUS_DEAD			3
 
 
 class LEMCrewStatus {
@@ -63,6 +64,25 @@ protected:
 	LEM *lem;
 	Sound &crewDeadSound;
 	bool firstTimestepDone;
+};
+
+class LMSuit
+{
+public:
+	LMSuit();
+	void Init(LEM *l, h_Tank *suittank, h_Pipe *helmetpipe);
+	void SetHelmetValveSizes(float s);
+	double GetHelmetSize() { return helmet->in->size; } //For debugging
+	void OpenHelmetGloves();
+	void CloseHelmetGloves();
+	bool IsHelmetOpen() { return helmet->in->open; }
+	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
+
+protected:
+	LEM *lem;
+	h_Tank *suit;
+	h_Pipe *helmet;
 };
 
 class LEMOverheadHatch

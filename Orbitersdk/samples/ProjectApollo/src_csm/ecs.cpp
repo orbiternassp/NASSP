@@ -846,7 +846,7 @@ void CrewStatus::Timestep(double simdt) {
 			return;
 
 		} else {
-			status = ECS_CREWSTATUS_CRITICAL;
+			status = ECS_CREWSTATUS_CRITICAL_CO2;
 			suitCO2Time -= simdt;
 		}
 	} else {

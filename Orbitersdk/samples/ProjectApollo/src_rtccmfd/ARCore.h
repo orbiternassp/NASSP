@@ -107,7 +107,7 @@ public:
 
 	//LANDMARK TRACKING PAGE
 	AP11LMARKTRKPAD landmarkpad;
-	double LmkLat, LmkLng;
+	double LmkLat, LmkLng, LmkAlt;
 	double LmkTime;
 	double LmkElevation;
 
@@ -199,7 +199,6 @@ public:
 	void TransferPoweredAscentToMPT();
 	void TransferGPMToMPT();
 	void MPTDirectInputCalc();
-	void MPTTLIDirectInput();
 	void AbortScanTableCalc();
 	void TransferLOIorMCCtoMPT();
 	void TransferRTEToMPT();
@@ -379,6 +378,7 @@ public:
 	AP11LMASCPAD lmascentpad;
 	int AscentPADVersion; //0 = Apollo 11-13, 1 = Apollo 14-17
 	double LAP_Phase, LAP_CR;
+	int LAP_Error; // 0 = No error, 2 = weight is below minimum allowed
 
 	//Erasable Memory Programs
 	std::string EMPFile;

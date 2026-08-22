@@ -5688,8 +5688,13 @@ void RTCC::TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad)
 	M = OrbMech::CALCSMSC(_V(PI - opt.SeparationAttitude.x, opt.SeparationAttitude.y, opt.SeparationAttitude.z));
 	M_RTM = mul(M, M_R);
 
+	// Separation attitude
 	SepATT = OrbMech::CALCGAR(opt.REFSMMAT, M_RTM);
+
+	// Extraction attitude
 	ExtATT = _V(300.0*RAD - SepATT.x, SepATT.y + PI, PI2 - SepATT.z);
+	// Wraparound pitch angle
+	if (ExtATT.y >= PI2) ExtATT.y -= PI2;
 
 	pad.BurnTime = AuxTableIndicator.DT_B;
 	pad.dVC = AuxTableIndicator.DV_C / 0.3048;
