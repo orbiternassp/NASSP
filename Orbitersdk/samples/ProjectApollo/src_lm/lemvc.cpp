@@ -3033,7 +3033,7 @@ void LEM::DefineVCAnimations()
 	LtgIntegralKnob.SetInitialAnimState(0.5);
 
 	MainPanelVC.AddSwitch(&ManualEngineStart, AID_VC_START_BUTTON);
-	ManualEngineStart.SetDirection(_V(0.00, -0.004*cos(P5_TILT - (90.0 * RAD)), -0.004*sin(P5_TILT - (90.0 * RAD))));
+	ManualEngineStart.SetReference(_V(-0.644982, 0.074371, 1.48255), _V(0.00, -0.004*cos(P5_TILT - (90.0 * RAD)), -0.004*sin(P5_TILT - (90.0 * RAD))));
 	ManualEngineStart.DefineMeshGroup(VC_GRP_StartButton);
 
 	MainPanelVC.AddSwitch(&CDRManualEngineStop, AID_VC_STOP_BUTTON_CDR);
