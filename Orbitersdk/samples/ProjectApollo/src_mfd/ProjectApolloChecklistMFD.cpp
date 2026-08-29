@@ -172,10 +172,10 @@ ProjectApolloChecklistMFD::~ProjectApolloChecklistMFD ()
 char *ProjectApolloChecklistMFD::ButtonLabel (int bt)
 {
 	// 2nd was "MET", disabled for now, MET is shown by default
-	static char *labelCHKLST[12] = {"NAV","","INFO","EXEC","FLSH","AUTO","PgUP","UP","BCK","GOTO","DN","PgDN"};
-	static char *labelCHKLSTActiveItem[12] = {"NAV","UNDO","INFO","EXEC","FLSH","AUTO","PgUP","UP","PRO","FAIL","DN","PgDN"};
-	static char *labelCHKLSTNAV[12] = {"BCK","","INFO","EXEC","FLSH","AUTO","PgUP","UP","SEL","REV","DN","PgDN"};
-	static char *labelCHKLSTREV[12] = {"NAV","","INFO","","","AUTO","PgUP","UP","","","DN","PgDN"};
+	static char *labelCHKLST[12] = {"NAV","","INFO","AUTO","EXEC","FLSH","PgUP","UP","BCK","GOTO","DN","PgDN"};
+	static char *labelCHKLSTActiveItem[12] = {"NAV","UNDO","INFO","AUTO","EXEC","FLSH","PgUP","UP","PRO","FAIL","DN","PgDN"};
+	static char *labelCHKLSTNAV[12] = {"BCK","","INFO","AUTO","EXEC","FLSH","PgUP","UP","SEL","REV","DN","PgDN"};
+	static char *labelCHKLSTREV[12] = {"NAV","","INFO","","","","PgUP","UP","","","DN","PgDN"};
 	static char *labelCHKLSTINFO[12] = {"BCK","","","","","","","","","","",""};
 
 	if (screen == PROG_CHKLST) {
@@ -204,9 +204,9 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		// {"Toggle Display","Mission Elapsed Time",'M'},
 		{0,0,0},
 		{"More Information","About This Step",'N'},
+		{"Toggle AutoComplete",0,';'},
 		{"Toggle Automatic", "Checklist execution", 'E'},
 		{"Toggle Flashing",0,'L'},
-		{"Toggle AutoComplete",0,';'},
 		{"Scroll Up","One Page",'['},
 		{"Scroll Up","One Line",'U'},
 		{"Back To", "Active Item", 'B'},
@@ -219,9 +219,9 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		// {"Toggle Display","Mission Elapsed Time",'M'},
 		{"Undo","Last Step",'B'},
 		{"More Information","About This Step",'N'},
+		{"Toggle AutoComplete",0,';'},
 		{"Toggle Automatic", "Checklist execution", 'E'},
 		{"Toggle Flashing",0,'L'},
-		{"Toggle AutoComplete",0,';'},
 		{"Scroll Up","One Page",'['},
 		{"Scroll Up","One Line",'U'},
 		{"Step Succeeds",0,'P'},
@@ -234,9 +234,9 @@ int ProjectApolloChecklistMFD::ButtonMenu (const MFDBUTTONMENU **menu) const
 		// {"Toggle Display","Mission Elapsed Time",'M'},
 		{0,0,0},
 		{"More Information","About This Checklist",'N'},
+		{"Toggle AutoComplete",0,';'},
 		{"Toggle Automatic", "Checklist execution", 'E'},
 		{"Toggle Flashing",0,'L'},
-		{"Toggle AutoComplete",0,';'},
 		{"Scroll Up","One Page",'['},
 		{"Scroll Up","One Line",'U'},
 		{"Select Checklist",0,'P'},
@@ -304,10 +304,10 @@ bool ProjectApolloChecklistMFD::ConsumeButton (int bt, int event)
 {
 	if (!(event & PANEL_MOUSE_LBDOWN)) return false;
 
-	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,0,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_SEMICOLON,OAPI_KEY_LBRACKET,OAPI_KEY_U,OAPI_KEY_B,OAPI_KEY_R,OAPI_KEY_J,OAPI_KEY_RBRACKET };
-	static const DWORD btkeyCHKLSTActiveItem[12] = { OAPI_KEY_C,OAPI_KEY_B,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_SEMICOLON,OAPI_KEY_LBRACKET,OAPI_KEY_U,OAPI_KEY_P,OAPI_KEY_F,OAPI_KEY_J,OAPI_KEY_RBRACKET};
-	static const DWORD btkeyCHKLSTNAV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_SEMICOLON,OAPI_KEY_LBRACKET,OAPI_KEY_U,OAPI_KEY_P,OAPI_KEY_R,OAPI_KEY_J,OAPI_KEY_RBRACKET};
-	static const DWORD btkeyCHKLSTREV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,0,0,OAPI_KEY_SEMICOLON,OAPI_KEY_LBRACKET,OAPI_KEY_U,0,0,OAPI_KEY_J,OAPI_KEY_RBRACKET};
+	static const DWORD btkeyCHKLST[12] = { OAPI_KEY_C,0,OAPI_KEY_N,OAPI_KEY_SEMICOLON,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_LBRACKET,OAPI_KEY_U,OAPI_KEY_B,OAPI_KEY_R,OAPI_KEY_J,OAPI_KEY_RBRACKET };
+	static const DWORD btkeyCHKLSTActiveItem[12] = { OAPI_KEY_C,OAPI_KEY_B,OAPI_KEY_N,OAPI_KEY_SEMICOLON,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_LBRACKET,OAPI_KEY_U,OAPI_KEY_P,OAPI_KEY_F,OAPI_KEY_J,OAPI_KEY_RBRACKET};
+	static const DWORD btkeyCHKLSTNAV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,OAPI_KEY_SEMICOLON,OAPI_KEY_E,OAPI_KEY_L,OAPI_KEY_LBRACKET,OAPI_KEY_U,OAPI_KEY_P,OAPI_KEY_R,OAPI_KEY_J,OAPI_KEY_RBRACKET};
+	static const DWORD btkeyCHKLSTREV[12] = { OAPI_KEY_C,OAPI_KEY_M,OAPI_KEY_N,0,0,0,OAPI_KEY_LBRACKET,OAPI_KEY_U,0,0,OAPI_KEY_J,OAPI_KEY_RBRACKET};
 	static const DWORD btkeyCHKLSTINFO[12] = { OAPI_KEY_B,OAPI_KEY_M,0,0,0,0,0,0,0,0,0,0};
 
 	if (screen == PROG_CHKLST)
