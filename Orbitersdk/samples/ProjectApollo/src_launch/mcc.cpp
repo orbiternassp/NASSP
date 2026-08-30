@@ -2914,7 +2914,7 @@ void MCC::drawPad(bool writetofile){
 		{
 			AP7NAV * form = (AP7NAV *)padForm;
 			OrbMech::format_time_prec(tmpbuf, form->NavChk[0]);
-			sprintf(buffer, "NAV CHECK\nGET (N34):\n%s\n %+07.2f LAT\n %+07.2f LNG\n %+07.1f ALT\n  %s", tmpbuf, form->lat[0], form->lng[0], form->alt[0], form->remarks);
+			sprintf(buffer, "NAV CHECK\nGET N34:\n%s\n %+07.2f LAT N43\n %+07.2f LNG\n %+07.1f ALT\n  %s", tmpbuf, form->lat[0], form->lng[0], form->alt[0], form->remarks);
 			oapiAnnotationSetText(NHpad, buffer);
 		}
 		break;
@@ -2946,7 +2946,7 @@ void MCC::drawPad(bool writetofile){
 			}
 			else
 			{
-				snprintf(tempString, 1024, "%+07.1f HA\n%+07.1f HP\n", form->HA, form->HP);
+				snprintf(tempString, 1024, "%+07.1f HA N42\n%+07.1f HP\n", form->HA, form->HP);
 			}
 			fullString.append(tempString);
 
@@ -2961,7 +2961,7 @@ void MCC::drawPad(bool writetofile){
 			else
 			{
 				OrbMech::SStoHHMMSS(form->burntime, hh, mm, ss);
-				snprintf(tempString, 1024, "%+06.0f WGT\n%+07.2f PTRM\n%+07.2f YTRM\nXXX%d:%02.0f BT (MIN:SEC)\n", form->Weight, form->pTrim, form->yTrim, mm, ss);
+				snprintf(tempString, 1024, "%+06.0f WGT N47\n%+07.2f PTRM N48\n%+07.2f YTRM\nXXX%d:%02.0f BT (MIN:SEC)\n", form->Weight, form->pTrim, form->yTrim, mm, ss);
 			}
 			fullString.append(tempString);
 
@@ -2975,7 +2975,7 @@ void MCC::drawPad(bool writetofile){
 			else
 			{
 				OrbMech::SStoHHMMSS(form->NavChk, hh, mm, ss, 0.01);
-				snprintf(tempString, 1024, "%+06d HRS\n%+06d MIN TLAT, LONG\n%+07.2f SEC\n%+07.2f LAT\n%+07.2f LONG\n%+07.1f ALT\n", hh, mm, ss, form->lat, form->lng, form->alt);
+				snprintf(tempString, 1024, "%+06d HRS N34\n%+06d MIN TLAT, LONG\n%+07.2f SEC\n%+07.2f LAT N43\n%+07.2f LONG\n%+07.1f ALT\n", hh, mm, ss, form->lat, form->lng, form->alt);
 			}
 			fullString.append(tempString);
 
