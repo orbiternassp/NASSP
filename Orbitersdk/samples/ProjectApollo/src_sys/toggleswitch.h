@@ -1423,6 +1423,11 @@ protected:
 	SURFHANDLE switchSurface;
 	SURFHANDLE switchsurfacevc;
 	SwitchRow *switchRow;
+	Sound Stbgrey;
+	Sound Stbbp;
+	virtual void InitSound(SoundLib* s);
+	double prevDisplayState;
+	bool initialized;
 };
 
 
