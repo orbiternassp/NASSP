@@ -34,7 +34,6 @@
 #include "tracer.h"
 
 #include "IU_ESE.h"
-#include "SCMUmbilical.h"
 #include "SIB_ESE.h"
 #include "IUUmbilical.h"
 #include "LC37.h"
@@ -43,11 +42,13 @@
 #include "apolloguidance.h"
 #include "LEMcomputer.h"
 #include "LEM.h"
+#include "s1bsystems.h"
 #include "sivbsystems.h"
 #include "s1b.h"
 #include "sivb.h"
 #include "papi.h"
 #include "RCA110A.h"
+#include "iu.h"
 
 HINSTANCE g_hDLL;
 
@@ -114,17 +115,13 @@ LC37::LC37(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	//meshoffsetMSS = _V(0,0,0);
 
-	IuUmb = new IUUmbilical(this);
-	IuESE = new IU_ESE(IuUmb, this);
-	SCMUmb = new SCMUmbilical(this);
-	SIBESE = new SIB_ESE(SCMUmb, this);
+	IuESE = new IU_ESE(this);
+	SIBESE = new SIB_ESE(this);
 	rca110a = new RCA110AM(this);
 }
 
 LC37::~LC37() {
-	delete IuUmb;
 	delete IuESE;
-	delete SCMUmb;
 	delete SIBESE;
 	delete rca110a;
 }
@@ -156,11 +153,11 @@ void LC37::clbkPostCreation()
 		oapiGetObjectName(h, buffer, 256);
 		if (!strcmp(SIBName, buffer)) {
 			s1b = (S1B *)oapiGetVesselInterface(h);
-			SCMUmb->Connect(s1b->GetSIB());
+			SIBESE->GetSIESEToSICommandConnector()->ConnectTo(s1b->GetSIB()->GetSIBToSIESEConnector());
 		}
 		else if (!strcmp(SIVBName, buffer)) {
 			sivb = (SIVB *)oapiGetVesselInterface(h);
-			IuUmb->Connect(sivb->GetIU());
+			IuESE->GetIUESEToIUCommandConnector()->ConnectTo(sivb->GetIU()->GetIUToIUESECommandConnector());
 		}
 	}
 
@@ -216,7 +213,7 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd)
 		}
 		else
 		{
-			IuUmb->LVDCPrepareToLaunch();
+			IuESE->GetIUESEToIUCommandConnector()->LVDCPrepareToLaunch();
 		}
 
 		if (MissionTime < -9)
@@ -239,23 +236,23 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd)
 
 		if (MissionTime > -3.1)
 		{
-			SCMUmb->SetEngineStart(5);
-			SCMUmb->SetEngineStart(7);
+			SIBESE->GetSIESEToSICommandConnector()->SetEngineStart(5);
+			SIBESE->GetSIESEToSICommandConnector()->SetEngineStart(7);
 		}
 		if (MissionTime > -3.0)
 		{
-			SCMUmb->SetEngineStart(6);
-			SCMUmb->SetEngineStart(8);
+			SIBESE->GetSIESEToSICommandConnector()->SetEngineStart(6);
+			SIBESE->GetSIESEToSICommandConnector()->SetEngineStart(8);
 		}
 		if (MissionTime > -2.9)
 		{
-			SCMUmb->SetEngineStart(2);
-			SCMUmb->SetEngineStart(4);
+			SIBESE->GetSIESEToSICommandConnector()->SetEngineStart(2);
+			SIBESE->GetSIESEToSICommandConnector()->SetEngineStart(4);
 		}
 		if (MissionTime > -2.8)
 		{
-			SCMUmb->SetEngineStart(1);
-			SCMUmb->SetEngineStart(3);
+			SIBESE->GetSIESEToSICommandConnector()->SetEngineStart(1);
+			SIBESE->GetSIESEToSICommandConnector()->SetEngineStart(3);
 		}
 
 		// T-1s or later?
@@ -294,11 +291,11 @@ void LC37::clbkPreStep(double simt, double simdt, double mjd)
 		// Disconnect IU Umbilical
 		if (MissionTime >= -0.05) {
 			// Activate liftoff circuit
-			IuUmb->SetEDSLiftoffEnableA();
-			IuUmb->SetEDSLiftoffEnableB();
+			IuESE->GetIUESEToIUCommandConnector()->SetEDSLiftoffEnableA();
+			IuESE->GetIUESEToIUCommandConnector()->SetEDSLiftoffEnableB();
 			// Disconnect Umbilicals
-			IuUmb->Disconnect();
-			SCMUmb->Disconnect();
+			IuESE->GetIUESEToIUCommandConnector()->Disconnect();
+			SIBESE->GetSIESEToSICommandConnector()->Disconnect();
 		}
 
 		// T+4s or later?
@@ -553,91 +550,6 @@ int LC37::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 	return 0;
 }
 
-bool LC37::ESEGetCommandVehicleLiftoffIndicationInhibit()
-{
-	return IuESE->GetCommandVehicleLiftoffIndicationInhibit();
-}
-
-bool LC37::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
-{
-	return IuESE->GetExcessiveRollRateAutoAbortInhibit(n);
-}
-
-bool LC37::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
-{
-	return IuESE->GetExcessivePitchYawRateAutoAbortInhibit(n);
-}
-
-bool LC37::ESEGetTwoEngineOutAutoAbortInhibit(int n)
-{
-	return IuESE->GetTwoEngineOutAutoAbortInhibit(n);
-}
-
-bool LC37::ESEGetGSEOverrateSimulate(int n)
-{
-	return IuESE->GetOverrateSimulate(n);
-}
-
-bool LC37::ESEGetEDSPowerInhibit()
-{
-	return IuESE->GetEDSPowerInhibit();
-}
-
-bool LC37::ESEPadAbortRequest()
-{
-	return IuESE->GetEDSPadAbortRequest();
-}
-
-bool LC37::ESEGetThrustOKIndicateEnableInhibitA()
-{
-	return IuESE->GetThrustOKIndicateEnableInhibitA();
-}
-
-bool LC37::ESEGetThrustOKIndicateEnableInhibitB()
-{
-	return IuESE->GetThrustOKIndicateEnableInhibitB();
-}
-
-bool LC37::ESEEDSLiftoffInhibitA()
-{
-	return IuESE->GetEDSLiftoffInhibitA();
-}
-
-bool LC37::ESEEDSLiftoffInhibitB()
-{
-	return IuESE->GetEDSLiftoffInhibitB();
-}
-
-bool LC37::ESEGetEDSAutoAbortSimulate(int n)
-{
-	return IuESE->GetEDSAutoAbortSimulate(n);
-}
-
-bool LC37::ESEGetEDSLVCutoffSimulate(int n)
-{
-	return IuESE->GetEDSLVCutoffSimulate(n);
-}
-
-bool LC37::ESEGetSIBurnModeSubstitute()
-{
-	return IuESE->GetSIBurnModeSubstitute();
-}
-
-bool LC37::ESEGetGuidanceReferenceRelease()
-{
-	return IuESE->GetGuidanceReferenceRelease();
-}
-
-bool LC37::ESEGetQBallSimulateCmd()
-{
-	return IuESE->GetQBallSimulateCmd();
-}
-
-bool LC37::ESEGetSIThrustOKSimulate(int eng, int n)
-{
-	return SIBESE->GetSIThrustOKSimulate(eng, n);
-}
-
 void LC37::SLCCCheckDiscreteInput(RCA110A *c)
 {
 	c->SetInput(0, true);
@@ -657,5 +569,5 @@ void LC37::ConnectGroundComputer(RCA110A *c)
 
 void LC37::IssueSwitchSelectorCmd(int stage, int chan)
 {
-	IuUmb->SwitchSelector(stage, chan);
+	IuESE->GetIUESEToIUCommandConnector()->SwitchSelector(stage, chan);
 }

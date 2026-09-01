@@ -23,47 +23,36 @@
   **************************************************************************/
 
 // To force Orbitersdk.h to use <fstream> in any compiler version
-#pragma include_alias( <fstream.h>, <fstream> )
-#include "Orbitersdk.h"
 
-#include "nasspdefs.h"
-#include "nasspsound.h"
-
-#include "soundlib.h"
 #include "s1c.h"
 
-#include <stdio.h>
-#include <string.h>
-
-
-S1C::S1C (OBJHANDLE hObj, int fmodel) : VESSEL2(hObj, fmodel)
-
+S1C::S1C (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
+SICSIISepPyros("SICSIISepPyros", Panelsdk)
 {
 	InitS1c();
 }
 
 S1C::~S1C()
-
 {
-	// Nothing for now.
+	delete(sicSystems);
 }
 
 void S1C::InitS1c()
-
 {
 	int i;
 
 	State = SIC_STATE_HIDDEN;
 
-	ph_retro = 0;
-	ph_main = 0;
+	ph_retro = nullptr;
+	ph_main = nullptr;
 
-	thg_retro = 0;
-	thg_main = 0;
+	thg_retro = nullptr;
+	thg_main = nullptr;
 
-	EmptyMass = 50000.0;
-	MainFuel = 5000.0;
+	EmptyMass = 137000.0;
+	MainFuel = 2077000.0;
 	EngineNum = 5;
+	RetroNum = 4;
 
 	RetrosFired = false;
 	LowRes = false;
@@ -80,13 +69,14 @@ void S1C::InitS1c()
 
 	CurrentThrust = 0.0;
 
-	hsat5stg1 = 0;
-	hsat5stg1low = 0;
+	hsat5stg1 = nullptr;
+	hsat5stg1low = nullptr;
 
 	for (i = 0; i < 4; i++)
-		th_retro[i] = 0;
+		th_retro[i] = nullptr;
 
-	th_main[0] = 0;
+	th_main[0] = nullptr;
+	hDockSII = nullptr;
 }
 
 void S1C::SetS1c()
@@ -121,7 +111,6 @@ void S1C::SetS1c()
 }
 
 void S1C::clbkPreStep(double simt, double simdt, double mjd)
-
 {	
 	if (State == SIC_STATE_HIDDEN)
 	{
@@ -192,9 +181,8 @@ void S1C::clbkPostCreation()
 }
 
 void S1C::clbkSaveState (FILEHANDLE scn)
-
 {
-	VESSEL2::clbkSaveState (scn);
+	VESSEL4::clbkSaveState (scn);
 
 	oapiWriteScenario_int (scn, "MAINSTATE", GetMainState());
 	oapiWriteScenario_int (scn, "VECHNO", VehicleNo);
@@ -223,7 +211,6 @@ typedef union
 } MainState;
 
 int S1C::GetMainState()
-
 {
 	MainState state;
 
@@ -237,7 +224,6 @@ int S1C::GetMainState()
 }
 
 void S1C::AddEngines()
-
 {
 	int i;
 	SURFHANDLE tex = oapiRegisterExhaustTexture ("ProjectApollo/Exhaust2");
@@ -336,7 +322,6 @@ void S1C::AddEngines()
 }
 
 void S1C::SetMainState(int s)
-
 {
 	MainState state;
 
@@ -349,7 +334,6 @@ void S1C::SetMainState(int s)
 }
 
 void S1C::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
-
 {
 	char *line;
 	float flt;
@@ -429,10 +413,15 @@ void S1C::clbkLoadStateEx (FILEHANDLE scn, void *vstatus)
 }
 
 void S1C::clbkSetClassCaps (FILEHANDLE cfg)
-
 {
-	VESSEL2::clbkSetClassCaps (cfg);
+	VESSEL4::clbkSetClassCaps (cfg);
 	SetS1c();
+
+	SetupTouchdownPoints();
+	hDockSII = CreateDock(_V(0.0, 0.0, 20.169), _V(0, 0, 1), _V(0, 1, 0));
+
+	sicSystems = new SICSystems(this, th_main, ph_main, SICSIISepPyros, LaunchS, SShutS, CurrentThrust);
+	RegisterConnector(0, sicSystems->GetSICToSIIConnector(), true);
 }
 
 void S1C::LoadMeshes(bool lowres)
@@ -452,8 +441,15 @@ void S1C::LoadMeshes(bool lowres)
 }
 
 void S1C::clbkDockEvent(int dock, OBJHANDLE connected)
-
 {
+	if (connected)
+	{
+		DockConnectors(dock);
+	}
+	else
+	{
+		UndockConnectors(dock);
+	}
 }
 
 bool S1C::clbkLoadGenericCockpit ()
@@ -514,7 +510,6 @@ void S1C::SetState(S1CSettings &state)
 }
 
 void S1C::ShowS1c()
-
 {
 	SetEmptyMass(EmptyMass);
 
@@ -545,6 +540,39 @@ void S1C::ShowS1c()
 	}
 
 	AddEngines();
+}
+
+void S1C::SetupTouchdownPoints()
+{
+	double td_mass = 2214000.0;
+	double td_width = 10.0;
+	double td_tdph = -49.0;
+	double td_height = 40.0;
+
+	static DWORD ntdp = 4;
+	static TOUCHDOWNVTX td[4];
+	double stiffness = (-1) * (td_mass * 9.80655) / (3 * -0.05);
+	double damping = 0.9 * (2 * sqrt(td_mass * stiffness));
+	for (int i = 0; i < 4; i++) {
+		td[i].damping = damping;
+		td[i].mu = 3;
+		td[i].mu_lng = 3;
+		td[i].stiffness = stiffness;
+	}
+	td[0].pos.x = -cos(30 * RAD) * td_width;
+	td[0].pos.y = -sin(30 * RAD) * td_width;
+	td[0].pos.z = td_tdph;
+	td[1].pos.x = 0;
+	td[1].pos.y = 1 * td_width;
+	td[1].pos.z = td_tdph;
+	td[2].pos.x = cos(30 * RAD) * td_width;
+	td[2].pos.y = -sin(30 * RAD) * td_width;
+	td[2].pos.z = td_tdph;
+	td[3].pos.x = 0;
+	td[3].pos.y = 0;
+	td[3].pos.z = td_tdph + td_height;
+
+	SetTouchdownPoints(td, ntdp);
 }
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)

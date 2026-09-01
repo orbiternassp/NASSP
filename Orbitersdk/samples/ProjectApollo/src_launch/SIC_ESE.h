@@ -29,13 +29,15 @@ See http://nassp.sourceforge.net/license/ for more details.
 class SIC_ESE : public SI_ESE
 {
 public:
-	SIC_ESE(TailUmbilical *TSMUmb, LCCPadInterface *p);
+	SIC_ESE(LCCPadInterface *p);
 
 	void Timestep();
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
 	bool GetSIThrustOKSimulate(int eng, int n) { return SICThrustOKSimulate[eng - 1][n - 1]; }
+	bool GetSIThrustOK(int eng, int n) { return SICThrustOK[(eng - 1) * 3 + (n - 1)]; }
 protected:
 	bool SICThrustOKSimulate[5][3];
+	bool SICThrustOK[15];
 };

@@ -31,8 +31,203 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "saturn.h"
 #include "papi.h"
 
+#include "sivbsystems.h"
 #include "s1bsystems.h"
 #include "SCMUmbilical.h"
+#include "TailUmbilicalInterface.h"
+
+SIBSystemsConnector::SIBSystemsConnector()
+{
+	ourSIB = NULL;
+}
+
+SIBSystemsConnector::~SIBSystemsConnector()
+{
+
+}
+
+SIBtoSIVBConnector::SIBtoSIVBConnector()
+{
+	type = SIVB_SIX_COMMAND;
+	ourSIB = NULL;
+}
+
+SIBtoSIVBConnector::~SIBtoSIVBConnector()
+{
+
+}
+
+bool SIBtoSIVBConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	SIVBSIXMessageType messageType;
+
+	messageType = (SIVBSIXMessageType)m.messageType;
+
+	switch (messageType)
+	{
+	case SIVB_SIX_IS_CONNECTED:
+		if (ourSIB)
+		{
+			return true;
+		}
+		break;
+	case SIVB_SIX_SI_SWITCH_SELECTOR:
+		if (ourSIB)
+		{
+			ourSIB->SwitchSelector(m.val1.iValue);
+			return true;
+		}
+		break;
+	case SIVB_SIX_SI_THRUSTER_DIR:
+		if (ourSIB)
+		{
+			ourSIB->SetThrusterDir(m.val1.iValue, m.val2.dValue, m.val3.dValue);
+			return true;
+		}
+		break;
+	case SIVB_SIX_SIB_LOW_LEVEL_SENSORS_DRY:
+		if (ourSIB)
+		{
+			m.val1.bValue = ourSIB->GetLowLevelSensorsDry();
+			return true;
+		}
+		break;
+	case SIVB_SIX_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
+		if (ourSIB)
+		{
+			m.val1.bValue = ourSIB->GetOutboardEnginesCutoff();
+			return true;
+		}
+		break;
+	case SIVB_SIX_GETSITHRUSTOK:
+		if (ourSIB)
+		{
+			ourSIB->GetThrustOK((bool *)m.val1.pValue);
+			return true;
+		}
+		break;
+	case SIVB_SIX_SI_EDS_CUTOFF:
+		if (ourSIB)
+		{
+			ourSIB->EDSEnginesCutoff(m.val1.bValue);
+			return true;
+		}
+		break;
+	case SIVB_SIX_GET_SI_INBOARD_ENGINE_OUT:
+		if (ourSIB)
+		{
+			m.val1.bValue = ourSIB->GetInboardEngineOut();
+			return true;
+		}
+		break;
+	case SIVB_SIX_GET_SI_OUTBOARD_ENGINE_OUT:
+		if (ourSIB)
+		{
+			m.val1.bValue = ourSIB->GetOutboardEngineOut();
+			return true;
+		}
+		break;
+	case SIVB_SIX_GET_SIX_SIVB_NOT_SEPARATED:
+		if (ourSIB)
+		{
+			m.val1.bValue = true;
+			return true;
+		}
+		break;
+	}
+
+	return false;
+}
+
+SIBToSIESEConnector::SIBToSIESEConnector()
+{
+	type = SIESE_SI_COMMAND;
+}
+
+SIBToSIESEConnector::~SIBToSIESEConnector()
+{
+
+}
+
+bool SIBToSIESEConnector::IsUmbilicalConnected()
+{
+	return (connectedTo != NULL);
+}
+
+bool SIBToSIESEConnector::GetSIBThrustOKSimulate(int eng, int n)
+{
+	ConnectorMessage m;
+
+	m.destination = SIESE_SI_COMMAND;
+	m.messageType = SI_SIESE_GET_SI_THRUST_OK_SIMULATE;
+	m.val1.iValue = eng;
+	m.val2.iValue = n;
+
+	if (SendMessage(m))
+	{
+		return m.val1.bValue;
+	}
+
+	return false;
+}
+
+bool SIBToSIESEConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	SIESEMessageType messageType;
+
+	messageType = (SIESEMessageType)m.messageType;
+
+	switch (messageType)
+	{
+	case SIESE_SI_SI_STAGE_LOGIC_CUTOFF:
+		if (ourSIB)
+		{
+			m.val1.bValue = ourSIB->GetEngineStop();
+			return true;
+		}
+		break;
+	case SIESE_SI_SET_ENGINE_START:
+		if (ourSIB)
+		{
+			ourSIB->SetEngineStart(m.val1.iValue);
+			return true;
+		}
+		break;
+	case SIESE_SI_GSE_CUTOFF:
+		if (ourSIB)
+		{
+			ourSIB->GSEEnginesCutoff(m.val1.bValue);
+			return true;
+		}
+		break;
+	case SIESE_SI_THRUST_OK:
+		if (ourSIB)
+		{
+			ourSIB->GetThrustOK((bool*)m.val1.pValue);
+			return true;
+		}
+		break;
+	}
+	return false;
+}
 
 H1Engine::H1Engine(VESSEL *v, THRUSTER_HANDLE &h1, bool cangimbal, double pcant, double ycant)
 	:vessel(v), th_h1(h1)
@@ -259,6 +454,8 @@ SIBSystems::SIBSystems(VESSEL *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop
 	LaunchSound(LaunchS)
 {
 	vessel = v;
+	sibSIVBConnector.SetSIBSystems(this);
+	sibSIESEConnector.SetSIBSystems(this);
 
 	for (int i = 0;i < 8;i++)
 	{
@@ -306,13 +503,12 @@ SIBSystems::SIBSystems(VESSEL *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop
 	h1engines[5] = &h1engine6;
 	h1engines[6] = &h1engine7;
 	h1engines[7] = &h1engine8;
-
-	SCMUmb = NULL;
 }
 
 SIBSystems::~SIBSystems()
 {
-	DisconnectUmbilical();
+	sibSIVBConnector.Disconnect();
+	sibSIESEConnector.Disconnect();
 }
 
 void SIBSystems::SaveState(FILEHANDLE scn) {
@@ -442,11 +638,11 @@ void SIBSystems::Timestep(double misst, double simdt)
 	{
 		for (int j = 0;j < 3;j++)
 		{
-			ThrustOK[i * 3 + j] = h1engines[i]->GetThrustOK() || ESEGetSIBThrustOKSimulate(i + 1, j + 1);
+			ThrustOK[i * 3 + j] = h1engines[i]->GetThrustOK() || sibSIESEConnector.GetSIBThrustOKSimulate(i + 1, j + 1);
 		}
 	}
 
-	if (IsUmbilicalConnected())
+	if (sibSIESEConnector.IsUmbilicalConnected())
 	{
 		LiftoffRelay = true;
 	}
@@ -804,29 +1000,6 @@ void SIBSystems::SwitchSelector(int channel)
 	default:
 		break;
 	}
-}
-
-void SIBSystems::DisconnectUmbilical()
-{
-	if (SCMUmb)
-	{
-		SCMUmb->sib = NULL;
-		SCMUmb = NULL;
-	}
-}
-
-bool SIBSystems::IsUmbilicalConnected()
-{
-	if (SCMUmb) return true;
-
-	return false;
-}
-
-bool SIBSystems::ESEGetSIBThrustOKSimulate(int eng, int n)
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return SCMUmb->ESEGetSIThrustOKSimulate(eng, n);
 }
 
 void SIBSystems::GetThrustOK(bool *ok)

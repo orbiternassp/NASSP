@@ -24,23 +24,27 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-class TailUmbilicalInterface;
+#include "connector.h"
 
-class TailUmbilical
+class SI_ESE;
+
+//IU ESE to IU connector
+class SIESEToSICommandConnector : public Connector
 {
 public:
-	TailUmbilical(TailUmbilicalInterface *ml);
-	virtual ~TailUmbilical();
+	SIESEToSICommandConnector();
+	~SIESEToSICommandConnector();
 
-	virtual void Disconnect() = 0;
+	//S-I to S-I ESE
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
-	//From SLV to ML
-	virtual bool ESEGetSIThrustOKSimulate(int eng, int n);
+	//S-I ESE to S-I
+	bool SIStageLogicCutoff();
+	void SetEngineStart(int eng);
+	void SIGSECutoff(bool cut);
+	void GetSIThrustOK(bool *ok, int n);
 
-	//From ML to SLV
-	virtual bool SIStageLogicCutoff() = 0;
-	virtual void SetEngineStart(int eng) = 0;
-	virtual void SIGSECutoff(bool cut) = 0;
+	void SetSI_ESE(SI_ESE *si_ese) { ourSI_ESE = si_ese; };
 protected:
-	TailUmbilicalInterface* TailUmb;
+	SI_ESE *ourSI_ESE;
 };

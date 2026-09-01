@@ -220,7 +220,7 @@ bool LVDA::GetLiftoff()
 
 bool LVDA::GetGuidanceReferenceRelease()
 {
-	return iu->ESEGetGuidanceReferenceRelease();
+	return iu->GetIUToIUESECommandConnector()->GetGuidanceReferenceRelease();
 }
 
 bool LVDA::GetSIVBO2H2BurnerMalfunction()

@@ -24,6 +24,8 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
+#include "connector.h"
+
 class H1Engine
 {
 public:
@@ -70,15 +72,49 @@ protected:
 	const double GIMBALLIMIT = 8.0*RAD;
 };
 
-class SCMUmbilical;
 class Pyro;
 class Sound;
+class SIBSystems;
+
+class SIBSystemsConnector : public Connector
+{
+public:
+	SIBSystemsConnector();
+	virtual ~SIBSystemsConnector();
+	void SetSIBSystems(SIBSystems *sib) { ourSIB = sib; };
+protected:
+	SIBSystems *ourSIB;
+};
+
+class SIBtoSIVBConnector : public SIBSystemsConnector
+{
+public:
+	SIBtoSIVBConnector();
+	~SIBtoSIVBConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
+//S-IC to S-I Connector
+class SIBToSIESEConnector : public SIBSystemsConnector
+{
+public:
+	SIBToSIESEConnector();
+	virtual ~SIBToSIESEConnector();
+
+	//S-IB to S-I ESE
+	bool IsUmbilicalConnected();
+	bool GetSIBThrustOKSimulate(int eng, int n);
+
+	//S-I ESE to S-IB
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
 
 class SIBSystems
 {
 public:
 	SIBSystems(VESSEL *v, THRUSTER_HANDLE *h1, PROPELLANT_HANDLE &h1prop, Pyro &SIB_SIVB_Sep, Sound &LaunchS, Sound &SShutS);
-	~SIBSystems();
+	virtual ~SIBSystems();
 	void Timestep(double misst, double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -109,13 +145,13 @@ public:
 	virtual bool GetEngineStop();
 	bool FireRetroRockets();
 
-	SCMUmbilical *SCMUmb;
+	SIBtoSIVBConnector * GetSIBtoSIVBConnector() { return &sibSIVBConnector; }
+	SIBToSIESEConnector * GetSIBToSIESEConnector() { return &sibSIESEConnector; }
 protected:
 	double GetSumThrust();
-	bool ESEGetSIBThrustOKSimulate(int eng, int n);
-	void DisconnectUmbilical();
-	bool IsUmbilicalConnected();
 
+	SIBtoSIVBConnector sibSIVBConnector;
+	SIBToSIESEConnector sibSIESEConnector;
 	VESSEL *vessel;
 	PROPELLANT_HANDLE &main_propellant;
 

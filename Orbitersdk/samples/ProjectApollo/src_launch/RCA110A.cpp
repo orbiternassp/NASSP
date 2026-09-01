@@ -98,7 +98,11 @@ bool ATOLLSequence::ReadIn(const char *str)
 
 int ATOLLSequence::GetOperator()
 {
-	if (Operator == "DISO")
+	if (Operator == "DISI")
+	{
+		return ATOLL_DISI;
+	}
+	else if (Operator == "DISO")
 	{
 		return ATOLL_DISO;
 	}
@@ -123,54 +127,96 @@ ATOLLProcessor::ATOLLProcessor(RCA110AL *r)
 	rca110a = r;
 	opcode = 0;
 	nextitemtime = 0.0;
-	skipgetline = false;
-	delaystatus = false;
+	nextcommand = false;
+	DISINum = 0;
+	for (int i = 0; i < 5; i++)
+	{
+		DISIRef[i] = 0;
+	}
+	DISICondition = false;
+	halt = false;
+	firstpass = false;
 }
 
 void ATOLLProcessor::Timestep(double simt)
 {
+	//If file is not open, return
 	if (ifs.is_open() == false) return;
-
+	//Halt processing
+	if (halt) return;
+	//Save sim time
 	simtime = simt;
-	if (simtime < nextitemtime) return;
-	if (skipgetline == false)
+
+	opcode = seq.GetOperator();
+	switch (opcode)
 	{
-		if (!ifs.getline(line, 100))
-		{
-			ifs.close();
-		}
+	case ATOLL_DELY:
+		DELY();
+		break;
+	case ATOLL_DISI:
+		DISI();
+		break;
+	case ATOLL_DISO:
+		DISO();
+		break;
+	case ATOLL_SCAN:
+		SCAN();
+		break;
+	case ATOLL_SSEL:
+		SSEL();
+		break;
 	}
-	seq.Clear();
-	if (seq.ReadIn(line))
+
+	//Halt processing
+	if (halt) return;
+
+	if (nextcommand)
 	{
-		opcode = seq.GetOperator();
-		switch (opcode)
-		{
-		case ATOLL_DELY:
-			DELY();
-			break;
-		case ATOLL_DISO:
-			DISO();
-			break;
-		case ATOLL_SCAN:
-			SCAN();
-			break;
-		case ATOLL_SSEL:
-			SSEL();
-			break;
-		}
+		ProcessLine();
 	}
 }
 
 void ATOLLProcessor::DELY()
 {
-	if (seq.Time <= 0) return;
-	nextitemtime = simtime + seq.Time / 1000.0;
+	if (seq.Time <= 0)
+	{
+		nextcommand = true;
+		return;
+	}
+
+	if (firstpass)
+	{
+		firstpass = false;
+		nextitemtime = simtime + seq.Time / 1000.0;
+	}
+	if (simtime >= nextitemtime)
+	{
+		nextcommand = true;
+	}
+}
+
+void ATOLLProcessor::DISI()
+{
+	//Read reference profile and number of inputs
+	DISINum = sscanf(seq.Variable.c_str(), "D%d,D%d,D%d,D%d,D%d", &DISIRef[0], &DISIRef[1], &DISIRef[2], &DISIRef[3], &DISIRef[4]);
+
+	if (DISINum == 0)
+	{
+		//Error
+		return;
+	}
+
+	DISICondition = (seq.Condition == 1);
+	nextcommand = true;
 }
 
 void ATOLLProcessor::DISO()
 {
-	if (seq.Variable.size() == 0) return;
+	nextcommand = true;
+	if (seq.Variable.size() == 0)
+	{
+		return;
+	}
 	if (seq.Variable[0] == 'D')
 	{
 		//Discrete output
@@ -190,29 +236,47 @@ void ATOLLProcessor::DISO()
 
 void ATOLLProcessor::SCAN()
 {
-	if (seq.Time > 0)
+	if (firstpass)
 	{
-		if (skipgetline == false)
+		firstpass = false;
+		if (seq.Time > 0)
 		{
 			nextitemtime = simtime + seq.Time / 1000.0;
-			skipgetline = true;
-			delaystatus = true;
 		}
 		else
 		{
-			delaystatus = false;
+			nextitemtime = -HUGE_VAL;
 		}
 	}
 
-	if (delaystatus) return;
+	//Time to scan?
+	if (simtime < nextitemtime) return;
 
-	//Do Scanning
-	delaystatus = false;
-	skipgetline = false;
+	//Yes, do Scanning
+	bool incorrect = false;
+	bool var;
+
+	for (int i = 0; i < DISINum; i++)
+	{
+		var = rca110a->GetOutputSignal(DISIRef[i]);
+
+		if (var != DISICondition)
+		{
+			incorrect = true;
+			break;
+		}
+	}
+
+	if (incorrect)
+	{
+		halt = true;
+	}
+	nextcommand = true;
 }
 
 void ATOLLProcessor::SSEL()
 {
+	nextcommand = true;
 	int stage, chan;
 
 	if (sscanf(seq.Variable.c_str(), "%d,%d", &stage, &chan) == 2)
@@ -224,6 +288,27 @@ void ATOLLProcessor::SSEL()
 void ATOLLProcessor::ReadFile(const char *str)
 {
 	ifs.open(str);
+	if (ifs.is_open())
+	{
+		ifs.getline(line, 100); //To skip first line
+		halt = false;
+		nextitemtime = -HUGE_VAL;
+		//Read first line of file
+		ProcessLine();
+	}
+}
+
+void ATOLLProcessor::ProcessLine()
+{
+	if (!ifs.getline(line, 100))
+	{
+		ifs.close();
+		return;
+	}
+	seq.Clear();
+	halt = !seq.ReadIn(line);
+	firstpass = true;
+	nextcommand = false;
 }
 
 RCA110A::RCA110A()

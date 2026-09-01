@@ -24,8 +24,11 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-class TailUmbilicalInterface
+enum SIESEMessageType
 {
-public:
-	virtual bool ESEGetSIThrustOKSimulate(int eng, int n) = 0;
+	SI_SIESE_GET_SI_THRUST_OK_SIMULATE,
+	SIESE_SI_SI_STAGE_LOGIC_CUTOFF,
+	SIESE_SI_SET_ENGINE_START,
+	SIESE_SI_GSE_CUTOFF,
+	SIESE_SI_THRUST_OK,
 };
