@@ -73,6 +73,14 @@
 #include "dinput.h"
 #include "vesim.h"
 
+#ifdef _OPENORBITER
+#include <gcCoreAPI.h>
+#include "DrawAPi.h"
+#else
+#include <gcConst.h>
+#include "Sketchpad2.h"	// Sketchpad2 is for superimposing tests in O16Beta. In OO we use the DrawAPi.h
+#endif // _OPENORBITER
+
 class MCC;
 class IU;
 class SIBSystems;
@@ -83,6 +91,11 @@ namespace mission
 	class Mission;
 };
 
+// This is moved here from saturnpanel.cpp for using it in also in saturnvc.cpp
+// CSM Optics base direction, as given in the Colossus code CSM_GEOMETRY.agc
+// All flown Colossus versions use these values
+#define OPTICS_BASE_COS  0.8431756920
+#define OPTICS_BASE_SIN  0.5376381241
 
 #define RCS_SM_QUAD_A		0
 #define RCS_SM_QUAD_B		1
@@ -293,6 +306,24 @@ typedef struct {
 	double InjectorFlange1TempF;
 	double InjectorFlange2TempF;
 } SPSStatus;
+
+// Some defines for the VC Optics
+// Order of meshgroups and textures
+#define CMVC_SCT_EYEPIECE	0
+#define CMVC_SXT_EYEPIECE	1
+#define CMVC_OPTICS_DSKY	2
+#define CMVC_OPTICS_P122	3
+#define CMVC_OPTICS_CLKPNTS	4
+#define CMVC_SXT_CUSTOM_CAM	5
+#define CMVC_SCT_RETICLE	6
+#define CMVC_SXT_RETICLE	7
+
+#define NUM_MSHGRPS	8
+#define NUM_RTCL	2
+#define FIRSTMSHGRP	0
+#define LASTMSHGRP	5
+#define FIRSTRTCL	6
+#define LASTRTCL	7
 
 // Vesim input IDs
 #define CSM_AXIS_INPUT_RHC_R        1
@@ -612,6 +643,10 @@ public:
 		SRF_VC_DIGITAL90,
 		SRF_VC_EVENT_TIMER_DIGITS90,
 		SRF_VC_ABORT,
+		SRF_VC_OPTICS_DSKY,
+		SRF_VC_OPTICS_P122,
+		SRF_VC_OPTICS_CUSTOMCAM,
+		SRF_VC_4DSKY_LEB,
 
 		//
 		// NSURF MUST BE THE LAST ENTRY HERE. PUT ANY NEW SURFACE IDS ABOVE THIS LINE
@@ -898,6 +933,11 @@ public:
 
 	// Variables for checklists
 	char Checklist_Variable[16][32];
+
+	// For hiding the Optics Panel122 and DSKY
+	bool ViewOpticsPanels;
+	bool OpticsVCDualViewFlashing = false;
+	DWORD VCOpticsRetAlpha = 0x80FFFFFF; // Semitransparent CustomCamera
 
 	//
 	// General functions that handle calls from Orbiter.
@@ -1314,6 +1354,8 @@ public:
 	void DoMeshAnimation(AnimState &, UINT &, double, double);
 
 	void UpdatePointingArrow();
+	void UpdateCMVCOptics();
+	void CMVCOpticsInitP122Switches();
 	void UpdateSideHatchClickspots(const VECTOR3 &ofs);
 	void UpdateForwardHatchClickspots(const VECTOR3 &ofs);
 
@@ -4056,6 +4098,8 @@ protected:
     #define SATVIEW_LOWER_CENTER    9
     #define SATVIEW_UPPER_CENTER    10
 	#define SATVIEW_SIDEHATCH       11
+	#define SATVIEW_OPTICS_SCT		12
+	#define SATVIEW_OPTICS_SXT		13
 
 	unsigned int	viewpos;
 
@@ -4080,6 +4124,7 @@ protected:
 	int coascdrreticleidx;
 	int cmvccuecardsarrowsidx;
 	int hcmPointingArrowidx;
+	int hCMVCOpticsidx;
 
 	DEVMESHHANDLE vcmesh;
 	bool ViewCueCardArrows;
@@ -4136,6 +4181,8 @@ protected:
 	bool FovFixed;
 	bool FovExternal;
 	double FovSave;
+	double FovSaveVCOptics;
+	bool GNPanelView = false;
 	int maxTimeAcceleration;
 	bool IsMultiThread;
 
@@ -4318,12 +4365,11 @@ protected:
 	void SetVCLighting(UINT meshidx, int material, int EmissionMode, double state, int cnt);
 #endif
 
-//	CAMERAHANDLE hFDAICam = NULL;
-//	SURFHANDLE srfFDAICamTexture;
-//	SURFHANDLE hFDAISurf;
+	CAMERAHANDLE hOpticsCustomCam = NULL;
+	SURFHANDLE srfOpticsCustomCam;
 
-//	void InitFDAICustomCamera(void);
-
+	void UpdateOpticsCustomCam(VECTOR3, VECTOR3, VECTOR3);
+	
 	//
 	// Systems functions.
 	//
@@ -4828,5 +4874,6 @@ extern MESHHANDLE hcmCOAScdr;
 extern MESHHANDLE hcmCOAScdrreticle;
 extern MESHHANDLE hcmCueCardsArrows;
 extern MESHHANDLE hcmPointingArrow;
+extern MESHHANDLE hCMVCOptics;
 
 #endif // _PA_SATURN_H

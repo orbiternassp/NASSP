@@ -96,6 +96,7 @@ MESHHANDLE hcmCOAScdr;
 MESHHANDLE hcmCOAScdrreticle;
 MESHHANDLE hcmCueCardsArrows;
 MESHHANDLE hcmPointingArrow;
+MESHHANDLE hCMVCOptics;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -670,6 +671,7 @@ void SaturnInitMeshes()
 	LOAD_MESH(hcmCOAScdrreticle, "ProjectApollo/CM-COAS-CDR_Reticle");
 	LOAD_MESH(hcmCueCardsArrows, "ProjectApollo/Helpers/CM-CueCardsArrows");
 	LOAD_MESH(hcmPointingArrow, "ProjectApollo/Helpers/PointingArrow");
+	LOAD_MESH(hCMVCOptics, "ProjectApollo/CMVC_Optics");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
@@ -1076,6 +1078,9 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 
 	// Pointing Arrow
 	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
+
+	// Optics
+	hCMVCOpticsidx = AddMesh(hCMVCOptics, &mesh_dir);
 
 	// VC
 	UpdateVC(mesh_dir);
@@ -1620,6 +1625,9 @@ void Saturn::SetReentryMeshes() {
 	// Pointing Arrow
 	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
 
+	// Optics
+	hCMVCOpticsidx = AddMesh(hCMVCOptics, &mesh_dir);
+
 	// VC
 	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
@@ -1911,6 +1919,9 @@ void Saturn::SetRecovery()
 	// Pointing Arrow
 	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
 
+	// Optics
+	hCMVCOpticsidx = AddMesh(hCMVCOptics, &mesh_dir);
+
 	// VC
 	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);
@@ -2135,7 +2146,9 @@ void Saturn::JettisonOpticsCover()
 	char VName[256];
 
 	// Use VC offset to calculate the optics cover offset
-	VECTOR3 ofs = _V(0, 0, CurrentViewOffset + 0.25);
+	VECTOR3 ofs;
+	if(!InVC) ofs = _V(0, 0, CurrentViewOffset + 0.25);	// 2D
+	else ofs = _V(0, -0.4, CurrentViewOffset);			// VC
 	VECTOR3 vel = {0.0, -0.16, 0.1};
 	VESSELSTATUS vs4b;
 	GetStatus (vs4b);

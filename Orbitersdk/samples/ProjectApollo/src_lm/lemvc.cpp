@@ -425,7 +425,7 @@ const VECTOR3 UtilityLights_LMPLocation = { 0.1030, 1.0318, 0.8908 };
 
 // AOT
 const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
-const VECTOR3 AOT_ShaftSelectorLocation = { 0.0640, 0.8800, 1.4792 };
+const VECTOR3 AOT_ShaftSelectorLocation = { 0.064288, 0.88006, 1.47924 };
 
 // Flood lights
 const VECTOR3 floodLightPos_Right = { 0.238, 0.89, 1.2 };
@@ -611,6 +611,14 @@ void LEM::SetView() {
 			v.z += -vcFreeCamy;
 			break;
 
+		case LMVIEW_OPTICS:
+			v =_V(0, 1.13, 1.26) + ofs;
+			SetCameraDefaultDirection(_V(cos(45.0*RAD)*sin(optics.OpticsShaft*PI / 3.0), sin(45.0*RAD), cos(45.0*RAD)*cos(optics.OpticsShaft*PI / 3.0)), optics.OpticsShaft*PI / 3.0);
+			oapiCameraSetCockpitDir(0, 0);
+			v.x += vcFreeCamx;
+			v.y += vcFreeCamz;
+			v.z += -vcFreeCamy;
+			break;
 		}
 
 		v.x += ViewOffsetx;
@@ -696,7 +704,7 @@ void LEM::SetView() {
 		oapiGetViewportSize(&w, &h);
 		oapiCameraSetAperture(atan(tan(RAD*30.0)*min(h / 1080.0, 1.0)));
 	}
-	else if (InPanel && PanelId == LMPANEL_AOTZOOM) {
+	else if ((InPanel && PanelId == LMPANEL_AOTZOOM)|| (InVC && viewpos == LMVIEW_OPTICS)) {
 		// if this is the first time we've been here, save the current FOV
 		if (InFOV) {
 			SaveFOV = oapiCameraAperture();
@@ -728,6 +736,10 @@ bool LEM::clbkLoadVC (int id)
 	// Init the 2D panel switches to fix XRSound not giving us switch clicks if we load directly into the VC.
 	// Calling InitPanel(LMPANEL_MAIN) also works, since that function calls SetSwitches() as well.
 	SetSwitches(LMPANEL_MAIN);	// Use main panel as a placeholder, it doesn't actually matter
+
+	// Change LM Optics Shaft Selector Texture with Numbers for mission A15 and above
+	if (pMission->GetLMNumber() >9)
+		oapiBlt(srf[SRF_LMVC2_TEXTURE], srf[SRF_LMVC2_TEXTURE], 363*TexMul, 1712*TexMul, 363*TexMul, 1621*TexMul, 372*TexMul, 90*TexMul, SURF_PREDEF_CK);
 
 	//Reset VC free camera to default
 	vcFreeCamx = 0;
@@ -766,6 +778,7 @@ bool LEM::clbkLoadVC (int id)
 		oapiVCSetNeighbours(LMVIEW_CBLEFT, LMVIEW_DSKY, LMVIEW_RDVZWIN, LMVIEW_LPD);
 		InVC = true;
 		InPanel = false;
+		oapiCameraSetAperture(30*RAD);
 		SetView();
 		SetLMMeshVis();
 		SetCOAS();
@@ -854,7 +867,7 @@ bool LEM::clbkLoadVC (int id)
 		viewpos = LMVIEW_AOT;
 		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 		SetCameraMovement(_V(0.05, 0.0, -0.05), 0, 90 * RAD, _V(-0.1, 0.0, 0.0), 0, 0, _V(0.1, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(-1, -1, -1, LMVIEW_DSKY);
+		oapiVCSetNeighbours(-1, -1,LMVIEW_OPTICS, LMVIEW_DSKY);
 		InVC = true;
 		InPanel = false;
 		SetView();
@@ -939,6 +952,22 @@ bool LEM::clbkLoadVC (int id)
 
 		return true;
 
+	case LMVIEW_OPTICS:
+		viewpos = LMVIEW_OPTICS;
+		SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		oapiVCSetNeighbours(-1, -1, -1, LMVIEW_AOT);
+		oapiCameraSetAperture(30.0*RAD);
+		InVC = true;
+		InPanel = false;
+		SetView();
+		SetLMMeshVis();
+		SetCOAS();
+
+		RegisterActiveAreas();
+
+		return true;
+
 	default:
 		return false;
 	}
@@ -964,6 +993,7 @@ void LEM::InitPanelVC() {
 	srf[SRF_DEDA_LIGHTSVC] = oapiLoadTexture("ProjectApollo/VC/ags_lights.dds");
 	srf[SRF_AOTFONT_VC] = oapiLoadTexture("ProjectApollo/VC/aot_font.dds");
 	srf[SRF_ENGSTARTSTOP_VC] = oapiLoadTexture("ProjectApollo/VC/LMEngStartStop.dds");
+	srf[SRF_LMVC2_TEXTURE] = oapiGetTextureHandle(GetMeshTemplate(vcidx), VC_TEX_LMVC_2_dds);
 
 	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP], ck);
 	oapiSetSurfaceColourKey(srf[SRF_VC_DIGITALDISP2], ck);
@@ -1043,6 +1073,15 @@ void LEM::RegisterActiveAreas()
 	const VECTOR3 AOTReticleDetentLocationRotBottom ={ 0.072334, 0.717842, 1.38451 };
 	oapiVCRegisterArea(AID_VC_AOT_ReticleKnobRotBottom, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_PRESSED|PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Spherical(AID_VC_AOT_ReticleKnobRotBottom, AOTReticleDetentLocationRotBottom + ofs, 0.01);
+
+	// AOT Detent
+	const VECTOR3 AOT_ShaftSelectorLocationTop ={ 0.07355, 0.8965, 1.47925 };
+	oapiVCRegisterArea(AID_VC_AOT_ShaftSelectorTop, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_AOT_ShaftSelectorTop, AOT_ShaftSelectorLocationTop + ofs, 0.01);
+
+	const VECTOR3 AOT_ShaftSelectorLocationBottom ={ 0.07355, 0.8636, 1.47925 };
+	oapiVCRegisterArea(AID_VC_AOT_ShaftSelectorBottom, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_LBDOWN);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_AOT_ShaftSelectorBottom, AOT_ShaftSelectorLocationBottom + ofs, 0.01);
 
 	// LMVC Lighting
 	oapiVCRegisterArea(AID_LMVC_LIGHTING,  PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE);
@@ -1662,6 +1701,16 @@ bool LEM::clbkVCMouseEvent(int id, int event, VECTOR3 &p)
 			}
 			return true;
 
+		case AID_VC_AOT_ShaftSelectorTop:
+			optics.OpticsShaft = (optics.OpticsShaft + 1) % 6;
+			AOT_ShaftSelectorRotState.action = AnimState::OPENING;
+			return ButtonClick(), true;
+
+		case AID_VC_AOT_ShaftSelectorBottom:
+			optics.OpticsShaft = (optics.OpticsShaft + 5) % 6;
+			AOT_ShaftSelectorRotState.action = AnimState::CLOSING;
+			return ButtonClick(), true;
+
 		case AID_VC_OVERHEADHATCH:
 			OverheadHatch.Toggle();
 			return true;
@@ -1803,20 +1852,23 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		SetVCLighting(vcidx, IntegralLights_LMVC, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC));
 		SetVCLighting(vcidx, IntegralLights_LMVC_NoTex, MAT_LIGHT, lca.GetIntegralOutput() + floodRotaryValue, NUM_ELEMENTS(IntegralLights_LMVC_NoTex));
 
+		// Switches uses radioluminescant so they are allways lit
+		SetVCLighting(vcidx, VC_MAT_LMVC_Switches_t, MAT_EMISSION, 1, 1);
+
 		if (LtgSidePanelsSwitch.GetState() == TOGGLESWITCH_UP){	// Panel 8, 11
 			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_8_11, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
-			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
+//			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
 		}else{
 			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_8_11, MAT_EMISSION, 0, 1);
-			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, 0, 1);
+//			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_8, MAT_EMISSION, 0, 1);
 		}
 		if (SidePanelsSwitch.GetState() == TOGGLESWITCH_UP){ // Panel 12, 14, 16
 			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_12_14_16, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
-			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
+//			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
 			SetVCLighting(vcidx, VC_MAT_Rotary_LM_Panel_12_14, MAT_EMISSION, lca.GetIntegralOutput() + floodRotaryValue, 1);
 		}else{
 			SetVCLighting(vcidx, VC_MAT_LMVC_2_Panel_12_14_16, MAT_EMISSION, 0, 1);
-			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, 0, 1);
+//			SetVCLighting(vcidx, VC_MAT_LMVC_Switches_Panel_12_14, MAT_EMISSION, 0, 1);
 			SetVCLighting(vcidx, VC_MAT_Rotary_LM_Panel_12_14, MAT_EMISSION, 0, 1);
 		}
 
@@ -1945,6 +1997,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 
 	case AID_LMVC_POINTINGARROW:
 		UpdatePointingArrow();
+		UpdateLMVCOptics();
 		SetVCCueCardsArrows();
 		return true;
 
@@ -2373,6 +2426,12 @@ void LEM::DefineVCAnimations()
 	static MGROUP_ROTATE AOT_ReticleKnobMeshRot(vcidx, AOT_ReticleKnob, 1, AOTReticleDetentLocation, _V(-1, 0, 0), (float)(-360.0 * RAD));
 	AOT_ReticleKnobAnimRot = CreateAnimation(1.0);
 	AddAnimationComponent(AOT_ReticleKnobAnimRot, 0.0,  1.0, &AOT_ReticleKnobMeshRot);
+
+	// AOT_ShaftSelector Rotation
+	static UINT AOT_ShaftSelectorKnob[1] = { VC_GRP_AOT_ShaftSelector };
+	static MGROUP_ROTATE AOT_ShaftSelectorMeshRot(vcidx, AOT_ShaftSelectorKnob, 1, AOT_ShaftSelectorLocation, _V(-1, 0, 0), (float)(-360.0 * RAD));
+	AOT_ShaftSelectorAnimRot = CreateAnimation(1.0);
+	AddAnimationComponent(AOT_ShaftSelectorAnimRot, 0.0,  1.0, &AOT_ShaftSelectorMeshRot);
 
 	//Panel 1
 
@@ -4038,3 +4097,152 @@ void LEM::HideMeshGroup(int meshidx, int meshgrp, bool hide){
 	}
 }
 
+//
+// This is the VC Optics stuff.
+//
+void LEM::UpdateLMVCOptics() {
+	// If we are not in Optics view hide the VC Optics mesh
+	if (viewpos != LMVIEW_OPTICS) {
+		SetMeshVisibilityMode(hLMVCOpticsidx, MESHVIS_NEVER);
+		SetMeshVisibilityMode(ascidx, MESHVIS_EXTERNAL);
+		return;
+	}
+
+	// struct for storing the original vertices from the mesh
+	// We do this to avoid rounding errors in every calculation.
+	// For this, we use the original vertices from the mesh.
+	struct OpticsMeshGroup {
+		std::vector<VECTOR3> data;
+		std::vector<VECTOR3> datanew;		// This is for storing the transformed vertices, not the original ones.
+		std::vector<NTVERTEX> vertexdata;	// This is for sending the transformad vertices to D3D9 client
+		int vtxcnt;
+		MESHGROUP* mshgrp;
+		GROUPREQUESTSPEC grp{0};
+		int ordernr;
+	};
+
+	// If we are not in VC return
+	if (!vcmesh) return;
+	if (oapiGetFocusInterface() != this) return;
+
+	VECTOR3 camPosGlobal, camPos, camDir, camPointing, opticsPos, final_vertex;
+	double aperture = 1.0;
+
+	SetCameraDefaultDirection(_V(cos(45.0*RAD)*sin(optics.OpticsShaft*PI / 3.0), sin(45.0*RAD), cos(45.0*RAD)*cos(optics.OpticsShaft*PI / 3.0)), optics.OpticsShaft*PI / 3.0);
+	oapiCameraSetCockpitDir(0,0);
+
+	// Get global camera position and direction.
+	oapiCameraGlobalPos(&camPosGlobal);
+	oapiCameraGlobalDir(&camDir);
+
+	MATRIX3 mRot;
+	oapiCameraRotationMatrix(&mRot);
+	// The up vector is the second column of the camera matrix.
+	VECTOR3 gCamUp = _V(mRot.m12, mRot.m22, mRot.m32);
+
+	// Transformation into the local ship system
+	Global2Local(camPosGlobal, camPos);
+
+	// Local viewing direction
+	VECTOR3 gTarget = camPosGlobal + camDir;
+	VECTOR3 lTarget;
+	Global2Local(gTarget, lTarget);
+	VECTOR3 lCamDir = lTarget - camPos;
+	normalise(lCamDir);
+
+	// Local Up Vector
+	VECTOR3 gUpPos = camPosGlobal + gCamUp;
+	VECTOR3 lUpPos;
+	Global2Local(gUpPos, lUpPos);
+	VECTOR3 lCamUp = lUpPos - camPos;
+	normalise(lCamUp);
+
+	// Local Right Vector
+	VECTOR3 lCamRight = crossp(lCamUp, lCamDir);
+	normalise(lCamRight);
+
+	VECTOR3 ofs;
+	GetMeshOffset(vcidx, ofs);
+	DEVMESHHANDLE hOpticsMesh = GetDevMesh(vis, hLMVCOpticsidx);
+
+	static std::vector<OpticsMeshGroup> lmvcOptics(3);	// 2 meshgroups from mesh + 1 extra for the reticles
+	static bool initVCOptics = true;
+
+	// Make copies of the mesh Vertices 
+	if (initVCOptics) {
+		MESHHANDLE hLVOptics = GetMeshTemplate(hLMVCOpticsidx);		// handle for VC Optics Mesh
+
+		// Order of mesh groups. This must be the same in the mesh
+		// 0 = Eyepiece, 1 = Reticle
+		for (int i = 0; i < 2; i++){
+			lmvcOptics[i].mshgrp = oapiMeshGroup(hLVOptics, i);
+			lmvcOptics[i].vtxcnt = lmvcOptics[i].mshgrp->nVtx;
+			lmvcOptics[i].data.resize(lmvcOptics[i].vtxcnt);
+			lmvcOptics[i].datanew.resize(lmvcOptics[i].vtxcnt);
+			if (i == 1 ) lmvcOptics[i+1].data.resize(lmvcOptics[i].vtxcnt);
+
+			for (int j = 0; j < lmvcOptics[i].vtxcnt; j++) {
+				lmvcOptics[i].data[j] = _V(lmvcOptics[i].mshgrp->Vtx[j].x, lmvcOptics[i].mshgrp->Vtx[j].y, lmvcOptics[i].mshgrp->Vtx[j].z);
+
+				// We copy all the original mesh reticle vertices from the positions 1 of the mesh array to positions 2
+				// This is needed for the rotation of the reticles. We need only the vertices. 
+				if (i == 1 ) lmvcOptics[i+1].data[j] = _V(lmvcOptics[i].mshgrp->Vtx[j].x, lmvcOptics[i].mshgrp->Vtx[j].y, lmvcOptics[i].mshgrp->Vtx[j].z);
+			}
+			lmvcOptics[i].vertexdata.resize(lmvcOptics[i].vtxcnt);
+			lmvcOptics[i].grp.Vtx = lmvcOptics[i].vertexdata.data();
+			lmvcOptics[i].grp.nVtx = lmvcOptics[i].vtxcnt;
+		}
+
+//		FovSaveVCOptics = 30*RAD;
+		initVCOptics = false;
+	}
+	
+	// Rotate Reticle
+	if (!oapiGetPause()) { // *** oapiGetPause() maybe unnecessary ***
+		double cos_a = std::cos(optics.OpticsReticle);
+		double sin_a = std::sin(optics.OpticsReticle);
+		for (int i = 0; i < lmvcOptics[1].vtxcnt; i++) {
+			double rx = lmvcOptics[1 + 1].data[i].x;
+			double ry = lmvcOptics[1 + 1].data[i].y;
+			lmvcOptics[1].data[i].x = rx * cos_a - ry * sin_a;
+			lmvcOptics[1].data[i].y = rx * sin_a + ry * cos_a;
+			lmvcOptics[1].data[i].z = lmvcOptics[1+1].data[i].z;
+		}
+	}
+
+	// Position the Opticsmesh 15cm in front of the camera
+	opticsPos = camPos - ofs + (lCamDir * 0.15);
+
+	GROUPEDITSPEC ges;
+	ges.flags = GRPEDIT_VTXCRD;
+	ges.vIdx = 0;
+
+	// OPTIMIZATION: Multiply direction vectors once per frame by aperture to accelerate the loop
+	VECTOR3 rScaled = lCamRight * aperture;
+	VECTOR3 uScaled = lCamUp    * aperture;
+	VECTOR3 dScaled = lCamDir   * aperture;
+
+	// Transform Vertices
+	for (int i = 0; i < 2; i++){
+		for (int j = 0; j < lmvcOptics[i].vtxcnt; j++) {
+			VECTOR3 vtx = lmvcOptics[i].data[j];
+
+			// Linear combination using pre-scaled vectors saves explicit vector multiplications
+			final_vertex = rScaled * vtx.x + uScaled * vtx.y + dScaled * vtx.z;
+			final_vertex += opticsPos;
+			lmvcOptics[i].datanew[j] = final_vertex;
+
+			lmvcOptics[i].grp.Vtx[j].x = (float)final_vertex.x;
+			lmvcOptics[i].grp.Vtx[j].y = (float)final_vertex.y;
+			lmvcOptics[i].grp.Vtx[j].z = (float)final_vertex.z;
+		}
+
+		// Send Mesh-Update to Orbiter
+		ges.nVtx = lmvcOptics[i].vtxcnt;
+		ges.Vtx = lmvcOptics[i].grp.Vtx;
+		oapiEditMeshGroup(hOpticsMesh, i, &ges);
+	}
+
+	SetMeshVisibilityMode(hLMVCOpticsidx, MESHVIS_VC);
+	SetMeshVisibilityMode(ascidx, MESHVIS_VC);
+}

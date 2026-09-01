@@ -7,7 +7,7 @@
 #define VC_NGRP 686
 
 // Number of materials:
-#define VC_NMAT 145
+#define VC_NMAT 144
 
 // Number of textures:
 #define VC_NTEX 34
@@ -833,19 +833,18 @@
 #define VC_MAT_WaterControlModule_t 129
 #define VC_MAT_Colors_t 130
 #define VC_MAT_Suit_Flow_Hose_t 131
-#define VC_MAT_LMVC_Switches_Panel_12_14 132
-#define VC_MAT_LMVC_Switches_Panel_8 133
-#define VC_MAT_RecorderSwitchGuard 134
-#define VC_MAT_Switch_Guards_P14_t 135
-#define VC_MAT_TTCA 136
-#define VC_MAT_Talkbacks_t 137
-#define VC_MAT_UpperHatch_t 138
-#define VC_MAT_Water_Dispenser_t 139
-#define VC_MAT_LM_Window_Frames 140
-#define VC_MAT_WindowsRim 141
-#define VC_MAT_Protective_Net_t 142
-#define VC_MAT_COASglass 143
-#define VC_MAT_COASglass2 144
+#define VC_MAT_LMVC_Switches_t 132
+#define VC_MAT_RecorderSwitchGuard 133
+#define VC_MAT_Switch_Guards_P14_t 134
+#define VC_MAT_TTCA 135
+#define VC_MAT_Talkbacks_t 136
+#define VC_MAT_UpperHatch_t 137
+#define VC_MAT_Water_Dispenser_t 138
+#define VC_MAT_LM_Window_Frames 139
+#define VC_MAT_WindowsRim 140
+#define VC_MAT_Protective_Net_t 141
+#define VC_MAT_COASglass 142
+#define VC_MAT_COASglass2 143
 
 // Named Textures:
 #define VC_TEX_LM_ACA_dds 1
