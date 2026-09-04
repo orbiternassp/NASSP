@@ -926,9 +926,19 @@ VECTOR3 LDPP::LATLON(double GMT) const
 
 void LDPP::LLTPR(double T_H, EphemerisData sv_L, EphemerisData &sv_DOI, VECTOR3 &DV_LVLH, double &t_IGN, double &t_TD, bool Integrated)
 {
+	// INPUTS:
+	// T_H: Threshold time for DOI
+	// sv_L: State vector
+	// Integrated: Use integrator with complete gravity model for coast integration
+	// OUTPUTS:
+	// sv_DOI: State vector at DOI
+	// DV_LVLH: DOI DV in LVLH coordinates
+	// t_IGN: Time of powered descent ignition
+	// t_TD: Time of powered descent touchdown
+
 	EphemerisData sv_L_apo, sv_PL;
 	VECTOR3 H_c, h_c, C, c, V_H, d, R_ppu, D_L, RR_LS, rr_LS, h_c2;
-	double t, dt, R_D, S_w, R_p, R_a, a_D, t_H, t_L, cc, eps_R, alpha, E_I, dt_peri;
+	double t, dt, R_D, S_w, R_p, R_a, a_D, t_H, t_L, cc, eps_R, alpha, E_I, dt_peri, dt_PL_PDI;
 	int N, ii;
 
 	//Time of initial state vector
@@ -987,8 +997,14 @@ void LDPP::LLTPR(double T_H, EphemerisData sv_L, EphemerisData &sv_DOI, VECTOR3 
 
 		//Not in LDPP document
 		h_c2 = unit(crossp(sv_PL.R, sv_PL.V));
+
+		// Compute PDI time
+		OrbMech::time_theta(sv_PL.R, sv_PL.V, opt.theta_PDI - opt.theta_D, mu, dt_PL_PDI);
+		t_IGN = sv_PL.GMT + dt_PL_PDI;
+
 		//Compute LM landing time
-		t_L = sv_PL.GMT + opt.t_D;
+		t_L = t_IGN + opt.t_D;
+
 		//Compute position of LM at landing point
 		R_ppu = unit(sv_PL.R);
 		d = unit(crossp(h_c2, R_ppu));
@@ -1033,7 +1049,6 @@ void LDPP::LLTPR(double T_H, EphemerisData sv_L, EphemerisData &sv_DOI, VECTOR3 
 
 	sv_DOI = sv_L;
 	DV_LVLH = mul(OrbMech::LVLH_Matrix(sv_DOI.R, sv_DOI.V), sv_L_apo.V - sv_L.V);
-	t_IGN = sv_PL.GMT;
 	t_TD = t_L;
 }
 
@@ -1807,12 +1822,9 @@ void LDPP::OutputCalculations()
 	}
 	else if (opt.MODE != 6)
 	{
-		//For now, from the old DOI calculation
-		double dt4;
-		OrbMech::time_theta(sv_LM.R, sv_LM.V, opt.theta_PDI - opt.theta_D, mu, dt4);
 		outp.azi = opt.azi_nom;
-		outp.t_Land = t_TD + dt4;
-		outp.t_PDI = t_IGN + dt4;
+		outp.t_Land = t_TD;
+		outp.t_PDI = t_IGN;
 	}
 	else
 	{
