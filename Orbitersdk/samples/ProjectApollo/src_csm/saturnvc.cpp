@@ -979,10 +979,24 @@ bool Saturn::clbkLoadVC (int id)
 	case SATVIEW_LEFTDOCK:
 		viewpos = SATVIEW_LEFTDOCK;
 		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
-		oapiVCSetNeighbours(-1, SATVIEW_SIDEHATCH, -1, SATVIEW_LEFTSEAT);
+		oapiVCSetNeighbours(-1, SATVIEW_SIDEHATCH, SATVIEW_LEFTRNDWINDOW, SATVIEW_LEFTSEAT);
 
 		SetView(true);
 		SetCOASMesh();
+
+		RegisterActiveAreas();
+
+		return true;
+
+	case SATVIEW_LEFTRNDWINDOW:
+		viewpos = SATVIEW_LEFTRNDWINDOW;
+		SetCameraRotationRange(0.0, 0.0, 0.0, 0.0);
+		oapiVCSetNeighbours(-1, -1, -1, SATVIEW_LEFTDOCK);
+		SetCameraMovement(_V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0, _V(0.0, 0.0, 0.0), 0, 0);
+		SetCameraDefaultDirection(_V(0.0, 0.5254716511, 0.8508111094));
+		oapiCameraSetCockpitDir(0, 0);
+
+		SetView(true);
 
 		RegisterActiveAreas();
 
@@ -3300,6 +3314,17 @@ void Saturn::SetView(double offset, bool update_direction)
 				//v.z += vcFreeCamz;
 				break;
 
+			case SATVIEW_LEFTRNDWINDOW:
+//				v = _V(-0.58, 1.048, 0.120 + ofs_vc.z);	//left 31.7 degree line window ***THIS IS WORKING***
+				v = _V(-0.58, 1.072, 0.159 + ofs_vc.z);	//left 31.7 degree line window
+//				v = _V(-0.58, 1.074, 0.162 + ofs_vc.z);	//left 31.7 degree line window
+//				v = _V(-0.58, 1.075, 0.164 + ofs_vc.z);	//left 31.7 degree line window
+
+				//v.x += vcFreeCamx;
+				//v.y += vcFreeCamy;
+				//v.z += vcFreeCamz;
+				break;
+
 			case SATVIEW_SIDEHATCH:
 				v = _V(0.0, 1, 0.2 + ofs_vc.z);
 				//v.x += vcFreeCamx;
@@ -3375,6 +3400,8 @@ void Saturn::SetView(double offset, bool update_direction)
 			SetCameraRotationRange(0.8 * PI, 0.8 * PI, 0.4 * PI, 0.4 * PI);
 			if (viewpos == SATVIEW_GNPANEL) {
 				SetCameraDefaultDirection(_V(0.0,-1.0, 0.0));
+			} else if (viewpos == SATVIEW_LEFTRNDWINDOW) {
+				SetCameraDefaultDirection(_V(0.0, 0.5254716511, 0.8508111094));
 			} else if (viewpos == SATVIEW_OPTICS_SCT) {
 				SetCameraDefaultDirection(_V(0.0, -1.0, 0.0));
 			} else if (viewpos == SATVIEW_OPTICS_SXT) {

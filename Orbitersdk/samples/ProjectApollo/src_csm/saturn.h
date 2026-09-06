@@ -4100,6 +4100,7 @@ protected:
 	#define SATVIEW_SIDEHATCH       11
 	#define SATVIEW_OPTICS_SCT		12
 	#define SATVIEW_OPTICS_SXT		13
+	#define SATVIEW_LEFTRNDWINDOW	14
 
 	unsigned int	viewpos;
 
