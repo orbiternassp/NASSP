@@ -59,6 +59,8 @@ public:
 	void clbkLoadStateEx(FILEHANDLE scn, void* vs);
 	void clbkSaveState(FILEHANDLE scn);
 
+	void LimitTetherDistance();
+
 private:
 	void GetCSM();
 	void GetLEM();
