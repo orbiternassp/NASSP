@@ -629,6 +629,7 @@ void LEM::Init()
 	windowshadesidx = -1;
 	xpointershadesidx = -1;
 	hLMPointingArrowidx = -1;
+	hLMVCOpticsidx = -1;
 	LMvccuecardsarrowsidx = -1;
 
 	drogue = NULL;
@@ -1376,6 +1377,19 @@ void LEM::SetAnimations(double simdt) {
 	if (AOTReticleDetent.GetState() == 0) AOT_ReticleKnobState.action = AnimState::CLOSING;
 	else AOT_ReticleKnobState.action = AnimState::OPENING;
 	DoMeshAnimation(AOT_ReticleKnobState, AOT_ReticleKnobAnimTrans, 0.1, simdt);
+
+	// Optics Shift Selector Animation
+	double targetPos = optics.OpticsShaft * (1.0 / 6.0);
+	double diff = fmod(targetPos - AOT_ShaftSelectorRotState.pos + 1.5, 1.0) - 0.5;
+	if (abs(diff) > 0.001) {
+		double maxStep = simdt * 2.0;
+		double actualStep = (maxStep > abs(diff)) ? diff : (diff > 0 ? maxStep : -maxStep);
+		AOT_ShaftSelectorRotState.pos += actualStep;
+		AOT_ShaftSelectorRotState.pos = fmod(AOT_ShaftSelectorRotState.pos + 1.0, 1.0);
+	} else {
+		AOT_ShaftSelectorRotState.pos = targetPos;
+	}
+	SetAnimation(AOT_ShaftSelectorAnimRot, AOT_ShaftSelectorRotState.pos);
 }
 
 //
