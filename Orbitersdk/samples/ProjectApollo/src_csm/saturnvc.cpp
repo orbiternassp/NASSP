@@ -2635,16 +2635,16 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		}
 
 		if (dsky2.GetStatusLtPower()) {
-			if (dsky.UplinkLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_UPLINK_ACTY); }
-			if (dsky.NoAttLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_NO_ATT); }
-			if (dsky.StbyLit())			{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_STBY); }
-			if (dsky.KbRelLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_KEY_REL); }
-			if (dsky.OprErrLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_OPR_ERR); }
-			if (dsky.TempLit())			{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_TEMP); }
-			if (dsky.GimbalLockLit())	{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_GIMBAL_LOCK); }
-			if (dsky.ProgLit())			{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_PROG); }
-			if (dsky.RestartLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_RESTART); }
-			if (dsky.TrackerLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_TRACKER); }
+			if (dsky2.UplinkLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_UPLINK_ACTY); }
+			if (dsky2.NoAttLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_NO_ATT); }
+			if (dsky2.StbyLit())			{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_STBY); }
+			if (dsky2.KbRelLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_KEY_REL); }
+			if (dsky2.OprErrLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_OPR_ERR); }
+			if (dsky2.TempLit())			{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_TEMP); }
+			if (dsky2.GimbalLockLit())	{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_GIMBAL_LOCK); }
+			if (dsky2.ProgLit())			{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_PROG); }
+			if (dsky2.RestartLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_RESTART); }
+			if (dsky2.TrackerLit())		{ DSKY_LEB_Lights.push_back(VC_MAT_DSKY_LIGHT_LEB_TRACKER); }
 		}
 
 		for (int i = 0; i < CWS_LIGHTS_PER_PANEL; i++)
