@@ -1096,6 +1096,17 @@ bool ProjectApolloChecklistMFD::Update (oapi::Sketchpad* skp)
 
 		// Make sure that the HiLghtdLine is shown actually
 		bool hiLghtdLineShown = false, redo = true;
+		if (NumChkLsts == 0) {
+			//If we end up here, we need to not try to iterate through the screen
+			//and instead effectively abort - somehow we have no checklists to show
+			//This would likely be caused by a parsing error when loading the checklist file
+			redo = false;
+			TopStep = 0;
+			skp->SetTextColor(RGB(225, 0, 0)); // red
+			skp->SetTextAlign(oapi::Sketchpad::CENTER);
+			line = "No Checklists Available";
+			skp->Text((int)(width * .5), (int)(height * 0.10), line.c_str(), line.size());
+		}
 		while (redo) {
 			grpcnt = 0;
 			for (cnt = 0; cnt < NLINES; cnt++) {
