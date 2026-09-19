@@ -726,7 +726,7 @@ bool RTCC::CalculationMTP_D(int fcn, LPVOID &pad, char * upString, char * upDesc
 		gmpopt.dLAN = 6.9*RAD;
 		gmpopt.ManeuverCode = RTCC_GMP_NSO; //Gives TIG at northernmost latitude
 		gmpopt.sv_in = sv0;
-		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(49, 10, 0);
+		gmpopt.TIG_GET = OrbMech::HHMMSSToSS(49, 20, 0); // About 1/4 of an orbit before the flight plan TIG. There are possible solutions every half orbit.
 		gmpopt.sv_in.Area = PZMPTCSM.ConfigurationArea;
 		gmpopt.sv_in.Weight = med_m50.CSMWT + med_m50.LMWT;
 		gmpopt.sv_in.KFactor = PZMPTCSM.KFactor;
