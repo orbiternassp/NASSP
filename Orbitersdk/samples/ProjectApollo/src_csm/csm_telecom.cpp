@@ -1995,7 +1995,7 @@ PCM::PCM()
 	wsk_error = 0;
 	last_update = 0;
 	last_rx = 0;
-	frame_addr = 0;
+	frame_addr = 1;
 	frame_count = 0;
 	m_socket = INVALID_SOCKET;
 }
@@ -4276,7 +4276,7 @@ void PCM::generate_stream_hbr(){
 			// 10A7
 			// ...
 			// 10A148
-			tx_data[tx_offset] = measure(10,TLM_A,1+(frame_addr*3));
+			tx_data[tx_offset] = measure(10,TLM_A,(frame_addr*3)-2);
 			break;
 		case 52: // 12A13
 		case 116:
@@ -4565,7 +4565,7 @@ void PCM::generate_stream_hbr(){
 			// 10A8
 			// ...
 			// 10A149
-			tx_data[tx_offset] = measure(10,TLM_A,2+(frame_addr*3));
+			tx_data[tx_offset] = measure(10,TLM_A,(frame_addr*3)-1);
 			break;
 		case 88:
 			switch(frame_count){
@@ -4822,7 +4822,7 @@ void PCM::generate_stream_hbr(){
 			// 10A9
 			// ...
 			// 10A150
-			tx_data[tx_offset] = measure(10,TLM_A,3+(frame_addr*3));
+			tx_data[tx_offset] = measure(10,TLM_A,(frame_addr*3));
 			break;
 		case 120:
 			switch(frame_count){
@@ -4922,8 +4922,8 @@ void PCM::generate_stream_hbr(){
 	if(word_addr > 127){
 		word_addr = 0;
 		frame_addr++;
-		if(frame_addr > 49){
-			frame_addr = 0;
+		if(frame_addr > 50){
+			frame_addr = 1;
 		}
 		frame_count++;
 		if(frame_count > 4){
