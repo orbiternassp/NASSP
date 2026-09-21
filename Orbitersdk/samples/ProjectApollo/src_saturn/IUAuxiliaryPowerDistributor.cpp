@@ -36,7 +36,7 @@ IUAuxiliaryPowerDistributor1::IUAuxiliaryPowerDistributor1(IU *iu)
 
 void IUAuxiliaryPowerDistributor1::Timestep(double simdt)
 {
-	if (CommandPowerTransfer && iu->IsUmbilicalConnected())
+	if (CommandPowerTransfer && iu->GetIUToIUESECommandConnector()->IsUmbilicalConnected())
 		MotorSwitchLogic = true;
 	else
 		MotorSwitchLogic = false;
@@ -54,7 +54,7 @@ IUAuxiliaryPowerDistributor2::IUAuxiliaryPowerDistributor2(IU *iu)
 
 void IUAuxiliaryPowerDistributor2::Timestep(double simdt)
 {
-	if (iu->ESEGetEDSPowerInhibit())
+	if (iu->GetIUToIUESECommandConnector()->GetEDSPowerInhibit())
 	{
 		EDSBus1PowerOff = true;
 		EDSBus2PowerOff = true;

@@ -25,22 +25,18 @@
 #pragma once
 
 #include "soundlib.h"
-#include "IUUmbilicalInterface.h"
-#include "TailUmbilicalInterface.h"
 #include "LCCPadInterface.h"
 
 class S1B;
 class SIVB;
-class IUUmbilical;
 class IU_ESE;
-class SCMUmbilical;
 class SIB_ESE;
 class RCA110AM;
 
 ///
 /// \ingroup Ground
 ///
-class LC37: public VESSEL2, public IUUmbilicalInterface, public TailUmbilicalInterface, public LCCPadInterface {
+class LC37: public VESSEL2, public LCCPadInterface {
 
 public:
 	LC37(OBJHANDLE hObj, int fmodel);
@@ -54,27 +50,6 @@ public:
 	int clbkConsumeBufferedKey(DWORD key, bool down, char *kstate);
 	void clbkPreStep(double simt, double simdt, double mjd);
 	void clbkPostStep(double simt, double simdt, double mjd);
-
-	// LC-37/IU Interface
-	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
-	bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
-	bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
-	bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
-	bool ESEGetGSEOverrateSimulate(int n);
-	bool ESEGetEDSPowerInhibit();
-	bool ESEPadAbortRequest();
-	bool ESEGetThrustOKIndicateEnableInhibitA();
-	bool ESEGetThrustOKIndicateEnableInhibitB();
-	bool ESEEDSLiftoffInhibitA();
-	bool ESEEDSLiftoffInhibitB();
-	bool ESEGetEDSAutoAbortSimulate(int n);
-	bool ESEGetEDSLVCutoffSimulate(int n);
-	bool ESEGetSIBurnModeSubstitute();
-	bool ESEGetGuidanceReferenceRelease();
-	bool ESEGetQBallSimulateCmd();
-
-	//ML/S-IC Interface
-	bool ESEGetSIThrustOKSimulate(int eng, int n);
 
 	// LCC/LC-37 Interface
 	void SLCCCheckDiscreteInput(RCA110A *c);
@@ -100,8 +75,6 @@ protected:
 	void DefineAnimations();
 	void UpdateMissionTime();
 
-	IUUmbilical *IuUmb;
-	SCMUmbilical *SCMUmb;
 	IU_ESE *IuESE;
 	SIB_ESE *SIBESE;
 	RCA110AM *rca110a;

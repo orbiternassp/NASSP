@@ -23,25 +23,3 @@ See http://nassp.sourceforge.net/license/ for more details.
 **************************************************************************/
 
 #pragma once
-
-#include "TailUmbilical.h"
-
-class SIBSystems;
-
-class SCMUmbilical : public TailUmbilical
-{
-public:
-	SCMUmbilical(TailUmbilicalInterface *ml);
-	~SCMUmbilical();
-
-	void Connect(SIBSystems* sic);
-	void Disconnect();
-
-	//From ML to SLV
-	bool SIStageLogicCutoff();
-	void SetEngineStart(int eng);
-	void SIGSECutoff(bool cut);
-
-	SIBSystems* sib;
-protected:
-};

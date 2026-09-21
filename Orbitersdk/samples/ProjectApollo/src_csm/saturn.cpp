@@ -5086,66 +5086,11 @@ int Saturn::GetAGCAttitudeError(int axis)
 	return 0;
 }
 
-void Saturn::GetSIIThrustOK(bool *ok)
-{
-	for (int i = 0;i < 5;i++)
-	{
-		ok[i] = false;
-	}
-}
-
-bool Saturn::GetSIVBThrustOK()
-{
-	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return false;
-
-	return sivb->GetThrustOK();
-}
-
 double Saturn::GetFirstStageThrust()
 {
 	if (stage > PRELAUNCH_STAGE) return 0.0;
 
 	return THRUST_FIRST_VAC;
-}
-
-double Saturn::GetSIVBFuelTankPressurePSI()
-{
-	if (sivb && stage < CSM_LEM_STAGE)
-		return sivb->GetLH2TankUllagePressurePSI();
-
-	return 0.0;
-}
-
-double Saturn::GetSIVBLOXTankPressurePSI()
-{
-	if (sivb && stage < CSM_LEM_STAGE)
-		return sivb->GetLOXTankUllagePressurePSI();
-
-	return 0.0;
-}
-
-bool Saturn::GetSIIPropellantDepletionEngineCutoff()
-{
-	return false;
-}
-
-bool Saturn::GetSIBLowLevelSensorsDry()
-{
-	return false;
-}
-
-void Saturn::SetSIVBThrusterDir(double yaw, double pitch)
-{
-	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
-
-	sivb->SetThrusterDir(yaw, pitch);
-}
-
-void Saturn::SIVBEDSCutoff(bool cut)
-{
-	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
-
-	sivb->EDSEngineCutoff(cut);
 }
 
 bool Saturn::GetQBallPower()
@@ -5156,14 +5101,6 @@ bool Saturn::GetQBallPower()
 bool Saturn::GetQBallSimulateCmd()
 {
 	return iuCommandConnector.GetQBallSimulateCmd();
-}
-
-void Saturn::SetAPSAttitudeEngine(int n, bool on)
-{
-	if (n < 0 || n > 5) return;
-	if (stage != LAUNCH_STAGE_SIVB && stage != STAGE_ORBIT_SIVB) return;
-
-	sivb->SetAPSAttitudeEngine(n, on);
 }
 
 bool Saturn::GetCMCSIVBTakeover()
@@ -5229,11 +5166,6 @@ bool Saturn::GetLMDesBatLVHVOffB()
 void Saturn::SetContrailLevel(double level)
 {
 	contrailLevel = level;
-}
-
-void Saturn::SIVBSwitchSelector(int channel)
-{
-	sivb->SwitchSelector(channel);
 }
 
 // Get checklist controller pointer

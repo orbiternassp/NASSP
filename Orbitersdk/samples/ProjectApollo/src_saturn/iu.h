@@ -39,7 +39,6 @@
 
 class SoundLib;
 class IU;
-class IUUmbilical;
 
 ///
 /// \ingroup Connectors
@@ -86,53 +85,67 @@ enum IUCSMMessageType
 ///
 enum IULVMessageType
 {
-	IULV_SET_APS_ATTITUDE_ENGINE,
-	IULV_SI_EDS_CUTOFF,
-	IULV_SII_EDS_CUTOFF,
-	IULV_SIVB_EDS_CUTOFF,
-	IULV_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
-	IULV_SET_SII_THRUSTER_DIR,
-	IULV_SET_SIVB_THRUSTER_DIR,
-	IULV_SI_SWITCH_SELECTOR,
-	IULV_SII_SWITCH_SELECTOR,
-	IULV_SIVB_SWITCH_SELECTOR,
 	IULV_SEPARATE_STAGE,
 	IULV_SET_STAGE,
 	IULV_NOSECAP_JETTISON,
 	IULV_DEPLOY_SLA_PANEL,
 
 	IULV_GET_STAGE,							///< Get mission stage.
-	IULV_GET_GLOBAL_ORIENTATION,
-	IULV_GET_MASS,							///< Get the spacecraft mass.
-	IULV_GET_GRAVITY_REF,					///< Get gravity reference.
 	IULV_GET_RELATIVE_POS,					///< Get relative position.
 	IULV_GET_RELATIVE_VEL,					///< Get relative velocity.
-	IULV_GET_WEIGHTVECTOR,					///< Get weight vector 
 	IULV_GET_INERTIAL_ACCEL,				///< Get inertial acceleration
 	IULV_GET_ROTATIONMATRIX,				///< Get rotation matrix
-	IULV_GET_GLOBAL_VEL,					///< Get global vel
 	IULV_GET_ANGULARVEL,					///< Get angular velocity
-	IULV_GET_MISSIONTIME,
-	IULV_GET_SI_THRUST_OK,
-	IULV_GET_SII_THRUST_OK,
-	IULV_GET_SIVB_THRUST_OK,
-	IULV_GET_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
-	IULV_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
-	IULV_GET_SI_INBOARD_ENGINE_OUT,
-	IULV_GET_SI_OUTBOARD_ENGINE_OUT,
-	IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY,
 	IULV_CSM_SEPARATION_SENSED,
-	IULV_GET_SII_FUEL_TANK_PRESSURE,
-	IULV_GET_SIVB_FUEL_TANK_PRESSURE,
-	IULV_GET_SIVB_LOX_TANK_PRESSURE,
 	IULV_GET_VEHICLENO
+};
+
+enum IUSIVBMessageType
+{
+	IUSIVB_SET_APS_ATTITUDE_ENGINE,
+	IUSIVB_SI_EDS_CUTOFF,
+	IUSIVB_SII_EDS_CUTOFF,
+	IUSIVB_SIVB_EDS_CUTOFF,
+	IUSIVB_SET_SI_THRUSTER_DIR,				///< Set thruster direction.
+	IUSIVB_SET_SII_THRUSTER_DIR,
+	IUSIVB_SET_SIVB_THRUSTER_DIR,
+	IUSIVB_SI_SWITCH_SELECTOR,
+	IUSIVB_SII_SWITCH_SELECTOR,
+	IUSIVB_SIVB_SWITCH_SELECTOR,
+	IUSIVB_GET_SI_THRUST_OK,
+	IUSIVB_GET_SII_THRUST_OK,
+	IUSIVB_GET_SIVB_THRUST_OK,
+	IUSIVB_GET_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
+	IUSIVB_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
+	IUSIVB_GET_SIB_LOW_LEVEL_SENSORS_DRY,
+	IUSIVB_GET_SI_INBOARD_ENGINE_OUT,
+	IUSIVB_GET_SI_OUTBOARD_ENGINE_OUT,
+	IUSIVB_GET_SII_FUEL_TANK_PRESSURE,
+	IUSIVB_GET_SIVB_FUEL_TANK_PRESSURE,
+	IUSIVB_GET_SIVB_LOX_TANK_PRESSURE,
+	IUSIVB_GET_SIX_SIVB_NOT_SEPARATED,
+	IUSIVB_GET_SIC_SII_NOT_SEPARATED,
+	IUSIVB_GET_SII_INTERSTAGE_NOT_SEPARATED,
+};
+
+//IU connector class
+
+class IUConnector : public Connector
+{
+public:
+	IUConnector();
+	virtual ~IUConnector();
+
+	void SetIU(IU *iu) { ourIU = iu; };
+protected:
+	IU *ourIU;
 };
 
 ///
 /// \ingroup Connectors
 /// \brief IU to CSM command connector.
 ///
-class IUToCSMCommandConnector : public Connector
+class IUToCSMCommandConnector : public IUConnector
 {
 public:
 	IUToCSMCommandConnector();
@@ -167,25 +180,17 @@ public:
 	int GetAGCAttitudeError(int axis);
 	bool IsEDSBusPowered(int eds);
 
-	void SetIU(IU *iu) { ourIU = iu; };
-
 	void TLIBegun();
 	void TLIEnded();	
 
-protected:
-
-	IU *ourIU;
 };
 
-///
-/// \ingroup Connectors
-/// \brief IU to LV command connector.
-///
-class IUToLVCommandConnector : public Connector
+// IU to S-IVB command connector (NEW)
+class IUToSIVBCommandConnector : public IUConnector
 {
 public:
-	IUToLVCommandConnector();
-	~IUToLVCommandConnector();
+	IUToSIVBCommandConnector();
+	~IUToSIVBCommandConnector();
 
 	void SetAPSAttitudeEngine(int n, bool on);
 	void SIEDSCutoff(bool cut);
@@ -194,10 +199,34 @@ public:
 	void SetSIThrusterDir(int n, double yaw, double pitch);
 	void SetSIIThrusterDir(int n, double yaw, double pitch);
 	void SetSIVBThrusterDir(double yaw, double pitch);
-
 	void SISwitchSelector(int channel);
 	void SIISwitchSelector(int channel);
 	void SIVBSwitchSelector(int channel);
+	void GetSIThrustOK(bool *ok, int n);
+	void GetSIIThrustOK(bool *ok);
+	bool GetSIVBThrustOK();
+	bool GetSIPropellantDepletionEngineCutoff();
+	bool GetSIIPropellantDepletionEngineCutoff();
+	bool GetSIBLowLevelSensorsDry();
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
+	double GetSIIFuelTankPressurePSI();
+	double GetSIVBLOXTankPressurePSI();
+	double GetSIVBFuelTankPressurePSI();
+	bool SIXSIVBNotSeparated();
+	bool SICSIINotSeparated();
+	bool SIIInterstageNotSeparated();
+};
+
+///
+/// \ingroup Connectors
+/// \brief IU to LV command connector. (OLD)
+///
+class IUToLVCommandConnector : public Connector
+{
+public:
+	IUToLVCommandConnector();
+	~IUToLVCommandConnector();
 
 	void SeparateStage(int stage);
 	void SetStage(int stage);
@@ -205,33 +234,46 @@ public:
 	void DeploySLAPanel();
 
 	int GetStage();
-	double GetMass();
-	void GetGlobalOrientation(VECTOR3 &arot);
-	bool GetWeightVector(VECTOR3 &w);
 	void GetInertialAccel(VECTOR3 &a);
 	void GetRotationMatrix(MATRIX3 &rot);
 	void GetAngularVel(VECTOR3 &avel);
-	double GetMissionTime();
 	int GetVehicleNo();
-	void GetSIThrustOK(bool *ok, int n);
-	bool GetSIPropellantDepletionEngineCutoff();
-	bool GetSIInboardEngineOut();
-	bool GetSIOutboardEngineOut();
-	bool GetSIBLowLevelSensorsDry();
-	void GetSIIThrustOK(bool *ok);
-	bool GetSIIPropellantDepletionEngineCutoff();
-	bool GetSIVBThrustOK();
-	double GetSIIFuelTankPressurePSI();
-	double GetSIVBLOXTankPressurePSI();
-	double GetSIVBFuelTankPressurePSI();
 
 	void GetRelativePos(OBJHANDLE ref, VECTOR3 &v);
 	void GetRelativeVel(OBJHANDLE ref, VECTOR3 &v);
-	void GetGlobalVel(VECTOR3 &v);
-
-	OBJHANDLE GetGravityRef();
 
 	bool CSMSeparationSensed();
+};
+
+//IU to IU ESE command connector
+class IUToIUESECommandConnector : public IUConnector
+{
+public:
+	IUToIUESECommandConnector();
+	~IUToIUESECommandConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+
+	bool IsUmbilicalConnected();
+
+	bool GetCommandVehicleLiftoffIndicationInhibit();
+	bool GetExcessiveRollRateAutoAbortInhibit(int n);
+	bool GetExcessivePitchYawRateAutoAbortInhibit(int n);
+	bool GetTwoEngineOutAutoAbortInhibit(int n);
+	bool GetGSEOverrateSimulate(int n);
+	bool GetEDSPowerInhibit();
+	bool PadAbortRequest();
+	bool GetEngineThrustIndicationEnableInhibitA();
+	bool GetEngineThrustIndicationEnableInhibitB();
+	bool EDSLiftoffInhibitA();
+	bool EDSLiftoffInhibitB();
+	bool GetSIBurnModeSubstitute();
+	bool GetGuidanceReferenceRelease();
+	bool GetQBallSimulateCmd();
+	bool GetEDSAutoAbortSimulate(int n);
+	bool GetEDSLVCutoffSimulate(int n);
+	bool GetSICOutboardEnginesCantInhibit();
+	bool GetSICOutboardEnginesCantSimulate();
 };
 
 ///
@@ -251,6 +293,7 @@ public:
 
 	virtual void ConnectToCSM(Connector *csmConnector);
 	virtual void ConnectToLV(Connector *CommandConnector);
+	virtual void ConnectToSIVB(Connector *CommandConnector);
 
 	void DisconnectIU();
 
@@ -278,7 +321,6 @@ public:
 	virtual bool GetSIIInboardEngineOut() { return false; }
 	virtual bool GetSIIOutboardEngineOut() { return false; }
 	virtual bool GetSIIEnginesOut();
-	bool IsUmbilicalConnected();
 	bool GetSCControlPoweredFlight() { return SCControlPoweredFlight; }
 	VECTOR3 GetTheodoliteAlignment(double azimuth);
 
@@ -286,6 +328,8 @@ public:
 
 	IUToCSMCommandConnector* GetCommandConnector() { return &commandConnector; }
 	IUToLVCommandConnector* GetLVCommandConnector() { return &lvCommandConnector; }
+	IUToSIVBCommandConnector* GetSIVBCommandConnector() { return &sivbCommandConnector; }
+	IUToIUESECommandConnector* GetIUToIUESECommandConnector() { return &iuToIUESECommandConnector; }
 
 	//Subsystem Access
 	virtual EDS* GetEDS() = 0;
@@ -300,30 +344,7 @@ public:
 	IUAuxiliaryPowerDistributor2 *GetAuxPowrDistr() { return &AuxiliaryPowerDistributor2; }
 	IUControlSignalProcessor *GetContSigProc() { return &ControlSignalProcessor; }
 
-	//ESE Functions
-	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
-	bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
-	bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
-	bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
-	bool ESEGetGSEOverrateSimulate(int n);
-	bool ESEGetEDSPowerInhibit();
-	bool ESEPadAbortRequest();
-	bool ESEGetEngineThrustIndicationEnableInhibitA();
-	bool ESEGetEngineThrustIndicationEnableInhibitB();
-	bool ESEEDSLiftoffInhibitA();
-	bool ESEEDSLiftoffInhibitB();
-	bool ESEGetSIBurnModeSubstitute();
-	bool ESEGetGuidanceReferenceRelease();
-	bool ESEESEGetQBallSimulateCmd();
-	bool ESEGetEDSAutoAbortSimulate(int n);
-	bool ESEGetEDSLVCutoffSimulate(int n);
-
-	virtual bool ESEGetSICOutboardEnginesCantInhibit() { return false; }
-	virtual bool ESEGetSICOutboardEnginesCantSimulate() { return false; }
-
-	IUUmbilical *IuUmb;
 protected:
-	void DisconnectUmbilical();
 
 	int State;
 
@@ -346,6 +367,11 @@ protected:
 	/// \brief Connector to launch vehicle.
 	///
 	IUToLVCommandConnector lvCommandConnector;
+
+	//Connector to S-IVB
+	IUToSIVBCommandConnector sivbCommandConnector;
+	//Connector to IU UESE
+	IUToIUESECommandConnector iuToIUESECommandConnector;
 
 	//Subsystems:
 
@@ -412,10 +438,6 @@ public:
 	IUControlDistributor *GetControlDistributor() { return &ControlDistributor; }
 	DelayTimer *GetEngineCutoffEnableTimer() { return &EngineCutoffEnableTimer; }
 	LVDC* GetLVDC() { return &lvdc; }
-
-	//ESE Functions
-	bool ESEGetSICOutboardEnginesCantInhibit();
-	bool ESEGetSICOutboardEnginesCantSimulate();
 
 protected:
 	//603A28

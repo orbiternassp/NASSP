@@ -35,6 +35,7 @@ class LCCPadInterface;
 
 enum ATOLLOperators
 {
+	ATOLL_DISI,
 	ATOLL_DISO,
 	ATOLL_DELY,
 	ATOLL_SCAN,
@@ -72,9 +73,12 @@ public:
 private:
 	//Operators
 	void DELY();
+	void DISI();
 	void DISO();
 	void SCAN();
 	void SSEL();
+
+	void ProcessLine();
 
 	ATOLLSequence seq;
 	std::ifstream ifs;
@@ -83,8 +87,17 @@ private:
 	RCA110AL *rca110a;
 	double nextitemtime;
 	double simtime;
-	bool skipgetline;
-	bool delaystatus;
+	//Go to next command, set in the operators
+	bool nextcommand;
+	//First pass in a command
+	bool firstpass;
+	//Halt processing
+	bool halt;
+
+	//Discrete Input Reference Profile
+	int DISIRef[5];
+	int DISINum;
+	bool DISICondition;
 };
 
 class RCA110A
@@ -109,7 +122,7 @@ protected:
 	std::bitset<RCA110A_INPUT_LINES> inputdiscretes;
 	std::bitset<RCA110A_OUTPUT_LINES> outputdiscretes;
 
-	//0 = nothing, 1 = single scan mode, 2 = continuous scan mode, 3 = monitor mode, 4 = monitor mode with selectable priority interruot
+	//0 = nothing, 1 = single scan mode, 2 = continuous scan mode, 3 = monitor mode, 4 = monitor mode with selectable priority interrupt
 	int mode;
 };
 

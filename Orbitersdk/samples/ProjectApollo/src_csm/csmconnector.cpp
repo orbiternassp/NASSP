@@ -97,35 +97,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_GLOBAL_ORIENTATION:
-		if (OurVessel)
-		{
-			VECTOR3 *arot = static_cast<VECTOR3 *> (m.val1.pValue);
-			VECTOR3 ar;
-
-			OurVessel->GetGlobalOrientation(ar);
-
-			*arot = ar;
-			return true;
-		}
-		break;
-
-	case IULV_GET_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMass();
-			return true;
-		}
-		break;
-
-	case IULV_GET_GRAVITY_REF:
-		if (OurVessel)
-		{
-			m.val1.hValue = OurVessel->GetGravityRef();
-			return true;
-		}
-		break;
-
 	case IULV_GET_RELATIVE_POS:
 		if (OurVessel)
 		{
@@ -158,22 +129,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_GLOBAL_VEL:
-		if (OurVessel)
-		{
-			OurVessel->GetGlobalVel(*(VECTOR3 *) m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_WEIGHTVECTOR:
-		if (OurVessel)
-		{
-			m.val2.bValue = OurVessel->GetWeightVector(*(VECTOR3 *) m.val1.pValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_INERTIAL_ACCEL:
 		if (OurVessel)
 		{
@@ -198,126 +153,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		}
 		break;
 
-	case IULV_GET_MISSIONTIME:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMissionTime();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SI_THRUST_OK:
-		if (OurVessel)
-		{
-			OurVessel->GetSIThrustOK((bool *)m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_SII_THRUST_OK:
-		if (OurVessel)
-		{
-			OurVessel->GetSIIThrustOK((bool *)m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_SIVB_THRUST_OK:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIVBThrustOK();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIPropellantDepletionEngineCutoff();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SI_INBOARD_ENGINE_OUT:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIInboardEngineOut();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SI_OUTBOARD_ENGINE_OUT:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIOutboardEngineOut();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIBLowLevelSensorsDry();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIIPropellantDepletionEngineCutoff();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SII_FUEL_TANK_PRESSURE:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSIIFuelTankPressurePSI();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SIVB_FUEL_TANK_PRESSURE:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSIVBFuelTankPressurePSI();
-			return true;
-		}
-		break;
-
-	case IULV_GET_SIVB_LOX_TANK_PRESSURE:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetSIVBLOXTankPressurePSI();
-			return true;
-		}
-		break;
-
-	case IULV_SI_SWITCH_SELECTOR:
-		if (OurVessel)
-		{
-			OurVessel->SISwitchSelector(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_SII_SWITCH_SELECTOR:
-		if (OurVessel)
-		{
-			OurVessel->SIISwitchSelector(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_SIVB_SWITCH_SELECTOR:
-		if (OurVessel)
-		{
-			OurVessel->SIVBSwitchSelector(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IULV_SEPARATE_STAGE:
 		if (OurVessel)
 		{
@@ -330,62 +165,6 @@ bool SaturnToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessag
 		if (OurVessel)
 		{
 			OurVessel->SetStage(m.val1.iValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_APS_ATTITUDE_ENGINE:
-		if (OurVessel)
-		{
-			OurVessel->SetAPSAttitudeEngine(m.val1.iValue, m.val2.bValue);
-			return true;
-		}
-		break;
-
-	case IULV_SI_EDS_CUTOFF:
-		if (OurVessel)
-		{
-			OurVessel->SIEDSCutoff(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IULV_SII_EDS_CUTOFF:
-		if (OurVessel)
-		{
-			OurVessel->SIIEDSCutoff(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IULV_SIVB_EDS_CUTOFF:
-		if (OurVessel)
-		{
-			OurVessel->SIVBEDSCutoff(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_SI_THRUSTER_DIR:
-		if (OurVessel)
-		{
-			OurVessel->SetSIThrusterDir(m.val1.iValue, m.val2.dValue, m.val3.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_SII_THRUSTER_DIR:
-		if (OurVessel)
-		{
-			OurVessel->SetSIIThrusterDir(m.val1.iValue, m.val2.dValue, m.val3.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_SIVB_THRUSTER_DIR:
-		if (OurVessel)
-		{
-			OurVessel->SetSIVBThrusterDir(m.val1.dValue, m.val2.dValue);
 			return true;
 		}
 		break;

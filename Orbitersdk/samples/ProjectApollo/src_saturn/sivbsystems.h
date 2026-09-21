@@ -30,6 +30,79 @@ See http://nassp.sourceforge.net/license/ for more details.
 #define PUVALVE_NULL 1
 #define PUVALVE_OPEN 2
 
+class BaseSIVBSystems;
+class SIVBSystems;
+
+//Messages to S-IB or S-II
+enum SIVBSIXMessageType
+{
+	SIVB_SIX_IS_CONNECTED,
+	SIVB_SIX_SI_THRUSTER_DIR,
+	SIVB_SIX_SII_THRUSTER_DIR,
+	SIVB_SIX_SIB_LOW_LEVEL_SENSORS_DRY,
+	SIVB_SIX_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
+	SIVB_SIX_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
+	SIVB_SIX_GETSITHRUSTOK,
+	SIVB_SIX_GETSIITHRUSTOK,
+	SIVB_SIX_SI_EDS_CUTOFF,
+	SIVB_SIX_SII_EDS_CUTOFF,
+	SIVB_SIX_SI_SWITCH_SELECTOR,
+	SIVB_SIX_SII_SWITCH_SELECTOR,
+	SIVB_SIX_GET_SI_INBOARD_ENGINE_OUT,
+	SIVB_SIX_GET_SI_OUTBOARD_ENGINE_OUT,
+	SIVB_SIX_GET_SII_FUEL_TANK_PRESSURE,
+	SIVB_SIX_GET_SIX_SIVB_NOT_SEPARATED,
+	SIVB_SIX_GET_SIC_SII_NOT_SEPARATED,
+	SIVB_SIX_GET_SII_INTERSTAGE_NOT_SEPARATED,
+};
+
+class SIVBSystemsConnector : public Connector
+{
+public:
+	SIVBSystemsConnector();
+	virtual ~SIVBSystemsConnector();
+	void SetSIVBSystems(SIVBSystems *sivb) { ourSIVB = sivb; };
+protected:
+	SIVBSystems *ourSIVB;
+};
+
+//S-IVB to S-IB or S-II Connector
+class SIVBToSIXConnector : public SIVBSystemsConnector
+{
+public:
+	SIVBToSIXConnector();
+	virtual ~SIVBToSIXConnector();
+
+	bool HasGround();
+	void SISwitchSelector(int channel);
+	void SIISwitchSelector(int channel);
+	void SetSIThrusterDir(int n, double yaw, double pitch);
+	void SetSIIThrusterDir(int n, double yaw, double pitch);
+
+	bool GetLowLevelSensorsDry();
+	bool GetSIPropellantDepletionEngineCutoff();
+	bool GetSIIPropellantDepletionEngineCutoff();
+	void GetSIThrustOK(bool *ok, int n);
+	void GetSIIThrustOK(bool *ok);
+	void SIEDSCutoff(bool cut);
+	void SIIEDSCutoff(bool cut);
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
+	double GetSIIFuelTankPressurePSI();
+	bool SIXSIVBNotSeparated();
+	bool SICSIINotSeparated();
+	bool SIIInterstageNotSeparated();
+};
+
+class SIVBToIUConnector : public SIVBSystemsConnector
+{
+public:
+	SIVBToIUConnector();
+	virtual ~SIVBToIUConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
 //This has class has everything that needs to be copied from Saturn to S-IVB class
 class BaseSIVBSystems
 {
@@ -210,6 +283,9 @@ protected:
 public:
 	virtual ~SIVBSystems();
 
+	SIVBToSIXConnector* GetSIVBSIXConnector() { return &sivbSIXConnector; }
+	SIVBToIUConnector* GetSIVBIUConnector() { return &sivbIUConnector; }
+
 	void RecalculateEngineParameters(double BaseThrust);
 	virtual void RecalculateEngineParameters() = 0;
 	virtual void SetSIVBMixtureRatio(double ratio) = 0;
@@ -268,6 +344,8 @@ protected:
 	void BurnerShutdown();
 
 	VESSEL *vessel;
+	SIVBToSIXConnector sivbSIXConnector; //Connector to S-IB (Saturn IB) or S-II (Saturn V)
+	SIVBToIUConnector sivbIUConnector; //Connector to IU
 	THRUSTER_HANDLE &j2engine;
 	THRUSTER_HANDLE *apsThrusters;
 	THRUSTER_HANDLE *ullage;

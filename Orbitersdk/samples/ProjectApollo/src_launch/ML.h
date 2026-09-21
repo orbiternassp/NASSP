@@ -25,13 +25,9 @@
 #pragma once
 
 #include "soundlib.h"
-#include "IUUmbilicalInterface.h"
-#include "TailUmbilicalInterface.h"
 #include "LCCPadInterface.h"
 
 class Saturn;
-class IUUmbilical;
-class TailUmbilical;
 class IUSV_ESE;
 class SI_ESE;
 class RCA110AM;
@@ -52,7 +48,7 @@ const double DAMPERARM_RETRACT_SPEED = 1.0 / 30.0;
 ///
 /// \ingroup Ground
 ///
-class ML: public VESSEL2, public IUUmbilicalInterface, public TailUmbilicalInterface, public LCCPadInterface {
+class ML: public VESSEL2, public LCCPadInterface {
 
 public:
 	ML(OBJHANDLE hObj, int fmodel);
@@ -72,29 +68,6 @@ public:
 	virtual bool Detach();
 	virtual bool Attach();
 	virtual bool IsInVAB(); 
-
-	// ML/IU Interface
-	bool ESEGetCommandVehicleLiftoffIndicationInhibit();
-	bool ESEGetSICOutboardEnginesCantInhibit();
-	bool ESEGetSICOutboardEnginesCantSimulate();
-	bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
-	bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
-	bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
-	bool ESEGetGSEOverrateSimulate(int n);
-	bool ESEGetEDSPowerInhibit();
-	bool ESEPadAbortRequest();
-	bool ESEGetThrustOKIndicateEnableInhibitA();
-	bool ESEGetThrustOKIndicateEnableInhibitB();
-	bool ESEEDSLiftoffInhibitA();
-	bool ESEEDSLiftoffInhibitB();
-	bool ESEGetSIBurnModeSubstitute();
-	bool ESEGetGuidanceReferenceRelease();
-	bool ESEGetQBallSimulateCmd();
-	bool ESEGetEDSAutoAbortSimulate(int n);
-	bool ESEGetEDSLVCutoffSimulate(int n);
-
-	//ML/S-IC Interface
-	bool ESEGetSIThrustOKSimulate(int eng, int n);
 
 	// LCC/ML Interface
 	void SLCCCheckDiscreteInput(RCA110A *c);
@@ -142,8 +115,6 @@ protected:
 	double liftoffStreamLevel;
 
 	Saturn *sat;
-	IUUmbilical *IuUmb;
-	TailUmbilical *TailUmb;
 	IUSV_ESE *IuESE;
 	SI_ESE *SIESE;
 	RCA110AM *rca110a;

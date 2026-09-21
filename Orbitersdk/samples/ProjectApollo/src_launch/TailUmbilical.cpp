@@ -22,20 +22,103 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 **************************************************************************/
 
+#include "Orbitersdk.h"
 #include "TailUmbilical.h"
 #include "TailUmbilicalInterface.h"
+#include "SI_ESE.h"
 
-TailUmbilical::TailUmbilical(TailUmbilicalInterface *ml) : TailUmb(ml)
+SIESEToSICommandConnector::SIESEToSICommandConnector()
+{
+	type = SIESE_SI_COMMAND;
+	ourSI_ESE = 0;
+}
+
+SIESEToSICommandConnector::~SIESEToSICommandConnector()
 {
 
 }
 
-TailUmbilical::~TailUmbilical()
+bool SIESEToSICommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 {
+	//
+	// Sanity check.
+	//
 
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	SIESEMessageType messageType;
+
+	messageType = (SIESEMessageType)m.messageType;
+
+	switch (messageType)
+	{
+	case SI_SIESE_GET_SI_THRUST_OK_SIMULATE:
+		if (ourSI_ESE)
+		{
+			m.val1.bValue = ourSI_ESE->GetSIThrustOKSimulate(m.val1.iValue, m.val2.iValue);
+			return true;
+		}
+		break;
+	}
+
+	return false;
 }
 
-bool TailUmbilical::ESEGetSIThrustOKSimulate(int eng, int n)
+bool SIESEToSICommandConnector::SIStageLogicCutoff()
 {
-	return TailUmb->ESEGetSIThrustOKSimulate(eng, n);
+	ConnectorMessage m;
+
+	m.destination = SIESE_SI_COMMAND;
+	m.messageType = SIESE_SI_SI_STAGE_LOGIC_CUTOFF;
+
+	if (SendMessage(m))
+	{
+		return m.val1.bValue;
+	}
+
+	return false;
+}
+
+void SIESEToSICommandConnector::SetEngineStart(int eng)
+{
+	ConnectorMessage m;
+
+	m.destination = SIESE_SI_COMMAND;
+	m.messageType = SIESE_SI_SET_ENGINE_START;
+	m.val1.iValue = eng;
+
+	SendMessage(m);
+}
+
+void SIESEToSICommandConnector::SIGSECutoff(bool cut)
+{
+	ConnectorMessage m;
+
+	m.destination = SIESE_SI_COMMAND;
+	m.messageType = SIESE_SI_GSE_CUTOFF;
+	m.val1.bValue = cut;
+
+	SendMessage(m);
+}
+
+void SIESEToSICommandConnector::GetSIThrustOK(bool *ok, int n)
+{
+	ConnectorMessage m;
+
+	m.destination = SIESE_SI_COMMAND;
+	m.messageType = SIESE_SI_THRUST_OK;
+	m.val1.pValue = ok;
+
+	if (SendMessage(m))
+	{
+		return;
+	}
+
+	for (int i = 0; i < n; i++)
+	{
+		ok[i] = false;
+	}
 }

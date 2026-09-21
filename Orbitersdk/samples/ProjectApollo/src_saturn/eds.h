@@ -84,6 +84,9 @@ public:
 	bool GetLVEnginesCutoffFromSC3() { return LVEnginesCutoffFromSC3; }
 	bool GetExcessiveRollRateIndication() { return ExcessiveRollRateIndication; }
 	bool GetExcessivePitchYawRateIndication() { return (ExcessivePitchYawRateIndicationA || ExcessivePitchYawRateIndicationB); }
+	bool GetSCCutoffEnabledA() { return LVEnginesCutoffEnable1; }
+	bool GetSCCutoffEnabledB() { return LVEnginesCutoffEnable2; }
+	void GetAutoAbortToSC(bool *abort);
 
 	void SetEDSLiftoffEnableA() { EDSLiftoffEnableA = true; }
 	void SetEDSLiftoffEnableB() { EDSLiftoffEnableB = true; }
@@ -202,9 +205,9 @@ protected:
 	//A9K5(K222)
 	bool ExcessivePitchYawRateIndicationB;
 	//A9K3 (K59)
-	bool SIAllEnginesOKA;
+	bool SINotAllEnginesOKA;
 	//A4K4 (K219)
-	bool SIAllEnginesOKB;
+	bool SINotAllEnginesOKB;
 	//A4K1
 	bool SCControlEnableRelay;
 	//A4K6 (K291-1), A10K3 (K291-2)
@@ -226,7 +229,6 @@ protected:
 	bool AbortLightSignal;
 	bool LVRateAutoSwitchOff;
 	bool TwoEngineOutAutoSwitchOff;
-	int Stage;
 	bool EDSBus1Powered, EDSBus2Powered, EDSBus3Powered;
 	bool BECOA, BECOB;
 

@@ -24,19 +24,21 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-class IUUmbilicalInterface;
-class IU;
+#include "connector.h"
 
-class IUUmbilical
+class IU_ESE;
+
+//IU ESE to IU connector
+class IUESEToIUCommandConnector : public Connector
 {
 public:
-	IUUmbilical(IUUmbilicalInterface *ml);
-	~IUUmbilical();
+	IUESEToIUCommandConnector();
+	~IUESEToIUCommandConnector();
 
-	void Connect(IU* iu);
-	void Disconnect();
+	//IU to IU ESE
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 
-	//From ML to SLV
+	//IU ESE to IU
 	void SetEDSLiftoffEnableA();
 	void SetEDSLiftoffEnableB();
 	void EDSLiftoffEnableReset();
@@ -60,28 +62,14 @@ public:
 	bool FCCPowerIsOn();
 	void SwitchSelector(int stage, int channel);
 	void LVDCPrepareToLaunch();
+	bool GetSCCutoffEnabledA();
+	bool GetSCCutoffEnabledB();
+	bool GetLiftoffEnableA();
+	bool GetLiftoffEnableB();
+	void GetEDSAbortCommandToSC(bool *abort);
 
-	//From SLV to ML
-	virtual bool ESEGetCommandVehicleLiftoffIndicationInhibit();
-	virtual bool ESEGetSICOutboardEnginesCantInhibit();
-	virtual bool ESEGetSICOutboardEnginesCantSimulate();
-	virtual bool ESEGetExcessiveRollRateAutoAbortInhibit(int n);
-	virtual bool ESEGetExcessivePitchYawRateAutoAbortInhibit(int n);
-	virtual bool ESEGetTwoEngineOutAutoAbortInhibit(int n);
-	virtual bool ESEGetGSEOverrateSimulate(int n);
-	virtual bool ESEGetEDSPowerInhibit();
-	virtual bool ESEPadAbortRequest();
-	virtual bool ESEGetThrustOKIndicateEnableInhibitA();
-	virtual bool ESEGetThrustOKIndicateEnableInhibitB();
-	virtual bool ESEEDSLiftoffInhibitA();
-	virtual bool ESEEDSLiftoffInhibitB();
-	virtual bool ESEGetSIBurnModeSubstitute();
-	virtual bool ESEGetGuidanceReferenceRelease();
-	virtual bool ESEGetQBallSimulateCmd();
-	virtual bool ESEGetEDSAutoAbortSimulate(int n);
-	virtual bool ESEGetEDSLVCutoffSimulate(int n);
-
-	IU* iu;
+	void SetIU_ESE(IU_ESE *iu_ese) { ourIU_ESE = iu_ese; };
 protected:
-	IUUmbilicalInterface* IuUmb;
+	bool GetEDSSCCutoff(int n);
+	IU_ESE *ourIU_ESE;
 };
