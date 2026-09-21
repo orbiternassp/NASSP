@@ -54,6 +54,7 @@ core
 !/Orbitersdk/samples
 /Orbitersdk/samples/*
 !/Orbitersdk/samples/ProjectApollo/
+!/Orbitersdk/samples/GroundElapsedTime/
 !/Meshes/
 /Meshes/*
 !/Meshes/ProjectApollo
