@@ -13,18 +13,34 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{61A67334-771F-48D8-B96E-B964C4B50FB8}</ProjectGuid>
     <RootNamespace>GroundElapsedTime</RootNamespace>
-    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+    <!-- "10.0" (rather than a specific build number like 10.0.17763.0) tells
+         Visual Studio "just use whatever Windows 10 SDK you already have
+         installed", which avoids yet another "required component missing"
+         error if the exact SDK build NASSP's other projects pin isn't on
+         this machine. -->
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
-    <PlatformToolset>v141</PlatformToolset>
+    <!-- Rest of NASSP's projects use v141 (the Visual Studio 2017 compiler),
+         because that's what's always been installed on the maintainers'
+         machines. But this addon doesn't need to be built with the exact
+         same compiler version as Saturn.dll/LEM.dll/etc: it never links
+         against those DLLs directly, it only calls their virtual functions
+         at runtime through the vessel object's vtable, and Microsoft has
+         kept that low-level object layout/calling convention identical
+         all the way from Visual Studio 2015 through 2022. So we can safely
+         target v143 (Visual Studio 2022's own compiler) here instead,
+         letting this one project build without installing the older
+         VS2017 toolset component. -->
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
