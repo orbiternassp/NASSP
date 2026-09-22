@@ -1554,7 +1554,7 @@ void DSKY::SendNetworkPacketDSKY()
 		char numLvl[256] = "";
 		char intLvl[256] = "";
 
-		sprintf(anunLvl, "%lf", SegmentPower->Voltage() / 5.0);
+		sprintf(anunLvl, "%lf", StatusPower->Voltage() / 5.0);
 		sprintf(numLvl, "%lf", Variable_250VAC_Output.Voltage() / 250.0);
 		sprintf(intLvl, "%lf", IntegralPower->Voltage() / 115.0);
 
