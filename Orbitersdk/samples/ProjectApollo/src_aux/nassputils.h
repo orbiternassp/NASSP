@@ -30,9 +30,11 @@
 #ifdef _OPENORBITER
 #define MAT_EMISSION MatProp::Emission
 #define MAT_LIGHT MatProp::Light
+#define SKP_COPY_ALPHA Sketchpad::COPY_ALPHA
 #else
 #define MAT_EMISSION MESHM_EMISSION2
 #define MAT_LIGHT MESHM_EMISSION
+#define SKP_COPY_ALPHA SKPBS_COPY_ALPHA
 #endif
 
 
