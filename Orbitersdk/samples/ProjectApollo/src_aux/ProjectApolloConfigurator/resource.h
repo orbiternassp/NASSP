@@ -7,6 +7,7 @@
 #define IDD_PAGEVISUAL                  103
 #define IDD_PAGECONTROL                 104
 #define IDD_PAGEMISC                    105
+#define IDD_PAGEAUTOSAVE                106
 #define IDC_EDIT_RHC                    1000
 #define IDC_EDIT_THC                    1001
 #define IDC_RADIO_SINGLEPANEL           1002
@@ -43,14 +44,18 @@
 #define IDC_BUTTON1                     1031
 #define IDC_BUTTON_CREATECONFIG         1032
 #define IDC_EDIT1                       1033
+#define IDC_CHECK_AUTOSAVE_ENABLED      1034
+#define IDC_EDIT_AUTOSAVE_INTERVAL      1035
+#define IDC_STATIC_AUTOSAVE_INTERVAL    1036
+#define IDC_CHECK_AUTOSAVE_NOTIFICATION 1037
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        106
+#define _APS_NEXT_RESOURCE_VALUE        107
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1034
+#define _APS_NEXT_CONTROL_VALUE         1038
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
