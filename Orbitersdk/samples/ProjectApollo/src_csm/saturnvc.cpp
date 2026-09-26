@@ -2203,6 +2203,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 					c |= 01;
 					agc.SetInputChannel(032, c);
 					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 0, 1648, 200, 200);			// UP
+					ThumbClick.play();
 				}
 				else {
 					unsigned int c = agc.GetInputChannel(032);
@@ -2220,6 +2221,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 					c |= 02;
 					agc.SetInputChannel(032, c);
 					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 400, 1648, 200, 200);		// DOWN
+					ThumbClick.play();
 				}
 				else {
 					unsigned int c = agc.GetInputChannel(032);
@@ -2237,6 +2239,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 					c |= 020;
 					agc.SetInputChannel(032, c);
 					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 600, 1648, 200, 200);		// RIGHT
+					ThumbClick.play();
 				}
 				else {
 					unsigned int c = agc.GetInputChannel(032);
@@ -2254,6 +2257,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 					c |= 040;
 					agc.SetInputChannel(032, c);
 					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 800, 1648, 200, 200);		// LEFT
+					ThumbClick.play();
 				}
 				else {
 					unsigned int c = agc.GetInputChannel(032);
@@ -2271,6 +2275,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 					c |= 010;
 					agc.SetInputChannel(032, c);
 					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 1200, 1648, 200, 200);		// LEFT
+					ThumbClick.play();
 				}
 				else {
 					unsigned int c = agc.GetInputChannel(032);
@@ -2288,6 +2293,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 					c |= 04;
 					agc.SetInputChannel(032, c);
 					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 510, 986, 1000, 1648, 200, 200);		// RIGHT
+					ThumbClick.play();
 				}
 				else {
 					unsigned int c = agc.GetInputChannel(032);
@@ -2302,6 +2308,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 				if (event == PANEL_MOUSE_LBDOWN) {
 					optics.OpticsManualMovement |= 0x01;
 					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1400, 1648, 208, 208);		// UP
+					ThumbClick.play();
 				}
 				else {
 					optics.OpticsManualMovement = 0;
@@ -2313,6 +2320,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 				if (event == PANEL_MOUSE_LBDOWN) {
 					optics.OpticsManualMovement |= 0x02;
 					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 1816, 1648, 208, 208);		// DOWN
+					ThumbClick.play();
 				}
 				else {
 					optics.OpticsManualMovement = 0;
@@ -2324,6 +2332,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 				if (event == PANEL_MOUSE_LBDOWN) {
 					optics.OpticsManualMovement |= 0x08;
 					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 2024, 1648, 208, 208);		// RIGHT
+					ThumbClick.play();
 				}
 				else {
 					optics.OpticsManualMovement = 0;
@@ -2335,6 +2344,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 				if (event == PANEL_MOUSE_LBDOWN) {
 					optics.OpticsManualMovement |= 0x04;
 					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 1970, 980, 2232, 1648, 208, 208);		// LEFT
+					ThumbClick.play();
 				}
 				else {
 					optics.OpticsManualMovement = 0;
@@ -2346,6 +2356,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 				if (event == PANEL_MOUSE_LBDOWN) {
 					agc.SetInputChannelBit(016, 5, 1);
 					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2166, 1012, 1728, 1512, 104, 104);	// DOWN
+					Bclick.play();
 				}
 				else {
 					agc.SetInputChannelBit(016, 5, 0);
@@ -2357,6 +2368,7 @@ bool Saturn::clbkVCMouseEvent (int id, int event, VECTOR3 &p)
 				if (event == PANEL_MOUSE_LBDOWN) {
 					agc.SetInputChannelBit(016, 6, 1);
 					oapiBlt(srf[SRF_VC_OPTICS_P122], srf[SRF_VC_OPTICS_P122], 2302, 1066, 1832, 1512, 104, 104);	// DOWN
+					Bclick.play();
 				}
 				else {
 					agc.SetInputChannelBit(016, 6, 0);
@@ -6885,7 +6897,7 @@ void Saturn::UpdateCMVCOptics() {
 	GetMeshOffset(vcidx, ofs);
 	DEVMESHHANDLE hOpticsMesh = GetDevMesh(vis, hCMVCOpticsidx);
 
-	static std::vector<OpticsMeshGroup> cmvcOptics(NUM_MSHGRPS + NUM_RTCL); // 8 meshgroups from mesh + 3 extra for the reticles
+	static std::vector<OpticsMeshGroup> cmvcOptics(NUM_MSHGRPS + NUM_RTCL); // 8 meshgroups from mesh + 2 extra for the reticles
 	static bool initVCOptics = true;
 
 	if (optics.SextDualView) {
@@ -6926,7 +6938,7 @@ void Saturn::UpdateCMVCOptics() {
 
 		// Order of mesh groups. This must be the same in the mesh
 		// 0=Telescope eyepiece, 1=Sextant eyepiece, 2=dsky, 3=CMVCOptics_Panel_122, 4=Optics Clickpoints
-		// 5=Custom Camera, 6=Telescope reticle,  7=Sextant reticle
+		// 5=Custom Camera, 6=Optics Cover, 7=Telescope reticle, 8=Sextant reticle
 		for (int i = FIRSTMSHGRP; i < NUM_MSHGRPS; i++) {
 			cmvcOptics[i].mshgrp = oapiMeshGroup(hCVOptics, i);
 			cmvcOptics[i].vtxcnt = cmvcOptics[i].mshgrp->nVtx;
@@ -6951,10 +6963,10 @@ void Saturn::UpdateCMVCOptics() {
 		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_EYEPIECE,	!isSextant);
 		HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_DSKY,		!ViewOpticsPanels);
 		HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_P122,		!ViewOpticsPanels);
-		HideMeshGroup(hCMVCOpticsidx, CMVC_SCT_RETICLE,		isSextant);
-		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_RETICLE,		!isSextant);
 		HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_CLKPNTS,	true);
 		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM,	true);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SCT_RETICLE,		isSextant);
+		HideMeshGroup(hCMVCOpticsidx, CMVC_SXT_RETICLE,		!isSextant);
 		FovSaveVCOptics = 30 * RAD;
 
 		initVCOptics = false;
@@ -7053,8 +7065,7 @@ void Saturn::CMVCOpticsInitP122Switches() {
 	BlitSwitchByIndex(120, 120, OpticsZeroSwitch.IsUp() ? 0 : 1);
 
 	// 2. ControllerTelescopeTrunnionSwitch (Uses Y-entries: 288, 432 and 576 -> Index 2, 3 and 4)
-	int trunnionIdx = ControllerTelescopeTrunnionSwitch.IsUp() ? 2 :
-						(ControllerTelescopeTrunnionSwitch.IsCenter() ? 3 : 4);
+	int trunnionIdx = ControllerTelescopeTrunnionSwitch.IsUp() ? 2 : (ControllerTelescopeTrunnionSwitch.IsCenter() ? 3 : 4);
 	BlitSwitchByIndex(442, 120, trunnionIdx);
 
 	// 3. ControllerCouplingSwitch (Uses Y-entries: 720 and 864 -> Index 5 and 6)
@@ -7064,7 +7075,12 @@ void Saturn::CMVCOpticsInitP122Switches() {
 	BlitSwitchByIndex(450, 462, OpticsModeSwitch.IsUp() ? 7 : 8);
 
 	// 5. ControllerSpeedSwitch (Uses Y-entries: 1296, 1440 and 1584 -> Index 9, 10 and 11)
-	int speedIdx = ControllerSpeedSwitch.IsUp() ? 9 :
-					(ControllerSpeedSwitch.IsCenter() ? 10 : 11);
+	int speedIdx = ControllerSpeedSwitch.IsUp() ? 9 : (ControllerSpeedSwitch.IsCenter() ? 10 : 11);
 	BlitSwitchByIndex(716, 462, speedIdx);
 }
+
+void Saturn::HideVCOpticsCoverMesh()
+{
+	HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_COVER, true);
+}
+
