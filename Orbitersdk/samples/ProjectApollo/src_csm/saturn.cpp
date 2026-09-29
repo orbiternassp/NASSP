@@ -51,6 +51,7 @@
 #include "LVDC.h"
 #include "iu.h"
 #include "Mission.h"
+#include "Autosave.h"
 
 #include "eva.h"
 
@@ -1649,6 +1650,9 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 	}
 
 	if (cmpeva)UpdateEVA(); //if cmp eva active (vessel created), enables EVA Timestep
+
+	// Autosave (checks focus internally, reads config from file)
+	NASSPAutosave::Update(GetHandle(), GetName(), pMission->GetMissionName().c_str(), MissionTime);
 
 	sprintf(buffer, "End time(0) %lld", time(0)); 
 	TRACE(buffer);
