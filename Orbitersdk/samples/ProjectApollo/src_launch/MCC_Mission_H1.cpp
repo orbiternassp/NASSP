@@ -210,7 +210,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(76.0 * 3600.0), 140, MST_H1_TRANSLUNAR_DAY4_1);
 		break;
 	case MST_H1_TRANSLUNAR_DAY4_1: //MCC-4 Evaluation to MCC-4 update or SV update
-		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(rtcc->calcParams.LOI - 6.5 * 3600.0) * 3600.0, 25, MST_H1_TRANSLUNAR_DAY4_2, scrubbed, mcc_calcs.GETEval(rtcc->calcParams.LOI - 4.5 * 3600.0), MST_H1_TRANSLUNAR_NO_MCC4_1);
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(rtcc->calcParams.LOI - 6.5 * 3600.0), 25, MST_H1_TRANSLUNAR_DAY4_2, scrubbed, mcc_calcs.GETEval(rtcc->calcParams.LOI - 4.5 * 3600.0), MST_H1_TRANSLUNAR_NO_MCC4_1);
 		break;
 	case MST_H1_TRANSLUNAR_NO_MCC4_1: //SV update to PC+2 update *No MCC-4 Timeline*
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 20.0 * 60.0, 5, MST_H1_TRANSLUNAR_NO_MCC4_2);
