@@ -1104,6 +1104,8 @@ void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
 	for (int i=0; i<NUM_ELEMENTS(Mission11MshGroups); i++) HideMeshGroup(vcidx, Mission11MshGroups[i], OtherPan230Msh);
 	for (int i=0; i<NUM_ELEMENTS(Mission15MshGroups); i++) HideMeshGroup(vcidx, Mission15MshGroups[i], A15Pan230Msh);
 	for (int i=0; i<NUM_ELEMENTS(Mission17MshGroups); i++) HideMeshGroup(vcidx, Mission17MshGroups[i], A17Pan230Msh);
+
+	if (!optics.OpticsCovered) HideVCOpticsCoverMesh();
 }
 
 void Saturn::clbkVisualDestroyed(VISHANDLE vis, int refcount) {
