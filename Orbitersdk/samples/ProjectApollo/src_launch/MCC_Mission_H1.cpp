@@ -204,13 +204,13 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(rtcc->calcParams.LOI - 23.5 * 3600.0), 5, MST_H1_TRANSLUNAR_DAY3_1);
 		break;
 	case MST_H1_TRANSLUNAR_DAY3_1: //MCC-3 update to PTC Quads Decision
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.LOI - 21.8 * 3600.0), 24, MST_H1_TRANSLUNAR_DAY3_2, scrubbed, mcc_calcs.GETEval(rtcc->calcParams.LOI - 6.5 * 3600.0), MST_H1_TRANSLUNAR_DAY4_1);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.LOI - 21.8 * 3600.0), 24, MST_H1_TRANSLUNAR_DAY3_2, scrubbed, mcc_calcs.GETEval(round((rtcc->calcParams.LOI - 7.5 * 3600.0) / 3600.0) * 3600.0), MST_H1_TRANSLUNAR_DAY4_1); //Takes LOI time reference and rounds to nearest hour for MCC4 evaluation
 		break;
 	case MST_H1_TRANSLUNAR_DAY3_2: //PTC Quads Decision to MCC-4 Evaluation
-		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(rtcc->calcParams.LOI - 6.5 * 3600.0), 140, MST_H1_TRANSLUNAR_DAY4_1);
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(round((rtcc->calcParams.LOI - 7.5 * 3600.0) / 3600.0) * 3600.0), 140, MST_H1_TRANSLUNAR_DAY4_1); //Takes LOI time reference and rounds to nearest hour for MCC4 evaluation
 		break;
 	case MST_H1_TRANSLUNAR_DAY4_1: //MCC-4 Evaluation to MCC-4 update or SV update
-		UpdateMacro(UTP_NONE, PT_NONE, SubStateTime > 5.0 * 60.0, 25, MST_H1_TRANSLUNAR_DAY4_2, scrubbed, mcc_calcs.GETEval(rtcc->calcParams.LOI - 4.5 * 3600.0), MST_H1_TRANSLUNAR_NO_MCC4_1);
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(rtcc->calcParams.LOI - 6.5 * 3600.0), 25, MST_H1_TRANSLUNAR_DAY4_2, scrubbed, mcc_calcs.GETEval(rtcc->calcParams.LOI - 4.5 * 3600.0), MST_H1_TRANSLUNAR_NO_MCC4_1);
 		break;
 	case MST_H1_TRANSLUNAR_NO_MCC4_1: //SV update to PC+2 update *No MCC-4 Timeline*
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 20.0 * 60.0, 5, MST_H1_TRANSLUNAR_NO_MCC4_2);
