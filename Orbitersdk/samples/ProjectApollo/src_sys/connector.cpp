@@ -255,6 +255,7 @@ ProjectApolloConnectorVessel::ProjectApolloConnectorVessel(OBJHANDLE hObj, int f
 	{
 		ConnectorList[i].port = 0;
 		ConnectorList[i].c = NULL;
+		ConnectorList[i].IsManagedConnector = false;
 	}
 
 	ValidationValue = PACV_N_VALIDATION;
@@ -266,7 +267,7 @@ ProjectApolloConnectorVessel::~ProjectApolloConnectorVessel()
 	int i;
 	for (i = 0; i < PACV_N_CONNECTORS; i++)
 	{
-		if (ConnectorList[i].c)
+		if (ConnectorList[i].IsManagedConnector == false && ConnectorList[i].c)
 		{
 			ConnectorList[i].c->Disconnect();
 		}
@@ -293,7 +294,7 @@ Connector *ProjectApolloConnectorVessel::GetConnector(int port, ConnectorType t)
 	return NULL;
 }
 
-bool ProjectApolloConnectorVessel::RegisterConnector(int port, Connector *c)
+bool ProjectApolloConnectorVessel::RegisterConnector(int port, Connector *c, bool isManaged)
 
 {
 	int i;
