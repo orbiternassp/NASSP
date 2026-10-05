@@ -651,7 +651,6 @@ public:
 
 	void SetAnimations(double);
 	void UpdatePointingArrow();
-	void UpdateLMVCOptics();
 
 	//
 	// VISHANDLE
