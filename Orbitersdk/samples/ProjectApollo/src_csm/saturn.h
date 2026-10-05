@@ -935,11 +935,6 @@ public:
 	// Variables for checklists
 	char Checklist_Variable[16][32];
 
-	// For hiding the Optics Panel122 and DSKY
-	bool ViewOpticsPanels;
-	bool OpticsVCDualViewFlashing = false;
-	DWORD VCOpticsRetAlpha = 0x80FFFFFF; // Semitransparent CustomCamera
-
 	//
 	// General functions that handle calls from Orbiter.
 	//
@@ -1355,7 +1350,6 @@ public:
 	void DoMeshAnimation(AnimState &, UINT &, double, double);
 
 	void UpdatePointingArrow();
-	void UpdateCMVCOptics();
 	void CMVCOpticsInitP122Switches();
 	void UpdateSideHatchClickspots(const VECTOR3 &ofs);
 	void UpdateForwardHatchClickspots(const VECTOR3 &ofs);
@@ -4370,8 +4364,6 @@ protected:
 
 	CAMERAHANDLE hOpticsCustomCam = NULL;
 	SURFHANDLE srfOpticsCustomCam;
-
-	void UpdateOpticsCustomCam(VECTOR3, VECTOR3, VECTOR3);
 	
 	//
 	// Systems functions.

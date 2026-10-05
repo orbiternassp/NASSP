@@ -176,7 +176,10 @@ public:
 	void SystemTimestep(double simdt);
 	bool PaintShaftDisplay(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);		// Update panel image
 	bool PaintTrunnionDisplay(SURFHANDLE surf, SURFHANDLE digits, int xTexMul = 1);	// Update panel image
+	void UpdateCMVCOptics();
 	void OpticsSwitchToggled();
+	void VC_Optics_Reticle_Plus();
+	void VC_Optics_Reticle_Minus();
 
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -201,9 +204,31 @@ public:
 	bool SextDVLOSTog;												// Alternating flag that controls LineOfSight cycling in Dual-View mode
 	double SextDVTimer;												// Governing timer to prevent view switching at greater than 15 frames per sim second
 	bool OpticsCovered;												// Are optics covers in place?
+	bool OpticsVCDualViewFlashing;
+	bool ViewOpticsPanels;											// For hiding the Optics Panel122 and DSKY
 protected:
 	bool PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value, int xTexMul = 1);
 	void TelescopeServoDrive(double dt, double sxt_angle, double &sct_angle, double &sct_rate);
+
+	// struct for storing the original vertices from the mesh
+	// We do this to avoid rounding errors in every calculation.
+	// For this, we use the original vertices from the mesh.
+	struct OpticsMeshGroup {
+		std::vector<VECTOR3> data;
+		std::vector<VECTOR3> datanew;		// This is for storing the transformed vertices, not the original ones.
+		std::vector<NTVERTEX> vertexdata;	// This is for sending the transformad vertices to D3D9 client
+		int vtxcnt;
+		MESHGROUP* mshgrp;
+		GROUPREQUESTSPEC grp{ 0 };
+		int ordernr;
+	};
+
+	void UpdateOpticsCustomCam(VECTOR3, VECTOR3, VECTOR3);
+
+	std::vector<OpticsMeshGroup> cmvcOptics;
+	bool initVCOptics;
+	bool CustomCam;
+	DWORD VCOpticsRetAlpha; // Semitransparent CustomCamera
 };
 
 

@@ -31,6 +31,8 @@
 #include "soundlib.h"
 #include "nasspsound.h"
 #include "nasspdefs.h"
+#include "nassputils.h"
+#include "resource.h"
 
 #include "apolloguidance.h"
 #include "dsky.h"
@@ -567,6 +569,13 @@ CMOptics::CMOptics() {
 	SextDVLOSTog = false;
 	SextDVTimer = 0.0;
 	OpticsCovered = true;
+	OpticsVCDualViewFlashing = false;
+
+	cmvcOptics.resize(NUM_MSHGRPS + NUM_RTCL); // 8 meshgroups from mesh + 2 extra for the reticles
+	initVCOptics = true;
+	CustomCam = true;
+	VCOpticsRetAlpha = 0x80FFFFFF;
+	ViewOpticsPanels = false;
 }
 
 void CMOptics::Init(Saturn *vessel) {
@@ -655,6 +664,252 @@ bool CMOptics::PaintDisplay(SURFHANDLE surf, SURFHANDLE digits, int value, int T
 	return true;
 }
 
+void CMOptics::UpdateCMVCOptics()
+{
+	auto setVCCameraLOS = [](double shaft, double trunnion) noexcept {
+		const double cosShaft = cos(shaft), sinShaft = sin(shaft);
+		const double cosTrun = cos(trunnion), sinTrun = sin(trunnion);
+		const double uzx = cosShaft * sinTrun, uzy = sinShaft * sinTrun, uzz = cosTrun;
+		const double azimuth = asin(uzx), polar = -atan2(uzy, uzz);
+		oapiCameraSetCockpitDir(polar, azimuth, false);
+		};
+
+	// If we are not in Optics view, Sextant or Teleskop, hide the VC Optics mesh
+	if (sat->viewpos != SATVIEW_OPTICS_SCT && sat->viewpos != SATVIEW_OPTICS_SXT) {
+		sat->SetMeshVisibilityMode(sat->hCMVCOpticsidx, MESHVIS_NEVER);
+		return;
+	}
+
+	// If we are not in VC return
+	if (!sat->vcmesh) return;
+	if (oapiGetFocusInterface() != sat) return;
+
+	VECTOR3 camPosGlobal, camPos, camDir, opticsPos, final_vertex;
+	double aperture = 0.0;
+
+	sat->SetCameraDefaultDirection(_V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN));
+	oapiCameraSetCockpitDir(0, 0);
+	sat->SetCameraCatchAngle(0.0);
+	sat->SetCameraRotationRange(PI / 2., PI / 2., PI / 2., PI / 2.);
+	bool isSextant = (sat->viewpos == SATVIEW_OPTICS_SXT);
+
+	if (isSextant) { // Sextant
+		bool isFlashing = OpticsVCDualViewFlashing;
+		bool dualView = SextDualView;
+		bool dvLOSTog = SextDVLOSTog;
+
+		if (isFlashing && dualView && dvLOSTog) {
+			setVCCameraLOS(SextShaft, 0.0);
+			sat->HideMeshGroup(sat->hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, true);
+		}
+		else {
+			setVCCameraLOS(SextShaft, SextTrunion);
+			sat->HideMeshGroup(sat->hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, isFlashing || !dualView);
+		}
+		//		aperture = oapiCameraAperture() * multiplicator; // 1.2282;
+		aperture = oapiCameraAperture() * 1.230;
+	}
+	else { // Telescope
+		setVCCameraLOS(TeleShaft, TeleTrunion);
+		//		aperture = oapiCameraAperture() * multiplicator2; //1.4637;
+		aperture = oapiCameraAperture() * 1.467;
+		// aperture = 1;	
+	}
+
+	// Get global camera position and direction. Is set in SATVIEW_OPTICS_SCT and SATVIEW_OPTICS_SXT
+	oapiCameraGlobalPos(&camPosGlobal);
+	oapiCameraGlobalDir(&camDir);
+
+	MATRIX3 mRot;
+	oapiCameraRotationMatrix(&mRot);
+	// The up vector is the second column of the camera matrix.
+	VECTOR3 gCamUp = _V(mRot.m12, mRot.m22, mRot.m32);
+
+	// Transformation into the local ship system
+	sat->Global2Local(camPosGlobal, camPos);
+
+	// Local viewing direction
+	VECTOR3 gTarget = camPosGlobal + camDir;
+	VECTOR3 lTarget;
+	sat->Global2Local(gTarget, lTarget);
+	VECTOR3 lCamDir = lTarget - camPos;
+	normalise(lCamDir);
+
+	// Local Up Vector
+	VECTOR3 gUpPos = camPosGlobal + gCamUp;
+	VECTOR3 lUpPos;
+	sat->Global2Local(gUpPos, lUpPos);
+	VECTOR3 lCamUp = lUpPos - camPos;
+	normalise(lCamUp);
+
+	// Local Right Vector
+	VECTOR3 lCamRight = crossp(lCamUp, lCamDir);
+	normalise(lCamRight);
+
+	VECTOR3 ofs;
+	sat->GetMeshOffset(sat->vcidx, ofs);
+	DEVMESHHANDLE hOpticsMesh = sat->GetDevMesh(sat->vis, sat->hCMVCOpticsidx);
+
+	if (SextDualView) {
+		// local custom camera direction
+		VECTOR3 localDir = _V(0.0, -OPTICS_BASE_COS, OPTICS_BASE_SIN);
+
+		// Calculate Local Up Vector to prevent image distortion
+		// Since localDir only has Y and Z components,
+		// we swap these and reverse one sign
+		VECTOR3 localUp = _V(0.0, OPTICS_BASE_SIN, OPTICS_BASE_COS);
+
+		// normalise the vectors
+		normalise(localDir);
+		normalise(localUp);
+
+		UpdateOpticsCustomCam(camPos, localDir, localUp);
+
+		// Superimposing using Sketchpad3 in Orbiter2016Beta or Sketchpad(DrawAPi) in OpenOrbiter
+#ifdef _OPENORBITER
+		oapi::Sketchpad* skp = oapiGetSketchpad(sat->srfOpticsCustomCam);
+#else
+		oapi::Sketchpad3* skp = (oapi::Sketchpad3*)oapiGetSketchpad(sat->srfOpticsCustomCam);
+#endif // _OPENORBITER
+		if (skp) {
+			oapi::Brush* pBrush = oapiCreateBrush(VCOpticsRetAlpha);
+			skp->SetBrush(pBrush);
+			skp->SetBlendState(SKP_COPY_ALPHA);
+			skp->Rectangle(0, 0, 2048, 2048);
+			oapiReleaseBrush(pBrush);
+			oapiReleaseSketchpad(skp);
+		}
+		oapiBlt(sat->srf[Saturn::SurfaceID_VC::SRF_VC_OPTICS_CUSTOMCAM], sat->srfOpticsCustomCam, 0, 0, 0, 0, 2048, 2048);
+	}
+
+	// Make copies of the mesh Vertices 
+	if (initVCOptics) {
+		MESHHANDLE hCVOptics = sat->GetMeshTemplate(sat->hCMVCOpticsidx); // handle for VC Optics Mesh
+
+		// Order of mesh groups. This must be the same in the mesh
+		// 0=Telescope eyepiece, 1=Sextant eyepiece, 2=dsky, 3=CMVCOptics_Panel_122, 4=Optics Clickpoints
+		// 5=Custom Camera, 6=Optics Cover, 7=Telescope reticle, 8=Sextant reticle
+		for (int i = FIRSTMSHGRP; i < NUM_MSHGRPS; i++) {
+			cmvcOptics[i].mshgrp = oapiMeshGroup(hCVOptics, i);
+			cmvcOptics[i].vtxcnt = cmvcOptics[i].mshgrp->nVtx;
+			cmvcOptics[i].data.resize(cmvcOptics[i].vtxcnt);
+			cmvcOptics[i].datanew.resize(cmvcOptics[i].vtxcnt);
+			if (i > LASTMSHGRP) cmvcOptics[i + NUM_RTCL].data.resize(cmvcOptics[i].vtxcnt);
+
+			for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
+				VECTOR3 vtx = _V(cmvcOptics[i].mshgrp->Vtx[j].x, cmvcOptics[i].mshgrp->Vtx[j].y, cmvcOptics[i].mshgrp->Vtx[j].z);
+				cmvcOptics[i].data[j] = vtx;
+
+				// We copy all the original mesh reticle vertices from the positions 6/7 of the mesh array to positions 8/9
+				// This is needed for the rotation of the reticles. We need only the vertices. 
+				if (i > LASTMSHGRP) cmvcOptics[i + NUM_RTCL].data[j] = vtx;
+			}
+			cmvcOptics[i].vertexdata.resize(cmvcOptics[i].vtxcnt);
+			cmvcOptics[i].grp.Vtx = cmvcOptics[i].vertexdata.data();
+			cmvcOptics[i].grp.nVtx = cmvcOptics[i].vtxcnt;
+		}
+
+		sat->HideMeshGroup(sat->hCMVCOpticsidx, CMVC_SCT_EYEPIECE, isSextant);
+		sat->HideMeshGroup(sat->hCMVCOpticsidx, CMVC_SXT_EYEPIECE, !isSextant);
+		sat->HideMeshGroup(sat->hCMVCOpticsidx, CMVC_OPTICS_DSKY, !ViewOpticsPanels);
+		sat->HideMeshGroup(sat->hCMVCOpticsidx, CMVC_OPTICS_P122, !ViewOpticsPanels);
+		sat->HideMeshGroup(sat->hCMVCOpticsidx, CMVC_OPTICS_CLKPNTS, true);
+		sat->HideMeshGroup(sat->hCMVCOpticsidx, CMVC_SXT_CUSTOM_CAM, true);
+		sat->HideMeshGroup(sat->hCMVCOpticsidx, CMVC_SCT_RETICLE, isSextant);
+		sat->HideMeshGroup(sat->hCMVCOpticsidx, CMVC_SXT_RETICLE, !isSextant);
+		sat->FovSaveVCOptics = 30 * RAD;
+
+		initVCOptics = false;
+		sat->CMVCOpticsInitP122Switches(); // Sync Panel 122 switches with the VC.
+	}
+
+	// Rotate Reticle
+	if (!oapiGetPause()) { // *** oapiGetPause() maybe unnecessary ***
+		double cos_a = std::cos(-TeleShaft);
+		double sin_a = std::sin(-TeleShaft);
+		for (int i = FIRSTRTCL; i < NUM_MSHGRPS; i++) { // If we wand also to rotate the reticle for the Custom camera we need to change i<7 to i<8
+			for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
+				double rx = cmvcOptics[i + NUM_RTCL].data[j].x;
+				double ry = cmvcOptics[i + NUM_RTCL].data[j].y;
+				cmvcOptics[i].data[j].x = rx * cos_a - ry * sin_a;
+				cmvcOptics[i].data[j].y = rx * sin_a + ry * cos_a;
+				cmvcOptics[i].data[j].z = cmvcOptics[i + NUM_RTCL].data[j].z;
+			}
+		}
+	}
+
+	// Position the Opticsmesh 15cm in front of the camera
+	opticsPos = camPos - ofs + (lCamDir * 0.15);
+
+	GROUPEDITSPEC ges;
+	ges.flags = GRPEDIT_VTXCRD;
+	ges.vIdx = 0;
+
+	// OPTIMIZATION: Multiply direction vectors once per frame by aperture to accelerate the loop
+	VECTOR3 rScaled = lCamRight * aperture;
+	VECTOR3 uScaled = lCamUp * aperture;
+	VECTOR3 dScaled = lCamDir * aperture;
+
+	// Transform Vertices
+	for (int i = FIRSTMSHGRP; i < NUM_MSHGRPS; i++) {
+		for (int j = 0; j < cmvcOptics[i].vtxcnt; j++) {
+			VECTOR3 vtx = cmvcOptics[i].data[j];
+
+			// Linear combination using pre-scaled vectors saves explicit vector multiplications
+			final_vertex = rScaled * vtx.x + uScaled * vtx.y + dScaled * vtx.z;
+			final_vertex += opticsPos;
+			cmvcOptics[i].datanew[j] = final_vertex;
+
+			cmvcOptics[i].grp.Vtx[j].x = (float)final_vertex.x;
+			cmvcOptics[i].grp.Vtx[j].y = (float)final_vertex.y;
+			cmvcOptics[i].grp.Vtx[j].z = (float)final_vertex.z;
+		}
+
+		// Send Mesh-Update to Orbiter
+		ges.nVtx = cmvcOptics[i].vtxcnt;
+		ges.Vtx = cmvcOptics[i].grp.Vtx;
+		oapiEditMeshGroup(hOpticsMesh, i, &ges);
+	}
+
+	// UPDATE CLICKPOINTS
+	double ClkArea = 0.0015 * aperture;     // Smaller CLickarea for the Switches
+	double ClkAreaDSKY = 0.005 * aperture;  // Bigger for the DSKY
+
+	for (int i = AID_VC_OPTICS_DSKY_VERB; i <= AID_VC_OPTICS_DSKY_RESET; i++) {
+		oapiVCSetAreaClickmode_Spherical(i, cmvcOptics[CMVC_OPTICS_CLKPNTS].datanew[i - AID_VC_OPTICS_DSKY_VERB] + ofs, ClkAreaDSKY);
+	}
+
+	for (int i = AID_VC_OPTICS_ZERO_UP; i <= AID_VC_OPTICS_REJECT_BUTTON; i++) {
+		oapiVCSetAreaClickmode_Spherical(i, cmvcOptics[CMVC_OPTICS_CLKPNTS].datanew[i - AID_VC_OPTICS_DSKY_VERB] + ofs, ClkArea);
+	}
+
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OPTICS_HIDEPANELS, cmvcOptics[CMVC_OPTICS_CLKPNTS].datanew[AID_VC_OPTICS_HIDEPANELS - AID_VC_OPTICS_DSKY_VERB] + ofs, 0.015 * aperture);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OPTICS_DUALVIEW_FLASHING, cmvcOptics[CMVC_OPTICS_CLKPNTS].datanew[AID_VC_OPTICS_DUALVIEW_FLASHING - AID_VC_OPTICS_DSKY_VERB] + ofs, 0.015 * aperture);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OPTICS_RETICLE_PLUS, cmvcOptics[CMVC_OPTICS_CLKPNTS].datanew[AID_VC_OPTICS_RETICLE_PLUS - AID_VC_OPTICS_DSKY_VERB] + ofs, ClkArea);
+	oapiVCSetAreaClickmode_Spherical(AID_VC_OPTICS_RETICLE_MINUS, cmvcOptics[CMVC_OPTICS_CLKPNTS].datanew[AID_VC_OPTICS_RETICLE_MINUS - AID_VC_OPTICS_DSKY_VERB] + ofs, ClkArea);
+
+	// Update the DSKY. Instead of blitting every light and digits we simply blit the whole DSKY
+	// from the other texture which all the lights and digits are already blittet.
+	// This is done for every frame. I think it would be enough to do it at every timestep instead.
+	oapiBlt(sat->srf[Saturn::SurfaceID_VC::SRF_VC_OPTICS_DSKY], sat->srf[Saturn::SurfaceID_VC::SRF_VC_4DSKY_LEB], 0, 0, 1754, 2107, 606, 400);
+
+	sat->SetMeshVisibilityMode(sat->hCMVCOpticsidx, MESHVIS_VC);
+}
+
+// CustomCamera for Optics
+void CMOptics::UpdateOpticsCustomCam(VECTOR3 camPos, VECTOR3 camDir, VECTOR3 camUp) {
+	gcCore* pCore = gcGetCoreInterface();
+	if (pCore) {
+		// Scaling factor for the Superimposing Custom Camera best match so far is 0.905
+		// This should be normaly (1.5 * RAD) but it's not working. Earlier tests was 1.073, but this was before i matched the 3D FOV to the 2D.
+		sat->hOpticsCustomCam = pCore->SetupCustomCamera(sat->hOpticsCustomCam, oapiCameraTarget(), camPos, camDir, camUp, 0.905 * RAD, sat->srfOpticsCustomCam, CUSTOMCAM_DEFAULTS);
+		if (CustomCam) {
+			pCore->CustomCameraOnOff(sat->hOpticsCustomCam, true);
+			CustomCam = false;
+		}
+	}
+}
+
 void CMOptics::OpticsSwitchToggled()
 {
 	if (sat->OpticsZeroSwitch.IsUp())
@@ -673,6 +928,24 @@ void CMOptics::OpticsSwitchToggled()
 	{
 		sat->agc.SetInputChannelBit(033, CMCControl, false);
 	}
+}
+
+void CMOptics::VC_Optics_Reticle_Plus()
+{
+#ifdef _OPENORBITER
+	VCOpticsRetAlpha = (std::clamp((int)(VCOpticsRetAlpha >> 24) + 1, 1, 255) << 24) | 0xFFFFFF;
+#else
+	VCOpticsRetAlpha = ((std::max)(1, (std::min)((int)(VCOpticsRetAlpha >> 24) + 1, 255)) << 24) | 0xFFFFFF;
+#endif
+}
+
+void CMOptics::VC_Optics_Reticle_Minus()
+{
+#ifdef _OPENORBITER
+	VCOpticsRetAlpha = (std::clamp((int)(VCOpticsRetAlpha >> 24) - 1, 1, 255) << 24) | 0xFFFFFF;
+#else
+	VCOpticsRetAlpha = ((std::max)(1, (std::min)((int)(VCOpticsRetAlpha >> 24) - 1, 255)) << 24) | 0xFFFFFF;
+#endif
 }
 
 void CMOptics::TimeStep(double simdt) {
