@@ -767,7 +767,7 @@ void CMOptics::UpdateCMVCOptics()
 
 		// Superimposing using Sketchpad3 in Orbiter2016Beta or Sketchpad(DrawAPi) in OpenOrbiter
 #ifdef _OPENORBITER
-		oapi::Sketchpad* skp = oapiGetSketchpad(srfOpticsCustomCam);
+		oapi::Sketchpad* skp = oapiGetSketchpad(sat->srfOpticsCustomCam);
 #else
 		oapi::Sketchpad3* skp = (oapi::Sketchpad3*)oapiGetSketchpad(sat->srfOpticsCustomCam);
 #endif // _OPENORBITER
