@@ -3133,7 +3133,7 @@ Workbook::SharedStringTable::SharedStringTable() : Record(),
 	stringsTotal_(0), uniqueStringsTotal_(0) {code_ = CODE::SST; dataSize_ = 8; recordSize_ = 12;}
 size_t Workbook::SharedStringTable::Read(const char* data)
 {
-	Record::Read(data);
+	size_t recordSize = Record::Read(data);
 	LittleEndian::Read(data_, stringsTotal_, 0, 4);
 	LittleEndian::Read(data_, uniqueStringsTotal_, 4, 4);
 	strings_.clear();
@@ -3193,7 +3193,10 @@ size_t Workbook::SharedStringTable::Read(const char* data)
 			}
 		}
 	}
-	return npos + 4*(npos/8224 + 1);
+
+	// Change deviating from original library implementation: The old calculation was assuming that all blocks would be filled.
+	// This lead to an incorrect return value here and thus to a corrupted parsing result.
+	return recordSize;
 }	
 size_t Workbook::SharedStringTable::Write(char* data)
 {
