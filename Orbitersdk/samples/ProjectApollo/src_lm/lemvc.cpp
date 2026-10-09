@@ -1892,8 +1892,8 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, VC_MAT_DEDA_Light, MAT_LIGHT, LtgORideAnunSwitch.Voltage() / 6.0, 1);
 		}
 
-#define XP_LIT_ON  (std::max)(lca.GetNumericOutput(), 0.15)
-#define XP_LIT_OFF  0.15
+#define XP_LIT_ON  (std::max)(lca.GetNumericOutput(), 0.01)
+#define XP_LIT_OFF  0.01
 
 		// Tapemeter Lights
 		if (AltRngMonSwitch.GetState() == TOGGLESWITCH_DOWN) {
@@ -3909,8 +3909,8 @@ void LEM::SetContactLight(int m, bool state) {
 	else
 	{   // OFF
 		mat->emissive.r = 0;
-		mat->emissive.g = 0.068f;
-		mat->emissive.b = 0.125f;
+		mat->emissive.g = 0.0f;
+		mat->emissive.b = 0.0f;
 		mat->emissive.a = 1;
 	}
 
@@ -3941,12 +3941,12 @@ void LEM::SetPowerFailureLight(int m, double voltage) {
 	}
 	else
 	{   // OFF
-		mat->diffuse.r = 0.125f;
+		mat->diffuse.r = 0.0f;
 		mat->diffuse.g = 0.0f;
 		mat->diffuse.b = 0.0f;
 		mat->diffuse.a = 1.0f;
 
-		mat->emissive.r = 0.125f;
+		mat->emissive.r = 0.0f;
 		mat->emissive.g = 0.0f;
 		mat->emissive.b = 0.0f;
 		mat->emissive.a = 1.0f;
