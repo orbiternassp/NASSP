@@ -56,12 +56,12 @@ IUControlDistributor::IUControlDistributor(IU *iu)
 
 void IUControlDistributor::Timestep(double simdt)
 {
-	if (iu->ESEGetCommandVehicleLiftoffIndicationInhibit())
+	if (iu->GetIUToIUESECommandConnector()->GetCommandVehicleLiftoffIndicationInhibit())
 		GSECommandVehicleLiftoffIndicationInhibit = true;
 	else
 		GSECommandVehicleLiftoffIndicationInhibit = false;
 
-	if (iu->GetLVCommandConnector()->GetSIVBThrustOK() == false)
+	if (iu->GetSIVBCommandConnector()->GetSIVBThrustOK() == false)
 	{
 		SIVBThrustNotOK = true;
 		SIVBEngineOutA = true;
@@ -141,15 +141,15 @@ void IUControlDistributor::SwitchSelector(int stage, int channel)
 	}
 	else if (stage == SWITCH_SELECTOR_SI)
 	{
-		iu->GetLVCommandConnector()->SISwitchSelector(channel);
+		iu->GetSIVBCommandConnector()->SISwitchSelector(channel);
 	}
 	else if (stage == SWITCH_SELECTOR_SII)
 	{
-		iu->GetLVCommandConnector()->SIISwitchSelector(channel);
+		iu->GetSIVBCommandConnector()->SIISwitchSelector(channel);
 	}
 	else if (stage == SWITCH_SELECTOR_SIVB)
 	{
-		iu->GetLVCommandConnector()->SIVBSwitchSelector(channel);
+		iu->GetSIVBCommandConnector()->SIVBSwitchSelector(channel);
 	}
 }
 
@@ -217,10 +217,10 @@ void IUControlDistributor1B::LoadState(FILEHANDLE scn, char *end_str) {
 
 bool IUControlDistributor1B::GetSIBurnMode()
 {
+	//GSE S-IC Burn Mode Substitute
+	if (iu->GetIUToIUESECommandConnector()->GetSIBurnModeSubstitute()) return true;
 	//Normal S-I Burn Mode Logic
-	if (iu->GetLVCommandConnector()->GetStage() < LAUNCH_STAGE_SIVB && !GSECommandVehicleLiftoffIndicationInhibit) return true;
-	//GSE S-I Burn Mode Substitute
-	if (iu->GetLVCommandConnector()->GetStage() == PRELAUNCH_STAGE) return true;
+	if (iu->GetSIVBCommandConnector()->SIXSIVBNotSeparated() && !GSECommandVehicleLiftoffIndicationInhibit) return true;
 
 	return false;
 }
@@ -242,7 +242,7 @@ void IUControlDistributorSV::Timestep(double simdt)
 {
 	IUControlDistributor::Timestep(simdt);
 
-	if (iu->ESEGetSICOutboardEnginesCantInhibit())
+	if (iu->GetIUToIUESECommandConnector()->GetSICOutboardEnginesCantInhibit())
 		SICOutboardEnginesCantInhibit = true;
 	else
 		SICOutboardEnginesCantInhibit = false;
@@ -286,16 +286,16 @@ void IUControlDistributorSV::LoadState(FILEHANDLE scn, char *end_str) {
 bool IUControlDistributorSV::GetSIBurnMode()
 {
 	//GSE S-IC Burn Mode Substitute
-	if (iu->ESEGetSIBurnModeSubstitute()) return true;
+	if (iu->GetIUToIUESECommandConnector()->GetSIBurnModeSubstitute()) return true;
 	//Normal S-IC Burn Mode Logic
-	if (iu->GetLVCommandConnector()->GetStage() < LAUNCH_STAGE_SIVB && !IsSIIBurnMode && !GSECommandVehicleLiftoffIndicationInhibit) return true;
+	if (iu->GetSIVBCommandConnector()->SIXSIVBNotSeparated() && !IsSIIBurnMode && !GSECommandVehicleLiftoffIndicationInhibit) return true;
 
 	return false;
 }
 
 bool IUControlDistributorSV::GetSIIBurnMode()
 {
-	if (iu->GetLVCommandConnector()->GetStage() < LAUNCH_STAGE_SIVB && IsSIIBurnMode && !GSECommandVehicleLiftoffIndicationInhibit)
+	if (iu->GetSIVBCommandConnector()->SIXSIVBNotSeparated() && IsSIIBurnMode && !GSECommandVehicleLiftoffIndicationInhibit)
 		return true;
 
 	return false;
@@ -303,13 +303,13 @@ bool IUControlDistributorSV::GetSIIBurnMode()
 
 bool IUControlDistributorSV::UseSICEngineCant()
 {
-	if (iu->GetLVCommandConnector()->GetStage() < LAUNCH_STAGE_TWO && SICEngineCantC && !SICOutboardEnginesCantInhibit)
+	if (iu->GetSIVBCommandConnector()->SICSIINotSeparated() && SICEngineCantC && !SICOutboardEnginesCantInhibit)
 	{
 		if (SICEngineCantA) return true;
 		else if (SICEngineCantB) return true;
 	}
 	else if (SICEngineCantA && SICEngineCantB && !SICOutboardEnginesCantInhibit) return true;
-	else if (iu->ESEGetSICOutboardEnginesCantSimulate()) return true;
+	else if (iu->GetIUToIUESECommandConnector()->GetSICOutboardEnginesCantSimulate()) return true;
 
 	return false;
 }

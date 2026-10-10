@@ -79,25 +79,7 @@ public:
 	/// \todo Not implemented yet, see Saturn1b
 	virtual void SetVentingJ2Thruster() {};
 
-	///
-	/// \brief LVDC "Switch Selector" staging support utility function
-	/// 
-	void SISwitchSelector(int channel);
-	void SIISwitchSelector(int channel);
-
-	void GetSIThrustOK(bool *ok);
-	void SIEDSCutoff(bool cut);
-	bool GetSIPropellantDepletionEngineCutoff();
-	bool GetSIInboardEngineOut();
-	bool GetSIOutboardEngineOut();
-	void SetSIThrusterDir(int n, double yaw, double pitch);
 	double GetSIThrustLevel();
-
-	void GetSIIThrustOK(bool *ok);
-	void SIIEDSCutoff(bool cut);
-	bool GetSIIPropellantDepletionEngineCutoff();
-	void SetSIIThrusterDir(int n, double yaw, double pitch);
-	double GetSIIFuelTankPressurePSI();
 
 	SICSystems *GetSIC() { return sic; }
 
@@ -205,6 +187,7 @@ protected:
 
 	SICSystems *sic;
 	SIISystems *sii;
+	SIIInterstageSystems *sii_is;
 
 	Pyro SICSIISepPyros;
 	Pyro SIIInterstagePyros;

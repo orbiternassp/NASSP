@@ -168,31 +168,6 @@ public:
 	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
 };
 
-//Messages to S-IB or S-II
-enum SIVBSIMessageType
-{
-	SIVB_SI_SWITCH_SELECTOR,
-	SIVB_SI_THRUSTER_DIR,
-	SIVB_SI_SIB_LOW_LEVEL_SENSORS_DRY,
-	SIVB_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
-	SIVB_SI_GETSITHRUSTOK
-};
-
-//S-IVB to S-IB or S-II Connector
-class SIVBToSIConnector : public SIVbConnector
-{
-public:
-	SIVBToSIConnector();
-	~SIVBToSIConnector();
-
-	void SISwitchSelector(int channel);
-	void SetSIThrusterDir(int n, double yaw, double pitch);
-
-	bool GetLowLevelSensorsDry();
-	bool GetSIPropellantDepletionEngineCutoff();
-	void GetSIThrustOK(bool *ok, int n);
-};
-
 ///
 /// This code simulates the seperated SIVb stage. Basically it simulates thrust decay if there is any fuel 
 /// left, fires any retro rockets to push it away from the Saturn and then sits around waiting to be deleted.
@@ -277,21 +252,8 @@ public:
 	virtual double GetMissionTime();
 	virtual void UpdateLaunchTime(double dt);
 
-	bool GetSIVBThrustOK();
-
-	void SetSIVBThrusterDir(double yaw, double pitch);
-	void SetAPSAttitudeEngine(int n, bool on);
-	void SIVBEDSCutoff(bool cut);
-	void SIVBSwitchSelector(int channel);
-
-	//Signals to lower stages
-	void SISwitchSelector(int channel);
-	void SetSIThrusterDir(int n, double yaw, double pitch);
-	bool GetSIBLowLevelSensorsDry();
-	bool GetSIPropellantDepletionEngineCutoff();
-
 	IU *GetIU() { return iu; };
-
+	SIVBSystems *GetSIVBSystems() { return sivbsys; }
 	InertialData *GetInertialData() { return &inertialData; };
 
 	///
@@ -351,8 +313,6 @@ public:
 	void CreateStrobes();
 	void ActivateStrobes();
 	void MoveStrobes();
-
-	SIVBToSIConnector *GetSIVBSIConnector() { return &sivbSIConnector; }
 
 protected:
 	///
@@ -484,7 +444,6 @@ protected:
 	///
 
 	PayloadToSLACommandConnector payloadSeparationConnector;
-	SIVBToSIConnector sivbSIConnector;
 
 	///
 	/// \brief Handle of docked vessel.

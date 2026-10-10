@@ -162,6 +162,7 @@
     <ClCompile Include="..\..\src_launch\SIB_ESE.cpp" />
     <ClCompile Include="..\..\src_launch\SI_ESE.cpp" />
     <ClCompile Include="..\..\src_launch\TailUmbilical.cpp" />
+    <ClCompile Include="..\..\src_sys\connector.cpp" />
     <ClCompile Include="..\..\src_sys\soundlib.cpp">
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
@@ -185,6 +186,7 @@
     <ClInclude Include="..\..\src_launch\SIB_ESE.h" />
     <ClInclude Include="..\..\src_launch\SI_ESE.h" />
     <ClInclude Include="..\..\src_launch\TailUmbilical.h" />
+    <ClInclude Include="..\..\src_sys\connector.h" />
     <ClInclude Include="..\..\src_sys\yaAGC\agc_engine.h" />
     <ClInclude Include="..\..\src_sys\apolloguidance.h" />
     <ClInclude Include="..\..\src_sys\cautionwarning.h" />

@@ -35,6 +35,7 @@
 #include "saturn.h"
 #include "papi.h"
 #include "IUUmbilical.h"
+#include "IUUmbilicalInterface.h"
 
 #include "iu.h"
 
@@ -53,13 +54,16 @@ ControlSignalProcessor(this)
 	SCControlPoweredFlight = false;
 
 	commandConnector.SetIU(this);
-
-	IuUmb = NULL;
+	sivbCommandConnector.SetIU(this);
+	iuToIUESECommandConnector.SetIU(this);
 }
 
 IU::~IU()
 {
-	DisconnectUmbilical();
+	commandConnector.Disconnect();
+	lvCommandConnector.Disconnect();
+	sivbCommandConnector.Disconnect();
+	iuToIUESECommandConnector.Disconnect();
 }
 
 void IU::SetMissionInfo(bool crewed, bool sccontpowered)
@@ -74,7 +78,7 @@ void IU::Timestep(double simt, double simdt, double mjd)
 	AuxiliaryPowerDistributor2.Timestep(simdt);
 
 	//Set the launch stage here
-	if (!IsUmbilicalConnected() && lvCommandConnector.GetStage() == PRELAUNCH_STAGE)
+	if (!iuToIUESECommandConnector.IsUmbilicalConnected() && lvCommandConnector.GetStage() == PRELAUNCH_STAGE)
 	{
 		lvCommandConnector.SetStage(LAUNCH_STAGE_ONE);
 	}
@@ -156,30 +160,33 @@ void IU::LoadState(FILEHANDLE scn)
 }
 
 void IU::ConnectToCSM(Connector *csmConnector)
-
 {
 	commandConnector.ConnectTo(csmConnector);
 }
 
 void IU::ConnectToLV(Connector *CommandConnector)
-
 {
 	lvCommandConnector.ConnectTo(CommandConnector);
 }
 
+void IU::ConnectToSIVB(Connector *CommandConnector)
+{
+	sivbCommandConnector.ConnectTo(CommandConnector);
+}
+
 bool IU::GetSIPropellantDepletionEngineCutoff()
 {
-	return lvCommandConnector.GetSIPropellantDepletionEngineCutoff();
+	return sivbCommandConnector.GetSIPropellantDepletionEngineCutoff();
 }
 
 bool IU::GetSIInboardEngineOut()
 {
-	return lvCommandConnector.GetSIInboardEngineOut();
+	return sivbCommandConnector.GetSIInboardEngineOut();
 }
 
 bool IU::GetSIOutboardEngineOut()
 {
-	return lvCommandConnector.GetSIOutboardEngineOut();
+	return sivbCommandConnector.GetSIOutboardEngineOut();
 }
 
 bool IU::SIBLowLevelSensorsDry()
@@ -248,145 +255,27 @@ bool IU::DCSUplink(int type, void *upl)
 	return dcs.Uplink(type, upl);
 }
 
-bool IU::IsUmbilicalConnected()
-{
-	if (IuUmb) return true;
-
-	return false;
-}
-
-void IU::DisconnectUmbilical()
-{
-	if (IuUmb)
-	{
-		IuUmb->iu = NULL;
-		IuUmb = NULL;
-	}
-}
-
 void IU::DisconnectIU()
 {
 	lvCommandConnector.Disconnect();
 	commandConnector.Disconnect();
+	sivbCommandConnector.Disconnect();
 }
 
-bool IU::ESEGetCommandVehicleLiftoffIndicationInhibit()
+IUConnector::IUConnector()
 {
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetCommandVehicleLiftoffIndicationInhibit();
+	ourIU = 0;
 }
 
-bool IU::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
+IUConnector::~IUConnector()
 {
-	if (!IsUmbilicalConnected()) return false;
 
-	return IuUmb->ESEGetExcessiveRollRateAutoAbortInhibit(n);
-}
-
-bool IU::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetExcessivePitchYawRateAutoAbortInhibit(n);
-}
-
-bool IU::ESEGetTwoEngineOutAutoAbortInhibit(int n)
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetTwoEngineOutAutoAbortInhibit(n);
-}
-
-bool IU::ESEGetGSEOverrateSimulate(int n)
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetGSEOverrateSimulate(n);
-}
-
-bool IU::ESEGetEDSPowerInhibit()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetEDSPowerInhibit();
-}
-
-bool IU::ESEPadAbortRequest()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEPadAbortRequest();
-}
-
-bool IU::ESEGetEngineThrustIndicationEnableInhibitA()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetThrustOKIndicateEnableInhibitA();
-}
-
-bool IU::ESEGetEngineThrustIndicationEnableInhibitB()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetThrustOKIndicateEnableInhibitB();
-}
-
-bool IU::ESEEDSLiftoffInhibitA()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEEDSLiftoffInhibitA();
-}
-
-bool IU::ESEEDSLiftoffInhibitB()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEEDSLiftoffInhibitB();
-}
-
-bool IU::ESEGetSIBurnModeSubstitute()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetSIBurnModeSubstitute();
-}
-
-bool IU::ESEGetGuidanceReferenceRelease()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetGuidanceReferenceRelease();
-}
-
-bool IU::ESEESEGetQBallSimulateCmd()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetQBallSimulateCmd();
-}
-
-bool IU::ESEGetEDSAutoAbortSimulate(int n)
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetEDSAutoAbortSimulate(n);
-}
-
-bool IU::ESEGetEDSLVCutoffSimulate(int n)
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetEDSLVCutoffSimulate(n);
 }
 
 IUToCSMCommandConnector::IUToCSMCommandConnector()
 
 {
 	type = CSM_IU_COMMAND;
-	ourIU = 0;
 }
 
 IUToCSMCommandConnector::~IUToCSMCommandConnector()
@@ -845,7 +734,7 @@ bool IUToCSMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &
 	case CSMIU_GET_QBALL_SIMULATE_CMD:
 		if (ourIU)
 		{
-			m.val1.bValue = ourIU->ESEESEGetQBallSimulateCmd();
+			m.val1.bValue = ourIU->GetIUToIUESECommandConnector()->GetQBallSimulateCmd();
 			return true;
 		}
 		break;
@@ -854,68 +743,67 @@ bool IUToCSMCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &
 	return false;
 }
 
-IUToLVCommandConnector::IUToLVCommandConnector()
-
+IUToSIVBCommandConnector::IUToSIVBCommandConnector()
 {
-	type = LV_IU_COMMAND;
+	type = SIVB_IU_COMMAND;
 }
 
-IUToLVCommandConnector::~IUToLVCommandConnector()
-
+IUToSIVBCommandConnector::~IUToSIVBCommandConnector()
 {
+
 }
 
-void IUToLVCommandConnector::SetAPSAttitudeEngine(int n, bool on)
+void IUToSIVBCommandConnector::SetAPSAttitudeEngine(int n, bool on)
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_APS_ATTITUDE_ENGINE;
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_SET_APS_ATTITUDE_ENGINE;
 	cm.val1.iValue = n;
 	cm.val2.bValue = on;
 
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SIEDSCutoff(bool cut)
+void IUToSIVBCommandConnector::SIEDSCutoff(bool cut)
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SI_EDS_CUTOFF;
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_SI_EDS_CUTOFF;
 	cm.val1.bValue = cut;
 
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SIIEDSCutoff(bool cut)
+void IUToSIVBCommandConnector::SIIEDSCutoff(bool cut)
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SII_EDS_CUTOFF;
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_SII_EDS_CUTOFF;
 	cm.val1.bValue = cut;
 
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SIVBEDSCutoff(bool cut)
+void IUToSIVBCommandConnector::SIVBEDSCutoff(bool cut)
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SIVB_EDS_CUTOFF;
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_SIVB_EDS_CUTOFF;
 	cm.val1.bValue = cut;
 
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetSIThrusterDir(int n, double yaw, double pitch)
+void IUToSIVBCommandConnector::SetSIThrusterDir(int n, double yaw, double pitch)
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_SI_THRUSTER_DIR;
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_SET_SI_THRUSTER_DIR;
 	cm.val1.iValue = n;
 	cm.val2.dValue = yaw;
 	cm.val3.dValue = pitch;
@@ -923,12 +811,12 @@ void IUToLVCommandConnector::SetSIThrusterDir(int n, double yaw, double pitch)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetSIIThrusterDir(int n, double yaw, double pitch)
+void IUToSIVBCommandConnector::SetSIIThrusterDir(int n, double yaw, double pitch)
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_SII_THRUSTER_DIR;
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_SET_SII_THRUSTER_DIR;
 	cm.val1.iValue = n;
 	cm.val2.dValue = yaw;
 	cm.val3.dValue = pitch;
@@ -936,49 +824,269 @@ void IUToLVCommandConnector::SetSIIThrusterDir(int n, double yaw, double pitch)
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SetSIVBThrusterDir(double yaw, double pitch)
+void IUToSIVBCommandConnector::SetSIVBThrusterDir(double yaw, double pitch)
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SET_SIVB_THRUSTER_DIR;
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_SET_SIVB_THRUSTER_DIR;
 	cm.val1.dValue = yaw;
 	cm.val2.dValue = pitch;
 
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SISwitchSelector(int channel)
+void IUToSIVBCommandConnector::SISwitchSelector(int channel)
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SI_SWITCH_SELECTOR;
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_SI_SWITCH_SELECTOR;
 	cm.val1.iValue = channel;
 
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SIISwitchSelector(int channel)
+void IUToSIVBCommandConnector::SIISwitchSelector(int channel)
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SII_SWITCH_SELECTOR;
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_SII_SWITCH_SELECTOR;
 	cm.val1.iValue = channel;
 
 	SendMessage(cm);
 }
 
-void IUToLVCommandConnector::SIVBSwitchSelector(int channel)
+void IUToSIVBCommandConnector::SIVBSwitchSelector(int channel)
 {
 	ConnectorMessage cm;
 
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_SIVB_SWITCH_SELECTOR;
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_SIVB_SWITCH_SELECTOR;
 	cm.val1.iValue = channel;
 
 	SendMessage(cm);
+}
+
+void IUToSIVBCommandConnector::GetSIThrustOK(bool *ok, int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SI_THRUST_OK;
+	cm.val1.pValue = ok;
+	cm.val2.iValue = n;
+
+	(SendMessage(cm));
+}
+
+void IUToSIVBCommandConnector::GetSIIThrustOK(bool *ok)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SII_THRUST_OK;
+	cm.val1.pValue = ok;
+
+	if (SendMessage(cm))
+	{
+		return;
+	}
+
+	for (int i = 0; i < 5; i++)
+	{
+		ok[i] = false;
+	}
+}
+
+bool IUToSIVBCommandConnector::GetSIVBThrustOK()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SIVB_THRUST_OK;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToSIVBCommandConnector::GetSIPropellantDepletionEngineCutoff()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToSIVBCommandConnector::GetSIIPropellantDepletionEngineCutoff()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToSIVBCommandConnector::GetSIBLowLevelSensorsDry()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SIB_LOW_LEVEL_SENSORS_DRY;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToSIVBCommandConnector::GetSIInboardEngineOut()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SI_INBOARD_ENGINE_OUT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToSIVBCommandConnector::GetSIOutboardEngineOut()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SI_OUTBOARD_ENGINE_OUT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+double IUToSIVBCommandConnector::GetSIIFuelTankPressurePSI()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SII_FUEL_TANK_PRESSURE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToSIVBCommandConnector::GetSIVBLOXTankPressurePSI()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SIVB_LOX_TANK_PRESSURE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+double IUToSIVBCommandConnector::GetSIVBFuelTankPressurePSI()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SIVB_FUEL_TANK_PRESSURE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+bool IUToSIVBCommandConnector::SIXSIVBNotSeparated()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SIX_SIVB_NOT_SEPARATED;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToSIVBCommandConnector::SICSIINotSeparated()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SIC_SII_NOT_SEPARATED;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool IUToSIVBCommandConnector::SIIInterstageNotSeparated()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_IU_COMMAND;
+	cm.messageType = IUSIVB_GET_SII_INTERSTAGE_NOT_SEPARATED;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+IUToLVCommandConnector::IUToLVCommandConnector()
+{
+	type = LV_IU_COMMAND;
+}
+
+IUToLVCommandConnector::~IUToLVCommandConnector()
+{
 }
 
 void IUToLVCommandConnector::SeparateStage(int stage)
@@ -1023,22 +1131,6 @@ void IUToLVCommandConnector::DeploySLAPanel()
 	SendMessage(cm);
 }
 
-double IUToLVCommandConnector::GetMass()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_MASS;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
 int IUToLVCommandConnector::GetStage()
 
 {
@@ -1053,34 +1145,6 @@ int IUToLVCommandConnector::GetStage()
 	}
 
 	return NULL_STAGE;
-}
-
-void IUToLVCommandConnector::GetGlobalOrientation(VECTOR3 &arot)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_GLOBAL_ORIENTATION;
-	cm.val1.pValue = &arot;
-
-	SendMessage(cm);
-}
-
-OBJHANDLE IUToLVCommandConnector::GetGravityRef()
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_GRAVITY_REF;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.hValue;
-	}
-
-	return 0;
 }
 
 void IUToLVCommandConnector::GetRelativePos(OBJHANDLE ref, VECTOR3 &v)
@@ -1107,35 +1171,6 @@ void IUToLVCommandConnector::GetRelativeVel(OBJHANDLE ref, VECTOR3 &v)
 	cm.val2.pValue = &v;
 
 	SendMessage(cm);
-}
-
-void IUToLVCommandConnector::GetGlobalVel(VECTOR3 &v)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_GLOBAL_VEL;
-	cm.val1.pValue = &v;
-
-	SendMessage(cm);
-}
-
-bool IUToLVCommandConnector::GetWeightVector(VECTOR3 &w)
-
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_WEIGHTVECTOR;
-	cm.val1.pValue = &w;
-
-	if (SendMessage(cm))
-	{		
-		return cm.val2.bValue; 
-	}
-
-	return false;
 }
 
 void IUToLVCommandConnector::GetInertialAccel(VECTOR3 &a)
@@ -1174,21 +1209,6 @@ void IUToLVCommandConnector::GetAngularVel(VECTOR3 &avel)
 	SendMessage(cm);
 }
 
-double IUToLVCommandConnector::GetMissionTime()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_MISSIONTIME;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
 int IUToLVCommandConnector::GetVehicleNo()
 {
 	ConnectorMessage cm;
@@ -1204,172 +1224,6 @@ int IUToLVCommandConnector::GetVehicleNo()
 	return 0;
 }
 
-void IUToLVCommandConnector::GetSIThrustOK(bool *ok, int n)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SI_THRUST_OK;
-	cm.val1.pValue = ok;
-	cm.val2.iValue = n;
-
-	(SendMessage(cm));
-}
-
-bool IUToLVCommandConnector::GetSIPropellantDepletionEngineCutoff()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-bool IUToLVCommandConnector::GetSIInboardEngineOut()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SI_INBOARD_ENGINE_OUT;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-bool IUToLVCommandConnector::GetSIOutboardEngineOut()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SI_OUTBOARD_ENGINE_OUT;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-bool IUToLVCommandConnector::GetSIBLowLevelSensorsDry()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-void IUToLVCommandConnector::GetSIIThrustOK(bool *ok)
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SII_THRUST_OK;
-	cm.val1.pValue = ok;
-
-	if (SendMessage(cm))
-	{
-		return;
-	}
-
-	for (int i = 0;i < 5;i++)
-	{
-		ok[i] = false;
-	}
-}
-
-bool IUToLVCommandConnector::GetSIIPropellantDepletionEngineCutoff()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-bool IUToLVCommandConnector::GetSIVBThrustOK()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SIVB_THRUST_OK;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-double IUToLVCommandConnector::GetSIIFuelTankPressurePSI()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SII_FUEL_TANK_PRESSURE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
-double IUToLVCommandConnector::GetSIVBLOXTankPressurePSI()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SIVB_LOX_TANK_PRESSURE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
-double IUToLVCommandConnector::GetSIVBFuelTankPressurePSI()
-{
-	ConnectorMessage cm;
-
-	cm.destination = LV_IU_COMMAND;
-	cm.messageType = IULV_GET_SIVB_FUEL_TANK_PRESSURE;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.dValue;
-	}
-
-	return 0.0;
-}
-
 bool IUToLVCommandConnector::CSMSeparationSensed()
 {
 	ConnectorMessage cm;
@@ -1382,6 +1236,479 @@ bool IUToLVCommandConnector::CSMSeparationSensed()
 		return cm.val1.bValue;
 	}
 
+	return false;
+}
+
+IUToIUESECommandConnector::IUToIUESECommandConnector()
+{
+	type = IUESE_IU_COMMAND;
+}
+
+IUToIUESECommandConnector::~IUToIUESECommandConnector()
+{
+
+}
+
+bool IUToIUESECommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+{
+	//
+// Sanity check.
+//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	IUESEMessageType messageType;
+
+	messageType = (IUESEMessageType)m.messageType;
+
+	switch (messageType)
+	{
+	case IUESE_IU_SET_EDS_LIFTOFF_ENABLE_A:
+		if (ourIU)
+		{
+			ourIU->GetEDS()->SetEDSLiftoffEnableA();
+			return true;
+		}
+		break;
+	case IUESE_IU_SET_EDS_LIFTOFF_ENABLE_B:
+		if (ourIU)
+		{
+			ourIU->GetEDS()->SetEDSLiftoffEnableB();
+			return true;
+		}
+		break;
+	case IUESE_IU_EDS_LIFTOFF_ENABLE_RESET:
+		if (ourIU)
+		{
+			ourIU->GetEDS()->LiftoffEnableReset();
+			return true;
+		}
+		break;
+	case IUESE_IU_SET_FCC_POWER:
+		if (ourIU)
+		{
+			ourIU->GetControlDistributor()->SetFCCPower(m.val1.bValue);
+			return true;
+		}
+		break;
+	case IUESE_IU_SET_Q_BALL_POWER:
+		if (ourIU)
+		{
+			ourIU->GetControlDistributor()->SetQBallPower(m.val1.bValue);
+			return true;
+		}
+		break;
+	case IUESE_IU_SET_CONTROL_SIGNAL_PROCESSOR_POWER:
+		if (ourIU)
+		{
+			ourIU->GetControlDistributor()->SetControlSignalProcessorPowerOn(m.val1.bValue);
+			return true;
+		}
+		break;
+	case IUESE_IU_EDS_GROUP_NO_1_RESET:
+		if (ourIU)
+		{
+			ourIU->GetControlDistributor()->ResetBus1();
+			return true;
+		}
+		break;
+	case IUESE_IU_EDS_GROUP_NO_2_RESET:
+		if (ourIU)
+		{
+			ourIU->GetControlDistributor()->ResetBus2();
+			return true;
+		}
+		break;
+	case IUESE_IU_ALL_SI_ENGINES_RUNNING:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->GetEDS()->GetAllSIEnginesRunning();
+			return true;
+		}
+		break;
+	case IUESE_IU_IS_EDS_UNSAFE_A:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->GetEDS()->IsEDSUnsafeA();
+			return true;
+		}
+		break;
+	case IUESE_IU_IS_EDS_UNSAFE_B:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->GetEDS()->IsEDSUnsafeB();
+			return true;
+		}
+		break;
+	case IUESE_IU_GET_EDS_SC_CUTOFF:
+		if (ourIU)
+		{
+			if (m.val1.iValue == 1)
+			{
+				m.val1.bValue = ourIU->GetEDS()->GetLVEnginesCutoffFromSC1();
+			}
+			else if (m.val1.iValue == 2)
+			{
+				m.val1.bValue = ourIU->GetEDS()->GetLVEnginesCutoffFromSC2();
+			}
+			else
+			{
+				m.val1.bValue = ourIU->GetEDS()->GetLVEnginesCutoffFromSC3();
+			}
+			return true;
+		}
+		break;
+	case IUESE_IU_GET_EDS_AUTO_ABORT_BUS:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->GetEDS()->GetAutoAbort();
+			return true;
+		}
+		break;
+	case IUESE_IU_GET_EDS_EXCESSIVE_ROLL_RATE_INDICATION:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->GetEDS()->GetExcessiveRollRateIndication();
+			return true;
+		}
+		break;
+	case IUESE_IU_GET_EDS_EXCESSIVE_PITCH_YAW_RATE_INDICATION:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->GetEDS()->GetExcessivePitchYawRateIndication();
+			return true;
+		}
+		break;
+	case IUESE_IU_GET_LVDC_OUTPUT_REGISTER_DISCRETE:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->GetLVDA()->GetOutputRegisterBit(m.val1.iValue);
+			return true;
+		}
+		break;
+	case IUESE_IU_FCC_POWER_IS_ON:
+		if (ourIU)
+		{
+			m.val1.bValue = ourIU->GetControlDistributor()->GetFCCPowerOn();
+			return true;
+		}
+		break;
+	case IUESE_IU_SWITCH_SELECTOR:
+		if (ourIU)
+		{
+			ourIU->GetControlDistributor()->SwitchSelector(m.val1.iValue, m.val2.iValue);
+			return true;
+		}
+		break;
+	case IUESE_IU_LVDC_PREPARE_TO_LAUNCH:
+		if (ourIU)
+		{
+			ourIU->GetLVDA()->PrepareToLaunch();
+			return true;
+		}
+		break;
+	case IUESE_IU_EDS_SC_CUTOFF_ENABLE_A:
+		if (ourIU)
+		{
+			ourIU->GetEDS()->GetSCCutoffEnabledA();
+			return true;
+		}
+		break;
+	case IUESE_IU_EDS_SC_CUTOFF_ENABLE_B:
+		if (ourIU)
+		{
+			ourIU->GetEDS()->GetSCCutoffEnabledB();
+			return true;
+		}
+		break;
+	case IUESE_IU_EDS_GET_LIFTOFF_ENABLE_A:
+		if (ourIU)
+		{
+			ourIU->GetEDS()->GetLiftoffEnableA();
+			return true;
+		}
+		break;
+	case IUESE_IU_EDS_GET_LIFTOFF_ENABLE_B:
+		if (ourIU)
+		{
+			ourIU->GetEDS()->GetLiftoffEnableB();
+			return true;
+		}
+		break;
+	case IUESE_IU_EDS_GET_ABORT_TO_SC:
+		if (ourIU)
+		{
+			ourIU->GetEDS()->GetAutoAbortToSC((bool*)m.val1.pValue);
+			return true;
+		}
+		break;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::IsUmbilicalConnected()
+{
+	return (connectedTo != NULL);
+}
+
+bool IUToIUESECommandConnector::GetCommandVehicleLiftoffIndicationInhibit()
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_COMMAND_VEHICLE_LIFTOFF_INDICATION_INHIBIT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetExcessiveRollRateAutoAbortInhibit(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_EXCESSIVE_ROLL_RATE_AUTO_ABORT_INHIBIT;
+	cm.val1.iValue = n;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetExcessivePitchYawRateAutoAbortInhibit(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_EXCESSIVE_PITCH_YAW_RATE_AUTO_ABORT_INHIBIT;
+	cm.val1.iValue = n;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetTwoEngineOutAutoAbortInhibit(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_TWO_ENGINE_OUT_AUTO_ABORT_INHIBIT;
+	cm.val1.iValue = n;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetGSEOverrateSimulate(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_GSE_OVERRATE_SIMULATE;
+	cm.val1.iValue = n;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetEDSPowerInhibit()
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_EDS_POWER_INHIBIT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::PadAbortRequest()
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_PAD_ABORT_REQUEST;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetEngineThrustIndicationEnableInhibitA()
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_ENGINE_THRUST_INDICATION_ENABLE_INHIBIT_A;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetEngineThrustIndicationEnableInhibitB()
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_ENGINE_THRUST_INDICATION_ENABLE_INHIBIT_B;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::EDSLiftoffInhibitA()
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_EDS_LIFTOFF_INHIBIT_A;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::EDSLiftoffInhibitB()
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_EDS_LIFTOFF_INHIBIT_B;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetSIBurnModeSubstitute()
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_SI_BURN_MODE_SUBSTITUTE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetGuidanceReferenceRelease()
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_GUIDANCE_REFERENCE_RELEASE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetQBallSimulateCmd()
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_Q_BALL_SIMULATE_CMD;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetEDSAutoAbortSimulate(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_EDS_AUTO_ABORT_SIMULATE;
+	cm.val1.iValue = n;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetEDSLVCutoffSimulate(int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_EDS_LV_CUTOFF_SIMULATE;
+	cm.val1.iValue = n;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetSICOutboardEnginesCantInhibit()
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_SIC_OUTBOARD_ENGINES_CANT_INHIBIT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
+}
+
+bool IUToIUESECommandConnector::GetSICOutboardEnginesCantSimulate()
+{
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IU_IUESE_GET_SIC_OUTBOARD_ENGINES_CANT_SIMULATE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
 	return false;
 }
 
@@ -1418,7 +1745,7 @@ void IU1B::Timestep(double simt, double simdt, double mjd)
 
 bool IU1B::SIBLowLevelSensorsDry()
 {
-	return lvCommandConnector.GetSIBLowLevelSensorsDry();
+	return sivbCommandConnector.GetSIBLowLevelSensorsDry();
 }
 
 void IU1B::LoadLVDC(FILEHANDLE scn) {
@@ -1574,7 +1901,7 @@ void IUSV::LoadLVDC(FILEHANDLE scn) {
 
 bool IUSV::GetSIIPropellantDepletionEngineCutoff()
 {
-	return lvCommandConnector.GetSIIPropellantDepletionEngineCutoff();
+	return sivbCommandConnector.GetSIIPropellantDepletionEngineCutoff();
 }
 
 bool IUSV::GetSIIEnginesOut()
@@ -1590,20 +1917,6 @@ bool IUSV::GetSIIInboardEngineOut()
 bool IUSV::GetSIIOutboardEngineOut()
 {
 	return eds.GetSIIOutboardEngineOut();
-}
-
-bool IUSV::ESEGetSICOutboardEnginesCantInhibit()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetSICOutboardEnginesCantInhibit();
-}
-
-bool IUSV::ESEGetSICOutboardEnginesCantSimulate()
-{
-	if (!IsUmbilicalConnected()) return false;
-
-	return IuUmb->ESEGetSICOutboardEnginesCantSimulate();
 }
 
 void IUSV::SwitchSelector(int item)
