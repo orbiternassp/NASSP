@@ -782,7 +782,7 @@ void CMOptics::TimeStep(double simdt) {
 			}
 		}
 
-		if (sat->agc.GetOutputChannelBit(012, DisengageOpticsDAC) == false && (sat->pMission->HasRateAidedOptics()) || sat->OpticsModeSwitch.IsUp())
+		if (sat->agc.GetOutputChannelBit(012, DisengageOpticsDAC) == false && (sat->pMission->HasRateAidedOptics() || sat->OpticsModeSwitch.IsUp()))
 		{
 			//26mV per bit, 30.8 revolutions per second per volt, 1/3080 gear ratio (Shaft), 2/11780 gear ratio (Trunnion)
 			dShaft += 0.026*30.8*PI2*1.0 / 3080.0*simdt*(double)sat->scdu.GetErrorCounter();
