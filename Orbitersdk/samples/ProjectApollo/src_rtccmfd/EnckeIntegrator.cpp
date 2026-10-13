@@ -748,20 +748,19 @@ void EnckeFreeFlightIntegrator::StoreVariables()
 
 void EnckeFreeFlightIntegrator::RestoreVariables()
 {
-	R_CON = SRTB;
-	V_CON = SRDTB;
-	delta = SY;
-	nu = SYP;
-	tau = SDELT;
-	TRECT = STRECT;
+	R0 = SRTB + SY;
+	V0 = SRDTB + SYP;
+	delta = nu = _V(0, 0, 0);
+	TRECT = STRECT + SDELT;
+	tau = 0.0;
 	WT = SWT;
+
 	if (P != P_S)
 	{
 		SetBodyParameters(P_S);
-		INITF = false;
-		adfunc();
 	}
-	Rectification();
+	INITF = false;
+	adfunc();
 }
 
 double EnckeFreeFlightIntegrator::CurrentTime()
