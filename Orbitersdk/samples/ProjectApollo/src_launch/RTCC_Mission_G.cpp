@@ -1511,7 +1511,7 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 		{
 			sprintf(form->remarks, "Undocked, assumes LOI-2");
 		}
-		else if (fcn == 45 || fcn == 46)
+		else if (fcn == 45 || fcn == 46 || fcn == 47)
 		{
 			sprintf(form->remarks, "Ullage: 2 jet, 16 seconds");
 		}
