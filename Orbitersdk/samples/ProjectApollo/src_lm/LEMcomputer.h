@@ -98,6 +98,7 @@ public:
 	void Timestep(double simdt);                                // Timestep
 	void SystemTimestep(double simdt);
 	bool PaintReticleAngle(SURFHANDLE surf, SURFHANDLE digits, int scale);	// Update panel image
+	void UpdateLMVCOptics();
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 
@@ -112,6 +113,25 @@ public:
 	double ReticleMoved;										// 0 is no movement detected, - is clockwise, + is counterclockwise
 	int RetDimmer;
 	int KnobTurning;
+
+protected:
+
+	// struct for storing the original vertices from the mesh
+	// We do this to avoid rounding errors in every calculation.
+	// For this, we use the original vertices from the mesh.
+	struct OpticsMeshGroup {
+		std::vector<VECTOR3> data;
+		std::vector<VECTOR3> datanew;		// This is for storing the transformed vertices, not the original ones.
+		std::vector<NTVERTEX> vertexdata;	// This is for sending the transformad vertices to D3D9 client
+		int vtxcnt;
+		MESHGROUP* mshgrp;
+		GROUPREQUESTSPEC grp{ 0 };
+		int ordernr;
+	};
+
+	// Virtual Cockpit
+	std::vector<OpticsMeshGroup> lmvcOptics;
+	bool initVCOptics;
 };
 
 //
