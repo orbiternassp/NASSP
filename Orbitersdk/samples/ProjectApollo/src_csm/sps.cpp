@@ -48,6 +48,9 @@ SPSPropellantSource::SPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 	primTestStatus = 0;
 	auxTestStatus = 0;
 	primTestTimer = 0;
+
+	// Will be reset in the first cycle if tests are disabled, that way we prevent reapplying the test impulse after loading a scenario
+	pugTestSignalLock = true;
 	heliumValveAOpen = false;
 	heliumValveBOpen = false;
 	propellantPressurePSI = 0;
@@ -172,21 +175,50 @@ void SPSPropellantSource::Timestep(double simt, double simdt) {
 	}
 
 	// Quantity test mode
-	if (our_vessel->SPSTestSwitch.IsCenter() || our_vessel->SPSPugModeSwitch.IsDown() || !IsGaugingPowered()) {
+	// Reset condition for PUG test
+	if(our_vessel->SPSTestSwitch.IsCenter() || our_vessel->SPSPugModeSwitch.IsCenter() || !IsGaugingPowered()) {
+		pugTestSignalLock = false;
+
+		if(our_vessel->SPSPugModeSwitch.IsUp())
 		primTestTimer = 0;
+	} else {
+		// Power passed through from Test switch to Mode Switch
 
-	} else if (primTestTimer) {
-		primTestTimer -= simdt;
-		if (primTestTimer <= 0) {
-			if (our_vessel->SPSTestSwitch.IsUp()) {
-				primTestStatus += 1.0;
-				primTestStatus = min(primTestStatus, 1.0);
+		// Update test initiation
+		if(!pugTestSignalLock) {
+			if(our_vessel->SPSPugModeSwitch.IsUp()) {
+				// PRIM mode: Start 4 second timer
+				primTestTimer = 4.0;
+			} else if(our_vessel->SPSPugModeSwitch.IsDown()) {
+				// AUX mode: Directly pass test signal
+				if (our_vessel->SPSTestSwitch.IsUp()) {
+					auxTestStatus += 1.0;
+					auxTestStatus = min(auxTestStatus, 1.0);
 
-			} else if (our_vessel->SPSTestSwitch.IsDown()) {
-				primTestStatus -= 1.0;
-				primTestStatus = max(primTestStatus, -1.0);
-			}		
-			primTestTimer = 0;
+				} else if (our_vessel->SPSTestSwitch.IsDown()) {
+					auxTestStatus -= 1.0;
+					auxTestStatus = max(auxTestStatus, -1.0);
+				}
+			}
+
+			// Set test signal lock. At this point either PRIM (timer) or AUX test was initiated
+			// Prevent periodic timer restart and AUX test signal increment/decrement until circuit is deactivated again
+			pugTestSignalLock = true;
+		}
+
+		if (primTestTimer) {
+			primTestTimer -= simdt;
+			if (primTestTimer <= 0) {
+				if (our_vessel->SPSTestSwitch.IsUp()) {
+					primTestStatus += 1.0;
+					primTestStatus = min(primTestStatus, 1.0);
+
+				} else if (our_vessel->SPSTestSwitch.IsDown()) {
+					primTestStatus -= 1.0;
+					primTestStatus = max(primTestStatus, -1.0);
+				}		
+				primTestTimer = 0;
+			}
 		}
 	}
 
@@ -288,23 +320,6 @@ void SPSPropellantSource::SystemTimestep(double simdt) {
 
 void SPSPropellantSource::SPSTestSwitchToggled() {
 
-	if (!IsGaugingPowered()) return;
-
-	// Aux mode
-	if (our_vessel->SPSPugModeSwitch.IsDown()) {
-		if (our_vessel->SPSTestSwitch.IsUp()) {
-			auxTestStatus += 1.0;
-			auxTestStatus = min(auxTestStatus, 1.0);
-
-		} else if (our_vessel->SPSTestSwitch.IsDown()) {
-			auxTestStatus -= 1.0;
-			auxTestStatus = max(auxTestStatus, -1.0);
-		}
-
-	// Prim mode
-	} else if (!our_vessel->SPSTestSwitch.IsCenter()) {
-		primTestTimer = 4.0;
-	}
 }
 
 bool SPSPropellantSource::IsOxidFlowValveMin() {
