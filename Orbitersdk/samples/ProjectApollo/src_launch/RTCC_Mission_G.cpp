@@ -188,6 +188,14 @@ bool RTCC::CalculationMTP_G(int fcn, LPVOID &pad, char * upString, char * upDesc
 			GMGMED("M68,CSM,1;");
 		}
 
+		// Sanity check, was TLI added to the MPT?
+		if (PZMPTCSM.mantable.empty())
+		{
+			scrubbed = true;
+			sprintf(upMessage, "MCC Error: TLI simulation failed");
+			break;
+		}
+
 		//Add separation maneuver to MPT
 		GMGMED("M40,P1,0.0;");
 		med_m66.Table = RTCC_MPT_CSM;
