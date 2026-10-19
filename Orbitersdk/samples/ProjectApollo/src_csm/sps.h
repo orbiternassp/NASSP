@@ -63,7 +63,8 @@ protected:
 	double primTestStatus;
 	double primTestTimer;
 	double auxTestStatus;
-	bool pugTestSignalLock;
+	bool pugTestPrimLock;
+	bool pugTestAuxLock;
 	double propellantMassToDisplay;
 	double oxidMassToDisplay;
 	double propellantMaxMassToDisplay;
