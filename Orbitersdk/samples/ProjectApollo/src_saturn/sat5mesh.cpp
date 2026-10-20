@@ -917,24 +917,12 @@ void SaturnV::SetThirdStageMesh (double offset)
 
 	AddCMMeshes(mesh_dir);
 
-	dockringidx = -1;
-	probeidx = -1;
-	probeextidx = -1;
-
 	if (LESAttached)
 	{
 		TowerOffset = 28.2 + offset;
 		mesh_dir=_V(0, 0, TowerOffset);
 		meshidx = AddMesh (hsat5tower, &mesh_dir);
 		SetBPCMesh(meshidx);
-	}
-	else {
-		if (HasProbe) {
-			dockringidx = AddMesh(hdockring, &mesh_dir);
-			probeidx = AddMesh(hprobe, &mesh_dir);
-			probeextidx = AddMesh(hprobeext, &mesh_dir);
-			SetDockingProbeMesh();
-		}
 	}
 
 	VECTOR3 dockpos = {0,0,24.8 + offset};
