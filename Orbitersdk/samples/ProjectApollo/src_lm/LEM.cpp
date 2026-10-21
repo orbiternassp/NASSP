@@ -2239,6 +2239,23 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 	else {
 		HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_FEEDER_FAULT_2, false);			// Apollo 15 to 17
 	}
+
+	// Apply the yellow stripes to the “ENG ARM” switch on the Apollo 15 LM.
+	if (pMission->GetLMNumber() == 9)
+	{
+		SURFHANDLE LMVC = oapiGetTextureHandle(hLMVC, VC_TEX_LMVC_dds);
+		oapiBlt(LMVC, LMVC, 140*TexMul, 1020*TexMul, 0*TexMul, 882*TexMul, 59*TexMul, 105*TexMul);
+	}
+
+	// Hide AOT RR Gyro selector mesh
+	// TODO: While the mesh is hidden, the switch still exists and can theoretically be clicked if one clicks on it.
+	if (pMission->GetLMNumber() < 5)
+	{
+		HideMeshGroup(vcidx, VC_GRP_AOT_RRGyro, true);
+		HideMeshGroup(vcidx, VC_GRP_SwitchHolder_RRGyro, true);
+		HideMeshGroup(vcidx, VC_GRP_Sw_RRGyro, true);
+	}
+
 }
 
 void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)

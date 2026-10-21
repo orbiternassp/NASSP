@@ -424,7 +424,7 @@ const VECTOR3 UtilityLights_CDRLocation = { 0.0162, 1.0318, 0.8908 };
 const VECTOR3 UtilityLights_LMPLocation = { 0.1030, 1.0318, 0.8908 };
 
 // AOT
-const VECTOR3 Sw_RRGyroLocation = { -0.1557, 0.7949, 1.3874 };
+const VECTOR3 Sw_RRGyroLocation = { -0.1575, 0.7930, 1.3903 };
 const VECTOR3 AOT_ShaftSelectorLocation = { 0.064288, 0.88006, 1.47924 };
 
 // Flood lights
@@ -1527,11 +1527,10 @@ void LEM::RegisterActiveAreas()
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_UTILITYLIGHTLMP, UtilityLights_LMPLocation + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + UTIL_LTS_CLICK + ofs, UtilityLights_LMPLocation + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + UTIL_LTS_CLICK + ofs, UtilityLights_LMPLocation + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + UTIL_LTS_CLICK + ofs, UtilityLights_LMPLocation + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + UTIL_LTS_CLICK + ofs);
 
 	// AOT
-
-	UL = _V(0.7391, 0.3895, -0.5493);
-	UR = _V(0.6599, -0.3398, 0.6698);
-	DL = _V(-0.6598, 0.3399, -0.6699);
-	DR = _V(-0.7392, -0.3894, 0.5494);
+	UL = _V(-0.7392, -0.3894, 0.5494);
+	UR = _V(-0.6598, 0.3399, -0.6699);
+	DL = _V(0.6599, -0.3398, 0.6698);
+	DR = _V(0.7391, 0.3895, -0.5493);
 
 	oapiVCRegisterArea(AID_VC_SW_RRGYRO, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
 	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_SW_RRGYRO, Sw_RRGyroLocation + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + RRGYRO_CLICK + ofs);
@@ -3721,7 +3720,7 @@ void LEM::DefineVCAnimations()
 
 	// AOT
 	MainPanelVC.AddSwitch(&RRGyroSelSwitch, AID_VC_SW_RRGYRO);
-	RRGyroSelSwitch.SetReference(Sw_RRGyroLocation, _V(-0.048633374944462, -0.519162328382934, 0.853290848204481));
+	RRGyroSelSwitch.SetReference(Sw_RRGyroLocation, _V(0.048633374944462, 0.519162328382934, -0.853290848204481));
 	RRGyroSelSwitch.DefineMeshGroup(VC_GRP_Sw_RRGyro);
 
 	// EVA Antenna Handle
