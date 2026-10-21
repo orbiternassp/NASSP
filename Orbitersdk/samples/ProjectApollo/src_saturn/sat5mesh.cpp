@@ -894,9 +894,6 @@ void SaturnV::SetThirdStageMesh (double offset)
 	// Pointing Arrow
 	hcmPointingArrowidx = AddMesh(hcmPointingArrow, &mesh_dir);
 
-	// Optics
-	hCMVCOpticsidx = AddMesh(hCMVCOptics, &mesh_dir);
-
 	// VC
 	UpdateVC(mesh_dir);
 	seatsfoldedidx = AddMesh(hcmseatsfolded, &mesh_dir);

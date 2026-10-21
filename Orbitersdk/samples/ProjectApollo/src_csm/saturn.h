@@ -1268,6 +1268,7 @@ public:
 	/// \brief Set optics cover mesh
 	///
 	void SetOpticsCoverMesh();
+	void SetVCOpticsCoverMesh();
 
 	///
 	/// \brief Set CM docking target mesh
@@ -1430,7 +1431,6 @@ protected:
 	void JettisonDockingProbe();
 
 	void JettisonOpticsCover();
-	void HideVCOpticsCoverMesh();
 
 	void JettisonSIMBayPanel();
 
