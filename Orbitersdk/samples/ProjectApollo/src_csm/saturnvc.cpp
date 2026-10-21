@@ -1105,7 +1105,7 @@ void Saturn::clbkVisualCreated(VISHANDLE vis, int refcount) {
 	for (int i=0; i<NUM_ELEMENTS(Mission15MshGroups); i++) HideMeshGroup(vcidx, Mission15MshGroups[i], A15Pan230Msh);
 	for (int i=0; i<NUM_ELEMENTS(Mission17MshGroups); i++) HideMeshGroup(vcidx, Mission17MshGroups[i], A17Pan230Msh);
 
-	if (!optics.OpticsCovered) HideVCOpticsCoverMesh();
+	SetVCOpticsCoverMesh();
 }
 
 void Saturn::clbkVisualDestroyed(VISHANDLE vis, int refcount) {
@@ -6814,8 +6814,15 @@ void Saturn::CMVCOpticsInitP122Switches() {
 	BlitSwitchByIndex(716, 462, speedIdx);
 }
 
-void Saturn::HideVCOpticsCoverMesh()
+void Saturn::SetVCOpticsCoverMesh()
 {
+	if (hCMVCOpticsidx == -1)
+		return;
+
+	// TBD: Should this code also be able to unhide the mesh group?
+	if (optics.OpticsCovered)
+		return;
+
 	HideMeshGroup(hCMVCOpticsidx, CMVC_OPTICS_COVER, true);
 }
 

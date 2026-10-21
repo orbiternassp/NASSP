@@ -965,7 +965,7 @@ void CMOptics::TimeStep(double simdt) {
 			OpticsCovered = false;			
 			sat->SetOpticsCoverMesh();
 			sat->JettisonOpticsCover();
-			sat->HideVCOpticsCoverMesh();
+			sat->SetVCOpticsCoverMesh();
 		}
 	}
 
