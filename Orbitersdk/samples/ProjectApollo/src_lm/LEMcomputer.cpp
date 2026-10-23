@@ -635,7 +635,7 @@ void LMOptics::UpdateLMVCOptics()
 	}
 
 	lem->SetMeshVisibilityMode(lem->hLMVCOpticsidx, MESHVIS_VC);
-	lem->SetMeshVisibilityMode(lem->ascidx, MESHVIS_VC);
+	lem->SetMeshVisibilityMode(lem->ascidx, MESHVIS_VCEXTERNAL);
 }
 
 
