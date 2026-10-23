@@ -321,10 +321,6 @@ void SPSPropellantSource::SystemTimestep(double simdt) {
 		our_vessel->HeValveMnBCircuitBraker.DrawPower(91.2);
 }
 
-void SPSPropellantSource::SPSTestSwitchToggled() {
-
-}
-
 bool SPSPropellantSource::IsOxidFlowValveMin() {
 
 	if (!our_vessel) return false;

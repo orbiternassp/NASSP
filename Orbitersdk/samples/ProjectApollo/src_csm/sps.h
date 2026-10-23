@@ -49,7 +49,6 @@ public:
 	bool IsOxidFlowValveMax();
 	void ResetOxidFlowValve() { primOxidFlowValve = 0; }
 
-	void SPSTestSwitchToggled();
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
 	void CheckPropellantMass();
