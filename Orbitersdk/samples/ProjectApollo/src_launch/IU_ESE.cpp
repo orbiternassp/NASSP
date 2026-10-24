@@ -28,10 +28,10 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LVDA.h"
 #include "IU_ESE.h"
 
-IU_ESE::IU_ESE(IUUmbilical *IuUmb, LCCPadInterface *p)
+IU_ESE::IU_ESE(LCCPadInterface *p)
 {
-	Umbilical = IuUmb;
 	Pad = p;
+	iuESEToIUCommandConnector.SetIU_ESE(this);
 
 	CommandVehicleLiftoffIndicationInhibit = true;
 	ThrustOKIndicateEnableInhibitA = true;
@@ -49,6 +49,12 @@ IU_ESE::IU_ESE(IUUmbilical *IuUmb, LCCPadInterface *p)
 	QBallSimulateCmd = false;
 	SwitchFCCPowerOn = false;
 	SwitchFCCPowerOff = false;
+	OneEngineOutA = false;
+	SCCutoffEnableA = false;
+	SCCutoffEnableB = false;
+	LiftoffReset = false;
+	LiftoffEnableA = false;
+	LiftoffEnableB = false;
 
 	for (int i = 0;i < 9;i++)
 	{
@@ -57,6 +63,7 @@ IU_ESE::IU_ESE(IUUmbilical *IuUmb, LCCPadInterface *p)
 	for (int i = 0;i < 6;i++)
 	{
 		EDSAutoAbortSimulate[i] = false;
+		EDSAbortCommandToSC[i] = false;
 	}
 	for (int i = 0;i < 3;i++)
 	{
@@ -67,6 +74,11 @@ IU_ESE::IU_ESE(IUUmbilical *IuUmb, LCCPadInterface *p)
 	}
 
 	LastMissionTime = 10000000.0;
+}
+
+IU_ESE::~IU_ESE()
+{
+	iuESEToIUCommandConnector.Disconnect();
 }
 
 void IU_ESE::SaveState(FILEHANDLE scn)
@@ -82,7 +94,7 @@ void IU_ESE::LoadState(FILEHANDLE scn)
 void IU_ESE::Timestep(double MissionTime, double simdt)
 {
 	//FCC Power (MDI 0861, MDO 1823)
-	FCCPowerIsOn = Umbilical->FCCPowerIsOn();
+	FCCPowerIsOn = iuESEToIUCommandConnector.FCCPowerIsOn();
 
 	if (Pad->SLCCGetOutputSignal(1823))
 		SwitchFCCPowerOn = true;
@@ -93,28 +105,28 @@ void IU_ESE::Timestep(double MissionTime, double simdt)
 	SwitchFCCPowerOff = false;
 
 	if (SwitchFCCPowerOn && !SwitchFCCPowerOff)
-		Umbilical->SwitchFCCPowerOn();
+		iuESEToIUCommandConnector.SwitchFCCPowerOn();
 	if (SwitchFCCPowerOff || (!SwitchFCCPowerOn && !SwitchFCCPowerOff))
-		Umbilical->SwitchFCCPowerOff();
+		iuESEToIUCommandConnector.SwitchFCCPowerOff();
 
 	//Q-Ball Power
 	if (Pad->SLCCGetOutputSignal(492))
 	{
-		Umbilical->SwitchQBallPowerOn();
+		iuESEToIUCommandConnector.SwitchQBallPowerOn();
 	}
 	if (Pad->SLCCGetOutputSignal(493))
 	{
-		Umbilical->SwitchQBallPowerOff();
+		iuESEToIUCommandConnector.SwitchQBallPowerOff();
 	}
 
 	//EDS Group Reset
 	if (Pad->SLCCGetOutputSignal(734))
 	{
-		Umbilical->EDSGroupNo1Reset();
+		iuESEToIUCommandConnector.EDSGroupNo1Reset();
 	}
 	if (Pad->SLCCGetOutputSignal(825))
 	{
-		Umbilical->EDSGroupNo2Reset();
+		iuESEToIUCommandConnector.EDSGroupNo2Reset();
 	}
 
 	//Q-Ball Simulate Command
@@ -274,6 +286,15 @@ void IU_ESE::Timestep(double MissionTime, double simdt)
 	else
 		ThrustOKIndicateEnableInhibitB = false;
 
+	//Telemetry
+	OneEngineOutA = !iuESEToIUCommandConnector.AllSIEnginesRunning();
+	SCCutoffEnableA = iuESEToIUCommandConnector.GetSCCutoffEnabledA();
+	SCCutoffEnableB = iuESEToIUCommandConnector.GetSCCutoffEnabledB();
+	LiftoffEnableA = iuESEToIUCommandConnector.GetLiftoffEnableA();
+	LiftoffEnableB = iuESEToIUCommandConnector.GetLiftoffEnableB();
+	LiftoffReset = !LiftoffEnableA && !LiftoffEnableB;
+	iuESEToIUCommandConnector.GetEDSAbortCommandToSC(EDSAbortCommandToSC);
+
 	//EDS Test
 	if ((MissionTime >= -6900.0) && (LastMissionTime < -6900.0))
 	{
@@ -324,11 +345,11 @@ void IU_ESE::Timestep(double MissionTime, double simdt)
 		ThrustOKIndicateEnableInhibitB = false;
 		SIBurnModeSubstitute = true;
 
-		EDSNotReady = Umbilical->IsEDSUnsafeA() || Umbilical->IsEDSUnsafeB() || !Umbilical->GetEDSSCCutoff1() || !Umbilical->GetEDSSCCutoff2() || !Umbilical->GetEDSSCCutoff3();
-		EDSNotReady = EDSNotReady || Umbilical->GetEDSAutoAbortBus() || Umbilical->GetEDSExcessiveRollRateIndication() || Umbilical->GetEDSExcessivePitchYawRateIndication();
+		EDSNotReady = iuESEToIUCommandConnector.IsEDSUnsafeA() || iuESEToIUCommandConnector.IsEDSUnsafeB() || !iuESEToIUCommandConnector.GetEDSSCCutoff1() || !iuESEToIUCommandConnector.GetEDSSCCutoff2() || !iuESEToIUCommandConnector.GetEDSSCCutoff3();
+		EDSNotReady = EDSNotReady || iuESEToIUCommandConnector.GetEDSAutoAbortBus() || iuESEToIUCommandConnector.GetEDSExcessiveRollRateIndication() || iuESEToIUCommandConnector.GetEDSExcessivePitchYawRateIndication();
 
-		InstrumentUnitReady = !Umbilical->GetLVDCOutputRegisterDiscrete(FiringCommitInhibit) && !Umbilical->GetLVDCOutputRegisterDiscrete(GuidanceReferenceFailureA)
-			&& !Umbilical->GetLVDCOutputRegisterDiscrete(GuidanceReferenceFailureB) && !EDSNotReady;
+		InstrumentUnitReady = !iuESEToIUCommandConnector.GetLVDCOutputRegisterDiscrete(FiringCommitInhibit) && !iuESEToIUCommandConnector.GetLVDCOutputRegisterDiscrete(GuidanceReferenceFailureA)
+			&& !iuESEToIUCommandConnector.GetLVDCOutputRegisterDiscrete(GuidanceReferenceFailureB) && !EDSNotReady;
 	}
 
 	LastMissionTime = MissionTime;
@@ -349,7 +370,7 @@ void IU_ESE::SetEDSMode(int mode)
 		ThrustOKIndicateEnableInhibitA = true;
 		ThrustOKIndicateEnableInhibitB = true;
 		PadAbortRequest = false;
-		Umbilical->EDSLiftoffEnableReset();
+		iuESEToIUCommandConnector.EDSLiftoffEnableReset();
 	}
 	//Monitor
 	else if (mode == LCC_EDS_MODE_MONITOR)
@@ -361,7 +382,7 @@ void IU_ESE::SetEDSMode(int mode)
 		ExcessivePitchYawRateAutoAbortInhibit[1] = true;
 		ExcessivePitchYawRateAutoAbortInhibit[2] = true;
 		EDSPowerInhibit = false;
-		Umbilical->EDSLiftoffEnableReset();
+		iuESEToIUCommandConnector.EDSLiftoffEnableReset();
 	}
 	//Test
 	else if (mode == LCC_EDS_MODE_TEST)
@@ -373,7 +394,7 @@ void IU_ESE::SetEDSMode(int mode)
 		ExcessivePitchYawRateAutoAbortInhibit[1] = true;
 		ExcessivePitchYawRateAutoAbortInhibit[2] = true;
 		EDSPowerInhibit = false;
-		Umbilical->EDSLiftoffEnableReset();
+		iuESEToIUCommandConnector.EDSLiftoffEnableReset();
 	}
 	//Launch
 	else if (mode == LCC_EDS_MODE_LAUNCH)
@@ -442,7 +463,7 @@ bool IU_ESE::GetTwoEngineOutAutoAbortInhibit(int n)
 	return false;
 }
 
-IUSV_ESE::IUSV_ESE(IUUmbilical *IuUmb, LCCPadInterface *p) : IU_ESE(IuUmb, p)
+IUSV_ESE::IUSV_ESE(LCCPadInterface *p) : IU_ESE(p)
 {
 	SICOutboardEnginesCantInhibit = false;
 	SICOutboardEnginesCantSimulate = false;

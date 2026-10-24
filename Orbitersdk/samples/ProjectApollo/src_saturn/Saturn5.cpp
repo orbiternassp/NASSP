@@ -100,6 +100,7 @@ SaturnV::SaturnV (OBJHANDLE hObj, int fmodel) : Saturn (hObj, fmodel),
 	hMaster = hObj;
 	sic = NULL;
 	sii = NULL;
+	sii_is = NULL;
 	initSaturnV();
 }
 
@@ -211,6 +212,11 @@ SaturnV::~SaturnV()
 	{
 		delete sii;
 		sii = 0;
+	}
+	if (sii_is)
+	{
+		delete sii_is;
+		sii_is = 0;
 	}
 }
 
@@ -626,6 +632,10 @@ void SaturnV::CreateStageSpecificSystems()
 	{
 		sic = new SICSystems(this, th_1st, ph_1st, SICSIISepPyros, LaunchS, SShutS, contrailLevel);
 	}
+	if (stage <= LAUNCH_STAGE_TWO)
+	{
+		sii_is = new SIIInterstageSystems();
+	}
 	if (stage <= LAUNCH_STAGE_TWO_ISTG_JET)
 	{
 		sii = new SIISystems(this, th_2nd, ph_2nd, thg_ull, SIIInterstagePyros, SIISIVBSepPyros, SPUShiftS, SepS);
@@ -649,6 +659,22 @@ void SaturnV::CheckSaturnSystemsState()
 			sic = 0;
 		}
 	}
+	else
+	{
+		sic->GetSICToSIIConnector()->ConnectTo(sii_is->GetSIIInterstageToSICConnector());
+	}
+	if (stage > LAUNCH_STAGE_TWO)
+	{
+		if (sii_is)
+		{
+			delete sii_is;
+			sii_is = 0;
+		}
+	}
+	else
+	{
+		sii_is->GetSIIInterstageToSIIConnector()->ConnectTo(sii->GetSIIToSIIInterstageConnector());
+	}
 	if (stage > LAUNCH_STAGE_TWO_ISTG_JET)
 	{
 		if (sii)
@@ -656,6 +682,10 @@ void SaturnV::CheckSaturnSystemsState()
 			delete sii;
 			sii = 0;
 		}
+	}
+	else
+	{
+		sii->GetSIIToSIVBConnector()->ConnectTo(sivb->GetSIVBSIXConnector());
 	}
 }
 
@@ -902,108 +932,6 @@ void SaturnV::LaunchVehicleUnbuild() {
 		buildstatus--;
 		ChangeSatVBuildState(buildstatus);
 	}
-}
-
-void SaturnV::SISwitchSelector(int channel)
-{
-	if (stage > LAUNCH_STAGE_ONE) return;
-
-	sic->SwitchSelector(channel);
-}
-
-void SaturnV::SIISwitchSelector(int channel)
-{
-	if (stage > LAUNCH_STAGE_TWO_ISTG_JET) return;
-
-	sii->SwitchSelector(channel);
-}
-
-void SaturnV::GetSIThrustOK(bool *ok)
-{
-	for (int i = 0;i < 15;i++)
-	{
-		ok[i] = false;
-	}
-
-	if (stage > LAUNCH_STAGE_ONE) return;
-
-	sic->GetThrustOK(ok);
-}
-
-bool SaturnV::GetSIPropellantDepletionEngineCutoff()
-{
-	if (stage > LAUNCH_STAGE_ONE) return false;
-
-	return sic->GetPropellantDepletionEngineCutoff();
-}
-
-bool SaturnV::GetSIInboardEngineOut()
-{
-	if (stage > LAUNCH_STAGE_ONE) return false;
-
-	return sic->GetInboardEngineOut();
-}
-
-bool SaturnV::GetSIOutboardEngineOut()
-{
-	if (stage > LAUNCH_STAGE_ONE) return false;
-
-	return sic->GetOutboardEngineOut();
-}
-
-void SaturnV::SetSIThrusterDir(int n, double yaw, double pitch)
-{
-	if (stage > LAUNCH_STAGE_ONE) return;
-
-	sic->SetThrusterDir(n, yaw, pitch);
-}
-
-bool SaturnV::GetSIIPropellantDepletionEngineCutoff()
-{
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return false;
-
-	return sii->GetPropellantDepletionEngineCutoff();
-}
-
-void SaturnV::SIEDSCutoff(bool cut)
-{
-	if (stage > LAUNCH_STAGE_ONE) return;
-
-	sic->EDSEnginesCutoff(cut);
-}
-
-void SaturnV::GetSIIThrustOK(bool *ok)
-{
-	for (int i = 0;i < 5;i++)
-	{
-		ok[i] = false;
-	}
-
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
-
-	sii->GetThrustOK(ok);
-}
-
-void SaturnV::SetSIIThrusterDir(int n, double yaw, double pitch)
-{
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
-
-	sii->SetThrusterDir(n, yaw, pitch);
-}
-
-void SaturnV::SIIEDSCutoff(bool cut)
-{
-	if (stage != LAUNCH_STAGE_TWO && stage != LAUNCH_STAGE_TWO_ISTG_JET) return;
-
-	sii->EDSEnginesCutoff(cut);
-}
-
-double SaturnV::GetSIIFuelTankPressurePSI()
-{
-	if (stage <= LAUNCH_STAGE_TWO_ISTG_JET)
-		return sii->GetLH2TankUllagePressurePSI();
-
-	return 0.0;
 }
 
 void SaturnV::SaveSII(FILEHANDLE scn)

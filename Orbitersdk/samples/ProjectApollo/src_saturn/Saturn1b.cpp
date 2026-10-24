@@ -293,67 +293,6 @@ void Saturn1b::clbkPostStep (double simt, double simdt, double mjd) {
 	Saturn::clbkPostStep(simt, simdt, mjd);
 }
 
-void Saturn1b::SISwitchSelector(int channel)
-{
-	if (stage > LAUNCH_STAGE_ONE) return;
-
-	sib->SwitchSelector(channel);
-}
-
-void Saturn1b::GetSIThrustOK(bool *ok)
-{
-	for (int i = 0;i < 24;i++)
-	{
-		ok[i] = false;
-	}
-
-	if (stage > LAUNCH_STAGE_ONE) return;
-
-	sib->GetThrustOK(ok);
-}
-
-void Saturn1b::SIEDSCutoff(bool cut)
-{
-	if (stage > LAUNCH_STAGE_ONE) return;
-
-	sib->EDSEnginesCutoff(cut);
-}
-
-bool Saturn1b::GetSIPropellantDepletionEngineCutoff()
-{
-	if (stage > LAUNCH_STAGE_ONE) return false;
-
-	return sib->GetOutboardEnginesCutoff();
-}
-
-bool Saturn1b::GetSIInboardEngineOut()
-{
-	if (stage > LAUNCH_STAGE_ONE) return false;
-
-	return sib->GetInboardEngineOut();
-}
-
-bool Saturn1b::GetSIOutboardEngineOut()
-{
-	if (stage > LAUNCH_STAGE_ONE) return false;
-
-	return sib->GetOutboardEngineOut();
-}
-
-bool Saturn1b::GetSIBLowLevelSensorsDry()
-{
-	if (stage > LAUNCH_STAGE_ONE) return false;
-
-	return sib->GetLowLevelSensorsDry();
-}
-
-void Saturn1b::SetSIThrusterDir(int n, double yaw, double pitch)
-{
-	if (stage > LAUNCH_STAGE_ONE) return;
-
-	sib->SetThrusterDir(n, yaw, pitch);
-}
-
 double Saturn1b::GetSIThrustLevel()
 {
 	if (stage > LAUNCH_STAGE_ONE) return 0.0;
@@ -469,6 +408,7 @@ void Saturn1b::CheckSaturnSystemsState()
 {
 	Saturn::CheckSaturnSystemsState();
 
+	//S-IB
 	if (stage > LAUNCH_STAGE_ONE)
 	{
 		if (sib)
@@ -476,6 +416,10 @@ void Saturn1b::CheckSaturnSystemsState()
 			delete sib;
 			sib = 0;
 		}
+	}
+	else
+	{
+		sib->GetSIBtoSIVBConnector()->ConnectTo(sivb->GetSIVBSIXConnector());
 	}
 }
 

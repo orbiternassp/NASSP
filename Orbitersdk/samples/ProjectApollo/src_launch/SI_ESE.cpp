@@ -23,16 +23,15 @@ See http://nassp.sourceforge.net/license/ for more details.
 **************************************************************************/
 
 #include "SI_ESE.h"
-#include "TailUmbilical.h"
 #include "LCCPadInterface.h"
 
-SI_ESE::SI_ESE(TailUmbilical *TailUmb, LCCPadInterface *p)
+SI_ESE::SI_ESE(LCCPadInterface *p)
 {
-	Umbilical = TailUmb;
+	siESEToSICommandConnector.SetSI_ESE(this);
 	Pad = p;
 }
 
 SI_ESE::~SI_ESE()
 {
-
+	siESEToSICommandConnector.Disconnect();
 }

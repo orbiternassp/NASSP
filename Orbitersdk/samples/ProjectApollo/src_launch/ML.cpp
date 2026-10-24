@@ -37,11 +37,12 @@
 #include "saturn.h"
 #include "papi.h"
 #include "IUUmbilical.h"
-#include "TSMUmbilical.h"
-#include "SCMUmbilical.h"
 #include "IU_ESE.h"
 #include "SIC_ESE.h"
 #include "SIB_ESE.h"
+#include "iu.h"
+#include "s1bsystems.h"
+#include "s1csystems.h"
 
 HINSTANCE g_hDLL;
 char trace_file[] = "ProjectApollo ML.log";
@@ -150,17 +151,13 @@ ML::ML(OBJHANDLE hObj, int fmodel) : VESSEL2 (hObj, fmodel) {
 
 	sat = NULL;
 
-	IuUmb = new IUUmbilical(this);
-	IuESE = new IUSV_ESE(IuUmb, this);
+	IuESE = new IUSV_ESE(this);
 	SIESE = NULL;
 	rca110a = new RCA110AM(this);
-	TailUmb = NULL;
 }
 
 ML::~ML() {
-	delete IuUmb;
 	delete IuESE;
-	delete TailUmb;
 	delete SIESE;
 	delete rca110a;
 }
@@ -190,13 +187,11 @@ void ML::clbkSetClassCaps(FILEHANDLE cfg) {
 
 	if (IsSaturnV)
 	{
-		TailUmb = new TSMUmbilical(this);
-		SIESE = new SIC_ESE(TailUmb, this);
+		SIESE = new SIC_ESE(this);
 	}
 	else
 	{
-		TailUmb = new SCMUmbilical(this);
-		SIESE = new SIB_ESE(TailUmb, this);
+		SIESE = new SIB_ESE(this);
 	}
 }
 
@@ -215,10 +210,16 @@ void ML::clbkPostCreation()
 				sat = (Saturn *)oapiGetVesselInterface(hLV);
 				if (sat->GetStage() < LAUNCH_STAGE_ONE)
 				{
-					IuUmb->Connect(sat->GetIU());
+					IuESE->GetIUESEToIUCommandConnector()->ConnectTo(sat->GetIU()->GetIUToIUESECommandConnector());
 
-					if (IsSaturnV) ((TSMUmbilical*)TailUmb)->Connect(sat->GetSIC());
-					else ((SCMUmbilical*)TailUmb)->Connect(sat->GetSIB());
+					if (IsSaturnV)
+					{
+						SIESE->GetSIESEToSICommandConnector()->ConnectTo(sat->GetSIC()->GetSICToSIESEConnector());
+					}
+					else
+					{
+						SIESE->GetSIESEToSICommandConnector()->ConnectTo(sat->GetSIB()->GetSIBToSIESEConnector());
+					}
 				}
 			}
 		}
@@ -564,7 +565,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		}
 		else
 		{
-			IuUmb->LVDCPrepareToLaunch();
+			IuESE->GetIUESEToIUCommandConnector()->LVDCPrepareToLaunch();
 		}
 
 		// T-16.2s or later?
@@ -625,7 +626,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		if (CutoffInterlock())
 		{
 			Hold = true;
-			TailUmb->SIGSECutoff(true);
+			SIESE->GetSIESEToSICommandConnector()->SIGSECutoff(true);
 		}
 		else if (Hold == false)
 		{
@@ -648,13 +649,13 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 		//Cutoff
 		if (sat->GetMissionTime() > 6.0 && sat->GetStage() <= PRELAUNCH_STAGE)
 		{
-			TailUmb->SIGSECutoff(true);
+			SIESE->GetSIESEToSICommandConnector()->SIGSECutoff(true);
 		}
 
 		if (CutoffInterlock())
 		{
 			Hold = true;
-			TailUmb->SIGSECutoff(true);
+			SIESE->GetSIESEToSICommandConnector()->SIGSECutoff(true);
 		}
 		else if (Hold == false)
 		{
@@ -675,11 +676,11 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 				if (bCommit)
 				{
 					// Activate liftoff circuit
-					IuUmb->SetEDSLiftoffEnableA();
-					IuUmb->SetEDSLiftoffEnableB();
+					IuESE->GetIUESEToIUCommandConnector()->SetEDSLiftoffEnableA();
+					IuESE->GetIUESEToIUCommandConnector()->SetEDSLiftoffEnableB();
 					// Disconnect Umbilicals
-					IuUmb->Disconnect();
-					TailUmb->Disconnect();
+					IuESE->GetIUESEToIUCommandConnector()->Disconnect();
+					SIESE->GetSIESEToSICommandConnector()->Disconnect();
 					// Move swingarms
 					OpenInflightSwingarms();
 					// Move masts
@@ -688,7 +689,7 @@ void ML::clbkPreStep(double simt, double simdt, double mjd) {
 				else
 				{
 					Hold = true;
-					TailUmb->SIGSECutoff(true);
+					SIESE->GetSIESEToSICommandConnector()->SIGSECutoff(true);
 				}
 			}
 
@@ -1190,13 +1191,13 @@ int ML::clbkConsumeBufferedKey(DWORD key, bool down, char *kstate) {
 
 bool ML::CutoffInterlock()
 {
-	return (IuUmb->IsEDSUnsafeA() || IuUmb->IsEDSUnsafeB() || TailUmb->SIStageLogicCutoff());
+	return (IuESE->GetIUESEToIUCommandConnector()->IsEDSUnsafeA() || IuESE->GetIUESEToIUCommandConnector()->IsEDSUnsafeB() || SIESE->GetSIESEToSICommandConnector()->SIStageLogicCutoff());
 }
 
 bool ML::Commit()
 {
 	if (!sat) return false;
-	return IuUmb->AllSIEnginesRunning() && !CutoffInterlock();
+	return IuESE->GetIUESEToIUCommandConnector()->AllSIEnginesRunning() && !CutoffInterlock();
 }
 
 void ML::HoldDownForce(double MissionTime)
@@ -1267,29 +1268,29 @@ void ML::SaturnIBIgnitionSequence(double MissionTime)
 	if (CutoffInterlock())
 	{
 		Hold = true;
-		TailUmb->SIGSECutoff(true);
+		SIESE->GetSIESEToSICommandConnector()->SIGSECutoff(true);
 	}
 	else if (Hold == false)
 	{
 		if (MissionTime > -3.1)
 		{
-			TailUmb->SetEngineStart(5);
-			TailUmb->SetEngineStart(7);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(5);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(7);
 		}
 		if (MissionTime > -3.0)
 		{
-			TailUmb->SetEngineStart(6);
-			TailUmb->SetEngineStart(8);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(6);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(8);
 		}
 		if (MissionTime > -2.9)
 		{
-			TailUmb->SetEngineStart(2);
-			TailUmb->SetEngineStart(4);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(2);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(4);
 		}
 		if (MissionTime > -2.8)
 		{
-			TailUmb->SetEngineStart(1);
-			TailUmb->SetEngineStart(3);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(1);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(3);
 		}
 
 		// T-1s or later?
@@ -1304,23 +1305,23 @@ void ML::SaturnVIgnitionSequence(double MissionTime)
 	if (CutoffInterlock())
 	{
 		Hold = true;
-		TailUmb->SIGSECutoff(true);
+		SIESE->GetSIESEToSICommandConnector()->SIGSECutoff(true);
 	}
 	else if (Hold == false)
 	{
 		if (MissionTime > -8.9)
 		{
-			TailUmb->SetEngineStart(5);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(5);
 		}
 		if (MissionTime > -8.62)
 		{
-			TailUmb->SetEngineStart(1);
-			TailUmb->SetEngineStart(3);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(1);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(3);
 		}
 		if (MissionTime > -8.2)
 		{
-			TailUmb->SetEngineStart(2);
-			TailUmb->SetEngineStart(4);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(2);
+			SIESE->GetSIESEToSICommandConnector()->SetEngineStart(4);
 		}
 
 		// T-4.9s or later?
@@ -1328,101 +1329,6 @@ void ML::SaturnVIgnitionSequence(double MissionTime)
 			state = STATE_LIFTOFFSTREAM;
 		}
 	}
-}
-
-bool ML::ESEGetCommandVehicleLiftoffIndicationInhibit()
-{
-	return IuESE->GetCommandVehicleLiftoffIndicationInhibit();
-}
-
-bool ML::ESEGetSICOutboardEnginesCantInhibit()
-{
-	return IuESE->GetSICOutboardEnginesCantInhibit();
-}
-
-bool ML::ESEGetSICOutboardEnginesCantSimulate()
-{
-	return IuESE->GetSICOutboardEnginesCantSimulate();
-}
-
-bool ML::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
-{
-	return IuESE->GetExcessiveRollRateAutoAbortInhibit(n);
-}
-
-bool ML::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
-{
-	return IuESE->GetExcessivePitchYawRateAutoAbortInhibit(n);
-}
-
-bool ML::ESEGetTwoEngineOutAutoAbortInhibit(int n)
-{
-	return IuESE->GetTwoEngineOutAutoAbortInhibit(n);
-}
-
-bool ML::ESEGetGSEOverrateSimulate(int n)
-{
-	return IuESE->GetOverrateSimulate(n);
-}
-
-bool ML::ESEGetEDSPowerInhibit()
-{
-	return IuESE->GetEDSPowerInhibit();
-}
-
-bool ML::ESEPadAbortRequest()
-{
-	return IuESE->GetEDSPadAbortRequest();
-}
-
-bool ML::ESEGetThrustOKIndicateEnableInhibitA()
-{
-	return IuESE->GetThrustOKIndicateEnableInhibitA();
-}
-
-bool ML::ESEGetThrustOKIndicateEnableInhibitB()
-{
-	return IuESE->GetThrustOKIndicateEnableInhibitB();
-}
-
-bool ML::ESEEDSLiftoffInhibitA()
-{
-	return IuESE->GetEDSLiftoffInhibitA();
-}
-
-bool ML::ESEEDSLiftoffInhibitB()
-{
-	return IuESE->GetEDSLiftoffInhibitB();
-}
-
-bool ML::ESEGetSIBurnModeSubstitute()
-{
-	return IuESE->GetSIBurnModeSubstitute();
-}
-
-bool ML::ESEGetGuidanceReferenceRelease()
-{
-	return IuESE->GetGuidanceReferenceRelease();
-}
-
-bool ML::ESEGetQBallSimulateCmd()
-{
-	return IuESE->GetQBallSimulateCmd();
-}
-
-bool ML::ESEGetEDSAutoAbortSimulate(int n)
-{
-	return IuESE->GetEDSAutoAbortSimulate(n);
-}
-
-bool ML::ESEGetEDSLVCutoffSimulate(int n)
-{
-	return IuESE->GetEDSLVCutoffSimulate(n);
-}
-
-bool ML::ESEGetSIThrustOKSimulate(int eng, int n)
-{
-	return SIESE->GetSIThrustOKSimulate(eng, n);
 }
 
 void ML::MobileLauncherComputer(int mdo, bool on)
@@ -1442,12 +1348,12 @@ void ML::MobileLauncherComputer(int mdo, bool on)
 		if (on)
 		{
 			IuESE->SetEDSLiftoffInhibitA(false);
-			IuUmb->SetEDSLiftoffEnableA();
+			IuESE->GetIUESEToIUCommandConnector()->SetEDSLiftoffEnableA();
 		}
 		else
 		{
 			IuESE->SetEDSLiftoffInhibitA(true);
-			IuUmb->EDSLiftoffEnableReset();
+			IuESE->GetIUESEToIUCommandConnector()->EDSLiftoffEnableReset();
 		}
 		break;
 	case 738:
@@ -1455,12 +1361,12 @@ void ML::MobileLauncherComputer(int mdo, bool on)
 		if (on)
 		{
 			IuESE->SetEDSLiftoffInhibitB(false);
-			IuUmb->SetEDSLiftoffEnableB();
+			IuESE->GetIUESEToIUCommandConnector()->SetEDSLiftoffEnableB();
 		}
 		else
 		{
 			IuESE->SetEDSLiftoffInhibitB(true);
-			IuUmb->EDSLiftoffEnableReset();
+			IuESE->GetIUESEToIUCommandConnector()->EDSLiftoffEnableReset();
 		}
 		break;
 	case 799:
@@ -1484,7 +1390,7 @@ void ML::MobileLauncherComputer(int mdo, bool on)
 	case 1584: //IVB MAIN STAGE OK SIM ON
 		break;
 	case 1903: //IU EDS RG SYSTEM POWER ON
-		IuUmb->SetControlSignalProcessorPower(on);
+		IuESE->GetIUESEToIUCommandConnector()->SetControlSignalProcessorPower(on);
 		break;
 	}
 }
@@ -1690,9 +1596,38 @@ void ML::TerminalCountdownSequencer(double MissionTime)
 
 void ML::SLCCCheckDiscreteInput(RCA110A *c)
 {
-	c->SetInput(646, IuUmb->GetEDSAutoAbortBus());
-	c->SetInput(647, IuUmb->IsEDSUnsafeA());
-	c->SetInput(648, IuUmb->IsEDSUnsafeB());
+	c->SetInput(600, IuESE->GetOneEngineOutA());
+	c->SetInput(601, SIESE->GetSIThrustOK(1, 1));
+	c->SetInput(602, SIESE->GetSIThrustOK(1, 2));
+	c->SetInput(603, SIESE->GetSIThrustOK(1, 3));
+	c->SetInput(604, SIESE->GetSIThrustOK(2, 1));
+	c->SetInput(605, SIESE->GetSIThrustOK(2, 2));
+	c->SetInput(606, SIESE->GetSIThrustOK(2, 3));
+	c->SetInput(607, SIESE->GetSIThrustOK(3, 1));
+	c->SetInput(608, SIESE->GetSIThrustOK(3, 2));
+	c->SetInput(609, SIESE->GetSIThrustOK(3, 3));
+	c->SetInput(610, SIESE->GetSIThrustOK(4, 1));
+	c->SetInput(611, SIESE->GetSIThrustOK(4, 2));
+	c->SetInput(612, SIESE->GetSIThrustOK(4, 3));
+	c->SetInput(613, SIESE->GetSIThrustOK(5, 1));
+	c->SetInput(614, SIESE->GetSIThrustOK(5, 2));
+	c->SetInput(615, SIESE->GetSIThrustOK(5, 3));
+	c->SetInput(616, IuESE->GetSCCutoffEnableA());
+	c->SetInput(617, IuESE->GetSCCutoffEnableB());
+
+	c->SetInput(634, IuESE->GetLiftoffReset());
+	c->SetInput(638, IuESE->GetLiftoffEnableA());
+	c->SetInput(639, IuESE->GetLiftoffEnableB());
+	c->SetInput(640, IuESE->GetEDSAbortCommandToSC(0));
+	c->SetInput(641, IuESE->GetEDSAbortCommandToSC(1));
+	c->SetInput(642, IuESE->GetEDSAbortCommandToSC(2));
+	c->SetInput(643, IuESE->GetEDSAbortCommandToSC(3));
+	c->SetInput(644, IuESE->GetEDSAbortCommandToSC(4));
+	c->SetInput(645, IuESE->GetEDSAbortCommandToSC(5));
+	c->SetInput(646, IuESE->GetIUESEToIUCommandConnector()->GetEDSAutoAbortBus());
+	c->SetInput(647, IuESE->GetIUESEToIUCommandConnector()->IsEDSUnsafeA());
+	c->SetInput(648, IuESE->GetIUESEToIUCommandConnector()->IsEDSUnsafeB());
+
 	c->SetInput(861, IuESE->GetFCCPowerIsOn());
 }
 
@@ -1708,5 +1643,5 @@ void ML::ConnectGroundComputer(RCA110A *c)
 
 void ML::IssueSwitchSelectorCmd(int stage, int chan)
 {
-	IuUmb->SwitchSelector(stage, chan);
+	IuESE->GetIUESEToIUCommandConnector()->SwitchSelector(stage, chan);
 }

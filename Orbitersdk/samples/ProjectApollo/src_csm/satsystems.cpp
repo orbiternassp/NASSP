@@ -2830,6 +2830,10 @@ void Saturn::CheckSaturnSystemsState()
 			iu = 0;
 		}
 	}
+	else
+	{
+		sivb->GetSIVBIUConnector()->ConnectTo(iu->GetSIVBCommandConnector());
+	}
 }
 
 void Saturn::CheckSMSystemsState()

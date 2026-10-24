@@ -333,7 +333,6 @@ void SIVB::InitS4b()
 
 	IUCommandConnector.SetSIVb(this);
 	payloadSeparationConnector.SetSIVb(this);
-	sivbSIConnector.SetSIVb(this);
 
 	if (!PanelSDKInitalised)
 	{
@@ -596,7 +595,7 @@ void SIVB::SetS4b()
 
 	//Docking port for the connection to the lower stage (S-IB or S-II)
 	CreateSISIVBInterface();
-	RegisterConnector(i, &sivbSIConnector);
+	RegisterConnector(i, sivbsys->GetSIVBSIXConnector(), true);
 	//Docking port for the connection to the stage attached to the front of the SLA (usually CSM, also Apollo 5 nosecap)
 	hDockCSM = CreateDock(_V(0.0, 0, 14.8), _V(0, 0, 1), _V(1, 0, 0));
 
@@ -624,6 +623,7 @@ void SIVB::SetS4b()
 	if (sivbsys)
 	{
 		sivbsys->SetVehicleNumber(VehicleNo);
+		sivbsys->GetSIVBIUConnector()->ConnectTo(iu->GetSIVBCommandConnector());
 		sivbsys->CreateParticleEffects(1400.0*0.0254); //CG location
 	}
 
@@ -1722,31 +1722,6 @@ void SIVB::UpdateLaunchTime(double dt)
 	MissionTime -= dt;
 }
 
-void SIVB::SetSIVBThrusterDir(double yaw, double pitch)
-{
-	sivbsys->SetThrusterDir(yaw, pitch);
-}
-
-void SIVB::SetAPSAttitudeEngine(int n, bool on)
-{
-	sivbsys->SetAPSAttitudeEngine(n, on);
-}
-
-bool SIVB::GetSIVBThrustOK()
-{
-	return sivbsys->GetThrustOK();
-}
-
-void SIVB::SIVBSwitchSelector(int channel)
-{
-	sivbsys->SwitchSelector(channel);
-}
-
-void SIVB::SIVBEDSCutoff(bool cut)
-{
-	sivbsys->EDSEngineCutoff(cut);
-}
-
 double SIVB::GetSIVbPropellantMass()
 
 {
@@ -2015,26 +1990,6 @@ void SIVB::MoveStrobes()
 	trackLightPos[3].z = ((pos[3].x * sin(theta)) + (pos[3].z * cos(theta))) + hinge[3].z;
 }
 
-void SIVB::SISwitchSelector(int channel)
-{
-	sivbSIConnector.SISwitchSelector(channel);
-}
-
-void SIVB::SetSIThrusterDir(int n, double yaw, double pitch)
-{
-	sivbSIConnector.SetSIThrusterDir(n, yaw, pitch);
-}
-
-bool SIVB::GetSIBLowLevelSensorsDry()
-{
-	return sivbSIConnector.GetLowLevelSensorsDry();
-}
-
-bool SIVB::GetSIPropellantDepletionEngineCutoff()
-{
-	return sivbSIConnector.GetSIPropellantDepletionEngineCutoff();
-}
-
 void SIVB::HideAllMeshes()
 
 {
@@ -2159,34 +2114,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 			}
 			return true;
 		}
-	case IULV_GET_GLOBAL_ORIENTATION:
-		if (OurVessel)
-		{
-			VECTOR3 *arot = static_cast<VECTOR3 *> (m.val1.pValue);
-			VECTOR3 ar;
-
-			OurVessel->GetGlobalOrientation(ar);
-
-			*arot = ar;
-			return true;
-		}
-		break;
-
-	case IULV_GET_MASS:
-		if (OurVessel)
-		{
-			m.val1.dValue = OurVessel->GetMass();
-			return true;
-		}
-		break;
-
-	case IULV_GET_GRAVITY_REF:
-		if (OurVessel)
-		{
-			m.val1.hValue = OurVessel->GetGravityRef();
-			return true;
-		}
-		break;
 
 	case IULV_GET_RELATIVE_POS:
 		if (OurVessel)
@@ -2220,22 +2147,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_GLOBAL_VEL:
-		if (OurVessel)
-		{
-			OurVessel->GetGlobalVel(*(VECTOR3 *) m.val1.pValue);
-			return true;
-		}
-		break;
-
-	case IULV_GET_WEIGHTVECTOR:
-		if (OurVessel)
-		{
-			m.val2.bValue = OurVessel->GetWeightVector(*(VECTOR3 *) m.val1.pValue);
-			return true;
-		}
-		break;
-
 	case IULV_GET_INERTIAL_ACCEL:
 		if (OurVessel)
 		{
@@ -2260,79 +2171,10 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		}
 		break;
 
-	case IULV_GET_SIVB_THRUST_OK:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIVBThrustOK();
-			return true;
-		}
-		break;
-
-	case IULV_SIVB_EDS_CUTOFF:
-		if (OurVessel)
-		{
-			OurVessel->SIVBEDSCutoff(m.val1.bValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_APS_ATTITUDE_ENGINE:
-		if (OurVessel)
-		{
-			OurVessel->SetAPSAttitudeEngine(m.val1.iValue, m.val2.bValue);
-			return true;
-		}
-		break;
-
-	case IULV_SET_SIVB_THRUSTER_DIR:
-		if (OurVessel)
-		{
-			OurVessel->SetSIVBThrusterDir(m.val1.dValue, m.val2.dValue);
-			return true;
-		}
-		break;
-
-	case IULV_SIVB_SWITCH_SELECTOR:
-		if (OurVessel)
-		{
-			OurVessel->SIVBSwitchSelector(m.val1.iValue);
-			return true;
-		}
-		break;
-
 	case IULV_CSM_SEPARATION_SENSED:
 		if (OurVessel)
 		{
 			m.val1.bValue = true;
-			return true;
-		}
-		break;
-
-	case IULV_SI_SWITCH_SELECTOR:
-		if (OurVessel)
-		{
-			OurVessel->SISwitchSelector(m.val1.iValue);
-			return true;
-		}
-		break;
-	case IULV_SET_SI_THRUSTER_DIR:
-		if (OurVessel)
-		{
-			OurVessel->SetSIThrusterDir(m.val1.iValue, m.val2.dValue, m.val3.dValue);
-			return true;
-		}
-		break;
-	case IULV_GET_SIB_LOW_LEVEL_SENSORS_DRY:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIBLowLevelSensorsDry();
-			return true;
-		}
-		break;
-	case IULV_GET_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIPropellantDepletionEngineCutoff();
 			return true;
 		}
 		break;
@@ -2354,13 +2196,6 @@ bool SIVbToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage 
 		if (OurVessel)
 		{
 			m.val1.iValue = OurVessel->GetVehicleNo();
-			return true;
-		}
-		break;
-	case IULV_GET_SI_THRUST_OK:
-		if (OurVessel)
-		{
-			OurVessel->GetSIVBSIConnector()->GetSIThrustOK((bool *)m.val1.pValue, m.val2.iValue);
 			return true;
 		}
 		break;
@@ -2413,88 +2248,4 @@ bool PayloadToSLACommandConnector::ReceiveMessage(Connector *from, ConnectorMess
 	}
 
 	return false;
-}
-
-SIVBToSIConnector::SIVBToSIConnector()
-{
-	type = SIVB_SI_COMMAND;
-	OurVessel = 0;
-}
-
-SIVBToSIConnector::~SIVBToSIConnector()
-{
-
-}
-
-void SIVBToSIConnector::SISwitchSelector(int channel)
-{
-	ConnectorMessage cm;
-
-	cm.destination = SIVB_SI_COMMAND;
-	cm.messageType = SIVB_SI_SWITCH_SELECTOR;
-	cm.val1.iValue = channel;
-
-	SendMessage(cm);
-}
-
-void SIVBToSIConnector::SetSIThrusterDir(int n, double yaw, double pitch)
-{
-	ConnectorMessage cm;
-
-	cm.destination = SIVB_SI_COMMAND;
-	cm.messageType = SIVB_SI_THRUSTER_DIR;
-	cm.val1.iValue = n;
-	cm.val2.dValue = yaw;
-	cm.val3.dValue = pitch;
-
-	SendMessage(cm);
-}
-
-bool SIVBToSIConnector::GetLowLevelSensorsDry()
-{
-	ConnectorMessage cm;
-
-	cm.destination = SIVB_SI_COMMAND;
-	cm.messageType = SIVB_SI_SIB_LOW_LEVEL_SENSORS_DRY;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-bool SIVBToSIConnector::GetSIPropellantDepletionEngineCutoff()
-{
-	ConnectorMessage cm;
-
-	cm.destination = SIVB_SI_COMMAND;
-	cm.messageType = SIVB_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF;
-
-	if (SendMessage(cm))
-	{
-		return cm.val1.bValue;
-	}
-
-	return false;
-}
-
-void SIVBToSIConnector::GetSIThrustOK(bool *ok, int n)
-{
-	ConnectorMessage cm;
-
-	cm.destination = SIVB_SI_COMMAND;
-	cm.messageType = SIVB_SI_GETSITHRUSTOK;
-	cm.val1.pValue = ok;
-
-	if (SendMessage(cm))
-	{
-		return;
-	}
-
-	for (int i = 0;i < n;i++)
-	{
-		ok[i] = false;
-	}
 }
