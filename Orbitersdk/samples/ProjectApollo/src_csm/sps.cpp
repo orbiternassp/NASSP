@@ -48,6 +48,10 @@ SPSPropellantSource::SPSPropellantSource(PROPELLANT_HANDLE &ph, PanelSDK &p) :
 	primTestStatus = 0;
 	auxTestStatus = 0;
 	primTestTimer = 0;
+
+	// Will be reset in the first cycle if tests are disabled, that way we prevent reapplying the test impulse after loading a scenario
+	pugTestPrimLock = true;
+	pugTestAuxLock = true;
 	heliumValveAOpen = false;
 	heliumValveBOpen = false;
 	propellantPressurePSI = 0;
@@ -172,21 +176,52 @@ void SPSPropellantSource::Timestep(double simt, double simdt) {
 	}
 
 	// Quantity test mode
-	if (our_vessel->SPSTestSwitch.IsCenter() || our_vessel->SPSPugModeSwitch.IsDown() || !IsGaugingPowered()) {
+
+	// Test power routed to PUG Mode switch
+	const bool testPower = IsGaugingPowered() && !our_vessel->SPSTestSwitch.IsCenter();
+
+	// Reset of edge detection lock
+	// Two separate edge detections to catch a case where switch from PRIM directly to AUX (or reserved)
+	if(!testPower || !our_vessel->SPSPugModeSwitch.IsUp()) {
 		primTestTimer = 0;
+		pugTestPrimLock = false;
+	}
+	if(!testPower || !our_vessel->SPSPugModeSwitch.IsDown()) {
+		pugTestAuxLock = false;
+	} 
 
-	} else if (primTestTimer) {
-		primTestTimer -= simdt;
-		if (primTestTimer <= 0) {
+	if(testPower) {
+		if(our_vessel->SPSPugModeSwitch.IsUp() && !pugTestPrimLock) {
+			// PRIM mode: Start 4 second timer
+			primTestTimer = 4.0;
+			// Prevent periodic timer restart until circuit is deactivated again
+			pugTestPrimLock = true;
+		} else if(our_vessel->SPSPugModeSwitch.IsDown() && !pugTestAuxLock) {
+			// AUX mode: Directly pass test signal
 			if (our_vessel->SPSTestSwitch.IsUp()) {
-				primTestStatus += 1.0;
-				primTestStatus = min(primTestStatus, 1.0);
-
+				auxTestStatus += 1.0;
+				auxTestStatus = min(auxTestStatus, 1.0);
 			} else if (our_vessel->SPSTestSwitch.IsDown()) {
-				primTestStatus -= 1.0;
-				primTestStatus = max(primTestStatus, -1.0);
-			}		
-			primTestTimer = 0;
+				auxTestStatus -= 1.0;
+				auxTestStatus = max(auxTestStatus, -1.0);
+			}
+			// Prevent periodic increments/decrements 
+			pugTestAuxLock = true;
+		}
+
+		if (primTestTimer) {
+			primTestTimer -= simdt;
+			if (primTestTimer <= 0) {
+				if (our_vessel->SPSTestSwitch.IsUp()) {
+					primTestStatus += 1.0;
+					primTestStatus = min(primTestStatus, 1.0);
+
+				} else if (our_vessel->SPSTestSwitch.IsDown()) {
+					primTestStatus -= 1.0;
+					primTestStatus = max(primTestStatus, -1.0);
+				}		
+				primTestTimer = 0;
+			}
 		}
 	}
 
@@ -284,27 +319,6 @@ void SPSPropellantSource::SystemTimestep(double simdt) {
 
 	if (heliumValveBOpen && our_vessel->HeValveMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) 
 		our_vessel->HeValveMnBCircuitBraker.DrawPower(91.2);
-}
-
-void SPSPropellantSource::SPSTestSwitchToggled() {
-
-	if (!IsGaugingPowered()) return;
-
-	// Aux mode
-	if (our_vessel->SPSPugModeSwitch.IsDown()) {
-		if (our_vessel->SPSTestSwitch.IsUp()) {
-			auxTestStatus += 1.0;
-			auxTestStatus = min(auxTestStatus, 1.0);
-
-		} else if (our_vessel->SPSTestSwitch.IsDown()) {
-			auxTestStatus -= 1.0;
-			auxTestStatus = max(auxTestStatus, -1.0);
-		}
-
-	// Prim mode
-	} else if (!our_vessel->SPSTestSwitch.IsCenter()) {
-		primTestTimer = 4.0;
-	}
 }
 
 bool SPSPropellantSource::IsOxidFlowValveMin() {
