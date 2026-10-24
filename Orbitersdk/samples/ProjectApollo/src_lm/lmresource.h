@@ -1366,6 +1366,9 @@
 #define AID_VC_AOT_ReticleKnobRotTop	5102
 #define AID_VC_AOT_ReticleKnobRotBottom	5103
 
+#define AID_VC_AOT_ShaftSelectorTop		5104
+#define AID_VC_AOT_ShaftSelectorBottom	5105
+
 // Cue Cards
 #define AID_VC_CUE_CARD_LOCATION_1		6000
 #define AID_VC_CUE_CARD_LOCATION_2		6001
