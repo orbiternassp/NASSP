@@ -391,8 +391,8 @@ class SaturnEcsGlycolPumpsSwitch: public RotationalSwitch {
 public:
 	SaturnEcsGlycolPumpsSwitch(PanelSDK &p) : ACBus1(0, p), ACBus2(0, p) { GlycolPump = NULL; };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Pump *p,
-		      CircuitBrakerSwitch* ac1a, CircuitBrakerSwitch* ac1b, CircuitBrakerSwitch* ac1c,
-			  CircuitBrakerSwitch* ac2a, CircuitBrakerSwitch* ac2b, CircuitBrakerSwitch* ac2c);
+		      CircuitBreakerSwitch* ac1a, CircuitBreakerSwitch* ac1b, CircuitBreakerSwitch* ac1c,
+			  CircuitBreakerSwitch* ac2a, CircuitBreakerSwitch* ac2b, CircuitBreakerSwitch* ac2c);
 	virtual bool SwitchTo(int newValue);
 	void LoadState(char *line);
 
@@ -408,8 +408,8 @@ class SaturnSuitCompressorSwitch: public ThreeSourceSwitch {
 public:
 	SaturnSuitCompressorSwitch(PanelSDK &p) : ACBus1(0, p), ACBus2(0, p) { };
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,
-		      CircuitBrakerSwitch* ac1a, CircuitBrakerSwitch* ac1b, CircuitBrakerSwitch* ac1c,
-			  CircuitBrakerSwitch* ac2a, CircuitBrakerSwitch* ac2b, CircuitBrakerSwitch* ac2c);
+		      CircuitBreakerSwitch* ac1a, CircuitBreakerSwitch* ac1b, CircuitBreakerSwitch* ac1c,
+			  CircuitBreakerSwitch* ac2a, CircuitBreakerSwitch* ac2b, CircuitBreakerSwitch* ac2c);
 
 protected:
 	ThreeWayPowerMerge ACBus1;
@@ -947,14 +947,14 @@ public:
 	SwitchRow SMSector1SwitchesRow;
 	ToggleSwitch SMSector1Cryo3ACPowerSwitch;
 	ToggleSwitch SMSector1SMACPowerSwitch;
-	CircuitBrakerSwitch SMSector1AC2ASystemBraker;
-	CircuitBrakerSwitch SMSector1AC2BSystemBraker;
-	CircuitBrakerSwitch SMSector1AC2CSystemBraker;
+	CircuitBreakerSwitch SMSector1AC2ASystemBreaker;
+	CircuitBreakerSwitch SMSector1AC2BSystemBreaker;
+	CircuitBreakerSwitch SMSector1AC2CSystemBreaker;
 	GuardedToggleSwitch SMSector1DoorJettisonSwitch;
 	ThreePosSwitch SMSector1LogicPower1Switch;
 	ThreePosSwitch SMSector1LogicPower2Switch;
-	CircuitBrakerSwitch SMSector1LogicPowerMNABraker;
-	CircuitBrakerSwitch SMSector1LogicPowerMNBBraker;
+	CircuitBreakerSwitch SMSector1LogicPowerMNABreaker;
+	CircuitBreakerSwitch SMSector1LogicPowerMNBBreaker;
 };
 
 class SaturnPanel277 : public BasicPanel
@@ -966,8 +966,8 @@ public:
 	SwitchRow Panel277SwitchesRow;
 	ToggleSwitch SPSPressIndFuelSwitch;
 	ToggleSwitch SPSPressIndOxidSwitch;
-	CircuitBrakerSwitch CSMLMFinalSepABatABraker;
-	CircuitBrakerSwitch CSMLMFinalSepBBatBBraker;
+	CircuitBreakerSwitch CSMLMFinalSepABatABreaker;
+	CircuitBreakerSwitch CSMLMFinalSepBBatBBreaker;
 };
 
 class SaturnPanel278J : public BasicPanel
@@ -984,7 +984,7 @@ public:
 	IndicatorSwitch ExperimentCovers1Indicator;
 	IndicatorSwitch ExperimentCovers2Indicator;
 	IndicatorSwitch O2Tank3IsolIndicator;
-	CircuitBrakerSwitch ExperimentCoversDeployBraker;
+	CircuitBreakerSwitch ExperimentCoversDeployBreaker;
 };
 
 class LeftCOASPowerSwitch : public SaturnToggleSwitch

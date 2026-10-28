@@ -71,7 +71,7 @@ protected:
 };
 
 // This is a CB like any other, except it lies about current across itself.
-class LEMVoltCB: public CircuitBrakerSwitch {
+class LEMVoltCB: public CircuitBreakerSwitch {
 	double Current();
 };
 

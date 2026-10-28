@@ -1386,7 +1386,7 @@ VHFAMTransceiver::VHFAMTransceiver()
 	lem = NULL;
 }
 
-void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt)
+void VHFAMTransceiver::Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBreakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt)
 {
 	sat = vessel;
 	vhfASwitch = vhfASw;
@@ -1648,7 +1648,7 @@ VHFRangingSystem::VHFRangingSystem()
 	rangeTone = false;
 }
 
-void VHFRangingSystem::Init(Saturn *vessel, CircuitBrakerSwitch *cb, ToggleSwitch *powersw, ToggleSwitch *resetsw, VHFAMTransceiver *transc)
+void VHFRangingSystem::Init(Saturn *vessel, CircuitBreakerSwitch *cb, ToggleSwitch *powersw, ToggleSwitch *resetsw, VHFAMTransceiver *transc)
 {
 	sat = vessel;
 	powercb = cb;
@@ -5235,7 +5235,7 @@ DSE::~DSE()
 {
 }
 
-void DSE::Init(Saturn *vessel, CircuitBrakerSwitch *accb, CircuitBrakerSwitch *dccb)
+void DSE::Init(Saturn *vessel, CircuitBreakerSwitch *accb, CircuitBreakerSwitch *dccb)
 {
 	sat = vessel;
 	ACbreaker = accb;
@@ -5717,7 +5717,7 @@ RNDZXPDRSystem::~RNDZXPDRSystem()
 	sat->CSM_RRTto_LM_RRConnector.Disconnect();
 }
 
-void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch)
+void RNDZXPDRSystem::Init(Saturn *vessel, CircuitBreakerSwitch *PowerCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch)
 {
 	sat = vessel;
 	if (!lem){
@@ -6027,7 +6027,7 @@ void RNDZXPDRSystem::SaveState(FILEHANDLE scn)
 	oapiWriteScenario_string(scn, "RNDZXPDRSystem", buffer);
 }
 
-void CTE::Init(CircuitBrakerSwitch* mna, CircuitBrakerSwitch* mnb)
+void CTE::Init(CircuitBreakerSwitch* mna, CircuitBreakerSwitch* mnb)
 {
 	cte_mna = mna;
 	cte_mnb = mnb;

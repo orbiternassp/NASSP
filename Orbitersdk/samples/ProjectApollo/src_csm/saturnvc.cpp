@@ -4669,8 +4669,8 @@ void Saturn::DefineVCAnimations()
 
 	const VECTOR3 cb_P4_vector = { 0.44660808466206 * 0.003, -0.853175444492311 * 0.003, 0.269504878675383 * 0.003 };
 
-	CircuitBrakerSwitch* breakerspanel4[P4_CBCOUNT] = { &SuitCompressorsAc1ACircuitBraker, &SuitCompressorsAc1BCircuitBraker, &SuitCompressorsAc1CCircuitBraker, &SuitCompressorsAc2ACircuitBraker, &SuitCompressorsAc2BCircuitBraker, &SuitCompressorsAc2CCircuitBraker, &ECSGlycolPumpsAc1ACircuitBraker, &ECSGlycolPumpsAc1BCircuitBraker, &ECSGlycolPumpsAc1CCircuitBraker,
-		&ECSGlycolPumpsAc2ACircuitBraker, &ECSGlycolPumpsAc2BCircuitBraker, &ECSGlycolPumpsAc2CCircuitBraker };
+	CircuitBreakerSwitch* breakerspanel4[P4_CBCOUNT] = { &SuitCompressorsAc1ACircuitBreaker, &SuitCompressorsAc1BCircuitBreaker, &SuitCompressorsAc1CCircuitBreaker, &SuitCompressorsAc2ACircuitBreaker, &SuitCompressorsAc2BCircuitBreaker, &SuitCompressorsAc2CCircuitBreaker, &ECSGlycolPumpsAc1ACircuitBreaker, &ECSGlycolPumpsAc1BCircuitBreaker, &ECSGlycolPumpsAc1CCircuitBreaker,
+		&ECSGlycolPumpsAc2ACircuitBreaker, &ECSGlycolPumpsAc2BCircuitBreaker, &ECSGlycolPumpsAc2CCircuitBreaker };
 
 	for (int i = 0; i < P4_CBCOUNT; i++)
 	{
@@ -4738,14 +4738,14 @@ void Saturn::DefineVCAnimations()
 
 	const VECTOR3 cb_p5_vector = { 0.846089265473375 * 0.003, 0.002307516178545 * 0.003, 0.533036237248285 * 0.003 };
 
-	CircuitBrakerSwitch* breakerspanel5[P5_CBCOUNT] = { &EpsSensorSignalDcMnaCircuitBraker, &EpsSensorSignalDcMnbCircuitBraker, &EpsSensorSignalAc1CircuitBraker, &EpsSensorSignalAc2CircuitBraker, &CWMnaCircuitBraker, &CWMnbCircuitBraker, &MnbLMPWR1CircuitBraker, &InverterControl1CircuitBraker, &InverterControl2CircuitBraker,
-		&InverterControl3CircuitBraker, &EPSSensorUnitDcBusACircuitBraker, &EPSSensorUnitDcBusBCircuitBraker, &EPSSensorUnitAcBus1CircuitBraker, &EPSSensorUnitAcBus2CircuitBraker, &BATRLYBusBatACircuitBraker, &BATRLYBusBatBCircuitBraker, &MnbLMPWR2CircuitBraker, &ControllerAc1CircuitBraker, &ControllerAc2CircuitBraker,
-		&CONTHTRSMnACircuitBraker, &CONTHTRSMnBCircuitBraker, &HTRSOVLDBatACircuitBraker, &HTRSOVLDBatBCircuitBraker, &BatteryChargerBatACircuitBraker, &BatteryChargerBatBCircuitBraker, &BatteryChargerMnACircuitBraker, &BatteryChargerMnBCircuitBraker, &BatteryChargerAcPwrCircuitBraker, &InstrumentLightingESSMnACircuitBraker,
-		&InstrumentLightingESSMnBCircuitBraker, &InstrumentLightingNonESSCircuitBraker, &InstrumentLightingSCIEquipSEP1CircuitBraker, &InstrumentLightingSCIEquipSEP2CircuitBraker, &InstrumentLightingSCIEquipHatchCircuitBraker, &ECSPOTH2OHTRMnACircuitBraker, &ECSPOTH2OHTRMnBCircuitBraker, &ECSH2OAccumMnACircuitBraker,
-		&ECSH2OAccumMnBCircuitBraker, &ECSTransducerWastePOTH2OMnACircuitBraker, &ECSTransducerWastePOTH2OMnBCircuitBraker, &ECSTransducerPressGroup1MnACircuitBraker, &ECSTransducerPressGroup1MnBCircuitBraker, &ECSTransducerPressGroup2MnACircuitBraker, &ECSTransducerPressGroup2MnBCircuitBraker, &ECSTransducerTempMnACircuitBraker,
-		&ECSTransducerTempMnBCircuitBraker, &ECSSecCoolLoopAc1CircuitBraker, &ECSSecCoolLoopAc2CircuitBraker, &ECSSecCoolLoopRADHTRMnACircuitBraker, &ECSSecCoolLoopXducersMnACircuitBraker, &ECSSecCoolLoopXducersMnBCircuitBraker, &ECSWasteH2OUrineDumpHTRMnACircuitBraker, &ECSWasteH2OUrineDumpHTRMnBCircuitBraker, &ECSCabinFanAC1ACircuitBraker,
-		&ECSCabinFanAC1BCircuitBraker, &ECSCabinFanAC1CCircuitBraker, &ECSCabinFanAC2ACircuitBraker, &ECSCabinFanAC2BCircuitBraker, &ECSCabinFanAC2CCircuitBraker, &GNPowerAc1CircuitBraker, &GNPowerAc2CircuitBraker, &GNIMUMnACircuitBraker, &GNIMUMnBCircuitBraker, &GNIMUHTRMnACircuitBraker, &GNIMUHTRMnBCircuitBraker, &GNComputerMnACircuitBraker,
-		&GNComputerMnBCircuitBraker, &GNOpticsMnACircuitBraker, &GNOpticsMnBCircuitBraker };
+	CircuitBreakerSwitch* breakerspanel5[P5_CBCOUNT] = { &EpsSensorSignalDcMnaCircuitBreaker, &EpsSensorSignalDcMnbCircuitBreaker, &EpsSensorSignalAc1CircuitBreaker, &EpsSensorSignalAc2CircuitBreaker, &CWMnaCircuitBreaker, &CWMnbCircuitBreaker, &MnbLMPWR1CircuitBreaker, &InverterControl1CircuitBreaker, &InverterControl2CircuitBreaker,
+		&InverterControl3CircuitBreaker, &EPSSensorUnitDcBusACircuitBreaker, &EPSSensorUnitDcBusBCircuitBreaker, &EPSSensorUnitAcBus1CircuitBreaker, &EPSSensorUnitAcBus2CircuitBreaker, &BATRLYBusBatACircuitBreaker, &BATRLYBusBatBCircuitBreaker, &MnbLMPWR2CircuitBreaker, &ControllerAc1CircuitBreaker, &ControllerAc2CircuitBreaker,
+		&CONTHTRSMnACircuitBreaker, &CONTHTRSMnBCircuitBreaker, &HTRSOVLDBatACircuitBreaker, &HTRSOVLDBatBCircuitBreaker, &BatteryChargerBatACircuitBreaker, &BatteryChargerBatBCircuitBreaker, &BatteryChargerMnACircuitBreaker, &BatteryChargerMnBCircuitBreaker, &BatteryChargerAcPwrCircuitBreaker, &InstrumentLightingESSMnACircuitBreaker,
+		&InstrumentLightingESSMnBCircuitBreaker, &InstrumentLightingNonESSCircuitBreaker, &InstrumentLightingSCIEquipSEP1CircuitBreaker, &InstrumentLightingSCIEquipSEP2CircuitBreaker, &InstrumentLightingSCIEquipHatchCircuitBreaker, &ECSPOTH2OHTRMnACircuitBreaker, &ECSPOTH2OHTRMnBCircuitBreaker, &ECSH2OAccumMnACircuitBreaker,
+		&ECSH2OAccumMnBCircuitBreaker, &ECSTransducerWastePOTH2OMnACircuitBreaker, &ECSTransducerWastePOTH2OMnBCircuitBreaker, &ECSTransducerPressGroup1MnACircuitBreaker, &ECSTransducerPressGroup1MnBCircuitBreaker, &ECSTransducerPressGroup2MnACircuitBreaker, &ECSTransducerPressGroup2MnBCircuitBreaker, &ECSTransducerTempMnACircuitBreaker,
+		&ECSTransducerTempMnBCircuitBreaker, &ECSSecCoolLoopAc1CircuitBreaker, &ECSSecCoolLoopAc2CircuitBreaker, &ECSSecCoolLoopRADHTRMnACircuitBreaker, &ECSSecCoolLoopXducersMnACircuitBreaker, &ECSSecCoolLoopXducersMnBCircuitBreaker, &ECSWasteH2OUrineDumpHTRMnACircuitBreaker, &ECSWasteH2OUrineDumpHTRMnBCircuitBreaker, &ECSCabinFanAC1ACircuitBreaker,
+		&ECSCabinFanAC1BCircuitBreaker, &ECSCabinFanAC1CCircuitBreaker, &ECSCabinFanAC2ACircuitBreaker, &ECSCabinFanAC2BCircuitBreaker, &ECSCabinFanAC2CCircuitBreaker, &GNPowerAc1CircuitBreaker, &GNPowerAc2CircuitBreaker, &GNIMUMnACircuitBreaker, &GNIMUMnBCircuitBreaker, &GNIMUHTRMnACircuitBreaker, &GNIMUHTRMnBCircuitBreaker, &GNComputerMnACircuitBreaker,
+		&GNComputerMnBCircuitBreaker, &GNOpticsMnACircuitBreaker, &GNOpticsMnBCircuitBreaker };
 
 	for (int i = 0; i < P5_CBCOUNT; i++)
 	{
@@ -4995,12 +4995,12 @@ void Saturn::DefineVCAnimations()
 
 	const VECTOR3 cb_p8_vector = { -0.844819075554255 * 0.003, 0.0, 0.535052081184303 * 0.003 };
 
-	CircuitBrakerSwitch* breakerspanel8[P8_CBCOUNT] = { &StabContSystemTVCAc1CircuitBraker, &StabContSystemAc1CircuitBraker, &StabContSystemAc2CircuitBraker, &ECATVCAc2CircuitBraker, &DirectUllMnACircuitBraker, &DirectUllMnBCircuitBraker, &ContrDirectMnA1CircuitBraker, &ContrDirectMnB1CircuitBraker, &ContrDirectMnA2CircuitBraker,
-		&ContrDirectMnB2CircuitBraker, &ACRollMnACircuitBraker, &ACRollMnBCircuitBraker, &BDRollMnACircuitBraker, &BDRollMnBCircuitBraker, &PitchMnACircuitBraker, &PitchMnBCircuitBraker, &YawMnACircuitBraker, &YawMnBCircuitBraker, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker, &LogicBus12MnACircuitBraker,
-		&LogicBus34MnACircuitBraker, &LogicBus14MnBCircuitBraker, &LogicBus23MnBCircuitBraker, &SystemMnACircuitBraker, &SystemMnBCircuitBraker, &CMHeater1MnACircuitBraker, &CMHeater2MnBCircuitBraker, &SMHeatersAMnBCircuitBraker, &SMHeatersCMnBCircuitBraker, &SMHeatersBMnACircuitBraker, &SMHeatersDMnACircuitBraker, &PrplntIsolMnACircuitBraker, &PrplntIsolMnBCircuitBraker,
-		&RCSLogicMnACircuitBraker, &RCSLogicMnBCircuitBraker, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &DockProbeMnACircuitBraker, &DockProbeMnBCircuitBraker, &GaugingMnACircuitBraker, &GaugingMnBCircuitBraker, &GaugingAc1CircuitBraker, &GaugingAc2CircuitBraker, &HeValveMnACircuitBraker, &HeValveMnBCircuitBraker, &PitchBatACircuitBraker, &PitchBatBCircuitBraker,
-		&YawBatACircuitBraker, &YawBatBCircuitBraker, &PilotValveMnACircuitBraker, &PilotValveMnBCircuitBraker, &FloatBag1BatACircuitBraker, &FloatBag2BatBCircuitBraker, &FloatBag3FLTPLCircuitBraker, &SECSLogicBatACircuitBraker, &SECSLogicBatBCircuitBraker, &SECSArmBatACircuitBraker, &SECSArmBatBCircuitBraker, &EDS1BatACircuitBraker, &EDS2BatCCircuitBraker,
-	    &EDS3BatBCircuitBraker, &ELSBatACircuitBraker, &ELSBatBCircuitBraker, &FLTPLCircuitBraker };
+	CircuitBreakerSwitch* breakerspanel8[P8_CBCOUNT] = { &StabContSystemTVCAc1CircuitBreaker, &StabContSystemAc1CircuitBreaker, &StabContSystemAc2CircuitBreaker, &ECATVCAc2CircuitBreaker, &DirectUllMnACircuitBreaker, &DirectUllMnBCircuitBreaker, &ContrDirectMnA1CircuitBreaker, &ContrDirectMnB1CircuitBreaker, &ContrDirectMnA2CircuitBreaker,
+		&ContrDirectMnB2CircuitBreaker, &ACRollMnACircuitBreaker, &ACRollMnBCircuitBreaker, &BDRollMnACircuitBreaker, &BDRollMnBCircuitBreaker, &PitchMnACircuitBreaker, &PitchMnBCircuitBreaker, &YawMnACircuitBreaker, &YawMnBCircuitBreaker, &OrdealAc2CircuitBreaker, &OrdealMnBCircuitBreaker, &ContrAutoMnACircuitBreaker, &ContrAutoMnBCircuitBreaker, &LogicBus12MnACircuitBreaker,
+		&LogicBus34MnACircuitBreaker, &LogicBus14MnBCircuitBreaker, &LogicBus23MnBCircuitBreaker, &SystemMnACircuitBreaker, &SystemMnBCircuitBreaker, &CMHeater1MnACircuitBreaker, &CMHeater2MnBCircuitBreaker, &SMHeatersAMnBCircuitBreaker, &SMHeatersCMnBCircuitBreaker, &SMHeatersBMnACircuitBreaker, &SMHeatersDMnACircuitBreaker, &PrplntIsolMnACircuitBreaker, &PrplntIsolMnBCircuitBreaker,
+		&RCSLogicMnACircuitBreaker, &RCSLogicMnBCircuitBreaker, &EMSMnACircuitBreaker, &EMSMnBCircuitBreaker, &DockProbeMnACircuitBreaker, &DockProbeMnBCircuitBreaker, &GaugingMnACircuitBreaker, &GaugingMnBCircuitBreaker, &GaugingAc1CircuitBreaker, &GaugingAc2CircuitBreaker, &HeValveMnACircuitBreaker, &HeValveMnBCircuitBreaker, &PitchBatACircuitBreaker, &PitchBatBCircuitBreaker,
+		&YawBatACircuitBreaker, &YawBatBCircuitBreaker, &PilotValveMnACircuitBreaker, &PilotValveMnBCircuitBreaker, &FloatBag1BatACircuitBreaker, &FloatBag2BatBCircuitBreaker, &FloatBag3FLTPLCircuitBreaker, &SECSLogicBatACircuitBreaker, &SECSLogicBatBCircuitBreaker, &SECSArmBatACircuitBreaker, &SECSArmBatBCircuitBreaker, &EDS1BatACircuitBreaker, &EDS2BatCCircuitBreaker,
+	    &EDS3BatBCircuitBreaker, &ELSBatACircuitBreaker, &ELSBatBCircuitBreaker, &FLTPLCircuitBreaker };
 
 	for (int i = 0; i < P8_CBCOUNT; i++)
 	{
@@ -5570,11 +5570,11 @@ void Saturn::DefineVCAnimations()
 
 	const VECTOR3 cb_leb_r_vector = { 0.003, 0.0, 0.0 };
 
-	CircuitBrakerSwitch* breakersleb1[LEB_R1_CBCOUNT] = {
+	CircuitBreakerSwitch* breakersleb1[LEB_R1_CBCOUNT] = {
 
-		/*Panel 229*/ &EPSMnBGroup1CircuitBraker, &EPSMnAGroup1CircuitBraker, &TimersMnACircuitBraker, &TimersMnBCircuitBraker, &EPSMnAGroup2CircuitBraker, &EPSMnBGroup2CircuitBraker, &SPSLineHtrsMnACircuitBraker, &SPSLineHtrsMnBCircuitBraker, &EPSMnAGroup3CircuitBraker,
-		&EPSMnBGroup3CircuitBraker, &O2VacIonPumpsMnACircuitBraker, &O2VacIonPumpsMnBCircuitBraker, &EPSMnAGroup4CircuitBraker, &EPSMnBGroup4CircuitBraker, &MainReleasePyroACircuitBraker, &MainReleasePyroBCircuitBraker, &EPSMnAGroup5CircuitBraker, &EPSMnBGroup5CircuitBraker, &UtilityCB1, &UtilityCB2, 
-		&EPSBatBusACircuitBraker, &EPSBatBusBCircuitBraker,
+		/*Panel 229*/ &EPSMnBGroup1CircuitBreaker, &EPSMnAGroup1CircuitBreaker, &TimersMnACircuitBreaker, &TimersMnBCircuitBreaker, &EPSMnAGroup2CircuitBreaker, &EPSMnBGroup2CircuitBreaker, &SPSLineHtrsMnACircuitBreaker, &SPSLineHtrsMnBCircuitBreaker, &EPSMnAGroup3CircuitBreaker,
+		&EPSMnBGroup3CircuitBreaker, &O2VacIonPumpsMnACircuitBreaker, &O2VacIonPumpsMnBCircuitBreaker, &EPSMnAGroup4CircuitBreaker, &EPSMnBGroup4CircuitBreaker, &MainReleasePyroACircuitBreaker, &MainReleasePyroBCircuitBreaker, &EPSMnAGroup5CircuitBreaker, &EPSMnBGroup5CircuitBreaker, &UtilityCB1, &UtilityCB2, 
+		&EPSBatBusACircuitBreaker, &EPSBatBusBCircuitBreaker,
 
 		/*Panel 225*/ &PCMTLMGroup1CB, &PCMTLMGroup2CB, &FLTBusMNACB, &FLTBusMNBCB, &PMPPowerPrimCB, &PMPPowerAuxCB, &VHFStationAudioLCB, &VHFStationAudioCTRCB, &VHFStationAudioRCB, &UDLCB, &HGAFLTBus1CB, &HGAGroup2CB, &SBandFMXMTRFLTBusCB, &SBandFMXMTRGroup1CB,
 		&CentralTimingEquipMNACB, &CentralTimingEquipMNBCB, &RNDZXPNDRFLTBusCB, &SIGCondrFLTBusCB, &SBandPWRAmpl1FLTBusCB, &SBandPWRAmpl1Group1CB, &SBandPWRAmpl2FLTBusCB, &SBandPWRAmpl2Group1CB, 
@@ -5591,12 +5591,12 @@ void Saturn::DefineVCAnimations()
 		breakersleb1[i]->DefineMeshGroup(VC_GRP_CB_LEB_Right1_01 + i);
 	}
 
-	CircuitBrakerSwitch* breakersleb2[LEB_R2_CBCOUNT] = {
-		/*Panel 250*/ &BatBusAToPyroBusTieCircuitBraker, &PyroASeqACircuitBraker, &BatBusBToPyroBusTieCircuitBraker, &PyroBSeqBCircuitBraker, &BatAPWRCircuitBraker, &BatBPWRCircuitBraker, &BatCPWRCircuitBraker, &BatCtoBatBusACircuitBraker, &BatCtoBatBusBCircuitBraker, &BatCCHRGCircuitBraker,
+	CircuitBreakerSwitch* breakersleb2[LEB_R2_CBCOUNT] = {
+		/*Panel 250*/ &BatBusAToPyroBusTieCircuitBreaker, &PyroASeqACircuitBreaker, &BatBusBToPyroBusTieCircuitBreaker, &PyroBSeqBCircuitBreaker, &BatAPWRCircuitBreaker, &BatBPWRCircuitBreaker, &BatCPWRCircuitBreaker, &BatCtoBatBusACircuitBreaker, &BatCtoBatBusBCircuitBreaker, &BatCCHRGCircuitBreaker,
 
-		/*Panel 275-278*/ &MainABatBusACircuitBraker, &MainABatCCircuitBraker, &MainBBatCCircuitBraker, &MainBBatBusBCircuitBraker, &FlightPostLandingBatBusACircuitBraker, &FlightPostLandingBatBusBCircuitBraker, &FlightPostLandingBatCCircuitBraker, &FlightPostLandingMainACircuitBraker, 
-		&FlightPostLandingMainBCircuitBraker, &InverterPower1MainACircuitBraker, &InverterPower2MainBCircuitBraker, &InverterPower3MainACircuitBraker, &InverterPower3MainBCircuitBraker,
-		&Panel276CB1, &Panel276CB2, &Panel276CB3, &Panel276CB4, &UprightingSystemCompressor1CircuitBraker, &UprightingSystemCompressor2CircuitBraker, &SIVBLMSepPyroACircuitBraker, &SIVBLMSepPyroBCircuitBraker };
+		/*Panel 275-278*/ &MainABatBusACircuitBreaker, &MainABatCCircuitBreaker, &MainBBatCCircuitBreaker, &MainBBatBusBCircuitBreaker, &FlightPostLandingBatBusACircuitBreaker, &FlightPostLandingBatBusBCircuitBreaker, &FlightPostLandingBatCCircuitBreaker, &FlightPostLandingMainACircuitBreaker, 
+		&FlightPostLandingMainBCircuitBreaker, &InverterPower1MainACircuitBreaker, &InverterPower2MainBCircuitBreaker, &InverterPower3MainACircuitBreaker, &InverterPower3MainBCircuitBreaker,
+		&Panel276CB1, &Panel276CB2, &Panel276CB3, &Panel276CB4, &UprightingSystemCompressor1CircuitBreaker, &UprightingSystemCompressor2CircuitBreaker, &SIVBLMSepPyroACircuitBreaker, &SIVBLMSepPyroBCircuitBreaker };
 
 	for (int i = 0; i < LEB_R2_CBCOUNT; i++)
 	{
