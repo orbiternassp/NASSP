@@ -262,7 +262,7 @@ public:
 class LEM_BusCrossTie : public e_object {
 public:
 	LEM_BusCrossTie();	// Cons
-	void LEM_BusCrossTie::Init(LEM *s, DCbus *sra, DCbus *srb, CircuitBrakerSwitch *cb1, CircuitBrakerSwitch *cb2, CircuitBrakerSwitch *cb3, CircuitBrakerSwitch *cb4);
+	void LEM_BusCrossTie::Init(LEM *s, DCbus *sra, DCbus *srb, CircuitBreakerSwitch *cb1, CircuitBreakerSwitch *cb2, CircuitBreakerSwitch *cb3, CircuitBreakerSwitch *cb4);
 	void UpdateFlow(double dt);
 	void DrawPower(double watts);
 
@@ -271,8 +271,8 @@ public:
 	DCbus *dc_bus_lmp;
 	LEM_BCTSource dc_output_cdr;
 	LEM_BCTSource dc_output_lmp;
-	CircuitBrakerSwitch *lmp_bus_cb, *lmp_bal_cb;
-	CircuitBrakerSwitch *cdr_bus_cb, *cdr_bal_cb;
+	CircuitBreakerSwitch *lmp_bus_cb, *lmp_bal_cb;
+	CircuitBreakerSwitch *cdr_bus_cb, *cdr_bal_cb;
 	double last_cdr_ld;
 	double last_lmp_ld;
 };

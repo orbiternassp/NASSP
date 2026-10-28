@@ -3262,7 +3262,7 @@ void LEM::DefineVCAnimations()
 	const VECTOR3 p11row4_vector = { 0.003 * sin(P11R4_TILT - (90.0 * RAD)), 0.003 * -cos(P11R4_TILT - (90.0 * RAD)), 0.0 };
 	const VECTOR3 p11row5_vector = { 0.003 * sin(P11R5_TILT - (90.0 * RAD)), 0.003 * -cos(P11R5_TILT - (90.0 * RAD)), 0.0 };
 
-	CircuitBrakerSwitch* breakerrow1[P11R1_CBCOUNT] = { &SE_WND_HTR_AC_CB, &HE_PQGS_PROP_DISP_AC_CB, &SBD_ANT_AC_CB, &ORDEAL_AC_CB, &AGS_AC_CB, &AOT_LAMP_ACB_CB, &LMP_FDAI_AC_CB, &NUM_LTG_AC_CB, &AC_B_INV_2_FEED_CB,
+	CircuitBreakerSwitch* breakerrow1[P11R1_CBCOUNT] = { &SE_WND_HTR_AC_CB, &HE_PQGS_PROP_DISP_AC_CB, &SBD_ANT_AC_CB, &ORDEAL_AC_CB, &AGS_AC_CB, &AOT_LAMP_ACB_CB, &LMP_FDAI_AC_CB, &NUM_LTG_AC_CB, &AC_B_INV_2_FEED_CB,
 		&AC_B_INV_1_FEED_CB, &AC_A_INV_2_FEED_CB, &AC_A_INV_1_FEED_CB, &AC_A_BUS_VOLT_CB, &CDR_WND_HTR_AC_CB, &TAPE_RCDR_AC_CB, &AOT_LAMP_ACA_CB, &RDZ_RDR_AC_CB, &DECA_GMBL_AC_CB, &INTGL_LTG_AC_CB };
 
 	for (int i = 0;i < P11R1_CBCOUNT;i++)
@@ -3273,7 +3273,7 @@ void LEM::DefineVCAnimations()
 		breakerrow1[i]->DefineMeshGroup(VC_GRP_CB_P11R1_01 + i);
 	}
 
-	CircuitBrakerSwitch* breakerrow2[P11R2_CBCOUNT] = { &RCS_A_MAIN_SOV_CB, &RCS_A_QUAD4_TCA_CB, &RCS_A_QUAD3_TCA_CB, &RCS_A_QUAD2_TCA_CB, &RCS_A_QUAD1_TCA_CB, &RCS_A_ISOL_VLV_CB, &RCS_A_ASC_FEED_2_CB,
+	CircuitBreakerSwitch* breakerrow2[P11R2_CBCOUNT] = { &RCS_A_MAIN_SOV_CB, &RCS_A_QUAD4_TCA_CB, &RCS_A_QUAD3_TCA_CB, &RCS_A_QUAD2_TCA_CB, &RCS_A_QUAD1_TCA_CB, &RCS_A_ISOL_VLV_CB, &RCS_A_ASC_FEED_2_CB,
 		&RCS_A_ASC_FEED_1_CB, &THRUST_DISP_CB, &MISSION_TIMER_CB, &CDR_XPTR_CB, &RNG_RT_ALT_RT_DC_CB, &GASTA_DC_CB, &CDR_FDAI_DC_CB, &COAS_DC_CB, &ORDEAL_DC_CB, &RNG_RT_ALT_RT_AC_CB, &GASTA_AC_CB,
 		&CDR_FDAI_AC_CB };
 
@@ -3285,7 +3285,7 @@ void LEM::DefineVCAnimations()
 		breakerrow2[i]->DefineMeshGroup(VC_GRP_CB_P11R2_01 + i);
 	}
 
-	CircuitBrakerSwitch* breakerrow3[P11R3_CBCOUNT] = { &PROP_DES_HE_REG_VENT_CB, &HTR_RR_STBY_CB, &HTR_RR_OPR_CB, &HTR_LR_CB, &HTR_DOCK_WINDOW_CB, &HTR_AOT_CB, &INST_SIG_CONDR_1_CB, &CDR_SCS_AEA_CB,
+	CircuitBreakerSwitch* breakerrow3[P11R3_CBCOUNT] = { &PROP_DES_HE_REG_VENT_CB, &HTR_RR_STBY_CB, &HTR_RR_OPR_CB, &HTR_LR_CB, &HTR_DOCK_WINDOW_CB, &HTR_AOT_CB, &INST_SIG_CONDR_1_CB, &CDR_SCS_AEA_CB,
 		&CDR_SCS_ABORT_STAGE_CB, &CDR_SCS_ATCA_CB, &CDR_SCS_AELD_CB, &SCS_ENG_CONT_CB, &SCS_ATT_DIR_CONT_CB, &SCS_ENG_START_OVRD_CB, &SCS_DECA_PWR_CB, &EDS_CB_LG_FLAG, &EDS_CB_LOGIC_A, &CDR_LTG_UTIL_CB,
 			   &CDR_LTG_ANUN_DOCK_COMPNT_CB };
 
@@ -3297,7 +3297,7 @@ void LEM::DefineVCAnimations()
 		breakerrow3[i]->DefineMeshGroup(VC_GRP_CB_P11R3_01 + i);
 	}
 
-	CircuitBrakerSwitch* breakerrow4[P11R4_CBCOUNT] = { &RCS_QUAD_4_CDR_HTR_CB, &RCS_QUAD_3_CDR_HTR_CB, &RCS_QUAD_2_CDR_HTR_CB,	&RCS_QUAD_1_CDR_HTR_CB,	&ECS_SUIT_FAN_1_CB,	&ECS_CABIN_FAN_1_CB,
+	CircuitBreakerSwitch* breakerrow4[P11R4_CBCOUNT] = { &RCS_QUAD_4_CDR_HTR_CB, &RCS_QUAD_3_CDR_HTR_CB, &RCS_QUAD_2_CDR_HTR_CB,	&RCS_QUAD_1_CDR_HTR_CB,	&ECS_SUIT_FAN_1_CB,	&ECS_CABIN_FAN_1_CB,
 		&ECS_GLYCOL_PUMP_2_CB, &ECS_GLYCOL_PUMP_1_CB, &ECS_GLYCOL_PUMP_AUTO_XFER_CB, &COMM_UP_DATA_LINK_CB, &COMM_SEC_SBAND_XCVR_CB, &COMM_SEC_SBAND_PA_CB, &COMM_VHF_XMTR_B_CB, &COMM_VHF_RCVR_A_CB,
 		&COMM_CDR_AUDIO_CB, &PGNS_SIG_STR_DISP_CB, &PGNS_LDG_RDR_CB, &PGNS_RNDZ_RDR_CB, &LGC_DSKY_CB, &IMU_SBY_CB, &IMU_OPR_CB };
 
@@ -3309,7 +3309,7 @@ void LEM::DefineVCAnimations()
 		breakerrow4[i]->DefineMeshGroup(VC_GRP_CB_P11R4_01 + i);
 	}
 
-	CircuitBrakerSwitch* breakerrow5[P11R5_CBCOUNT] = { &CDRBatteryFeedTieCB1, &CDRBatteryFeedTieCB2, &CDRCrossTieBalCB, &CDRCrossTieBusCB,&CDRXLunarBusTieCB,&CDRDesECAContCB,&CDRDesECAMainCB,
+	CircuitBreakerSwitch* breakerrow5[P11R5_CBCOUNT] = { &CDRBatteryFeedTieCB1, &CDRBatteryFeedTieCB2, &CDRCrossTieBalCB, &CDRCrossTieBusCB,&CDRXLunarBusTieCB,&CDRDesECAContCB,&CDRDesECAMainCB,
 	&CDRAscECAContCB, &CDRAscECAMainCB, &CDRInverter1CB, &CDRDCBusVoltCB };
 
 	for (int i = 0;i < P11R5_CBCOUNT;i++)
@@ -3323,8 +3323,8 @@ void LEM::DefineVCAnimations()
 	//Panel 12
 
 	TwoPositionSwitch *panel12sw[P12_SWITCHCOUNT] = { &Panel12AudioCtlSwitch, &Panel12UpdataLinkSwitch, &LMPAudSBandSwitch, &LMPAudICSSwitch, &LMPAudRelaySwitch, &LMPAudVHFASwitch, &LMPAudVHFBSwitch,
-		&LMPAudVOXSwitch, &SBandModulateSwitch, &SBandXCvrSelSwitch, &SBandPASelSwitch, &SBandVoiceSwitch, &SBandPCMSwitch, &SBandRangeSwitch, &VHFAVoiceSwitch, &VHFARcvrSwtich, &VHFBVoiceSwitch,
-		&VHFBRcvrSwtich, &TLMBiomedSwtich, &TLMBitrateSwitch, &TapeRecorderSwitch, &Panel12AntTrackModeSwitch };
+		&LMPAudVOXSwitch, &SBandModulateSwitch, &SBandXCvrSelSwitch, &SBandPASelSwitch, &SBandVoiceSwitch, &SBandPCMSwitch, &SBandRangeSwitch, &VHFAVoiceSwitch, &VHFARcvrSwitch, &VHFBVoiceSwitch,
+		&VHFBRcvrSwitch, &TLMBiomedSwitch, &TLMBitrateSwitch, &TapeRecorderSwitch, &Panel12AntTrackModeSwitch };
 
 	for (int i = 0;i < P12_SWITCHCOUNT;i++)
 	{
@@ -3436,7 +3436,7 @@ void LEM::DefineVCAnimations()
 	const VECTOR3 p16row3_vector = { 0.003 * -sin(P16R3_TILT - (90.0 * RAD)), 0.003 * cos(P16R3_TILT - (90.0 * RAD)), 0.0 };
 	const VECTOR3 p16row4_vector = { 0.003 * -sin(P16R4_TILT - (90.0 * RAD)), 0.003 * cos(P16R4_TILT - (90.0 * RAD)), 0.0 };
 
-	CircuitBrakerSwitch* breakerrowp161[P16R1_CBCOUNT] = { &LMP_EVT_TMR_FDAI_DC_CB, &SE_XPTR_DC_CB, &RCS_B_ASC_FEED_1_CB, &RCS_B_ASC_FEED_2_CB, &RCS_B_ISOL_VLV_CB, &RCS_B_QUAD1_TCA_CB, &RCS_B_QUAD2_TCA_CB, 
+	CircuitBreakerSwitch* breakerrowp161[P16R1_CBCOUNT] = { &LMP_EVT_TMR_FDAI_DC_CB, &SE_XPTR_DC_CB, &RCS_B_ASC_FEED_1_CB, &RCS_B_ASC_FEED_2_CB, &RCS_B_ISOL_VLV_CB, &RCS_B_QUAD1_TCA_CB, &RCS_B_QUAD2_TCA_CB, 
 		&RCS_B_QUAD3_TCA_CB, &RCS_B_QUAD4_TCA_CB, &RCS_B_CRSFD_CB, &RCS_B_TEMP_PRESS_DISP_FLAGS_CB, &RCS_B_PQGS_DISP_CB, &RCS_B_MAIN_SOV_CB, &PROP_DISP_ENG_OVRD_LOGIC_CB, &PROP_PQGS_CB, &PROP_ASC_HE_REG_CB };
 
 	for (int i = 0;i < P16R1_CBCOUNT;i++)
@@ -3447,7 +3447,7 @@ void LEM::DefineVCAnimations()
 		breakerrowp161[i]->DefineMeshGroup(VC_GRP_CB_P16R1_01 + i);
 	}
 	
-	CircuitBrakerSwitch* breakerrowp162[P16R2_CBCOUNT] = { &LTG_FLOOD_CB, &LTG_TRACK_CB, &LTG_ANUN_DOCK_COMPNT_CB, &LTG_MASTER_ALARM_CB, &EDS_CB_LOGIC_B, &SCS_AEA_CB, &SCS_ENG_ARM_CB, &SCS_ASA_CB, 
+	CircuitBreakerSwitch* breakerrowp162[P16R2_CBCOUNT] = { &LTG_FLOOD_CB, &LTG_TRACK_CB, &LTG_ANUN_DOCK_COMPNT_CB, &LTG_MASTER_ALARM_CB, &EDS_CB_LOGIC_B, &SCS_AEA_CB, &SCS_ENG_ARM_CB, &SCS_ASA_CB, 
 		&SCS_AELD_CB, &SCS_ATCA_CB, &SCS_ABORT_STAGE_CB, &SCS_ATCA_AGS_CB, &SCS_DES_ENG_OVRD_CB, &INST_CWEA_CB, &INST_SIG_SENSOR_CB, &INST_PCMTEA_CB, &INST_SIG_CONDR_2_CB, &ECS_SUIT_FLOW_CONT_CB };
 
 	for (int i = 0;i < P16R2_CBCOUNT;i++)
@@ -3458,7 +3458,7 @@ void LEM::DefineVCAnimations()
 		breakerrowp162[i]->DefineMeshGroup(VC_GRP_CB_P16R2_01 + i);
 	}
 
-	CircuitBrakerSwitch* breakerrowp163[P16R3_CBCOUNT] = { &COMM_DISP_CB, &COMM_SE_AUDIO_CB, &COMM_VHF_XMTR_A_CB, &COMM_VHF_RCVR_B_CB, &COMM_PRIM_SBAND_PA_CB, &COMM_PRIM_SBAND_XCVR_CB, &COMM_SBAND_ANT_CB, 
+	CircuitBreakerSwitch* breakerrowp163[P16R3_CBCOUNT] = { &COMM_DISP_CB, &COMM_SE_AUDIO_CB, &COMM_VHF_XMTR_A_CB, &COMM_VHF_RCVR_B_CB, &COMM_PRIM_SBAND_PA_CB, &COMM_PRIM_SBAND_XCVR_CB, &COMM_SBAND_ANT_CB, 
 		&COMM_PMP_CB, &COMM_TV_CB, &ECS_DISP_CB, &ECS_GLYCOL_PUMP_SEC_CB, &ECS_LGC_PUMP_CB, &ECS_CABIN_FAN_CONT_CB, &ECS_CABIN_REPRESS_CB, &ECS_SUIT_FAN_2_CB, &ECS_SUIT_FAN_DP_CB, &ECS_DIVERT_VLV_CB, 
 		&ECS_CO2_SENSOR_CB };
 
@@ -3470,7 +3470,7 @@ void LEM::DefineVCAnimations()
 		breakerrowp163[i]->DefineMeshGroup(VC_GRP_CB_P16R3_01 + i);
 	}
 
-	CircuitBrakerSwitch* breakerrowp164[P16R4_CBCOUNT] = { &RCS_QUAD_1_LMP_HTR_CB, &RCS_QUAD_2_LMP_HTR_CB, &RCS_QUAD_3_LMP_HTR_CB, &RCS_QUAD_4_LMP_HTR_CB, &HTR_DISP_CB, &HTR_SBD_ANT_CB, &CAMR_SEQ_CB,
+	CircuitBreakerSwitch* breakerrowp164[P16R4_CBCOUNT] = { &RCS_QUAD_1_LMP_HTR_CB, &RCS_QUAD_2_LMP_HTR_CB, &RCS_QUAD_3_LMP_HTR_CB, &RCS_QUAD_4_LMP_HTR_CB, &HTR_DISP_CB, &HTR_SBD_ANT_CB, &CAMR_SEQ_CB,
 		&EPS_DISP_CB, &LMPDCBusVoltCB, &LMPInverter2CB, &LMPAscECAMainCB, &LMPAscECAContCB, &LMPDesECAMainCB, &LMPDesECAContCB, &LMPXLunarBusTieCB, &LMPCrossTieBusCB, &LMPCrossTieBalCB,
 		&LMPBatteryFeedTieCB1, &LMPBatteryFeedTieCB2 };
 

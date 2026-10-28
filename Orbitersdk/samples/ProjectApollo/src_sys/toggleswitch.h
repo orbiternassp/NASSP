@@ -797,10 +797,10 @@ public:
 /// \brief Two-position circuit breaker switch.
 /// \ingroup PanelItems
 ///
-class CircuitBrakerSwitch: public ToggledPushSwitch {
+class CircuitBreakerSwitch: public ToggledPushSwitch {
 
 public:
-	CircuitBrakerSwitch() { MaxAmps = 0.0; };
+	CircuitBreakerSwitch() { MaxAmps = 0.0; };
 
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, e_object *s = 0, double amps = 30.0);
 
@@ -1628,7 +1628,7 @@ protected:
 	friend class RotationalSwitch;
 	friend class IndicatorSwitch;
 	friend class ThumbwheelSwitch;
-	friend class CircuitBrakerSwitch;
+	friend class CircuitBreakerSwitch;
 	friend class HandcontrollerSwitch;
 	friend class MeterSwitch;
 	friend class ContinuousSwitch;
@@ -1703,7 +1703,7 @@ protected:
 	friend class RotationalSwitch;
 	friend class IndicatorSwitch;
 	friend class ThumbwheelSwitch;
-	friend class CircuitBrakerSwitch;
+	friend class CircuitBreakerSwitch;
 	friend class HandcontrollerSwitch;
 	friend class MeterSwitch;
 	friend class ContinuousSwitch;

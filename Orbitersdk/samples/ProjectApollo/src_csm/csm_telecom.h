@@ -234,7 +234,7 @@ public:
 	DSE();
 	virtual ~DSE();
 
-	void Init(Saturn *vessel, CircuitBrakerSwitch *accb, CircuitBrakerSwitch *dccb);	       // Initialization
+	void Init(Saturn *vessel, CircuitBreakerSwitch *accb, CircuitBreakerSwitch *dccb);	       // Initialization
 	bool IsACPowered();
 	bool IsDCPowered();
 	bool TapeMotion();
@@ -248,8 +248,8 @@ protected:
 	Saturn *sat;					    /// Ship we're installed in
 	DSEChunk tape[tapeSize];			/// Simulated tape.
 
-	CircuitBrakerSwitch *ACbreaker;		/// AC circuit breaker.
-	CircuitBrakerSwitch *DCbreaker;		/// DC circuit breaker.
+	CircuitBreakerSwitch *ACbreaker;		/// AC circuit breaker.
+	CircuitBreakerSwitch *DCbreaker;		/// DC circuit breaker.
 
 	double tapeSpeed;					/// Tape speed in inches per second.
 	double tapePosition;				/// Tape position.
@@ -523,7 +523,7 @@ class VHFAMTransceiver
 public:
 	VHFAMTransceiver();
 	void Timestep();
-	void Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBrakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt);
+	void Init(Saturn *vessel, ThreePosSwitch *vhfASw, ThreePosSwitch *vhfBSw, ThreePosSwitch *rcvSw, CircuitBreakerSwitch *ctrpowcb, RotationalSwitch *antSelSw, VHFAntenna *lAnt, VHFAntenna *rAnt);
 	void LoadState(char *line);
 	void SaveState(FILEHANDLE scn);
 	bool IsVHFRangingConfig() { return (receiveA && !receiveB && !transmitA && transmitB); }
@@ -578,7 +578,7 @@ protected:
 	ThreePosSwitch *vhfASwitch;
 	ThreePosSwitch *vhfBSwitch;
 	ThreePosSwitch *rcvSwitch;
-	CircuitBrakerSwitch *ctrPowerCB;
+	CircuitBreakerSwitch *ctrPowerCB;
 	RotationalSwitch *antSelectorSw;
 	VHFAntenna *leftAntenna;
 	VHFAntenna *rightAntenna;
@@ -592,7 +592,7 @@ class VHFRangingSystem
 {
 public:
 	VHFRangingSystem();
-	void Init(Saturn *vessel, CircuitBrakerSwitch *cb, ToggleSwitch *powersw, ToggleSwitch *resetsw, VHFAMTransceiver *transc);
+	void Init(Saturn *vessel, CircuitBreakerSwitch *cb, ToggleSwitch *powersw, ToggleSwitch *resetsw, VHFAMTransceiver *transc);
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	bool IsPowered();
@@ -618,7 +618,7 @@ protected:
 	Saturn *sat;
 	VESSEL *lem;
 	VHFAMTransceiver *transceiver;
-	CircuitBrakerSwitch *powercb;
+	CircuitBreakerSwitch *powercb;
 	ToggleSwitch *powerswitch;
 	ToggleSwitch *resetswitch;
 };
@@ -630,7 +630,7 @@ class RNDZXPDRSystem
 public:
 	RNDZXPDRSystem();
 	~RNDZXPDRSystem();
-	void Init(Saturn *vessel, CircuitBrakerSwitch *PowerCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch);
+	void Init(Saturn *vessel, CircuitBreakerSwitch *PowerCB, ToggleSwitch *RNDZXPDRSwitch, ThreePosSwitch *Panel100RNDZXPDRSwitch, RotationalSwitch *LeftSystemTestRotarySwitch, RotationalSwitch *RightSystemTestRotarySwitch);
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void LoadState(char *line);
@@ -684,7 +684,7 @@ protected:
 	//RRT_AGC_XDUCER AGC_XDUCER;
 	//RRT_FREQLOCK_XDUCER FREQLOCK_XDUCER;
 
-	CircuitBrakerSwitch *RRT_FLTBusCB;
+	CircuitBreakerSwitch *RRT_FLTBusCB;
 	ToggleSwitch *TestOperateSwitch; //test operate switch
 	ThreePosSwitch *HeaterPowerSwitch; //heater/power switch
 	RotationalSwitch *RRT_LeftSystemTestRotarySwitch;
@@ -709,11 +709,11 @@ protected:
 
 class CTE : public TimingEquipment {
 public:
-	void Init(CircuitBrakerSwitch* mna, CircuitBrakerSwitch* mnb);
+	void Init(CircuitBreakerSwitch* mna, CircuitBreakerSwitch* mnb);
 	bool IsPowered();
 	virtual bool TimingSignal();
 
 protected:
-	CircuitBrakerSwitch* cte_mna;
-	CircuitBrakerSwitch* cte_mnb;
+	CircuitBreakerSwitch* cte_mna;
+	CircuitBreakerSwitch* cte_mnb;
 };

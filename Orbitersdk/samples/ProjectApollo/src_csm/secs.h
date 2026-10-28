@@ -134,7 +134,7 @@ class MESC
 public:
 	MESC();
 	void Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, MissionTimer *MT, ThreePosSwitch *MTC, EventTimer *ET, ThreePosSwitch *ETC, MESC* OtherMESCSystem, int IsSysA);
-	void CBInit(CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker);
+	void CBInit(CircuitBreakerSwitch *SECSLogic, CircuitBreakerSwitch *SECSArm, CircuitBreakerSwitch *RCSLogicCB, CircuitBreakerSwitch *ELSBatteryCB, CircuitBreakerSwitch *EDSBreaker);
 	void Timestep(double simdt);
 
 	bool GetApexCoverJettisonRelay() { return ApexCoverJettison; }
@@ -276,17 +276,17 @@ protected:
 
 	DCbus *SECSLogicBus;
 	DCbus *SECSPyroBus;
-	CircuitBrakerSwitch *SECSLogicBreaker;
-	CircuitBrakerSwitch *SECSArmBreaker;
-	CircuitBrakerSwitch *RCSLogicCircuitBreaker;
-	CircuitBrakerSwitch *ELSBatteryBreaker;
-	CircuitBrakerSwitch *EDSBatteryBreaker;
+	CircuitBreakerSwitch *SECSLogicBreaker;
+	CircuitBreakerSwitch *SECSArmBreaker;
+	CircuitBreakerSwitch *RCSLogicCircuitBreaker;
+	CircuitBreakerSwitch *ELSBatteryBreaker;
+	CircuitBreakerSwitch *EDSBatteryBreaker;
 	MissionTimer *MissionTimerDisplay;
 	EventTimer *EventTimerDisplay;
 	ThreePosSwitch *EventTimerControl;
 	ThreePosSwitch *MissionTimerControl;
 
-	CircuitBrakerSwitch *EDSLogicBreaker;
+	CircuitBreakerSwitch *EDSLogicBreaker;
 
 	//NOTEHANDLE MESCDisplay;
 };
@@ -297,8 +297,8 @@ class LDEC
 {
 public:
 	LDEC();
-	void Init(Saturn *v, MESC* connectedMESC, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch* DockProbe, ThreePosSwitch *DockingProbeRetract, ToggleSwitch *PyroArmSw, DCbus *PyroB, PowerMerge *PyroBusFeed);
-	void InitSIMJett(CircuitBrakerSwitch *SMSec1Power);
+	void Init(Saturn *v, MESC* connectedMESC, CircuitBreakerSwitch *SECSArm, CircuitBreakerSwitch* DockProbe, ThreePosSwitch *DockingProbeRetract, ToggleSwitch *PyroArmSw, DCbus *PyroB, PowerMerge *PyroBusFeed);
+	void InitSIMJett(CircuitBreakerSwitch *SMSec1Power);
 	void Timestep(double simdt);
 	void LoadState(FILEHANDLE scn, char *end_str);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
@@ -344,13 +344,13 @@ protected:
 
 	Saturn *Sat;
 	MESC* mesc;
-	CircuitBrakerSwitch *SECSArmBreaker;
-	CircuitBrakerSwitch *DockProbeBreaker;
+	CircuitBreakerSwitch *SECSArmBreaker;
+	CircuitBreakerSwitch *DockProbeBreaker;
 	ThreePosSwitch *DockingProbeRetractSwitch;
 	ToggleSwitch *PyroArmSwitch;
 	DCbus *PyroBus;
 	PowerMerge *PyroBusFeeder;
-	CircuitBrakerSwitch *SMSector1LogicPowerBreaker;
+	CircuitBreakerSwitch *SMSector1LogicPowerBreaker;
 };
 
 ///
@@ -380,7 +380,7 @@ public:
 
 	SMJC *GetSMJC(bool isSysA);
 
-	void InitSIMJett(CircuitBrakerSwitch *SMSec1PowerA, CircuitBrakerSwitch *SMSec1PowerB);
+	void InitSIMJett(CircuitBreakerSwitch *SMSec1PowerA, CircuitBreakerSwitch *SMSec1PowerB);
 	void SetSaturnType(int sattype);
 
 	void LoadState(FILEHANDLE scn);
@@ -470,7 +470,7 @@ class ELSC
 {
 public:
 	ELSC();
-	void Init(Saturn *v, CircuitBrakerSwitch *ELSBatteryCB, MESC* ConnectedMESC, ELSC *OtherELSCSystem);
+	void Init(Saturn *v, CircuitBreakerSwitch *ELSBatteryCB, MESC* ConnectedMESC, ELSC *OtherELSCSystem);
 	void Timestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
@@ -498,7 +498,7 @@ protected:
 	//Pilot Parachute Deploy
 	DelayTimer TD3;
 
-	CircuitBrakerSwitch *ELSBatteryBreaker;
+	CircuitBreakerSwitch *ELSBatteryBreaker;
 
 	ELSC* OtherELSC;
 	MESC* mesc;
@@ -540,7 +540,7 @@ public:
 	PCVB pcvb;
 
 protected:
-	double NewFloatBagSize(double size, ThreePosSwitch *sw, CircuitBrakerSwitch *cb, double simdt);
+	double NewFloatBagSize(double size, ThreePosSwitch *sw, CircuitBreakerSwitch *cb, double simdt);
 
 	int State;
 

@@ -826,7 +826,7 @@ LEM_BusCrossTie::LEM_BusCrossTie() {
 	last_lmp_ld = 0;
 }
 
-void LEM_BusCrossTie::Init(LEM *s, DCbus *sra, DCbus *srb, CircuitBrakerSwitch *cb1, CircuitBrakerSwitch *cb2, CircuitBrakerSwitch *cb3, CircuitBrakerSwitch *cb4) {
+void LEM_BusCrossTie::Init(LEM *s, DCbus *sra, DCbus *srb, CircuitBreakerSwitch *cb1, CircuitBreakerSwitch *cb2, CircuitBreakerSwitch *cb3, CircuitBreakerSwitch *cb4) {
 	lem = s;
 	dc_bus_lmp = sra;
 	dc_bus_cdr = srb;

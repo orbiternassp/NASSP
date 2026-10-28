@@ -226,7 +226,7 @@ void SPSPropellantSource::Timestep(double simt, double simdt) {
 	}
 
 	// Helium valve A
-	if (our_vessel->HeValveMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && 
+	if (our_vessel->HeValveMnACircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE && 
 	   (our_vessel->SPSHeliumValveASwitch.IsDown() || (thrustOn && our_vessel->SPSHeliumValveASwitch.IsUp()))) {
 		heliumValveAOpen = true;
 
@@ -238,7 +238,7 @@ void SPSPropellantSource::Timestep(double simt, double simdt) {
 	}
 
 	// Helium valve B
-	if (our_vessel->HeValveMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && 
+	if (our_vessel->HeValveMnBCircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE && 
 	   (our_vessel->SPSHeliumValveBSwitch.IsDown() || (thrustOn && our_vessel->SPSHeliumValveBSwitch.IsUp()))) {
 		heliumValveBOpen = true;
 
@@ -314,11 +314,11 @@ void SPSPropellantSource::SystemTimestep(double simdt) {
 
 	if (our_vessel->GetStage() > CSM_LEM_STAGE) return;
 
-	if (heliumValveAOpen && our_vessel->HeValveMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) 
-		our_vessel->HeValveMnACircuitBraker.DrawPower(91.2);
+	if (heliumValveAOpen && our_vessel->HeValveMnACircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE) 
+		our_vessel->HeValveMnACircuitBreaker.DrawPower(91.2);
 
-	if (heliumValveBOpen && our_vessel->HeValveMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) 
-		our_vessel->HeValveMnBCircuitBraker.DrawPower(91.2);
+	if (heliumValveBOpen && our_vessel->HeValveMnBCircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE) 
+		our_vessel->HeValveMnBCircuitBreaker.DrawPower(91.2);
 }
 
 bool SPSPropellantSource::IsOxidFlowValveMin() {
@@ -562,11 +562,11 @@ void SPSEngine::Timestep(double simt, double simdt) {
 	bool injectorPreValveAOpen = false;
 	bool injectorPreValveBOpen = false;
 
-	if (saturn->HeValveMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && saturn->dVThrust1Switch.IsUp()) {
+	if (saturn->HeValveMnACircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE && saturn->dVThrust1Switch.IsUp()) {
 		injectorPreValveAOpen = true;
 	}
 
-	if (saturn->HeValveMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && saturn->dVThrust2Switch.IsUp()) {
+	if (saturn->HeValveMnBCircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE && saturn->dVThrust2Switch.IsUp()) {
 		injectorPreValveBOpen = true;
 	}
 

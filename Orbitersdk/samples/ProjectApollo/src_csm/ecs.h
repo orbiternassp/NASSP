@@ -108,7 +108,7 @@ public:
 	CabinPressureReliefValve(Sound &plventsound);
 	virtual ~CabinPressureReliefValve();
 
-	void Init(h_Pipe *p, h_Pipe *i, Saturn *v, ThumbwheelSwitch *l, CircuitBrakerSwitch *plvlv, ThreePosSwitch *plv, e_object *plpower, SaturnSideHatch *sh);
+	void Init(h_Pipe *p, h_Pipe *i, Saturn *v, ThumbwheelSwitch *l, CircuitBreakerSwitch *plvlv, ThreePosSwitch *plv, e_object *plpower, SaturnSideHatch *sh);
 	void SystemTimestep(double simdt);
 	void SetLeakSize(double s);
 	void SetReliefPressurePSI(double p);
@@ -120,7 +120,7 @@ protected:
 	h_Pipe *inlet;
 	Saturn *saturn;
 	ThumbwheelSwitch *lever;
-	CircuitBrakerSwitch *postLandingValve;
+	CircuitBreakerSwitch *postLandingValve;
 	ThreePosSwitch *postLandingVent;
 	e_object *postLandingPower;
 	SaturnSideHatch *sideHatch;
@@ -141,13 +141,13 @@ public:
 	SuitCircuitReturnValve();
 	virtual ~SuitCircuitReturnValve();
 
-	void Init(h_Pipe *p, CircuitBrakerSwitch *l);
+	void Init(h_Pipe *p, CircuitBreakerSwitch *l);
 	void SystemTimestep(double simdt);
 	bool IsOpen() { return (pipe->in->open != 0); };
 
 protected:
 	h_Pipe *pipe;
-	CircuitBrakerSwitch *lever;
+	CircuitBreakerSwitch *lever;
 };
 
 ///
@@ -163,7 +163,7 @@ public:
 
 	void Init(h_Tank *o2sm, h_Tank *o2mr, h_Tank *o2st, h_Tank *o2rp, h_Tank *o2rpo, h_Pipe *o2rpop,
 		      RotationalSwitch *smv, RotationalSwitch *stv, RotationalSwitch *rpv,
-			  CircuitBrakerSwitch *mra, CircuitBrakerSwitch *mrb, PanelSwitchItem *eo2v,
+			  CircuitBreakerSwitch *mra, CircuitBreakerSwitch *mrb, PanelSwitchItem *eo2v,
 			  PanelSwitchItem *ro2v, RotationalSwitch *strv);
 	void SystemTimestep(double simdt);
 	void Close();
@@ -180,8 +180,8 @@ protected:
 	RotationalSwitch *smSupplyValve;
 	RotationalSwitch *surgeTankValve;
 	RotationalSwitch *repressPackageValve;
-	CircuitBrakerSwitch *mainRegulatorASwitch;
-	CircuitBrakerSwitch *mainRegulatorBSwitch;
+	CircuitBreakerSwitch *mainRegulatorASwitch;
+	CircuitBreakerSwitch *mainRegulatorBSwitch;
 	PanelSwitchItem *emergencyO2Valve;
 	PanelSwitchItem *repressO2Valve;
 	RotationalSwitch *surgeTankReliefValve;
@@ -454,7 +454,7 @@ class SaturnDumpHeater
 {
 public:
 	SaturnDumpHeater();
-	void Init(Saturn* s, h_Radiator* noz, Boiler* ha, Boiler* sha, Boiler* hb, Boiler* shb, CircuitBrakerSwitch* cba, CircuitBrakerSwitch* cbb, ThreePosSwitch* sw);
+	void Init(Saturn* s, h_Radiator* noz, Boiler* ha, Boiler* sha, Boiler* hb, Boiler* shb, CircuitBreakerSwitch* cba, CircuitBreakerSwitch* cbb, ThreePosSwitch* sw);
 	double GetTemperatureF();
 	bool IsFrozen();
 	void SystemTimestep(double simdt);
@@ -465,8 +465,8 @@ protected:
 	Boiler *stripheaterA;
 	Boiler *heaterB;
 	Boiler *stripheaterB;
-	CircuitBrakerSwitch *circuitbreakerA;
-	CircuitBrakerSwitch *circuitbreakerB;
+	CircuitBreakerSwitch *circuitbreakerA;
+	CircuitBreakerSwitch *circuitbreakerB;
 	ThreePosSwitch *powerswitch;
 	double temp;
 };

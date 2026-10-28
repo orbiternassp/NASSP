@@ -48,7 +48,7 @@ LEM_EDRelayBox::LEM_EDRelayBox():
 	DescentTankIsolValvesRelay = false;
 }
 
-void LEM_EDRelayBox::Init(LEM *l, CircuitBrakerSwitch *LogicPower, DCbus *edbus, Battery *edbatt)
+void LEM_EDRelayBox::Init(LEM *l, CircuitBreakerSwitch *LogicPower, DCbus *edbus, Battery *edbatt)
 {
 	lem = l;
 	EDLogicPower = LogicPower;
