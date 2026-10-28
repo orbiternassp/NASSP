@@ -490,10 +490,10 @@ void LEM::InitSwitches() {
 	SBandPCMSwitch.Register(PSH,"SBandPCMSwitch",THREEPOSSWITCH_CENTER);
 	SBandRangeSwitch.Register(PSH,"SBandRangeSwitch",THREEPOSSWITCH_CENTER);
 	VHFAVoiceSwitch.Register(PSH,"VHFAVoiceSwitch",THREEPOSSWITCH_CENTER);
-	VHFARcvrSwtich.Register(PSH,"VHFARcvrSwtich",TOGGLESWITCH_DOWN);
+	VHFARcvrSwitch.Register(PSH,"VHFARcvrSwitch",TOGGLESWITCH_DOWN);
 	VHFBVoiceSwitch.Register(PSH,"VHFBVoiceSwitch",THREEPOSSWITCH_CENTER);
-	VHFBRcvrSwtich.Register(PSH,"VHFBRcvrSwtich",TOGGLESWITCH_DOWN);
-	TLMBiomedSwtich.Register(PSH,"TLMBiomedSwtich",THREEPOSSWITCH_CENTER);
+	VHFBRcvrSwitch.Register(PSH,"VHFBRcvrSwitch",TOGGLESWITCH_DOWN);
+	TLMBiomedSwitch.Register(PSH,"TLMBiomedSwitch",THREEPOSSWITCH_CENTER);
 	TLMBitrateSwitch.Register(PSH,"TLMBitrateSwitch",TOGGLESWITCH_UP);
 	VHFASquelch.Register(PSH,"VHFASquelch",3,9);
 	VHFBSquelch.Register(PSH,"VHFBSquelch",3,9);
@@ -1174,7 +1174,7 @@ void LEM::InitPanel (int panel)
 		// srf[5]						= oapiCreateSurface (LOADBMP (IDB_FDAI));
 		srf[SRF_LIGHTS2]			= oapiCreateSurface (LOADBMP (IDB_LIGHTS2));
 		srf[SRF_LEMSWITCH1]			= oapiCreateSurface (LOADBMP (IDB_LEMSWITCH1));
-		srf[SRF_LEMSWTICH3]			= oapiCreateSurface (LOADBMP (IDB_LEMSWITCH3));
+		srf[SRF_LEMSWITCH3]			= oapiCreateSurface (LOADBMP (IDB_LEMSWITCH3));
 		// Unused surface 7 was
 		// srf[7]						= oapiCreateSurface (LOADBMP (IDB_SWLEVER));
 		srf[SRF_SECSWITCH]			= oapiCreateSurface (LOADBMP (IDB_SECSWITCH));
@@ -2435,10 +2435,10 @@ void LEM::SetSwitches(int panel) {
 
 	Panel12CommSwitchRow2.Init(AID_LM_P12_COMM_SWITCHES_ROW2, MainPanel);
 	VHFAVoiceSwitch.Init(0, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel12CommSwitchRow2);
-	VHFARcvrSwtich.Init(634 - 568, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel12CommSwitchRow2);
+	VHFARcvrSwitch.Init(634 - 568, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel12CommSwitchRow2);
 	VHFBVoiceSwitch.Init(698 - 568, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel12CommSwitchRow2);
-	VHFBRcvrSwtich.Init(764 - 568, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel12CommSwitchRow2);
-	TLMBiomedSwtich.Init(828 - 568, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel12CommSwitchRow2);
+	VHFBRcvrSwitch.Init(764 - 568, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel12CommSwitchRow2);
+	TLMBiomedSwitch.Init(828 - 568, 0, 34, 29, srf[SRF_LMTHREEPOSSWITCH], srf[SRF_BORDER_34x29], Panel12CommSwitchRow2);
 	TLMBitrateSwitch.Init(894 - 568, 0, 34, 29, srf[SRF_SWITCHUP], srf[SRF_BORDER_34x29], Panel12CommSwitchRow2);
 
 	Panel12CommSwitchRow3.Init(AID_LM_P12_COMM_SWITCHES_ROW3, MainPanel);

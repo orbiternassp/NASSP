@@ -369,7 +369,7 @@ public:
 		SRF_SWITCHUP,
 		SRF_LIGHTS2,
 		SRF_LEMSWITCH1,
-		SRF_LEMSWTICH3,
+		SRF_LEMSWITCH3,
 		SRF_SECSWITCH,
 		SRF_THRUSTMETER,
 		SRF_SEQUENCERSWITCHES,
@@ -1482,10 +1482,10 @@ protected:
 
 	SwitchRow Panel12CommSwitchRow2;
 	ThreePosSwitch VHFAVoiceSwitch;
-	ToggleSwitch VHFARcvrSwtich;
+	ToggleSwitch VHFARcvrSwitch;
 	ThreePosSwitch VHFBVoiceSwitch;
-	ToggleSwitch VHFBRcvrSwtich;
-	ThreePosSwitch TLMBiomedSwtich;
+	ToggleSwitch VHFBRcvrSwitch;
+	ThreePosSwitch TLMBiomedSwitch;
 	ToggleSwitch TLMBitrateSwitch;
 
 	SwitchRow Panel12CommSwitchRow3;

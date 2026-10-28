@@ -3323,8 +3323,8 @@ void LEM::DefineVCAnimations()
 	//Panel 12
 
 	TwoPositionSwitch *panel12sw[P12_SWITCHCOUNT] = { &Panel12AudioCtlSwitch, &Panel12UpdataLinkSwitch, &LMPAudSBandSwitch, &LMPAudICSSwitch, &LMPAudRelaySwitch, &LMPAudVHFASwitch, &LMPAudVHFBSwitch,
-		&LMPAudVOXSwitch, &SBandModulateSwitch, &SBandXCvrSelSwitch, &SBandPASelSwitch, &SBandVoiceSwitch, &SBandPCMSwitch, &SBandRangeSwitch, &VHFAVoiceSwitch, &VHFARcvrSwtich, &VHFBVoiceSwitch,
-		&VHFBRcvrSwtich, &TLMBiomedSwtich, &TLMBitrateSwitch, &TapeRecorderSwitch, &Panel12AntTrackModeSwitch };
+		&LMPAudVOXSwitch, &SBandModulateSwitch, &SBandXCvrSelSwitch, &SBandPASelSwitch, &SBandVoiceSwitch, &SBandPCMSwitch, &SBandRangeSwitch, &VHFAVoiceSwitch, &VHFARcvrSwitch, &VHFBVoiceSwitch,
+		&VHFBRcvrSwitch, &TLMBiomedSwitch, &TLMBitrateSwitch, &TapeRecorderSwitch, &Panel12AntTrackModeSwitch };
 
 	for (int i = 0;i < P12_SWITCHCOUNT;i++)
 	{
