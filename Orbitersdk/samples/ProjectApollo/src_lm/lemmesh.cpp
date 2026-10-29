@@ -150,7 +150,7 @@ void LEM::SetLmVesselDockStage()
 
 {
 	ClearThrusterDefinitions();
-	SetEmptyMass(AscentFuelMassKg + AscentEmptyMassKg + DescentEmptyMassKg);
+	SetEmptyMass(AscentEmptyMassKg + DescentEmptyMassKg);
 	if (oapiGetFocusObject() == GetHandle()) { SetSize(6); }
 	else { SetSize(visibilitySize); }
 	SetVisibilityLimit(1e-3, 4.6401e-4);
@@ -174,7 +174,7 @@ void LEM::SetLmVesselDockStage()
 
 	if (!ph_Dsc)
 	{
-		ph_Dsc = CreatePropellantResource(DescentFuelMassKg); //2nd stage Propellant
+		ph_Dsc = CreatePropellantResource(DescentFuelMassKg); //Descent stage Propellant
 	}
 
 	SetDefaultPropellantResource(ph_Dsc); // display 2nd stage propellant level in generic HUD
@@ -185,6 +185,16 @@ void LEM::SetLmVesselDockStage()
 	}
 	if (!ph_RCSB) {
 		ph_RCSB = CreatePropellantResource(LM_RCS_FUEL_PER_TANK);
+	}
+
+	//Create Ascent Stage APS Resource
+	if (!ph_Asc)
+	{
+		ph_Asc = CreatePropellantResource(AscentFuelMassKg);
+	}
+	else
+	{
+		SetPropellantMaxMass(ph_Asc, AscentFuelMassKg);
 	}
 
 	// orbiter main thrusters
