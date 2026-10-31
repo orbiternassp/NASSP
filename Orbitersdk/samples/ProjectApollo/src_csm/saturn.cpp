@@ -1644,7 +1644,7 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 		dsky.SendNetworkPacketDSKY();
 	}
 
-	if ((oapiGetFocusObject() == GetHandle()) && (oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
+	if ((oapiGetFocusObject() == GetHandle()) && nassp::utils::IsVirtualCockpitMode() && (oapiCameraMode() == CAM_COCKPIT)) {
 		//We have focus on this vessel, and are in the VC
 		MoveFlashlight();
 	}
@@ -1700,7 +1700,7 @@ void Saturn::clbkPostStep(double simt, double simdt, double mjd)
 	checkControl.timestep(MissionTime, eventControl);
 
 	// Update VC animations
-	if (oapiCameraInternal() && oapiCockpitMode() == COCKPIT_VIRTUAL)
+	if (oapiCameraInternal() && nassp::utils::IsVirtualCockpitMode())
 	{
 		MainPanelVC.OnPostStep(simt, simdt, mjd);
 	}

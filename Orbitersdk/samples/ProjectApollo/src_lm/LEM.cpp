@@ -1462,7 +1462,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	}
 
 	// Debug string for displaying descent flight info from VC view
-	if (VcInfoEnabled && !Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && oapiCockpitMode() == COCKPIT_VIRTUAL && viewpos == LMVIEW_LPD) {
+	if (VcInfoEnabled && !Landed && GetAltitude(ALTMODE_GROUND) < 10000.0 && EngineArmSwitch.GetState() == 0 && nassp::utils::IsVirtualCockpitMode() && viewpos == LMVIEW_LPD) {
 
 		char pgnssw[32];
 		char thrsw[32];
@@ -1523,7 +1523,7 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		dsky.SendNetworkPacketDSKY();
 	}
 
-	if ((oapiGetFocusObject() == GetHandle()) && (oapiCockpitMode() == COCKPIT_VIRTUAL) && (oapiCameraMode() == CAM_COCKPIT)) {
+	if ((oapiGetFocusObject() == GetHandle()) && nassp::utils::IsVirtualCockpitMode() && (oapiCameraMode() == CAM_COCKPIT)) {
 		//We have focus on this vessel, and are in the VC
 		MoveFlashlight();
 	}

@@ -102,5 +102,17 @@ namespace nassp
 			}
 			return false;
 		}
+
+		// Orbiter only creates its cockpit pane when a graphics client is attached.
+		// Without one (console mode: Modules\Server\orbiter.exe with no graphics client module)
+		// the render viewport is 0 x 0 and oapiCockpitMode() dereferences a NULL pane.
+		// Use this instead of oapiCockpitMode() == COCKPIT_VIRTUAL in per-timestep code.
+		static inline bool IsVirtualCockpitMode()
+		{
+			DWORD w = 0, h = 0;
+			oapiGetViewportSize(&w, &h);
+			if (w == 0 || h == 0) return false; // no graphics client
+			return oapiCockpitMode() == COCKPIT_VIRTUAL;
+		}
 	}
 }
