@@ -1826,7 +1826,7 @@ void LEMDPSDigitalMeter::InitVC(SURFHANDLE surf)
 
 bool LEMDPSDigitalMeter::IsPowered()
 {
-	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->lca.Num_Override_20_110VAC_Output.Voltage() < 20.0)
+	if (Voltage() < SP_MIN_DCVOLTAGE || lem->QTYMonSwitch.IsDown() || lem->PROP_PQGS_CB.Voltage() < SP_MIN_DCVOLTAGE || lem->lca.Num_Override_20_110VAC_Output.Voltage() < 30.0)
 	{
 		return false;
 	}
@@ -1907,7 +1907,7 @@ void LEMDigitalHeliumPressureMeter::Init(SURFHANDLE surf, SwitchRow &row, Rotati
 
 bool LEMDigitalHeliumPressureMeter::IsPowered()
 {
-	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.Num_Override_20_110VAC_Output.Voltage() < 20.0)
+	if (Voltage() < SP_MIN_DCVOLTAGE || source->GetState() == 0 || lem->lca.Num_Override_20_110VAC_Output.Voltage() < 30.0)
 	{
 		return false;
 	}
