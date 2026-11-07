@@ -425,6 +425,7 @@ const VECTOR3 UtilityLights_LMPLocation = { 0.1030, 1.0318, 0.8908 };
 
 // AOT
 const VECTOR3 Sw_RRGyroLocation = { -0.1575, 0.7930, 1.3903 };
+const VECTOR3 Sw_RRGyroP16Location = { 0.9401, 0.4903, 1.3734 };
 const VECTOR3 AOT_ShaftSelectorLocation = { 0.064288, 0.88006, 1.47924 };
 
 // Flood lights
@@ -1533,8 +1534,22 @@ void LEM::RegisterActiveAreas()
 	DR = _V(0.7391, 0.3895, -0.5493);
 
 	oapiVCRegisterArea(AID_VC_SW_RRGYRO, PANEL_REDRAW_ALWAYS, PANEL_MOUSE_DOWN | PANEL_MOUSE_UP);
-	oapiVCSetAreaClickmode_Quadrilateral(AID_VC_SW_RRGYRO, Sw_RRGyroLocation + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + RRGYRO_CLICK + ofs);
-
+	if (pMission->GetLMNumber() > 5) {
+		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_SW_RRGYRO, Sw_RRGyroLocation + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroLocation + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + RRGYRO_CLICK + ofs);
+}
+	if (pMission->GetLMNumber() == 5) {
+		// AOT LM5
+//		UL = _V(0.9401, 0.4998, 1.3792);
+//		UR = _V(0.9401, 0.4998, 1.3675);
+//		DL = _V(0.9401, 0.4808, 1.3792);
+//		DR = _V(0.9401, 0.4808, 1.3675);
+		UL = _V( 0.0052,  0.7068,  0.7071);
+		UR = _V( 0.0053,  0.7072, -0.7072);
+		DL = _V(-0.0054, -0.7071,  0.7069);
+		DR = _V(-0.0055, -0.7070, -0.7068);
+		oapiVCSetAreaClickmode_Quadrilateral(AID_VC_SW_RRGYRO, Sw_RRGyroP16Location + _V(UL.x * SWITCH, UL.y * SWITCH, UL.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroP16Location + _V(UR.x * SWITCH, UR.y * SWITCH, UR.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroP16Location + _V(DL.x * SWITCH, DL.y * SWITCH, DL.z * SWITCH) + RRGYRO_CLICK + ofs, Sw_RRGyroP16Location + _V(DR.x * SWITCH, DR.y * SWITCH, DR.z * SWITCH) + RRGYRO_CLICK + ofs);
+	}	
+	
 	oapiVCRegisterArea(AID_VC_RETICLEDISP, _R(1068*TexMul, 1891*TexMul, 1188*TexMul, 1927*TexMul), PANEL_REDRAW_ALWAYS, PANEL_MOUSE_IGNORE, PANEL_MAP_BACKGROUND, MainPanelTex2);
 
 	// COAS FWD
@@ -3720,8 +3735,14 @@ void LEM::DefineVCAnimations()
 
 	// AOT
 	MainPanelVC.AddSwitch(&RRGyroSelSwitch, AID_VC_SW_RRGYRO);
-	RRGyroSelSwitch.SetReference(Sw_RRGyroLocation, _V(0.048633374944462, 0.519162328382934, -0.853290848204481));
-	RRGyroSelSwitch.DefineMeshGroup(VC_GRP_Sw_RRGyro);
+	if (pMission->GetLMNumber() > 5) {
+		RRGyroSelSwitch.SetReference(Sw_RRGyroLocation, _V(0.048633374944462, 0.519162328382934, -0.853290848204481));
+		RRGyroSelSwitch.DefineMeshGroup(VC_GRP_Sw_RRGyro);
+	}
+	if (pMission->GetLMNumber() == 5) {
+		RRGyroSelSwitch.SetReference(Sw_RRGyroP16Location, _V(0, 0, -1));
+		RRGyroSelSwitch.DefineMeshGroup(VC_GRP_Sw_P16_RRGyro_LM5);
+	}	
 
 	// EVA Antenna Handle
 	MainPanelVC.AddSwitch(&EvaAntennaHandle, AID_VC_EVA_Ant_Handle);

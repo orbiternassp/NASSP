@@ -2247,15 +2247,25 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 		oapiBlt(LMVC, LMVC, 140*TexMul, 1020*TexMul, 0*TexMul, 882*TexMul, 59*TexMul, 105*TexMul);
 	}
 
-	// Hide AOT RR Gyro selector mesh
+	// Apollo 11 RR Gyro Switch
+	// Hide AOT RR Gyro selector mesh for Apollo 11 and below
 	// TODO: While the mesh is hidden, the switch still exists and can theoretically be clicked if one clicks on it.
-	if (pMission->GetLMNumber() < 5)
-	{
+	if (pMission->GetLMNumber() <= 5) {												// Apollo 11
 		HideMeshGroup(vcidx, VC_GRP_AOT_RRGyro, true);
 		HideMeshGroup(vcidx, VC_GRP_SwitchHolder_RRGyro, true);
 		HideMeshGroup(vcidx, VC_GRP_Sw_RRGyro, true);
+		HideMeshGroup(vcidx, VC_GRP_Panel12_16_AOT_LM5, true);
+	}
+	if (pMission->GetLMNumber() == 5) {
+		HideMeshGroup(vcidx, VC_GRP_Panel12_16_AOT_NonLM5, true);
+		HideMeshGroup(vcidx, VC_GRP_Panel12_16_AOT_LM5, false);
 	}
 
+	if (pMission->GetLMNumber() != 5) {												// Hide the switch in Panel 16 for Other Missions
+		HideMeshGroup(vcidx, VC_GRP_Sw_P16_RRGyro_LM5, true);
+		HideMeshGroup(vcidx, VC_GRP_SwitchHolder_P16_LM5, true);
+	}
+	if (pMission->GetLMNumber() > 5) HideMeshGroup(vcidx, VC_GRP_Panel12_16_AOT_LM5, true);
 }
 
 void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)
