@@ -55,6 +55,7 @@ MESHHANDLE hLMVC;
 MESHHANDLE hLMWindowShades;
 MESHHANDLE hLMXpointerShades;
 MESHHANDLE hLMPointingArrow;
+MESHHANDLE hLMVCOptics;
 MESHHANDLE hLMCueCardsArrows;
 
 static PARTICLESTREAMSPEC lunar_dust = {
@@ -853,6 +854,9 @@ void LEM::SetMeshes() {
 	// Pointing Arrow
 	hLMPointingArrowidx = AddMesh(hLMPointingArrow, &mesh_asc);
 
+	// Optics
+	hLMVCOpticsidx = AddMesh(hLMVCOptics, &mesh_asc);
+
 	// VC Mesh
 	vcidx = AddMesh(hLMVC, &mesh_asc);
 
@@ -886,6 +890,7 @@ void LEMLoadMeshes()
 	hLMXpointerShades = oapiLoadMeshGlobal("ProjectApollo/LM_Xpointer_Shades");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
 	hLMPointingArrow = oapiLoadMeshGlobal("ProjectApollo/Helpers/PointingArrow");
+	hLMVCOptics = oapiLoadMeshGlobal("ProjectApollo/LMVC_Optics");
 	hLMCueCardsArrows = oapiLoadMeshGlobal("ProjectApollo/Helpers/LM-CueCardsArrows");
 }
 
