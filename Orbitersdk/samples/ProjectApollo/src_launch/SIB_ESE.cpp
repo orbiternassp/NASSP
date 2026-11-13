@@ -27,7 +27,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LCCPadInterface.h"
 #include "SIB_ESE.h"
 
-SIB_ESE::SIB_ESE(TailUmbilical *SCMUmb, LCCPadInterface *p) : SI_ESE(SCMUmb, p)
+SIB_ESE::SIB_ESE(LCCPadInterface *p) : SI_ESE(p)
 {
 	for (int i = 0;i < 8;i++)
 	{

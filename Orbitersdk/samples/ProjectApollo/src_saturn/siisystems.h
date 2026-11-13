@@ -25,15 +25,69 @@ See http://nassp.sourceforge.net/license/ for more details.
 #pragma once
 
 #include "j2engine.h"
+#include "connector.h"
 
 #define PUVALVE_CLOSED 0
 #define PUVALVE_NULL 1
 #define PUVALVE_OPEN 2
 
+//Messages to S-IC
+enum SIISICMessageType
+{
+	SII_SIC_SI_THRUSTER_DIR,
+	SII_SIC_SI_EDS_CUTOFF,
+	SII_SIC_SI_SWITCH_SELECTOR,
+	SII_SIC_GETSITHRUSTOK,
+	SII_SIC_PROPELLANT_DEPLETION_ENGINE_CUTOFF,
+	SII_SIC_GET_SI_INBOARD_ENGINE_OUT,
+	SII_SIC_GET_SI_OUTBOARD_ENGINE_OUT,
+	SII_SIC_GET_SIC_SII_NOT_SEPARATED,
+};
+
+class SIISystems;
+
+class SIISystemsConnector : public Connector
+{
+public:
+	SIISystemsConnector();
+	virtual ~SIISystemsConnector();
+	void SetSIISystems(SIISystems *sii) { ourSII = sii; };
+protected:
+	SIISystems *ourSII;
+};
+
+//S-II to S-IVB Connector
+class SIIToSIVBConnector : public SIISystemsConnector
+{
+public:
+	SIIToSIVBConnector();
+	virtual ~SIIToSIVBConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
+//S-II to S-II Interstage Connector
+class SIIToSIIInterstageConnector : public SIISystemsConnector
+{
+public:
+	SIIToSIIInterstageConnector();
+	virtual ~SIIToSIIInterstageConnector();
+
+	void SetSIThrusterDir(int n, double yaw, double pitch);
+	void SIEDSCutoff(bool cut);
+	void SISwitchSelector(int channel);
+	void GetSIThrustOK(bool *ok, int n);
+	bool GetSIPropellantDepletionEngineCutoff();
+	bool GetSIInboardEngineOut();
+	bool GetSIOutboardEngineOut();
+	bool GetSICSIINotSeparated();
+};
+
 class SIISystems
 {
 public:
 	SIISystems(VESSEL *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop, THGROUP_HANDLE &ull, Pyro &SII_Inter, Pyro &SII_SIVB_Sep, Sound &pushifts, Sound &SepS);
+	virtual ~SIISystems();
 	void Timestep(double simdt);
 	void SaveState(FILEHANDLE scn);
 	void LoadState(FILEHANDLE scn);
@@ -68,6 +122,10 @@ public:
 
 	//To IU
 	double GetLH2TankUllagePressurePSI() { return LH2TankUllagePressurePSI; }
+	bool GetSIISIVBNotSeparated();
+
+	SIIToSIVBConnector* GetSIIToSIVBConnector() { return &siiSIVBConnector; }
+	SIIToSIIInterstageConnector* GetSIIToSIIInterstageConnector() { return &siiSIIInterstageConnector; }
 
 protected:
 	void GetJ2ISP(double ratio, double &isp, double &ThrustAdjust);
@@ -111,7 +169,58 @@ protected:
 
 	Sound &puShiftSound;
 	Sound &sepSound;
+
+	SIIToSIVBConnector siiSIVBConnector;
+	SIIToSIIInterstageConnector siiSIIInterstageConnector;
 };
 
 #define SIISYSTEMS_START_STRING		"SIISYSTEMS_BEGIN"
 #define SIISYSTEMS_END_STRING		"SIISYSTEMS_END"
+
+// INTERSTAGE, MOVE THIS LATER TO DIFFERENT FILES
+
+class SIIInterstageSystems;
+
+//Generic S-II interstage connector class
+class SIIInterstageSystemsConnector : public Connector
+{
+public:
+	SIIInterstageSystemsConnector();
+	virtual ~SIIInterstageSystemsConnector();
+	void SetSIIInterstageSystems(SIIInterstageSystems *is) { ourIS = is; };
+protected:
+	SIIInterstageSystems *ourIS;
+};
+
+//Connector from S-II interstage to S-II
+class SIIInterstageToSIIConnector : public SIIInterstageSystemsConnector
+{
+public:
+	SIIInterstageToSIIConnector();
+	virtual ~SIIInterstageToSIIConnector();
+
+	bool ReceiveMessage(Connector *from, ConnectorMessage &m);
+};
+
+//Connector for S-II interstage to S-IC
+class SIIInterstageToSICConnector : public SIIInterstageSystemsConnector
+{
+public:
+	SIIInterstageToSICConnector();
+	virtual ~SIIInterstageToSICConnector();
+
+	bool ForwardMessage(ConnectorMessage &m);
+};
+
+class SIIInterstageSystems
+{
+public:
+	SIIInterstageSystems();
+	virtual ~SIIInterstageSystems();
+
+	SIIInterstageToSIIConnector *GetSIIInterstageToSIIConnector() { return &siiInterstageSIIConnector; }
+	SIIInterstageToSICConnector *GetSIIInterstageToSICConnector() { return &siiInterstageSICConnector; }
+protected:
+	SIIInterstageToSIIConnector siiInterstageSIIConnector;
+	SIIInterstageToSICConnector siiInterstageSICConnector;
+};

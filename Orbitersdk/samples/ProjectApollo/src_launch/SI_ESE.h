@@ -24,23 +24,28 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-class TailUmbilical;
 class LCCPadInterface;
 
 #include "Orbitersdk.h"
+#include "TailUmbilical.h"
 
 class SI_ESE
 {
 public:
-	SI_ESE(TailUmbilical *TailUmb, LCCPadInterface *p);
+	SI_ESE(LCCPadInterface *p);
 	virtual ~SI_ESE();
 
+	//S-I ESE to S-I
 	virtual bool GetSIThrustOKSimulate(int eng, int n) = 0;
+	//S-I ESE to ML
+	virtual bool GetSIThrustOK(int eng, int n) = 0;
 
 	virtual void Timestep() = 0;
 	virtual void SaveState(FILEHANDLE scn) = 0;
 	virtual void LoadState(FILEHANDLE scn) = 0;
+
+	SIESEToSICommandConnector* GetSIESEToSICommandConnector() { return &siESEToSICommandConnector; }
 protected:
-	TailUmbilical *Umbilical;
+	SIESEToSICommandConnector siESEToSICommandConnector;
 	LCCPadInterface *Pad;
 };
