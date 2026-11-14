@@ -1506,14 +1506,14 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 		{ "Planning mode active", 0, 'A' },
 		{ "", 0, ' ' },
 		{ "Orientation change", 0, 'O' },
-		{ "Delete maneuver", 0, 'D' },
+		{ "Freeze, unfreeze, delete", 0, 'D' },
 		{ "Copy ephemeris", 0, 'H' },
 		{ "Cape Crossing Init", 0, 'C' },
 
 		{ "Direct Input", 0, 'I' },
 		{ "Add TLI to MPT", 0, 'T' },
 		{ "Add PDI to MPT", 0, 'P' },
-		{ "Spherical coordinates", 0, 'S' },
+		{ "Sph. coordinates", 0, 'S' },
 		{ "Enter vector", 0, 'F' },
 		{ "Back to menu", 0, 'B' },
 	};
@@ -1523,7 +1523,7 @@ ApolloRTCCMFDButtons::ApolloRTCCMFDButtons()
 	RegisterFunction("ACT", OAPI_KEY_A, &ApolloRTCCMFD::menuMPTCycleActive);
 	RegisterFunction("", OAPI_KEY_Q, &ApolloRTCCMFD::menuVoid);
 	RegisterFunction("UDT", OAPI_KEY_O, &ApolloRTCCMFD::menuMPTVehicleOrientationChange);
-	RegisterFunction("DEL", OAPI_KEY_D, &ApolloRTCCMFD::menuMPTDeleteManeuver);
+	RegisterFunction("FUD", OAPI_KEY_D, &ApolloRTCCMFD::menuMPTDeleteManeuver);
 	RegisterFunction("P16", OAPI_KEY_H, &ApolloRTCCMFD::menuMPTCopyEphemeris);
 	RegisterFunction("P17", OAPI_KEY_C, &ApolloRTCCMFD::menuCapeCrossingInit);
 
