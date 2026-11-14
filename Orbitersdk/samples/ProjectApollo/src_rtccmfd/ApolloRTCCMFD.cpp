@@ -8332,7 +8332,7 @@ void ApolloRTCCMFD::menuMPTCycleActive()
 void ApolloRTCCMFD::menuMPTDeleteManeuver()
 {
 	bool MPTDeleteManeuverInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Freeze/unfreeze/delete maneuver in MPT (Format: M62,Table,Manv No.,Action,Vector;)", MPTDeleteManeuverInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Freeze/unfreeze/delete maneuver in MPT (Format: M62,Table,Manv No.,Action (F, U, D or DH),Vector;)", MPTDeleteManeuverInput, 0, 50, (void*)this);
 }
 
 bool MPTDeleteManeuverInput(void* id, char *str, void *data)
