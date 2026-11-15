@@ -829,7 +829,7 @@ class EMS : public e_object {
 public:
 	EMS(PanelSDK &p);
 	virtual ~EMS();
-	void Init(Saturn *vessel, e_object *a, e_object *b, ContinuousRotationalSwitch *dimmer, e_object *c);
+	void Init(Saturn* vessel, e_object* a, e_object* b, e_object* numpwr, e_object* intpwr);
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
@@ -859,7 +859,8 @@ public:
 	
 protected:
 	bool IsPowered();
-	bool IsDisplayPowered();
+	bool IsNumDisplayPowered();
+	bool IsIntDisplayPowered();
 	
 	void AccelerometerTimeStep(double simdt);
 	double xacc, xaccG, constG;
@@ -915,7 +916,8 @@ protected:
 
 	PowerMerge DCPower;
 	Saturn *sat;
-	ContinuousRotationalSwitch *DimmerRotationalSwitch;
+	e_object* numericsPower;
+	e_object* integralPower;
 
 	friend class SaturnEMSDvDisplay;
 	friend class SaturnEMSScrollDisplay;

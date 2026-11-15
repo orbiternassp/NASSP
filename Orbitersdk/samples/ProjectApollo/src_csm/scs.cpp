@@ -4833,7 +4833,8 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	dVRangeCounter = 0;
 	dVTestTime = 0;
 	sat = NULL;
-	DimmerRotationalSwitch = NULL;
+	numericsPower = NULL;
+	integralPower = NULL;
 	SlewScribe = 0;
 	ScrollPosition = 0;
 	GScribe = 1;
@@ -4892,11 +4893,11 @@ EMS::~EMS()
 	if (rsirot) delete rsirot;
 }
 
-void EMS::Init(Saturn *vessel, e_object *a, e_object *b, ContinuousRotationalSwitch *dimmer, e_object *c) {
+void EMS::Init(Saturn* vessel, e_object* a, e_object* b, e_object* numpwr, e_object* intpwr) {
 	sat = vessel;
-	DCPower.WireToBuses(a, b);
-	WireTo(c);
-	DimmerRotationalSwitch = dimmer;
+	DCPower.WireToBuses(a, b); //EMS Power
+	numericsPower = numpwr; //Numerics Power
+	integralPower = intpwr; //Integral Power
 }
 
 void EMS::TimeStep(double simdt) {
@@ -5145,14 +5146,19 @@ void EMS::TimeStep(double simdt) {
 
 void EMS::SystemTimestep(double simdt) {
 
-	if (IsPowered() && !IsOff()) {
+	if (IsPowered() && !IsOff())
+	{
 		DCPower.DrawPower(93.28);	// see CSM Systems Handbook
 	}
 
-	if (IsDisplayPowered() && !IsOff()) {
-		DrawPower(0.022);
+	if (IsNumDisplayPowered() && !IsOff())
+	{
+		numericsPower->DrawPower((numericsPower->Voltage() / 115.0) * (4.0 * 7.0 * 0.022)); //TBD: Needs to be power per lit segment
+	}
 
-		//sprintf(oapiDebugString(), "vinert %f", vinert);
+	if (IsIntDisplayPowered() && !IsOff())  //TBD: Need to find integral EL lighting draw, approximating from LM at 1.005W per strip
+	{
+		integralPower->DrawPower((integralPower->Voltage() / 115.0) * (6.0 * 1.005)); //CSM Systems Handbook indicates 6 "bulbs"
 	}
 }
 
@@ -5381,12 +5387,20 @@ bool EMS::IsDecimalPointBlanked()
 
 bool EMS::IsPowered() {
 
-	return DCPower.Voltage() > SP_MIN_DCVOLTAGE; 
+	return DCPower.Voltage() > SP_MIN_DCVOLTAGE;
 }
 
-bool EMS::IsDisplayPowered() {
+bool EMS::IsNumDisplayPowered() {
 
-	if (Voltage() < SP_MIN_ACVOLTAGE || DimmerRotationalSwitch->GetState() == 0)
+	if (numericsPower->Voltage() < 30.0)
+		return false;
+
+	return true;
+}
+
+bool EMS::IsIntDisplayPowered() {
+
+	if (integralPower->Voltage() < 30.0)
 		return false;
 
 	return true;

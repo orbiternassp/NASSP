@@ -492,7 +492,7 @@ void Saturn::SystemsInit() {
 	rjec.Init(this);
 	eca.Init(this);
 	tvsa.Init(this);
-	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
+	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &LeftNumericLights.Variable_0_115VAC_Num_Output, &LeftIntegralLights.Variable_0_115VAC_Int_Output);
 	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch, &ORDEALLightingSwitch);
 	mechanicalAccelerometer.Init(this);
 
