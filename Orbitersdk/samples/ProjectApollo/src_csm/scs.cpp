@@ -4893,7 +4893,7 @@ EMS::~EMS()
 	if (rsirot) delete rsirot;
 }
 
-void EMS::Init(Saturn* vessel, e_object* a, e_object* b, e_object* numpwr, e_object* intpwr) {
+void EMS::Init(Saturn *vessel, e_object *a, e_object *b, e_object *numpwr, e_object *intpwr) {
 	sat = vessel;
 	DCPower.WireToBuses(a, b); //EMS Power
 	numericsPower = numpwr; //Numerics Power
