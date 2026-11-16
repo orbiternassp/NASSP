@@ -4906,8 +4906,42 @@ void EMS::Init(Saturn *vessel, e_object *a, e_object *b, e_object *numpwr, e_obj
 	DCPower.WireToBuses(a, b); //EMS Power
 	numericsPower = numpwr; //Numerics Power
 	scrollRSIPower = scrollRSIcb; //Scroll & RSI Lighting Power
+}
 
-	Fixed_115_6VAC_Output.WireTo(scrollRSIPower);
+void EMS::ScrollRSILighting()
+{
+	if (IsScrollRSIDisplayPowered())
+	{
+		Fixed_115_6VAC_Output.WireTo(scrollRSIPower);
+	}
+	else
+	{
+		Fixed_115_6VAC_Output.WireTo(NULL);
+	}
+}
+
+void EMS::CoilLogic()
+{
+	//Relays (TODO: K1 and K2)
+	//K3
+	if (!IsPowered() || sat->EMSFunctionSwitch.GetState() == 0)
+	{
+		K3 = false;
+	}
+	else
+	{
+		K3 = true;
+	}
+
+	//K4 (Scroll & RSI Lighting Disable)
+	if (IsPowered() && (sat->EMSFunctionSwitch.GetState() == 1 || sat->EMSFunctionSwitch.GetState() == 2 || sat->EMSFunctionSwitch.GetState() == 3))
+	{
+		K4 = true;
+	}
+	else
+	{
+		K4 = false;
+	}
 }
 
 void EMS::TimeStep(double simdt) {
@@ -5170,7 +5204,11 @@ void EMS::TimeStep(double simdt) {
 		//sprintf(oapiDebugString(), "ScrollPosition %f", ScrollPosition);
 	}
 
+	CoilLogic();
+	ScrollRSILighting();
 	RotateRSI(simdt);
+
+	//sprintf(oapiDebugString(), "Is Scroll Powered %d Scroll/RSI Voltage: %lf K1: %d K2: %d K3: %d K4 %d SW: %d", IsScrollRSIDisplayPowered(), Fixed_115_6VAC_Output.Voltage(), K1, K2, K3, K4, sat->EMSFunctionSwitch.GetState());
 }
 
 void EMS::SystemTimestep(double simdt) {
@@ -5431,12 +5469,12 @@ bool EMS::IsNumDisplayPowered() {
 
 bool EMS::IsScrollRSIDisplayPowered() {
 
-	if (K4)
+	if (K3 && !K4)
 	{
-		return false;
+		return true;
 	}
 
-	return true;
+	return false;
 }
 
 void EMS::SaveState(FILEHANDLE scn) {
