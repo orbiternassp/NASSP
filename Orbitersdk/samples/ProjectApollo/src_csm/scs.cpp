@@ -4827,14 +4827,15 @@ extern GDIParams g_Param;
 
 
 
-EMS::EMS(PanelSDK &p) : DCPower(0, p) {
+EMS::EMS(PanelSDK &p) : DCPower(0, p),
+	Fixed_115_6VAC_Output("Fixed EMS AC Transformer", 6.0) {
 
 	status = EMS_STATUS_OFF;
 	dVRangeCounter = 0;
 	dVTestTime = 0;
 	sat = NULL;
 	numericsPower = NULL;
-	integralPower = NULL;
+	scrollRSIPower = NULL;
 	SlewScribe = 0;
 	ScrollPosition = 0;
 	GScribe = 1;
@@ -4844,6 +4845,13 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	RSIRotation = PI/2;
 	RSITarget = 0;
 	vinert = 37000.0;
+
+	p.AddElectrical(&Fixed_115_6VAC_Output, false);
+
+	K1 = false;
+	K2 = false;
+	K3 = false;
+	K4 = false;
 
 	switchchangereset = false;
 
@@ -4893,11 +4901,13 @@ EMS::~EMS()
 	if (rsirot) delete rsirot;
 }
 
-void EMS::Init(Saturn *vessel, e_object *a, e_object *b, e_object *numpwr, e_object *intpwr) {
+void EMS::Init(Saturn *vessel, e_object *a, e_object *b, e_object *numpwr, e_object *scrollRSIcb) {
 	sat = vessel;
 	DCPower.WireToBuses(a, b); //EMS Power
 	numericsPower = numpwr; //Numerics Power
-	integralPower = intpwr; //Integral Power
+	scrollRSIPower = scrollRSIcb; //Scroll & RSI Lighting Power
+
+	Fixed_115_6VAC_Output.WireTo(scrollRSIPower);
 }
 
 void EMS::TimeStep(double simdt) {
@@ -4925,6 +4935,25 @@ void EMS::TimeStep(double simdt) {
 	// Turn on reset
 	if (status == EMS_STATUS_OFF && sat->EMSFunctionSwitch.GetState() != 0) {
 		SwitchChanged();
+	}
+
+	//Relays (TODO: K1 and K2)
+	if (!IsPowered() || EMS_STATUS_OFF)
+	{
+		K3 = false;
+	}
+	else
+	{
+		K3 = true;
+	}
+
+	if (K3 && (EMS_STATUS_DV || EMS_STATUS_DVTEST || EMS_STATUS_DVSET))
+	{
+		K4 = true;
+	}
+	else
+	{
+		K4 = false;
 	}
 
 	switch (status) {
@@ -5146,19 +5175,19 @@ void EMS::TimeStep(double simdt) {
 
 void EMS::SystemTimestep(double simdt) {
 
-	if (IsPowered() && !IsOff())
+	if (IsPowered() && !IsOff()) //TBD individual bulb power draws (0.05g, SPS THRUST ON, LIFT UP, LIFT DOWN)
 	{
 		DCPower.DrawPower(93.28);	// see CSM Systems Handbook
 	}
 
-	if (IsNumDisplayPowered() && !IsOff())
+	if (IsNumDisplayPowered())
 	{
-		numericsPower->DrawPower((numericsPower->Voltage() / 115.0) * (4.0 * 7.0 * 0.022)); //TBD: Needs to be power per lit segment
+		numericsPower->DrawPower((numericsPower->Voltage() / 115.0) * (38.0 * 0.022)); //38 segments (TBD: Needs to be power per lit segment)
 	}
 
-	if (IsIntDisplayPowered() && !IsOff())  //TBD: Need to find integral EL lighting draw, approximating from LM at 1.005W per strip
+	if (IsScrollRSIDisplayPowered()) //Assumes 0.5W per lamp in scroll and RSI backlighting, needs to be checked
 	{
-		integralPower->DrawPower((integralPower->Voltage() / 115.0) * (6.0 * 1.005)); //CSM Systems Handbook indicates 6 "bulbs"
+		Fixed_115_6VAC_Output.DrawPower(10 * 1.005);
 	}
 }
 
@@ -5392,16 +5421,20 @@ bool EMS::IsPowered() {
 
 bool EMS::IsNumDisplayPowered() {
 
-	if (numericsPower->Voltage() < 30.0)
+	if (!K3 || numericsPower->Voltage() < 30.0)
+	{
 		return false;
+	}
 
 	return true;
 }
 
-bool EMS::IsIntDisplayPowered() {
+bool EMS::IsScrollRSIDisplayPowered() {
 
-	if (integralPower->Voltage() < 30.0)
+	if (K4)
+	{
 		return false;
+	}
 
 	return true;
 }

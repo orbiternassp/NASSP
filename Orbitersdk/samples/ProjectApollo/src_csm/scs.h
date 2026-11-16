@@ -829,11 +829,14 @@ class EMS : public e_object {
 public:
 	EMS(PanelSDK &p);
 	virtual ~EMS();
-	void Init(Saturn *vessel, e_object *a, e_object *b, e_object *numpwr, e_object *intpwr);
+	void Init(Saturn *vessel, e_object *a, e_object *b, e_object *numpwr, e_object *scrollRSIcb);
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
+
+	// Variable 115-6VAC output to scroll and RSI lighting
+	FixedVoltageTransformer Fixed_115_6VAC_Output;
 
 	double GetdVRangeCounter() { return dVRangeCounter; };
 	oapi::IVECTOR2 ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
@@ -860,7 +863,7 @@ public:
 protected:
 	bool IsPowered();
 	bool IsNumDisplayPowered();
-	bool IsIntDisplayPowered();
+	bool IsScrollRSIDisplayPowered();
 	
 	void AccelerometerTimeStep(double simdt);
 	double xacc, xaccG, constG;
@@ -873,6 +876,11 @@ protected:
 	double MaxScrollPosition;
 	double dVRangeCounter;
 	double dVTestTime;
+
+	bool K1;	//dV & dV Test (TBD: Needs connected and integrated into current logic)
+	bool K2;	//dV Test (TBD: Needs connected and integrated into current logic)
+	bool K3;	//Off
+	bool K4;	//dV, dV Test, dV Set/VHF RNG
 
 	bool switchchangereset;
 
@@ -917,7 +925,7 @@ protected:
 	PowerMerge DCPower;
 	Saturn *sat;
 	e_object* numericsPower;
-	e_object* integralPower;
+	e_object *scrollRSIPower;
 
 	friend class SaturnEMSDvDisplay;
 	friend class SaturnEMSScrollDisplay;
