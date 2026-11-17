@@ -359,7 +359,7 @@ void SCERA1::Timestep()
 	//Suit outlet pressure (GF1301)
 	SA5.SetOutput(1, scale_data(lem->ecs.GetSuitPressurePSI(), 0.0, 10.0));
 	//CO2 partial pressure (GF1521)
-	SA5.SetOutput(2, scale_data(lem->ecs.GetSensorCO2MMHg(), 0.0, 30.0));
+	SA5.SetOutput(2, scale_data(lem->ecs.GetSensorCO2Voltage(), 0.0, 5.0));
 	//Water separator no. 1 and 2 (GF9999)
 	SA5.SetOutput(3, scale_data(lem->ecs.GetWaterSeparatorRPM(), 0.0, 3600.0));
 	//S-band reciever signal (GT0994V)

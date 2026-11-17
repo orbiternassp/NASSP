@@ -112,9 +112,11 @@ DWORD FloodLights_LMVC[] = {
 	VC_MAT_Panel_02_CW_Lights_WATER_QTY,
 	VC_MAT_CircuitBreakers_t,
 
-	//Tapemeter Lights
+	// Tapemeter Lights
 	VC_MAT_Panel1_Tapemeter_AltAltRate,
 	VC_MAT_Panel1_Tapemeter_RangeRangeRate,
+
+	// Helium X10 Light
 	VC_MAT_RCS_HE_PRESS_x10,
 
 	// XPointer Light Bulbs
@@ -170,7 +172,7 @@ DWORD IntegralLights_LMVC_NoTex[] = {
 };
 
 DWORD NumericLights_LMVC[] = {
-	VC_MAT_Panel4_DSKY,
+	//VC_MAT_Panel4_DSKY,
 	VC_MAT_Panel1_Numerics_Timer,
 	VC_MAT_DEDA_Display,
 /*	VC_MAT_L01_PwrFail_XpointerL,
@@ -271,7 +273,7 @@ DWORD LMVC_CW_Lights[5][8] = {
 	}
 };
 
-//Tapemeter Lights
+// Tapemeter Lights
 DWORD Tapemeter_AltAltRate[] = {
 	VC_MAT_Panel1_Tapemeter_AltAltRate
 };

@@ -34,7 +34,8 @@
 
 #define ECS_CREWSTATUS_OK			0
 #define ECS_CREWSTATUS_CRITICAL		1
-#define ECS_CREWSTATUS_DEAD			2
+#define ECS_CREWSTATUS_CRITICAL_CO2	2
+#define ECS_CREWSTATUS_DEAD			3
 
 
 class LEMCrewStatus {
@@ -63,6 +64,25 @@ protected:
 	LEM *lem;
 	Sound &crewDeadSound;
 	bool firstTimestepDone;
+};
+
+class LMSuit
+{
+public:
+	LMSuit();
+	void Init(LEM *l, h_Tank *suittank, h_Pipe *helmetpipe);
+	void SetHelmetValveSizes(float s);
+	double GetHelmetSize() { return helmet->in->size; } //For debugging
+	void OpenHelmetGloves();
+	void CloseHelmetGloves();
+	bool IsHelmetOpen() { return helmet->in->open; }
+	void Timestep(double simdt);
+	void SystemTimestep(double simdt);
+
+protected:
+	LEM *lem;
+	h_Tank *suit;
+	h_Pipe *helmet;
 };
 
 class LEMOverheadHatch
@@ -396,7 +416,7 @@ public:
 	double GetCabinTempF();
 	double GetSuitPressurePSI();
 	double GetSuitTempF();
-	double GetSensorCO2MMHg();
+	double GetSensorCO2Voltage();
 	double AscentWaterTank1Quantity();
 	double AscentWaterTank2Quantity();
 	double DescentWaterTankQuantity();
@@ -419,7 +439,9 @@ public:
 	double GetPLSSFillPressurePSI();
 	double GetECSSuitPSI();
 	double GetECSCabinPSI();
-	double GetECSSensorCO2MMHg();
+	double GetECSCabinCO2MMHg();
+	double GetECSCDRSuitCO2MMHg();
+	double GetECSLMPSuitCO2MMHg();
 	bool GetSuitFan1Failure();
 	bool GetSuitFan2Failure();
 	bool GetPrimGlycolLowLevel();
@@ -430,7 +452,7 @@ public:
 
 	LEM *lem;													// Pointer at LEM
 	double *Cabin_Press, *Cabin_Temp;					// Cabin Atmosphere
-	double *Suit_Press, *Suit_Temp, *SuitCircuit_CO2, *SGD_CO2;					// Suit Circuit Atmosphere
+	double *Suit_Press, *SGD_Press, *Suit_Temp, *SuitCircuit_CO2, *SGD_CO2, *Cabin_CO2, *CDRSuit_CO2, *LMPSuit_CO2;					// Suit Circuit Atmosphere
 	double *Asc_Water1, *Asc_Water2, *Des_Water, *Des_Water_Press;	// Water tanks
 	double *Asc_Water1Temp, *Asc_Water2Temp, *WB_Prim_Water_Temp;	// Water tank temperatures
 	double *Asc_Oxygen1, *Asc_Oxygen2, *Des_Oxygen;				// Oxygen tanks

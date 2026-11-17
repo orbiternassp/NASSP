@@ -161,6 +161,31 @@ namespace mission {
 		AddCSMCueCard(8, "LMP_BOOST-ABORTS");
 		AddCSMCueCard(9, "LOI_LIMITS");
 		AddCSMCueCard(10, "CSM_ANTENNA_LOCATIONS");
+		AddLMCueCard(0, "A15LM_DPS_PROCEDURE");
+		AddLMCueCard(1, "A15LM_CDR_LMP_BUS_LOST");
+		AddLMCueCard(2, "A15LM_DPS_APS_RCS");
+		AddLMCueCard(3, "A15LM_DPS_ASCENT");
+		AddLMCueCard(4, "A15LM_FT_NM");
+		AddLMCueCard(5, "A15LM_ABORT_OPS_MANUAL_STAGE_A");
+		AddLMCueCard(5, "A15LM_ABORT_OPS_MANUAL_STAGE_B");
+		AddLMCueCard(6, "A15LM_ASCENT_MONITOR_CHART");
+		AddLMCueCard(6, "A15LM_DESCENT_H_vs_HDOT");
+		AddLMCueCard(7, "A15LM_DPS_BURN");
+		AddLMCueCard(7, "A15LM_NO_DPI_APS_BURN");
+		AddLMCueCard(7, "A15LM_MISSION_RULES_NOGO");
+		AddLMCueCard(7, "A15LM_ALARM_CODES");
+		AddLMCueCard(8, "A15LM_DPS_ABORT_INSERTION");
+		AddLMCueCard(8, "A15LM_STAGING");
+		AddLMCueCard(8, "A15LM_ABNORMAL_VEHICLE_DYNAMICS");
+		AddLMCueCard(8, "A15LM_LIGHT_MEANING_IMMEDIATE");
+		AddLMCueCard(9, "A15LM_DPS_PRE_SHe_PRESS_RNG");
+		AddLMCueCard(10, "A15LM_BUS_LOSS");
+		AddLMCueCard(11, "A15LM_DEDA_ADDRESSES");
+		AddLMCueCard(12, "A15LM_S_BAND_ANTENNA_ANGLES");
+		AddLMCueCard(13, "A15LM_LM_COMM_MODES");
+		AddLMCueCard(13, "A15LM_LOSS_OF_COMM");
+		//AddLMCueCard(0, "A15LM_COAS_BORESIGHT_LOG"); Backside card, skipped
+		//AddLMCueCard(17, "A15LM_CDR_WARNING_LIGHTS"); Unknown location
 	}
 
 	bool Mission::LoadMission(const int iMission)
@@ -639,9 +664,14 @@ namespace mission {
 		return GetCueCards(CSMCueCards, counter, loc, meshname, ofs);
 	}
 
+	bool Mission::GetLMCueCards(unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs)
+	{
+		return GetCueCards(LMCueCards, counter, loc, meshname, ofs);
+	}
+
 	bool Mission::GetCueCards(const std::vector<CueCardConfig> &cue, unsigned &counter, unsigned &loc, std::string &meshname, VECTOR3 &ofs)
 	{
-		while (counter < CSMCueCards.size())
+		while (counter < cue.size())
 		{
 			if (cue[counter].meshname != "" && cue[counter].meshname != "None")
 			{

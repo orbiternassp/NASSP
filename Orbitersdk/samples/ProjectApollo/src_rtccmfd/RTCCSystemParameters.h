@@ -284,7 +284,8 @@ struct RTCCSystemParameters
 		MCVLMC = 0.0;
 		MCVCMC = 0.5;
 		MCCMCU = 6378165.0;
-		MCCNMC = 3443.93359;
+		MCCNMC = 6378165.0 / 1852.0;
+		MCCCUL = 1852.0 / 6378165.0;
 		MCSMLR = 1738090.0;
 		MCCRPD = 0.01745329251; // PI/180
 		MCECAP = 6373368.0; //0.999247902 in er
@@ -744,6 +745,8 @@ struct RTCCSystemParameters
 	double MCCMCU;
 	//Nautical miles per Earth radii
 	double MCCNMC;
+	//Canonical unit (Earth radii) per nautical mile
+	double MCCCUL;
 	//Year of epoch
 	int AGCEpoch;
 	//Mean lunar radius

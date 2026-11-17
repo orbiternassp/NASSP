@@ -51,6 +51,9 @@
 #include "LVDC.h"
 #include "iu.h"
 #include "Mission.h"
+#include "Autosave.h"
+
+#include "eva.h"
 
 #include <crtdbg.h>
 
@@ -361,8 +364,8 @@ BOOL CALLBACK EnumAxesCallback( const DIDEVICEOBJECTINSTANCE* pdidoi, VOID* pSat
 Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj, fmodel), 
 	inertialData(this),
 	agc(soundlib, dsky, dsky2, imu, scdu, tcdu, Panelsdk),
-	dsky(soundlib, agc, 015),
-	dsky2(soundlib, agc, 016),
+	dsky(soundlib, agc, Panelsdk, 015),
+	dsky2(soundlib, agc, Panelsdk, 016),
 	CMCDCBusFeeder("CMC-DCBus-Feeder", Panelsdk),
 	imu(agc, Panelsdk, inertialData),
 	scdu(agc, RegOPTX, 0140, 2),
@@ -370,9 +373,11 @@ Saturn::Saturn(OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel (hObj,
 	mechanicalAccelerometer(inertialData),
 	cws(SMasterAlarm, Bclick, Panelsdk),
 	dockingprobe(0, SDockingCapture, SDockingLatch, SDockingExtend, SUndock, CrashBumpS, Panelsdk),
-	LeftIntegralLights(11.0), //LH Integral Power (watts)
-	RightIntegralLights(13.1), //RH Integral Power (watts)
-	LEBIntegralLights(7.1), //LEB Integral Power (watts)
+	LeftIntegralLights(Panelsdk, 11.0), //LH Integral Power (watts)
+	RightIntegralLights(Panelsdk, 13.1), //RH Integral Power (watts)
+	LEBIntegralLights(Panelsdk, 7.1), //LEB Integral Power (watts)
+	LeftNumericLights(Panelsdk),
+	LEBNumericLights(Panelsdk),
 	MissionTimerDisplay(Panelsdk),
 	MissionTimer306Display(Panelsdk),
 	EventTimerDisplay(Panelsdk),
@@ -688,6 +693,8 @@ void Saturn::initSaturn()
 	TLISoundsLoaded = false;
 	IUSCContPermanentEnabled = true;
 
+	cmpeva = false;
+
 	//
 	// Do we have the Skylab-type SM and CM?
 	//
@@ -784,7 +791,7 @@ void Saturn::initSaturn()
 	NextMissionEventTime = 0;
 
 	//
-	// No point trying to destroy things if we haven't launched.
+	// No point trying to destroy things if we haven't launched... unless we had a pad abort
 	//
 
 	NextDestroyCheckTime = 0;
@@ -802,8 +809,8 @@ void Saturn::initSaturn()
 
 	agc.ControlVessel(this);
 	imu.SetVessel(this, false);
-	dsky.Init(&LightingNumIntLMDCCB, &CMCDCBusFeeder, &NumericRotarySwitch, &IntegralRotarySwitch, NULL, NULL);
-	dsky2.Init(&LightingNumIntLEBCB, &CMCDCBusFeeder, &Panel100NumericRotarySwitch, &Panel100IntegralRotarySwitch, NULL, NULL);
+	dsky.Init(&LeftNumericLights.Variable_115_5VAC_Output, &CMCDCBusFeeder, &NumericRotarySwitch, &LeftIntegralLights.Variable_0_115VAC_Int_Output);
+	dsky2.Init(&LEBNumericLights.Variable_115_5VAC_Output, &CMCDCBusFeeder, &Panel100NumericRotarySwitch, &LEBIntegralLights.Variable_0_115VAC_Int_Output);
 
 	//SIMBay Initialization (Only J Missions, Apollo 15+)
 	simbay.Init(this);
@@ -818,10 +825,11 @@ void Saturn::initSaturn()
 	//
 	// Wire up timers.
 	//
-	MissionTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB, NULL, &cte);
-	MissionTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &Panel100NumericRotarySwitch, &LightingNumIntLEBCB, NULL, &cte);
-	EventTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLEBCB, NULL);
-	EventTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &Panel100NumericRotarySwitch, &LightingNumIntLEBCB, NULL);
+	MissionTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &LeftNumericLights.Variable_0_115VAC_Num_Output, &cte);
+	MissionTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &LEBNumericLights.Variable_0_115VAC_Num_Output, &cte);
+
+	EventTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, NULL);
+	EventTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, NULL);
 
 	//
 	// Configure connectors.
@@ -1312,6 +1320,9 @@ void Saturn::clbkPostCreation()
 	hga.clbkPostCreation();
 	SPSEngine.clbkPostCreation();
 
+	//Set up systems
+	imu.clbkPostCreation();
+
 	// Connect to the Checklist controller.
 	checkControl.linktoVessel(this);
 
@@ -1668,6 +1679,11 @@ void Saturn::clbkPreStep(double simt, double simdt, double mjd)
 		//We have focus on this vessel, and are in the VC
 		MoveFlashlight();
 	}
+
+	if (cmpeva)UpdateEVA(); //if cmp eva active (vessel created), enables EVA Timestep
+
+	// Autosave (checks focus internally, reads config from file)
+	NASSPAutosave::Update(GetHandle(), GetName(), pMission->GetMissionName().c_str(), MissionTime);
 
 	sprintf(buffer, "End time(0) %lld", time(0)); 
 	TRACE(buffer);
@@ -2034,6 +2050,10 @@ void Saturn::clbkSaveState(FILEHANDLE scn)
 	if (pMission->IsJMission()) simbay.MappingCameraSaveState(scn);
 	if (pMission->GetPanel230Version() == 1) simbay.GammaBaySaveState(scn);
 	if (pMission->GetPanel230Version() == 1) simbay.MassSpectrometerSaveState(scn);
+	//Save EVA State in scn file
+	char buffer[100];
+	sprintf(buffer, "%d", cmpeva);
+	oapiWriteScenario_string(scn, "CMPEVA", buffer);
 }
 
 void Saturn::QuicksaveScenario()
@@ -2620,6 +2640,11 @@ bool Saturn::ProcessConfigFileLine(FILEHANDLE scn, char *line)
 	}
 	else if (!strnicmp(line, "PAYN", 4)) {
 		strncpy (PayloadName, line + 5, 64);
+	}
+	else if (!strnicmp(line, "CMPEVA", 6)) {
+		//Load EVA State from scn file
+		sscanf(line + 6, "%d", &i);
+		cmpeva = i;
 	}
 	else if (!strnicmp(line, FAILURES_START_STRING, sizeof(FAILURES_START_STRING))) {
 		Failures.LoadState(scn);
@@ -3301,6 +3326,12 @@ void Saturn::SetStage(int s)
 		break;
 	}
 
+	// Start doing checks if obsolete stages should be deleted in the case of a pad abort
+	if (NextDestroyCheckTime == 0.0 && stage >= CM_STAGE)
+	{
+		NextDestroyCheckTime = SimulatedTime;
+	}
+
 	//
 	// CSM/LV separation or Mode I abort
 	//
@@ -3738,9 +3769,9 @@ int Saturn::clbkConsumeDirectKey(char *kstate)
 	// Only override these keys if the user is holding no modifier keys, Alt only, or Ctrl + Alt.
 	if (GetAttitudeMode() == ATTITUDEMODE::ATTMODE_ROT && !(KEYMOD_CONTROL(kstate) && !KEYMOD_ALT(kstate)) && !KEYMOD_SHIFT(kstate)) {
 		// Possible deflection amounts are:
-		// No key modifiers: 10.5° (max proportional rate, but not hardover)
-		// Alt: 11.5° (full deflection, triggering direct switches)
-		// Ctrl + Alt: 1.51° (triggering breakout switches)
+		// No key modifiers: 10.5Â° (max proportional rate, but not hardover)
+		// Alt: 11.5Â° (full deflection, triggering direct switches)
+		// Ctrl + Alt: 1.51Â° (triggering breakout switches)
 		double deflectionDegrees = KEYMOD_ALT(kstate) ? KEYMOD_CONTROL(kstate) ? 1.51 : 11.5 : 10.5;
 		double deflectionPercent = deflectionDegrees / 11.5;
 

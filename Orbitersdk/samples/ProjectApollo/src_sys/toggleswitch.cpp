@@ -250,7 +250,7 @@ void TwoPositionSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Soun
 void TwoPositionSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
-		s->LoadSound(Sclick, CLICK_SOUND);
+		s->LoadSound(Sclick, CLICK_SOUND, INTERNAL_ONLY);
 }
 
 bool TwoPositionSwitch::SwitchTo(int newState, bool dontspring) {
@@ -1034,7 +1034,7 @@ void PushSwitch::VesimSwitchTo(int newState) {
 void PushSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
-		s->LoadSound(Sclick, BUTTON_SOUND);
+		s->LoadSound(Sclick, BUTTON_SOUND, INTERNAL_ONLY);
 }
 
 //
@@ -1117,7 +1117,7 @@ double CircuitBrakerSwitch::Frequency()
 void CircuitBrakerSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
-		s->LoadSound(Sclick, CIRCUITBREAKER_SOUND);
+		s->LoadSound(Sclick, CIRCUITBREAKER_SOUND, INTERNAL_ONLY);
 }
 
 void CircuitBrakerSwitch::DrawPower(double watts)
@@ -3024,7 +3024,7 @@ void RotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 	switchRow = &row;
 
 	if (!sclick.isValid()) {
-		row.panelSwitches->soundlib->LoadSound(sclick, ROTARY_SOUND);
+		row.panelSwitches->soundlib->LoadSound(sclick, ROTARY_SOUND, INTERNAL_ONLY);
 	}
 
 	OurVessel = switchRow->panelSwitches->vessel;
@@ -3482,7 +3482,7 @@ void ThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 	switchRow = &row;
 
 	if (!sclick.isValid()) {
-		row.panelSwitches->soundlib->LoadSound(sclick, THUMBWHEEL_SOUND);
+		row.panelSwitches->soundlib->LoadSound(sclick, THUMBWHEEL_SOUND, INTERNAL_ONLY);
 	}
 
 	OurVessel = switchRow->panelSwitches->vessel;
@@ -5336,25 +5336,6 @@ void CMCOpticsZeroSwitch::DoDrawSwitch(SURFHANDLE DrawSurface)
 	}
 }
 
-bool ModeSelectSwitch::SwitchTo(int newState, bool dontspring)
-{
-	if (AGCThreePoswitch::SwitchTo(newState, dontspring)) {
-		if (agc) {
-			bool PGNS = false;
-
-			if (IsCenter()) {
-				PGNS = true;
-			}
-
-			//Actually Display Inertial Data
-			agc->SetInputChannelBit(030, GuidanceReferenceRelease, PGNS);
-		}
-		return true;
-	}
-
-	return false;
-}
-
 //
 // If we add more caution and warning system switches which use toggle-switch, they could be derived from a new
 // class which has the generic init function to set the cws.
@@ -5445,7 +5426,7 @@ void HandcontrollerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, 	
 	switchRow = &row;
 
 	if (!sclick.isValid()) {
-		row.panelSwitches->soundlib->LoadSound(sclick, THUMBWHEEL_SOUND);
+		row.panelSwitches->soundlib->LoadSound(sclick, THUMBWHEEL_SOUND, INTERNAL_ONLY);
 	}
 }
 
@@ -5663,6 +5644,62 @@ void DSKYPushSwitch::DoDrawSwitch(SURFHANDLE DrawSurface) {
 	} else {
 		oapiBlt(DrawSurface, SwitchSurface, x, y, xOffset, yOffset + 120, width, height, SURF_PREDEF_CK);
 	}
+}
+
+RotVariableVoltageTransformer::RotVariableVoltageTransformer(char* i_name, double MinVolt, double MaxVolt, bool DCAC) : VariableVoltageTransformer(i_name, MinVolt, MaxVolt, DCAC)
+{
+	rotary = NULL;
+}
+
+void RotVariableVoltageTransformer::Init(ContinuousSwitch* rot)
+{
+	rotary = rot;
+}
+
+double RotVariableVoltageTransformer::GetValue()
+{
+	if (rotary) return rotary->GetOutput();
+	else return 0.0;
+}
+
+RotVoltageTransformerOverride::RotVoltageTransformerOverride(char* i_name, double MinVolt, double MaxVolt, bool DCAC) : RotVariableVoltageTransformer(i_name, MinVolt, MaxVolt, DCAC)
+{
+	OverrideSwitch = NULL;
+}
+
+void RotVoltageTransformerOverride::Init(ContinuousSwitch* rot, ToggleSwitch* ovrdsw)
+{
+	RotVariableVoltageTransformer::Init(rot);
+
+	OverrideSwitch = ovrdsw;
+}
+
+void RotVoltageTransformerOverride::UpdateFlow(double dt)
+{
+	if (SRC)
+	{
+		// If override switch is up, pass through input voltage without change. Otherwise use rotational switch control.
+		if (OverrideSwitch->IsUp())
+		{
+			Volts = SRC->Voltage();
+		}
+		else
+		{
+			double DesVolts = min_output_voltage + (max_output_voltage - min_output_voltage) * GetValue();
+			Volts = min(SRC->Voltage(), DesVolts);
+		}
+	}
+	else
+	{
+		Volts = 0.0;
+	}
+
+	if (Volts > 0.0) {
+		Amperes = (power_load / Volts);
+	}
+
+	last_power_load = power_load;
+	power_load = 0.0;
 }
 
 PanelGroup::~PanelGroup()

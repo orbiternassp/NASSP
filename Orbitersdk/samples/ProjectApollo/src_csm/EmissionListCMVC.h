@@ -41,7 +41,7 @@ DWORD IntergralLights_P8_NTex[] = {
 DWORD NumericLights_P8_NTex[] = {
 
 	// TODO Material List
-	VC_MAT_DSKY_P8_t,
+	//VC_MAT_DSKY_P8_t,
 	VC_MAT_EMS_DeltaV_Range_P8_t,
 	VC_MAT_MissionTimer_P2
 };

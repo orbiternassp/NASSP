@@ -103,6 +103,21 @@ BEGIN
     EDITTEXT        IDC_EDIT1,95,136,24,14,ES_AUTOHSCROLL
 END
 
+IDD_PAGEAUTOSAVE DIALOGEX 0, 0, 232, 195
+STYLE DS_SETFONT | DS_3DLOOK | WS_CHILD
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Autosave Settings",IDC_STATIC,7,7,219,80
+    CONTROL         "Enable autosave",IDC_CHECK_AUTOSAVE_ENABLED,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,22,70,10
+    LTEXT           "Interval (minutes):",IDC_STATIC_AUTOSAVE_INTERVAL,13,40,60,10
+    EDITTEXT        IDC_EDIT_AUTOSAVE_INTERVAL,75,38,20,13,ES_RIGHT | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "(1-60)",IDC_STATIC,100,40,25,10
+    CONTROL         "Show save notifications",IDC_CHECK_AUTOSAVE_NOTIFICATION,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,13,58,90,10
+    LTEXT           "Scenarios are saved to: Scenarios/Autosave/<mission>/",IDC_STATIC,13,72,200,10
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //

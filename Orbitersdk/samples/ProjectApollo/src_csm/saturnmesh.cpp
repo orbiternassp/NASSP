@@ -48,6 +48,8 @@
 #include "Mission.h"
 #include "SIMBay.h"
 
+#include "eva.h"
+
 MESHHANDLE hSM;
 MESHHANDLE hSMRCS;
 MESHHANDLE hSMRCSLow;
@@ -2466,5 +2468,97 @@ void Saturn::SetRunningLights() {
 		runningLights[i].tofs = 0;
 		runningLights[i].active = false;
 		AddBeacon(runningLights + i);
+	}
+}
+
+void Saturn::ToggleCMPEVA()
+{
+	ECSStatus ecs;
+	GetECSStatus(ecs);
+	//if (ecs.crewNumber < 3) return;
+	if (cmpeva) return;
+
+	if (ecs.crewNumber > 0) SetCrewNumber(ecs.crewNumber - 1);
+	//SetCrewNumber(2);
+
+	VESSELSTATUS vs1;
+	GetStatus(vs1);
+
+	char VName[256] = "";
+	strcpy(VName, pMission->GetCMPName().c_str());
+
+	VECTOR3 ofs;
+	if (stage == STAGE_ORBIT_SIVB) ofs = { 0, 1.10678, 13.15 + 2.227 };
+	else if (stage == CSM_LEM_STAGE) ofs = { 0, 1.10678, 2.23204 };
+
+	Local2Rel(ofs - currentCoG, vs1.rpos);
+
+	vs1.eng_main = vs1.eng_hovr = 0.0;
+	vs1.vrot.x = -vs1.vrot.x;
+	vs1.vrot.y = -vs1.vrot.y;
+	vs1.vrot.z = vs1.vrot.z;
+	hCMPEVA = oapiCreateVessel(VName, "ProjectApollo/EVA", vs1);
+
+	cmpeva = true;
+
+	EVA* eva = (EVA*)oapiGetVesselInterface(hCMPEVA);
+
+	EVASettingsCMP evascmp;
+
+	evascmp.MissionNo = ApolloNo;
+	evascmp.isCMP = true;
+	strcpy(evascmp.CSMName, GetName());
+	eva->SetEVAStatsCMP(evascmp);
+
+	oapiSetFocusObject(hCMPEVA);
+}
+
+void Saturn::UpdateEVA()
+{
+	ECSStatus ecs;
+	GetECSStatus(ecs);
+
+	if (cmpeva)
+	{
+		char VName[256] = "";
+		strcpy(VName, pMission->GetCMPName().c_str());
+		hCMPEVA = oapiGetObjectByName(VName);
+
+		if (hCMPEVA == NULL)
+		{
+			cmpeva = false;
+			SetCrewNumber(ecs.crewNumber + 1);
+		}
+	}
+}
+
+void Saturn::StopEVA()
+{
+	ECSStatus ecs;
+	GetECSStatus(ecs);
+
+	VECTOR3 gpos;
+	VECTOR3 ghatch;
+	if (stage == STAGE_ORBIT_SIVB) ghatch = { 0, 1.10678, 13.15 + 2.227 };
+	else if (stage == CSM_LEM_STAGE) ghatch = { 0, 1.10678, 2.23204 };
+
+	Local2Global(ghatch - currentCoG, ghatch);
+
+	if (cmpeva)
+	{
+		char VName[256] = "";
+		strcpy(VName, pMission->GetCMPName().c_str());
+		hCMPEVA = oapiGetObjectByName(VName);
+
+		oapiGetGlobalPos(hCMPEVA, &gpos);
+		double distance = dist(gpos, ghatch);
+
+		if (distance < 0.75)
+		{
+			cmpeva = false;
+			SetCrewNumber(ecs.crewNumber + 1);
+			//SetCrewNumber(3);
+			oapiDeleteVessel(hCMPEVA);
+		}
 	}
 }

@@ -137,6 +137,14 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			GMGMED("M68,CSM,1;");
 		}
 
+		// Sanity check, was TLI added to the MPT?
+		if (PZMPTCSM.mantable.empty())
+		{
+			scrubbed = true;
+			sprintf(upMessage, "MCC Error: TLI simulation failed");
+			break;
+		}
+
 		//Add separation maneuver to MPT
 		GMGMED("M40,P1,0.0;");
 		med_m66.Table = RTCC_MPT_CSM;
@@ -192,7 +200,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.vessel = calcParams.src;
 		entopt.RV_MCC = sv1;
 
-		EntryTargeting(&entopt, &res); //Target load for uplink
+		EntryTargeting(entopt, res);
 
 		opt.TIG = res.P30TIG;
 		opt.dV_LVLH = res.dV_LVLH;
@@ -2054,7 +2062,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		AP11LMManPADOpt opt;
 		SV sv, sv1, sv2;
 		MATRIX3 Q_Xx;
-		VECTOR3 UX, UY, UZ, DV, DV_P, DV_C, V_G, dV_LVLH;
+		VECTOR3 UX, UY, UZ, DV, DV_P, DV_C, V_G, dV_LVLH, CSM_IMU;
 		double GETbase, MJD_depletion, t_Depletion_guess, t_Depletion, dv, theta_T;
 		char buffer1[1000];
 
@@ -2108,7 +2116,8 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		dockopt.type = 3;
 
 		DockingAlignmentProcessor(dockopt);
-		sprintf(form->remarks, "CSM IMU angles. Roll %.0f, pitch %.0f, yaw %.0f", dockopt.CSMAngles.x*DEG, dockopt.CSMAngles.y*DEG, dockopt.CSMAngles.z*DEG);
+		CSM_IMU = OrbMech::imulimit(dockopt.CSMAngles * DEG);
+		sprintf(form->remarks, "CSM IMU angles: Roll %.0f, Pitch %.0f, Yaw %.0f", CSM_IMU.x, CSM_IMU.y, CSM_IMU.z);
 		sprintf(form->purpose, "APS Depletion");
 
 		sprintf(uplinkdata, "%s", buffer1);
@@ -2172,7 +2181,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 		entopt.type = 3; //Unspecified area
 
 		//Calculate corridor control burn
-		EntryTargeting(&entopt, &res);
+		EntryTargeting(entopt, res);
 
 		//If time to EI is more than 24 hours and the splashdown longitude is not within 2° of desired, then perform a longitude control burn
 		if (MCCtime < calcParams.EI - 24.0*3600.0 && abs(res.longitude - entopt.lng) > 2.0*RAD)
@@ -2180,7 +2189,7 @@ bool RTCC::CalculationMTP_F(int fcn, LPVOID &pad, char * upString, char * upDesc
 			entopt.type = 1;
 			entopt.t_Z = res.GET400K;
 
-			EntryTargeting(&entopt, &res);
+			EntryTargeting(entopt, res);
 		}
 
 		//Apollo 10 Mission Rules

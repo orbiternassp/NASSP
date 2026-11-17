@@ -63,6 +63,7 @@ public:
 	bool IsFrequencyDataGood() { return FrequencyLock; };
 	bool IsRadarDataGood() { return radarDataGood; };
 	bool GetNoTrackSignal() { return NoTrackSignal; }
+	void SelfTest(int LMNumber);
 	
 private:
 	VESSEL *csm;
@@ -87,6 +88,7 @@ private:
 	double rate;
 	double internalrange;
 	double internalrangerate;
+	double rangetest, ratetest, rdrxmtr;
 	int scratch[2];             // Scratch data
 	int mode;					//Mode I = false, Mode II = true
 	double hpbw_factor;			//Beamwidth factor

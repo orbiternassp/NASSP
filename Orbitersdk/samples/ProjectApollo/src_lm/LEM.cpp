@@ -44,6 +44,7 @@
 #include "tracer.h"
 #include "papi.h"
 #include "Mission.h"
+#include "Autosave.h"
 
 #include "connector.h"
 #include "nassputils.h"
@@ -380,7 +381,7 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	ED28VBusB("ED-28V-BusB", NULL),
 	ACBusA("AC-Bus-A",NULL),
 	ACBusB("AC-Bus-B",NULL),
-	dsky(soundlib, agc, 015),
+	dsky(soundlib, agc, Panelsdk, 015),
 	LandingGearPyros("Landing-Gear-Pyros", Panelsdk),
 	LandingGearPyrosFeeder("Landing-Gear-Pyros-Feeder", Panelsdk),
 	StagingBoltsPyros("Staging-Bolts-Pyros", Panelsdk),
@@ -452,14 +453,16 @@ LEM::LEM(OBJHANDLE hObj, int fmodel) : Payload (hObj, fmodel),
 	lm_vhf_to_csm_csm_connector(this, &VHF),
 	cdi(this),
 	AOTLampFeeder("AOT-Lamp-Feeder", Panelsdk),
-	NumDockCompLTGFeeder("Num-Dock-Comp-LTG-Feeder", Panelsdk),
 	DescentECAMainFeeder("Descent-ECA-Main-Feeder", Panelsdk),
 	DescentECAContFeeder("Descent-ECA-Cont-Feeder", Panelsdk),
 	AscentECAMainFeeder("Ascent-ECA-Main-Feeder", Panelsdk),
 	AscentECAContFeeder("Ascent-ECA-Cont-Feeder", Panelsdk),
 	vesim(&cbLMVesim, this),
-	Failures(this)
+	lca(Panelsdk),
+	ComponentLights(Panelsdk),
 
+	Failures(this),
+	CueCards(vcidx, this, 25)
 {
 	dllhandle = g_Param.hDLL; // DS20060413 Save for later
 	InitLEMCalled = false;
@@ -534,8 +537,11 @@ void LEM::Init()
 	CDRinPLSS = 0;
 	LMPinPLSS = 0;
 
+	spaceeva = false;
+
 	CMPowerToCDRBusRelayA = false;
 	CMPowerToCDRBusRelayB = false;
+	SLADockingLightPressureSwitchRelay = false;
 
 	InVC = false;
 	InPanel = false;
@@ -624,6 +630,7 @@ void LEM::Init()
 	windowshadesidx = -1;
 	xpointershadesidx = -1;
 	hLMPointingArrowidx = -1;
+	LMvccuecardsarrowsidx = -1;
 
 	drogue = NULL;
 	probes = NULL;
@@ -640,6 +647,7 @@ void LEM::Init()
 	aeaa = NULL;
 
 	COASreticlevisible = 0;
+	ViewCueCardArrows = false;
 
 	trackLightPos = _V(0, 0, 0);
 	for (int i = 0;i < 5;i++)
@@ -891,6 +899,25 @@ int LEM::clbkConsumeDirectKey(char* kstate)
 int LEM::clbkConsumeBufferedKey(DWORD key, bool down, char *keystate) {
 
 	if (enableVESIM) vesim.clbkConsumeBufferedKey(key, down, keystate);
+
+	// Help key for CueCard Arrows
+	if (KEYMOD_LCONTROL(keystate)) {
+		if (down) {
+			switch (key) {
+			case OAPI_KEY_H:
+				if (InVC && oapiCameraInternal())
+				{
+					if (ViewCueCardArrows == true) {
+						ViewCueCardArrows = false;
+					}
+					else {
+						ViewCueCardArrows = true;
+					}
+					return 1;
+				}
+			}
+		}
+	}
 
 	// DS20060404 Allow keys to control DSKY like in the CM
 	if (KEYMOD_SHIFT(keystate) && !KEYMOD_CONTROL(keystate) && !KEYMOD_ALT(keystate)) {
@@ -1500,6 +1527,11 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 		//We have focus on this vessel, and are in the VC
 		MoveFlashlight();
 	}
+
+	if (spaceeva)UpdateSpaceEVA(); //if lmp eva active (vessel created), enables EVA Timestep
+
+	// Autosave (checks focus internally, reads config from file)
+	NASSPAutosave::Update(GetHandle(), GetName(), pMission->GetMissionName().c_str(), MissionTime);
 }
 
 
@@ -1688,6 +1720,9 @@ void LEM::PostLoadSetup(bool define_anims)
 	CheckDescentStageSystems();
 	if (define_anims) DefineAnimations();
 
+	//Reload cue cards, if required
+	CueCards.ResetCueCards();
+
 	///
 	// Realism Mode Settings
 	//
@@ -1708,6 +1743,15 @@ void LEM::PostLoadSetup(bool define_anims)
 		break;
 	case THREEPOSSWITCH_DOWN:    // OFF	
 		break;                   // Handled later
+	}
+	// Lighting wiring
+	if (SLADockingLightPressureSwitchRelay)
+	{
+		DockingLightSwitchConnector.WireTo(&CDR_LTG_ANUN_DOCK_COMPNT_CB);
+	}
+	else
+	{
+		DockingLightSwitchConnector.WireTo(NULL);
 	}
 
 	HRESULT         hr;
@@ -1752,7 +1796,7 @@ void LEM::PostLoadSetup(bool define_anims)
 void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 {
 	char *line;
-	int	SwitchState;
+	int	SwitchState, i;
 	float ftcp;
 
 	while (oapiReadScenario_nextline(scn, line)) {
@@ -1907,6 +1951,11 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 			sscanf(line + 21, "%d", &i);
 			CMPowerToCDRBusRelayB = (i == 1);
 		}
+		else if (!strnicmp(line, "SLADockingLightPressureSwitchRelay", 34)) {
+			int i;
+			sscanf(line + 34, "%d", &i);
+			SLADockingLightPressureSwitchRelay = (i == 1);
+			}
 		else if (!strnicmp(line, "UNIFIEDSBAND", 12)) {
 			SBand.LoadState(line);
 		}
@@ -1916,8 +1965,8 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "VHFTRANSCEIVER", 14)) {
 			VHF.LoadState(line);
 		}
-		else if (!strnicmp(line, "LCA_START", sizeof("LCA_START"))) {
-			lca.LoadState(scn,"LCA_END");
+		else if (!strnicmp(line, "DATARECORDER", 12)) {
+			DSEA.LoadState(line);
 		}
 		else if (!strnicmp(line, CWEA_START_STRING, sizeof(CWEA_START_STRING))) {
 			CWEA.LoadState(scn, CWEA_END_STRING);
@@ -1960,6 +2009,12 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		}
 		else if (!strnicmp(line, "LEM_LR_START", sizeof("LEM_LR_START"))) {
 			LR.LoadState(scn, "LEM_LR_END");
+		}
+		else if (!strnicmp(line, "PANEL1RELAYBOX", 14)) {
+		Panel1RelayBox.LoadState(line);
+		}
+		else if (!strnicmp(line, "PANEL2RELAYBOX", 14)) {
+		Panel2RelayBox.LoadState(line);
 		}
 		else if (!strnicmp(line, "RADARTAPE_START", sizeof("RADARTAPE_START"))) {
 			RadarTape.LoadState(scn, "RADARTAPE_END");
@@ -2054,8 +2109,16 @@ void LEM::GetScenarioState(FILEHANDLE scn, void *vs)
 		else if (!strnicmp(line, "EVENTTIMER_START", sizeof("EVENTTIMER_START"))) {
 			EventTimerDisplay.LoadState(scn, EVENTTIMER_END_STRING);
 		}
+		else if (!strnicmp(line, CUECARDS_START_STRING, sizeof(CUECARDS_START_STRING))) {
+			CueCards.LoadState(scn);
+		}
 		else if (!strnicmp(line, "<INTERNALS>", 11)) { //INTERNALS signals the PanelSDK part of the scenario
 			Panelsdk.Load(scn);			//send the loading to the Panelsdk
+		}
+		else if (!strnicmp(line, "SPACEEVA", 8)) {
+			//Load EVA State from scn file
+			sscanf(line + 8, "%d", &i);
+			spaceeva = i;
 		}
 		else if (!strnicmp(line, ChecklistControllerStartString, strlen(ChecklistControllerStartString)))
 		{
@@ -2089,6 +2152,9 @@ void LEM::clbkSetClassCaps (FILEHANDLE cfg) {
 
 void LEM::clbkPostCreation()
 {
+	//Set up systems
+	imu.clbkPostCreation();
+
 	//Find MCC, if it exists
 	pMCC = NULL;
 	hMCC = oapiGetVesselByName("MCC");
@@ -2407,6 +2473,8 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	oapiWriteScenario_float(scn, "DSCEMPTYMASS", DescentEmptyMassKg);
 	oapiWriteScenario_float(scn, "ASCEMPTYMASS", AscentEmptyMassKg);
 
+	oapiWriteScenario_int(scn, "SPACEEVA", spaceeva);
+
 	if (!Crewed) {
 		oapiWriteScenario_int (scn, "UNMANNED", 1);
 	}
@@ -2432,6 +2500,7 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 		aea.SaveState(scn, "AEA_START", "AEA_END");
 		asa.SaveState(scn, "ASA_START", "ASA_END");
 	}
+	CueCards.SaveState(scn);
 
 	//
 	// Save the Panel SDK state.
@@ -2457,14 +2526,17 @@ void LEM::clbkSaveState (FILEHANDLE scn)
 	drb.SaveState(scn);
 	papiWriteScenario_bool(scn, "CMPowerToCDRBusRelayA", CMPowerToCDRBusRelayA);
 	papiWriteScenario_bool(scn, "CMPowerToCDRBusRelayB", CMPowerToCDRBusRelayB);
+	papiWriteScenario_bool(scn, "SLADockingLightPressureSwitchRelay", SLADockingLightPressureSwitchRelay);
+
+	// Save Relay Boxes
+	Panel1RelayBox.SaveState(scn);
+	Panel2RelayBox.SaveState(scn);
 
 	// Save COMM
 	SBand.SaveState(scn);
 	SBandSteerable.SaveState(scn);
 	VHF.SaveState(scn);
-
-	// Save Lighting
-	lca.SaveState(scn, "LCA_START", "LCA_END");
+	DSEA.SaveState(scn);
 
 	// Save CWEA
 	CWEA.SaveState(scn, CWEA_START_STRING, CWEA_END_STRING);

@@ -2569,7 +2569,10 @@ void ELSC::Timestep(double simdt)
 {
 	TimerTimestep(simdt);
 
-	//24,000 feet Lock Up
+	// 24,000 feet Lock Up
+	// Important note:
+	// In the schematics there appears a different logic path to the ELS relays. This path can not energize the relays in the ELS directly according to the AOH.
+	// That path goes back to the MESC, energizes the ELS Activate relay there and the resulting logic path (ELSActivateLogic) can energize the ELS relays.
 	if (mesc->ELSActivateLogic() && (Sat->els.BaroSwitch24k.IsClosed() || BaroswitchLockIn || OtherELSC->BaroswitchLockIn))
 	{
 		BaroswitchLockIn = true;

@@ -44,6 +44,7 @@ public:
 	void ChannelOutput(int address, ChannelValue value);
 	void Timestep(double simdt);
 	void SystemTimestep(double simdt);
+	void clbkPostCreation();
 	void TurnOn();
 	void TurnOff();
 	void DriveGimbals(double x, double y, double z);

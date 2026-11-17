@@ -82,13 +82,16 @@ public:
 	void menuSetFailuresPage();
 	void menuSetSLPage();
 
-	void menuKillRot();
+	//Kill rotation function; retained commented out in the event the function is needed later for debugging
+	//void menuKillRot();
 	void menuSaveEMSScroll();
 	void menuVAGCCoreDump();
 	void menuChangeLaunchTime();
 	void menuSetCrewNumber();
 	void menuSetCDRInSuit();
 	void menuSetLMPInSuit();
+	void menuCDRHelmetGloves();
+	void menuLMPHelmetGloves();
 	void menuStartEVA();
 	void menuConnectCSMO2Hose();
 	void menuJettisonEquipment();

@@ -2444,6 +2444,7 @@ private:
 	void TimeUpdate();
 public:
 	void AP7TPIPAD(const AP7TPIPADOpt &opt, AP7TPI &pad);
+	void SLTPIPAD(const AP7TPIPADOpt &opt, SLTPI &pad);
 	void AP9LMTPIPAD(const AP9LMTPIPADOpt &opt, AP9LMTPI &pad);
 	void AP9LMCDHPAD(const AP9LMCDHPADOpt &opt, AP9LMCDH &pad);
 	void TLI_PAD(const TLIPADOpt &opt, TLIPAD &pad);
@@ -2454,7 +2455,7 @@ public:
 	void PMSTICN(const TwoImpulseOpt &opt, TwoImpulseResuls &res);
 	double FindDH(VehicleDataBlock sv_A, VehicleDataBlock sv_P, double GMT_guess, double DH);
 	MATRIX3 REFSMMATCalc(REFSMMATOpt *opt);
-	void EntryTargeting(EntryOpt *opt, EntryResults *res);//VECTOR3 &dV_LVLH, double &P30TIG, double &latitude, double &longitude, double &GET05G, double &RTGO, double &VIO, double &ReA, int &precision);
+	void EntryTargeting(const EntryOpt &opt, EntryResults &res);
 	void BlockDataProcessor(EarthEntryOpt *opt, EntryResults *res);
 	//RTCC module name PMMEPP
 	void TranslunarInjectionProcessor(bool mpt, EphemerisData *sv = NULL, PLAWDTOutput *WeightsTable = NULL);
@@ -3505,6 +3506,21 @@ public:
 	BurnParameterTable PZBURN;
 	LWPInputTable PZSLVCON;
 	SLVTargetingParametersTable PZSLVTAR;
+
+	struct ExpendableWeightsTableEntry
+	{
+		double GET;
+		double WeightLoss;
+		int Veh; // 0 = CSM, 1 = S-IVB, 2 = LM Ascent Stage, 3 = LM Descent Stage
+	};
+
+	struct ExpendableWeightsTable
+	{
+		void SaveState(FILEHANDLE scn, char* start_str, char* end_str);
+		void LoadState(FILEHANDLE scn, char* end_str);
+
+		std::vector<ExpendableWeightsTableEntry> data;
+	} PZEXPCSM, PZEXPLEM;
 
 	struct PerigeeAdjustTableEntry
 	{
@@ -4943,7 +4959,7 @@ public:
 		int UpdateNo = 0;
 		int SequenceNo = 0;
 		std::string Site1, Site2;
-		double GET = 0.0;
+		double GenGET = 0.0;
 		int Verb = 71;
 		int Octals[20] = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0 };
 		int VehID = 0;
@@ -5195,6 +5211,7 @@ public:
 
 private:
 	void AP7ManeuverPAD(const AP7ManPADOpt &opt, AP7MNV &pad);
+	void SLManeuverPAD(const AP7ManPADOpt &opt, SLMNV &pad);
 	void navcheck(VECTOR3 R, double GMT, int RBI, double &lat, double &lng, double &alt);
 	void AP7BlockData(AP7BLKOpt *opt, AP7BLK &pad);
 	void AP11BlockData(AP11BLKOpt *opt, P37PAD &pad);
@@ -5338,12 +5355,6 @@ protected:
 	std::ofstream rtccdebug;
 
 public:
-
-	//Vessel pointers to be used exclusively by the RTCC MFD
-	VESSEL *pCSM, *pLM;
-	char CSMName[64];
-	char LEMName[64];
-
 	RTCCSystemParameters SystemParameters;
 	rtcc::RTCCDynamicDisplayData DynamicDisplayData;
 };

@@ -890,7 +890,7 @@ public:
 	virtual bool CheckMouseClick(int event, int mx, int my);
 };
 
-class DSEIndicatorSwitch : public IndicatorSwitch
+class DSETalkback : public IndicatorSwitch
 {
 public:
 	void Init(int xp, int yp, int w, int h, SURFHANDLE surf, SwitchRow &row, DSE *d, bool failopen = false);

@@ -35,9 +35,8 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	RegisterFunction("DBG", OAPI_KEY_D, &ProjectApolloMFD::menuSetDebugPage);
 
 
-	static const MFDBUTTONMENU mnuGNC[5] = {
+	static const MFDBUTTONMENU mnuGNC[4] = {
 		{ "Back", 0, 'B' },
-		{ "Kill rotation", 0, 'K' },
 		{ "Save EMS scroll", 0, 'E' },
 		{ "Virtual AGC core dump", 0, 'D' },
 		{ "Change Saturn launch time", 0, 'T' }
@@ -46,7 +45,6 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	page.GNC = RegisterPage(mnuGNC, sizeof(mnuGNC) / sizeof(MFDBUTTONMENU));
 
 	RegisterFunction("BCK", OAPI_KEY_B, &ProjectApolloMFD::menuSetMainPage);
-	RegisterFunction("KILR", OAPI_KEY_K, &ProjectApolloMFD::menuKillRot);
 	RegisterFunction("EMS", OAPI_KEY_E, &ProjectApolloMFD::menuSaveEMSScroll);
 	RegisterFunction("DMP", OAPI_KEY_D, &ProjectApolloMFD::menuVAGCCoreDump);
 	RegisterFunction("TLO", OAPI_KEY_T, &ProjectApolloMFD::menuChangeLaunchTime);
@@ -55,16 +53,16 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 	static const MFDBUTTONMENU mnuECS[12] = {
 		{ "Back", 0, 'B' },
 		{ "Crew number", 0, 'N' },
-		{ "CDR in suit", 0, 'C' },
-		{ "LMP in suit", 0, 'L' },
+		{ "CDR location (LM Only)", 0, 'C' },
+		{ "LMP location (LM Only)", 0, 'L' },
 		{ "Start EVA",0,'E' },
 		{ "Connect CSM O2 Hose to LM",0,'H' },
 		{ "Jettison LM Equipment",0,'J' },
 		{ 0,0,0 },
+		{ "CDR Helmet/Gloves (LM Only)",0,'F' },
+		{ "LMP Helmet/Gloves (LM Only)",0,'G' },
 		{ 0,0,0 },
-		{ 0,0,0 },
-		{ 0,0,0 },
-		{ "ECS Debug", 0, 'D' }
+		{ "ECS Debug", 0, 'P' }
 	};
 
 	page.ECS = RegisterPage(mnuECS, sizeof(mnuECS) / sizeof(MFDBUTTONMENU));
@@ -78,10 +76,10 @@ ProjectApolloMFDButtons::ProjectApolloMFDButtons()
 
 	RegisterFunction("JET", OAPI_KEY_J, &ProjectApolloMFD::menuJettisonEquipment);
 	RegisterFunction("", OAPI_KEY_Z, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_Y, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("", OAPI_KEY_X, &ProjectApolloMFD::menuVoid);
+	RegisterFunction("HMT", OAPI_KEY_F, &ProjectApolloMFD::menuCDRHelmetGloves);
+	RegisterFunction("HMT", OAPI_KEY_G, &ProjectApolloMFD::menuLMPHelmetGloves);
 	RegisterFunction("", OAPI_KEY_W, &ProjectApolloMFD::menuVoid);
-	RegisterFunction("DBG", OAPI_KEY_D, &ProjectApolloMFD::menuSetECSDebugPage);
+	RegisterFunction("DBG", OAPI_KEY_P, &ProjectApolloMFD::menuSetECSDebugPage);
 
 
 	static const MFDBUTTONMENU mnuECSDBG[8] = {

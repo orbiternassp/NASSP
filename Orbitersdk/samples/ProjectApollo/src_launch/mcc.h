@@ -187,6 +187,8 @@
 #define PT_AP7WSMRPAD		38
 #define PT_AP7P23PAD		39
 #define PT_AP7PTCPAD		40
+#define PT_SLMNV			50
+#define PT_SLTPI			51
 #define PT_NONE				99
 #define PT_GENERIC			100
 

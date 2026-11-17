@@ -343,7 +343,7 @@ namespace OrbMech{
 		{
 			length += sprintf(buf, "-");
 		}
-		sprintf(buf + length, "HRS XXX%03d\nMIN XXXX%02d\nSEC XX%05.2f", hours, minutes, seconds);
+		sprintf(buf + length, "HRS %+06d\nMIN %+06d\nSEC %+07.2lf", hours, minutes, seconds);
 	}
 
 	void format_declination_HHMM(char *buf, double decl)

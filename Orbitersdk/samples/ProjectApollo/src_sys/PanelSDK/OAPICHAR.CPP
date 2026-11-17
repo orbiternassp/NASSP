@@ -103,7 +103,7 @@ else if (Compare(name,"OAPI_KEY_SCROLL")) return			0x46;  // Scroll lock
 else if (Compare(name,"OAPI_KEY_NUMPAD7")) return		0x47;
 else if (Compare(name,"OAPI_KEY_NUMPAD8")) return		0x48;
 else if (Compare(name,"OAPI_KEY_NUMPAD9")) return		0x49;
-else if (Compare(name,"OPAI_KEY_SUBTRACT")) return		0x4A ; // - on numeric keypad
+else if (Compare(name,"OAPI_KEY_SUBTRACT")) return		0x4A ; // - on numeric keypad
 else if (Compare(name,"OAPI_KEY_NUMPAD4")) return		0x4B;
 else if (Compare(name,"OAPI_KEY_NUMPAD5")) return		0x4C;
 else if (Compare(name,"OAPI_KEY_NUMPAD6")) return		0x4D;

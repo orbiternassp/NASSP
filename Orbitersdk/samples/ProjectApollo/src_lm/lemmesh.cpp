@@ -46,6 +46,8 @@
 #include "LM_VC_Resource.h"
 #include "Mission.h"
 
+#include "eva.h"
+
 MESHHANDLE hLMDescent;
 MESHHANDLE hLMDescentNoLeg;
 MESHHANDLE hLMAscent;
@@ -53,6 +55,7 @@ MESHHANDLE hLMVC;
 MESHHANDLE hLMWindowShades;
 MESHHANDLE hLMXpointerShades;
 MESHHANDLE hLMPointingArrow;
+MESHHANDLE hLMCueCardsArrows;
 
 static PARTICLESTREAMSPEC lunar_dust = {
 	0,		// flag
@@ -449,6 +452,8 @@ void LEM::SetLMMeshVisVC() {
 		SetMeshVisibilityMode(vcidx, MESHVIS_VC);
 	}
 
+	//Cue Cards Arrows
+	SetVCCueCardsArrows();
 	SetWindowShades();
 
 }
@@ -703,6 +708,16 @@ void LEM::SetCOAS() {
 	}
 }
 
+void LEM::SetVCCueCardsArrows() {
+	//	if (checkControl.getFlashing() || ViewCueCardArrows) {
+	if (ViewCueCardArrows) {
+		SetMeshVisibilityMode(LMvccuecardsarrowsidx, MESHVIS_VC);
+	}
+	else {
+		SetMeshVisibilityMode(LMvccuecardsarrowsidx, MESHVIS_NEVER);
+	}
+}
+
 void LEM::SetWindowShades() {
 
 	if (!hLMWindowShades)
@@ -843,6 +858,9 @@ void LEM::SetMeshes() {
 
 	// Descent Stage Mesh
 	dscidx = AddMesh(hLMDescent, &mesh_dsc);
+
+	// Cue Cards pointing arrow
+	LMvccuecardsarrowsidx = AddMesh(hLMCueCardsArrows, &mesh_asc);
 }
 
 void LEM::CreateAirfoils()
@@ -868,6 +886,7 @@ void LEMLoadMeshes()
 	hLMXpointerShades = oapiLoadMeshGlobal("ProjectApollo/LM_Xpointer_Shades");
 	lunar_dust.tex = oapiRegisterParticleTexture("ProjectApollo/dust");
 	hLMPointingArrow = oapiLoadMeshGlobal("ProjectApollo/Helpers/PointingArrow");
+	hLMCueCardsArrows = oapiLoadMeshGlobal("ProjectApollo/Helpers/LM-CueCardsArrows");
 }
 
 //
@@ -894,3 +913,78 @@ void LEM::GetDockStatus()
 //	GetStatusEx(&vslm);
 }
 */
+
+void LEM::ToggleSpaceEVA()
+{
+	if (LMPinPLSS == 0) return;
+	if (spaceeva) return;
+
+	VESSELSTATUS vs1;
+	GetStatus(vs1);
+
+	char VName[256] = "";
+	strcpy(VName, pMission->GetLMPName().c_str());
+
+	VECTOR3 ofs = { 0, 0.685402, 2.55546 };
+
+	Local2Rel(ofs - currentCoG, vs1.rpos);
+
+	vs1.eng_main = vs1.eng_hovr = 0.0;
+	vs1.vrot.x = -vs1.vrot.x;
+	vs1.vrot.y = -vs1.vrot.y;
+	vs1.vrot.z = vs1.vrot.z;
+	hSPACEEVA = oapiCreateVessel(VName, "ProjectApollo/EVA", vs1);
+
+	spaceeva = true;
+
+	EVA* eva = (EVA*)oapiGetVesselInterface(hSPACEEVA);
+
+	EVASettingsLMP evaslmp;
+
+	evaslmp.MissionNo = ApolloNo;
+	evaslmp.isLMP = true;
+	strcpy(evaslmp.LEMName, GetName());
+	eva->SetEVAStatsLMP(evaslmp);
+
+	oapiSetFocusObject(hSPACEEVA);
+}
+
+void LEM::UpdateSpaceEVA()
+{
+	if (spaceeva)
+	{
+		char VName[256] = "";
+		strcpy(VName, pMission->GetLMPName().c_str());
+		hSPACEEVA = oapiGetObjectByName(VName);
+
+		if (hSPACEEVA == NULL)
+		{
+			spaceeva = false;
+		}
+	}
+}
+
+void LEM::StopSpaceEVA()
+{
+	VECTOR3 gpos;
+	VECTOR3 ghatch;
+	ghatch = { 0, 0.685402, 2.55546 };
+
+	Local2Global(ghatch - currentCoG, ghatch);
+
+	if (spaceeva)
+	{
+		char VName[256] = "";
+		strcpy(VName, pMission->GetLMPName().c_str());
+		hSPACEEVA = oapiGetObjectByName(VName);
+
+		oapiGetGlobalPos(hSPACEEVA, &gpos);
+		double distance = dist(gpos, ghatch);
+
+		if (distance < 0.75)
+		{
+			spaceeva = false;
+			oapiDeleteVessel(hSPACEEVA);
+		}
+	}
+}

@@ -52,6 +52,9 @@ public:
 	double GetDimmableLoad();
 	int GetCWLightStatus(int, int);
 
+	//Comparator Outputs
+	bool IsCO2PartialPressureHigh();
+
 	//For SCEA
 	//TBD: Should use relays, light status is also set during light test
 	bool GetCESACPwrFail() { return LightStatus[0][1] == 1; }
@@ -95,7 +98,9 @@ protected:
 	CWEA_FlipFlop RRCautFF;
 	CWEA_FlipFlop SBDCautFF;
 
+	//Relays
 	bool MasterAlarm;
+	bool CO2PartialPressureHigh; //K11
 
 	//For time accelerations etc.
 	int ECSFailureCount;

@@ -526,7 +526,7 @@ int USB::PAPowerLogic()
 int USB::SBandAntennaSelectionLogic()
 {
 	bool pwr;
-	if (sat->SBandNormalXPDRSwitch.IsUp() & sat->SBandPWRAmpl2FLTBusCB.IsPowered())
+	if (sat->SBandNormalXPDRSwitch.IsUp() && sat->SBandPWRAmpl2FLTBusCB.IsPowered())
 	{
 		pwr = true;
 	}
@@ -3062,6 +3062,7 @@ unsigned char PCM::measure(int channel, int type, int ccode){
 							data |= (secsStatus.EDSAbortLogicInput1 << 0);
 							data |= (secsStatus.EDSAbortLogicInput2 << 1);
 							data |= (secsStatus.EDSAbortLogicInput3 << 3);
+							data |= (sat->dataRecorder.TapeMotion() << 4);
 							return data;
 						case 15:
 							/*	2 = IMU HTR +28 VDC
@@ -5196,174 +5197,504 @@ void DSEChunk::Erase( const DSEChunkType dataType )
 	chunkValidBytes = 0;
 }
 
-DSE::DSE() :
-	tapeSpeedInchesPerSecond( 0.0 ),
-	desiredTapeSpeed( 0.0 ),
-	tapeMotion( 0.0 ),
-	state( STOPPED )
+DSE::DSE()
 {
-	lastEventTime = 0;
+	sat = NULL;
+	ACbreaker = NULL;
+	DCbreaker = NULL;
+
+	tapeSpeed = 0.0;
+	tapePosition = 0.0;
+	desiredTapeSpeed = 0.0;
+	motorDirection = 0.0;
+
+	K1 = false;
+	K2 = false;
+	K3 = false;
+	K4 = false;
+	K5 = false;
+	K6 = false;
+	K7 = false;
+	slowClutch = false;
+	fastClutch = false;
+
+	FWD = false;
+	REW = false;
+	RCD = false;
+	PLAY = false;
+	CSMPCM = false;
+	LMPCM = false;
+	LBR = false;
+	HBR = false;
+
+	record = false;
+	playback = false;
 }
 
 DSE::~DSE()
 {
 }
 
-void DSE::Init(Saturn *vessel)
+void DSE::Init(Saturn *vessel, CircuitBrakerSwitch *accb, CircuitBrakerSwitch *dccb)
 {
 	sat = vessel;
+	ACbreaker = accb;
+	DCbreaker = dccb;
 }
+
+bool DSE::IsACPowered()
+{
+	if (ACbreaker->Voltage() > SP_MIN_ACVOLTAGE)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool DSE::IsDCPowered()
+{
+	if (DCbreaker->IsPowered())
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+const double tapeLength = 27144.0; //inches, 2262 ft
+const double tapeAccel = 30.0;
 
 bool DSE::TapeMotion()
 {
-	switch (state)
+	if (tapeSpeed != 0.0)
 	{
-	case STOPPED:
-	case STARTING_PLAY:
-	case STARTING_RECORD:
-		return false;
-
-	default:
 		return true;
 	}
+	return false;
 }
 
-const double playSpeed = 120.0;
-const double hbrRecord = 15.0;
-const double lbrRecord = 3.75;
-
-void DSE::Play()
+bool DSE::EndOfTapeREW()
 {
-	if ( state != PLAYING || desiredTapeSpeed < playSpeed  )
+	if (tapePosition <= 0.0 && K1)
 	{
-		desiredTapeSpeed = playSpeed;
-		state = STARTING_PLAY;
-	} else
-		state = PLAYING;
+		return true;
+	}
+	return false;
 }
 
-void DSE::Stop()
+bool DSE::EndOfTapeFWD()
 {
-	if ( state != STOPPED || desiredTapeSpeed > 0.0  )
+	if (tapePosition >= tapeLength && !K1)
 	{
-		desiredTapeSpeed = 0.0;
-		state = STOPPING;
-	} else
-		state = STOPPED;
+		return true;
+	}
+	return false;
 }
 
-void DSE::Record( bool hbr )
+void DSE::SwitchLogic()
 {
-	double tapeSpeed = hbr ? hbrRecord : lbrRecord;
-	if ( state != RECORDING || tapeSpeedInchesPerSecond != tapeSpeed )
+	//Input logic
+
+	//Forward switch
+	if (!IsDCPowered())
 	{
-		desiredTapeSpeed = tapeSpeed;
-		
-		if ( desiredTapeSpeed > tapeSpeedInchesPerSecond )
+		FWD = false;
+		REW = false;
+	}
+	else if (!sat->udl.GetTapeRecorderFWDLogic1() && !sat->udl.GetTapeRecorderFWDLogic2()) //Reset (Reset/Reset)
+	{
+		if (sat->TapeRecorderForwardSwitch.GetState() == 2)
 		{
-			state = STARTING_RECORD;
+			FWD = true;
+			REW = false;
 		}
-		else if ( desiredTapeSpeed < tapeSpeedInchesPerSecond )
+		else if (sat->TapeRecorderForwardSwitch.GetState() == 0)
 		{
-			state = SLOWING_RECORD;
+			FWD = false;
+			REW = true;
 		}
 		else
 		{
-			state = RECORDING;
+			FWD = false;
+			REW = false;
 		}
-	} else
-		state = RECORDING;
+	}
+	else if (!sat->udl.GetTapeRecorderFWDLogic1() && sat->udl.GetTapeRecorderFWDLogic2()) //Forward (Reset/Set)
+	{
+		FWD = true;
+		REW = false;
+	}
+	else if (sat->udl.GetTapeRecorderFWDLogic1() && sat->udl.GetTapeRecorderFWDLogic2()) //Rewind (Set/Set)
+	{
+		FWD = false;
+		REW = true;
+	}
+	else //Stop (Set/Reset)
+	{
+		FWD = false;
+		REW = false;
+	}
+
+	//Record switch
+	if (!FWD)
+	{
+		RCD = false;
+		PLAY = false;
+	}
+	else if (!sat->udl.GetTapeRecorderRCDLogic1() && !sat->udl.GetTapeRecorderRCDLogic2()) //(Reset (Reset/Reset)
+	{
+		if (sat->TapeRecorderRecordSwitch.GetState() == 2)
+		{
+			RCD = true;
+			PLAY = false;
+		}
+		else if (sat->TapeRecorderRecordSwitch.GetState() == 0)
+		{
+			RCD = false;
+			PLAY = true;
+		}
+		else
+		{
+			RCD = false;
+			PLAY = false;
+		}
+	}
+	else if (!sat->udl.GetTapeRecorderRCDLogic1() && sat->udl.GetTapeRecorderRCDLogic2()) //Record (Reset/Set)
+	{
+		RCD = true;
+		PLAY = false;
+	}
+	else if (sat->udl.GetTapeRecorderRCDLogic1() && sat->udl.GetTapeRecorderRCDLogic2()) //Playback (Set/Set)
+	{
+		RCD = false;
+		PLAY = true;
+	}
+	else //Off (Set/Reset)
+	{
+		RCD = false;
+		PLAY = false;
+	}
+
+	//PCM switch
+	if (!PLAY)
+	{
+		CSMPCM = false;
+		LMPCM = false;
+	}
+	else if (!sat->udl.GetTapeRecorderPCMLogic1() && !sat->udl.GetTapeRecorderPCMLogic2()) //Reset (Reset/Reset)
+	{
+		if (sat->TapeRecorderPCMSwitch.IsDown())
+		{
+			CSMPCM = false;
+			LMPCM = true; //Forces 60/120 ips playback
+		}
+		else
+		{
+			CSMPCM = true; //Allows playback based on recorded bitrate (not implemented yet)
+			LMPCM = false;
+		}
+	}
+	else if (!sat->udl.GetTapeRecorderPCMLogic1() && sat->udl.GetTapeRecorderPCMLogic2()) //PCM/ANLG (Reset/Set)
+	{
+		CSMPCM = true; //Allows playback based on recorded bitrate (not implemented yet)
+		LMPCM = false;
+	}
+	else //LM PCM (Set/XX)
+	{
+		CSMPCM = false;
+		LMPCM = true; //Forces 60/120 ips playback
+	}
+
+	//LBR switch
+	if (!RCD)
+	{
+		LBR = false;
+		HBR = false;
+	}
+	else if (!sat->udl.GetBitrateLogic1() && !sat->udl.GetBitrateLogic2()) //Reset (Reset/Reset)
+	{
+		if (sat->PCMBitRateSwitch.IsDown())
+		{
+			LBR = true;
+			HBR = false;
+		}
+		else
+		{
+			LBR = false;
+			HBR = true;
+		}
+	}
+	else if (!sat->udl.GetBitrateLogic1() && sat->udl.GetBitrateLogic2()) //HBR (Reset/Set)
+	{
+		LBR = false;
+		HBR = true;
+	}
+	else //LBR (Set/XX)
+	{
+		LBR = true;
+		HBR = false;
+	}
 }
 
-const double tapeAccel = 30.0;
-
-void DSE::TimeStep( double simt, double simdt )
+void DSE::RelayLogic()
 {
-	/// \todo forward/backward motion
-	/// \todo high/low bitrate
+	//Relay logic
 
-	switch ( state )
+	//Rew/Fwd Relay
+	if (REW)
 	{
-	case STOPPED:
-		if (!sat->TapeRecorderForwardSwitch.IsCenter()) {
-			if (sat->TapeRecorderRecordSwitch.IsUp()) {
-				Record(true);
-			} else if (sat->TapeRecorderRecordSwitch.IsDown()) {
-				Play();
+		K1 = true;
+	}
+	else if (FWD)
+	{
+		K1 = false;
+	}
+
+	//Power Relay
+	if (EndOfTapeREW() || EndOfTapeFWD())
+	{
+		K7 = false;
+	}
+	else if (FWD || REW)
+	{
+		K7 = true;
+	}
+
+	//Electronics Relay
+	if (K7 && (RCD || PLAY))
+	{
+		K3 = true;
+	}
+	else if (!K7 || (!RCD && !PLAY))
+	{
+		K3 = false;
+	}
+
+	//Play/Record Relays
+	if (PLAY)
+	{
+		K4 = true;
+		K5 = true;
+	}
+	else if (RCD)
+	{
+		K4 = false;
+		K5 = false;
+	}
+
+	if (CSMPCM)
+	{
+		K6 = false;
+	}
+	else if (LMPCM)
+	{
+		K6 = true;
+	}
+
+	if (K3 && K4 && !K6)
+	{
+		K2 = true;
+	}
+	else if (K3 && K4 && K6)
+	{
+		K2 = false;
+	}
+}
+
+void DSE::ClutchLogic()
+{
+	if (K7 && !K1) //Tape is moving forward
+	{
+		if (!K3) //Not playing or recording
+		{
+			fastClutch = true;
+			slowClutch = false;
+		}
+		else if (K3 && !K4) //Record
+		{
+			if (LBR)
+			{
+				fastClutch = false;
+				slowClutch = false;
+			}
+			else if (HBR)
+			{
+				fastClutch = false;
+				slowClutch = true;
 			}
 		}
-		break;
-
-	case PLAYING:
-		if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
-			Stop();
-		} else if (sat->TapeRecorderRecordSwitch.IsUp()) {
-			Record(true);
-		}
-		break;
-
-	case RECORDING:
-		if (sat->TapeRecorderForwardSwitch.IsCenter() || sat->TapeRecorderRecordSwitch.IsCenter()) {
-			Stop();
-		} else if (sat->TapeRecorderRecordSwitch.IsDown()) {
-			Play();
-		}
-		break;
-
-	case STARTING_PLAY:
-		tapeSpeedInchesPerSecond += tapeAccel * simdt;
-		if ( tapeSpeedInchesPerSecond >= desiredTapeSpeed )
+		else if (K3 && K4) //Playback
 		{
-			tapeSpeedInchesPerSecond = desiredTapeSpeed;
-			state = PLAYING;
+			if (K6) //LM PCM
+			{
+				fastClutch = true;
+				slowClutch = false;
+			}
+			else if (!K6) //PCM/ANLG (Set to fast clutch for now, this would normally depend on recorded bitrate)
+			{
+				fastClutch = true;
+				slowClutch = false;
+			}
 		}
-		break;
-
-	case STARTING_RECORD:
-		tapeSpeedInchesPerSecond += tapeAccel * simdt;
-		if ( tapeSpeedInchesPerSecond >= desiredTapeSpeed )
-		{
-			tapeSpeedInchesPerSecond = desiredTapeSpeed;
-			state = RECORDING;
-		}
-		break;
-
-	case SLOWING_RECORD:
-		tapeSpeedInchesPerSecond -= tapeAccel * simdt;
-		if ( tapeSpeedInchesPerSecond <= desiredTapeSpeed )
-		{
-			tapeSpeedInchesPerSecond = desiredTapeSpeed;
-			state = RECORDING;
-		}
-		break;
-
-	case STOPPING:
-		tapeSpeedInchesPerSecond -= tapeAccel * simdt;
-		if ( tapeSpeedInchesPerSecond <= 0.0 )
-		{
-			tapeSpeedInchesPerSecond = 0.0;
-			state = STOPPED;
-		}
-		break;
-
-	default:
-		break;
 	}
-	lastEventTime = simt;
-	//sprintf(oapiDebugString(), "DSE tapeSpeedips %lf desired %lf tapeMotion %lf state %i", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state);
+	else if (K7 && K1) //Tape is moving in reverse
+	{
+		fastClutch = true;
+		slowClutch = false;
+	}
+}
+
+void DSE::TimeStep(double simdt)
+{
+	//Switch logic
+	SwitchLogic();
+
+	//Relay logic
+	RelayLogic();
+
+	//Clutch logic
+	ClutchLogic();
+
+	//Tape motion logic
+	if (IsACPowered() && K7)
+	{
+		if (FWD)
+		{
+			motorDirection = 1.0;
+		}
+		else if (REW)
+		{
+			motorDirection = -1.0;
+		}
+		else
+		{
+			motorDirection = 0.0;
+		}
+	}
+	else
+	{
+		motorDirection = 0.0;
+	}
+
+	//Tape speed logic
+	double commandedSpeed{}, cmd, pos;
+
+	if (!FWD && !REW)
+	{
+		commandedSpeed = 0.0;
+	}
+	else if (!fastClutch && !slowClutch)
+	{
+		commandedSpeed = 3.75;
+	}
+	else if (fastClutch && !slowClutch)
+	{
+		commandedSpeed = 120.0;
+	}
+	else if (!fastClutch && slowClutch)
+	{
+		commandedSpeed = 15.0;
+	}
+
+	//Mission check
+	if (sat->pMission->IsJMission())
+	{
+		commandedSpeed = commandedSpeed / 2.0;
+	}
+
+	//Head logic
+	if (K3)
+	{
+		if (K4)
+		{
+			playback = true;
+			record = false;
+		}
+		else
+		{
+			playback = false;
+			record = true;
+		}
+	}
+
+	desiredTapeSpeed = commandedSpeed * motorDirection;
+
+	//Tape acceleration logic
+	cmd = desiredTapeSpeed - tapeSpeed;
+	if (abs(cmd) > tapeAccel * simdt)
+	{
+		pos = sign(desiredTapeSpeed - tapeSpeed) * tapeAccel * simdt;
+	}
+	else
+	{
+		pos = cmd;
+	}
+
+	tapeSpeed += pos;
+
+	tapePosition += tapeSpeed * simdt;
+
+	if (tapePosition <= 0.0)
+	{
+		tapePosition = 0.0;
+		tapeSpeed = 0.0;
+	}
+	else if (tapePosition >= tapeLength)
+	{
+		tapePosition = tapeLength;
+		tapeSpeed = 0.0;
+	}
+
+	//sprintf(oapiDebugString(), "K1 %i K2 %i K3 %i K4 %i K5 %i K6 %i K7 %i", K1, K2, K3, K4, K5, K6, K7);
+	//sprintf(oapiDebugString(), "tapeSpeed %lf desired %lf position %lf motor %lf tapeMotion %i EndREW %i K1 %i K3 %i K4 %i K5 %i K7 %i PCM %i LBR %i FWD %i REW %i RCD %i PLAY %i fastclutch %i slowclutch %i", tapeSpeed, desiredTapeSpeed, tapePosition, motorDirection, TapeMotion(), EndOfTapeREW(), K1, K3, K4, K5, K7, CSMPCM, LBR, FWD, REW, RCD, PLAY, fastClutch, slowClutch);
+}
+
+void DSE::SystemTimestep(double simdt)
+{
+	if (IsDCPowered())
+	{
+		DCbreaker->DrawPower(3.1);
+	}
+
+	if (IsACPowered() && tapeSpeed != 0.0)
+	{
+		if (tapeSpeed != desiredTapeSpeed)
+		{
+			ACbreaker->DrawPower(70.0); //Increased load when accelerating
+		}
+		else
+		{
+			ACbreaker->DrawPower(30.0); //Steady state load
+		}
+	}
 }
 
 void DSE::LoadState(char *line) {
-	
+
 	/// \todo DSE Chunks
 
-	sscanf(line + 12, "%lf %lf %lf %i %lf", &tapeSpeedInchesPerSecond, &desiredTapeSpeed, &tapeMotion, &state, &lastEventTime);
+	int inttemp[9];
+	sscanf(line + 12, "%lf %lf %d %d %d %d %d %d %d %d %d", &tapeSpeed, &tapePosition, &inttemp[0], &inttemp[1], &inttemp[2], &inttemp[3], &inttemp[4], &inttemp[5], &inttemp[6], &inttemp[7], &inttemp[8]);
+	K1 = (inttemp[0] != 0);
+	K2 = (inttemp[1] != 0);
+	K3 = (inttemp[2] != 0);
+	K4 = (inttemp[3] != 0);
+	K5 = (inttemp[4] != 0);
+	K6 = (inttemp[5] != 0);
+	K7 = (inttemp[6] != 0);
+	fastClutch = (inttemp[7] != 0);
+	slowClutch = (inttemp[8] != 0);
 }
 
 void DSE::SaveState(FILEHANDLE scn) {
 	char buffer[256];
 
-	sprintf(buffer, "%lf %lf %lf %i %lf", tapeSpeedInchesPerSecond, desiredTapeSpeed, tapeMotion, state, lastEventTime); 
+	sprintf(buffer, "%lf %lf %d %d %d %d %d %d %d %d %d", tapeSpeed, tapePosition, K1, K2, K3, K4, K5, K6, K7, fastClutch, slowClutch);
 	oapiWriteScenario_string(scn, "DATARECORDER", buffer);
 }
 
@@ -5428,7 +5759,7 @@ unsigned char RNDZXPDRSystem::GetScaledRFPower()
 	
 	if(XPDRon)
 	{ 
-		return static_cast<unsigned char>(((XMITpower - min_value) / (max_value - min_value) * 148) + 107); //2.1 to 5.0V, scalled to 0x00 to 0xFF range
+		return static_cast<unsigned char>(((XMITpower - min_value) / (max_value - min_value) * 148) + 107); //2.1 to 5.0V, scaled to 0x00 to 0xFF range
 	}
 	else
 	{
@@ -5443,7 +5774,7 @@ unsigned char RNDZXPDRSystem::GetScaledAGCPower()
 
 	if (XPDRon && (haslock == LOCKED))
 	{
-		return static_cast<unsigned char>((abs(RCVDPowerdB)-min_value)/(max_value - min_value)*229); //0.0 to 4.5V, scalled to 0x00 to 0xFF range
+		return static_cast<unsigned char>((abs(RCVDPowerdB)-min_value)/(max_value - min_value)*229); //0.0 to 4.5V, scaled to 0x00 to 0xFF range
 	}
 	else
 	{
@@ -5455,7 +5786,7 @@ unsigned char RNDZXPDRSystem::GetScaledFreqLock()
 {
 	if (XPDRon && (haslock == LOCKED))
 	{
-		return static_cast<unsigned char>((lockTimer/1.3)*229); //0.0 to 4.5V, scalled to 0x00 to 0xFF range
+		return static_cast<unsigned char>((lockTimer/1.3)*229); //0.0 to 4.5V, scaled to 0x00 to 0xFF range
 	}
 	else if (XPDRon && (haslock == UNLOCKED))
 	{

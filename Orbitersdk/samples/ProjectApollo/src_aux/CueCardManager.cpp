@@ -24,7 +24,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "CueCardManager.h"
 
-CueCardManager::CueCardManager(int &vcidx, VESSEL *v, unsigned num) : vc(vcidx)
+CueCardManager::CueCardManager(UINT &vcidx, VESSEL *v, unsigned num) : vc(vcidx)
 {
 	vessel = v;
 	CueCardLocations.resize(num, CueCardLocation(this));

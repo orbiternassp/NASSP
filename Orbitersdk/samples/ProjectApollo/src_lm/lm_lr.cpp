@@ -39,6 +39,13 @@ LEM_LR::LEM_LR()
 	lrheat = 0;
 	antennaAngle = 24; // Position 1
 
+	//LM-5 Defaults
+	rangetest = 8287;
+	ratetest[0] = -494;
+	ratetest[1] = 1861;
+	ratetest[2] = 1331;
+	altxmtr = 3.5;
+	velxmtr = 3.6;
 }
 
 void LEM_LR::Init(LEM *s, e_object *dc_src, h_Radiator *ant, Boiler *anheat, h_HeatLoad *hl) {
@@ -128,7 +135,7 @@ double LEM_LR::GetAltTransmitterPower()
 		return 0;
 	}
 
-	return 3.0;
+	return altxmtr;
 }
 
 double LEM_LR::GetVelTransmitterPower()
@@ -138,11 +145,11 @@ double LEM_LR::GetVelTransmitterPower()
 		return 0;
 	}
 
-	return 3.0;
+	return velxmtr;
 }
 
 void LEM_LR::Timestep(double simdt) {
-	
+
 	if (lem == NULL) { return; }
 	//LR Mesh Animation
 	if (lem->stage < 2) {
@@ -252,35 +259,14 @@ void LEM_LR::Timestep(double simdt) {
 	}
 
 	// Data Determination
-	if (lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_DOWN) {
-		if (antennaAngle == 0) {
-			// Test Mode POS 2
-			// Drive to:
-			//
-			//
-			//
-			//
-			range = 8000;
-			rate[0] = -494;
-			rate[1] = 1861;
-			rate[2] = 1331;
-			rangeGood = 1;
-			velocityGood = 1;
-		}
-		else {
-			// Test Mode
-			// Drive to:
-			// Alt 8287 ft
-			// Vel -494,1861,1331 ft/sec
-			// on the LGC
-			// For some reason this should show up as 8000 ft and -480 fps on the alt/alt-rate monitor?
-			range = 8287;
-			rate[0] = -494;
-			rate[1] = 1861;
-			rate[2] = 1331;
-			rangeGood = 1;
-			velocityGood = 1;
-		}
+	if (lem->RadarTestSwitch.GetState() == THREEPOSSWITCH_DOWN)
+	{
+		range = rangetest;
+		rate[0] = ratetest[0];
+		rate[1] = ratetest[1];
+		rate[2] = ratetest[2];
+		rangeGood = 1;
+		velocityGood = 1;
 	}
 	else {
 		// Operate Mode
@@ -403,6 +389,65 @@ void LEM_LR::SystemTimestep(double simdt)
 		lrheat->GenerateHeat(118.0 / 3.0); // 118W breaker heat load divided by 3 as this power is shared between the antenna assembly and the electronics assembly, with temperature sensor only on the antenna assembly
 	}
 	//sprintf(oapiDebugString(), "LRT %lf", GetAntennaTempF());
+}
+
+void LEM_LR::SelfTest(int LMNumber)
+{
+	switch (LMNumber)
+	{
+	case 1: //LM-1
+	case 2: //LM-2
+	case 3: //LM-3
+	{
+		rangetest = 8287;
+		ratetest[0] = -247;
+		ratetest[1] = 930;
+		ratetest[2] = 666;
+		altxmtr = 3.6;
+		velxmtr = 3.8;
+	}
+	break;
+	case 4: //LM-4
+	{
+		rangetest = 8276;
+		ratetest[0] = -247;
+		ratetest[1] = -929;
+		ratetest[2] = 665;
+		altxmtr = 3.6;
+		velxmtr = 3.6;
+	}
+	break;
+	case 5: //LM-5
+	{
+		rangetest = 8275;
+		ratetest[0] = -494;
+		ratetest[1] = 1858;
+		ratetest[2] = 1329;
+		altxmtr = 3.5;
+		velxmtr = 3.6;
+	}
+	break;
+	case 10: //LM-10
+	{
+		rangetest = 8287;
+		ratetest[0] = -495;
+		ratetest[1] = 1862;
+		ratetest[2] = 1331;
+		altxmtr = 3.5;
+		velxmtr = 3.6;
+	}
+	break;
+	default: //LM-6, 7, 8, "9", 11, 12, and other "future" LM's
+	{
+		rangetest = 8286;
+		ratetest[0] = -495;
+		ratetest[1] = 1862;
+		ratetest[2] = 1331;
+		altxmtr = 3.5;
+		velxmtr = 3.6;
+	}
+	break;
+	}
 }
 
 void LEM_LR::DefineAnimations(UINT idx) {

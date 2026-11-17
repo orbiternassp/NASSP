@@ -206,20 +206,21 @@ public:
 	LEM_DEDA(LEM *lem, SoundLib &s, LEM_AEA &computer);
 	virtual ~LEM_DEDA();
 
-	void Init(e_object *powered);
+	void Init(e_object *powered, e_object *segmentlightpower, e_object *anunpower);
+
 	void Reset();
 
 	//
 	// Light status.
 	//
 
-	bool OprErrLit()	{ return OprErrLight; };
+	bool OprErrLit() { return OprErrLight; };
 	//
 	// Set light status.
 	//
 
-	void SetOprErr(bool val)		{ OprErrLight = val; };
-	void ClearOprErr()		{ OprErrLight = false; };
+	void SetOprErr(bool val) { OprErrLight = val; };
+	void ClearOprErr() { OprErrLight = false; };
 	//
 	// Timestep to run programs.
 	//
@@ -285,14 +286,13 @@ protected:
 	// Lights.
 	//
 
-	void LightOprErrLight()		{ OprErrLight = true; };
-	void ClearOprErrLight()		{ OprErrLight = false; };
+	void LightOprErrLight() { OprErrLight = true; };
+	void ClearOprErrLight() { OprErrLight = false; };
 
 	//
 	// Light power consumption.
 	//
 
-	int LightsLit;
 	int SegmentsLit;
 
 	//
@@ -349,6 +349,8 @@ protected:
 	Sound Sclick;
 
 	bool FirstTimeStep;
+	e_object *OpErrLtPower;
+	e_object *SegmentPower;
 
 	//
 	// Local helper functions.
@@ -360,7 +362,7 @@ protected:
 	char ValueCharSign(unsigned val);
 	void SendKeyCode(int val);
 
-	void DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset); 
+	void DEDAKeyBlt(SURFHANDLE surf, SURFHANDLE keys, int dstx, int dsty, int srcx, int srcy, bool lit, int xOffset, int yOffset);
 	void RenderThreeDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, int xTexMul = 1);
 	void RenderSixDigitDisplay(SURFHANDLE surf, SURFHANDLE digits, int dstx, int dsty, char *Str, int xTexMul = 1);
 	int ThreeDigitDisplaySegmentsLit(char *Str);

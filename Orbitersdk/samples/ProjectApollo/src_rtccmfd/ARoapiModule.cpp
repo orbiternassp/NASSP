@@ -38,6 +38,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 extern ARoapiModule *g_coreMod;
 extern ARCore *GCoreData[32];
 extern VESSEL *GCoreVessel[32];
+extern AR_GlobalData g_GlobalData;
 extern AR_GCore *g_SC;
 extern int nGutsUsed;
 extern int g_MFDmode;
@@ -122,4 +123,14 @@ void ARoapiModule::clbkDeleteVessel(OBJHANDLE hVessel) {                     // 
 			break;
 		}
 	}
+}
+
+DLLCLBK void opcSaveState(FILEHANDLE scn)
+{
+	g_GlobalData.SaveState(scn);
+}
+
+DLLCLBK void opcLoadState(FILEHANDLE scn)
+{
+	g_GlobalData.LoadState(scn);
 }

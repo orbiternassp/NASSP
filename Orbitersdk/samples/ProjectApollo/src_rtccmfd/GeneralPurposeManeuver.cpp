@@ -24,6 +24,11 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "rtcc.h"
 #include "GeneralPurposeManeuver.h"
 
+GMPOpt::GMPOpt()
+{
+	OptApsid = true;
+}
+
 RTCCGeneralPurposeManeuverProcessor::RTCCGeneralPurposeManeuverProcessor(RTCC *r) : RTCCModule(r)
 {
 
@@ -950,7 +955,7 @@ void RTCCGeneralPurposeManeuverProcessor::NodeShift()
 int RTCCGeneralPurposeManeuverProcessor::ApsidesChange(bool limit)
 {
 	double r_AD, r_PD, dr_a_max, dr_p_max, a_D, e_D, cos_theta_A, theta_A, r_a, r_p, cos_E_a;
-	double dr_ap0, dr_ap1, dr_p0, dr_p1, dr_ap_c, dr_p_c, ddr_ap, ddr_p, E_a;
+	double dr_ap0, dr_ap1, dr_p0, dr_p1, dr_ap_c, dr_p_c, ddr_ap, ddr_p, E_a, temp_l;
 	int err;
 
 	pRTCC->PMMAPD(aeg.Header, sv_b, 0, 0, INFO, &sv_AP, &sv_PE);
@@ -1030,7 +1035,16 @@ int RTCCGeneralPurposeManeuverProcessor::ApsidesChange(bool limit)
 
 		E_a = acos(cos_E_a);
 		sv_a.f = acos2((sv_a.coe_osc.a*(1.0 - sv_a.coe_osc.e * sv_a.coe_osc.e) - sv_b.R) / (sv_a.coe_osc.e*sv_b.R));
-		if (sv_b.coe_osc.l > PI)
+		//Optimum solution places post-maneuver mean anomaly in same 180 degree range as the pre-maneuver mean anomaly
+		if (opt->OptApsid)
+		{
+			temp_l = sv_b.coe_osc.l;
+		}
+		else
+		{
+			temp_l = PI2 - sv_b.coe_osc.l;
+		}
+		if (temp_l > PI)
 		{
 			E_a = PI2 - E_a;
 			sv_a.f = PI2 - sv_a.f;

@@ -208,7 +208,7 @@ void LEVA::clbkPostCreation()
 	if (oapiGetVesselByName("LR3") == NULL) { EasepLr3Planted = false; }
 	else { EasepLr3Planted = true; }
 
-	if (oapiGetVesselByName("Centeral Station") == NULL) { AlsepStationPlanted = false; }
+	if (oapiGetVesselByName("Central Station") == NULL) { AlsepStationPlanted = false; }
 	else { AlsepStationPlanted = true; }
 
 	if (oapiGetVesselByName("S-Band") == NULL) { AlsepSBndPlanted = false; }
@@ -776,7 +776,7 @@ void LEVA::SetEquip()
 					AlsepSBndPlanted = true;
 				}
 				else if (AlsepStationPlanted == false) {
-					oapiCreateVessel("Centeral Station", "ProjectApollo/AlsepStation", vs1);
+					oapiCreateVessel("Central Station", "ProjectApollo/AlsepStation", vs1);
 					AlsepStationPlanted = true;
 				}
 				else if (AlsepSWSPlanted == false) {

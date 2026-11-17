@@ -49,6 +49,7 @@ LEM_CWEA::LEM_CWEA(SoundLib &s) : soundlib(s) {
 	CWEAHeat = 0;
 
 	MasterAlarm = false;
+	CO2PartialPressureHigh = false;
 	Operate = false;
 	ECSFailureCount = 0;
 }
@@ -88,14 +89,14 @@ bool LEM_CWEA::IsMAPowered() {
 }
 
 bool LEM_CWEA::IsLTGPowered() {
-	if (lem->lca.GetAnnunVoltage() > 2.25)
+	if (lem->LtgORideAnunSwitch.Voltage() > 1.8)
 		return true;
 
 	return false;
 }
 
 bool LEM_CWEA::IsCWPWRLTGPowered() {
-	if (lem->lca.GetCompDockVoltage() > 2.25)
+	if (lem->lca.Fixed_5_5VDC_Output.Voltage() > 1.8)
 		return true;
 
 	return false;
@@ -418,19 +419,20 @@ void LEM_CWEA::Timestep(double simdt) {
 
 		// LR Antenna
 		// LM-3: < -15.0F or > 150.0F 
-		// LM-4 and subsequent: < 15.6F or > 148.9F, cut and capped
+		// LM-4 and subsequent: < 15.6F or > 148.9F
 		if (lem->pMission->GetLMNumber() < 3)
 		{
 			min = 2.313; // -15.0F
 			max = 4.375; // 150.0F
-			voltage = lem->scera1.GetVoltage(21, 3);
 		}
 		else
 		{
 			min = 2.305; // -15.6F
 			max = 4.361; // 148.9F
-			voltage = 0.0;
 		}
+
+		// Cut and capped on LM-4 exclusively
+		lem->pMission->GetLMNumber() == 4 ? voltage = 0 : voltage = lem->scera1.GetVoltage(21, 3);
 
 		LRHeaterCautFF.Set(voltage < min || voltage > max);
 		LRHeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 1);
@@ -455,32 +457,48 @@ void LEM_CWEA::Timestep(double simdt) {
 			max = 4.703; // 241.0F
 		}
 
+		double RCSVoltage1 = 0.0;
+		double RCSVoltage2 = 0.0;
+		double RCSVoltage3 = 0.0;
+		double RCSVoltage4 = 0.0;
+
+		if (lem->pMission->GetLMNumber() <= 3)
+		{
+			RCSVoltage1 = lem->scera1.GetVoltage(20, 4);
+			RCSVoltage2 = lem->scera1.GetVoltage(20, 3);
+			RCSVoltage3 = lem->scera1.GetVoltage(20, 2);
+			RCSVoltage4 = lem->scera1.GetVoltage(20, 1);
+		}
+		else if (lem->pMission->GetLMNumber() >= 8)
+		{
+			// Constant voltage from master alarm reset circuit. Voltage unknown at this point, assumed somewhere between min and max
+			RCSVoltage1 = RCSVoltage2 = RCSVoltage3 = RCSVoltage4 = IsCWEAPowered() ? 4.0 : 0.0;
+		}
+		// Otherwise LM-4 through LM-7 remain 0.0, cut and capped
+
+
 		//Quad 1
-		voltage = lem->pMission->GetLMNumber() <= 4 ? lem->scera1.GetVoltage(20, 4) : 0.0;
-		QD1HeaterCautFF.Set(voltage < min || voltage > max);
+		QD1HeaterCautFF.Set(RCSVoltage1 < min || RCSVoltage1 > max);
 		QD1HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 2);
 
 		//Quad 2
-		voltage = lem->pMission->GetLMNumber() <= 4 ? lem->scera1.GetVoltage(20, 3) : 0.0;
-		QD2HeaterCautFF.Set(voltage < min || voltage > max);
+		QD2HeaterCautFF.Set(RCSVoltage2 < min || RCSVoltage2 > max);
 		QD2HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 3);
 
 		//Quad 3
-		voltage = lem->pMission->GetLMNumber() <= 4 ? lem->scera1.GetVoltage(20, 2) : 0.0;
-		QD3HeaterCautFF.Set(voltage < min || voltage > max);
+		QD3HeaterCautFF.Set(RCSVoltage3 < min || RCSVoltage3 > max);
 		QD3HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 4);
 
 		//Quad 4
-		voltage = lem->pMission->GetLMNumber() <= 4 ? lem->scera1.GetVoltage(20, 1) : 0.0;
-		QD4HeaterCautFF.Set(voltage < min || voltage > max);
+		QD4HeaterCautFF.Set(RCSVoltage4 < min || RCSVoltage4 > max);
 		QD4HeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 5);
 
 		// S-Band Antenna Electronic Drive Assembly < -64.08F or > 152.63F
 		SBDHeaterCautFF.Set(lem->scera2.GetVoltage(21, 2) < 1.743 || lem->scera2.GetVoltage(21, 2) > 4.421);
 		SBDHeaterCautFF.Reset(lem->TempMonitorRotary.GetState() == 6);
 
-		//Set CW Light
-		if (LRHeaterCautFF.IsSet() || RRHeaterCautFF.IsSet() || SBDHeaterCautFF.IsSet() || QD1HeaterCautFF.IsSet() || QD2HeaterCautFF.IsSet() || QD3HeaterCautFF.IsSet() || QD4HeaterCautFF.IsSet())
+		//Set CW Light (LR Heater FF can still be set on all missions, but is ignored on LM-5 and subsequent)
+		if ((lem->pMission->GetLMNumber() <= 4 && LRHeaterCautFF.IsSet()) || RRHeaterCautFF.IsSet() || SBDHeaterCautFF.IsSet() || QD1HeaterCautFF.IsSet() || QD2HeaterCautFF.IsSet() || QD3HeaterCautFF.IsSet() || QD4HeaterCautFF.IsSet())
 			SetLight(2, 6, 1);
 		else
 			SetLight(2, 6, 0);
@@ -498,8 +516,12 @@ void LEM_CWEA::Timestep(double simdt) {
 		// Restoration of normal CO2 pressure
 		// Restoration of normal water separator speed
 		// Selection of #2 suit fan
+
+		//CO2 partial pressure high comparator
+		CO2PartialPressureHigh = (lem->ecs.GetSensorCO2Voltage() >= 2.274);
+
 		lightlogic = false;
-		if (lem->ecs.GetSensorCO2MMHg() >= 7.6) { lightlogic = true;}	// CO2 Partial Pressure > 7.6mm
+		if (CO2PartialPressureHigh) { lightlogic = true;}	// CO2 Partial Pressure > 7.6mm
 		if (lem->scera2.GetVoltage(13, 3) > 2.5) { lightlogic = true; } // Glycol pump failure
 		if (lem->scera2.GetVoltage(3, 2) > 2.5) { lightlogic = true; } // Suit fan 1 failure
 		if (lem->ecs.GetWaterSeparatorRPM() < 792.5) { lightlogic = true; } // Water separator failure
@@ -569,10 +591,16 @@ void LEM_CWEA::Timestep(double simdt) {
 		WaterCautFF3.Set((abs(lem->scera1.GetVoltage(8, 1) - lem->scera1.GetVoltage(8, 2)) / ((lem->scera1.GetVoltage(8, 1) + lem->scera1.GetVoltage(8, 2)) / 2.0)) >= 0.15);
 		WaterCautFF3.Reset(lem->QtyMonRotary.GetState() == 0);
 
-		if ((lem->stage < 2 && (WaterCautFF1.IsSet() || WaterCautFF2.IsSet())) || WaterCautFF3.IsSet())
-			SetLight(3, 7, 1);
-		else
-			SetLight(3, 7, 0);
+		// Warning light was removed on LM-9+
+		if (lem->pMission->GetLMNumber() >= 9) {
+			SetLight(3, 7, 2);
+		}
+		else {
+			if ((lem->stage < 2 && (WaterCautFF1.IsSet() || WaterCautFF2.IsSet())) || WaterCautFF3.IsSet())
+				SetLight(3, 7, 1);
+			else
+				SetLight(3, 7, 0);
+		}
 
 		// 6DS40 S-BAND RECEIVER FAILURE CAUTION
 		// On when reciever signal lost.
@@ -588,14 +616,22 @@ void LEM_CWEA::Timestep(double simdt) {
 	}
 	else
 	{
-
 		SetLightStates(0);
 
 		//Only for LM10+
 		SetLight(3, 5, 2);
 
+		//Disable light for LM-9+
+		if (lem->pMission->GetLMNumber() >= 9)
+		{
+			SetLight(3, 7, 2);
+		}
+
 		//CWEA PWR
 		SetLight(3, 6, 1);
+
+		//Reset non-latching relays
+		CO2PartialPressureHigh = false;
 	}
 
 	// CWEA TEST SWITCH FUNCTIONALITY
@@ -646,7 +682,8 @@ void LEM_CWEA::Timestep(double simdt) {
 		LightStatus[0][7] = 1;
 		LightStatus[1][7] = 1;
 		LightStatus[2][7] = 1;
-		LightStatus[3][7] = 1;
+		if (lem->pMission->GetLMNumber() <= 8)
+			LightStatus[3][7] = 1;
 		LightStatus[4][7] = 1;
 		break;
 	case 6: // COMPNT
@@ -663,7 +700,7 @@ void LEM_CWEA::SystemTimestep(double simdt) {
 		CWEAHeat->GenerateHeat(11.48);
 	}
 	if (IsLTGPowered())
-		lem->lca.DrawDCPower(GetDimmableLoad() + GetNonDimmableLoad());
+		lem->LtgORideAnunSwitch.DrawPower(GetDimmableLoad() + GetNonDimmableLoad());
 	if (MasterAlarm == true)
 		ma_pwr->DrawPower(7.2);
 
@@ -722,6 +759,8 @@ void LEM_CWEA::TurnOff()
 
 void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 {
+	char buffer[256];
+
 	oapiWriteLine(scn, start_str);
 
 	papiWriteScenario_bool(scn, "OPERATE", Operate);
@@ -753,6 +792,8 @@ void LEM_CWEA::SaveState(FILEHANDLE scn, char *start_str, char *end_str)
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS3", &LightStatus[3][0], 8);
 	papiWriteScenario_intarr(scn, "LIGHTSTATUS4", &LightStatus[4][0], 8);
 	oapiWriteScenario_int(scn, "ECSFAILURECOUNT", ECSFailureCount);
+	sprintf(buffer, "%d", CO2PartialPressureHigh);
+	oapiWriteScenario_string(scn, "RELAYS", buffer);
 
 	oapiWriteLine(scn, end_str);
 }
@@ -828,6 +869,11 @@ void LEM_CWEA::LoadState(FILEHANDLE scn, char *end_str)
 		}
 		else if (!strnicmp(line, "OXYGENCAUTFF3", 13)) {
 			OxygenCautFF3.LoadState(line, 13);
+		}
+		else if (!strnicmp(line, "RELAYS", 6)) {
+			int iTemp = 0;
+			sscanf(line, "%d", &iTemp);
+			CO2PartialPressureHigh = (iTemp != 0);
 		}
 
 		papiReadScenario_bool(line, "OPERATE", Operate);
@@ -1040,23 +1086,10 @@ double LEM_CWEA::GetNumberLightsOn()	//Counts number of CW lights lit minus the 
 	return GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank3Lights() + GetCWBank4Lights();
 }
 
-double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the CW power light is lit or a lamp test is active
+double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the CW power light
 {
 	if (LightStatus[3][6] == 1 && lem->LampToneTestRotary != 5) {
 		return 1.18;
-	}
-	
-	if (lem->LampToneTestRotary == 2) {
-		return GetCWBank1Lights() * 1.18;
-	}
-	else if (lem->LampToneTestRotary == 3) {
-		return GetCWBank2Lights() * 1.18;
-	}
-	else if (lem->LampToneTestRotary == 4) {
-		return GetCWBank3Lights() * 1.18;
-	}
-	else if (lem->LampToneTestRotary == 5) {
-		return GetCWBank4Lights() * 1.18;
 	}
 	return 0.0;
 }
@@ -1064,20 +1097,25 @@ double LEM_CWEA::GetNonDimmableLoad()	//Returns bulb draw if the CW power light 
 double LEM_CWEA::GetDimmableLoad()
 {
 	if (lem->LampToneTestRotary == 0 || lem->LampToneTestRotary == 1 || lem->LampToneTestRotary == 6 || lem->LampToneTestRotary == 7) {
-		return (GetNumberLightsOn() * 1.18) * lem->lca.GetAnnunDimPct();	//Approx 1.18W per bulb, scaled with LCA dimming
+		return (GetNumberLightsOn() * 1.18) * (lem->LtgORideAnunSwitch.Voltage() / 6.0);	//Approx 1.18W per bulb, scaled with LCA dimming
 	}
 	else if (lem->LampToneTestRotary == 2) {
-		return ((GetCWBank2Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18) * lem->lca.GetAnnunDimPct();
+		return ((GetCWBank2Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18) * (lem->LtgORideAnunSwitch.Voltage() / 6.0);
 	}
 	else if (lem->LampToneTestRotary == 3) {
-		return ((GetCWBank1Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18) * lem->lca.GetAnnunDimPct();
+		return ((GetCWBank1Lights() + GetCWBank3Lights() + GetCWBank4Lights()) * 1.18) * (lem->LtgORideAnunSwitch.Voltage() / 6.0);
 	}
 	else if (lem->LampToneTestRotary == 4) {
-		return ((GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank4Lights()) * 1.18) * lem->lca.GetAnnunDimPct();
+		return ((GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank4Lights()) * 1.18) * (lem->LtgORideAnunSwitch.Voltage() / 6.0);
 	}
 	else if (lem->LampToneTestRotary == 5) {
-		return ((GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank3Lights()) * 1.18) * lem->lca.GetAnnunDimPct();
+		return ((GetCWBank1Lights() + GetCWBank2Lights() + GetCWBank3Lights()) * 1.18) * (lem->LtgORideAnunSwitch.Voltage() / 6.0);
 	}
 	else
 		return 0.0;
+}
+
+bool LEM_CWEA::IsCO2PartialPressureHigh()
+{
+	return CO2PartialPressureHigh;
 }

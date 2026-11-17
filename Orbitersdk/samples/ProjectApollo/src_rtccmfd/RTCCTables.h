@@ -383,7 +383,7 @@ struct EMSMISSInputTable
 	//Coordinate system indicator (Part of Anchor Vector)
 	//Maneuver indicator (true = consider maneuvers, false = don't consider maneuvers)
 	bool ManeuverIndicator = false;
-	//Vehicle code (1 = LEM, 3 = CSM)
+	//Vehicle code (1 = CSM, 3 = LEM)
 	int VehicleCode;
 	//Density multiplication override indicator
 	bool DensityMultOverrideIndicator = false;
