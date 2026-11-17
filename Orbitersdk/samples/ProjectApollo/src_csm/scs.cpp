@@ -4971,25 +4971,6 @@ void EMS::TimeStep(double simdt) {
 		SwitchChanged();
 	}
 
-	//Relays (TODO: K1 and K2)
-	if (!IsPowered() || EMS_STATUS_OFF)
-	{
-		K3 = false;
-	}
-	else
-	{
-		K3 = true;
-	}
-
-	if (K3 && (EMS_STATUS_DV || EMS_STATUS_DVTEST || EMS_STATUS_DVSET))
-	{
-		K4 = true;
-	}
-	else
-	{
-		K4 = false;
-	}
-
 	switch (status) {
 		case EMS_STATUS_DV:
 		case EMS_STATUS_DV_BACKUP:
