@@ -835,7 +835,7 @@ public:
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
 
-	// Variable 115-6VAC output to scroll and RSI lighting
+	// Fixed 115 to 6 VAC output to scroll and RSI lighting
 	FixedVoltageTransformer Fixed_115_6VAC_Output;
 
 	double GetdVRangeCounter() { return dVRangeCounter; };
