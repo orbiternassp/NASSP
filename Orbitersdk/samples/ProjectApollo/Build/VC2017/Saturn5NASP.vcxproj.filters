@@ -54,6 +54,9 @@
     <ClCompile Include="..\..\src_csm\dockingprobe.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+	<ClCompile Include="..\..\src_csm\SIMBay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src_sys\dsky.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -288,6 +291,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_csm\dockingprobe.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+	<ClInclude Include="..\..\src_csm\SIMBay.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src_sys\dsky.h">
