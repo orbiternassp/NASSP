@@ -408,8 +408,8 @@ public:
 		SRF_CMMFDFRAME,
 		SRF_COAS,
 		SRF_THUMBWHEEL_SMALLFONTS,
-		SRF_CIRCUITBRAKER,
-		SRF_CIRCUITBRAKER_YELLOW,
+		SRF_CIRCUITBREAKER,
+		SRF_CIRCUITBREAKER_YELLOW,
 		SRF_THREEPOSSWITCH20,
 		SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL,
 		SRF_THREEPOSSWITCH30,
@@ -1950,7 +1950,7 @@ protected:
 	CSMLMPowerSwitch LMPowerSwitch;
 
 	SwitchRow PostLDGVentValveLeverRow;
-	CircuitBrakerSwitch PostLDGVentValveLever;
+	CircuitBreakerSwitch PostLDGVentValveLever;
 
 	SwitchRow GDCAlignButtonRow;
 	PushSwitch GDCAlignButton;
@@ -2373,171 +2373,171 @@ protected:
 	AttitudeToggle OrbiterAttitudeToggle;
 
 	/////////////////////////////
-	// Panel 5 circuit brakers //
+	// Panel 5 circuit breakers //
 	/////////////////////////////
 	
-	// EPS sensor signal circuit brakers
+	// EPS sensor signal circuit breakers
 
-	SwitchRow EpsSensorSignalDcCircuitBrakersRow;
-	CircuitBrakerSwitch EpsSensorSignalDcMnaCircuitBraker;
-	CircuitBrakerSwitch EpsSensorSignalDcMnbCircuitBraker;
+	SwitchRow EpsSensorSignalDcCircuitBreakersRow;
+	CircuitBreakerSwitch EpsSensorSignalDcMnaCircuitBreaker;
+	CircuitBreakerSwitch EpsSensorSignalDcMnbCircuitBreaker;
 	
-	SwitchRow EpsSensorSignalAcCircuitBrakersRow;
-	CircuitBrakerSwitch EpsSensorSignalAc1CircuitBraker;
-	CircuitBrakerSwitch EpsSensorSignalAc2CircuitBraker;
+	SwitchRow EpsSensorSignalAcCircuitBreakersRow;
+	CircuitBreakerSwitch EpsSensorSignalAc1CircuitBreaker;
+	CircuitBreakerSwitch EpsSensorSignalAc2CircuitBreaker;
 
-	// C/W circuit brakers
+	// C/W circuit breakers
 
-	SwitchRow CWCircuitBrakersRow;
-	CircuitBrakerSwitch CWMnaCircuitBraker;
-	CircuitBrakerSwitch CWMnbCircuitBraker;
+	SwitchRow CWCircuitBreakersRow;
+	CircuitBreakerSwitch CWMnaCircuitBreaker;
+	CircuitBreakerSwitch CWMnbCircuitBreaker;
 
-	// LEM PWR circuit brakers
+	// LEM PWR circuit breakers
 	
-	SwitchRow LMPWRCircuitBrakersRow;
-	CircuitBrakerSwitch MnbLMPWR1CircuitBraker;
-	CircuitBrakerSwitch MnbLMPWR2CircuitBraker;
+	SwitchRow LMPWRCircuitBreakersRow;
+	CircuitBreakerSwitch MnbLMPWR1CircuitBreaker;
+	CircuitBreakerSwitch MnbLMPWR2CircuitBreaker;
 
-	// Inverter control circuit brakers
+	// Inverter control circuit breakers
 	
-	SwitchRow InverterControlCircuitBrakersRow;
-	CircuitBrakerSwitch InverterControl1CircuitBraker;
-	CircuitBrakerSwitch InverterControl2CircuitBraker;
-	CircuitBrakerSwitch InverterControl3CircuitBraker;
+	SwitchRow InverterControlCircuitBreakersRow;
+	CircuitBreakerSwitch InverterControl1CircuitBreaker;
+	CircuitBreakerSwitch InverterControl2CircuitBreaker;
+	CircuitBreakerSwitch InverterControl3CircuitBreaker;
 
-	// EPS sensor unit circuit brakers
+	// EPS sensor unit circuit breakers
 	
-	SwitchRow EPSSensorUnitCircuitBrakersRow;
-	CircuitBrakerSwitch EPSSensorUnitDcBusACircuitBraker;
-	CircuitBrakerSwitch EPSSensorUnitDcBusBCircuitBraker;
-	CircuitBrakerSwitch EPSSensorUnitAcBus1CircuitBraker;
-	CircuitBrakerSwitch EPSSensorUnitAcBus2CircuitBraker;
+	SwitchRow EPSSensorUnitCircuitBreakersRow;
+	CircuitBreakerSwitch EPSSensorUnitDcBusACircuitBreaker;
+	CircuitBreakerSwitch EPSSensorUnitDcBusBCircuitBreaker;
+	CircuitBreakerSwitch EPSSensorUnitAcBus1CircuitBreaker;
+	CircuitBreakerSwitch EPSSensorUnitAcBus2CircuitBreaker;
 
-	// Battery relay bus circuit brakers
+	// Battery relay bus circuit breakers
 
-	SwitchRow BATRLYBusCircuitBrakersRow;
-	CircuitBrakerSwitch BATRLYBusBatACircuitBraker;
-	CircuitBrakerSwitch BATRLYBusBatBCircuitBraker;
+	SwitchRow BATRLYBusCircuitBreakersRow;
+	CircuitBreakerSwitch BATRLYBusBatACircuitBreaker;
+	CircuitBreakerSwitch BATRLYBusBatBCircuitBreaker;
 
-	// ECS radiators circuit brakers
+	// ECS radiators circuit breakers
 
-	SwitchRow ECSRadiatorsCircuitBrakersRow;
-	CircuitBrakerSwitch ControllerAc1CircuitBraker;
-	CircuitBrakerSwitch ControllerAc2CircuitBraker;
-	CircuitBrakerSwitch CONTHTRSMnACircuitBraker;
-	CircuitBrakerSwitch CONTHTRSMnBCircuitBraker;
-	CircuitBrakerSwitch HTRSOVLDBatACircuitBraker;
-	CircuitBrakerSwitch HTRSOVLDBatBCircuitBraker;
+	SwitchRow ECSRadiatorsCircuitBreakersRow;
+	CircuitBreakerSwitch ControllerAc1CircuitBreaker;
+	CircuitBreakerSwitch ControllerAc2CircuitBreaker;
+	CircuitBreakerSwitch CONTHTRSMnACircuitBreaker;
+	CircuitBreakerSwitch CONTHTRSMnBCircuitBreaker;
+	CircuitBreakerSwitch HTRSOVLDBatACircuitBreaker;
+	CircuitBreakerSwitch HTRSOVLDBatBCircuitBreaker;
 
-	// Battery charger circuit brakers
+	// Battery charger circuit breakers
 
-	SwitchRow BatteryChargerCircuitBrakersRow;
-	CircuitBrakerSwitch BatteryChargerBatACircuitBraker;
-	CircuitBrakerSwitch BatteryChargerBatBCircuitBraker;
-	CircuitBrakerSwitch BatteryChargerMnACircuitBraker;
-	CircuitBrakerSwitch BatteryChargerMnBCircuitBraker;
-	CircuitBrakerSwitch BatteryChargerAcPwrCircuitBraker;
+	SwitchRow BatteryChargerCircuitBreakersRow;
+	CircuitBreakerSwitch BatteryChargerBatACircuitBreaker;
+	CircuitBreakerSwitch BatteryChargerBatBCircuitBreaker;
+	CircuitBreakerSwitch BatteryChargerMnACircuitBreaker;
+	CircuitBreakerSwitch BatteryChargerMnBCircuitBreaker;
+	CircuitBreakerSwitch BatteryChargerAcPwrCircuitBreaker;
 
-	// Instrument lighting circuit brakers
+	// Instrument lighting circuit breakers
 
-	SwitchRow InstrumentLightingCircuitBrakersRow;
-	CircuitBrakerSwitch InstrumentLightingESSMnACircuitBraker;
-	CircuitBrakerSwitch InstrumentLightingESSMnBCircuitBraker;
-	CircuitBrakerSwitch InstrumentLightingNonESSCircuitBraker;
-	CircuitBrakerSwitch InstrumentLightingSCIEquipSEP1CircuitBraker;
-	CircuitBrakerSwitch InstrumentLightingSCIEquipSEP2CircuitBraker;
-	CircuitBrakerSwitch InstrumentLightingSCIEquipHatchCircuitBraker;
+	SwitchRow InstrumentLightingCircuitBreakersRow;
+	CircuitBreakerSwitch InstrumentLightingESSMnACircuitBreaker;
+	CircuitBreakerSwitch InstrumentLightingESSMnBCircuitBreaker;
+	CircuitBreakerSwitch InstrumentLightingNonESSCircuitBreaker;
+	CircuitBreakerSwitch InstrumentLightingSCIEquipSEP1CircuitBreaker;
+	CircuitBreakerSwitch InstrumentLightingSCIEquipSEP2CircuitBreaker;
+	CircuitBreakerSwitch InstrumentLightingSCIEquipHatchCircuitBreaker;
 	
-	// ECS circuit brakers
+	// ECS circuit breakers
 
-	SwitchRow ECSCircuitBrakersRow;
-	CircuitBrakerSwitch ECSPOTH2OHTRMnACircuitBraker;
-	CircuitBrakerSwitch ECSPOTH2OHTRMnBCircuitBraker;
-	CircuitBrakerSwitch ECSH2OAccumMnACircuitBraker;
-	CircuitBrakerSwitch ECSH2OAccumMnBCircuitBraker;
-	CircuitBrakerSwitch ECSTransducerWastePOTH2OMnACircuitBraker;
-	CircuitBrakerSwitch ECSTransducerWastePOTH2OMnBCircuitBraker;
-	CircuitBrakerSwitch ECSTransducerPressGroup1MnACircuitBraker;
-	CircuitBrakerSwitch ECSTransducerPressGroup1MnBCircuitBraker;
-	CircuitBrakerSwitch ECSTransducerPressGroup2MnACircuitBraker;
-	CircuitBrakerSwitch ECSTransducerPressGroup2MnBCircuitBraker;
-	CircuitBrakerSwitch ECSTransducerTempMnACircuitBraker;
-	CircuitBrakerSwitch ECSTransducerTempMnBCircuitBraker;
+	SwitchRow ECSCircuitBreakersRow;
+	CircuitBreakerSwitch ECSPOTH2OHTRMnACircuitBreaker;
+	CircuitBreakerSwitch ECSPOTH2OHTRMnBCircuitBreaker;
+	CircuitBreakerSwitch ECSH2OAccumMnACircuitBreaker;
+	CircuitBreakerSwitch ECSH2OAccumMnBCircuitBreaker;
+	CircuitBreakerSwitch ECSTransducerWastePOTH2OMnACircuitBreaker;
+	CircuitBreakerSwitch ECSTransducerWastePOTH2OMnBCircuitBreaker;
+	CircuitBreakerSwitch ECSTransducerPressGroup1MnACircuitBreaker;
+	CircuitBreakerSwitch ECSTransducerPressGroup1MnBCircuitBreaker;
+	CircuitBreakerSwitch ECSTransducerPressGroup2MnACircuitBreaker;
+	CircuitBreakerSwitch ECSTransducerPressGroup2MnBCircuitBreaker;
+	CircuitBreakerSwitch ECSTransducerTempMnACircuitBreaker;
+	CircuitBreakerSwitch ECSTransducerTempMnBCircuitBreaker;
 
-	// ECS circuit brakers lower row 
+	// ECS circuit breakers lower row 
 
-	SwitchRow ECSLowerRowCircuitBrakersRow;
-	CircuitBrakerSwitch ECSSecCoolLoopAc1CircuitBraker;
-	CircuitBrakerSwitch ECSSecCoolLoopAc2CircuitBraker;
-	CircuitBrakerSwitch ECSSecCoolLoopRADHTRMnACircuitBraker;
-	CircuitBrakerSwitch ECSSecCoolLoopXducersMnACircuitBraker;
-	CircuitBrakerSwitch ECSSecCoolLoopXducersMnBCircuitBraker;
-	CircuitBrakerSwitch ECSWasteH2OUrineDumpHTRMnACircuitBraker;
-	CircuitBrakerSwitch ECSWasteH2OUrineDumpHTRMnBCircuitBraker;
-	CircuitBrakerSwitch ECSCabinFanAC1ACircuitBraker;
-	CircuitBrakerSwitch ECSCabinFanAC1BCircuitBraker;
-	CircuitBrakerSwitch ECSCabinFanAC1CCircuitBraker;
-	CircuitBrakerSwitch ECSCabinFanAC2ACircuitBraker;
-	CircuitBrakerSwitch ECSCabinFanAC2BCircuitBraker;
-	CircuitBrakerSwitch ECSCabinFanAC2CCircuitBraker;
+	SwitchRow ECSLowerRowCircuitBreakersRow;
+	CircuitBreakerSwitch ECSSecCoolLoopAc1CircuitBreaker;
+	CircuitBreakerSwitch ECSSecCoolLoopAc2CircuitBreaker;
+	CircuitBreakerSwitch ECSSecCoolLoopRADHTRMnACircuitBreaker;
+	CircuitBreakerSwitch ECSSecCoolLoopXducersMnACircuitBreaker;
+	CircuitBreakerSwitch ECSSecCoolLoopXducersMnBCircuitBreaker;
+	CircuitBreakerSwitch ECSWasteH2OUrineDumpHTRMnACircuitBreaker;
+	CircuitBreakerSwitch ECSWasteH2OUrineDumpHTRMnBCircuitBreaker;
+	CircuitBreakerSwitch ECSCabinFanAC1ACircuitBreaker;
+	CircuitBreakerSwitch ECSCabinFanAC1BCircuitBreaker;
+	CircuitBreakerSwitch ECSCabinFanAC1CCircuitBreaker;
+	CircuitBreakerSwitch ECSCabinFanAC2ACircuitBreaker;
+	CircuitBreakerSwitch ECSCabinFanAC2BCircuitBreaker;
+	CircuitBreakerSwitch ECSCabinFanAC2CCircuitBreaker;
 
-	// Guidance/navigation circuit brakers 
+	// Guidance/navigation circuit breakers 
 
-	SwitchRow GNCircuitBrakersRow;
-	CircuitBrakerSwitch GNPowerAc1CircuitBraker;
-	CircuitBrakerSwitch GNPowerAc2CircuitBraker;
-	CircuitBrakerSwitch GNIMUMnACircuitBraker;
-	CircuitBrakerSwitch GNIMUMnBCircuitBraker;
-	CircuitBrakerSwitch GNIMUHTRMnACircuitBraker;
-	CircuitBrakerSwitch GNIMUHTRMnBCircuitBraker;
-	CircuitBrakerSwitch GNComputerMnACircuitBraker;
-	CircuitBrakerSwitch GNComputerMnBCircuitBraker;
-	CircuitBrakerSwitch GNOpticsMnACircuitBraker;
-	CircuitBrakerSwitch GNOpticsMnBCircuitBraker;
+	SwitchRow GNCircuitBreakersRow;
+	CircuitBreakerSwitch GNPowerAc1CircuitBreaker;
+	CircuitBreakerSwitch GNPowerAc2CircuitBreaker;
+	CircuitBreakerSwitch GNIMUMnACircuitBreaker;
+	CircuitBreakerSwitch GNIMUMnBCircuitBreaker;
+	CircuitBreakerSwitch GNIMUHTRMnACircuitBreaker;
+	CircuitBreakerSwitch GNIMUHTRMnBCircuitBreaker;
+	CircuitBreakerSwitch GNComputerMnACircuitBreaker;
+	CircuitBreakerSwitch GNComputerMnBCircuitBreaker;
+	CircuitBreakerSwitch GNOpticsMnACircuitBreaker;
+	CircuitBreakerSwitch GNOpticsMnBCircuitBreaker;
 
 	/////////////////////////////
-	// Panel 4 circuit brakers //
+	// Panel 4 circuit breakers //
 	/////////////////////////////
 	
-	// Suit compressors circuit brakers 
+	// Suit compressors circuit breakers 
 
-	SwitchRow SuitCompressorsAc1ACircuitBrakerRow;
-	CircuitBrakerSwitch SuitCompressorsAc1ACircuitBraker;
+	SwitchRow SuitCompressorsAc1ACircuitBreakerRow;
+	CircuitBreakerSwitch SuitCompressorsAc1ACircuitBreaker;
 
-	SwitchRow SuitCompressorsAc1BCircuitBrakerRow;
-	CircuitBrakerSwitch SuitCompressorsAc1BCircuitBraker;
+	SwitchRow SuitCompressorsAc1BCircuitBreakerRow;
+	CircuitBreakerSwitch SuitCompressorsAc1BCircuitBreaker;
 
-	SwitchRow SuitCompressorsAc1CCircuitBrakerRow;
-	CircuitBrakerSwitch SuitCompressorsAc1CCircuitBraker;
+	SwitchRow SuitCompressorsAc1CCircuitBreakerRow;
+	CircuitBreakerSwitch SuitCompressorsAc1CCircuitBreaker;
 
-	SwitchRow SuitCompressorsAc2ACircuitBrakerRow;
-	CircuitBrakerSwitch SuitCompressorsAc2ACircuitBraker;
+	SwitchRow SuitCompressorsAc2ACircuitBreakerRow;
+	CircuitBreakerSwitch SuitCompressorsAc2ACircuitBreaker;
 
-	SwitchRow SuitCompressorsAc2BCircuitBrakerRow;
-	CircuitBrakerSwitch SuitCompressorsAc2BCircuitBraker;
+	SwitchRow SuitCompressorsAc2BCircuitBreakerRow;
+	CircuitBreakerSwitch SuitCompressorsAc2BCircuitBreaker;
 
-	SwitchRow SuitCompressorsAc2CCircuitBrakerRow;
-	CircuitBrakerSwitch SuitCompressorsAc2CCircuitBraker;
+	SwitchRow SuitCompressorsAc2CCircuitBreakerRow;
+	CircuitBreakerSwitch SuitCompressorsAc2CCircuitBreaker;
 
-	// ECS glycol pumps circuit brakers 
+	// ECS glycol pumps circuit breakers 
 
-	SwitchRow ECSGlycolPumpsAc1ACircuitBrakerRow;
-	CircuitBrakerSwitch ECSGlycolPumpsAc1ACircuitBraker;
+	SwitchRow ECSGlycolPumpsAc1ACircuitBreakerRow;
+	CircuitBreakerSwitch ECSGlycolPumpsAc1ACircuitBreaker;
 
-	SwitchRow ECSGlycolPumpsAc1BCircuitBrakerRow;
-	CircuitBrakerSwitch ECSGlycolPumpsAc1BCircuitBraker;
+	SwitchRow ECSGlycolPumpsAc1BCircuitBreakerRow;
+	CircuitBreakerSwitch ECSGlycolPumpsAc1BCircuitBreaker;
 
-	SwitchRow ECSGlycolPumpsAc1CCircuitBrakerRow;
-	CircuitBrakerSwitch ECSGlycolPumpsAc1CCircuitBraker;
+	SwitchRow ECSGlycolPumpsAc1CCircuitBreakerRow;
+	CircuitBreakerSwitch ECSGlycolPumpsAc1CCircuitBreaker;
 
-	SwitchRow ECSGlycolPumpsAc2ACircuitBrakerRow;
-	CircuitBrakerSwitch ECSGlycolPumpsAc2ACircuitBraker;
+	SwitchRow ECSGlycolPumpsAc2ACircuitBreakerRow;
+	CircuitBreakerSwitch ECSGlycolPumpsAc2ACircuitBreaker;
 
-	SwitchRow ECSGlycolPumpsAc2BCircuitBrakerRow;
-	CircuitBrakerSwitch ECSGlycolPumpsAc2BCircuitBraker;
+	SwitchRow ECSGlycolPumpsAc2BCircuitBreakerRow;
+	CircuitBreakerSwitch ECSGlycolPumpsAc2BCircuitBreaker;
 
-	SwitchRow ECSGlycolPumpsAc2CCircuitBrakerRow;
-	CircuitBrakerSwitch ECSGlycolPumpsAc2CCircuitBraker;
+	SwitchRow ECSGlycolPumpsAc2CCircuitBreakerRow;
+	CircuitBreakerSwitch ECSGlycolPumpsAc2CCircuitBreaker;
 
 	/////////////////////////
 	// Panel 6 thumbwheels //
@@ -2644,25 +2644,25 @@ protected:
 	ThreeSourceSwitch TelcomGroup2Switch;
 
 	///////////////////////////////
-	// Panel 275 circuit brakers //
+	// Panel 275 circuit breakers //
 	///////////////////////////////
 
-	SwitchRow Panel275CircuitBrakersRow;
-	CircuitBrakerSwitch InverterPower3MainBCircuitBraker;
-	CircuitBrakerSwitch InverterPower3MainACircuitBraker;
-	CircuitBrakerSwitch InverterPower2MainBCircuitBraker;
-	CircuitBrakerSwitch InverterPower1MainACircuitBraker;
-	CircuitBrakerSwitch FlightPostLandingMainBCircuitBraker;
-	CircuitBrakerSwitch FlightPostLandingMainACircuitBraker;
-	CircuitBrakerSwitch FlightPostLandingBatCCircuitBraker;
-	CircuitBrakerSwitch FlightPostLandingBatBusBCircuitBraker;
+	SwitchRow Panel275CircuitBreakersRow;
+	CircuitBreakerSwitch InverterPower3MainBCircuitBreaker;
+	CircuitBreakerSwitch InverterPower3MainACircuitBreaker;
+	CircuitBreakerSwitch InverterPower2MainBCircuitBreaker;
+	CircuitBreakerSwitch InverterPower1MainACircuitBreaker;
+	CircuitBreakerSwitch FlightPostLandingMainBCircuitBreaker;
+	CircuitBreakerSwitch FlightPostLandingMainACircuitBreaker;
+	CircuitBreakerSwitch FlightPostLandingBatCCircuitBreaker;
+	CircuitBreakerSwitch FlightPostLandingBatBusBCircuitBreaker;
 	
-	SwitchRow Panel275CircuitBrakersLowerRow;
-	CircuitBrakerSwitch FlightPostLandingBatBusACircuitBraker;
-	CircuitBrakerSwitch MainBBatBusBCircuitBraker;
-	CircuitBrakerSwitch MainBBatCCircuitBraker;
-	CircuitBrakerSwitch MainABatCCircuitBraker;
-	CircuitBrakerSwitch MainABatBusACircuitBraker;
+	SwitchRow Panel275CircuitBreakersLowerRow;
+	CircuitBreakerSwitch FlightPostLandingBatBusACircuitBreaker;
+	CircuitBreakerSwitch MainBBatBusBCircuitBreaker;
+	CircuitBreakerSwitch MainBBatCCircuitBreaker;
+	CircuitBreakerSwitch MainABatCCircuitBreaker;
+	CircuitBreakerSwitch MainABatBusACircuitBreaker;
 
 	////////////////////////
 	// Right window cover //
@@ -2840,92 +2840,92 @@ protected:
 	// Panel 8 circuit breakers //
 	//////////////////////////////
 
-	SwitchRow StabContSystemCircuitBrakerRow;
-	CircuitBrakerSwitch StabContSystemTVCAc1CircuitBraker;
-	CircuitBrakerSwitch StabContSystemAc1CircuitBraker;
-	CircuitBrakerSwitch StabContSystemAc2CircuitBraker;
+	SwitchRow StabContSystemCircuitBreakerRow;
+	CircuitBreakerSwitch StabContSystemTVCAc1CircuitBreaker;
+	CircuitBreakerSwitch StabContSystemAc1CircuitBreaker;
+	CircuitBreakerSwitch StabContSystemAc2CircuitBreaker;
 
-	SwitchRow StabilizationControlSystemCircuitBrakerRow;
-	CircuitBrakerSwitch ECATVCAc2CircuitBraker;
-	CircuitBrakerSwitch DirectUllMnACircuitBraker;
-	CircuitBrakerSwitch DirectUllMnBCircuitBraker;
-	CircuitBrakerSwitch ContrDirectMnA1CircuitBraker;
-	CircuitBrakerSwitch ContrDirectMnB1CircuitBraker;
-	CircuitBrakerSwitch ContrDirectMnA2CircuitBraker;
-	CircuitBrakerSwitch ContrDirectMnB2CircuitBraker;
-	CircuitBrakerSwitch ACRollMnACircuitBraker;
-	CircuitBrakerSwitch ACRollMnBCircuitBraker;
-	CircuitBrakerSwitch BDRollMnACircuitBraker;
-	CircuitBrakerSwitch BDRollMnBCircuitBraker;
-	CircuitBrakerSwitch PitchMnACircuitBraker;
-	CircuitBrakerSwitch PitchMnBCircuitBraker;
-	CircuitBrakerSwitch YawMnACircuitBraker;
-	CircuitBrakerSwitch YawMnBCircuitBraker;
+	SwitchRow StabilizationControlSystemCircuitBreakerRow;
+	CircuitBreakerSwitch ECATVCAc2CircuitBreaker;
+	CircuitBreakerSwitch DirectUllMnACircuitBreaker;
+	CircuitBreakerSwitch DirectUllMnBCircuitBreaker;
+	CircuitBreakerSwitch ContrDirectMnA1CircuitBreaker;
+	CircuitBreakerSwitch ContrDirectMnB1CircuitBreaker;
+	CircuitBreakerSwitch ContrDirectMnA2CircuitBreaker;
+	CircuitBreakerSwitch ContrDirectMnB2CircuitBreaker;
+	CircuitBreakerSwitch ACRollMnACircuitBreaker;
+	CircuitBreakerSwitch ACRollMnBCircuitBreaker;
+	CircuitBreakerSwitch BDRollMnACircuitBreaker;
+	CircuitBreakerSwitch BDRollMnBCircuitBreaker;
+	CircuitBreakerSwitch PitchMnACircuitBreaker;
+	CircuitBreakerSwitch PitchMnBCircuitBreaker;
+	CircuitBreakerSwitch YawMnACircuitBreaker;
+	CircuitBreakerSwitch YawMnBCircuitBreaker;
 
-	SwitchRow StabilizationControlSystem2CircuitBrakerRow;
-	CircuitBrakerSwitch OrdealAc2CircuitBraker;
-	CircuitBrakerSwitch OrdealMnBCircuitBraker;
-	CircuitBrakerSwitch ContrAutoMnACircuitBraker;
-	CircuitBrakerSwitch ContrAutoMnBCircuitBraker;
-	CircuitBrakerSwitch LogicBus12MnACircuitBraker;
-	CircuitBrakerSwitch LogicBus34MnACircuitBraker;
-	CircuitBrakerSwitch LogicBus14MnBCircuitBraker;
-	CircuitBrakerSwitch LogicBus23MnBCircuitBraker;
-	CircuitBrakerSwitch SystemMnACircuitBraker;
-	CircuitBrakerSwitch SystemMnBCircuitBraker;
+	SwitchRow StabilizationControlSystem2CircuitBreakerRow;
+	CircuitBreakerSwitch OrdealAc2CircuitBreaker;
+	CircuitBreakerSwitch OrdealMnBCircuitBreaker;
+	CircuitBreakerSwitch ContrAutoMnACircuitBreaker;
+	CircuitBreakerSwitch ContrAutoMnBCircuitBreaker;
+	CircuitBreakerSwitch LogicBus12MnACircuitBreaker;
+	CircuitBreakerSwitch LogicBus34MnACircuitBreaker;
+	CircuitBreakerSwitch LogicBus14MnBCircuitBreaker;
+	CircuitBreakerSwitch LogicBus23MnBCircuitBreaker;
+	CircuitBreakerSwitch SystemMnACircuitBreaker;
+	CircuitBreakerSwitch SystemMnBCircuitBreaker;
 
-	SwitchRow ReactionControlSystemCircuitBrakerRow;
-	CircuitBrakerSwitch CMHeater1MnACircuitBraker;
-	CircuitBrakerSwitch CMHeater2MnBCircuitBraker;
-	CircuitBrakerSwitch SMHeatersAMnBCircuitBraker;
-	CircuitBrakerSwitch SMHeatersCMnBCircuitBraker;
-	CircuitBrakerSwitch SMHeatersBMnACircuitBraker;
-	CircuitBrakerSwitch SMHeatersDMnACircuitBraker;
-	CircuitBrakerSwitch PrplntIsolMnACircuitBraker;
-	CircuitBrakerSwitch PrplntIsolMnBCircuitBraker;
-	CircuitBrakerSwitch RCSLogicMnACircuitBraker;
-	CircuitBrakerSwitch RCSLogicMnBCircuitBraker;
-	CircuitBrakerSwitch EMSMnACircuitBraker;
-	CircuitBrakerSwitch EMSMnBCircuitBraker;
-	CircuitBrakerSwitch DockProbeMnACircuitBraker;
-	CircuitBrakerSwitch DockProbeMnBCircuitBraker;
+	SwitchRow ReactionControlSystemCircuitBreakerRow;
+	CircuitBreakerSwitch CMHeater1MnACircuitBreaker;
+	CircuitBreakerSwitch CMHeater2MnBCircuitBreaker;
+	CircuitBreakerSwitch SMHeatersAMnBCircuitBreaker;
+	CircuitBreakerSwitch SMHeatersCMnBCircuitBreaker;
+	CircuitBreakerSwitch SMHeatersBMnACircuitBreaker;
+	CircuitBreakerSwitch SMHeatersDMnACircuitBreaker;
+	CircuitBreakerSwitch PrplntIsolMnACircuitBreaker;
+	CircuitBreakerSwitch PrplntIsolMnBCircuitBreaker;
+	CircuitBreakerSwitch RCSLogicMnACircuitBreaker;
+	CircuitBreakerSwitch RCSLogicMnBCircuitBreaker;
+	CircuitBreakerSwitch EMSMnACircuitBreaker;
+	CircuitBreakerSwitch EMSMnBCircuitBreaker;
+	CircuitBreakerSwitch DockProbeMnACircuitBreaker;
+	CircuitBreakerSwitch DockProbeMnBCircuitBreaker;
 
-	SwitchRow ServicePropulsionSysCircuitBrakerRow;
-	CircuitBrakerSwitch GaugingMnACircuitBraker;
-	CircuitBrakerSwitch GaugingMnBCircuitBraker;
-	CircuitBrakerSwitch GaugingAc1CircuitBraker;
-	CircuitBrakerSwitch GaugingAc2CircuitBraker;
-	CircuitBrakerSwitch HeValveMnACircuitBraker;
-	CircuitBrakerSwitch HeValveMnBCircuitBraker;
-	CircuitBrakerSwitch PitchBatACircuitBraker;
-	CircuitBrakerSwitch PitchBatBCircuitBraker;
-	CircuitBrakerSwitch YawBatACircuitBraker;
-	CircuitBrakerSwitch YawBatBCircuitBraker;
-	CircuitBrakerSwitch PilotValveMnACircuitBraker;
-	CircuitBrakerSwitch PilotValveMnBCircuitBraker;
+	SwitchRow ServicePropulsionSysCircuitBreakerRow;
+	CircuitBreakerSwitch GaugingMnACircuitBreaker;
+	CircuitBreakerSwitch GaugingMnBCircuitBreaker;
+	CircuitBreakerSwitch GaugingAc1CircuitBreaker;
+	CircuitBreakerSwitch GaugingAc2CircuitBreaker;
+	CircuitBreakerSwitch HeValveMnACircuitBreaker;
+	CircuitBreakerSwitch HeValveMnBCircuitBreaker;
+	CircuitBreakerSwitch PitchBatACircuitBreaker;
+	CircuitBreakerSwitch PitchBatBCircuitBreaker;
+	CircuitBreakerSwitch YawBatACircuitBreaker;
+	CircuitBreakerSwitch YawBatBCircuitBreaker;
+	CircuitBreakerSwitch PilotValveMnACircuitBreaker;
+	CircuitBreakerSwitch PilotValveMnBCircuitBreaker;
 
-	SwitchRow FloatBagCircuitBrakerRow;
-	CircuitBrakerSwitch FloatBag1BatACircuitBraker;
-	CircuitBrakerSwitch FloatBag2BatBCircuitBraker;
-	CircuitBrakerSwitch FloatBag3FLTPLCircuitBraker;
+	SwitchRow FloatBagCircuitBreakerRow;
+	CircuitBreakerSwitch FloatBag1BatACircuitBreaker;
+	CircuitBreakerSwitch FloatBag2BatBCircuitBreaker;
+	CircuitBreakerSwitch FloatBag3FLTPLCircuitBreaker;
 
-	SwitchRow SeqEventsContSysCircuitBrakerRow;
-	CircuitBrakerSwitch SECSLogicBatACircuitBraker;
-	CircuitBrakerSwitch SECSLogicBatBCircuitBraker;
-	CircuitBrakerSwitch SECSArmBatACircuitBraker;
-	CircuitBrakerSwitch SECSArmBatBCircuitBraker;
+	SwitchRow SeqEventsContSysCircuitBreakerRow;
+	CircuitBreakerSwitch SECSLogicBatACircuitBreaker;
+	CircuitBreakerSwitch SECSLogicBatBCircuitBreaker;
+	CircuitBreakerSwitch SECSArmBatACircuitBreaker;
+	CircuitBreakerSwitch SECSArmBatBCircuitBreaker;
 
-	SwitchRow EDSCircuitBrakerRow;
-	CircuitBrakerSwitch EDS1BatACircuitBraker;
-	CircuitBrakerSwitch EDS2BatCCircuitBraker;
-	CircuitBrakerSwitch EDS3BatBCircuitBraker;
+	SwitchRow EDSCircuitBreakerRow;
+	CircuitBreakerSwitch EDS1BatACircuitBreaker;
+	CircuitBreakerSwitch EDS2BatCCircuitBreaker;
+	CircuitBreakerSwitch EDS3BatBCircuitBreaker;
 
-	SwitchRow ELSCircuitBrakerRow;
-	CircuitBrakerSwitch ELSBatACircuitBraker;
-	CircuitBrakerSwitch ELSBatBCircuitBraker;
+	SwitchRow ELSCircuitBreakerRow;
+	CircuitBreakerSwitch ELSBatACircuitBreaker;
+	CircuitBreakerSwitch ELSBatBCircuitBreaker;
 
-	SwitchRow PLVentCircuitBrakerRow;
-	CircuitBrakerSwitch FLTPLCircuitBraker;
+	SwitchRow PLVentCircuitBreakerRow;
+	CircuitBreakerSwitch FLTPLCircuitBreaker;
 
 	//////////////////////
 	// Panel 8 switches //
@@ -3039,67 +3039,67 @@ protected:
 	///////////////////
 	
 	SwitchRow Panel225CircuitBreakersRow;
-	CircuitBrakerSwitch PCMTLMGroup1CB;
-	CircuitBrakerSwitch PCMTLMGroup2CB;
-	CircuitBrakerSwitch FLTBusMNACB;
-	CircuitBrakerSwitch FLTBusMNBCB;
-	CircuitBrakerSwitch PMPPowerPrimCB;
-	CircuitBrakerSwitch PMPPowerAuxCB;
-	CircuitBrakerSwitch VHFStationAudioLCB;
-	CircuitBrakerSwitch VHFStationAudioCTRCB;
-	CircuitBrakerSwitch VHFStationAudioRCB;
-	CircuitBrakerSwitch UDLCB;
-	CircuitBrakerSwitch HGAFLTBus1CB;
-	CircuitBrakerSwitch HGAGroup2CB;
-	CircuitBrakerSwitch SBandFMXMTRFLTBusCB;
-	CircuitBrakerSwitch SBandFMXMTRGroup1CB;
-	CircuitBrakerSwitch CentralTimingEquipMNACB;
-	CircuitBrakerSwitch CentralTimingEquipMNBCB;
-	CircuitBrakerSwitch RNDZXPNDRFLTBusCB;
-	CircuitBrakerSwitch SIGCondrFLTBusCB;
-	CircuitBrakerSwitch SBandPWRAmpl1FLTBusCB;
-	CircuitBrakerSwitch SBandPWRAmpl1Group1CB;
-	CircuitBrakerSwitch SBandPWRAmpl2FLTBusCB;
-	CircuitBrakerSwitch SBandPWRAmpl2Group1CB;
+	CircuitBreakerSwitch PCMTLMGroup1CB;
+	CircuitBreakerSwitch PCMTLMGroup2CB;
+	CircuitBreakerSwitch FLTBusMNACB;
+	CircuitBreakerSwitch FLTBusMNBCB;
+	CircuitBreakerSwitch PMPPowerPrimCB;
+	CircuitBreakerSwitch PMPPowerAuxCB;
+	CircuitBreakerSwitch VHFStationAudioLCB;
+	CircuitBreakerSwitch VHFStationAudioCTRCB;
+	CircuitBreakerSwitch VHFStationAudioRCB;
+	CircuitBreakerSwitch UDLCB;
+	CircuitBreakerSwitch HGAFLTBus1CB;
+	CircuitBreakerSwitch HGAGroup2CB;
+	CircuitBreakerSwitch SBandFMXMTRFLTBusCB;
+	CircuitBreakerSwitch SBandFMXMTRGroup1CB;
+	CircuitBreakerSwitch CentralTimingEquipMNACB;
+	CircuitBreakerSwitch CentralTimingEquipMNBCB;
+	CircuitBreakerSwitch RNDZXPNDRFLTBusCB;
+	CircuitBreakerSwitch SIGCondrFLTBusCB;
+	CircuitBreakerSwitch SBandPWRAmpl1FLTBusCB;
+	CircuitBreakerSwitch SBandPWRAmpl1Group1CB;
+	CircuitBreakerSwitch SBandPWRAmpl2FLTBusCB;
+	CircuitBreakerSwitch SBandPWRAmpl2Group1CB;
 
 	SwitchRow Panel226CircuitBreakersRow;
-	CircuitBrakerSwitch FuelCell1PumpsACCB;
-	CircuitBrakerSwitch FuelCell1ReacsCB;
-	CircuitBrakerSwitch FuelCell1BusContCB;
-	CircuitBrakerSwitch FuelCell1PurgeCB;
-	CircuitBrakerSwitch FuelCell1RadCB;
-	CircuitBrakerSwitch CryogenicH2HTR1CB;
-	CircuitBrakerSwitch CryogenicH2HTR2CB;
-	CircuitBrakerSwitch FuelCell2PumpsACCB;
-	CircuitBrakerSwitch FuelCell2ReacsCB;
-	CircuitBrakerSwitch FuelCell2BusContCB;
-	CircuitBrakerSwitch FuelCell2PurgeCB;
-	CircuitBrakerSwitch FuelCell2RadCB;
-	CircuitBrakerSwitch CryogenicO2HTR1CB;
-	CircuitBrakerSwitch CryogenicO2HTR2CB;
-	CircuitBrakerSwitch FuelCell3PumpsACCB;
-	CircuitBrakerSwitch FuelCell3ReacsCB;
-	CircuitBrakerSwitch FuelCell3BusContCB;
-	CircuitBrakerSwitch FuelCell3PurgeCB;
-	CircuitBrakerSwitch FuelCell3RadCB;
-	CircuitBrakerSwitch CryogenicQTYAmpl1CB;
-	CircuitBrakerSwitch CryogenicQTYAmpl2CB;
-	CircuitBrakerSwitch CryogenicFanMotorsAC1ACB;
-	CircuitBrakerSwitch CryogenicFanMotorsAC1BCB;
-	CircuitBrakerSwitch CryogenicFanMotorsAC1CCB;
-	CircuitBrakerSwitch CryogenicFanMotorsAC2ACB;
-	CircuitBrakerSwitch CryogenicFanMotorsAC2BCB;
-	CircuitBrakerSwitch CryogenicFanMotorsAC2CCB;
-	CircuitBrakerSwitch LightingRndzMNACB;
-	CircuitBrakerSwitch LightingRndzMNBCB;
-	CircuitBrakerSwitch LightingFloodMNACB;
-	CircuitBrakerSwitch LightingFloodMNBCB;
-	CircuitBrakerSwitch LightingFloodFLTPLCB;
-	CircuitBrakerSwitch LightingNumIntLEBCB;
-	CircuitBrakerSwitch LightingNumIntLMDCCB;
-	CircuitBrakerSwitch LightingNumIntRMDCCB;
-	CircuitBrakerSwitch RunEVATRGTAC1CB;
-	CircuitBrakerSwitch RunEVATRGTAC2CB;
+	CircuitBreakerSwitch FuelCell1PumpsACCB;
+	CircuitBreakerSwitch FuelCell1ReacsCB;
+	CircuitBreakerSwitch FuelCell1BusContCB;
+	CircuitBreakerSwitch FuelCell1PurgeCB;
+	CircuitBreakerSwitch FuelCell1RadCB;
+	CircuitBreakerSwitch CryogenicH2HTR1CB;
+	CircuitBreakerSwitch CryogenicH2HTR2CB;
+	CircuitBreakerSwitch FuelCell2PumpsACCB;
+	CircuitBreakerSwitch FuelCell2ReacsCB;
+	CircuitBreakerSwitch FuelCell2BusContCB;
+	CircuitBreakerSwitch FuelCell2PurgeCB;
+	CircuitBreakerSwitch FuelCell2RadCB;
+	CircuitBreakerSwitch CryogenicO2HTR1CB;
+	CircuitBreakerSwitch CryogenicO2HTR2CB;
+	CircuitBreakerSwitch FuelCell3PumpsACCB;
+	CircuitBreakerSwitch FuelCell3ReacsCB;
+	CircuitBreakerSwitch FuelCell3BusContCB;
+	CircuitBreakerSwitch FuelCell3PurgeCB;
+	CircuitBreakerSwitch FuelCell3RadCB;
+	CircuitBreakerSwitch CryogenicQTYAmpl1CB;
+	CircuitBreakerSwitch CryogenicQTYAmpl2CB;
+	CircuitBreakerSwitch CryogenicFanMotorsAC1ACB;
+	CircuitBreakerSwitch CryogenicFanMotorsAC1BCB;
+	CircuitBreakerSwitch CryogenicFanMotorsAC1CCB;
+	CircuitBreakerSwitch CryogenicFanMotorsAC2ACB;
+	CircuitBreakerSwitch CryogenicFanMotorsAC2BCB;
+	CircuitBreakerSwitch CryogenicFanMotorsAC2CCB;
+	CircuitBreakerSwitch LightingRndzMNACB;
+	CircuitBreakerSwitch LightingRndzMNBCB;
+	CircuitBreakerSwitch LightingFloodMNACB;
+	CircuitBreakerSwitch LightingFloodMNBCB;
+	CircuitBreakerSwitch LightingFloodFLTPLCB;
+	CircuitBreakerSwitch LightingNumIntLEBCB;
+	CircuitBreakerSwitch LightingNumIntLMDCCB;
+	CircuitBreakerSwitch LightingNumIntRMDCCB;
+	CircuitBreakerSwitch RunEVATRGTAC1CB;
+	CircuitBreakerSwitch RunEVATRGTAC2CB;
 	
 	///////////////
 	// Panel 227 //
@@ -3113,44 +3113,44 @@ protected:
 	////////////////////////////////////////
 
 	SwitchRow Panel229CircuitBreakersRow;
-	CircuitBrakerSwitch TimersMnACircuitBraker;
-	CircuitBrakerSwitch TimersMnBCircuitBraker;
-	CircuitBrakerSwitch EPSMnAGroup1CircuitBraker;
-	CircuitBrakerSwitch EPSMnBGroup1CircuitBraker;
-	CircuitBrakerSwitch SPSLineHtrsMnACircuitBraker;
-	CircuitBrakerSwitch SPSLineHtrsMnBCircuitBraker;
-	CircuitBrakerSwitch EPSMnAGroup2CircuitBraker;
-	CircuitBrakerSwitch EPSMnBGroup2CircuitBraker;
-	CircuitBrakerSwitch O2VacIonPumpsMnACircuitBraker;
-	CircuitBrakerSwitch O2VacIonPumpsMnBCircuitBraker;
-	CircuitBrakerSwitch EPSMnAGroup3CircuitBraker;
-	CircuitBrakerSwitch EPSMnBGroup3CircuitBraker;
-	CircuitBrakerSwitch MainReleasePyroACircuitBraker;
-	CircuitBrakerSwitch MainReleasePyroBCircuitBraker;
-	CircuitBrakerSwitch EPSMnAGroup4CircuitBraker;
-	CircuitBrakerSwitch EPSMnBGroup4CircuitBraker;
-	CircuitBrakerSwitch EPSMnAGroup5CircuitBraker;
-	CircuitBrakerSwitch EPSMnBGroup5CircuitBraker;
-	CircuitBrakerSwitch UtilityCB1;
-	CircuitBrakerSwitch UtilityCB2;
-	CircuitBrakerSwitch EPSBatBusACircuitBraker;
-	CircuitBrakerSwitch EPSBatBusBCircuitBraker;
+	CircuitBreakerSwitch TimersMnACircuitBreaker;
+	CircuitBreakerSwitch TimersMnBCircuitBreaker;
+	CircuitBreakerSwitch EPSMnAGroup1CircuitBreaker;
+	CircuitBreakerSwitch EPSMnBGroup1CircuitBreaker;
+	CircuitBreakerSwitch SPSLineHtrsMnACircuitBreaker;
+	CircuitBreakerSwitch SPSLineHtrsMnBCircuitBreaker;
+	CircuitBreakerSwitch EPSMnAGroup2CircuitBreaker;
+	CircuitBreakerSwitch EPSMnBGroup2CircuitBreaker;
+	CircuitBreakerSwitch O2VacIonPumpsMnACircuitBreaker;
+	CircuitBreakerSwitch O2VacIonPumpsMnBCircuitBreaker;
+	CircuitBreakerSwitch EPSMnAGroup3CircuitBreaker;
+	CircuitBreakerSwitch EPSMnBGroup3CircuitBreaker;
+	CircuitBreakerSwitch MainReleasePyroACircuitBreaker;
+	CircuitBreakerSwitch MainReleasePyroBCircuitBreaker;
+	CircuitBreakerSwitch EPSMnAGroup4CircuitBreaker;
+	CircuitBreakerSwitch EPSMnBGroup4CircuitBreaker;
+	CircuitBreakerSwitch EPSMnAGroup5CircuitBreaker;
+	CircuitBreakerSwitch EPSMnBGroup5CircuitBreaker;
+	CircuitBreakerSwitch UtilityCB1;
+	CircuitBreakerSwitch UtilityCB2;
+	CircuitBreakerSwitch EPSBatBusACircuitBreaker;
+	CircuitBreakerSwitch EPSBatBusBCircuitBreaker;
 
 	///////////////////////
 	// Panel 250/251/252 //
 	///////////////////////
 
 	SwitchRow Panel250CircuitBreakersRow;
-	CircuitBrakerSwitch BatBusAToPyroBusTieCircuitBraker;
-	CircuitBrakerSwitch PyroASeqACircuitBraker;
-	CircuitBrakerSwitch BatBusBToPyroBusTieCircuitBraker;
-	CircuitBrakerSwitch PyroBSeqBCircuitBraker;
-	CircuitBrakerSwitch BatAPWRCircuitBraker;
-	CircuitBrakerSwitch BatBPWRCircuitBraker;
-	CircuitBrakerSwitch BatCPWRCircuitBraker;
-	CircuitBrakerSwitch BatCtoBatBusACircuitBraker;
-	CircuitBrakerSwitch BatCtoBatBusBCircuitBraker;
-	CircuitBrakerSwitch BatCCHRGCircuitBraker;
+	CircuitBreakerSwitch BatBusAToPyroBusTieCircuitBreaker;
+	CircuitBreakerSwitch PyroASeqACircuitBreaker;
+	CircuitBreakerSwitch BatBusBToPyroBusTieCircuitBreaker;
+	CircuitBreakerSwitch PyroBSeqBCircuitBreaker;
+	CircuitBreakerSwitch BatAPWRCircuitBreaker;
+	CircuitBreakerSwitch BatBPWRCircuitBreaker;
+	CircuitBreakerSwitch BatCPWRCircuitBreaker;
+	CircuitBreakerSwitch BatCtoBatBusACircuitBreaker;
+	CircuitBreakerSwitch BatCtoBatBusBCircuitBreaker;
+	CircuitBreakerSwitch BatCCHRGCircuitBreaker;
 
 	SwitchRow WasteMGMTOvbdDrainDumpRotaryRow;
 	RotationalSwitch WasteMGMTOvbdDrainDumpRotary;
@@ -3169,16 +3169,16 @@ protected:
 	///////////////////
 
 	SwitchRow Panel276CBRow;
-	CircuitBrakerSwitch Panel276CB1;
-	CircuitBrakerSwitch Panel276CB2;
-	CircuitBrakerSwitch Panel276CB3;
-	CircuitBrakerSwitch Panel276CB4;
+	CircuitBreakerSwitch Panel276CB1;
+	CircuitBreakerSwitch Panel276CB2;
+	CircuitBreakerSwitch Panel276CB3;
+	CircuitBreakerSwitch Panel276CB4;
 	
 	SwitchRow Panel278CBRow;
-	CircuitBrakerSwitch UprightingSystemCompressor1CircuitBraker;
-	CircuitBrakerSwitch UprightingSystemCompressor2CircuitBraker;
-	CircuitBrakerSwitch SIVBLMSepPyroACircuitBraker;
-	CircuitBrakerSwitch SIVBLMSepPyroBCircuitBraker;
+	CircuitBreakerSwitch UprightingSystemCompressor1CircuitBreaker;
+	CircuitBreakerSwitch UprightingSystemCompressor2CircuitBreaker;
+	CircuitBreakerSwitch SIVBLMSepPyroACircuitBreaker;
+	CircuitBreakerSwitch SIVBLMSepPyroBCircuitBreaker;
 
 	// Panel 278 Mission-Specific Additions
 	SaturnPanel278J *Panel278J;
@@ -3226,7 +3226,7 @@ protected:
 	////////////////////////
 
 	SwitchRow GlycolToRadiatorsLeverRow; 	
-	CircuitBrakerSwitch GlycolToRadiatorsLever;
+	CircuitBreakerSwitch GlycolToRadiatorsLever;
 
 	SwitchRow CabinPressureReliefLever1Row;
 	SaturnCabinPressureReliefLever CabinPressureReliefLever1;
@@ -3250,7 +3250,7 @@ protected:
 
 
 	SwitchRow SuitCircuitReturnValveLeverRow;
-	CircuitBrakerSwitch SuitCircuitReturnValveLever;
+	CircuitBreakerSwitch SuitCircuitReturnValveLever;
 
 	SwitchRow O2DemandRegulatorRotaryRow;
 	RotationalSwitch O2DemandRegulatorRotary;
@@ -3299,8 +3299,8 @@ protected:
 	///////////////
 
 	SwitchRow O2MainRegulatorSwitchesRow;
-	CircuitBrakerSwitch O2MainRegulatorASwitch;
-	CircuitBrakerSwitch O2MainRegulatorBSwitch;
+	CircuitBreakerSwitch O2MainRegulatorASwitch;
+	CircuitBreakerSwitch O2MainRegulatorBSwitch;
 
 	SwitchRow CabinRepressValveRotaryRow;
 	RotationalSwitch CabinRepressValveRotary;
@@ -4256,7 +4256,7 @@ protected:
 	void KillAlt(OBJHANDLE &hvessel,double altVS);
 	void RedrawPanel_MFDButton (SURFHANDLE surf, int mfd, int side, int xoffset, int yoffset, int ydist);
 	void FuelCellHeaterSwitchToggled(TwoPositionSwitch *s, int *pump);
-	void FuelCellReactantsSwitchToggled(TwoPositionSwitch *s, CircuitBrakerSwitch *cb, CircuitBrakerSwitch *cbLatch, int *h2open, int *o2open);
+	void FuelCellReactantsSwitchToggled(TwoPositionSwitch *s, CircuitBreakerSwitch *cb, CircuitBreakerSwitch *cbLatch, int *h2open, int *o2open);
 	void MousePanel_MFDButton(int mfd, int event, int mx, int my);
 	void initSaturn();
 	void SwitchClick();

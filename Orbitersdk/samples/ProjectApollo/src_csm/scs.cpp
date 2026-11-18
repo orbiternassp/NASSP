@@ -531,11 +531,11 @@ void GDC::SystemTimestep(double simdt) {
 	/// \todo DC power is needed, too
 	if (sat->SCSElectronicsPowerRotarySwitch.GetState() != 2) return;  // Switched off
 
-	if (sat->StabContSystemAc1CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE || 
-	    sat->StabContSystemAc2CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) return;
+	if (sat->StabContSystemAc1CircuitBreaker.Voltage() < SP_MIN_ACVOLTAGE || 
+	    sat->StabContSystemAc2CircuitBreaker.Voltage() < SP_MIN_ACVOLTAGE) return;
 
-	sat->StabContSystemAc1CircuitBraker.DrawPower(10.4); 
-	sat->StabContSystemAc2CircuitBraker.DrawPower(3.4); 	
+	sat->StabContSystemAc1CircuitBreaker.DrawPower(10.4); 
+	sat->StabContSystemAc2CircuitBreaker.DrawPower(3.4); 	
 }
 		
 void GDC::Timestep(double simdt) {
@@ -550,8 +550,8 @@ void GDC::Timestep(double simdt) {
 	//POWER
 	bool power, ac1power, ac2power, E1_504, E1_503, E1_502, E0_503PR, E0_503Y, E2_503, E2_502, EA_501, EB_501;
 
-	ac1power = sat->StabContSystemAc1CircuitBraker.IsPowered();
-	ac2power = sat->StabContSystemAc2CircuitBraker.IsPowered();
+	ac1power = sat->StabContSystemAc1CircuitBreaker.IsPowered();
+	ac2power = sat->StabContSystemAc2CircuitBreaker.IsPowered();
 
 	//SCS electronics power switch state is assured above
 	if (ac1power)
@@ -621,12 +621,12 @@ void GDC::Timestep(double simdt) {
 		E2_503 = false;
 	}
 
-	if (sat->SystemMnACircuitBraker.IsPowered())
+	if (sat->SystemMnACircuitBreaker.IsPowered())
 		EA_501 = true;
 	else
 		EA_501 = false;
 
-	if (sat->SystemMnBCircuitBraker.IsPowered())
+	if (sat->SystemMnBCircuitBreaker.IsPowered())
 		EB_501 = true;
 	else
 		EB_501 = false;
@@ -2101,12 +2101,12 @@ void EDA::Timestep(double simdt)
 	else
 		A9K4 = false;
 
-	if (sat->LVFuelTankPressIndicatorSwitch.IsUp() && sat->EDS1BatACircuitBraker.IsPowered())
+	if (sat->LVFuelTankPressIndicatorSwitch.IsUp() && sat->EDS1BatACircuitBreaker.IsPowered())
 		A11K1 = A11K3 = A11K6 = true;
 	else
 		A11K1 = A11K3 = A11K6 = false;
 
-	if (sat->LVFuelTankPressIndicatorSwitch.IsUp() && sat->EDS3BatBCircuitBraker.IsPowered())
+	if (sat->LVFuelTankPressIndicatorSwitch.IsUp() && sat->EDS3BatBCircuitBreaker.IsPowered())
 		A11K2 = A11K4 = A11K5 = true;
 	else
 		A11K2 = A11K4 = A11K5 = false;
@@ -3031,8 +3031,8 @@ bool RJEC::IsThrusterPowered(ThreePosSwitch *s) {
 
 	// see AOH Figure 2.5-2
 	if (s->IsPowered() && 
-		((s->IsUp() && sat->secs.MESCA.GetAutoRCSEnableRelay() && sat->ContrAutoMnACircuitBraker.IsPowered()) ||
-		 (s->IsDown() && sat->secs.MESCB.GetAutoRCSEnableRelay() && sat->ContrAutoMnBCircuitBraker.IsPowered()))) {
+		((s->IsUp() && sat->secs.MESCA.GetAutoRCSEnableRelay() && sat->ContrAutoMnACircuitBreaker.IsPowered()) ||
+		 (s->IsDown() && sat->secs.MESCB.GetAutoRCSEnableRelay() && sat->ContrAutoMnBCircuitBreaker.IsPowered()))) {
 		return true;
 	}
 	return false;
@@ -3300,8 +3300,8 @@ void RJEC::TimeStep(double simdt){
 	S26 = sat->dVThrust1Switch.Voltage() > SP_MIN_DCVOLTAGE;
 	S59 = sat->dVThrust2Switch.Voltage() > SP_MIN_DCVOLTAGE;
 	AB_X16 = td[1] && td[2] && td[5] && td[6];	//TBD: This can be done better with a THC class
-	AB_X70 = sat->secs.MESCA.FireUllage() && sat->RCSLogicMnACircuitBraker.IsPowered();
-	AB_X71 = sat->secs.MESCB.FireUllage() && sat->RCSLogicMnBCircuitBraker.IsPowered();
+	AB_X70 = sat->secs.MESCA.FireUllage() && sat->RCSLogicMnACircuitBreaker.IsPowered();
+	AB_X71 = sat->secs.MESCB.FireUllage() && sat->RCSLogicMnBCircuitBreaker.IsPowered();
 	DV_EMS_Set = sat->ems.IsdVMode() && sat->ems.GetdVRangeCounter() >= 0;
 	val11 = sat->agc.GetOutputChannel(011);
 	cmcsignal = val11[12];
@@ -3549,7 +3549,7 @@ bool ECA::IsDCPowered() {
 	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 0) return false;  // Switched off
 
 	// Ensure DC power
-	if (sat->SystemMnBCircuitBraker.Voltage() < SP_MIN_DCVOLTAGE) return false;
+	if (sat->SystemMnBCircuitBreaker.Voltage() < SP_MIN_DCVOLTAGE) return false;
 
 	return true;
 }
@@ -3560,7 +3560,7 @@ bool ECA::IsAC1Powered()
 	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 0) return false;  // Switched off
 
 	// Ensure AC power
-	if (sat->StabContSystemAc1CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) return false;
+	if (sat->StabContSystemAc1CircuitBreaker.Voltage() < SP_MIN_ACVOLTAGE) return false;
 
 	return true;
 }
@@ -3571,7 +3571,7 @@ bool ECA::IsAC2Powered()
 	if (sat->SCSElectronicsPowerRotarySwitch.GetState() == 0) return false;  // Switched off
 
 	// Ensure AC power
-	if (sat->ECATVCAc2CircuitBraker.Voltage() < SP_MIN_ACVOLTAGE) return false;
+	if (sat->ECATVCAc2CircuitBreaker.Voltage() < SP_MIN_ACVOLTAGE) return false;
 
 	return true;
 }
@@ -3579,10 +3579,10 @@ bool ECA::IsAC2Powered()
 void ECA::SystemTimestep(double simdt) {
 
 	// Do we have power?
-	if (IsDCPowered()) sat->SystemMnBCircuitBraker.DrawPower(14.4);
+	if (IsDCPowered()) sat->SystemMnBCircuitBreaker.DrawPower(14.4);
 	//SCS training document just says 13.7W AC power
-	if (IsAC1Powered()) sat->StabContSystemAc1CircuitBraker.DrawPower(6.85);
-	if (IsAC2Powered()) sat->ECATVCAc2CircuitBraker.DrawPower(6.85);
+	if (IsAC1Powered()) sat->StabContSystemAc1CircuitBreaker.DrawPower(6.85);
+	if (IsAC2Powered()) sat->ECATVCAc2CircuitBreaker.DrawPower(6.85);
 }
 
 void ECA::TimeStep(double simdt) {
@@ -4393,11 +4393,11 @@ bool ServoAmplifierModule::IsClutch1Powered()
 	if ((*relays[0]) || *(relays[3])) return false;
 	if (sat->TVCServoPower1Switch.IsUp())
 	{
-		if (sat->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+		if (sat->SystemMnACircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE) return true;
 	}
 	else if (sat->TVCServoPower1Switch.IsDown())
 	{
-		if (sat->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+		if (sat->SystemMnBCircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE) return true;
 	}
 
 	return false;
@@ -4408,11 +4408,11 @@ bool ServoAmplifierModule::IsClutch2Powered()
 	if (!(*relays[1]) && !(*relays[3])) return false;
 	if (sat->TVCServoPower2Switch.IsUp())
 	{
-		if (sat->SystemMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+		if (sat->SystemMnACircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE) return true;
 	}
 	else if (sat->TVCServoPower2Switch.IsDown())
 	{
-		if (sat->SystemMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) return true;
+		if (sat->SystemMnBCircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE) return true;
 	}
 
 	return false;
@@ -4421,22 +4421,22 @@ bool ServoAmplifierModule::IsClutch2Powered()
 void ServoAmplifierModule::DrawSystem1Power() {
 
 	if (sat->TVCServoPower1Switch.IsUp()) {
-		sat->SystemMnACircuitBraker.DrawPower(6.7);				/// CSM Data Book
+		sat->SystemMnACircuitBreaker.DrawPower(6.7);				/// CSM Data Book
 
 	}
 	else if (sat->TVCServoPower1Switch.IsDown()) {
-		sat->SystemMnBCircuitBraker.DrawPower(6.7);				/// CSM Data Book
+		sat->SystemMnBCircuitBreaker.DrawPower(6.7);				/// CSM Data Book
 	}
 }
 
 void ServoAmplifierModule::DrawSystem2Power() {
 
 	if (sat->TVCServoPower2Switch.IsUp()) {
-		sat->SystemMnACircuitBraker.DrawPower(6.7);				/// CSM Data Book 
+		sat->SystemMnACircuitBreaker.DrawPower(6.7);				/// CSM Data Book 
 
 	}
 	else if (sat->TVCServoPower2Switch.IsDown()) {
-		sat->SystemMnBCircuitBraker.DrawPower(6.7);				/// CSM Data Book
+		sat->SystemMnBCircuitBreaker.DrawPower(6.7);				/// CSM Data Book
 	}
 }
 
@@ -4720,11 +4720,11 @@ bool TVSA::IsSystem1ACPowered()
 {
 	if (sat->TVCServoPower1Switch.IsUp())
 	{
-		if (sat->StabContSystemTVCAc1CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
+		if (sat->StabContSystemTVCAc1CircuitBreaker.Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
 	else if (sat->TVCServoPower1Switch.IsDown())
 	{
-		if (sat->ECATVCAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
+		if (sat->ECATVCAc2CircuitBreaker.Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
 
 	return false;
@@ -4734,11 +4734,11 @@ bool TVSA::IsSystem2ACPowered()
 {
 	if (sat->TVCServoPower2Switch.IsUp())
 	{
-		if (sat->StabContSystemTVCAc1CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
+		if (sat->StabContSystemTVCAc1CircuitBreaker.Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
 	else if (sat->TVCServoPower2Switch.IsDown())
 	{
-		if (sat->ECATVCAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
+		if (sat->ECATVCAc2CircuitBreaker.Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
 
 	return false;
@@ -4747,20 +4747,20 @@ bool TVSA::IsSystem2ACPowered()
 void TVSA::DrawSystem1ACPower() {
 
 	if (sat->TVCServoPower1Switch.IsUp()) {
-		sat->StabContSystemTVCAc1CircuitBraker.DrawPower(1.36);	// Systems handbook
+		sat->StabContSystemTVCAc1CircuitBreaker.DrawPower(1.36);	// Systems handbook
 	}
 	else if (sat->TVCServoPower1Switch.IsDown()) {
-		sat->StabContSystemAc2CircuitBraker.DrawPower(1.36);	// Systems handbook
+		sat->StabContSystemAc2CircuitBreaker.DrawPower(1.36);	// Systems handbook
 	}
 }
 
 void TVSA::DrawSystem2ACPower() {
 
 	if (sat->TVCServoPower2Switch.IsUp()) {
-		sat->StabContSystemAc1CircuitBraker.DrawPower(1.36);	// Systems handbook
+		sat->StabContSystemAc1CircuitBreaker.DrawPower(1.36);	// Systems handbook
 	}
 	else if (sat->TVCServoPower2Switch.IsDown()) {
-		sat->ECATVCAc2CircuitBraker.DrawPower(1.36);			// Systems handbook
+		sat->ECATVCAc2CircuitBreaker.DrawPower(1.36);			// Systems handbook
 	}
 }
 

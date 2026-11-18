@@ -844,7 +844,7 @@ LEMCabinRepressValve::LEMCabinRepressValve()
 	EmergencyCabinRepressRelay = false;
 }
 
-void LEMCabinRepressValve::Init(LEM *l, h_Pipe *crv, CircuitBrakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs)
+void LEMCabinRepressValve::Init(LEM *l, h_Pipe *crv, CircuitBreakerSwitch *crcb, RotationalSwitch *crvs, RotationalSwitch* pras, RotationalSwitch *prbs)
 {
 	lem = l;
 	cabinRepressValve = crv;
@@ -984,7 +984,7 @@ LEMSuitGasDiverter::LEMSuitGasDiverter()
 	pressRegulatorBSwitch = NULL;
 }
 
-void LEMSuitGasDiverter::Init(h_Tank *sgdv, h_Tank *cab, CircuitBrakerSwitch *sgds, CircuitBrakerSwitch *dvcb, RotationalSwitch* pras, RotationalSwitch *prbs)
+void LEMSuitGasDiverter::Init(h_Tank *sgdv, h_Tank *cab, CircuitBreakerSwitch *sgds, CircuitBreakerSwitch *dvcb, RotationalSwitch* pras, RotationalSwitch *prbs)
 {
 	suitGasDiverterValve = sgdv;
 	cabin = cab;
@@ -1190,7 +1190,7 @@ LEMCabinFan::LEMCabinFan(FadeInOutSound &cabinfanS) : cabinfansound(cabinfanS)
 	cabinFanHeat = 0;
 }
 
-void LEMCabinFan::Init(CircuitBrakerSwitch *cf1cb, CircuitBrakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs, Pump *cf, h_HeatLoad *cfh)
+void LEMCabinFan::Init(CircuitBreakerSwitch *cf1cb, CircuitBreakerSwitch *cfccb, RotationalSwitch *pras, RotationalSwitch *prbs, Pump *cf, h_HeatLoad *cfh)
 {
 	cabinFan1CB = cf1cb;
 	cabinFanContCB = cfccb;
@@ -1311,7 +1311,7 @@ LEMPrimGlycolPumpController::LEMPrimGlycolPumpController()
 	AutoTransferCounter = 0;
 }
 
-void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBrakerSwitch *gp1cb, CircuitBrakerSwitch *gp2cb, CircuitBrakerSwitch *gpatcb, h_HeatLoad *gp1h, h_HeatLoad *gp2h)
+void LEMPrimGlycolPumpController::Init(h_Tank *pgat, h_Tank *pgpmt, Pump *gp1, Pump *gp2, RotationalSwitch *gr, CircuitBreakerSwitch *gp1cb, CircuitBreakerSwitch *gp2cb, CircuitBreakerSwitch *gpatcb, h_HeatLoad *gp1h, h_HeatLoad *gp2h)
 {
 	primGlycolAccumulatorTank = pgat;
 	primGlycolPumpManifoldTank = pgpmt;
@@ -1442,7 +1442,7 @@ LEMSuitFanDPSensor::LEMSuitFanDPSensor()
 	PressureSwitch = false;
 }
 
-void LEMSuitFanDPSensor::Init(h_Tank *sfmint, h_Tank *sfmoutt, CircuitBrakerSwitch *sfdpcb)
+void LEMSuitFanDPSensor::Init(h_Tank *sfmint, h_Tank *sfmoutt, CircuitBreakerSwitch *sfdpcb)
 {
 	suitFanManifoldInTank = sfmint;
 	suitFanManifoldOutTank = sfmoutt;

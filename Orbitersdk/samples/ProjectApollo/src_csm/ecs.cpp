@@ -308,7 +308,7 @@ CabinPressureReliefValve::~CabinPressureReliefValve() {
 
 }
 
-void CabinPressureReliefValve::Init(h_Pipe *p, h_Pipe *i, Saturn *v, ThumbwheelSwitch *l, CircuitBrakerSwitch *plvlv, ThreePosSwitch *plv, e_object *plpower, SaturnSideHatch *sh) {
+void CabinPressureReliefValve::Init(h_Pipe *p, h_Pipe *i, Saturn *v, ThumbwheelSwitch *l, CircuitBreakerSwitch *plvlv, ThreePosSwitch *plv, e_object *plpower, SaturnSideHatch *sh) {
 
 	pipe = p;
 	inlet = i;
@@ -511,7 +511,7 @@ SuitCircuitReturnValve::~SuitCircuitReturnValve() {
 
 }
 
-void SuitCircuitReturnValve::Init(h_Pipe *p, CircuitBrakerSwitch *l) {
+void SuitCircuitReturnValve::Init(h_Pipe *p, CircuitBreakerSwitch *l) {
 
 	pipe = p;
 	lever = l;
@@ -553,7 +553,7 @@ O2SMSupply::~O2SMSupply() {
 
 void O2SMSupply::Init(h_Tank *o2sm, h_Tank *o2mr, h_Tank *o2st, h_Tank *o2rp, h_Tank *o2rpo, h_Pipe *o2rpop,
 					  RotationalSwitch *smv, RotationalSwitch *stv, RotationalSwitch *rpv,
-					  CircuitBrakerSwitch *mra, CircuitBrakerSwitch *mrb, PanelSwitchItem *eo2v,
+					  CircuitBreakerSwitch *mra, CircuitBreakerSwitch *mrb, PanelSwitchItem *eo2v,
 					  PanelSwitchItem *ro2v, RotationalSwitch *strv) {
 
 	o2SMSupply = o2sm;	
@@ -1192,11 +1192,11 @@ void SaturnWaterController::SystemTimestep(double simdt) {
 	//TBD//
 
 	// Potable H2O heaters
-	if (saturn->PotH2oHtrSwitch.IsUp() && saturn->ECSPOTH2OHTRMnACircuitBraker.IsPowered()) {
-		saturn->ECSPOTH2OHTRMnACircuitBraker.DrawPower(45.0);
+	if (saturn->PotH2oHtrSwitch.IsUp() && saturn->ECSPOTH2OHTRMnACircuitBreaker.IsPowered()) {
+		saturn->ECSPOTH2OHTRMnACircuitBreaker.DrawPower(45.0);
 	}
-	if (saturn->PotH2oHtrSwitch.IsDown() && saturn->ECSPOTH2OHTRMnBCircuitBraker.IsPowered()) {
-		saturn->ECSPOTH2OHTRMnBCircuitBraker.DrawPower(45.0);
+	if (saturn->PotH2oHtrSwitch.IsDown() && saturn->ECSPOTH2OHTRMnBCircuitBreaker.IsPowered()) {
+		saturn->ECSPOTH2OHTRMnBCircuitBreaker.DrawPower(45.0);
 	}
 
 	//sprintf(oapiDebugString(), "wasteWaterDumpLevel %f", wasteWaterDumpLevel);
@@ -1703,7 +1703,7 @@ SaturnDumpHeater::SaturnDumpHeater()
 
 }
 
-void SaturnDumpHeater::Init(Saturn* s, h_Radiator* noz, Boiler* ha, Boiler* sha, Boiler* hb, Boiler* shb, CircuitBrakerSwitch* cba, CircuitBrakerSwitch* cbb, ThreePosSwitch* sw)
+void SaturnDumpHeater::Init(Saturn* s, h_Radiator* noz, Boiler* ha, Boiler* sha, Boiler* hb, Boiler* shb, CircuitBreakerSwitch* cba, CircuitBreakerSwitch* cbb, ThreePosSwitch* sw)
 {
 	saturn = s;
 	nozzle = noz;

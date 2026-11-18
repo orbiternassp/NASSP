@@ -148,7 +148,7 @@ void LM_VHF::SystemTimestep(double simdt) {
 	}
 
 	// VHF RCVR A
-	if (lem->COMM_VHF_RCVR_A_CB.Voltage() > 24 && lem->VHFARcvrSwtich.GetState() == TOGGLESWITCH_UP)
+	if (lem->COMM_VHF_RCVR_A_CB.Voltage() > 24 && lem->VHFARcvrSwitch.GetState() == TOGGLESWITCH_UP)
 	{
 		receiveA = true;
 	}
@@ -168,7 +168,7 @@ void LM_VHF::SystemTimestep(double simdt) {
 	}
 
 	// VHF RCVR B
-	if (lem->COMM_VHF_RCVR_B_CB.Voltage() > 24 && lem->VHFBRcvrSwtich.GetState() == TOGGLESWITCH_UP)
+	if (lem->COMM_VHF_RCVR_B_CB.Voltage() > 24 && lem->VHFBRcvrSwitch.GetState() == TOGGLESWITCH_UP)
 	{
 		receiveB = true;
 	}

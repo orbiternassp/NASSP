@@ -32,7 +32,7 @@ class LEM_EDRelayBox
 public:
 	LEM_EDRelayBox();
 	void Timestep(double simdt);
-	void Init(LEM *l, CircuitBrakerSwitch *LogicPower, DCbus *edbus, Battery *edbatt);
+	void Init(LEM *l, CircuitBreakerSwitch *LogicPower, DCbus *edbus, Battery *edbatt);
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 
@@ -102,7 +102,7 @@ protected:
 	DelayTimer DescentEngineOnDelay;
 
 	LEM *lem;
-	CircuitBrakerSwitch *EDLogicPower;
+	CircuitBreakerSwitch *EDLogicPower;
 	DCbus *EDDCBus;
 	Battery *EDBattery;
 };
