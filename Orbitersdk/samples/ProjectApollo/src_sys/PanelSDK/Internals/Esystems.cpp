@@ -553,8 +553,8 @@ void FCell::refresh(double dt)
 
 void FCell::Clogging(double dt)
 {
-	H2_clogging += (1 - H2_purity) * H2_flow * dt;
-	O2_clogging += (1 - O2_purity) * O2_flow * dt;
+	H2_clogging += (1 - H2_purity) * H2_flow;
+	O2_clogging += (1 - O2_purity) * O2_flow;
 
 	if (H2_clogging < 0)
 	{
