@@ -33,6 +33,289 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #include "siisystems.h"
 
+SIISystemsConnector::SIISystemsConnector()
+{
+	ourSII = NULL;
+}
+
+SIISystemsConnector::~SIISystemsConnector()
+{
+
+}
+
+SIIToSIVBConnector::SIIToSIVBConnector()
+{
+	type = SIVB_SIX_COMMAND;
+}
+
+SIIToSIVBConnector::~SIIToSIVBConnector()
+{
+
+}
+
+bool SIIToSIVBConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	SIVBSIXMessageType messageType;
+
+	messageType = (SIVBSIXMessageType)m.messageType;
+
+	switch (messageType)
+	{
+	case SIVB_SIX_SI_THRUSTER_DIR:
+		if (ourSII)
+		{
+			ourSII->GetSIIToSIIInterstageConnector()->SetSIThrusterDir(m.val1.iValue, m.val2.dValue, m.val3.dValue);
+			return true;
+		}
+		break;
+	case SIVB_SIX_SII_THRUSTER_DIR:
+		if (ourSII)
+		{
+			ourSII->SetThrusterDir(m.val1.iValue, m.val2.dValue, m.val3.dValue);
+			return true;
+		}
+		break;
+	case SIVB_SIX_SI_EDS_CUTOFF:
+		if (ourSII)
+		{
+			ourSII->GetSIIToSIIInterstageConnector()->SIEDSCutoff(m.val1.bValue);
+			return true;
+		}
+		break;
+	case SIVB_SIX_SII_EDS_CUTOFF:
+		if (ourSII)
+		{
+			ourSII->EDSEnginesCutoff(m.val1.bValue);
+			return true;
+		}
+		break;
+	case SIVB_SIX_SI_SWITCH_SELECTOR:
+		if (ourSII)
+		{
+			ourSII->GetSIIToSIIInterstageConnector()->SISwitchSelector(m.val1.iValue);
+			return true;
+		}
+		break;
+	case SIVB_SIX_SII_SWITCH_SELECTOR:
+		if (ourSII)
+		{
+			ourSII->SwitchSelector(m.val1.iValue);
+			return true;
+		}
+		break;
+	case SIVB_SIX_GETSITHRUSTOK:
+		if (ourSII)
+		{
+			ourSII->GetSIIToSIIInterstageConnector()->GetSIThrustOK((bool *)m.val1.pValue, m.val2.iValue);
+			return true;
+		}
+		break;
+	case SIVB_SIX_GETSIITHRUSTOK:
+		if (ourSII)
+		{
+			ourSII->GetThrustOK((bool *)m.val1.pValue);
+			return true;
+		}
+		break;
+	case SIVB_SIX_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
+		if (ourSII)
+		{
+			m.val1.bValue = ourSII->GetSIIToSIIInterstageConnector()->GetSIPropellantDepletionEngineCutoff();
+			return true;
+		}
+		break;
+	case SIVB_SIX_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
+		if (ourSII)
+		{
+			m.val1.bValue = ourSII->GetPropellantDepletionEngineCutoff();
+			return true;
+		}
+		break;
+	case SIVB_SIX_GET_SI_INBOARD_ENGINE_OUT:
+		if (ourSII)
+		{
+			m.val1.bValue = ourSII->GetSIIToSIIInterstageConnector()->GetSIInboardEngineOut();
+			return true;
+		}
+		break;
+	case SIVB_SIX_GET_SI_OUTBOARD_ENGINE_OUT:
+		if (ourSII)
+		{
+			m.val1.bValue = ourSII->GetSIIToSIIInterstageConnector()->GetSIOutboardEngineOut();
+			return true;
+		}
+		break;
+	case SIVB_SIX_GET_SII_FUEL_TANK_PRESSURE:
+		if (ourSII)
+		{
+			m.val1.dValue = ourSII->GetLH2TankUllagePressurePSI();
+			return true;
+		}
+		break;
+	case SIVB_SIX_GET_SIX_SIVB_NOT_SEPARATED:
+		if (ourSII)
+		{
+			m.val1.bValue = ourSII->GetSIISIVBNotSeparated();
+			return true;
+		}
+		break;
+	case SIVB_SIX_GET_SIC_SII_NOT_SEPARATED:
+		if (ourSII)
+		{
+			m.val1.bValue = ourSII->GetSIIToSIIInterstageConnector()->GetSICSIINotSeparated();
+			return true;
+		}
+		break;
+	case SIVB_SIX_GET_SII_INTERSTAGE_NOT_SEPARATED:
+		if (ourSII)
+		{
+			m.val1.bValue = ourSII->GetSIIToSIIInterstageConnector()->connectedTo != NULL; //TBD: Send to interstage, then back to S-II systems where a GSE simulate signal could be used
+			return true;
+		}
+		break;
+	}
+	return false;
+}
+
+SIIToSIIInterstageConnector::SIIToSIIInterstageConnector()
+{
+	type = SII_SII_IS_COMMAND;
+}
+
+SIIToSIIInterstageConnector::~SIIToSIIInterstageConnector()
+{
+
+}
+
+void SIIToSIIInterstageConnector::SetSIThrusterDir(int n, double yaw, double pitch)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SII_SII_IS_COMMAND;
+	cm.messageType = SII_SIC_SI_THRUSTER_DIR;
+	cm.val1.iValue = n;
+	cm.val2.dValue = yaw;
+	cm.val3.dValue = pitch;
+
+	if (SendMessage(cm))
+	{
+		return;
+	}
+}
+
+void SIIToSIIInterstageConnector::SIEDSCutoff(bool cut)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SII_SII_IS_COMMAND;
+	cm.messageType = SII_SIC_SI_EDS_CUTOFF;
+	cm.val1.bValue = cut;
+
+	if (SendMessage(cm))
+	{
+		return;
+	}
+}
+
+void SIIToSIIInterstageConnector::SISwitchSelector(int channel)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SII_SII_IS_COMMAND;
+	cm.messageType = SII_SIC_SI_SWITCH_SELECTOR;
+	cm.val1.iValue = channel;
+
+	SendMessage(cm);
+}
+
+void SIIToSIIInterstageConnector::GetSIThrustOK(bool *ok, int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SII_SII_IS_COMMAND;
+	cm.messageType = SII_SIC_GETSITHRUSTOK;
+	cm.val1.pValue = ok;
+
+	if (SendMessage(cm))
+	{
+		return;
+	}
+
+	for (int i = 0; i < n; i++)
+	{
+		ok[i] = false;
+	}
+}
+
+bool SIIToSIIInterstageConnector::GetSIPropellantDepletionEngineCutoff()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SII_SII_IS_COMMAND;
+	cm.messageType = SII_SIC_PROPELLANT_DEPLETION_ENGINE_CUTOFF;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool SIIToSIIInterstageConnector::GetSIInboardEngineOut()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SII_SII_IS_COMMAND;
+	cm.messageType = SII_SIC_GET_SI_INBOARD_ENGINE_OUT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool SIIToSIIInterstageConnector::GetSIOutboardEngineOut()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SII_SII_IS_COMMAND;
+	cm.messageType = SII_SIC_GET_SI_OUTBOARD_ENGINE_OUT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool SIIToSIIInterstageConnector::GetSICSIINotSeparated()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SII_SII_IS_COMMAND;
+	cm.messageType = SII_SIC_GET_SIC_SII_NOT_SEPARATED;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
 SIISystems::SIISystems(VESSEL *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop, THGROUP_HANDLE &ull, Pyro &SII_Inter, Pyro &SII_SIVB_Sep, Sound &pushifts, Sound &SepS)
 	:main_propellant(j2prop), ullage(ull), puShiftSound(pushifts), sepSound(SepS),
 	j2engine1(v, j2[0]),
@@ -71,6 +354,15 @@ SIISystems::SIISystems(VESSEL *v, THRUSTER_HANDLE *j2, PROPELLANT_HANDLE &j2prop
 	j2engines[2] = &j2engine3;
 	j2engines[3] = &j2engine4;
 	j2engines[4] = &j2engine5;
+
+	siiSIIInterstageConnector.SetSIISystems(this);
+	siiSIVBConnector.SetSIISystems(this);
+}
+
+SIISystems::~SIISystems()
+{
+	siiSIIInterstageConnector.Disconnect();
+	siiSIVBConnector.Disconnect();
 }
 
 void SIISystems::SaveState(FILEHANDLE scn) {
@@ -317,6 +609,12 @@ bool SIISystems::GetPropellantDepletionEngineCutoff()
 	return false;
 }
 
+bool SIISystems::GetSIISIVBNotSeparated()
+{
+	//TBD: ESE S-II/S-IVB sep simulate
+	return true;
+}
+
 void SIISystems::SwitchSelector(int channel)
 {
 	switch (channel)
@@ -498,4 +796,69 @@ void SIISystems::EDSEnginesCutoff(bool cut)
 		j2engine4.ResetEDSCutoff();
 		j2engine5.ResetEDSCutoff();
 	}
+}
+
+SIIInterstageSystemsConnector::SIIInterstageSystemsConnector()
+{
+	ourIS = NULL;
+}
+
+SIIInterstageSystemsConnector::~SIIInterstageSystemsConnector()
+{
+
+}
+
+SIIInterstageToSIIConnector::SIIInterstageToSIIConnector()
+{
+	type = SII_SII_IS_COMMAND;
+}
+
+SIIInterstageToSIIConnector::~SIIInterstageToSIIConnector()
+{
+
+}
+
+bool SIIInterstageToSIIConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+{
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	//Directly forward the message
+	return ourIS->GetSIIInterstageToSICConnector()->ForwardMessage(m);
+}
+
+SIIInterstageToSICConnector::SIIInterstageToSICConnector()
+{
+	type = SII_IS_SIC_COMMAND;
+}
+
+SIIInterstageToSICConnector::~SIIInterstageToSICConnector()
+{
+
+}
+
+bool SIIInterstageToSICConnector::ForwardMessage(ConnectorMessage &m)
+{
+	//Directly forward the message
+	m.destination = type;
+
+	return SendMessage(m);
+}
+
+SIIInterstageSystems::SIIInterstageSystems()
+{
+	siiInterstageSIIConnector.SetSIIInterstageSystems(this);
+	siiInterstageSICConnector.SetSIIInterstageSystems(this);
+}
+
+SIIInterstageSystems::~SIIInterstageSystems()
+{
+	siiInterstageSIIConnector.Disconnect();
+	siiInterstageSICConnector.Disconnect();
 }

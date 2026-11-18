@@ -28,7 +28,6 @@
 #include "connector.h"
 
 #include "nasspdefs.h"
-#include "sivb.h"
 #include "s1b.h"
 
 #include <stdio.h>
@@ -70,78 +69,6 @@ PARTICLESTREAMSPEC srb_exhaust = {
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
 
-SIBConnector::SIBConnector()
-{
-	OurVessel = NULL;
-}
-
-SIBConnector::~SIBConnector()
-{
-
-}
-
-SIBtoSIVBConnector::SIBtoSIVBConnector()
-{
-	type = SIVB_SI_COMMAND;
-}
-
-SIBtoSIVBConnector::~SIBtoSIVBConnector()
-{
-
-}
-
-bool SIBtoSIVBConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
-{
-	//
-	// Sanity check.
-	//
-
-	if (m.destination != type)
-	{
-		return false;
-	}
-
-	SIVBSIMessageType messageType;
-
-	messageType = (SIVBSIMessageType)m.messageType;
-
-	switch (messageType)
-	{
-	case SIVB_SI_SWITCH_SELECTOR:
-		if (OurVessel)
-		{
-			OurVessel->SwitchSelector(m.val1.iValue);
-		}
-		return true;
-	case SIVB_SI_THRUSTER_DIR:
-		if (OurVessel)
-		{
-			OurVessel->SetH1ThrusterDir(m.val1.iValue, m.val2.dValue, m.val3.dValue);
-		}
-		return true;
-	case SIVB_SI_SIB_LOW_LEVEL_SENSORS_DRY:
-			if (OurVessel)
-			{
-				m.val1.bValue = OurVessel->GetLowLevelSensorsDry();
-			}
-		return true;
-	case SIVB_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
-		if (OurVessel)
-		{
-			m.val1.bValue = OurVessel->GetSIPropellantDepletionEngineCutoff();
-		}
-		return true;
-	case SIVB_SI_GETSITHRUSTOK:
-		if (OurVessel)
-		{
-			OurVessel->GetSIThrustOK((bool *)m.val1.pValue);
-		}
-		return true;
-	}
-
-	return false;
-}
-
 S1B::S1B (OBJHANDLE hObj, int fmodel) : ProjectApolloConnectorVessel(hObj, fmodel),
 SIB_SIVB_Sep("SIB-SIVB-Sep-Pyros", Panelsdk),
 sibsys(this, th_main, ph_main, SIB_SIVB_Sep, LaunchS, SShutS)
@@ -180,10 +107,8 @@ sibsys(this, th_main, ph_main, SIB_SIVB_Sep, LaunchS, SShutS)
 	VehicleNo = 0;
 	RetroNum = 4;
 
-	sibSIVBConnector.SetSIB(this);
-
 	hDockSIVB = CreateDock(_V(0.0, 0, 16.70513 + 5.7023), _V(0, 0, 1), _V(0, 1, 0));
-	RegisterConnector(0, &sibSIVBConnector);
+	RegisterConnector(0, sibsys.GetSIBtoSIVBConnector());
 
 	Panelsdk.RegisterVessel(this);
 	Panelsdk.InitFromFile("ProjectApollo\\SIBSystems");
@@ -593,31 +518,6 @@ void S1B::SetState(S1BSettings &state)
 	SeparateSIVB();
 	sibsys.SetPropellantLevelSensorsEnable();
 	sibsys.Set_SIB_SIVB_SeparationCmdLatch();
-}
-
-void S1B::SetH1ThrusterDir(int n, double beta_y, double beta_p)
-{
-	sibsys.SetThrusterDir(n, beta_y, beta_p);
-}
-
-void S1B::SwitchSelector(int channel)
-{
-	sibsys.SwitchSelector(channel);
-}
-
-bool S1B::GetLowLevelSensorsDry()
-{
-	return sibsys.GetLowLevelSensorsDry();
-}
-
-bool S1B::GetSIPropellantDepletionEngineCutoff()
-{
-	return sibsys.GetOutboardEnginesCutoff();
-}
-
-void S1B::GetSIThrustOK(bool *ok)
-{
-	sibsys.GetThrustOK(ok);
 }
 
 DLLCLBK VESSEL *ovcInit (OBJHANDLE hvessel, int flightmodel)

@@ -31,6 +31,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "saturn.h"
 #include "papi.h"
 
+#include "iu.h"
 #include "sivbsystems.h"
 
 static PARTICLESTREAMSPEC lh2_npv_venting_spec = {
@@ -88,6 +89,490 @@ static PARTICLESTREAMSPEC lox_dump_venting_spec = {
 	PARTICLESTREAMSPEC::LVL_LIN, 0.0, 1.0,
 	PARTICLESTREAMSPEC::ATM_FLAT, 1.0, 1.0
 };
+
+SIVBSystemsConnector::SIVBSystemsConnector()
+{
+	ourSIVB = NULL;
+}
+
+SIVBSystemsConnector::~SIVBSystemsConnector()
+{
+	
+}
+
+SIVBToSIXConnector::SIVBToSIXConnector()
+{
+	type = SIVB_SIX_COMMAND;
+}
+
+SIVBToSIXConnector::~SIVBToSIXConnector()
+{
+
+}
+
+bool SIVBToSIXConnector::HasGround()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_IS_CONNECTED;
+
+	if (SendMessage(cm))
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void SIVBToSIXConnector::SISwitchSelector(int channel)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_SI_SWITCH_SELECTOR;
+	cm.val1.iValue = channel;
+
+	SendMessage(cm);
+}
+
+void SIVBToSIXConnector::SIISwitchSelector(int channel)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_SII_SWITCH_SELECTOR;
+	cm.val1.iValue = channel;
+
+	SendMessage(cm);
+}
+
+void SIVBToSIXConnector::SetSIThrusterDir(int n, double yaw, double pitch)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_SI_THRUSTER_DIR;
+	cm.val1.iValue = n;
+	cm.val2.dValue = yaw;
+	cm.val3.dValue = pitch;
+
+	SendMessage(cm);
+}
+
+void SIVBToSIXConnector::SetSIIThrusterDir(int n, double yaw, double pitch)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_SII_THRUSTER_DIR;
+	cm.val1.iValue = n;
+	cm.val2.dValue = yaw;
+	cm.val3.dValue = pitch;
+
+	SendMessage(cm);
+}
+
+bool SIVBToSIXConnector::GetLowLevelSensorsDry()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_SIB_LOW_LEVEL_SENSORS_DRY;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool SIVBToSIXConnector::GetSIPropellantDepletionEngineCutoff()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool SIVBToSIXConnector::GetSIIPropellantDepletionEngineCutoff()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+void SIVBToSIXConnector::GetSIThrustOK(bool *ok, int n)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_GETSITHRUSTOK;
+	cm.val1.pValue = ok;
+	cm.val2.iValue = n;
+
+	if (SendMessage(cm))
+	{
+		return;
+	}
+
+	for (int i = 0; i < n; i++)
+	{
+		ok[i] = false;
+	}
+}
+
+void SIVBToSIXConnector::GetSIIThrustOK(bool *ok)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_GETSIITHRUSTOK;
+	cm.val1.pValue = ok;
+
+	if (SendMessage(cm))
+	{
+		return;
+	}
+
+	for (int i = 0; i < 5; i++)
+	{
+		ok[i] = false;
+	}
+}
+
+void SIVBToSIXConnector::SIEDSCutoff(bool cut)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_SI_EDS_CUTOFF;
+	cm.val1.bValue = cut;
+
+	if (SendMessage(cm))
+	{
+		return;
+	}
+}
+
+void SIVBToSIXConnector::SIIEDSCutoff(bool cut)
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_SII_EDS_CUTOFF;
+	cm.val1.bValue = cut;
+
+	if (SendMessage(cm))
+	{
+		return;
+	}
+}
+
+bool SIVBToSIXConnector::GetSIInboardEngineOut()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_GET_SI_INBOARD_ENGINE_OUT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool SIVBToSIXConnector::GetSIOutboardEngineOut()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_GET_SI_OUTBOARD_ENGINE_OUT;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+double SIVBToSIXConnector::GetSIIFuelTankPressurePSI()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_GET_SII_FUEL_TANK_PRESSURE;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.dValue;
+	}
+
+	return 0.0;
+}
+
+bool SIVBToSIXConnector::SIXSIVBNotSeparated()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_GET_SIX_SIVB_NOT_SEPARATED;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool SIVBToSIXConnector::SICSIINotSeparated()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_GET_SIC_SII_NOT_SEPARATED;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+bool SIVBToSIXConnector::SIIInterstageNotSeparated()
+{
+	ConnectorMessage cm;
+
+	cm.destination = SIVB_SIX_COMMAND;
+	cm.messageType = SIVB_SIX_GET_SII_INTERSTAGE_NOT_SEPARATED;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+
+	return false;
+}
+
+SIVBToIUConnector::SIVBToIUConnector()
+{
+	type = SIVB_IU_COMMAND;
+}
+
+SIVBToIUConnector::~SIVBToIUConnector()
+{
+
+}
+
+bool SIVBToIUConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
+{
+	//
+// Sanity check.
+//
+
+	if (m.destination != type)
+	{
+		return false;
+	}
+
+	IUSIVBMessageType messageType;
+
+	messageType = (IUSIVBMessageType)m.messageType;
+
+	switch (messageType)
+	{
+	case IUSIVB_SET_APS_ATTITUDE_ENGINE:
+		if (ourSIVB)
+		{
+			ourSIVB->SetAPSAttitudeEngine(m.val1.iValue, m.val2.bValue);
+			return true;
+		}
+		break;
+	case IUSIVB_SI_EDS_CUTOFF:
+		if (ourSIVB)
+		{
+			ourSIVB->GetSIVBSIXConnector()->SIEDSCutoff(m.val1.bValue);
+			return true;
+		}
+		break;
+	case IUSIVB_SII_EDS_CUTOFF:
+		if (ourSIVB)
+		{
+			ourSIVB->GetSIVBSIXConnector()->SIIEDSCutoff(m.val1.bValue);
+			return true;
+		}
+		break;
+	case IUSIVB_SIVB_EDS_CUTOFF:
+		if (ourSIVB)
+		{
+			ourSIVB->EDSEngineCutoff(m.val1.bValue);
+			return true;
+		}
+		break;
+	case IUSIVB_SET_SI_THRUSTER_DIR:
+		if (ourSIVB)
+		{
+			ourSIVB->GetSIVBSIXConnector()->SetSIThrusterDir(m.val1.iValue, m.val2.dValue, m.val3.dValue);
+			return true;
+		}
+		break;
+	case IUSIVB_SET_SII_THRUSTER_DIR:
+		if (ourSIVB)
+		{
+			ourSIVB->GetSIVBSIXConnector()->SetSIIThrusterDir(m.val1.iValue, m.val2.dValue, m.val3.dValue);
+			return true;
+		}
+		break;
+	case IUSIVB_SET_SIVB_THRUSTER_DIR:
+		if (ourSIVB)
+		{
+			ourSIVB->SetThrusterDir(m.val1.dValue, m.val2.dValue);
+			return true;
+		}
+		break;
+	case IUSIVB_SI_SWITCH_SELECTOR:
+		if (ourSIVB)
+		{
+			ourSIVB->GetSIVBSIXConnector()->SISwitchSelector(m.val1.iValue);
+			return true;
+		}
+		break;
+	case IUSIVB_SII_SWITCH_SELECTOR:
+		if (ourSIVB)
+		{
+			ourSIVB->GetSIVBSIXConnector()->SIISwitchSelector(m.val1.iValue);
+			return true;
+		}
+		break;
+	case IUSIVB_SIVB_SWITCH_SELECTOR:
+		if (ourSIVB)
+		{
+			ourSIVB->SwitchSelector(m.val1.iValue);
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SI_THRUST_OK:
+		if (ourSIVB)
+		{
+			ourSIVB->GetSIVBSIXConnector()->GetSIThrustOK((bool *)m.val1.pValue, m.val2.iValue);
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SII_THRUST_OK:
+		if (ourSIVB)
+		{
+			ourSIVB->GetSIVBSIXConnector()->GetSIIThrustOK((bool *)m.val1.pValue);
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SIVB_THRUST_OK:
+		if (ourSIVB)
+		{
+			m.val1.bValue = ourSIVB->GetThrustOK();
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SI_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
+		if (ourSIVB)
+		{
+			m.val1.bValue = ourSIVB->GetSIVBSIXConnector()->GetSIPropellantDepletionEngineCutoff();
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SII_PROPELLANT_DEPLETION_ENGINE_CUTOFF:
+		if (ourSIVB)
+		{
+			m.val1.bValue = ourSIVB->GetSIVBSIXConnector()->GetSIIPropellantDepletionEngineCutoff();
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SIB_LOW_LEVEL_SENSORS_DRY:
+		if (ourSIVB)
+		{
+			m.val1.bValue = ourSIVB->GetSIVBSIXConnector()->GetLowLevelSensorsDry();
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SI_INBOARD_ENGINE_OUT:
+		if (ourSIVB)
+		{
+			m.val1.bValue = ourSIVB->GetSIVBSIXConnector()->GetSIInboardEngineOut();
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SI_OUTBOARD_ENGINE_OUT:
+		if (ourSIVB)
+		{
+			m.val1.bValue = ourSIVB->GetSIVBSIXConnector()->GetSIOutboardEngineOut();
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SII_FUEL_TANK_PRESSURE:
+		if (ourSIVB)
+		{
+			m.val1.dValue = ourSIVB->GetSIVBSIXConnector()->GetSIIFuelTankPressurePSI();
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SIVB_FUEL_TANK_PRESSURE:
+		if (ourSIVB)
+		{
+			m.val1.dValue = ourSIVB->GetLH2TankUllagePressurePSI();
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SIVB_LOX_TANK_PRESSURE:
+		if (ourSIVB)
+		{
+			m.val1.dValue = ourSIVB->GetLOXTankUllagePressurePSI();
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SIX_SIVB_NOT_SEPARATED:
+		if (ourSIVB)
+		{
+			m.val1.bValue = ourSIVB->GetSIVBSIXConnector()->SIXSIVBNotSeparated();
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SIC_SII_NOT_SEPARATED:
+		if (ourSIVB)
+		{
+			m.val1.bValue = ourSIVB->GetSIVBSIXConnector()->SICSIINotSeparated();
+			return true;
+		}
+		break;
+	case IUSIVB_GET_SII_INTERSTAGE_NOT_SEPARATED:
+		if (ourSIVB)
+		{
+			m.val1.bValue = ourSIVB->GetSIVBSIXConnector()->SIIInterstageNotSeparated();
+			return true;
+		}
+		break;
+	}
+	return false;
+}
 
 //Constants
 const double BTU = 1055.06;										// BTU to Jouls
@@ -276,6 +761,8 @@ SIVBSystems::SIVBSystems(VESSEL *v, THRUSTER_HANDLE &j2, PROPELLANT_HANDLE &j2pr
 {
 
 	vessel = v;	
+	sivbSIXConnector.SetSIVBSystems(this);
+	sivbIUConnector.SetSIVBSystems(this);
 
 	LH2_NPV_Stream1 = NULL;
 	LH2_NPV_Stream2 = NULL;
@@ -323,6 +810,8 @@ SIVBSystems::~SIVBSystems()
 		vessel->DelExhaustStream(LOX_Dump_Stream);
 		LOX_Dump_Stream = NULL;
 	}
+	sivbSIXConnector.Disconnect();
+	sivbIUConnector.Disconnect();
 }
 
 void SIVBSystems::SaveState(FILEHANDLE scn) {
@@ -673,7 +1162,7 @@ void SIVBSystems::Timestep(double simdt)
 		HeliumControlDeenergizedTimer.SetRunning(true);
 	}
 	EngineStart4 = (EngineStop || SparksDeenergized);
-	EngineStartLockUp = (EngineStart || SparkSystemOn); //TBD: Require S-II/S-IVB staging
+	EngineStartLockUp = ((EngineStart && !sivbSIXConnector.HasGround()) || SparkSystemOn); //TBD: Require S-II/S-IVB staging
 	SparkSystemOn = (EngineStartLockUp && K101 && !EngineStart4);
 	EngineStart3 = HeliumControlOn || SparkSystemOn;
 	HeliumControlOn = (EngineStart3 && K101 && !HeliumControlDeenergizedTimer.ContactClosed()) || J2SignalF;
