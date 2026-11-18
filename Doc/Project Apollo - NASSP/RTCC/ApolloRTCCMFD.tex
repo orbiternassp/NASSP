@@ -2408,6 +2408,37 @@ Select the target point like in example 1. Two input values have to be tweaked m
 \end{tabbing}
 \newpage
 
+\textbf{MED Code}: M62\\
+\textbf{Purpose}: To freeze, unfreeze and delete (future and history) maneuvers\\
+\textbf{Example}: \texttt{M62,CSM,1,D;}
+
+\begin{center}
+\begin{tabular}{|c|*{6}{>{\centering\arraybackslash}m{2.1cm}|} }
+ \hline
+ \diagbox{\textbf{Desc.}}{\textbf{Item}} & \textbf{1} & \textbf{2} & \textbf{3} & \textbf{4} & \textbf{5} & \textbf{6} \\ 
+ \hline
+ \textbf{Item Name} &MPT Code&Maneuver Number&Desired Action&Vector ID&&\\
+ \hline
+ \textbf{Input Format} &EBCDIC&FXP&EBCDIC&EBCDIC&&\\
+ \hline
+ \textbf{Input Units} &CSM, LEM&&F, U, D, DH&&&\\
+ \hline
+ \textbf{Checking Option}&&1 $\leq$ X $\leq$ 15&&&&\\
+ \hline
+ \textbf{Missing Item Option}&Error&Error&Error&Execute&&\\
+ \hline
+\end{tabular}
+\end{center}
+
+\begin{tabbing}
+\textbf{Notes}: \=  F = Freeze\\
+\>  U = Unfreeze\\
+\>  D = Delete\\
+\>  DH = Delete History\\
+\>  If vector ID is omitted, the curren ephemeris vector is used.\\
+\end{tabbing}
+\newpage
+
 \textbf{MED Code}: P08\\
 \textbf{Purpose}: Update pitch angle from horizon\\
 \textbf{Example}: \texttt{P08,31.6;}
