@@ -630,6 +630,7 @@ void LEM::Init()
 	windowshadesidx = -1;
 	xpointershadesidx = -1;
 	hLMPointingArrowidx = -1;
+	hLMVCOpticsidx = -1;
 	LMvccuecardsarrowsidx = -1;
 
 	drogue = NULL;
@@ -1377,6 +1378,19 @@ void LEM::SetAnimations(double simdt) {
 	if (AOTReticleDetent.GetState() == 0) AOT_ReticleKnobState.action = AnimState::CLOSING;
 	else AOT_ReticleKnobState.action = AnimState::OPENING;
 	DoMeshAnimation(AOT_ReticleKnobState, AOT_ReticleKnobAnimTrans, 0.1, simdt);
+
+	// Optics Shift Selector Animation
+	double targetPos = optics.OpticsShaft * (1.0 / 6.0);
+	double diff = fmod(targetPos - AOT_ShaftSelectorRotState.pos + 1.5, 1.0) - 0.5;
+	if (abs(diff) > 0.001) {
+		double maxStep = simdt * 2.0;
+		double actualStep = (maxStep > abs(diff)) ? diff : (diff > 0 ? maxStep : -maxStep);
+		AOT_ShaftSelectorRotState.pos += actualStep;
+		AOT_ShaftSelectorRotState.pos = fmod(AOT_ShaftSelectorRotState.pos + 1.0, 1.0);
+	} else {
+		AOT_ShaftSelectorRotState.pos = targetPos;
+	}
+	SetAnimation(AOT_ShaftSelectorAnimRot, AOT_ShaftSelectorRotState.pos);
 }
 
 //
@@ -2229,6 +2243,33 @@ void LEM::clbkVisualCreated(VISHANDLE vis, int refcount)
 	else {
 		HideMeshGroup(vcidx, VC_GRP_Panel12_16_DC_FEEDER_FAULT_2, false);			// Apollo 15 to 17
 	}
+
+	// Apply the yellow stripes to the “ENG ARM” switch on the Apollo 15 LM.
+	if (pMission->GetLMNumber() == 9)
+	{
+		SURFHANDLE LMVC = oapiGetTextureHandle(hLMVC, VC_TEX_LMVC_dds);
+		oapiBlt(LMVC, LMVC, 140*TexMul, 1020*TexMul, 0*TexMul, 882*TexMul, 59*TexMul, 105*TexMul);
+	}
+
+	// Apollo 11 RR Gyro Switch
+	// Hide AOT RR Gyro selector mesh for Apollo 11 and below
+	// TODO: While the mesh is hidden, the switch still exists and can theoretically be clicked if one clicks on it.
+	if (pMission->GetLMNumber() <= 5) {												// Apollo 11
+		HideMeshGroup(vcidx, VC_GRP_AOT_RRGyro, true);
+		HideMeshGroup(vcidx, VC_GRP_SwitchHolder_RRGyro, true);
+		HideMeshGroup(vcidx, VC_GRP_Sw_RRGyro, true);
+		HideMeshGroup(vcidx, VC_GRP_Panel12_16_AOT_LM5, true);
+	}
+	if (pMission->GetLMNumber() == 5) {
+		HideMeshGroup(vcidx, VC_GRP_Panel12_16_AOT_NonLM5, true);
+		HideMeshGroup(vcidx, VC_GRP_Panel12_16_AOT_LM5, false);
+	}
+
+	if (pMission->GetLMNumber() != 5) {												// Hide the switch in Panel 16 for Other Missions
+		HideMeshGroup(vcidx, VC_GRP_Sw_P16_RRGyro_LM5, true);
+		HideMeshGroup(vcidx, VC_GRP_SwitchHolder_P16_LM5, true);
+	}
+	if (pMission->GetLMNumber() > 5) HideMeshGroup(vcidx, VC_GRP_Panel12_16_AOT_LM5, true);
 }
 
 void LEM::clbkVisualDestroyed(VISHANDLE vis, int refcount)

@@ -1245,9 +1245,9 @@ void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, 
 	Int_Override_15_75VAC_Output.WireTo(acintcb);
 }
 
-double LEM_LCA::GetNumericOutput()  //Provides scaling for VC lighting and power draw
+double LEM_LCA::GetNumericOutput()  //Provides scaling for VC lighting, visible voltage about 30 VAC based on testing and seeing it start at 28 and fully visible at 36
 {
-	return Num_Override_20_110VAC_Output.Voltage() / 115.0;
+	return (Num_Override_20_110VAC_Output.Voltage() - 30.0) / 85.0;
 }
 
 double LEM_LCA::GetIntegralOutput()  //Provides scaling for VC lighting and power draw
