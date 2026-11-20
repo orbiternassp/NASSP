@@ -4966,6 +4966,10 @@ void EMS::TimeStep(double simdt) {
 		LiftVectLightOn = 0;
 	}
 
+	// Scroll & RSI Lighting
+	CoilLogic();
+	ScrollRSILighting();
+
 	// Turn on reset
 	if (status == EMS_STATUS_OFF && sat->EMSFunctionSwitch.GetState() != 0) {
 		SwitchChanged();
@@ -5185,8 +5189,6 @@ void EMS::TimeStep(double simdt) {
 		//sprintf(oapiDebugString(), "ScrollPosition %f", ScrollPosition);
 	}
 
-	CoilLogic();
-	ScrollRSILighting();
 	RotateRSI(simdt);
 
 	//sprintf(oapiDebugString(), "Is Scroll Powered %d Scroll/RSI Voltage: %lf K1: %d K2: %d K3: %d K4 %d SW: %d", IsScrollRSIDisplayPowered(), Fixed_115_6VAC_Output.Voltage(), K1, K2, K3, K4, sat->EMSFunctionSwitch.GetState());
