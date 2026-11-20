@@ -4724,7 +4724,7 @@ bool TVSA::IsSystem1ACPowered()
 	}
 	else if (sat->TVCServoPower1Switch.IsDown())
 	{
-		if (sat->ECATVCAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
+		if (sat->StabContSystemAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
 
 	return false;
