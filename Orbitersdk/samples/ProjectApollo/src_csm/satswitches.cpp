@@ -1871,7 +1871,7 @@ void SaturnEMSDvDisplay::Init(SURFHANDLE digits, SwitchRow &row, Saturn *s)
 
 void SaturnEMSDvDisplay::DoDrawSwitch(double v, SURFHANDLE drawSurface)
 {
-	if (Voltage() < SP_MIN_DCVOLTAGE || Sat->ems.IsOff() || !Sat->ems.IsNumDisplayPowered()) return;
+	if (!Sat->ems.IsNumDisplayPowered()) return;
 
 	const int DigitWidth = 17;
 	const int DigitHeight = 19;

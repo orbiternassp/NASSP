@@ -2587,6 +2587,7 @@ bool Saturn::clbkVCRedrawEvent (int id, int event, SURFHANDLE surf)
 		SetVCLighting(vcidx, IntegralLights_P8, MAT_EMISSION, LeftIntegralLights.GetOutput(), NUM_ELEMENTS(IntegralLights_P8));
 		SetVCLighting(vcidx, IntergralLights_P8_NTex, MAT_LIGHT, LeftIntegralLights.GetOutput() + floodRotaryValue, NUM_ELEMENTS(IntergralLights_P8_NTex));
 		SetVCLighting(vcidx, VC_MAT_EMS_Scroll, MAT_LIGHT, (ems.Fixed_115_6VAC_Output.Voltage() / 6.0), 1);
+		SetVCLighting(vcidx, VC_MAT_Panel1_RSI_Display, MAT_EMISSION, (ems.Fixed_115_6VAC_Output.Voltage() / 6.0), 1);
 
 		// External meshes
 		SetVCLighting(seatsunfoldedidx, CMVCSeatsUnFolded, MAT_LIGHT, floodRotaryValue, NUM_ELEMENTS(CMVCSeatsUnFolded));
