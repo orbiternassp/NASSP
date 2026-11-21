@@ -148,6 +148,8 @@
 
 #include "nasspdefs.h"
 
+#include "saturn.h" //Necessary for (std:max) on VS19
+
 static char TwoSpace[] = "  ";
 static char SixSpace[] = "      ";
 
@@ -242,6 +244,16 @@ bool DSKY::IsSegmentPowered() {
 	if (Variable_250VAC_Output.Voltage() < 20.0) { return false; }
 
 	return true;
+}
+
+double DSKY::GetSegmentOutput()  //Provides scaling for VC lighting and external devices, visible voltage about 30 VAC based on testing and seeing it start at 28 and fully visible at 36
+{
+	return (std::max)(0.0, ((Variable_250VAC_Output.Voltage() - 30.0) / 220.0));
+}
+
+double DSKY::GetIntegralOutput()  //Provides scaling for external devices, visible voltage about 30 VAC based on testing and seeing it start at 28 and fully visible at 36
+{
+	return (std::max)(0.0, ((IntegralPower->Voltage() - 30.0) / 85.0));
 }
 
 void DSKY::Timestep(double simt)
@@ -374,6 +386,7 @@ void DSKY::SystemTimestep(double simdt)
 	}
 
 	//sprintf(oapiDebugString(), "DSKY %f", (LightsLit * 0.6) + (SegmentsLit * 0.022));
+	//sprintf(oapiDebugString(), "DSKY Volts: %.1lf, Segment Volts: %.1lf, Segment Output: %.1lf", SegmentPower->Voltage(), Variable_250VAC_Output.Voltage(), GetSegmentOutput());
 }
 
 void DSKY::KeyClick()
@@ -1554,9 +1567,9 @@ void DSKY::SendNetworkPacketDSKY()
 		char numLvl[256] = "";
 		char intLvl[256] = "";
 
-		sprintf(anunLvl, "%lf", SegmentPower->Voltage() / 5.0);
-		sprintf(numLvl, "%lf", Variable_250VAC_Output.Voltage() / 250.0);
-		sprintf(intLvl, "%lf", IntegralPower->Voltage() / 115.0);
+		sprintf(anunLvl, "%lf", StatusPower->Voltage() / 5.0);
+		sprintf(numLvl, "%lf", GetSegmentOutput());
+		sprintf(intLvl, "%lf", GetIntegralOutput());
 
 		anun = anun + "\"" + anunLvl + "\",";
 		numerics = numerics + "\"" + numLvl + "\",";
@@ -1576,12 +1589,5 @@ bool DSKY::GetStatusLtPower()
 
 bool DSKY::GetDSKYPower()
 {
-	if (SegmentPower->Voltage() > SP_MIN_DCVOLTAGE)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	return IsSegmentPowered();
 }

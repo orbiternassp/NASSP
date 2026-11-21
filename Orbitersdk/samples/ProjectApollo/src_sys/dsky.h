@@ -168,6 +168,9 @@ public:
 	bool GetStatusLtPower();
 	bool GetDSKYPower();
 
+	double GetSegmentOutput();
+	double GetIntegralOutput();
+
 	void SaveState(FILEHANDLE scn, char *start_str, char *end_str);
 	void LoadState(FILEHANDLE scn, char *end_str);
 

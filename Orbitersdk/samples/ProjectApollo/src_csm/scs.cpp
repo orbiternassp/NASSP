@@ -4827,13 +4827,15 @@ extern GDIParams g_Param;
 
 
 
-EMS::EMS(PanelSDK &p) : DCPower(0, p) {
+EMS::EMS(PanelSDK &p) : DCPower(0, p),
+	Fixed_115_6VAC_Output("Fixed EMS AC Transformer", 6.0) {
 
 	status = EMS_STATUS_OFF;
 	dVRangeCounter = 0;
 	dVTestTime = 0;
 	sat = NULL;
-	DimmerRotationalSwitch = NULL;
+	numericsPower = NULL;
+	scrollRSIPower = NULL;
 	SlewScribe = 0;
 	ScrollPosition = 0;
 	GScribe = 1;
@@ -4843,6 +4845,13 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p) {
 	RSIRotation = PI/2;
 	RSITarget = 0;
 	vinert = 37000.0;
+
+	p.AddElectrical(&Fixed_115_6VAC_Output, false);
+
+	K1 = false;
+	K2 = false;
+	K3 = false;
+	K4 = false;
 
 	switchchangereset = false;
 
@@ -4892,11 +4901,47 @@ EMS::~EMS()
 	if (rsirot) delete rsirot;
 }
 
-void EMS::Init(Saturn *vessel, e_object *a, e_object *b, ContinuousRotationalSwitch *dimmer, e_object *c) {
+void EMS::Init(Saturn *vessel, e_object *a, e_object *b, e_object *numpwr, e_object *scrollRSIcb) {
 	sat = vessel;
-	DCPower.WireToBuses(a, b);
-	WireTo(c);
-	DimmerRotationalSwitch = dimmer;
+	DCPower.WireToBuses(a, b); //EMS Power
+	numericsPower = numpwr; //Numerics Power
+	scrollRSIPower = scrollRSIcb; //Scroll & RSI Lighting Power
+}
+
+void EMS::ScrollRSILighting()
+{
+	if (IsScrollRSIDisplayPowered())
+	{
+		Fixed_115_6VAC_Output.WireTo(scrollRSIPower);
+	}
+	else
+	{
+		Fixed_115_6VAC_Output.WireTo(NULL);
+	}
+}
+
+void EMS::CoilLogic()
+{
+	//Relays (TODO: K1 and K2)
+	//K3
+	if (!IsPowered() || sat->EMSFunctionSwitch.GetState() == 0)
+	{
+		K3 = false;
+	}
+	else
+	{
+		K3 = true;
+	}
+
+	//K4 (Scroll & RSI Lighting Disable)
+	if (IsPowered() && (sat->EMSFunctionSwitch.GetState() == 1 || sat->EMSFunctionSwitch.GetState() == 2 || sat->EMSFunctionSwitch.GetState() == 3))
+	{
+		K4 = true;
+	}
+	else
+	{
+		K4 = false;
+	}
 }
 
 void EMS::TimeStep(double simdt) {
@@ -4920,6 +4965,10 @@ void EMS::TimeStep(double simdt) {
 		pt05GLightOn = false;
 		LiftVectLightOn = 0;
 	}
+
+	// Scroll & RSI Lighting
+	CoilLogic();
+	ScrollRSILighting();
 
 	// Turn on reset
 	if (status == EMS_STATUS_OFF && sat->EMSFunctionSwitch.GetState() != 0) {
@@ -5141,18 +5190,25 @@ void EMS::TimeStep(double simdt) {
 	}
 
 	RotateRSI(simdt);
+
+	//sprintf(oapiDebugString(), "Is Scroll Powered %d Scroll/RSI Voltage: %lf K1: %d K2: %d K3: %d K4 %d SW: %d", IsScrollRSIDisplayPowered(), Fixed_115_6VAC_Output.Voltage(), K1, K2, K3, K4, sat->EMSFunctionSwitch.GetState());
 }
 
 void EMS::SystemTimestep(double simdt) {
 
-	if (IsPowered() && !IsOff()) {
+	if (IsPowered() && !IsOff()) //TBD individual bulb power draws (0.05g, SPS THRUST ON, LIFT UP, LIFT DOWN)
+	{
 		DCPower.DrawPower(93.28);	// see CSM Systems Handbook
 	}
 
-	if (IsDisplayPowered() && !IsOff()) {
-		DrawPower(0.022);
+	if (IsNumDisplayPowered())
+	{
+		numericsPower->DrawPower((numericsPower->Voltage() / 115.0) * (38.0 * 0.022)); //38 segments (TBD: Needs to be power per lit segment)
+	}
 
-		//sprintf(oapiDebugString(), "vinert %f", vinert);
+	if (IsScrollRSIDisplayPowered()) //Assumes 0.5W per lamp in scroll and RSI backlighting, needs to be checked
+	{
+		Fixed_115_6VAC_Output.DrawPower(10 * 1.005);
 	}
 }
 
@@ -5381,15 +5437,27 @@ bool EMS::IsDecimalPointBlanked()
 
 bool EMS::IsPowered() {
 
-	return DCPower.Voltage() > SP_MIN_DCVOLTAGE; 
+	return DCPower.Voltage() > SP_MIN_DCVOLTAGE;
 }
 
-bool EMS::IsDisplayPowered() {
+bool EMS::IsNumDisplayPowered() {
 
-	if (Voltage() < SP_MIN_ACVOLTAGE || DimmerRotationalSwitch->GetState() == 0)
+	if (!K3 || numericsPower->Voltage() < 30.0)
+	{
 		return false;
+	}
 
 	return true;
+}
+
+bool EMS::IsScrollRSIDisplayPowered() {
+
+	if (K3 && !K4)
+	{
+		return true;
+	}
+
+	return false;
 }
 
 void EMS::SaveState(FILEHANDLE scn) {

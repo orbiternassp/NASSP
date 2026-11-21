@@ -1888,7 +1888,7 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 		SetVCLighting(vcidx, IntegralLights_LMVC_Ordeal, MAT_EMISSION, ordeal.LightingPower(), NUM_ELEMENTS(IntegralLights_LMVC_Ordeal));
 
 		SetVCLighting(vcidx, NumericLights_LMVC, MAT_LIGHT, lca.GetNumericOutput(), NUM_ELEMENTS(NumericLights_LMVC));
-		SetVCLighting(vcidx, VC_MAT_Panel4_DSKY, MAT_LIGHT, dsky.Variable_250VAC_Output.Voltage() / 250.0, 1);
+		SetVCLighting(vcidx, VC_MAT_Panel4_DSKY, MAT_LIGHT, dsky.GetSegmentOutput(), 1);
 
 		if (CWEA.GetMasterAlarm()) {
 			SetVCLighting(vcidx, MasterAlarm_NoTex, MAT_LIGHT, 1, NUM_ELEMENTS(MasterAlarm_NoTex));

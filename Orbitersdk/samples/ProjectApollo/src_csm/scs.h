@@ -829,11 +829,14 @@ class EMS : public e_object {
 public:
 	EMS(PanelSDK &p);
 	virtual ~EMS();
-	void Init(Saturn *vessel, e_object *a, e_object *b, ContinuousRotationalSwitch *dimmer, e_object *c);
+	void Init(Saturn *vessel, e_object *a, e_object *b, e_object *numpwr, e_object *scrollRSIcb);
 	void TimeStep(double simdt);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn);                                // SaveState callback
 	void LoadState(FILEHANDLE scn);                                // LoadState callback
+
+	// Fixed 115 to 6 VAC output to scroll and RSI lighting
+	FixedVoltageTransformer Fixed_115_6VAC_Output;
 
 	double GetdVRangeCounter() { return dVRangeCounter; };
 	oapi::IVECTOR2 ScribePntArray[EMS_SCROLL_LENGTH_PX*3]; //Thrice the number of pixels in the scrolling direction.
@@ -851,6 +854,8 @@ public:
 	bool IsdVMode();
 	bool WriteScrollToFile();
 	bool IsDecimalPointBlanked();
+	bool IsNumDisplayPowered();
+	bool IsScrollRSIDisplayPowered();
 
 	void DefineVCAnimations(UINT vc_idx);
 	void SetReference(const VECTOR3& ref, const VECTOR3& _dir);
@@ -859,7 +864,8 @@ public:
 	
 protected:
 	bool IsPowered();
-	bool IsDisplayPowered();
+	void ScrollRSILighting();
+	void CoilLogic();
 	
 	void AccelerometerTimeStep(double simdt);
 	double xacc, xaccG, constG;
@@ -872,6 +878,11 @@ protected:
 	double MaxScrollPosition;
 	double dVRangeCounter;
 	double dVTestTime;
+
+	bool K1;	//dV & dV Test (TBD: Needs connected and integrated into current logic)
+	bool K2;	//dV Test (TBD: Needs connected and integrated into current logic)
+	bool K3;	//Off
+	bool K4;	//dV, dV Test, dV Set/VHF RNG
 
 	bool switchchangereset;
 
@@ -915,7 +926,8 @@ protected:
 
 	PowerMerge DCPower;
 	Saturn *sat;
-	ContinuousRotationalSwitch *DimmerRotationalSwitch;
+	e_object *numericsPower;
+	e_object *scrollRSIPower;
 
 	friend class SaturnEMSDvDisplay;
 	friend class SaturnEMSScrollDisplay;

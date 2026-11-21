@@ -1247,28 +1247,28 @@ void LEM_LCA::Init(LEM *l, e_object *cdrcb, e_object *lmpcb, e_object *acnumcb, 
 
 double LEM_LCA::GetNumericOutput()  //Provides scaling for VC lighting, visible voltage about 30 VAC based on testing and seeing it start at 28 and fully visible at 36
 {
-	return (Num_Override_20_110VAC_Output.Voltage() - 30.0) / 85.0;
+	return (std::max)(0.0, ((Num_Override_20_110VAC_Output.Voltage() - 30.0) / 85.0));
 }
 
-double LEM_LCA::GetIntegralOutput()  //Provides scaling for VC lighting and power draw
+double LEM_LCA::GetIntegralOutput()  //Provides scaling for VC lighting, visible voltage about 30 VAC based on testing and seeing it start at 28 and fully visible at 36
 {
-	return Int_Override_15_75VAC_Output.Voltage() / 115.0;
+	return (std::max)(0.0, ((Int_Override_15_75VAC_Output.Voltage() - 30.0) / 85.0));
 }
 
 void LEM_LCA::SystemTimestep(double simdt)
 {
 	//Integral power draw (46 total EL strips at 1.005W per strip)
 
-	Int_Override_15_75VAC_Output.DrawPower(17.078 * GetIntegralOutput()); //17 EL Strips
+	Int_Override_15_75VAC_Output.DrawPower(17.078 * (Int_Override_15_75VAC_Output.Voltage() / 115.0)); //17 EL Strips
 
 	if (lem->LtgSidePanelsSwitch.IsUp()) //CDR Side Panel (13 EL Strips)
 	{
-		Int_Override_15_75VAC_Output.DrawPower(13.065 * GetIntegralOutput());
+		Int_Override_15_75VAC_Output.DrawPower(13.065 * (Int_Override_15_75VAC_Output.Voltage() / 115.0));
 	}
 
 	if (lem->SidePanelsSwitch.IsUp()) //LMP Side Panel (16 EL Strips)
 	{
-		Int_Override_15_75VAC_Output.DrawPower(16.073 * GetIntegralOutput());
+		Int_Override_15_75VAC_Output.DrawPower(16.073 * (Int_Override_15_75VAC_Output.Voltage() / 115.0));
 	}
 
 	//sprintf(oapiDebugString(), "Voltages: CDR %.1lf, LMP %.1lf, Merge %.1lf, 5.5VDC Out %.1lf, 6VDC Out %.1lf, 2-5VDC Out %.1lf",
@@ -1276,6 +1276,8 @@ void LEM_LCA::SystemTimestep(double simdt)
 
 	//sprintf(oapiDebugString(), "Power Load: 5.5VDC Out %.1lf, 6.0VDC Out %.1lf, 2-5VDC Out %.1lf", Fixed_5_5VDC_Output.GetLastPowerLoad(), Fixed_6VDC_Output.GetLastPowerLoad(), Variable_2_5VDC_Output.GetLastPowerLoad());
 	//sprintf(oapiDebugString(), "Power Load: Num %.1lf, Int %.1lf", Num_Override_20_110VAC_Output.GetLastPowerLoad(), Int_Override_15_75VAC_Output.GetLastPowerLoad());
+
+	//sprintf(oapiDebugString(), "Num Output: %.1lf, Num Volts: %.1lf, Int Output %.1lf, Int Volts %.1lf", GetNumericOutput(), Num_Override_20_110VAC_Output.Voltage(), GetIntegralOutput(), Int_Override_15_75VAC_Output.Voltage());
 
 	double AnnunHeat = (Fixed_5_5VDC_Output.GetLastPowerLoad() + Fixed_6VDC_Output.GetLastPowerLoad() + Variable_2_5VDC_Output.GetLastPowerLoad()) * 0.5337;
 	double NumHeat = Num_Override_20_110VAC_Output.GetLastPowerLoad() * 0.6285;

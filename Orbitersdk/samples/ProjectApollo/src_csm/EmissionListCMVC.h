@@ -30,7 +30,7 @@ DWORD IntergralLights_P8_NTex[] = {
 
 	// TODO Material List
 //	VC_MAT_CWLights_P8_t,
-	VC_MAT_EMS_Scroll,
+//	VC_MAT_EMS_Scroll,
 	VC_MAT_Timer_P1,
 	VC_MAT_FDAI_Ball_t,
 	VC_MAT_AttitudeSetNumbers
@@ -58,6 +58,7 @@ DWORD FloodLights_P8[] = {
 	VC_MAT_AdditionalParts_t,
 //	VC_MAT_AttitudeSetNumbers,
 	VC_MAT_Altimeter_Cover,
+	VC_MAT_Panel1_RSI_Display,
 	VC_MAT_Optics,
 //	VC_MAT_CM_Switches,
 	VC_MAT_Accelerometer_Cover,
