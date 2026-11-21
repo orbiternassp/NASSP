@@ -605,7 +605,9 @@ void LEM::SetView() {
 			break;
 
 		case LMVIEW_RDVZWIN:
-			v = _V(-0.58, -0.05, 1.004) + ofs;
+//			v = _V(-0.58, -0.05, 1.004) + ofs;
+			v = _V(-0.57745, -0.05, 0.99) + ofs;
+
 			SetCameraDefaultDirection(_V(0.0, 1.0, 0.0));
 			v.x += vcFreeCamx;
 			v.y += vcFreeCamz;
@@ -1539,10 +1541,6 @@ void LEM::RegisterActiveAreas()
 }
 	if (pMission->GetLMNumber() == 5) {
 		// AOT LM5
-//		UL = _V(0.9401, 0.4998, 1.3792);
-//		UR = _V(0.9401, 0.4998, 1.3675);
-//		DL = _V(0.9401, 0.4808, 1.3792);
-//		DR = _V(0.9401, 0.4808, 1.3675);
 		UL = _V( 0.0052,  0.7068,  0.7071);
 		UR = _V( 0.0053,  0.7072, -0.7072);
 		DL = _V(-0.0054, -0.7071,  0.7069);

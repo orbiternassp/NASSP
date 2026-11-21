@@ -767,9 +767,9 @@ void CMOptics::UpdateCMVCOptics()
 
 		// Superimposing using Sketchpad3 in Orbiter2016Beta or Sketchpad(DrawAPi) in OpenOrbiter
 #ifdef _OPENORBITER
-		oapi::Sketchpad* skp = oapiGetSketchpad(sat->srfOpticsCustomCam);
+		oapi::Sketchpad* skp = oapiGetSketchpad(sat->srf[Saturn::SRF_VC_OPTICS_TMP_CUSTOMCAM]);
 #else
-		oapi::Sketchpad3* skp = (oapi::Sketchpad3*)oapiGetSketchpad(sat->srfOpticsCustomCam);
+		oapi::Sketchpad3* skp = (oapi::Sketchpad3*)oapiGetSketchpad(sat->srf[Saturn::SRF_VC_OPTICS_TMP_CUSTOMCAM]);
 #endif // _OPENORBITER
 		if (skp) {
 			oapi::Brush* pBrush = oapiCreateBrush(VCOpticsRetAlpha);
@@ -779,7 +779,7 @@ void CMOptics::UpdateCMVCOptics()
 			oapiReleaseBrush(pBrush);
 			oapiReleaseSketchpad(skp);
 		}
-		oapiBlt(sat->srf[Saturn::SurfaceID_VC::SRF_VC_OPTICS_CUSTOMCAM], sat->srfOpticsCustomCam, 0, 0, 0, 0, 2048, 2048);
+		oapiBlt(sat->srf[Saturn::SurfaceID_VC::SRF_VC_OPTICS_CUSTOMCAM], sat->srf[Saturn::SRF_VC_OPTICS_TMP_CUSTOMCAM], 0, 0, 0, 0, 2048, 2048);
 	}
 
 	// Make copies of the mesh Vertices 
@@ -902,7 +902,7 @@ void CMOptics::UpdateOpticsCustomCam(VECTOR3 camPos, VECTOR3 camDir, VECTOR3 cam
 	if (pCore) {
 		// Scaling factor for the Superimposing Custom Camera best match so far is 0.905
 		// This should be normaly (1.5 * RAD) but it's not working. Earlier tests was 1.073, but this was before i matched the 3D FOV to the 2D.
-		sat->hOpticsCustomCam = pCore->SetupCustomCamera(sat->hOpticsCustomCam, oapiCameraTarget(), camPos, camDir, camUp, 0.905 * RAD, sat->srfOpticsCustomCam, CUSTOMCAM_DEFAULTS);
+		sat->hOpticsCustomCam = pCore->SetupCustomCamera(sat->hOpticsCustomCam, oapiCameraTarget(), camPos, camDir, camUp, 0.905 * RAD, sat->srf[Saturn::SRF_VC_OPTICS_TMP_CUSTOMCAM], CUSTOMCAM_DEFAULTS);
 		if (CustomCam) {
 			pCore->CustomCameraOnOff(sat->hOpticsCustomCam, true);
 			CustomCam = false;
