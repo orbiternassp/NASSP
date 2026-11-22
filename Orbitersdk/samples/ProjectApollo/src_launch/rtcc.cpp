@@ -18427,10 +18427,16 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 {
 	bool tupind = false;
 	MissionPlanTable *mpt = GetMPTPointer(veh);
+	MPTManeuver* mptman = NULL;
+	PMMSPTInput pmmsptin;
+	int err;
+	unsigned i;
+	bool isRefreeze;
+	EphemerisData sv_out;
 
 	if (man > mpt->ManeuverNum)
 	{
-		//Error 40
+		// Error 40: Maneuver does not exist
 		PMXSPT("PMMFUD", 40);
 		return;
 	}
@@ -18536,50 +18542,187 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 			return;
 		}
 		//Determine 1st maneuver to be frozen
-		unsigned i = mpt->LastExecutedManeuver + 1;
+		i = mpt->LastExecutedManeuver + 1;
+
+		// Type of vector for freeze?
 		if (StationID != "")
 		{
+			// Useable Vector Table
 			goto RTCC_PMMFUD_9_1;
 		}
-		//Set trajectory number negative
+		// Ephemeris
+		
+		// Set trajectory number negative
 		mpt->CommonBlock.TUP = -abs(mpt->CommonBlock.TUP);
 
-		do
+	RTCC_PMMFUD_5_2:
+		// Is this a TLI maneuver?
+		if (mpt->mantable[i - 1].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
 		{
-			if (mpt->mantable[i - 1].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
+			// Yes
+			goto RTCC_PMMFUD_8_1;
+		}
+		// No
+		// Move in descriptive block of maneuver to be frozen
+		mptman = &mpt->mantable[i - 1];
+		isRefreeze = mptman->FrozenManeuverInd;
+
+		// Store vector at GMTBB as frozen maneuver vector
+		mptman->FrozenManeuverVector.GMT = mptman->GMTMAN;
+		mptman->FrozenManeuverVector.R = mptman->R_1;
+		mptman->FrozenManeuverVector.V = mptman->V_1;
+		mptman->FrozenManeuverVector.RBI = mptman->RefBodyInd;
+	RTCC_PMMFUD_6_2:
+		// Attitude code?
+		if (mptman->AttitudeCode < 3)
+		{
+			// Inertial or manual
+			goto RTCC_PMMFUD_7_2;
+		}
+		else if (mptman->AttitudeCode == 3)
+		{
+			// Lambert
+			// Is this a re-freeze or a freeze on a VPS vector?
+			if (isRefreeze || StationID != "")
 			{
-				//Is this a re-freeze?
-				if (mpt->mantable[i - 1].FrozenManeuverInd)
-				{
-					//Is the TLI maneuver iterable?
-					if (mpt->mantable[i - 1].Word78i[1] != 0)
-					{
-
-					}
-					else
-					{
-
-					}
-				}
+				goto RTCC_PMMFUD_7_1;
 			}
 			else
 			{
-				mpt->mantable[i - 1].FrozenManeuverVector.GMT = mpt->mantable[i - 1].GMTMAN;
-				mpt->mantable[i - 1].FrozenManeuverVector.R = mpt->mantable[i - 1].R_1;
-				mpt->mantable[i - 1].FrozenManeuverVector.V = mpt->mantable[i - 1].V_1;
-				mpt->mantable[i - 1].FrozenManeuverVector.RBI = mpt->mantable[i - 1].RefBodyInd;
+				goto RTCC_PMMFUD_7_2;
 			}
-			//External DV
-			if (mpt->mantable[i - 1].AttitudeCode >= 4 && mpt->mantable[i - 1].AttitudeCode <= 5)
-			{
-				mpt->mantable[i - 1].Word67i[0] = 0;
-			}
-			mpt->mantable[i - 1].FrozenManeuverInd = true;
+		}
+		else if (mptman->AttitudeCode > 5)
+		{
+			// Ascent or Descent (?)
+			goto RTCC_PMMFUD_7_1;
+		}
+		// External DV (PGNS or AGS)
+		// Set External DV indicator to 0 (inertial)
+		mptman->Word67i[0] = 0;
+		if (mptman->AttitudeCode == 5)
+		{
+			// AGS
+			// Is this a re-freeze or a freeze on a VPS vector?
+			// TBD
+		}
+		// TBD: Zero out AGS backup parameters
+		// TBD: EMSMISS: Move frozen vector (free-flight) to GMTI
+		// Is this a re-freeze or a freeze on a VPS vector?
+		if (isRefreeze || StationID != "")
+		{
+			// Yes
+			// TBD: PIEXDV: Rotate External DV display and command to inertial
+		}
+		else
+		{
+			// No
+			goto RTCC_PMMFUD_7_2;
+		}
+	RTCC_PMMFUD_7_1:
+		// Set trajectory update indicator to yes
+		tupind = true;
+	RTCC_PMMFUD_7_2:
+		// Set freeze flag to show maneuver frozen
+		mptman->FrozenManeuverInd = true;
+		// Store ID and time of frozen anchor vector
+		if (StationID != "")
+		{
+			mptman->StationIDFrozen = StationID;
+		}
+		else
+		{
+			mptman->StationIDFrozen = mpt->StationID;
+		}
+		mptman->GMTFrozen = mptman->FrozenManeuverVector.GMT;
+	RTCC_PMMFUD_7_3:
+		// Have all required maneuvers been frozen?
+		if (i < mpt->ManeuverNum)
+		{
+			// No
+			
+			// TBD: flowchart did not have this
 			i++;
-		} while (i <= man);
 
-		PMSVCT(8, veh);
-
+			// Type of vector used for freeze?
+			if (StationID != "")
+			{
+				goto RTCC_PMMFUD_10_1;
+			}
+			else
+			{
+				goto RTCC_PMMFUD_5_2;
+			}
+		}
+	// RTCC_PMMFUD_7_4:
+		// Is this a re-freeze?
+		if (isRefreeze == false)
+		{
+			// No
+			// Store new number of last frozen maneuver
+			mpt->LastFrozenManeuver = i;
+		}
+		// Is a trajectory update needed?
+		if (tupind)
+		{
+			// Yes
+			goto RTCC_PMMFUD_10_2;
+		}
+		// No
+		// Set trajectory update number positive
+		mpt->CommonBlock.TUP = abs(mpt->CommonBlock.TUP);
+		// Display updates
+		EMSNAP(veh, 2);
+		return;
+	RTCC_PMMFUD_8_1:
+		// TLI
+		// Is this a re-freeze?
+		if (mpt->mantable[i - 1].FrozenManeuverInd)
+		{
+			// Yes
+			// Is this TLI maneuver iterable?
+			if (mpt->mantable[i - 1].Word78i[1] != 0)
+			{
+				// Yes
+				goto RTCC_PMMFUD_8_A;
+			}
+			else
+			{
+				// Set trajectory update indicator to yes
+				tupind = true;
+			}
+		}
+		// Move in descriptive block of TLI maneuver
+		mptman = &mpt->mantable[i - 1];
+		// Set current TLI indicator to 0
+		mptman->Word78i[0] = 0;
+		// Store vector at GMTBB as frozen maneuver vector
+		mptman->FrozenManeuverVector.GMT = mptman->GMTMAN;
+		mptman->FrozenManeuverVector.R = mptman->R_1;
+		mptman->FrozenManeuverVector.V = mptman->V_1;
+		mptman->FrozenManeuverVector.RBI = mptman->RefBodyInd;
+		goto RTCC_PMMFUD_7_2;
+	RTCC_PMMFUD_8_A:
+		// Store current ephemeris vector and anchor vector station ID and time for PMMSPT
+		pmmsptin.GMT = mptman->FrozenManeuverVector.GMT;
+		pmmsptin.R = mptman->FrozenManeuverVector.R;
+		pmmsptin.V = mptman->FrozenManeuverVector.V;
+		pmmsptin.StationID = mptman->StationIDFrozen;
+	RTCC_PMMFUD_8_2:
+		// Call PMMSPT
+		pmmsptin.QUEID = 33;
+		pmmsptin.Table = veh;
+		pmmsptin.mpt = mpt;
+		pmmsptin.CurMan = mptman;
+		if (err = PMMSPT(pmmsptin))
+		{
+			// Error?
+			PMXSPT("PMMSPT", err);
+			return;
+		}
+		// Set trajectory update indicator to yes
+		tupind = true;
+		goto RTCC_PMMFUD_7_3;
 	RTCC_PMMFUD_9_1:
 		//Is an evaluation vector being requested?
 		if (StationID.length() >= 4 && StationID[3] == 'E')
@@ -18588,8 +18731,7 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 			PMXSPT("PMMFUD", 41);
 			return;
 		}
-		EphemerisData sv_out;
-		int err = BMSVPSVectorFetch(StationID, sv_out);
+		err = BMSVPSVectorFetch(StationID, sv_out);
 		//Error?
 		if (err)
 		{
@@ -18610,63 +18752,86 @@ void RTCC::PMMFUD(int veh, unsigned man, int action, std::string StationID)
 		//TBD
 		//Set trajectory number negative
 		mpt->CommonBlock.TUP = -abs(mpt->CommonBlock.TUP);
-
-		//Move anchor vector to GMTBB
-		EMSMISSInputTable intab;
-
-		intab.AnchorVector = sv_out;
-
-		EMSMISS(&intab);
-		//TBD
+	RTCC_PMMFUD_10_1:
+		// TBD: EMSMISS: Move anchor vector to GMTBB
+		// TBD: Is next maneuver to be frozen a TLI?
+		if (false)
+		{
+			// TBD: Is the TLI maneuver iterable?
+			if (mpt->mantable[i - 1].Word78i[1] != 0)
+			{
+				// Yes
+				goto RTCC_PMMFUD_8_2;
+			}
+		}
+		// Move in descriptive block of maneuver to be frozen
+		mptman = &mpt->mantable[i - 1];
+		// TBD: State vector moved to GMTBB as frozen maneuver vector and set freeze flag to show maneuver frozen
+		goto RTCC_PMMFUD_6_2;
+	RTCC_PMMFUD_10_2:
+		// Set trajectory update number negative
+		mpt->CommonBlock.TUP = -abs(mpt->CommonBlock.TUP);
+		// Queue trajectory update
+		PMSVCT(8, veh);
 	}
 	//Unfreeze
 	else
 	{
-		//Maneuver executed?
+		// Maneuver executed?
 		if (man <= mpt->LastExecutedManeuver)
 		{
-			//Error 46
+			// Error 46
 			PMXSPT("PMMFUD", 46);
 			return;
 		}
-		//Maneuver frozen?
+		// Maneuver frozen?
 		if (mpt->mantable[man - 1].FrozenManeuverInd == false)
 		{
-			//Error 45
+			// Error 45
 			PMXSPT("PMMFUD", 45);
 			return;
 		}
-		//Decrement input number by 1 and store as number of last frozen maneuver in MPT
+		// Decrement input number by 1 and store as number of last frozen maneuver in MPT
 		mpt->LastFrozenManeuver = man - 1;
-		
+		// Set trajectory update number negative
 		mpt->CommonBlock.TUP = -abs(mpt->CommonBlock.TUP);
-		unsigned curman = man;
-		while (curman <= mpt->ManeuverNum)
+		i = man;
+	RTCC_PMMFUD_3_2:
+		// Move in descriptive block of maneuver to be unfrozen
+		mptman = &mpt->mantable[i - 1];
+		// Is this the TLI maneuver?
+		if (mptman->AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
 		{
-			//Is this the TLI maneuver?
-			if (mpt->mantable[curman - 1].AttitudeCode == RTCC_ATTITUDE_SIVB_IGM)
-			{
-				mpt->mantable[curman - 1].Word78i[0] = mpt->mantable[curman - 1].Word78i[1];
-				tupind = true;
-			}
-			else if (mpt->mantable[curman - 1].AttitudeCode == RTCC_ATTITUDE_LAMBERT)
-			{
-				tupind = true;
-			}
-			//External DV
-			else if (mpt->mantable[curman - 1].AttitudeCode > 3 && mpt->mantable[curman - 1].AttitudeCode < 6)
-			{
-				mpt->mantable[curman - 1].Word67i[0] = 1;
-				tupind = true;
-			}
-			//IGM again??
-			else if (mpt->mantable[curman - 1].AttitudeCode >= 6)
-			{
-				tupind = true;
-			}
-			mpt->mantable[curman - 1].FrozenManeuverInd = false;
-			curman++;
+			// Yes
+			// Set current TLI indicator = original
+			mptman->Word78i[0] = mptman->Word78i[1];
+			goto RTCC_PMMFUD_4_2;
 		}
+		if (mptman->AttitudeCode == RTCC_ATTITUDE_LAMBERT)
+		{
+			// Lambert
+		RTCC_PMMFUD_4_2:
+			tupind = true;
+		}
+		else if (mptman->AttitudeCode > 3)
+		{
+			if (mptman->AttitudeCode < 6)
+			{
+				// External DV
+				mptman->Word67i[0] = 1;
+			}
+			tupind = true;
+		}
+		// Set freeze flag to show not frozen
+		mptman->FrozenManeuverInd = false;
+		// Have all required maneuvers been unfrozen?
+		if (i < mpt->ManeuverNum && mpt->mantable[i].FrozenManeuverInd)
+		{
+			// No
+			i++;
+			goto RTCC_PMMFUD_3_2;
+		}
+		// Is a trajectory update needed?
 		if (tupind)
 		{
 			PMSVCT(8, veh);

@@ -1206,7 +1206,7 @@ void ACInverter::UpdateFlow(double dt)
 
 		if (PhaseA.Current() > 11) { overloaded = true; }
 		if (PhaseB.Current() > 11) { overloaded = true; }
-		if (PhaseB.Current() > 11) { overloaded = true; }
+		if (PhaseC.Current() > 11) { overloaded = true; }
 		if ((PhaseA.Current() + PhaseB.Current() + PhaseC.Current()) > 27.7) { overloaded = true; }
 
 		if (overloaded && last_overload_check) {
