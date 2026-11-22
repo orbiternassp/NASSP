@@ -4846,8 +4846,6 @@ EMS::EMS(PanelSDK &p) : DCPower(0, p),
 	RSITarget = 0;
 	vinert = 37000.0;
 
-	p.AddElectrical(&Fixed_115_6VAC_Output, false);
-
 	K1 = false;
 	K2 = false;
 	K3 = false;
@@ -4906,6 +4904,31 @@ void EMS::Init(Saturn *vessel, e_object *a, e_object *b, e_object *numpwr, e_obj
 	DCPower.WireToBuses(a, b); //EMS Power
 	numericsPower = numpwr; //Numerics Power
 	scrollRSIPower = scrollRSIcb; //Scroll & RSI Lighting Power
+}
+
+bool EMS::IsPowered() {
+
+	return DCPower.Voltage() > SP_MIN_DCVOLTAGE;
+}
+
+bool EMS::IsNumDisplayPowered() {
+
+	if (!K3 || numericsPower->Voltage() < 30.0)
+	{
+		return false;
+	}
+
+	return true;
+}
+
+bool EMS::IsScrollRSIDisplayPowered() {
+
+	if (K3 && !K4)
+	{
+		return true;
+	}
+
+	return false;
 }
 
 void EMS::ScrollRSILighting()
@@ -5435,36 +5458,16 @@ bool EMS::IsDecimalPointBlanked()
 	return false;
 }
 
-bool EMS::IsPowered() {
-
-	return DCPower.Voltage() > SP_MIN_DCVOLTAGE;
-}
-
-bool EMS::IsNumDisplayPowered() {
-
-	if (!K3 || numericsPower->Voltage() < 30.0)
-	{
-		return false;
-	}
-
-	return true;
-}
-
-bool EMS::IsScrollRSIDisplayPowered() {
-
-	if (K3 && !K4)
-	{
-		return true;
-	}
-
-	return false;
-}
-
 void EMS::SaveState(FILEHANDLE scn) {
 	char buffer[100];
+	char relays[32];
 	
 	oapiWriteLine(scn, EMS_START_STRING);
 	oapiWriteScenario_int(scn, "STATUS", status);
+
+	sprintf(relays, "%d %d %d %d", K1, K2, K3, K4);
+	oapiWriteScenario_string(scn, "RELAYS", relays);
+
 	papiWriteScenario_double(scn, "DVRANGECOUNTER", dVRangeCounter);
 	papiWriteScenario_double(scn, "VINERTIAL", vinert);
 	papiWriteScenario_double(scn, "DVTESTTIME", dVTestTime);
@@ -5486,17 +5489,28 @@ void EMS::SaveState(FILEHANDLE scn) {
 void EMS::LoadState(FILEHANDLE scn) {
 
 	int i;
+	int inttemp[4];
 	long j, k;
 	char *line;	
 
 	while (oapiReadScenario_nextline (scn, line)) {
 		if (!strnicmp(line, EMS_END_STRING, sizeof(EMS_END_STRING))){
-			return;
+			break;
 		}
 
-		if (!strnicmp (line, "STATUS", 6)) {
+		if (!strnicmp(line, "STATUS", 6)) {
 			sscanf(line + 6, "%i", &status);
-		} else if (!strnicmp (line, "DVRANGECOUNTER", 14)) {
+		}
+		else if (!strnicmp(line, "RELAYS", 6)) {
+			sscanf(line + 6, "%i %i %i %i", &inttemp[0], &inttemp[1], &inttemp[2], &inttemp[3]);
+
+			K1 = (inttemp[0] != 0);
+			K2 = (inttemp[1] != 0);
+			K3 = (inttemp[2] != 0);
+			K4 = (inttemp[3] != 0);
+
+		}
+		else if (!strnicmp (line, "DVRANGECOUNTER", 14)) {
 			sscanf(line + 14, "%lf", &dVRangeCounter);
 		} else if (!strnicmp (line, "VINERTIAL", 9)) {
 			sscanf(line + 9, "%lf", &vinert);
@@ -5528,6 +5542,8 @@ void EMS::LoadState(FILEHANDLE scn) {
 			ScribePntArrayVC[i].y = k*TexMul;
 		}
 	}
+
+	ScrollRSILighting(); // Loads scroll/RSI lighting voltage at scenario start to prevent false "off" on load
 }
 
 bool EMS::WriteScrollToFile() {
