@@ -10327,6 +10327,10 @@ bool RTCC::DockingInitiationProcessor(DKIOpt opt)
 
 	PZDKIT.UpdatingIndicator = true;
 	PZDKIT.NumSolutions = 0;
+	PZDKIT.CSMSTAID = opt.CSMSTAID;
+	PZDKIT.CSM_GMTV = opt.sv_CSM.GMT;
+	PZDKIT.LM_GMTV = opt.sv_LM.GMT;
+	PZDKIT.LMSTAID = opt.LMSTAID;
 	for (i = 0; i < 7; i++)
 	{
 		PZDKIT.Block[i].PlanStatus = 0; //Invalidate all solutions
@@ -11125,6 +11129,77 @@ void RTCC::PCHAPE(double R1, double R2, double R3, double U1, double U2, double 
 	XR = abs(XR);
 	RAP = RR + XR;
 	RPE = RR - XR;
+}
+
+int RTCC::PMMMLC(int chaser, VehicleDataBlock& sv_chaser, std::string& ChaserStaID, VehicleDataBlock& sv_target, std::string& TargetStaID)
+{
+	// Use MED K10 to get the vehicle data blocks for chaser and target for the DKI
+
+	MissionPlanTable* mpt_chaser, *mpt_target;
+	double t_man_chaser, t_man_target, T, t_fetch;
+
+	mpt_chaser = GetMPTPointer(chaser);
+	mpt_target = GetMPTPointer(4 - chaser);
+
+	// Get time of last frozen chaser maneuver
+	if (mpt_chaser->LastFrozenManeuver == 0)
+	{
+		t_man_chaser = 0.0;
+	}
+	else
+	{
+		t_man_chaser = mpt_chaser->mantable[mpt_chaser->LastFrozenManeuver - 1].GMT_BO;
+	}
+	// Get time of last frozen target maneuver
+	if (mpt_target->LastFrozenManeuver == 0)
+	{
+		t_man_target = 0.0;
+	}
+	else
+	{
+		t_man_target = mpt_target->mantable[mpt_target->LastFrozenManeuver - 1].GMT_BO;
+	}
+
+	// Fetch time
+	if (med_k10.MLDTime == 0.0)
+	{
+		T = RTCCPresentTimeGMT();
+	}
+	else
+	{
+		T = GMTfromGET(med_k10.MLDTime);
+	}
+
+	// Fetch time before frozen maneuver time?
+	if (T < t_man_chaser)
+	{
+		PMXSPT("PMMMLC", 75);
+		return 1;
+	}
+	// Set fetch time
+	t_fetch = T;
+
+	// Get chaser elements
+	if (PMSVEC(chaser, true, t_fetch, med_k10.ChaserVectorID, sv_chaser, ChaserStaID))
+	{
+		// PMSVEC writes its own error message
+		return 1;
+	}
+
+	// Fetch time not before last frozen target maneuver
+	if (t_fetch < t_man_target)
+	{
+		t_fetch = t_man_target;
+	}
+
+	// Get chaser elements
+	if (PMSVEC(chaser, false, t_fetch, med_k10.TargetVectorID, sv_target, TargetStaID))
+	{
+		// PMSVEC writes its own error message
+		return 1;
+	}
+
+	return 0;
 }
 
 void RTCC::PCMVMR(AEGDataBlock &CHASER, AEGDataBlock &TARGET, double DELVX, double DELVY, double DELVZ, double mu, double &Pitch, double &Yaw, int I)
@@ -36870,6 +36945,12 @@ void RTCC::PMDRPT()
 	}
 
 	PZRPDT.plans = PZDKIT.NumSolutions;
+	PZRPDT.CSMSTAID = PZDKIT.CSMSTAID;
+	PZRPDT.CSM_GMTV = PZDKIT.CSM_GMTV;
+	PZRPDT.CSM_GETV = GETfromGMT(PZDKIT.CSM_GMTV);
+	PZRPDT.LMSTAID = PZDKIT.LMSTAID;
+	PZRPDT.LM_GMTV = PZDKIT.LM_GMTV;
+	PZRPDT.LM_GETV = GETfromGMT(PZDKIT.LM_GMTV);
 
 	for (int i = 0;i < PZDKIT.NumSolutions;i++)
 	{

@@ -3786,19 +3786,10 @@ int ARCore::subThread()
 		if (GD->MissionPlanningActive)
 		{
 			VehicleDataBlock sv_chaser, sv_target;
-			std::string StaID;
-			int err;
+			std::string ChaserStaID, TargetStaID;
 
-			//Get chaser state vector and weight
-			err = GC->rtcc->PMSVEC(GC->rtcc->med_k00.ChaserVehicle, true, GMT, GC->rtcc->med_k10.ChaserVectorID, sv_chaser, StaID);
-			if (err)
-			{
-				Result = DONE;
-				break;
-			}
-			//Get target state vector and weight
-			err = GC->rtcc->PMSVEC(GC->rtcc->med_k00.ChaserVehicle, false, GMT, GC->rtcc->med_k10.TargetVectorID, sv_target, StaID);
-			if (err)
+			// Get state vectors
+			if (GC->rtcc->PMMMLC(GC->rtcc->med_k00.ChaserVehicle, sv_chaser, ChaserStaID, sv_target, TargetStaID))
 			{
 				Result = DONE;
 				break;
@@ -3808,11 +3799,15 @@ int ARCore::subThread()
 			{
 				opt.sv_CSM = sv_chaser.sv;
 				opt.sv_LM = sv_target.sv;
+				opt.CSMSTAID = ChaserStaID;
+				opt.LMSTAID = TargetStaID;
 			}
 			else
 			{
 				opt.sv_CSM = sv_target.sv;
 				opt.sv_LM = sv_chaser.sv;
+				opt.CSMSTAID = TargetStaID;
+				opt.LMSTAID = ChaserStaID;
 			}
 		}
 		else

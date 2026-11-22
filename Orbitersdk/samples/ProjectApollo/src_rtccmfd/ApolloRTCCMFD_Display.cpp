@@ -8884,6 +8884,12 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, 1, 7, "ID  M  DVCSM   DVLM  NC1   NH  NCC  NSR  NPC   GETTPI");
 		skp->SetTextAlign(oapi::Sketchpad::RIGHT);
 		SetMOCRFont(skp, 3, true);
+		Text(skp, 17, 2, GC->rtcc->PZRPDT.CSMSTAID);
+		Text(skp, 38, 2, GC->rtcc->PZRPDT.LMSTAID);
+		Text_GET_HHHMMSS(skp, 17, 3, GC->rtcc->PZRPDT.CSM_GMTV);
+		Text_GET_HHHMMSS(skp, 38, 3, GC->rtcc->PZRPDT.LM_GMTV);
+		Text_GET_HHHMMSS(skp, 17, 4, GC->rtcc->PZRPDT.CSM_GETV);
+		Text_GET_HHHMMSS(skp, 38, 4, GC->rtcc->PZRPDT.LM_GETV);
 		Text(skp, 40, 27, GC->rtcc->PZRPDT.ErrorMessage);
 		for (int i = 0; i < GC->rtcc->PZRPDT.plans; i++)
 		{

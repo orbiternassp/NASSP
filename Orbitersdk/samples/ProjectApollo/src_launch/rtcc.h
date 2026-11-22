@@ -663,7 +663,9 @@ struct LMARKTRKPADOpt
 struct DKIOpt
 {
 	EphemerisData sv_CSM;
+	std::string CSMSTAID;
 	EphemerisData sv_LM;
+	std::string LMSTAID;
 	//Maneuvering vehicle. 1 = CSM, 2 = LM
 	int MV;
 	//Flag which determines how the maneuver line is defined or computed
@@ -2543,6 +2545,8 @@ public:
 	bool PoweredDescentProcessor(VECTOR3 R_LS, double TLAND, VehicleDataBlock sv, RTCCNIAuxOutputTable &aux, EphemerisDataTable2 *E, VehicleDataBlock &sv_PDI, VehicleDataBlock &sv_land, double &dv);
 	int EntryUpdateCalc(EphemerisData sv0, double entryrange, bool highspeed, EntryResults &res);
 	void PMMDKI(SPQOpt &opt, SPQResults &res);
+	//Maneuver Line Control Module
+	int PMMMLC(int chaser, VehicleDataBlock& sv_chaser, std::string& ChaserStaID, VehicleDataBlock& sv_target, std::string& TargetStaID);
 	//Velocity maneuver performer
 	void PCMVMR(AEGDataBlock &CHASER, AEGDataBlock &TARGET, double DELVX, double DELVY, double DELVZ, double mu, double &Pitch, double &Yaw, int I);
 	void PCMVMR(VECTOR3 R_C, VECTOR3 V_C, VECTOR3 R_T, VECTOR3 V_T, double DELVX, double DELVY, double DELVZ, int I, VECTOR3 &V_C_apo, double &Pitch, double &Yaw);
@@ -4576,6 +4580,11 @@ public:
 		bool UpdatingIndicator = false;
 		//Number of plans that were generated (SPQ always 1)
 		int NumSolutions = 0;
+		//CSM and LM station IDs
+		std::string CSMSTAID;
+		std::string LMSTAID;
+		double CSM_GMTV;
+		double LM_GMTV;
 		//Block 2 (Information Block)
 		DKIDataBlock Block[7];
 	} PZDKIT;
@@ -4620,6 +4629,12 @@ public:
 	struct RendezvousPlanningDisplay
 	{
 		int plans = 0;
+		std::string CSMSTAID;
+		std::string LMSTAID;
+		double CSM_GMTV;
+		double CSM_GETV;
+		double LM_GMTV;
+		double LM_GETV;
 		RendezvousPlanningDisplayData data[7];
 		std::string ErrorMessage;
 	} PZRPDT;
