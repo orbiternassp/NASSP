@@ -1664,6 +1664,9 @@ void Saturn::clbkPostStep(double simt, double simdt, double mjd)
 	sprintf(buffer, "MissionTime %f, simt %f, simdt %f, time(0) %lld", MissionTime, simt, simdt, time(0));
 	TRACE(buffer);
 
+	// Set the docking target for VC or 2D
+	SetCMdocktgtMesh();
+
 	if (debugConnected == false)
 	{
 		sprintf(debugString(), "Please enable the Project Apollo MFD on the modules tab of the launchpad.");
