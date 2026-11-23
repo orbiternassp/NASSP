@@ -139,25 +139,25 @@ void RCSC::Timestep(double simdt)
 	}
 
 	// CM/SM transfer motors
-	if (Sat->CMRCSLogicSwitch.IsUp() && Sat->RCSLogicMnACircuitBraker.IsPowered() && RCSCCMSMTransferA) {
+	if (Sat->CMRCSLogicSwitch.IsUp() && Sat->RCSLogicMnACircuitBreaker.IsPowered() && RCSCCMSMTransferA) {
 		CMTransferMotor1 = true;
 	}
-	if (Sat->CMRCSLogicSwitch.IsUp() && Sat->RCSLogicMnBCircuitBraker.IsPowered() && RCSCCMSMTransferB) {
+	if (Sat->CMRCSLogicSwitch.IsUp() && Sat->RCSLogicMnBCircuitBreaker.IsPowered() && RCSCCMSMTransferB) {
 		CMTransferMotor2 = true;
 	}
 	if (Sat->RCSTrnfrSwitch.IsUp()) {
-		if (Sat->RCSLogicMnACircuitBraker.IsPowered()) {
+		if (Sat->RCSLogicMnACircuitBreaker.IsPowered()) {
 			CMTransferMotor1 = true;
 		}
-		if (Sat->RCSLogicMnBCircuitBraker.IsPowered()) {
+		if (Sat->RCSLogicMnBCircuitBreaker.IsPowered()) {
 			CMTransferMotor2 = true;
 		}
 	}
 	else if (Sat->RCSTrnfrSwitch.IsDown()) {
-		if (Sat->RCSLogicMnACircuitBraker.IsPowered()) {
+		if (Sat->RCSLogicMnACircuitBreaker.IsPowered()) {
 			CMTransferMotor1 = false;
 		}
-		if (Sat->RCSLogicMnBCircuitBraker.IsPowered()) {
+		if (Sat->RCSLogicMnBCircuitBreaker.IsPowered()) {
 			CMTransferMotor2 = false;
 		}
 	}
@@ -318,11 +318,11 @@ void RCSC::ControlVessel(Saturn *v)
 
 bool RCSC::CMRCSLogicA() 
 { 
-	return (Sat->RCSLogicMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CMRCSLogicSwitch.IsUp(); 
+	return (Sat->RCSLogicMnACircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CMRCSLogicSwitch.IsUp(); 
 }
 bool RCSC::CMRCSLogicB() 
 {
-	return (Sat->RCSLogicMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CMRCSLogicSwitch.IsUp(); 
+	return (Sat->RCSLogicMnBCircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CMRCSLogicSwitch.IsUp(); 
 }
 
 bool RCSC::CMPropellantDumpLogicA() 
@@ -347,12 +347,12 @@ bool RCSC::CMPropellantPurgeLogicB()
 
 bool RCSC::CMRCSHeDumpLogicA() 
 { 
-	return (Sat->RCSLogicMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CmRcsHeDumpSwitch.GetState(); 
+	return (Sat->RCSLogicMnACircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CmRcsHeDumpSwitch.GetState(); 
 }
 
 bool RCSC::CMRCSHeDumpLogicB() 
 { 
-	return (Sat->RCSLogicMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CmRcsHeDumpSwitch.GetState(); 
+	return (Sat->RCSLogicMnBCircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE) && Sat->CmRcsHeDumpSwitch.GetState(); 
 }
 
 bool RCSC::GetCMTransferMotor(bool IsSystemA)
@@ -364,12 +364,12 @@ bool RCSC::GetCMTransferMotor(bool IsSystemA)
 
 bool RCSC::GetCMRCSHeatersA()
 {
-	return (CMRCSHeatersA && Sat->CMHeater1MnACircuitBraker.IsPowered());
+	return (CMRCSHeatersA && Sat->CMHeater1MnACircuitBreaker.IsPowered());
 }
 
 bool RCSC::GetCMRCSHeatersB()
 {
-	return (CMRCSHeatersB && Sat->CMHeater2MnBCircuitBraker.IsPowered());
+	return (CMRCSHeatersB && Sat->CMHeater2MnBCircuitBreaker.IsPowered());
 }
 
 bool RCSC::GetCMRCSDumpA()
@@ -536,7 +536,7 @@ void MESC::Init(Saturn *v, DCbus *LogicBus, DCbus *PyroBus, MissionTimer *MT, Th
 	//oapiAnnotationSetPos(MESCDisplay, 0, 0.1, 0.33, 1);
 }
 
-void MESC::CBInit(CircuitBrakerSwitch *SECSLogic, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch *RCSLogicCB, CircuitBrakerSwitch *ELSBatteryCB, CircuitBrakerSwitch *EDSBreaker)
+void MESC::CBInit(CircuitBreakerSwitch *SECSLogic, CircuitBreakerSwitch *SECSArm, CircuitBreakerSwitch *RCSLogicCB, CircuitBreakerSwitch *ELSBatteryCB, CircuitBreakerSwitch *EDSBreaker)
 {
 	SECSLogicBreaker = SECSLogic;
 	SECSArmBreaker = SECSArm;
@@ -602,7 +602,7 @@ void MESC::Timestep(double simdt)
 		}
 		else
 		{
-			EDSLogicBreaker = &Sat->EDS2BatCCircuitBraker;
+			EDSLogicBreaker = &Sat->EDS2BatCCircuitBreaker;
 		}
 
 		//EDS Auto Abort
@@ -1340,7 +1340,7 @@ LDEC::LDEC():
 	SMSector1LogicPowerBreaker = NULL;
 }
 
-void LDEC::Init(Saturn *v, MESC* connectedMESC, CircuitBrakerSwitch *SECSArm, CircuitBrakerSwitch* DockProbe,ThreePosSwitch *DockingProbeRetract, ToggleSwitch *PyroArmSw, DCbus *PyroB, PowerMerge *PyroBusFeed)
+void LDEC::Init(Saturn *v, MESC* connectedMESC, CircuitBreakerSwitch *SECSArm, CircuitBreakerSwitch* DockProbe,ThreePosSwitch *DockingProbeRetract, ToggleSwitch *PyroArmSw, DCbus *PyroB, PowerMerge *PyroBusFeed)
 {
 	Sat = v;
 	mesc = connectedMESC;
@@ -1352,7 +1352,7 @@ void LDEC::Init(Saturn *v, MESC* connectedMESC, CircuitBrakerSwitch *SECSArm, Ci
 	PyroBusFeeder = PyroBusFeed;
 }
 
-void LDEC::InitSIMJett(CircuitBrakerSwitch *SMSec1Power)
+void LDEC::InitSIMJett(CircuitBreakerSwitch *SMSec1Power)
 {
 	SMSector1LogicPowerBreaker = SMSec1Power;
 }
@@ -1526,14 +1526,14 @@ void SECS::ControlVessel(Saturn *v)
 void SECS::Realize()
 {
 	MESCA.Init(Sat, &Sat->SECSLogicBusA, &Sat->PyroBusA, &Sat->MissionTimer306Display, &Sat->MissionTimer306Switch, &Sat->EventTimer306Display, &Sat->EventTimerControl306Switch, &MESCB, true);
-	MESCA.CBInit(&Sat->SECSLogicBatACircuitBraker, &Sat->SECSArmBatACircuitBraker, &Sat->RCSLogicMnACircuitBraker, &Sat->ELSBatACircuitBraker, &Sat->EDS1BatACircuitBraker);
+	MESCA.CBInit(&Sat->SECSLogicBatACircuitBreaker, &Sat->SECSArmBatACircuitBreaker, &Sat->RCSLogicMnACircuitBreaker, &Sat->ELSBatACircuitBreaker, &Sat->EDS1BatACircuitBreaker);
 	MESCB.Init(Sat, &Sat->SECSLogicBusB, &Sat->PyroBusB, &Sat->MissionTimerDisplay, &Sat->MissionTimerSwitch, &Sat->EventTimerDisplay, &Sat->EventTimerContSwitch, &MESCA, false);
-	MESCB.CBInit(&Sat->SECSLogicBatBCircuitBraker, &Sat->SECSArmBatBCircuitBraker, &Sat->RCSLogicMnBCircuitBraker, &Sat->ELSBatBCircuitBraker, &Sat->EDS3BatBCircuitBraker);
-	LDECA.Init(Sat, &MESCA, &Sat->SECSArmBatACircuitBraker, &Sat->DockProbeMnACircuitBraker, &Sat->DockingProbeRetractPrimSwitch, &Sat->PyroArmASwitch, &Sat->PyroBusA, &Sat->PyroBusAFeeder);
-	LDECB.Init(Sat, &MESCB, &Sat->SECSArmBatBCircuitBraker, &Sat->DockProbeMnBCircuitBraker, &Sat->DockingProbeRetractSecSwitch, &Sat->PyroArmBSwitch, &Sat->PyroBusB, &Sat->PyroBusBFeeder);
+	MESCB.CBInit(&Sat->SECSLogicBatBCircuitBreaker, &Sat->SECSArmBatBCircuitBreaker, &Sat->RCSLogicMnBCircuitBreaker, &Sat->ELSBatBCircuitBreaker, &Sat->EDS3BatBCircuitBreaker);
+	LDECA.Init(Sat, &MESCA, &Sat->SECSArmBatACircuitBreaker, &Sat->DockProbeMnACircuitBreaker, &Sat->DockingProbeRetractPrimSwitch, &Sat->PyroArmASwitch, &Sat->PyroBusA, &Sat->PyroBusAFeeder);
+	LDECB.Init(Sat, &MESCB, &Sat->SECSArmBatBCircuitBreaker, &Sat->DockProbeMnBCircuitBreaker, &Sat->DockingProbeRetractSecSwitch, &Sat->PyroArmBSwitch, &Sat->PyroBusB, &Sat->PyroBusBFeeder);
 }
 
-void SECS::InitSIMJett(CircuitBrakerSwitch *SMSec1PowerA, CircuitBrakerSwitch *SMSec1PowerB)
+void SECS::InitSIMJett(CircuitBreakerSwitch *SMSec1PowerA, CircuitBreakerSwitch *SMSec1PowerB)
 {
 	LDECA.InitSIMJett(SMSec1PowerA);
 	LDECB.InitSIMJett(SMSec1PowerB);
@@ -1586,11 +1586,11 @@ void SECS::Timestep(double simt, double simdt)
 	if (Sat->SIVBPayloadSepSwitch.IsUp()) {
 		if (LDECA.GetLMSLASeparationInitiate() && LDECB.GetLMSLASeparationInitiate())
 		{
-			if (Sat->SIVBLMSepPyroACircuitBraker.IsPowered()) {
+			if (Sat->SIVBLMSepPyroACircuitBreaker.IsPowered()) {
 				// Blow Pyro A
 				pyroA = true;
 			}
-			if (Sat->SIVBLMSepPyroBCircuitBraker.IsPowered()) {
+			if (Sat->SIVBLMSepPyroBCircuitBreaker.IsPowered()) {
 				// Blow Pyro B
 				pyroB = true;
 			}
@@ -1727,7 +1727,7 @@ void SECS::Timestep(double simt, double simdt)
 
 bool SECS::IsLogicPoweredAndArmedA() {
 
-	if (Sat->SECSArmBatACircuitBraker.IsPowered() && (Sat->SECSLogicBusA.Voltage() > SP_MIN_DCVOLTAGE))
+	if (Sat->SECSArmBatACircuitBreaker.IsPowered() && (Sat->SECSLogicBusA.Voltage() > SP_MIN_DCVOLTAGE))
 		return true;
 
 	return false;
@@ -1735,7 +1735,7 @@ bool SECS::IsLogicPoweredAndArmedA() {
 
 bool SECS::IsLogicPoweredAndArmedB() {
 
-	if (Sat->SECSArmBatBCircuitBraker.IsPowered() && (Sat->SECSLogicBusB.Voltage() > SP_MIN_DCVOLTAGE))
+	if (Sat->SECSArmBatBCircuitBreaker.IsPowered() && (Sat->SECSLogicBusB.Voltage() > SP_MIN_DCVOLTAGE))
 		return true;
 
 	return false;
@@ -1986,7 +1986,7 @@ ELSC::ELSC():
 	//ELSCDisplay = NULL;
 }
 
-void ELSC::Init(Saturn *v, CircuitBrakerSwitch *ELSBatteryCB, MESC* ConnectedMESC, ELSC *OtherELSCSystem)
+void ELSC::Init(Saturn *v, CircuitBreakerSwitch *ELSBatteryCB, MESC* ConnectedMESC, ELSC *OtherELSCSystem)
 {
 	ELSBatteryBreaker = ELSBatteryCB;
 	mesc = ConnectedMESC;
@@ -2154,8 +2154,8 @@ void ELS::ControlVessel(Saturn *v)
 	Sat = v;
 	BaroSwitch10k.ControlVessel(Sat);
 	BaroSwitch24k.ControlVessel(Sat);
-	ELSCA.Init(Sat, &Sat->ELSBatACircuitBraker, &Sat->secs.MESCA, &ELSCB);
-	ELSCB.Init(Sat, &Sat->ELSBatBCircuitBraker, &Sat->secs.MESCB, &ELSCA);
+	ELSCA.Init(Sat, &Sat->ELSBatACircuitBreaker, &Sat->secs.MESCA, &ELSCB);
+	ELSCB.Init(Sat, &Sat->ELSBatBCircuitBreaker, &Sat->secs.MESCB, &ELSCA);
 	pcvb.Init(Sat);
 }
 
@@ -2211,11 +2211,11 @@ void ELS::Timestep(double simt, double simdt)
 
 	pyroA = false, pyroB = false;
 
-	if (pcvb.GetMainChuteReleaseA() && Sat->MainReleasePyroACircuitBraker.IsPowered()) {
+	if (pcvb.GetMainChuteReleaseA() && Sat->MainReleasePyroACircuitBreaker.IsPowered()) {
 		// Blow Pyro A
 		pyroA = true;
 	}
-	if (pcvb.GetMainChuteReleaseB() && Sat->MainReleasePyroBCircuitBraker.IsPowered()) {
+	if (pcvb.GetMainChuteReleaseB() && Sat->MainReleasePyroBCircuitBreaker.IsPowered()) {
 		// Blow Pyro B
 		pyroB = true;
 	}
@@ -2251,9 +2251,9 @@ void ELS::Timestep(double simt, double simdt)
 		}
 
 		// Float Bag sizes
-		FloatBag1Size = NewFloatBagSize(FloatBag1Size, &Sat->FloatBagSwitch1, &Sat->FloatBag1BatACircuitBraker, simdt);
-		FloatBag2Size = NewFloatBagSize(FloatBag2Size, &Sat->FloatBagSwitch2, &Sat->FloatBag2BatBCircuitBraker, simdt);
-		FloatBag3Size = NewFloatBagSize(FloatBag3Size, &Sat->FloatBagSwitch3, &Sat->FloatBag3FLTPLCircuitBraker, simdt);
+		FloatBag1Size = NewFloatBagSize(FloatBag1Size, &Sat->FloatBagSwitch1, &Sat->FloatBag1BatACircuitBreaker, simdt);
+		FloatBag2Size = NewFloatBagSize(FloatBag2Size, &Sat->FloatBagSwitch2, &Sat->FloatBag2BatBCircuitBreaker, simdt);
+		FloatBag3Size = NewFloatBagSize(FloatBag3Size, &Sat->FloatBagSwitch3, &Sat->FloatBag3FLTPLCircuitBreaker, simdt);
 		FloatBagVessel->SetBagSize(1, FloatBag1Size);
 		FloatBagVessel->SetBagSize(2, FloatBag2Size);
 		FloatBagVessel->SetBagSize(3, FloatBag3Size);
@@ -2263,7 +2263,7 @@ void ELS::Timestep(double simt, double simdt)
 			// Extend beacon automatically
 			FloatBagVessel->ExtendBeacon();
 			// Control the light
-			if (Sat->FloatBag3FLTPLCircuitBraker.Voltage() < SP_MIN_DCVOLTAGE || Sat->PostLandingBCNLTSwitch.IsCenter()) {
+			if (Sat->FloatBag3FLTPLCircuitBreaker.Voltage() < SP_MIN_DCVOLTAGE || Sat->PostLandingBCNLTSwitch.IsCenter()) {
 				FloatBagVessel->SetBeaconLight(false, false);
 			} else if (Sat->PostLandingBCNLTSwitch.IsDown()) {
 				FloatBagVessel->SetBeaconLight(true, false);
@@ -2275,7 +2275,7 @@ void ELS::Timestep(double simt, double simdt)
 		// Dye marker
 		if (Sat->GetStage() >= CM_ENTRY_STAGE_SEVEN && DyeMarkerTime > 0) {
 			// Turned on?			
-			if (Sat->FloatBag3FLTPLCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && Sat->PostLandingDYEMarkerSwitch.IsUp()) { 
+			if (Sat->FloatBag3FLTPLCircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE && Sat->PostLandingDYEMarkerSwitch.IsUp()) { 
 				DyeMarkerLevel = 1;
 				DyeMarkerTime -= simdt;
 			} else {
@@ -2287,14 +2287,14 @@ void ELS::Timestep(double simt, double simdt)
 	}
 }
 
-double ELS::NewFloatBagSize(double size, ThreePosSwitch *sw, CircuitBrakerSwitch *cb, double simdt) 
+double ELS::NewFloatBagSize(double size, ThreePosSwitch *sw, CircuitBreakerSwitch *cb, double simdt) 
 
 {
 	if (cb->Voltage() > SP_MIN_DCVOLTAGE) {
 		if (sw->IsDown()) {
 			size -= simdt / (7. * 60.);	// same as fill? 
 			size = max(0, size);
-		} else if (sw->IsUp() && (Sat->UprightingSystemCompressor1CircuitBraker.IsPowered() || Sat->UprightingSystemCompressor1CircuitBraker.IsPowered())) {
+		} else if (sw->IsUp() && (Sat->UprightingSystemCompressor1CircuitBreaker.IsPowered() || Sat->UprightingSystemCompressor1CircuitBreaker.IsPowered())) {
 			size += simdt / (7. * 60.);	// Apollo 15 entry checklist
 			size = min(1, size);
 		}
@@ -2307,38 +2307,38 @@ void ELS::SystemTimestep(double simdt)
 {
 	// Float bag compressor 1
 	bool comp = false;
-	if (Sat->FloatBag1BatACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && Sat->FloatBagSwitch1.IsUp()) {
+	if (Sat->FloatBag1BatACircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE && Sat->FloatBagSwitch1.IsUp()) {
 		comp = true;
 	}
 
 	// Float bag compressor 2 
-	if ((Sat->FloatBag2BatBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && Sat->FloatBagSwitch2.IsUp()) ||
-		(Sat->FloatBag3FLTPLCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE && Sat->FloatBagSwitch3.IsUp())) {
+	if ((Sat->FloatBag2BatBCircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE && Sat->FloatBagSwitch2.IsUp()) ||
+		(Sat->FloatBag3FLTPLCircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE && Sat->FloatBagSwitch3.IsUp())) {
 		comp = true;
 	}
 
 	if (comp) {
-		if (Sat->UprightingSystemCompressor1CircuitBraker.IsPowered()) {
-			Sat->UprightingSystemCompressor1CircuitBraker.DrawPower(424); // Systems handbook
+		if (Sat->UprightingSystemCompressor1CircuitBreaker.IsPowered()) {
+			Sat->UprightingSystemCompressor1CircuitBreaker.DrawPower(424); // Systems handbook
 		}
-		if (Sat->UprightingSystemCompressor2CircuitBraker.IsPowered()) {
-			Sat->UprightingSystemCompressor2CircuitBraker.DrawPower(424); // Systems handbook
+		if (Sat->UprightingSystemCompressor2CircuitBreaker.IsPowered()) {
+			Sat->UprightingSystemCompressor2CircuitBreaker.DrawPower(424); // Systems handbook
 		}
 	}
 
 	// Beacon light
-	if (Sat->GetStage() >= CM_ENTRY_STAGE_SIX && Sat->FloatBag3FLTPLCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE) {
+	if (Sat->GetStage() >= CM_ENTRY_STAGE_SIX && Sat->FloatBag3FLTPLCircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE) {
 		// LO/HI
 		if (Sat->PostLandingBCNLTSwitch.IsDown()) {
-			Sat->FloatBag3FLTPLCircuitBraker.DrawPower(10);	// guessed
+			Sat->FloatBag3FLTPLCircuitBreaker.DrawPower(10);	// guessed
 		} else if (Sat->PostLandingBCNLTSwitch.IsUp()) {
-			Sat->FloatBag3FLTPLCircuitBraker.DrawPower(40);	// guessed
+			Sat->FloatBag3FLTPLCircuitBreaker.DrawPower(40);	// guessed
 		}
 	}
 
 	// Dye marker
 	if (DyeMarkerLevel == 1) {
-		Sat->FloatBag3FLTPLCircuitBraker.DrawPower(10);	// guessed
+		Sat->FloatBag3FLTPLCircuitBreaker.DrawPower(10);	// guessed
 	}
 }
 

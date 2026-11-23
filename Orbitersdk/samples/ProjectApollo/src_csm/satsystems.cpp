@@ -72,9 +72,9 @@ void Saturn::SystemsInit() {
 	Inverter2 = (ACInverter *) Panelsdk.GetPointerByString("ELECTRIC:INV_2");
 	Inverter3 = (ACInverter *) Panelsdk.GetPointerByString("ELECTRIC:INV_3");
 
-	Inverter1->WireTo(&InverterControl1CircuitBraker);
-	Inverter2->WireTo(&InverterControl2CircuitBraker);
-	Inverter3->WireTo(&InverterControl3CircuitBraker);	
+	Inverter1->WireTo(&InverterControl1CircuitBreaker);
+	Inverter2->WireTo(&InverterControl2CircuitBreaker);
+	Inverter3->WireTo(&InverterControl3CircuitBreaker);	
 
 	//
 	// AC Bus 1
@@ -239,8 +239,8 @@ void Saturn::SystemsInit() {
 	// Wire battery buses to batteries.
 	//
 
-	BatteryBusA.WireToBuses(&BatAPWRCircuitBraker, &BatCtoBatBusACircuitBraker);
-	BatteryBusB.WireToBuses(&BatBPWRCircuitBraker, &BatCtoBatBusBCircuitBraker);
+	BatteryBusA.WireToBuses(&BatAPWRCircuitBreaker, &BatCtoBatBusACircuitBreaker);
+	BatteryBusB.WireToBuses(&BatBPWRCircuitBreaker, &BatCtoBatBusBCircuitBreaker);
 
 	//
 	// Pyro devices.
@@ -250,8 +250,8 @@ void Saturn::SystemsInit() {
 	PyroBatteryB = (Battery *) Panelsdk.GetPointerByString("ELECTRIC:BATTERY_PYRO_B");
 
 	// Pyro buses and its feeders
-	PyroBusAFeeder.WireToBuses(&PyroASeqACircuitBraker, &BatBusAToPyroBusTieCircuitBraker);
-	PyroBusBFeeder.WireToBuses(&PyroBSeqBCircuitBraker, &BatBusBToPyroBusTieCircuitBraker);	
+	PyroBusAFeeder.WireToBuses(&PyroASeqACircuitBreaker, &BatBusAToPyroBusTieCircuitBreaker);
+	PyroBusBFeeder.WireToBuses(&PyroBSeqBCircuitBreaker, &BatBusBToPyroBusTieCircuitBreaker);	
 	Panelsdk.AddElectrical(&PyroBusA, false);
 	Panelsdk.AddElectrical(&PyroBusB, false);
 
@@ -275,7 +275,7 @@ void Saturn::SystemsInit() {
 	// Battery relay bus
 	//
 
-	BatteryRelayBus.WireToBuses(&BATRLYBusBatACircuitBraker, &BATRLYBusBatBCircuitBraker);
+	BatteryRelayBus.WireToBuses(&BATRLYBusBatACircuitBreaker, &BATRLYBusBatBCircuitBreaker);
 
 	//
 	// Main Buses
@@ -289,11 +289,11 @@ void Saturn::SystemsInit() {
 	MainBusB->WireTo(MainBusBController.GetBusSource());
 
 	MainBusAController.Init(FuelCells[0], FuelCells[1], FuelCells[2],
-		                    &MainABatBusACircuitBraker, &MainABatCCircuitBraker, eo,
+		                    &MainABatBusACircuitBreaker, &MainABatCCircuitBreaker, eo,
 							&FuelCell1BusContCB, &FuelCell2BusContCB, &FuelCell3BusContCB);	
 
 	MainBusBController.Init(FuelCells[0], FuelCells[1], FuelCells[2],
-		                    &MainBBatBusBCircuitBraker, &MainBBatCCircuitBraker, eo,
+		                    &MainBBatBusBCircuitBreaker, &MainBBatCCircuitBreaker, eo,
 							&FuelCell1BusContCB, &FuelCell2BusContCB, &FuelCell3BusContCB);
 	
 	MainBusAController.ConnectFuelCell(2, true);	// Default state of MainBusASwitch2
@@ -306,21 +306,21 @@ void Saturn::SystemsInit() {
 	FlightBus.WireTo(&FlightBusFeeder);
 	Panelsdk.AddElectrical(&FlightBus, false);
 
-	CMCDCBusFeeder.WireToBuses(&GNComputerMnACircuitBraker, &GNComputerMnBCircuitBraker);
+	CMCDCBusFeeder.WireToBuses(&GNComputerMnACircuitBreaker, &GNComputerMnBCircuitBreaker);
 
 
 	// Feeder for LM umbilical
-	LMUmbilicalFeeder.WireToBuses(&MnbLMPWR1CircuitBraker,&MnbLMPWR2CircuitBraker);
+	LMUmbilicalFeeder.WireToBuses(&MnbLMPWR1CircuitBreaker,&MnbLMPWR2CircuitBreaker);
 
 	//
 	// Flight/Post Landing Bus and its feeder
 	//
 
-	FlightPostLandingBusFeeder.WireToBus(1, &FlightPostLandingMainACircuitBraker);
-	FlightPostLandingBusFeeder.WireToBus(2, &FlightPostLandingMainBCircuitBraker);
-	FlightPostLandingBusFeeder.WireToBus(3, &FlightPostLandingBatBusACircuitBraker);
-	FlightPostLandingBusFeeder.WireToBus(4, &FlightPostLandingBatBusBCircuitBraker);
-	FlightPostLandingBusFeeder.WireToBus(5, &FlightPostLandingBatCCircuitBraker);
+	FlightPostLandingBusFeeder.WireToBus(1, &FlightPostLandingMainACircuitBreaker);
+	FlightPostLandingBusFeeder.WireToBus(2, &FlightPostLandingMainBCircuitBreaker);
+	FlightPostLandingBusFeeder.WireToBus(3, &FlightPostLandingBatBusACircuitBreaker);
+	FlightPostLandingBusFeeder.WireToBus(4, &FlightPostLandingBatBusBCircuitBreaker);
+	FlightPostLandingBusFeeder.WireToBus(5, &FlightPostLandingBatCCircuitBreaker);
 	FlightPostLandingBus.WireTo(&FlightPostLandingBusFeeder);
 	Panelsdk.AddElectrical(&FlightPostLandingBus, false);
 
@@ -329,24 +329,24 @@ void Saturn::SystemsInit() {
 	//
 
 	BatteryCharger.Init(EntryBatteryA, EntryBatteryB, EntryBatteryC,
-		                &BatteryChargerBatACircuitBraker, &BatteryChargerBatBCircuitBraker, &BatCCHRGCircuitBraker,
-						&BatteryChargerMnACircuitBraker, &BatteryChargerMnBCircuitBraker, &BatteryChargerAcPwrCircuitBraker,
-						&BatCPWRCircuitBraker);
+		                &BatteryChargerBatACircuitBreaker, &BatteryChargerBatBCircuitBreaker, &BatCCHRGCircuitBreaker,
+						&BatteryChargerMnACircuitBreaker, &BatteryChargerMnBCircuitBreaker, &BatteryChargerAcPwrCircuitBreaker,
+						&BatCPWRCircuitBreaker);
 
-	EntryBatteryA->WireTo(&BatteryChargerBatACircuitBraker);
-	EntryBatteryB->WireTo(&BatteryChargerBatBCircuitBraker);
+	EntryBatteryA->WireTo(&BatteryChargerBatACircuitBreaker);
+	EntryBatteryB->WireTo(&BatteryChargerBatBCircuitBreaker);
 
-	BatCPWRCircuitBraker.WireTo(DiodeBatC);
-	BatCCHRGCircuitBraker.WireTo(&BatCPWRCircuitBraker);
+	BatCPWRCircuitBreaker.WireTo(DiodeBatC);
+	BatCCHRGCircuitBreaker.WireTo(&BatCPWRCircuitBreaker);
 
 	//
 	// SCS Logic Buses
 	//
 
-	SCSLogicBus1Feeder.WireToBuses(&LogicBus12MnACircuitBraker, &LogicBus14MnBCircuitBraker);
-	SCSLogicBus2Feeder.WireToBuses(&LogicBus23MnBCircuitBraker, &LogicBus12MnACircuitBraker);
-	SCSLogicBus3Feeder.WireToBuses(&LogicBus23MnBCircuitBraker, &LogicBus34MnACircuitBraker);
-	SCSLogicBus4Feeder.WireToBuses(&LogicBus14MnBCircuitBraker, &LogicBus34MnACircuitBraker);
+	SCSLogicBus1Feeder.WireToBuses(&LogicBus12MnACircuitBreaker, &LogicBus14MnBCircuitBreaker);
+	SCSLogicBus2Feeder.WireToBuses(&LogicBus23MnBCircuitBreaker, &LogicBus12MnACircuitBreaker);
+	SCSLogicBus3Feeder.WireToBuses(&LogicBus23MnBCircuitBreaker, &LogicBus34MnACircuitBreaker);
+	SCSLogicBus4Feeder.WireToBuses(&LogicBus14MnBCircuitBreaker, &LogicBus34MnACircuitBreaker);
 	SCSLogicBus1.WireTo(&SCSLogicBus1Feeder);
 	SCSLogicBus4.WireTo(&SCSLogicBus4Feeder);
 	Panelsdk.AddElectrical(&SCSLogicBus1, false);
@@ -383,8 +383,8 @@ void Saturn::SystemsInit() {
 	//
 
 	CSMCabin = (h_Tank*)Panelsdk.GetPointerByString("HYDRAULIC:CABIN");
-	CabinFan1Feeder.WireToBuses(&ECSCabinFanAC1ACircuitBraker, &ECSCabinFanAC1BCircuitBraker, &ECSCabinFanAC1CCircuitBraker);
-	CabinFan2Feeder.WireToBuses(&ECSCabinFanAC2ACircuitBraker, &ECSCabinFanAC2BCircuitBraker, &ECSCabinFanAC2CCircuitBraker);
+	CabinFan1Feeder.WireToBuses(&ECSCabinFanAC1ACircuitBreaker, &ECSCabinFanAC1BCircuitBreaker, &ECSCabinFanAC1CCircuitBreaker);
+	CabinFan2Feeder.WireToBuses(&ECSCabinFanAC2ACircuitBreaker, &ECSCabinFanAC2BCircuitBreaker, &ECSCabinFanAC2CCircuitBreaker);
 
 	PrimCabinHeatExchanger = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMCABINHEATEXCHANGER");
 	PrimSuitHeatExchanger = (h_HeatExchanger *) Panelsdk.GetPointerByString("HYDRAULIC:PRIMSUITHEATEXCHANGER");
@@ -400,8 +400,8 @@ void Saturn::SystemsInit() {
 
 	PrimGlycolPump1 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP1");
 	PrimGlycolPump2 = (Pump *)Panelsdk.GetPointerByString("ELECTRIC:PRIMGLYCOLPUMP2");
-	GlycolPump1Feeder.WireToBuses(&ECSGlycolPumpsAc1ACircuitBraker, &ECSGlycolPumpsAc1BCircuitBraker, &ECSGlycolPumpsAc1CCircuitBraker);
-	GlycolPump2Feeder.WireToBuses(&ECSGlycolPumpsAc2ACircuitBraker, &ECSGlycolPumpsAc2BCircuitBraker, &ECSGlycolPumpsAc2CCircuitBraker);
+	GlycolPump1Feeder.WireToBuses(&ECSGlycolPumpsAc1ACircuitBreaker, &ECSGlycolPumpsAc1BCircuitBreaker, &ECSGlycolPumpsAc1CCircuitBreaker);
+	GlycolPump2Feeder.WireToBuses(&ECSGlycolPumpsAc2ACircuitBreaker, &ECSGlycolPumpsAc2BCircuitBreaker, &ECSGlycolPumpsAc2CCircuitBreaker);
 	
 	CabinHeater = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:CABINHEATER");
 	
@@ -415,8 +415,8 @@ void Saturn::SystemsInit() {
 	SuitCompressor2 = (AtmRegen *) Panelsdk.GetPointerByString("ELECTRIC:SUITCOMPRESSORCO2ABSORBER2");
 	SuitCompressor2->WireTo(&SuitCompressor2Switch);
 
-	SuitCompressor1Feeder.WireToBuses(&SuitCompressorsAc1ACircuitBraker, &SuitCompressorsAc1BCircuitBraker, &SuitCompressorsAc1CCircuitBraker);
-	SuitCompressor2Feeder.WireToBuses(&SuitCompressorsAc2ACircuitBraker, &SuitCompressorsAc2BCircuitBraker, &SuitCompressorsAc2CCircuitBraker);
+	SuitCompressor1Feeder.WireToBuses(&SuitCompressorsAc1ACircuitBreaker, &SuitCompressorsAc1BCircuitBreaker, &SuitCompressorsAc1CCircuitBreaker);
+	SuitCompressor2Feeder.WireToBuses(&SuitCompressorsAc2ACircuitBreaker, &SuitCompressorsAc2BCircuitBreaker, &SuitCompressorsAc2CCircuitBreaker);
 
 	eo = (e_object *) Panelsdk.GetPointerByString("ELECTRIC:SECGLYCOLPUMP");
 	eo->WireTo(&SecCoolantLoopPumpSwitch);
@@ -434,12 +434,12 @@ void Saturn::SystemsInit() {
 	CabinPressureReliefValve1.Init((h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFVALVE1"), 
 		                           (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFINLET1"), 
 								   this, &CabinPressureReliefLever1, &PostLDGVentValveLever, &PostLandingVentSwitch, 
-								   &FLTPLCircuitBraker, &SideHatch);
+								   &FLTPLCircuitBreaker, &SideHatch);
 	
 	CabinPressureReliefValve2.Init((h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFVALVE2"), 
 		                           (h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:CABINPRESSURERELIEFINLET2"), 
 								   this, &CabinPressureReliefLever2, &PostLDGVentValveLever, &PostLandingVentSwitch, 
-								   &FLTPLCircuitBraker, &SideHatch);
+								   &FLTPLCircuitBreaker, &SideHatch);
 	
 	SuitCircuitReturnValve.Init((h_Pipe *) Panelsdk.GetPointerByString("HYDRAULIC:SUITCIRCUITRETURNINLET"), &SuitCircuitReturnValveLever);
 	
@@ -476,24 +476,24 @@ void Saturn::SystemsInit() {
 	// Wire up internal systems.
 	//
 
-	cws.WireTo(&CWMnaCircuitBraker, &CWMnbCircuitBraker);
-	agc.WirePower(&GNComputerMnACircuitBraker, &GNComputerMnBCircuitBraker);
+	cws.WireTo(&CWMnaCircuitBreaker, &CWMnbCircuitBreaker);
+	agc.WirePower(&GNComputerMnACircuitBreaker, &GNComputerMnBCircuitBreaker);
 	agc.SetDSKY2(&dsky2);
-	imu.WireToBuses(&GNIMUMnACircuitBraker, &GNIMUMnBCircuitBraker, &GNPowerIMUSwitch);
-	imu.WireHeaterToBuses((Boiler *) Panelsdk.GetPointerByString("ELECTRIC:IMUHEATER"), &GNIMUHTRMnACircuitBraker, &GNIMUHTRMnBCircuitBraker);
-	dockingprobe.WireTo(&DockProbeMnACircuitBraker, &DockProbeMnBCircuitBraker);   
+	imu.WireToBuses(&GNIMUMnACircuitBreaker, &GNIMUMnBCircuitBreaker, &GNPowerIMUSwitch);
+	imu.WireHeaterToBuses((Boiler *) Panelsdk.GetPointerByString("ELECTRIC:IMUHEATER"), &GNIMUHTRMnACircuitBreaker, &GNIMUHTRMnBCircuitBreaker);
+	dockingprobe.WireTo(&DockProbeMnACircuitBreaker, &DockProbeMnBCircuitBreaker);   
 
 	// SCS initialization
-	bmag1.Init(1, this, &SystemMnACircuitBraker, &StabContSystemAc1CircuitBraker, (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:BMAGHEATER1"));
-	bmag2.Init(2, this, &SystemMnBCircuitBraker, &StabContSystemAc2CircuitBraker, (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:BMAGHEATER2"));
+	bmag1.Init(1, this, &SystemMnACircuitBreaker, &StabContSystemAc1CircuitBreaker, (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:BMAGHEATER1"));
+	bmag2.Init(2, this, &SystemMnBCircuitBreaker, &StabContSystemAc2CircuitBreaker, (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:BMAGHEATER2"));
 	gdc.Init(this);
 	ascp.Init(this);
 	eda.Init(this);
 	rjec.Init(this);
 	eca.Init(this);
 	tvsa.Init(this);
-	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
-	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch, &ORDEALLightingSwitch);
+	ems.Init(this, &EMSMnACircuitBreaker, &EMSMnBCircuitBreaker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
+	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBreaker, &OrdealMnBCircuitBreaker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch, &ORDEALLightingSwitch);
 	mechanicalAccelerometer.Init(this);
 
 	qball.Init(this);
@@ -517,12 +517,12 @@ void Saturn::SystemsInit() {
 	//Instrumentation
 	sce.Init(this);
 
-	InstrumentationPowerFeeder.WireToBuses(&InstrumentLightingESSMnACircuitBraker, &InstrumentLightingESSMnBCircuitBraker);
-	ECSPressGroups1Feeder.WireToBuses(&ECSTransducerPressGroup1MnACircuitBraker, &ECSTransducerPressGroup1MnBCircuitBraker);
-	ECSPressGroups2Feeder.WireToBuses(&ECSTransducerPressGroup2MnACircuitBraker, &ECSTransducerPressGroup2MnBCircuitBraker);
-	ECSTempTransducerFeeder.WireToBuses(&ECSTransducerTempMnACircuitBraker, &ECSTransducerTempMnBCircuitBraker);
-	ECSWastePotTransducerFeeder.WireToBuses(&ECSTransducerWastePOTH2OMnACircuitBraker, &ECSTransducerWastePOTH2OMnBCircuitBraker);
-	ECSSecTransducersFeeder.WireToBuses(&ECSSecCoolLoopXducersMnACircuitBraker, &ECSSecCoolLoopXducersMnBCircuitBraker);
+	InstrumentationPowerFeeder.WireToBuses(&InstrumentLightingESSMnACircuitBreaker, &InstrumentLightingESSMnBCircuitBreaker);
+	ECSPressGroups1Feeder.WireToBuses(&ECSTransducerPressGroup1MnACircuitBreaker, &ECSTransducerPressGroup1MnBCircuitBreaker);
+	ECSPressGroups2Feeder.WireToBuses(&ECSTransducerPressGroup2MnACircuitBreaker, &ECSTransducerPressGroup2MnBCircuitBreaker);
+	ECSTempTransducerFeeder.WireToBuses(&ECSTransducerTempMnACircuitBreaker, &ECSTransducerTempMnBCircuitBreaker);
+	ECSWastePotTransducerFeeder.WireToBuses(&ECSTransducerWastePOTH2OMnACircuitBreaker, &ECSTransducerWastePOTH2OMnBCircuitBreaker);
+	ECSSecTransducersFeeder.WireToBuses(&ECSSecCoolLoopXducersMnACircuitBreaker, &ECSSecCoolLoopXducersMnBCircuitBreaker);
 
 	H2Tank1TempSensor.Init(&CryogenicQTYAmpl1CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK1"));
 	H2Tank2TempSensor.Init(&CryogenicQTYAmpl2CB, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:H2TANK2"));
@@ -581,9 +581,9 @@ void Saturn::SystemsInit() {
 	SecGlycolAccumQtySensor.Init(&ECSSecTransducersFeeder, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECGLYCOLACCUMULATOR"));
 	SecEvapOutSteamPressSensor.Init(&ECSSecTransducersFeeder, (h_Evaporator *)Panelsdk.GetPointerByString("HYDRAULIC:SECEVAPORATOR"));
 	PriEvapInletTempSensor.Init(&Panel276CB2, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMEVAPORATORINLET"));
-	PriRadInTempSensor.Init(&CONTHTRSMnBCircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET"));
-	SecRadInTempSensor.Init(&ECSSecCoolLoopRADHTRMnACircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATORINLET"));
-	SecRadOutTempSensor.Init(&ECSSecCoolLoopRADHTRMnACircuitBraker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATOROUTLET"));
+	PriRadInTempSensor.Init(&CONTHTRSMnBCircuitBreaker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:PRIMRADIATORINLET"));
+	SecRadInTempSensor.Init(&ECSSecCoolLoopRADHTRMnACircuitBreaker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATORINLET"));
+	SecRadOutTempSensor.Init(&ECSSecCoolLoopRADHTRMnACircuitBreaker, (h_Tank *)Panelsdk.GetPointerByString("HYDRAULIC:SECRADIATOROUTLET"));
 	
 	CMRCSEngine12TempSensor.Init(&Panel276CB1, (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSROLLJET12"));
 	CMRCSEngine14TempSensor.Init(&Panel276CB2, (h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCHJET14"));
@@ -603,12 +603,12 @@ void Saturn::SystemsInit() {
 	optics.Init(this);
 
 	// SPS initialization
-	SPSPropellant.Init(&GaugingMnACircuitBraker, &GaugingMnBCircuitBraker, &SPSGaugingSwitch, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERINJECTORFLANGE"), (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELINJECTORFLANGE"));
+	SPSPropellant.Init(&GaugingMnACircuitBreaker, &GaugingMnBCircuitBreaker, &SPSGaugingSwitch, (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:SPSOXIDIZERINJECTORFLANGE"), (h_Radiator *)Panelsdk.GetPointerByString("HYDRAULIC:SPSFUELINJECTORFLANGE"));
 	SPSEngine.Init(this, (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:SPSTHRUSTHEAT"));
 	SPSEngine.pitchGimbalActuator.Init(this, tvsa.GetPitchServoAmp(), &Pitch1Switch, &Pitch2Switch,
-		                               MainBusA, &PitchBatACircuitBraker, MainBusB, &PitchBatBCircuitBraker);
+		                               MainBusA, &PitchBatACircuitBreaker, MainBusB, &PitchBatBCircuitBreaker);
 	SPSEngine.yawGimbalActuator.Init(this, tvsa.GetYawServoAmp(), &Yaw1Switch, &Yaw2Switch,
-		                             MainBusA, &YawBatACircuitBraker, MainBusB, &YawBatBCircuitBraker);
+		                             MainBusA, &YawBatACircuitBreaker, MainBusB, &YawBatBCircuitBreaker);
 
 	SPSFuelSumpTankHeaterA = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSFUELSUMPTANKHEATERA");
 	SPSFuelSumpTankHeaterB = (Boiler *) Panelsdk.GetPointerByString("ELECTRIC:SPSFUELSUMPTANKHEATERB");
@@ -624,19 +624,19 @@ void Saturn::SystemsInit() {
 	SPSOxBallValveHeaterA = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSOXBALLVALVEHEATERA");
 	SPSOxBallValveHeaterB = (Boiler *)Panelsdk.GetPointerByString("ELECTRIC:SPSOXBALLVALVEHEATERB");
 
-	SPSFuelSumpTankHeaterA->WireTo(&SPSLineHtrsMnACircuitBraker);
-	SPSFuelSumpTankHeaterB->WireTo(&SPSLineHtrsMnBCircuitBraker);
-	SPSFuelInterfaceFeedHeaterA->WireTo(&SPSLineHtrsMnACircuitBraker);
-	SPSFuelInterfaceFeedHeaterB->WireTo(&SPSLineHtrsMnBCircuitBraker);
-	SPSFuelBallValveHeaterA->WireTo(&SPSLineHtrsMnACircuitBraker);
-	SPSFuelBallValveHeaterB->WireTo(&SPSLineHtrsMnBCircuitBraker);
+	SPSFuelSumpTankHeaterA->WireTo(&SPSLineHtrsMnACircuitBreaker);
+	SPSFuelSumpTankHeaterB->WireTo(&SPSLineHtrsMnBCircuitBreaker);
+	SPSFuelInterfaceFeedHeaterA->WireTo(&SPSLineHtrsMnACircuitBreaker);
+	SPSFuelInterfaceFeedHeaterB->WireTo(&SPSLineHtrsMnBCircuitBreaker);
+	SPSFuelBallValveHeaterA->WireTo(&SPSLineHtrsMnACircuitBreaker);
+	SPSFuelBallValveHeaterB->WireTo(&SPSLineHtrsMnBCircuitBreaker);
 
-	SPSOxSumpTankHeaterA->WireTo(&SPSLineHtrsMnACircuitBraker);
-	SPSOxSumpTankHeaterB->WireTo(&SPSLineHtrsMnBCircuitBraker);
-	SPSOxInterfaceFeedHeaterA->WireTo(&SPSLineHtrsMnACircuitBraker);
-	SPSOxInterfaceFeedHeaterB->WireTo(&SPSLineHtrsMnBCircuitBraker);
-	SPSOxBallValveHeaterA->WireTo(&SPSLineHtrsMnACircuitBraker);
-	SPSOxBallValveHeaterB->WireTo(&SPSLineHtrsMnBCircuitBraker);
+	SPSOxSumpTankHeaterA->WireTo(&SPSLineHtrsMnACircuitBreaker);
+	SPSOxSumpTankHeaterB->WireTo(&SPSLineHtrsMnBCircuitBreaker);
+	SPSOxInterfaceFeedHeaterA->WireTo(&SPSLineHtrsMnACircuitBreaker);
+	SPSOxInterfaceFeedHeaterB->WireTo(&SPSLineHtrsMnBCircuitBreaker);
+	SPSOxBallValveHeaterA->WireTo(&SPSLineHtrsMnACircuitBreaker);
+	SPSOxBallValveHeaterB->WireTo(&SPSLineHtrsMnBCircuitBreaker);
 
 	// SM RCS initialization
 	SMQuadARCS.Init(th_rcs_a, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SMRCSQUADA"));
@@ -644,60 +644,60 @@ void Saturn::SystemsInit() {
 	SMQuadCRCS.Init(th_rcs_c, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SMRCSQUADC"));
 	SMQuadDRCS.Init(th_rcs_d, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:SMRCSQUADD"));
 
-	SMRCSHelium1ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSHelium1BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-	SMRCSHelium1CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSHelium1DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSHelium1ASwitch.WireTo(&PrplntIsolMnBCircuitBreaker);
+	SMRCSHelium1BSwitch.WireTo(&PrplntIsolMnACircuitBreaker);
+	SMRCSHelium1CSwitch.WireTo(&PrplntIsolMnBCircuitBreaker);
+	SMRCSHelium1DSwitch.WireTo(&PrplntIsolMnACircuitBreaker);
 
-	SMRCSHelium2ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSHelium2BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-	SMRCSHelium2CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSHelium2DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSHelium2ASwitch.WireTo(&PrplntIsolMnBCircuitBreaker);
+	SMRCSHelium2BSwitch.WireTo(&PrplntIsolMnACircuitBreaker);
+	SMRCSHelium2CSwitch.WireTo(&PrplntIsolMnBCircuitBreaker);
+	SMRCSHelium2DSwitch.WireTo(&PrplntIsolMnACircuitBreaker);
 
-	SMRCSProp1ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSProp1BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-	SMRCSProp1CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSProp1DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSProp1ASwitch.WireTo(&PrplntIsolMnBCircuitBreaker);
+	SMRCSProp1BSwitch.WireTo(&PrplntIsolMnACircuitBreaker);
+	SMRCSProp1CSwitch.WireTo(&PrplntIsolMnBCircuitBreaker);
+	SMRCSProp1DSwitch.WireTo(&PrplntIsolMnACircuitBreaker);
 
-	SMRCSProp2ASwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSProp2BSwitch.WireTo(&PrplntIsolMnACircuitBraker);
-	SMRCSProp2CSwitch.WireTo(&PrplntIsolMnBCircuitBraker);
-	SMRCSProp2DSwitch.WireTo(&PrplntIsolMnACircuitBraker);
+	SMRCSProp2ASwitch.WireTo(&PrplntIsolMnBCircuitBreaker);
+	SMRCSProp2BSwitch.WireTo(&PrplntIsolMnACircuitBreaker);
+	SMRCSProp2CSwitch.WireTo(&PrplntIsolMnBCircuitBreaker);
+	SMRCSProp2DSwitch.WireTo(&PrplntIsolMnACircuitBreaker);
 
-	SMRCSHelium1ATalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSHelium1BTalkback.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSHelium1CTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSHelium1DTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSHelium1ATalkback.WireTo(&SMHeatersAMnBCircuitBreaker);
+	SMRCSHelium1BTalkback.WireTo(&SMHeatersBMnACircuitBreaker);
+	SMRCSHelium1CTalkback.WireTo(&SMHeatersAMnBCircuitBreaker);
+	SMRCSHelium1DTalkback.WireTo(&SMHeatersBMnACircuitBreaker);
 
-	SMRCSHelium2ATalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSHelium2BTalkback.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSHelium2CTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSHelium2DTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSHelium2ATalkback.WireTo(&SMHeatersAMnBCircuitBreaker);
+	SMRCSHelium2BTalkback.WireTo(&SMHeatersBMnACircuitBreaker);
+	SMRCSHelium2CTalkback.WireTo(&SMHeatersAMnBCircuitBreaker);
+	SMRCSHelium2DTalkback.WireTo(&SMHeatersBMnACircuitBreaker);
 
-	SMRCSProp1ATalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSProp1BTalkback.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSProp1CTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSProp1DTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSProp1ATalkback.WireTo(&SMHeatersAMnBCircuitBreaker);
+	SMRCSProp1BTalkback.WireTo(&SMHeatersBMnACircuitBreaker);
+	SMRCSProp1CTalkback.WireTo(&SMHeatersAMnBCircuitBreaker);
+	SMRCSProp1DTalkback.WireTo(&SMHeatersBMnACircuitBreaker);
 
-	SMRCSProp2ATalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSProp2BTalkback.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSProp2CTalkback.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSProp2DTalkback.WireTo(&SMHeatersBMnACircuitBraker);
+	SMRCSProp2ATalkback.WireTo(&SMHeatersAMnBCircuitBreaker);
+	SMRCSProp2BTalkback.WireTo(&SMHeatersBMnACircuitBreaker);
+	SMRCSProp2CTalkback.WireTo(&SMHeatersAMnBCircuitBreaker);
+	SMRCSProp2DTalkback.WireTo(&SMHeatersBMnACircuitBreaker);
 	
-	SMRCSHeaterASwitch.WireTo(&SMHeatersAMnBCircuitBraker);
-	SMRCSHeaterBSwitch.WireTo(&SMHeatersBMnACircuitBraker);
-	SMRCSHeaterCSwitch.WireTo(&SMHeatersCMnBCircuitBraker);
-	SMRCSHeaterDSwitch.WireTo(&SMHeatersDMnACircuitBraker);
+	SMRCSHeaterASwitch.WireTo(&SMHeatersAMnBCircuitBreaker);
+	SMRCSHeaterBSwitch.WireTo(&SMHeatersBMnACircuitBreaker);
+	SMRCSHeaterCSwitch.WireTo(&SMHeatersCMnBCircuitBreaker);
+	SMRCSHeaterDSwitch.WireTo(&SMHeatersDMnACircuitBreaker);
 
 	// CM RCS initialization
-	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"), &CMRCS2, &RCSLogicMnACircuitBraker, &PyroBusA, &SMHeatersBMnACircuitBraker);
-	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"), NULL, &RCSLogicMnBCircuitBraker, &PyroBusB, &SMHeatersAMnBCircuitBraker);
+	CMRCS1.Init(th_att_cm_sys1, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM1"), &CMRCS2, &RCSLogicMnACircuitBreaker, &PyroBusA, &SMHeatersBMnACircuitBreaker);
+	CMRCS2.Init(th_att_cm_sys2, (h_Radiator *) Panelsdk.GetPointerByString("HYDRAULIC:CMRCSHELIUM2"), NULL, &RCSLogicMnBCircuitBreaker, &PyroBusB, &SMHeatersAMnBCircuitBreaker);
 
-	CMRCSProp1Switch.WireTo(&PrplntIsolMnACircuitBraker);
-	CMRCSProp2Switch.WireTo(&PrplntIsolMnBCircuitBraker);
+	CMRCSProp1Switch.WireTo(&PrplntIsolMnACircuitBreaker);
+	CMRCSProp2Switch.WireTo(&PrplntIsolMnBCircuitBreaker);
 
-	CMRCSProp1Talkback.WireTo(&SMHeatersBMnACircuitBraker);
-	CMRCSProp2Talkback.WireTo(&SMHeatersAMnBCircuitBraker);
+	CMRCSProp1Talkback.WireTo(&SMHeatersBMnACircuitBreaker);
+	CMRCSProp2Talkback.WireTo(&SMHeatersAMnBCircuitBreaker);
 
 	CMRCSHeat[0] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCH13COIL");
 	CMRCSHeat[1] = (h_HeatLoad *)Panelsdk.GetPointerByString("HYDRAULIC:CMRCSPITCH23COIL");
@@ -749,8 +749,8 @@ void Saturn::SystemsInit() {
 							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLESTRIPHEATERA"),
 							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLEHEATERB"),
 							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:WATERDUMPNOZZLESTRIPHEATERB"),
-							&ECSWasteH2OUrineDumpHTRMnACircuitBraker,
-							&ECSWasteH2OUrineDumpHTRMnBCircuitBraker,
+							&ECSWasteH2OUrineDumpHTRMnACircuitBreaker,
+							&ECSWasteH2OUrineDumpHTRMnBCircuitBreaker,
 							&WasteH2ODumpSwitch);
 	UrineDumpHeater.Init(this,
 							(h_Radiator*)Panelsdk.GetPointerByString("HYDRAULIC:URINEDUMPNOZZLE"),
@@ -758,19 +758,19 @@ void Saturn::SystemsInit() {
 							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLESTRIPHEATERA"),
 							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLEHEATERB"),
 							(Boiler*)Panelsdk.GetPointerByString("ELECTRIC:URINEDUMPNOZZLESTRIPHEATERB"),
-							&ECSWasteH2OUrineDumpHTRMnACircuitBraker,
-							&ECSWasteH2OUrineDumpHTRMnBCircuitBraker,
+							&ECSWasteH2OUrineDumpHTRMnACircuitBreaker,
+							&ECSWasteH2OUrineDumpHTRMnBCircuitBreaker,
 							&UrineDumpSwitch);
 
 	SteamDuctHeaterA = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:STEAMDUCTHEATERA");
 	SteamDuctHeaterB = (Boiler*)Panelsdk.GetPointerByString("ELECTRIC:STEAMDUCTHEATERB");
-	SteamDuctHeaterA->WireTo(&ECSWasteH2OUrineDumpHTRMnACircuitBraker);
-	SteamDuctHeaterB->WireTo(&ECSWasteH2OUrineDumpHTRMnBCircuitBraker);
+	SteamDuctHeaterA->WireTo(&ECSWasteH2OUrineDumpHTRMnACircuitBreaker);
+	SteamDuctHeaterB->WireTo(&ECSWasteH2OUrineDumpHTRMnBCircuitBreaker);
 
 	// Initialize joystick
-	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBraker, &ContrAutoMnBCircuitBraker);
-	RHCDirect1Power.WireToBuses(&ContrDirectMnA1CircuitBraker, &ContrDirectMnB1CircuitBraker);
-	RHCDirect2Power.WireToBuses(&ContrDirectMnA2CircuitBraker, &ContrDirectMnB2CircuitBraker);
+	RHCNormalPower.WireToBuses(&ContrAutoMnACircuitBreaker, &ContrAutoMnBCircuitBreaker);
+	RHCDirect1Power.WireToBuses(&ContrDirectMnA1CircuitBreaker, &ContrDirectMnB1CircuitBreaker);
+	RHCDirect2Power.WireToBuses(&ContrDirectMnA2CircuitBreaker, &ContrDirectMnB2CircuitBreaker);
 	
 	js_enabled = 0;  // Disabled
 	rhc_id = -1;     // Disabled
@@ -2028,7 +2028,7 @@ void Saturn::JoystickTimestep()
 			switch (RotPowerNormal1Switch.GetState()) {
 				case THREEPOSSWITCH_UP:
 				case THREEPOSSWITCH_DOWN:
-					rhc_acvoltage1 = StabContSystemAc1CircuitBraker.Voltage();
+					rhc_acvoltage1 = StabContSystemAc1CircuitBreaker.Voltage();
 					break;
 			}
 		}
@@ -2036,7 +2036,7 @@ void Saturn::JoystickTimestep()
 			switch(RotPowerNormal2Switch.GetState()){
 				case THREEPOSSWITCH_UP:       
 				case THREEPOSSWITCH_DOWN:     
-					rhc_acvoltage2 = ECATVCAc2CircuitBraker.Voltage();
+					rhc_acvoltage2 = ECATVCAc2CircuitBreaker.Voltage();
 					break;
 			}
 		}
@@ -2048,8 +2048,8 @@ void Saturn::JoystickTimestep()
 				direct_power1 = &RHCDirect1Power;
 				break;
 			case THREEPOSSWITCH_DOWN:     // MNA
-				rhc_directv1 = ContrDirectMnA1CircuitBraker.Voltage();
-				direct_power1 = &ContrDirectMnA1CircuitBraker;
+				rhc_directv1 = ContrDirectMnA1CircuitBreaker.Voltage();
+				direct_power1 = &ContrDirectMnA1CircuitBreaker;
 				break;
 		}
 		switch(RotPowerDirect2Switch.GetState()){
@@ -2058,8 +2058,8 @@ void Saturn::JoystickTimestep()
 				direct_power2 = &RHCDirect2Power;
 				break;
 			case THREEPOSSWITCH_DOWN:     // MNB
-				rhc_directv2 = ContrDirectMnB2CircuitBraker.Voltage();
-				direct_power2 = &ContrDirectMnB2CircuitBraker;
+				rhc_directv2 = ContrDirectMnB2CircuitBreaker.Voltage();
+				direct_power2 = &ContrDirectMnB2CircuitBreaker;
 				break;
 		}
 
@@ -2505,9 +2505,9 @@ void Saturn::JoystickTimestep()
 		double thc_voltage = 0; 
 		switch (TransContrSwitch.GetState()) {
 			case TOGGLESWITCH_UP: // The THC is powered from MNA or MNB automatically.
-				thc_voltage = ContrAutoMnACircuitBraker.Voltage();
+				thc_voltage = ContrAutoMnACircuitBreaker.Voltage();
 				if (thc_voltage < SP_MIN_DCVOLTAGE) {
-					thc_voltage = ContrAutoMnBCircuitBraker.Voltage();
+					thc_voltage = ContrAutoMnBCircuitBreaker.Voltage();
 				}
 				break;
 			case TOGGLESWITCH_DOWN:
@@ -2659,11 +2659,11 @@ void Saturn::JoystickTimestep()
 	//
 
 	if (DirectUllageButton.GetState() == 1) {
-		if (DirectUllMnACircuitBraker.IsPowered()) {   
+		if (DirectUllMnACircuitBreaker.IsPowered()) {   
 			SetRCSState(RCS_SM_QUAD_B, 4, true);
 			SetRCSState(RCS_SM_QUAD_D, 3, true);
 		}
-		if (DirectUllMnBCircuitBraker.IsPowered()) {   
+		if (DirectUllMnBCircuitBreaker.IsPowered()) {   
 			SetRCSState(RCS_SM_QUAD_A, 4, true); 
 			SetRCSState(RCS_SM_QUAD_C, 3, true);
 		}
@@ -2675,7 +2675,7 @@ void Saturn::JoystickTimestep()
 	}
 
 	//SPS Abort Ullage
-	if ((secs.MESCA.FireUllage() && RCSLogicMnACircuitBraker.IsPowered()) || (secs.MESCB.FireUllage() && RCSLogicMnBCircuitBraker.IsPowered()))
+	if ((secs.MESCA.FireUllage() && RCSLogicMnACircuitBreaker.IsPowered()) || (secs.MESCB.FireUllage() && RCSLogicMnBCircuitBreaker.IsPowered()))
 	{
 		SetRCSState(RCS_SM_QUAD_B, 4, true);
 		SetRCSState(RCS_SM_QUAD_D, 3, true);
@@ -2731,7 +2731,7 @@ void Saturn::JoystickTimestep()
 		SetCMRCSState(7, true);
 		SetCMRCSState(8, true);
 		SetCMRCSState(11, true);
-		CMHeater1MnACircuitBraker.DrawPower(315.0);
+		CMHeater1MnACircuitBreaker.DrawPower(315.0);
 	}
 	else if (secs.rcsc.GetCMRCSDumpA())
 	{
@@ -2740,7 +2740,7 @@ void Saturn::JoystickTimestep()
 		SetCMRCSState(7, true);	
 		SetCMRCSState(8, true);	
 		SetCMRCSState(11, true);
-		RCSLogicMnACircuitBraker.DrawPower(262.5);
+		RCSLogicMnACircuitBreaker.DrawPower(262.5);
 	}
 		
 	// Manual control
@@ -2752,7 +2752,7 @@ void Saturn::JoystickTimestep()
 		SetCMRCSState(6, true);
 		SetCMRCSState(9, true);
 		SetCMRCSState(10, true);
-		CMHeater2MnBCircuitBraker.DrawPower(315.0);
+		CMHeater2MnBCircuitBreaker.DrawPower(315.0);
 	}
 	else if (secs.rcsc.GetCMRCSDumpB())
 	{
@@ -2761,7 +2761,7 @@ void Saturn::JoystickTimestep()
 		SetCMRCSState(6, true);	
 		SetCMRCSState(9, true);	
 		SetCMRCSState(10, true);
-		RCSLogicMnBCircuitBraker.DrawPower(262.5);
+		RCSLogicMnBCircuitBreaker.DrawPower(262.5);
 	}
 
 	//Code for generating heat in the CM RCS thrusters. Is this the best place for this?
@@ -2927,8 +2927,8 @@ void Saturn::CheckSMSystemsState()
 		SPSOxBallValveHeaterA->WireTo(NULL);
 		SPSOxBallValveHeaterB->WireTo(NULL);
 
-		HeValveMnACircuitBraker.WireTo(NULL);
-		HeValveMnBCircuitBraker.WireTo(NULL);
+		HeValveMnACircuitBreaker.WireTo(NULL);
+		HeValveMnBCircuitBreaker.WireTo(NULL);
 
 		// ECS Coolant loops are disconnected, we set them to zero length, which disables them
 		PrimEcsRadiatorExchanger1->SetLength(0);
@@ -3002,13 +3002,13 @@ void Saturn::CreateMissionSpecificSystems()
 	{
 		pgPanels100.AddPanel(Panel181 = new SaturnPanel181, &PSH);
 
-		Panel181->SMSector1LogicPowerMNABraker.WireTo(MainBusA);
-		Panel181->SMSector1LogicPowerMNBBraker.WireTo(MainBusB);
-		Panel181->SMSector1AC2ASystemBraker.WireTo(&ACBus2PhaseA);
-		Panel181->SMSector1AC2BSystemBraker.WireTo(&ACBus2PhaseB);
-		Panel181->SMSector1AC2CSystemBraker.WireTo(&ACBus2PhaseC);
+		Panel181->SMSector1LogicPowerMNABreaker.WireTo(MainBusA);
+		Panel181->SMSector1LogicPowerMNBBreaker.WireTo(MainBusB);
+		Panel181->SMSector1AC2ASystemBreaker.WireTo(&ACBus2PhaseA);
+		Panel181->SMSector1AC2BSystemBreaker.WireTo(&ACBus2PhaseB);
+		Panel181->SMSector1AC2CSystemBreaker.WireTo(&ACBus2PhaseC);
 
-		secs.InitSIMJett(&Panel181->SMSector1LogicPowerMNABraker, &Panel181->SMSector1LogicPowerMNBBraker);
+		secs.InitSIMJett(&Panel181->SMSector1LogicPowerMNABreaker, &Panel181->SMSector1LogicPowerMNBBreaker);
 	}
 
 	if (pMission->GetPanel277Version() == 1)

@@ -369,7 +369,7 @@ public:
 		SRF_SWITCHUP,
 		SRF_LIGHTS2,
 		SRF_LEMSWITCH1,
-		SRF_LEMSWTICH3,
+		SRF_LEMSWITCH3,
 		SRF_SECSWITCH,
 		SRF_THRUSTMETER,
 		SRF_SEQUENCERSWITCHES,
@@ -397,7 +397,7 @@ public:
 		SRF_CMMFDFRAME,
 		SRF_COAS,
 		SRF_THUMBWHEEL_SMALLFONTS,
-		SRF_CIRCUITBRAKER,
+		SRF_CIRCUITBREAKER,
 		SRF_THREEPOSSWITCH20,
 		SRF_THUMBWHEEL_SMALLFONTS_DIAGONAL,
 		SRF_THREEPOSSWITCH30,
@@ -1239,106 +1239,106 @@ protected:
 	//////////////////
 
 	SwitchRow Panel11CB1SwitchRow;
-	CircuitBrakerSwitch SE_WND_HTR_AC_CB;
-	CircuitBrakerSwitch HE_PQGS_PROP_DISP_AC_CB;
-	CircuitBrakerSwitch SBD_ANT_AC_CB;
-	CircuitBrakerSwitch ORDEAL_AC_CB;
-	CircuitBrakerSwitch AGS_AC_CB;
-	CircuitBrakerSwitch AOT_LAMP_ACB_CB;
-	CircuitBrakerSwitch LMP_FDAI_AC_CB;
-	CircuitBrakerSwitch NUM_LTG_AC_CB;
-	CircuitBrakerSwitch AC_B_INV_1_FEED_CB;
-	CircuitBrakerSwitch AC_B_INV_2_FEED_CB;
-	CircuitBrakerSwitch AC_A_INV_1_FEED_CB;
-	CircuitBrakerSwitch AC_A_INV_2_FEED_CB;
+	CircuitBreakerSwitch SE_WND_HTR_AC_CB;
+	CircuitBreakerSwitch HE_PQGS_PROP_DISP_AC_CB;
+	CircuitBreakerSwitch SBD_ANT_AC_CB;
+	CircuitBreakerSwitch ORDEAL_AC_CB;
+	CircuitBreakerSwitch AGS_AC_CB;
+	CircuitBreakerSwitch AOT_LAMP_ACB_CB;
+	CircuitBreakerSwitch LMP_FDAI_AC_CB;
+	CircuitBreakerSwitch NUM_LTG_AC_CB;
+	CircuitBreakerSwitch AC_B_INV_1_FEED_CB;
+	CircuitBreakerSwitch AC_B_INV_2_FEED_CB;
+	CircuitBreakerSwitch AC_A_INV_1_FEED_CB;
+	CircuitBreakerSwitch AC_A_INV_2_FEED_CB;
 	LEMVoltCB           AC_A_BUS_VOLT_CB;
-	CircuitBrakerSwitch CDR_WND_HTR_AC_CB;
-	CircuitBrakerSwitch TAPE_RCDR_AC_CB;
-	CircuitBrakerSwitch AOT_LAMP_ACA_CB;
-	CircuitBrakerSwitch RDZ_RDR_AC_CB;
-	CircuitBrakerSwitch DECA_GMBL_AC_CB;
-	CircuitBrakerSwitch INTGL_LTG_AC_CB;
+	CircuitBreakerSwitch CDR_WND_HTR_AC_CB;
+	CircuitBreakerSwitch TAPE_RCDR_AC_CB;
+	CircuitBreakerSwitch AOT_LAMP_ACA_CB;
+	CircuitBreakerSwitch RDZ_RDR_AC_CB;
+	CircuitBreakerSwitch DECA_GMBL_AC_CB;
+	CircuitBreakerSwitch INTGL_LTG_AC_CB;
 
 	SwitchRow Panel11CB2SwitchRow;
-	CircuitBrakerSwitch RCS_A_MAIN_SOV_CB;
-	CircuitBrakerSwitch RCS_A_QUAD4_TCA_CB;
-	CircuitBrakerSwitch RCS_A_QUAD3_TCA_CB;
-	CircuitBrakerSwitch RCS_A_QUAD2_TCA_CB;
-	CircuitBrakerSwitch RCS_A_QUAD1_TCA_CB;
-	CircuitBrakerSwitch RCS_A_ISOL_VLV_CB;
-	CircuitBrakerSwitch RCS_A_ASC_FEED_2_CB;
-	CircuitBrakerSwitch RCS_A_ASC_FEED_1_CB;
-	CircuitBrakerSwitch THRUST_DISP_CB;
-	CircuitBrakerSwitch MISSION_TIMER_CB;
-	CircuitBrakerSwitch CDR_XPTR_CB;
-	CircuitBrakerSwitch RNG_RT_ALT_RT_DC_CB;
-	CircuitBrakerSwitch GASTA_DC_CB;
-	CircuitBrakerSwitch CDR_FDAI_DC_CB;
-	CircuitBrakerSwitch COAS_DC_CB;
-	CircuitBrakerSwitch ORDEAL_DC_CB;
-	CircuitBrakerSwitch RNG_RT_ALT_RT_AC_CB;
-	CircuitBrakerSwitch GASTA_AC_CB;
-	CircuitBrakerSwitch CDR_FDAI_AC_CB;
+	CircuitBreakerSwitch RCS_A_MAIN_SOV_CB;
+	CircuitBreakerSwitch RCS_A_QUAD4_TCA_CB;
+	CircuitBreakerSwitch RCS_A_QUAD3_TCA_CB;
+	CircuitBreakerSwitch RCS_A_QUAD2_TCA_CB;
+	CircuitBreakerSwitch RCS_A_QUAD1_TCA_CB;
+	CircuitBreakerSwitch RCS_A_ISOL_VLV_CB;
+	CircuitBreakerSwitch RCS_A_ASC_FEED_2_CB;
+	CircuitBreakerSwitch RCS_A_ASC_FEED_1_CB;
+	CircuitBreakerSwitch THRUST_DISP_CB;
+	CircuitBreakerSwitch MISSION_TIMER_CB;
+	CircuitBreakerSwitch CDR_XPTR_CB;
+	CircuitBreakerSwitch RNG_RT_ALT_RT_DC_CB;
+	CircuitBreakerSwitch GASTA_DC_CB;
+	CircuitBreakerSwitch CDR_FDAI_DC_CB;
+	CircuitBreakerSwitch COAS_DC_CB;
+	CircuitBreakerSwitch ORDEAL_DC_CB;
+	CircuitBreakerSwitch RNG_RT_ALT_RT_AC_CB;
+	CircuitBreakerSwitch GASTA_AC_CB;
+	CircuitBreakerSwitch CDR_FDAI_AC_CB;
 
 	SwitchRow Panel11CB3SwitchRow;
-	CircuitBrakerSwitch PROP_DES_HE_REG_VENT_CB;
-	CircuitBrakerSwitch HTR_RR_STBY_CB;
-	CircuitBrakerSwitch HTR_RR_OPR_CB;
-	CircuitBrakerSwitch HTR_LR_CB;
-	CircuitBrakerSwitch HTR_DOCK_WINDOW_CB;
-	CircuitBrakerSwitch HTR_AOT_CB;
-	CircuitBrakerSwitch INST_SIG_CONDR_1_CB;
-	CircuitBrakerSwitch CDR_SCS_AEA_CB;
-	CircuitBrakerSwitch CDR_SCS_ABORT_STAGE_CB;
-	CircuitBrakerSwitch CDR_SCS_ATCA_CB;
-	CircuitBrakerSwitch CDR_SCS_AELD_CB;
-	CircuitBrakerSwitch SCS_ENG_CONT_CB;
-	CircuitBrakerSwitch SCS_ATT_DIR_CONT_CB;
-	CircuitBrakerSwitch SCS_ENG_START_OVRD_CB;
-	CircuitBrakerSwitch SCS_DECA_PWR_CB;
-	CircuitBrakerSwitch EDS_CB_LG_FLAG;
-	CircuitBrakerSwitch EDS_CB_LOGIC_A;
-	CircuitBrakerSwitch CDR_LTG_UTIL_CB;
-	CircuitBrakerSwitch CDR_LTG_ANUN_DOCK_COMPNT_CB;
+	CircuitBreakerSwitch PROP_DES_HE_REG_VENT_CB;
+	CircuitBreakerSwitch HTR_RR_STBY_CB;
+	CircuitBreakerSwitch HTR_RR_OPR_CB;
+	CircuitBreakerSwitch HTR_LR_CB;
+	CircuitBreakerSwitch HTR_DOCK_WINDOW_CB;
+	CircuitBreakerSwitch HTR_AOT_CB;
+	CircuitBreakerSwitch INST_SIG_CONDR_1_CB;
+	CircuitBreakerSwitch CDR_SCS_AEA_CB;
+	CircuitBreakerSwitch CDR_SCS_ABORT_STAGE_CB;
+	CircuitBreakerSwitch CDR_SCS_ATCA_CB;
+	CircuitBreakerSwitch CDR_SCS_AELD_CB;
+	CircuitBreakerSwitch SCS_ENG_CONT_CB;
+	CircuitBreakerSwitch SCS_ATT_DIR_CONT_CB;
+	CircuitBreakerSwitch SCS_ENG_START_OVRD_CB;
+	CircuitBreakerSwitch SCS_DECA_PWR_CB;
+	CircuitBreakerSwitch EDS_CB_LG_FLAG;
+	CircuitBreakerSwitch EDS_CB_LOGIC_A;
+	CircuitBreakerSwitch CDR_LTG_UTIL_CB;
+	CircuitBreakerSwitch CDR_LTG_ANUN_DOCK_COMPNT_CB;
 
 	SwitchRow Panel11CB4SwitchRow;
-	CircuitBrakerSwitch RCS_QUAD_4_CDR_HTR_CB;
-	CircuitBrakerSwitch RCS_QUAD_3_CDR_HTR_CB;
-	CircuitBrakerSwitch RCS_QUAD_2_CDR_HTR_CB;
-	CircuitBrakerSwitch RCS_QUAD_1_CDR_HTR_CB;
-	CircuitBrakerSwitch ECS_SUIT_FAN_1_CB;
-	CircuitBrakerSwitch ECS_CABIN_FAN_1_CB;
-	CircuitBrakerSwitch ECS_GLYCOL_PUMP_2_CB;
-	CircuitBrakerSwitch ECS_GLYCOL_PUMP_1_CB;
-	CircuitBrakerSwitch ECS_GLYCOL_PUMP_AUTO_XFER_CB;
-	CircuitBrakerSwitch COMM_UP_DATA_LINK_CB;
-	CircuitBrakerSwitch COMM_SEC_SBAND_XCVR_CB;
-	CircuitBrakerSwitch COMM_SEC_SBAND_PA_CB;
-	CircuitBrakerSwitch COMM_VHF_XMTR_B_CB;
-	CircuitBrakerSwitch COMM_VHF_RCVR_A_CB;
-	CircuitBrakerSwitch COMM_CDR_AUDIO_CB;
-	CircuitBrakerSwitch PGNS_SIG_STR_DISP_CB;
-	CircuitBrakerSwitch PGNS_LDG_RDR_CB;
-	CircuitBrakerSwitch PGNS_RNDZ_RDR_CB;
-	CircuitBrakerSwitch IMU_OPR_CB;
-	CircuitBrakerSwitch IMU_SBY_CB;
-	CircuitBrakerSwitch LGC_DSKY_CB;
+	CircuitBreakerSwitch RCS_QUAD_4_CDR_HTR_CB;
+	CircuitBreakerSwitch RCS_QUAD_3_CDR_HTR_CB;
+	CircuitBreakerSwitch RCS_QUAD_2_CDR_HTR_CB;
+	CircuitBreakerSwitch RCS_QUAD_1_CDR_HTR_CB;
+	CircuitBreakerSwitch ECS_SUIT_FAN_1_CB;
+	CircuitBreakerSwitch ECS_CABIN_FAN_1_CB;
+	CircuitBreakerSwitch ECS_GLYCOL_PUMP_2_CB;
+	CircuitBreakerSwitch ECS_GLYCOL_PUMP_1_CB;
+	CircuitBreakerSwitch ECS_GLYCOL_PUMP_AUTO_XFER_CB;
+	CircuitBreakerSwitch COMM_UP_DATA_LINK_CB;
+	CircuitBreakerSwitch COMM_SEC_SBAND_XCVR_CB;
+	CircuitBreakerSwitch COMM_SEC_SBAND_PA_CB;
+	CircuitBreakerSwitch COMM_VHF_XMTR_B_CB;
+	CircuitBreakerSwitch COMM_VHF_RCVR_A_CB;
+	CircuitBreakerSwitch COMM_CDR_AUDIO_CB;
+	CircuitBreakerSwitch PGNS_SIG_STR_DISP_CB;
+	CircuitBreakerSwitch PGNS_LDG_RDR_CB;
+	CircuitBreakerSwitch PGNS_RNDZ_RDR_CB;
+	CircuitBreakerSwitch IMU_OPR_CB;
+	CircuitBreakerSwitch IMU_SBY_CB;
+	CircuitBreakerSwitch LGC_DSKY_CB;
 
 	SwitchRow Panel11CB5SwitchRow;
 	// Bus feed tie breakers
-	CircuitBrakerSwitch CDRBatteryFeedTieCB1;
-	CircuitBrakerSwitch CDRBatteryFeedTieCB2;
-	CircuitBrakerSwitch CDRCrossTieBusCB;
-	CircuitBrakerSwitch CDRCrossTieBalCB;
-	CircuitBrakerSwitch CDRXLunarBusTieCB;
+	CircuitBreakerSwitch CDRBatteryFeedTieCB1;
+	CircuitBreakerSwitch CDRBatteryFeedTieCB2;
+	CircuitBreakerSwitch CDRCrossTieBusCB;
+	CircuitBreakerSwitch CDRCrossTieBalCB;
+	CircuitBreakerSwitch CDRXLunarBusTieCB;
 	// ECA control & Voltmeter
-	CircuitBrakerSwitch CDRDesECAContCB;
-	CircuitBrakerSwitch CDRDesECAMainCB;
-	CircuitBrakerSwitch CDRAscECAContCB;
-	CircuitBrakerSwitch CDRAscECAMainCB;
+	CircuitBreakerSwitch CDRDesECAContCB;
+	CircuitBreakerSwitch CDRDesECAMainCB;
+	CircuitBreakerSwitch CDRAscECAContCB;
+	CircuitBreakerSwitch CDRAscECAMainCB;
 	LEMVoltCB CDRDCBusVoltCB;
 	// AC Inverter 1 feed
-	CircuitBrakerSwitch CDRInverter1CB;
+	CircuitBreakerSwitch CDRInverter1CB;
 
 	bool CMPowerToCDRBusRelayA, CMPowerToCDRBusRelayB; //Relays 3K3 and 3K4
 	bool SLADockingLightPressureSwitchRelay; // Relay 16K1
@@ -1482,10 +1482,10 @@ protected:
 
 	SwitchRow Panel12CommSwitchRow2;
 	ThreePosSwitch VHFAVoiceSwitch;
-	ToggleSwitch VHFARcvrSwtich;
+	ToggleSwitch VHFARcvrSwitch;
 	ThreePosSwitch VHFBVoiceSwitch;
-	ToggleSwitch VHFBRcvrSwtich;
-	ThreePosSwitch TLMBiomedSwtich;
+	ToggleSwitch VHFBRcvrSwitch;
+	ThreePosSwitch TLMBiomedSwitch;
 	ToggleSwitch TLMBitrateSwitch;
 
 	SwitchRow Panel12CommSwitchRow3;
@@ -1534,92 +1534,92 @@ protected:
 	//////////////////
 
 	SwitchRow Panel16CB1SwitchRow;
-	CircuitBrakerSwitch LMP_EVT_TMR_FDAI_DC_CB;
-	CircuitBrakerSwitch SE_XPTR_DC_CB;
-	CircuitBrakerSwitch RCS_B_ASC_FEED_1_CB;
-	CircuitBrakerSwitch RCS_B_ASC_FEED_2_CB;
-	CircuitBrakerSwitch RCS_B_ISOL_VLV_CB;
-	CircuitBrakerSwitch RCS_B_QUAD1_TCA_CB;
-	CircuitBrakerSwitch RCS_B_QUAD2_TCA_CB;
-	CircuitBrakerSwitch RCS_B_QUAD3_TCA_CB;
-	CircuitBrakerSwitch RCS_B_QUAD4_TCA_CB;
-	CircuitBrakerSwitch RCS_B_CRSFD_CB;
-	CircuitBrakerSwitch RCS_B_TEMP_PRESS_DISP_FLAGS_CB;
-	CircuitBrakerSwitch RCS_B_PQGS_DISP_CB;
-	CircuitBrakerSwitch RCS_B_MAIN_SOV_CB;
-	CircuitBrakerSwitch PROP_DISP_ENG_OVRD_LOGIC_CB;
-	CircuitBrakerSwitch PROP_PQGS_CB;
-	CircuitBrakerSwitch PROP_ASC_HE_REG_CB;
+	CircuitBreakerSwitch LMP_EVT_TMR_FDAI_DC_CB;
+	CircuitBreakerSwitch SE_XPTR_DC_CB;
+	CircuitBreakerSwitch RCS_B_ASC_FEED_1_CB;
+	CircuitBreakerSwitch RCS_B_ASC_FEED_2_CB;
+	CircuitBreakerSwitch RCS_B_ISOL_VLV_CB;
+	CircuitBreakerSwitch RCS_B_QUAD1_TCA_CB;
+	CircuitBreakerSwitch RCS_B_QUAD2_TCA_CB;
+	CircuitBreakerSwitch RCS_B_QUAD3_TCA_CB;
+	CircuitBreakerSwitch RCS_B_QUAD4_TCA_CB;
+	CircuitBreakerSwitch RCS_B_CRSFD_CB;
+	CircuitBreakerSwitch RCS_B_TEMP_PRESS_DISP_FLAGS_CB;
+	CircuitBreakerSwitch RCS_B_PQGS_DISP_CB;
+	CircuitBreakerSwitch RCS_B_MAIN_SOV_CB;
+	CircuitBreakerSwitch PROP_DISP_ENG_OVRD_LOGIC_CB;
+	CircuitBreakerSwitch PROP_PQGS_CB;
+	CircuitBreakerSwitch PROP_ASC_HE_REG_CB;
 
 	SwitchRow Panel16CB2SwitchRow;
-	CircuitBrakerSwitch LTG_FLOOD_CB;
-	CircuitBrakerSwitch LTG_TRACK_CB;
-	CircuitBrakerSwitch LTG_ANUN_DOCK_COMPNT_CB;
-	CircuitBrakerSwitch LTG_MASTER_ALARM_CB;
-	CircuitBrakerSwitch EDS_CB_LOGIC_B;
-	CircuitBrakerSwitch SCS_AEA_CB;
-	CircuitBrakerSwitch SCS_ENG_ARM_CB;
-	CircuitBrakerSwitch SCS_ASA_CB;
-	CircuitBrakerSwitch SCS_AELD_CB;
-	CircuitBrakerSwitch SCS_ATCA_CB;
-	CircuitBrakerSwitch SCS_ABORT_STAGE_CB;
-	CircuitBrakerSwitch SCS_ATCA_AGS_CB;
-	CircuitBrakerSwitch SCS_DES_ENG_OVRD_CB;
-	CircuitBrakerSwitch INST_CWEA_CB;
-	CircuitBrakerSwitch INST_SIG_SENSOR_CB;
-	CircuitBrakerSwitch INST_PCMTEA_CB;
-	CircuitBrakerSwitch INST_SIG_CONDR_2_CB;
-	CircuitBrakerSwitch ECS_SUIT_FLOW_CONT_CB;
+	CircuitBreakerSwitch LTG_FLOOD_CB;
+	CircuitBreakerSwitch LTG_TRACK_CB;
+	CircuitBreakerSwitch LTG_ANUN_DOCK_COMPNT_CB;
+	CircuitBreakerSwitch LTG_MASTER_ALARM_CB;
+	CircuitBreakerSwitch EDS_CB_LOGIC_B;
+	CircuitBreakerSwitch SCS_AEA_CB;
+	CircuitBreakerSwitch SCS_ENG_ARM_CB;
+	CircuitBreakerSwitch SCS_ASA_CB;
+	CircuitBreakerSwitch SCS_AELD_CB;
+	CircuitBreakerSwitch SCS_ATCA_CB;
+	CircuitBreakerSwitch SCS_ABORT_STAGE_CB;
+	CircuitBreakerSwitch SCS_ATCA_AGS_CB;
+	CircuitBreakerSwitch SCS_DES_ENG_OVRD_CB;
+	CircuitBreakerSwitch INST_CWEA_CB;
+	CircuitBreakerSwitch INST_SIG_SENSOR_CB;
+	CircuitBreakerSwitch INST_PCMTEA_CB;
+	CircuitBreakerSwitch INST_SIG_CONDR_2_CB;
+	CircuitBreakerSwitch ECS_SUIT_FLOW_CONT_CB;
 
 	SwitchRow Panel16CB3SwitchRow;
-	CircuitBrakerSwitch COMM_DISP_CB;
-	CircuitBrakerSwitch COMM_SE_AUDIO_CB;
-	CircuitBrakerSwitch COMM_VHF_XMTR_A_CB;
-	CircuitBrakerSwitch COMM_VHF_RCVR_B_CB;
-	CircuitBrakerSwitch COMM_PRIM_SBAND_PA_CB;
-	CircuitBrakerSwitch COMM_PRIM_SBAND_XCVR_CB;
-	CircuitBrakerSwitch COMM_SBAND_ANT_CB;
-	CircuitBrakerSwitch COMM_PMP_CB;
-	CircuitBrakerSwitch COMM_TV_CB;
-	CircuitBrakerSwitch ECS_DISP_CB;
-	CircuitBrakerSwitch ECS_GLYCOL_PUMP_SEC_CB;
-	CircuitBrakerSwitch ECS_LGC_PUMP_CB;
-	CircuitBrakerSwitch ECS_CABIN_FAN_CONT_CB;
-	CircuitBrakerSwitch ECS_CABIN_REPRESS_CB;
-	CircuitBrakerSwitch ECS_SUIT_FAN_2_CB;
-	CircuitBrakerSwitch ECS_SUIT_FAN_DP_CB;
-	CircuitBrakerSwitch ECS_DIVERT_VLV_CB;
-	CircuitBrakerSwitch ECS_CO2_SENSOR_CB;
+	CircuitBreakerSwitch COMM_DISP_CB;
+	CircuitBreakerSwitch COMM_SE_AUDIO_CB;
+	CircuitBreakerSwitch COMM_VHF_XMTR_A_CB;
+	CircuitBreakerSwitch COMM_VHF_RCVR_B_CB;
+	CircuitBreakerSwitch COMM_PRIM_SBAND_PA_CB;
+	CircuitBreakerSwitch COMM_PRIM_SBAND_XCVR_CB;
+	CircuitBreakerSwitch COMM_SBAND_ANT_CB;
+	CircuitBreakerSwitch COMM_PMP_CB;
+	CircuitBreakerSwitch COMM_TV_CB;
+	CircuitBreakerSwitch ECS_DISP_CB;
+	CircuitBreakerSwitch ECS_GLYCOL_PUMP_SEC_CB;
+	CircuitBreakerSwitch ECS_LGC_PUMP_CB;
+	CircuitBreakerSwitch ECS_CABIN_FAN_CONT_CB;
+	CircuitBreakerSwitch ECS_CABIN_REPRESS_CB;
+	CircuitBreakerSwitch ECS_SUIT_FAN_2_CB;
+	CircuitBreakerSwitch ECS_SUIT_FAN_DP_CB;
+	CircuitBreakerSwitch ECS_DIVERT_VLV_CB;
+	CircuitBreakerSwitch ECS_CO2_SENSOR_CB;
 
 	SwitchRow Panel16CB4SwitchRow;
-	CircuitBrakerSwitch RCS_QUAD_1_LMP_HTR_CB;
-	CircuitBrakerSwitch RCS_QUAD_2_LMP_HTR_CB;
-	CircuitBrakerSwitch RCS_QUAD_3_LMP_HTR_CB;
-	CircuitBrakerSwitch RCS_QUAD_4_LMP_HTR_CB;
-	CircuitBrakerSwitch HTR_DISP_CB;
-	CircuitBrakerSwitch HTR_SBD_ANT_CB;
-	CircuitBrakerSwitch CAMR_SEQ_CB;
-	CircuitBrakerSwitch EPS_DISP_CB;
+	CircuitBreakerSwitch RCS_QUAD_1_LMP_HTR_CB;
+	CircuitBreakerSwitch RCS_QUAD_2_LMP_HTR_CB;
+	CircuitBreakerSwitch RCS_QUAD_3_LMP_HTR_CB;
+	CircuitBreakerSwitch RCS_QUAD_4_LMP_HTR_CB;
+	CircuitBreakerSwitch HTR_DISP_CB;
+	CircuitBreakerSwitch HTR_SBD_ANT_CB;
+	CircuitBreakerSwitch CAMR_SEQ_CB;
+	CircuitBreakerSwitch EPS_DISP_CB;
 	// ECA control, AC Inverter & DC Voltmeter
 	LEMVoltCB LMPDCBusVoltCB;
-	CircuitBrakerSwitch LMPInverter2CB;
-	CircuitBrakerSwitch LMPAscECAMainCB;
-	CircuitBrakerSwitch LMPAscECAContCB;
-	CircuitBrakerSwitch LMPDesECAMainCB;
-	CircuitBrakerSwitch LMPDesECAContCB;
+	CircuitBreakerSwitch LMPInverter2CB;
+	CircuitBreakerSwitch LMPAscECAMainCB;
+	CircuitBreakerSwitch LMPAscECAContCB;
+	CircuitBreakerSwitch LMPDesECAMainCB;
+	CircuitBreakerSwitch LMPDesECAContCB;
 	// Battery feed tie breakers
-	CircuitBrakerSwitch LMPXLunarBusTieCB;
-	CircuitBrakerSwitch LMPCrossTieBusCB;
-	CircuitBrakerSwitch LMPCrossTieBalCB;
-	CircuitBrakerSwitch LMPBatteryFeedTieCB1;
-	CircuitBrakerSwitch LMPBatteryFeedTieCB2;
+	CircuitBreakerSwitch LMPXLunarBusTieCB;
+	CircuitBreakerSwitch LMPCrossTieBusCB;
+	CircuitBreakerSwitch LMPCrossTieBalCB;
+	CircuitBreakerSwitch LMPBatteryFeedTieCB1;
+	CircuitBreakerSwitch LMPBatteryFeedTieCB2;
 
 	///////////////
 	// ECS Panel //
 	///////////////
 
 	SwitchRow ECSSuitGasDiverterSwitchRow;
-	CircuitBrakerSwitch SuitGasDiverterSwitch;
+	CircuitBreakerSwitch SuitGasDiverterSwitch;
 
 	SwitchRow OxygenControlSwitchRow;
 	RotationalSwitch CabinRepressValveSwitch;

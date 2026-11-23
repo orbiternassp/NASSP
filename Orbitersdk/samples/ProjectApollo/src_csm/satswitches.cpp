@@ -1010,8 +1010,8 @@ void DirectO2RotationalSwitch::CheckValve()
 
 
 void SaturnEcsGlycolPumpsSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row, Pump *p,
-									  CircuitBrakerSwitch* ac1a, CircuitBrakerSwitch* ac1b, CircuitBrakerSwitch* ac1c,
-									  CircuitBrakerSwitch* ac2a, CircuitBrakerSwitch* ac2b, CircuitBrakerSwitch* ac2c)
+									  CircuitBreakerSwitch* ac1a, CircuitBreakerSwitch* ac1b, CircuitBreakerSwitch* ac1c,
+									  CircuitBreakerSwitch* ac2a, CircuitBreakerSwitch* ac2b, CircuitBreakerSwitch* ac2c)
 {
 	RotationalSwitch::Init(xp, yp, w, h, surf, bsurf, row);
 	GlycolPump = p;
@@ -1056,8 +1056,8 @@ void SaturnEcsGlycolPumpsSwitch::CheckPump()
 
 
 void SaturnSuitCompressorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFHANDLE bsurf, SwitchRow &row,
-									  CircuitBrakerSwitch* ac1a, CircuitBrakerSwitch* ac1b, CircuitBrakerSwitch* ac1c,
-									  CircuitBrakerSwitch* ac2a, CircuitBrakerSwitch* ac2b, CircuitBrakerSwitch* ac2c)
+									  CircuitBreakerSwitch* ac1a, CircuitBreakerSwitch* ac1b, CircuitBreakerSwitch* ac1c,
+									  CircuitBreakerSwitch* ac2a, CircuitBreakerSwitch* ac2b, CircuitBreakerSwitch* ac2c)
 {
 	ACBus1.WireToBuses(ac1a, ac1b, ac1c);
 	ACBus2.WireToBuses(ac2a, ac2b, ac2c);
@@ -2573,14 +2573,14 @@ void SaturnPanel181::Register(PanelSwitchScenarioHandler *PSH)
 {
 	SMSector1Cryo3ACPowerSwitch.Register(*PSH, "SMSector1Cryo3ACPowerSwitch", TOGGLESWITCH_UP);
 	SMSector1SMACPowerSwitch.Register(*PSH, "SMSector1SMACPowerSwitch", TOGGLESWITCH_UP);
-	SMSector1AC2ASystemBraker.Register(*PSH, "SMSector1AC2ASystemBraker", 1);
-	SMSector1AC2BSystemBraker.Register(*PSH, "SMSector1AC2BSystemBraker", 1);
-	SMSector1AC2CSystemBraker.Register(*PSH, "SMSector1AC2CSystemBraker", 1);
+	SMSector1AC2ASystemBreaker.Register(*PSH, "SMSector1AC2ASystemBreaker", 1);
+	SMSector1AC2BSystemBreaker.Register(*PSH, "SMSector1AC2BSystemBreaker", 1);
+	SMSector1AC2CSystemBreaker.Register(*PSH, "SMSector1AC2CSystemBreaker", 1);
 	SMSector1DoorJettisonSwitch.Register(*PSH, "SMSector1DoorJettisonSwitch", TOGGLESWITCH_DOWN, false, SPRINGLOADEDSWITCH_DOWN);
 	SMSector1LogicPower1Switch.Register(*PSH, "SMSector1LogicPower1Switch", THREEPOSSWITCH_CENTER);
 	SMSector1LogicPower2Switch.Register(*PSH, "SMSector1LogicPower2Switch", THREEPOSSWITCH_CENTER);
-	SMSector1LogicPowerMNABraker.Register(*PSH, "SMSector1LogicPowerMNABraker", 0);
-	SMSector1LogicPowerMNBBraker.Register(*PSH, "SMSector1LogicPowerMNBBraker", 0);
+	SMSector1LogicPowerMNABreaker.Register(*PSH, "SMSector1LogicPowerMNABreaker", 0);
+	SMSector1LogicPowerMNBBreaker.Register(*PSH, "SMSector1LogicPowerMNBBreaker", 0);
 }
 
 void SaturnPanel277::Register(PanelSwitchScenarioHandler *PSH)
@@ -2589,8 +2589,8 @@ void SaturnPanel277::Register(PanelSwitchScenarioHandler *PSH)
 	SPSPressIndFuelSwitch.SetSideways(1);
 	SPSPressIndOxidSwitch.Register(*PSH, "SPSPressIndOxidSwitch", TOGGLESWITCH_UP);
 	SPSPressIndOxidSwitch.SetSideways(1);
-	CSMLMFinalSepABatABraker.Register(*PSH, "CSMLMFinalSepABatABraker", 1);
-	CSMLMFinalSepBBatBBraker.Register(*PSH, "CSMLMFinalSepBBatBBraker", 1);
+	CSMLMFinalSepABatABreaker.Register(*PSH, "CSMLMFinalSepABatABreaker", 1);
+	CSMLMFinalSepBBatBBreaker.Register(*PSH, "CSMLMFinalSepBBatBBreaker", 1);
 }
 
 void SaturnPanel278J::Register(PanelSwitchScenarioHandler *PSH)
@@ -2607,7 +2607,7 @@ void SaturnPanel278J::Register(PanelSwitchScenarioHandler *PSH)
 	ExperimentCovers1Indicator.Register(*PSH, "ExperimentCovers1Indicator", false);
 	ExperimentCovers2Indicator.Register(*PSH, "ExperimentCovers2Indicator", false);
 	O2Tank3IsolIndicator.Register(*PSH, "O2Tank3IsolIndicator", false);
-	ExperimentCoversDeployBraker.Register(*PSH, "ExperimentCoversDeployBraker", 1);
+	ExperimentCoversDeployBreaker.Register(*PSH, "ExperimentCoversDeployBreaker", 1);
 }
 
 bool LeftCOASPowerSwitch::SwitchTo(int newState, bool dontspring)

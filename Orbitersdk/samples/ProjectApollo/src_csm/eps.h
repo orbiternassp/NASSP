@@ -138,7 +138,7 @@ class ExteriorLighting
 public:
 	ExteriorLighting();
 	virtual ~ExteriorLighting();
-	void Init(Saturn *s, CircuitBrakerSwitch *RDVMNB, ThreeSourceTwoDestSwitch *RDZSPOT, PowerMerge *AC, ToggleSwitch *RUNEVA, ElectricLight *EVALT);
+	void Init(Saturn *s, CircuitBreakerSwitch *RDVMNB, ThreeSourceTwoDestSwitch *RDZSPOT, PowerMerge *AC, ToggleSwitch *RUNEVA, ElectricLight *EVALT);
 	void SystemTimestep(double simdt);
 	void SaveState(FILEHANDLE scn, char *name_str);
 	void LoadState(char *line, int strlen);
@@ -147,7 +147,7 @@ public:
 
 protected:
 	Saturn *saturn;
-	CircuitBrakerSwitch *RNDZSPOTMNBcb;
+	CircuitBreakerSwitch *RNDZSPOTMNBcb;
 	ThreeSourceTwoDestSwitch *RDZSPOTsw;
 	PowerMerge *ACPower;
 	ToggleSwitch *RUNEVAsw;

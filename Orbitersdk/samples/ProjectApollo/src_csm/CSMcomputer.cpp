@@ -579,10 +579,10 @@ void CMOptics::SystemTimestep(double simdt) {
 	// Optics system apparently uses 124.4 watts of power to operate.
 	// This should probably vary up and down when the motors run, but I couldn't find data for it.
 	Powered = 0; // Reset
-	if (sat->GNOpticsMnACircuitBraker.Voltage() > SP_MIN_DCVOLTAGE){
+	if (sat->GNOpticsMnACircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE){
 		Powered |= 1;
 	}
-	if (sat->GNOpticsMnBCircuitBraker.Voltage() > SP_MIN_DCVOLTAGE){
+	if (sat->GNOpticsMnBCircuitBreaker.Voltage() > SP_MIN_DCVOLTAGE){
 		Powered |= 2;
 	}
 	if (sat->GNPowerOpticsSwitch.IsDown()) {
@@ -592,14 +592,14 @@ void CMOptics::SystemTimestep(double simdt) {
 		case 0: // OFF
 			break;
 		case 1: // MNA
-			sat->GNOpticsMnACircuitBraker.DrawPower(124.4);
+			sat->GNOpticsMnACircuitBreaker.DrawPower(124.4);
 			break;
 		case 2: // MNB
-			sat->GNOpticsMnBCircuitBraker.DrawPower(124.4);
+			sat->GNOpticsMnBCircuitBreaker.DrawPower(124.4);
 			break;
 		case 3: // BOTH
-			sat->GNOpticsMnACircuitBraker.DrawPower(62.2);
-			sat->GNOpticsMnBCircuitBraker.DrawPower(62.2);
+			sat->GNOpticsMnACircuitBreaker.DrawPower(62.2);
+			sat->GNOpticsMnBCircuitBreaker.DrawPower(62.2);
 			break;
 	}
 

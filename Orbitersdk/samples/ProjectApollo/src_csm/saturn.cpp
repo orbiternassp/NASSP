@@ -806,11 +806,11 @@ void Saturn::initSaturn()
 	//
 	// Wire up timers.
 	//
-	MissionTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &LeftNumericLights.Variable_0_115VAC_Num_Output, &cte);
-	MissionTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, &LEBNumericLights.Variable_0_115VAC_Num_Output, &cte);
+	MissionTimerDisplay.Init(&TimersMnACircuitBreaker, &TimersMnBCircuitBreaker, &LeftNumericLights.Variable_0_115VAC_Num_Output, &cte);
+	MissionTimer306Display.Init(&TimersMnACircuitBreaker, &TimersMnBCircuitBreaker, &LEBNumericLights.Variable_0_115VAC_Num_Output, &cte);
 
-	EventTimerDisplay.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, NULL);
-	EventTimer306Display.Init(&TimersMnACircuitBraker, &TimersMnBCircuitBraker, NULL);
+	EventTimerDisplay.Init(&TimersMnACircuitBreaker, &TimersMnBCircuitBreaker, NULL);
+	EventTimer306Display.Init(&TimersMnACircuitBreaker, &TimersMnBCircuitBreaker, NULL);
 
 	//
 	// Configure connectors.
@@ -5063,15 +5063,15 @@ bool Saturn::IsEDSBusPowered(int eds)
 	{
 		if (eds == 1)
 		{
-			return EDS1BatACircuitBraker.IsPowered();
+			return EDS1BatACircuitBreaker.IsPowered();
 		}
 		else if (eds == 2)
 		{
-			return EDS2BatCCircuitBraker.IsPowered();
+			return EDS2BatCCircuitBreaker.IsPowered();
 		}
 		else if (eds == 3)
 		{
-			return EDS3BatBCircuitBraker.IsPowered();
+			return EDS3BatBCircuitBreaker.IsPowered();
 		}
 	}
 
@@ -5223,17 +5223,17 @@ void Saturn::ConnectCSMO2Hose()
 
 bool Saturn::GetLMDesBatLVOn()
 {
-	return LMPowerSwitch.IsDown() && MnbLMPWR2CircuitBraker.IsPowered();
+	return LMPowerSwitch.IsDown() && MnbLMPWR2CircuitBreaker.IsPowered();
 }
 
 bool Saturn::GetLMDesBatLVHVOffA()
 {
-	return LMPowerSwitch.IsUp() && MnbLMPWR1CircuitBraker.IsPowered();
+	return LMPowerSwitch.IsUp() && MnbLMPWR1CircuitBreaker.IsPowered();
 }
 
 bool Saturn::GetLMDesBatLVHVOffB()
 {
-	return LMPowerSwitch.IsUp() && MnbLMPWR2CircuitBraker.IsPowered();
+	return LMPowerSwitch.IsUp() && MnbLMPWR2CircuitBreaker.IsPowered();
 }
 
 void Saturn::SetContrailLevel(double level)
