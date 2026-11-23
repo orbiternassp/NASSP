@@ -1904,8 +1904,8 @@ bool LEM::clbkVCRedrawEvent(int id, int event, SURFHANDLE surf)
 			SetVCLighting(vcidx, VC_MAT_DEDA_Light, MAT_LIGHT, LtgORideAnunSwitch.Voltage() / 6.0, 1);
 		}
 
-#define XP_LIT_ON  (std::max)(lca.GetNumericOutput(), 0.01)
-#define XP_LIT_OFF  0.01
+#define XP_LIT_ON  lca.GetNumericOutput()
+#define XP_LIT_OFF  0.0
 
 		// Tapemeter Lights
 		if (AltRngMonSwitch.GetState() == TOGGLESWITCH_DOWN) {
