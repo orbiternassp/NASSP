@@ -8332,7 +8332,7 @@ void ApolloRTCCMFD::menuMPTCycleActive()
 void ApolloRTCCMFD::menuMPTDeleteManeuver()
 {
 	bool MPTDeleteManeuverInput(void* id, char *str, void *data);
-	oapiOpenInputBox("Freeze/unfreeze/delete maneuver in MPT (Format: M62,Table,Manv No.,Action,Vector;)", MPTDeleteManeuverInput, 0, 50, (void*)this);
+	oapiOpenInputBox("Freeze/unfreeze/delete maneuver in MPT (Format: M62,Table,Manv No.,Action (F, U, D or DH),Vector;)", MPTDeleteManeuverInput, 0, 50, (void*)this);
 }
 
 bool MPTDeleteManeuverInput(void* id, char *str, void *data)
@@ -8956,11 +8956,11 @@ void ApolloRTCCMFD::menuVectorCompareTime()
 
 bool VectorCompareTimeInput(void* id, char *str, void *data)
 {
-	int hh, mm, ss;
-	double time;
-	if (sscanf(str, "%d:%d:%d", &hh, &mm, &ss) == 3)
+	int hh, mm;
+	double ss, time;
+	if (sscanf(str, "%d:%d:%lf", &hh, &mm, &ss) == 3)
 	{
-		time = ss + 60 * (mm + 60 * abs(hh));
+		time = ss + (double)(60 * (mm + 60 * abs(hh)));
 		if (str[0] == '-')
 		{
 			time = -time;

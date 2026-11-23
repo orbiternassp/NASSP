@@ -194,7 +194,7 @@ void EVA::SetAstroStage()
 	SetSize(1);
 	SetEmptyMass(EMP_MASS);
 	ClearMeshes();
-	SetCameraOffset(_V(0, 1, 0));
+	SetCameraOffset(_V(0, 0.587462, 0));
 	SetTouchdownPoints(tdvtx_geardown, 3);
 
 	hProp = CreatePropellantResource(FUEL_MASS, FUEL_MASS);
@@ -394,6 +394,8 @@ void EVA::clbkPreStep(double SimT, double SimDT, double MJD)
 		lemvessel->StopSpaceEVA();
 		GoDockLEM = false;
 	}
+
+	LimitTetherDistance();
 }
 
 void EVA::clbkLoadStateEx(FILEHANDLE scn, void* vs)
@@ -438,4 +440,39 @@ void EVA::clbkSaveState(FILEHANDLE scn)
 	if (ApolloNo != 0) {
 		oapiWriteScenario_int(scn, "MISSIONNO", ApolloNo);
 	}
+}
+
+void EVA::LimitTetherDistance()
+{
+	OBJHANDLE hMother = nullptr;
+
+	if (CSMMotherShip && isCMP) hMother = hCSM;
+	else if (LEMMotherShip && isLMP) hMother = hLEM;
+
+	if (!hMother) return;
+
+	VESSEL* mother = oapiGetVesselInterface(hMother);
+	if (!mother) return;
+
+	VESSELSTATUS2 evaVS{}, motherVS{};
+
+	evaVS.version = 2;
+	motherVS.version = 2;
+
+	GetStatusEx(&evaVS);
+	mother->GetStatusEx(&motherVS);
+
+	if (evaVS.rbody != motherVS.rbody) return;
+
+	VECTOR3 delta = evaVS.rpos - motherVS.rpos;
+	double dist = length(delta);
+
+	if (dist <= 7.62 || dist < 1e-6) return;
+
+	VECTOR3 dir = delta / dist;
+
+	evaVS.rpos = motherVS.rpos + dir * 7.62;
+	evaVS.rvel = motherVS.rvel;
+
+	DefSetStateEx(&evaVS);
 }

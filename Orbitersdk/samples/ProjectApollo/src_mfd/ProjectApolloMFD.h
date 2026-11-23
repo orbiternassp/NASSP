@@ -82,7 +82,8 @@ public:
 	void menuSetFailuresPage();
 	void menuSetSLPage();
 
-	void menuKillRot();
+	//Kill rotation function; retained commented out in the event the function is needed later for debugging
+	//void menuKillRot();
 	void menuSaveEMSScroll();
 	void menuVAGCCoreDump();
 	void menuChangeLaunchTime();

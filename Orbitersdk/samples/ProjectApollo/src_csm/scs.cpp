@@ -4459,6 +4459,10 @@ TVSA::TVSA() :
 	pitchGimbalPosition2 = 0.0;
 	yawGimbalPosition1 = 0.0;
 	yawGimbalPosition2 = 0.0;
+	Sys1Ac1CB = nullptr;
+	Sys1Ac2CB = nullptr;
+	Sys2Ac1CB = nullptr;
+	Sys2Ac2CB = nullptr;
 	A4K1 = false;
 	A4K2 = false;
 	A4K3 = false;
@@ -4477,6 +4481,11 @@ void TVSA::Init(Saturn *vessel) {
 	pitchServoAmp.Init(vessel);
 	yawServoAmp.Init(vessel);
 	sat = vessel;
+
+	Sys1Ac1CB = &vessel->StabContSystemTVCAc1CircuitBraker;
+	Sys1Ac2CB = &vessel->StabContSystemAc2CircuitBraker;
+	Sys2Ac1CB = &vessel->StabContSystemAc1CircuitBraker;
+	Sys2Ac2CB = &vessel->ECATVCAc2CircuitBraker;
 }
 
 void TVSA::TimeStep(double simdt)
@@ -4720,11 +4729,11 @@ bool TVSA::IsSystem1ACPowered()
 {
 	if (sat->TVCServoPower1Switch.IsUp())
 	{
-		if (sat->StabContSystemTVCAc1CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
+		if (Sys1Ac1CB->Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
 	else if (sat->TVCServoPower1Switch.IsDown())
 	{
-		if (sat->ECATVCAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
+		if (Sys1Ac2CB->Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
 
 	return false;
@@ -4734,11 +4743,11 @@ bool TVSA::IsSystem2ACPowered()
 {
 	if (sat->TVCServoPower2Switch.IsUp())
 	{
-		if (sat->StabContSystemTVCAc1CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
+		if (Sys2Ac1CB->Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
 	else if (sat->TVCServoPower2Switch.IsDown())
 	{
-		if (sat->ECATVCAc2CircuitBraker.Voltage() > SP_MIN_ACVOLTAGE) return true;
+		if (Sys2Ac2CB->Voltage() > SP_MIN_ACVOLTAGE) return true;
 	}
 
 	return false;
@@ -4747,20 +4756,20 @@ bool TVSA::IsSystem2ACPowered()
 void TVSA::DrawSystem1ACPower() {
 
 	if (sat->TVCServoPower1Switch.IsUp()) {
-		sat->StabContSystemTVCAc1CircuitBraker.DrawPower(1.36);	// Systems handbook
+		Sys1Ac1CB->DrawPower(1.36);	// Systems handbook
 	}
 	else if (sat->TVCServoPower1Switch.IsDown()) {
-		sat->StabContSystemAc2CircuitBraker.DrawPower(1.36);	// Systems handbook
+		Sys1Ac2CB->DrawPower(1.36);	// Systems handbook
 	}
 }
 
 void TVSA::DrawSystem2ACPower() {
 
 	if (sat->TVCServoPower2Switch.IsUp()) {
-		sat->StabContSystemAc1CircuitBraker.DrawPower(1.36);	// Systems handbook
+		Sys2Ac1CB->DrawPower(1.36);	// Systems handbook
 	}
 	else if (sat->TVCServoPower2Switch.IsDown()) {
-		sat->ECATVCAc2CircuitBraker.DrawPower(1.36);			// Systems handbook
+		Sys2Ac2CB->DrawPower(1.36);	// Systems handbook
 	}
 }
 

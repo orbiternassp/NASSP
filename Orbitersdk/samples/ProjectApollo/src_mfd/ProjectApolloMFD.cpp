@@ -2205,12 +2205,13 @@ void ProjectApolloMFD::menuSetSLPage()
 	screen = m_buttonPages.page.SL;
 	m_buttonPages.SelectPage(this, screen);
 }
-
+//Kill rotation function; retained commented out in the event the function is needed later for debugging
+/*
 void ProjectApolloMFD::menuKillRot()
 {
 	g_Data.killrot ? g_Data.killrot = 0 : g_Data.killrot = 1;
 }
-
+*/
 void ProjectApolloMFD::menuSaveEMSScroll()
 {
 	if (saturn)

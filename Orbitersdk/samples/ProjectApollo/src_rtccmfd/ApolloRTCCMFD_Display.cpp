@@ -5223,7 +5223,7 @@ bool ApolloRTCCMFD::Update(oapi::Sketchpad *skp)
 		Text(skp, 51, 19, "%.3lf", GC->rtcc->PZLDPDIS.SN_LK_A);
 		if (GC->rtcc->PZLDPDIS.error != 0)
 		{
-			Text(skp, 15, 27, "Error %d", GC->rtcc->PZLDPDIS.error);
+			Text(skp, 25, 27, "Error %d", GC->rtcc->PZLDPDIS.error);
 		}
 		break;
 	case 61:

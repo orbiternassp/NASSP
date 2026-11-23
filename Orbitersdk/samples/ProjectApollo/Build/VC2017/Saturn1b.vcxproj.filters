@@ -485,6 +485,7 @@
     <ClInclude Include="..\..\src_csm\eps.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src_sys\timingequipment.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\abort.bmp">

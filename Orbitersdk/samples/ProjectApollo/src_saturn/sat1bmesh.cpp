@@ -407,9 +407,6 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 	mesh_dir=_V(-2.45, 0, 10.55 + offset);
     AddMesh (hStageSLA4Mesh, &mesh_dir);
 
-	dockringidx = -1;
-	probeidx = -1;
-	probeextidx = -1;
 	crewidx = -1;
 	cmpidx = -1;
 	sidehatchidx = -1;
@@ -438,14 +435,6 @@ void Saturn1b::SetSecondStageMeshes(double offset)
 			// If the LES is attached, no point drawing things in the external view which can't
 			// actually be seen...
 			//
-		}
-		else if (HasProbe)
-		{
-			mesh_dir=_V(0,0,21.2 + offset);
-			dockringidx = AddMesh(hdockring, &mesh_dir);
-			probeidx = AddMesh(hprobe, &mesh_dir);
-			probeextidx = AddMesh(hprobeext, &mesh_dir);
-			SetDockingProbeMesh();
 		}
 
 		//

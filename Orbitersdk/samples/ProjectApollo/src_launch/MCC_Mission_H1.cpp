@@ -42,7 +42,7 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(1.0 * 3600.0 + 30.0 * 60.0), 10, MST_H1_EPO1);
 		break;
 	case MST_H1_EPO1: //TLI Simulation to TLI+90 PAD
-		UpdateMacro(UTP_NONE, PT_NONE, true, 11, MST_H1_EPO2);
+		UpdateMacro(UTP_NONE, PT_NONE, true, 11, MST_H1_EPO2, scrubbed, true, MST_ENTRY);
 		break;
 	case MST_H1_EPO2: //TLI+90 Maneuver PAD to TLI+5h P37 PAD
 		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, SubStateTime > 5.0 * 60.0, 12, MST_H1_EPO3);
@@ -159,6 +159,33 @@ void MCC::MissionSequence_H1()
 		}
 		break;
 		case 2:
+			// Start APS burn 4 minutes earlier than scheduled at TB8 + 0:52:40.0
+			// The timing of this would be depend on the specific launch day and TLI opportunity
+			// TBD: Move this to its own RTCC calculation as in reality the extra burn duration was calculated from several factors, but
+			// the nominal required burn duration for the planned Apollo 12 launch is still several minutes. I did not find an exact source for the planned time.
+			if (SubStateTime > OrbMech::HHMMSSToSS(0, 52, 40))
+			{
+				// Don't do this past the time of nominal APS shutdown, just to be safe with old scenarios
+				if (SubStateTime < OrbMech::HHMMSSToSS(1, 1, 40))
+				{
+					// Command on APS engines
+					DCSSWITSEL swsel;
+
+					// APS engine 1
+					swsel.stage = 3;
+					swsel.channel = 42;
+					sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_SWITCH_SELECTOR, &swsel);
+
+					// APS engine 2
+					swsel.channel = 101;
+					sivb->GetIU()->GetDCS()->Uplink(DCSUPLINK_SWITCH_SELECTOR, &swsel);
+
+					addMessage("MCC: Command on S-IVB APS ullage engines");
+				}
+				setSubState(3);
+			}
+			break;
+		case 3:
 			if (mcc_calcs.GETEval(rtcc->calcParams.TLI + 2.0 * 3600.0 + 29.0 * 60.0))
 			{
 				SlowIfDesired();
@@ -204,13 +231,13 @@ void MCC::MissionSequence_H1()
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, mcc_calcs.GETEval(rtcc->calcParams.LOI - 23.5 * 3600.0), 5, MST_H1_TRANSLUNAR_DAY3_1);
 		break;
 	case MST_H1_TRANSLUNAR_DAY3_1: //MCC-3 update to PTC Quads Decision
-		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.LOI - 21.8 * 3600.0), 24, MST_H1_TRANSLUNAR_DAY3_2, scrubbed, mcc_calcs.GETEval(rtcc->calcParams.LOI - 6.5 * 3600.0), MST_H1_TRANSLUNAR_DAY4_1);
+		UpdateMacro(UTP_PADWITHCMCUPLINK, PT_AP11MNV, mcc_calcs.GETEval(rtcc->calcParams.LOI - 21.8 * 3600.0), 24, MST_H1_TRANSLUNAR_DAY3_2, scrubbed, mcc_calcs.GETEval(round((rtcc->calcParams.LOI - 7.5 * 3600.0) / 3600.0) * 3600.0), MST_H1_TRANSLUNAR_DAY4_1); //Takes LOI time reference and rounds to nearest hour for MCC4 evaluation
 		break;
 	case MST_H1_TRANSLUNAR_DAY3_2: //PTC Quads Decision to MCC-4 Evaluation
-		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(rtcc->calcParams.LOI - 6.5 * 3600.0), 140, MST_H1_TRANSLUNAR_DAY4_1);
+		UpdateMacro(UTP_PADONLY, PT_GENERIC, mcc_calcs.GETEval(round((rtcc->calcParams.LOI - 7.5 * 3600.0) / 3600.0) * 3600.0), 140, MST_H1_TRANSLUNAR_DAY4_1); //Takes LOI time reference and rounds to nearest hour for MCC4 evaluation
 		break;
 	case MST_H1_TRANSLUNAR_DAY4_1: //MCC-4 Evaluation to MCC-4 update or SV update
-		UpdateMacro(UTP_NONE, PT_NONE, SubStateTime > 5.0 * 60.0, 25, MST_H1_TRANSLUNAR_DAY4_2, scrubbed, mcc_calcs.GETEval(rtcc->calcParams.LOI - 4.5 * 3600.0), MST_H1_TRANSLUNAR_NO_MCC4_1);
+		UpdateMacro(UTP_NONE, PT_NONE, mcc_calcs.GETEval(rtcc->calcParams.LOI - 6.5 * 3600.0), 25, MST_H1_TRANSLUNAR_DAY4_2, scrubbed, mcc_calcs.GETEval(rtcc->calcParams.LOI - 4.5 * 3600.0), MST_H1_TRANSLUNAR_NO_MCC4_1);
 		break;
 	case MST_H1_TRANSLUNAR_NO_MCC4_1: //SV update to PC+2 update *No MCC-4 Timeline*
 		UpdateMacro(UTP_CMCUPLINKONLY, PT_NONE, SubStateTime > 20.0 * 60.0, 5, MST_H1_TRANSLUNAR_NO_MCC4_2);

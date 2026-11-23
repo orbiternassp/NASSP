@@ -250,7 +250,7 @@ void TwoPositionSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Soun
 void TwoPositionSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
-		s->LoadSound(Sclick, CLICK_SOUND);
+		s->LoadSound(Sclick, CLICK_SOUND, INTERNAL_ONLY);
 }
 
 bool TwoPositionSwitch::SwitchTo(int newState, bool dontspring) {
@@ -1034,7 +1034,7 @@ void PushSwitch::VesimSwitchTo(int newState) {
 void PushSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
-		s->LoadSound(Sclick, BUTTON_SOUND);
+		s->LoadSound(Sclick, BUTTON_SOUND, INTERNAL_ONLY);
 }
 
 //
@@ -1117,7 +1117,7 @@ double CircuitBrakerSwitch::Frequency()
 void CircuitBrakerSwitch::InitSound(SoundLib *s) {
 
 	if (!Sclick.isValid())
-		s->LoadSound(Sclick, CIRCUITBREAKER_SOUND);
+		s->LoadSound(Sclick, CIRCUITBREAKER_SOUND, INTERNAL_ONLY);
 }
 
 void CircuitBrakerSwitch::DrawPower(double watts)
@@ -3024,7 +3024,7 @@ void RotationalSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 	switchRow = &row;
 
 	if (!sclick.isValid()) {
-		row.panelSwitches->soundlib->LoadSound(sclick, ROTARY_SOUND);
+		row.panelSwitches->soundlib->LoadSound(sclick, ROTARY_SOUND, INTERNAL_ONLY);
 	}
 
 	OurVessel = switchRow->panelSwitches->vessel;
@@ -3482,7 +3482,7 @@ void ThumbwheelSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 	switchRow = &row;
 
 	if (!sclick.isValid()) {
-		row.panelSwitches->soundlib->LoadSound(sclick, THUMBWHEEL_SOUND);
+		row.panelSwitches->soundlib->LoadSound(sclick, THUMBWHEEL_SOUND, INTERNAL_ONLY);
 	}
 
 	OurVessel = switchRow->panelSwitches->vessel;
@@ -5426,7 +5426,7 @@ void HandcontrollerSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, 	
 	switchRow = &row;
 
 	if (!sclick.isValid()) {
-		row.panelSwitches->soundlib->LoadSound(sclick, THUMBWHEEL_SOUND);
+		row.panelSwitches->soundlib->LoadSound(sclick, THUMBWHEEL_SOUND, INTERNAL_ONLY);
 	}
 }
 

@@ -3946,11 +3946,7 @@ void Saturn::PanelSwitchToggled(TwoPositionSwitch *s) {
 		else
 			*pump = SP_VALVE_NONE;
 
-	} else if (s == &SPSTestSwitch) {
-		SPSPropellant.SPSTestSwitchToggled();
-	}
-
-	else if (s == &SPSLineHTRSSwitch) {
+	} else if (s == &SPSLineHTRSSwitch) {
 
 	if (s->IsUp()) {
 		SPSFuelSumpTankHeaterA->SetPumpOn();
@@ -4032,7 +4028,7 @@ void Saturn::PanelIndicatorSwitchStateRequested(IndicatorSwitch *s) {
 	} else if (s == &FuelCellRadTempIndicator) {
 		FuelCellStatus fc;
 		GetFuelCellStatus(FuelCellIndicatorsSwitch.GetState() + 1, fc);
-		if (fc.CoolingTempF < -30.0 || stage > CSM_LEM_STAGE)	// indication if temperature below -30°F
+		if (fc.CoolingTempF < -30.0 || stage > CSM_LEM_STAGE)	// indication if temperature below -30ï¿½F
 			FuelCellRadTempIndicator.SetState(0);
 		else
 			FuelCellRadTempIndicator.SetState(1);
@@ -6168,7 +6164,7 @@ void Saturn::InitSwitches() {
 	StabContSystemAc1CircuitBraker.Register(PSH, "StabContSystemAc1CircuitBraker", 1);
 	StabContSystemAc2CircuitBraker.Register(PSH, "StabContSystemAc2CircuitBraker", 1);
 
-	ECATVCAc2CircuitBraker.Register(PSH, "StabContSystemTVCAc1CircuitBraker", 1);
+	ECATVCAc2CircuitBraker.Register(PSH, "ECATVCAc2CircuitBraker", 1);
 	DirectUllMnACircuitBraker.Register(PSH, "DirectUllMnACircuitBraker", 1);
 	DirectUllMnBCircuitBraker.Register(PSH, "DirectUllMnBCircuitBraker", 1);
 	ContrDirectMnA1CircuitBraker.Register(PSH, "ContrDirectMnA1CircuitBraker", 1);

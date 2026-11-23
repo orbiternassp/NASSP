@@ -692,8 +692,10 @@ void LEM_DPS::Timestep(double simt, double simdt) {
 			Erosion += lem->GetThrusterLevel(dpsThruster[0])*2.525*simdt;
 			//Set base thrust (FCMAX) plus erosion effect
 			lem->SetThrusterMax0(dpsThruster[0], DPS_FCMAX + Erosion);
+			//Calculate actual thrust
+			double THRUST = (DPS_FCMAX + Erosion) * lem->GetThrusterLevel(dpsThruster[0]);
 			//Recalculate and set ISP
-			lem->SetThrusterIsp(dpsThruster[0], RecalculateISP((DPS_FCMAX + Erosion) / DPS_FMAX)*9.80665);
+			lem->SetThrusterIsp(dpsThruster[0], RecalculateISP(THRUST / DPS_FMAX)*9.80665);
 		}
 
 		//sprintf(oapiDebugString(), "Start: %d, Stop: %d Lever: %f Throttle Cmd: %f engPreValvesArm %d engArm %d thrustOn: %d", lem->ManualEngineStart.GetState(), lem->CDRManualEngineStop.GetState(), lem->ttca_throttle_pos_dig, thrustcommand, engPreValvesArm, engArm, thrustOn);
@@ -742,13 +744,13 @@ double LEM_DPS::GetInjectorActuatorPosition()
 
 double LEM_DPS::RecalculateISP(double THRUST_FMAX)
 {
-	//Numbers from GSOP R-567 Section 6, except below 11.4% thrust, which just needed to not go below zero ISP
+	//Numbers from GSOP R-567 Section 6
 	if (THRUST_FMAX >= 0.925) return (488.0 - 200.0*THRUST_FMAX);
 	else if (THRUST_FMAX >= 0.401) return (288.8778626 + 15.26717557*THRUST_FMAX);
 	else if (THRUST_FMAX >= 0.252) return (291.2322148 + 9.395973154*THRUST_FMAX);
 	else if (THRUST_FMAX >= 0.115) return (291.9445255 + 6.569343066*THRUST_FMAX);
-	else if (THRUST_FMAX >= 0.05) return (-52.3 + 3000.0*THRUST_FMAX);
-	else return (97.7);
+	else if (THRUST_FMAX >= 0.114) return (-52.3 + 3000.0*THRUST_FMAX);
+	else return (289.7);
 }
 
 void LEM_DPS::SaveState(FILEHANDLE scn, char *start_str, char *end_str) {

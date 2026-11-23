@@ -679,6 +679,9 @@ void FDAI::AnimateFDAI(VECTOR3 rates, VECTOR3 errors, UINT animR, UINT animP, UI
 	if (fdai_proc[0] < 0) fdai_proc[0] += 1.0;
 	if (fdai_proc[1] < 0) fdai_proc[1] += 1.0;
 	if (fdai_proc[2] < 0) fdai_proc[2] += 1.0;
+	if (fdai_proc[0] > 1.0) fdai_proc[0] -= 1.0;
+	if (fdai_proc[1] > 1.0) fdai_proc[1] -= 1.0;
+	if (fdai_proc[2] > 1.0) fdai_proc[2] -= 1.0;
 	vessel->SetAnimation(animY, fdai_proc[2]);
 	vessel->SetAnimation(animR, fdai_proc[0]);
 	vessel->SetAnimation(animP, fdai_proc[1]);

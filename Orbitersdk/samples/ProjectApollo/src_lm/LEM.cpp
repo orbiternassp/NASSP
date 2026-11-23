@@ -44,6 +44,7 @@
 #include "tracer.h"
 #include "papi.h"
 #include "Mission.h"
+#include "Autosave.h"
 
 #include "connector.h"
 #include "nassputils.h"
@@ -1542,6 +1543,9 @@ void LEM::clbkPreStep (double simt, double simdt, double mjd) {
 	}
 
 	if (spaceeva)UpdateSpaceEVA(); //if lmp eva active (vessel created), enables EVA Timestep
+
+	// Autosave (checks focus internally, reads config from file)
+	NASSPAutosave::Update(GetHandle(), GetName(), pMission->GetMissionName().c_str(), MissionTime);
 }
 
 
