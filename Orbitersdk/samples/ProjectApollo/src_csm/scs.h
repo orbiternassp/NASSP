@@ -782,6 +782,12 @@ protected:
 	double yawGimbalPosition2;
 	Saturn *sat;
 
+	// Circuit Breaker
+	CircuitBrakerSwitch *Sys1Ac1CB;
+	CircuitBrakerSwitch *Sys1Ac2CB;
+	CircuitBrakerSwitch *Sys2Ac1CB;
+	CircuitBrakerSwitch *Sys2Ac2CB;
+
 	//RELAYS
 
 	//Pitch Servo No. 2 Engage
