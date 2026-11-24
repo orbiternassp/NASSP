@@ -2380,6 +2380,8 @@ ContinuousSwitch::ContinuousSwitch()
 	maxValue = 1.0;
 	slope = 1.0;
 	Wraparound = false;
+	LowerLimit = 0.0;
+	UpperLimit = 1.0;
 
 	grpIndex = NULL;
 	pswitchrot = NULL;
@@ -2441,6 +2443,16 @@ void ContinuousSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, SURFH
 void ContinuousSwitch::SetWraparound(bool _Wraparound)
 {
 	Wraparound = _Wraparound;
+}
+
+void ContinuousSwitch::SetLowerLimit(double val)
+{
+	LowerLimit = val;
+}
+
+void ContinuousSwitch::SetUpperLimit(double val)
+{
+	UpperLimit = val;
 }
 
 double ContinuousSwitch::GetValue()
@@ -2509,13 +2521,13 @@ void ContinuousSwitch::SetValue(double newAngle)
 	}
 	else
 	{
-		if (newAngle < 0.0)
+		if (newAngle < LowerLimit)
 		{
-			newAngle = 0.0;
+			newAngle = LowerLimit;
 		}
-		else if (newAngle > 1.0)
+		else if (newAngle > UpperLimit)
 		{
-			newAngle = 1.0;
+			newAngle = UpperLimit;
 		}
 	}
 
