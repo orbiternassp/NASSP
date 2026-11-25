@@ -46,6 +46,7 @@
 
 #include "LES.h"
 #include "Mission.h"
+#include "SIMBay.h"
 
 #include "eva.h"
 
@@ -61,7 +62,6 @@ MESHHANDLE hSMPanel5;
 MESHHANDLE hSMPanel6;
 MESHHANDLE hSMhga;
 MESHHANDLE hSMCRYO;
-MESHHANDLE hSMSIMBAY;
 MESHHANDLE hCM;
 MESHHANDLE hCMnh;
 MESHHANDLE hCM2;
@@ -96,6 +96,16 @@ MESHHANDLE hcmCOAScdr;
 MESHHANDLE hcmCOAScdrreticle;
 MESHHANDLE hcmCueCardsArrows;
 MESHHANDLE hcmPointingArrow;
+
+
+MESHHANDLE hSMSIMBAY1; //Apollo 15/16 SIMBAY
+MESHHANDLE hSMSIMBAY2; //Apollo 17 SIMBAY
+MESHHANDLE hYAGI;
+MESHHANDLE hDIPOLEBOXES;
+MESHHANDLE hDIPOLEANTENNA1;
+MESHHANDLE hDIPOLEANTENNA2;
+MESHHANDLE hSUBSATELLITESTORED;
+MESHHANDLE hSubSatelliteBoom;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -636,7 +646,6 @@ void SaturnInitMeshes()
 	LOAD_MESH(hSMPanel6, "ProjectApollo/SM-Panel6");
 	LOAD_MESH(hSMhga, "ProjectApollo/SM-HGA");
 	LOAD_MESH(hSMCRYO, "ProjectApollo/SM-CRYO");
-	LOAD_MESH(hSMSIMBAY, "ProjectApollo/SM-SIMBAY");
 	LOAD_MESH(hCM, "ProjectApollo/CM");
 	LOAD_MESH(hCMnh, "ProjectApollo/CM-Nohatch");
 	LOAD_MESH(hCM2, "ProjectApollo/CM-Recov");
@@ -671,6 +680,16 @@ void SaturnInitMeshes()
 	LOAD_MESH(hcmCueCardsArrows, "ProjectApollo/Helpers/CM-CueCardsArrows");
 	LOAD_MESH(hcmPointingArrow, "ProjectApollo/Helpers/PointingArrow");
 
+
+	LOAD_MESH(hSMSIMBAY1, "ProjectApollo/SM-SIMBAY1");
+	LOAD_MESH(hSMSIMBAY2, "ProjectApollo/SM-SIMBAY2");
+	LOAD_MESH(hYAGI, "ProjectApollo/Yagi");
+	LOAD_MESH(hDIPOLEBOXES, "ProjectApollo/SM-DipoleBoxes");
+	LOAD_MESH(hDIPOLEANTENNA1, "ProjectApollo/DipoleAntenna1");
+	LOAD_MESH(hDIPOLEANTENNA2, "ProjectApollo/DipoleAntenna2");
+	LOAD_MESH(hSUBSATELLITESTORED, "ProjectApollo/SubSatelliteStored");
+	LOAD_MESH(hSubSatelliteBoom, "ProjectApollo/SubSatelliteBoom");
+
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
 }
@@ -703,12 +722,44 @@ void Saturn::AddSM(double offset, bool showSPS)
 
 	AddMesh (hSMPanel5, &mesh_dir);
 	AddMesh (hSMPanel6, &mesh_dir);
-	AddMesh (hSMSIMBAY, &mesh_dir);
 
 	if (showSPS) {
 		mesh_dir = _V(0, SMVO, offset - 1.654);
 		SPSidx = AddMesh(hSMSPS, &mesh_dir);
 		SPSEngine.DefineAnimations(SPSidx);
+	}
+
+	if (pMission->GetPanel230Version() == 1) {
+		mesh_dir = _V(0, SMVO, offset);
+		simbay1idx = AddMesh(hSMSIMBAY1, &mesh_dir);
+		simbay.DefineAnimations(simbay1idx);
+	}
+
+	if (pMission->GetPanel230Version() == 2) {
+		mesh_dir = _V(0, SMVO, offset);
+		simbay2idx = AddMesh(hSMSIMBAY2, &mesh_dir);
+		simbay.DefineAnimations(simbay2idx);
+	}
+
+	if (pMission->GetPanel230Version() == 1 && !SubSatLaunched)
+	{
+		subsatellitestoredidx = AddMesh(hSUBSATELLITESTORED, &mesh_dir);
+	}
+
+	if (pMission->GetPanel230Version() == 2)
+	{
+		if (!DipoleAntennasJett)
+		{
+			mesh_dir = _V(-0.910553, 0.83574, -3.55932);
+			dipoleantenna1idx = AddMesh(hDIPOLEANTENNA1, &mesh_dir);
+			hf_antenna_1.DefineAnimations(dipoleantenna1idx);
+		}
+		if (!DipoleAntennasJett)
+		{
+			mesh_dir = _V(0.910553, -0.83574, -3.55932);
+			dipoleantenna2idx = AddMesh(hDIPOLEANTENNA2, &mesh_dir);
+			hf_antenna_2.DefineAnimations(dipoleantenna2idx);
+		}
 	}
 }
 
@@ -1035,6 +1086,19 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 		hga.DefineAnimations(HGAidx);
 	}
 
+	//
+    // Apollo 7-16 and Skylab have no Yagi and Dipole antennas.
+    //
+	if (pMission->GetPanel230Version() == 2) {
+		mesh_dir = _V(0, 0, 28.9578 - CGOffset);
+		yagiidx = AddMesh(hYAGI, &mesh_dir);
+	}
+	// Dipole Antenna boxes.
+	if (pMission->GetPanel230Version() == 2) {
+		mesh_dir = _V(0, 0, 28.8078 - CGOffset);
+		dipoleboxesidx = AddMesh(hDIPOLEBOXES, &mesh_dir);
+	}
+
 	mesh_dir=_V(0, 0, 34.4 - CGOffset);
 
 	UINT meshidx;
@@ -1252,6 +1316,39 @@ void Saturn::SetSIMBayPanelMesh()
 	}
 	else {
 		SetMeshVisibilityMode(simbaypanelidx, MESHVIS_NEVER);
+	}
+}
+
+void Saturn::SubSatelliteMesh()
+{
+	if (subsatellitestoredidx == -1)
+		return;
+
+	if (!SubSatLaunched) {
+		SetMeshVisibilityMode(subsatellitestoredidx, MESHVIS_EXTERNAL);
+	}
+	else {
+		SetMeshVisibilityMode(subsatellitestoredidx, MESHVIS_NEVER);
+	}
+}
+
+void Saturn::SetDipoleAntennasMesh()
+{
+	if (dipoleantenna1idx == -1)
+		return;
+
+	if (dipoleantenna2idx == -1)
+		return;
+
+	if (!DipoleAntennasJett)
+	{
+		SetMeshVisibilityMode(dipoleantenna1idx, MESHVIS_EXTERNAL);
+		SetMeshVisibilityMode(dipoleantenna2idx, MESHVIS_EXTERNAL);
+	}
+	else
+	{
+		SetMeshVisibilityMode(dipoleantenna1idx, MESHVIS_NEVER);
+		SetMeshVisibilityMode(dipoleantenna2idx, MESHVIS_NEVER);
 	}
 }
 
@@ -2127,6 +2224,35 @@ void Saturn::JettisonSIMBayPanel()
 	strcat(VName, "-PANEL1");
 
 	oapiCreateVessel(VName, "ProjectApollo/SM-Panel1", vs1);
+}
+
+void Saturn::LaunchSubSatellite()
+{
+	VESSELSTATUS vs1;
+	GetStatus(vs1);
+
+	const double CGOffset = 12.25 + 21.5 - 1.8 + 0.35; //32.3
+	const double SEP_VEL = 1.2192; // m/s (4 ft/s)
+	const double angle = 19.2145 * RAD; //Ejection angle (from CSM Z Axis)
+
+	VECTOR3 ofs1 = { 0.576818, 1.29165, 29.8617 - CGOffset };
+	VECTOR3 relVel = _V(SEP_VEL * sin(angle), SEP_VEL * cos(angle), 0.0);
+
+	VECTOR3 relVelGlobal;
+	Local2Rel(ofs1 - currentCoG, vs1.rpos);
+	GlobalRot(relVel, relVelGlobal);
+
+	vs1.rvel = vs1.rvel + relVelGlobal;
+	vs1.vrot = _V(0, 1.25663706, 0);
+	vs1.arot.z += angle;
+
+	vs1.status = 0;
+
+	char VName[256];
+	GetApolloName(VName);
+	strcat(VName, "-SUBSATELLITE");
+
+	hSubSatellite = oapiCreateVessel(VName, "ProjectApollo/SubSatellite", vs1);
 }
 
 void Saturn::JettisonOpticsCover() 

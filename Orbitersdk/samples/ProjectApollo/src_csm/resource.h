@@ -780,6 +780,9 @@
 #define IDB_CRYO_IND_J                                     1067
 #define IDB_SWITCHGUARDS90_RIGHT                           1068
 #define AID_DUMMY_PANEL_AREA							   1069
+#define AID_CSM_PANEL_230J								   1070
+#define IDB_CSM_PANEL_230_CSM112						   1071
+#define IDB_CSM_PANEL_230_CSM114						   1072
 
 // VC Active Areas
 #define AID_VC_SEATSCYCLE		                3000

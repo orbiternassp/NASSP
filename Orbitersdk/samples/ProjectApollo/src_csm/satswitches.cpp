@@ -2583,6 +2583,114 @@ void SaturnPanel181::Register(PanelSwitchScenarioHandler *PSH)
 	SMSector1LogicPowerMNBBraker.Register(*PSH, "SMSector1LogicPowerMNBBraker", 0);
 }
 
+void SaturnPanel230CSM112::Register(PanelSwitchScenarioHandler* PSH)
+{
+	//Switches Row 1
+	MappingCamera1Switch.Register(*PSH, "MappingCamera1Switch", THREEPOSSWITCH_DOWN);
+	MappingCamera1Switch.SetSideways(2);
+	MappingCamera2Switch.Register(*PSH, "MappingCamera2Switch", THREEPOSSWITCH_CENTER);
+	MappingCamera2Switch.SetSideways(2);
+	GammaBay1Switch.Register(*PSH, "GammaBay1Switch", THREEPOSSWITCH_CENTER);
+	GammaBay1Switch.SetSideways(2);
+	GammaBay2Switch.Register(*PSH, "GammaBay2Switch", TOGGLESWITCH_UP, SPRINGLOADEDSWITCH_UP);
+	GammaBay2Switch.SetSideways(2);
+	MassSpectrometer1Switch.Register(*PSH, "MassSpectrometer1Switch", THREEPOSSWITCH_CENTER);
+	MassSpectrometer1Switch.SetSideways(2);
+	MassSpectrometer2Switch.Register(*PSH, "MassSpectrometer2Switch", TOGGLESWITCH_UP, SPRINGLOADEDSWITCH_UP);
+	MassSpectrometer2Switch.SetSideways(2);
+	//Switches Row 2
+	ImageMtnSwitch.Register(*PSH, "ImageMtnSwitch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	ImageMtnSwitch.SetSideways(2);
+	LaserAltmSwitch.Register(*PSH, "LaserAltmSwitch", TOGGLESWITCH_UP);
+	LaserAltmSwitch.SetSideways(2);
+	Exp1Switch.Register(*PSH, "Exp1Switch", TOGGLESWITCH_UP);
+	Exp1Switch.SetSideways(2);
+	Exp2Switch.Register(*PSH, "Exp2Switch", THREEPOSSWITCH_CENTER);
+	Exp2Switch.SetSideways(2);
+	IonSourceSwitch.Register(*PSH, "IonSourceSwitch", THREEPOSSWITCH_CENTER);
+	IonSourceSwitch.SetSideways(2);
+	//Switches Row 3
+	DataSys1Switch.Register(*PSH, "DataSys1Switch", TOGGLESWITCH_UP);
+	DataSys1Switch.SetSideways(2);
+	DataSys2Switch.Register(*PSH, "DataSys2Switch", TOGGLESWITCH_UP);
+	DataSys2Switch.SetSideways(2);
+	GainStepSwitch.Register(*PSH, "GainStepSwitch", THREEPOSSWITCH_CENTER);
+	GainStepSwitch.SetSideways(2);
+	MultSwitch.Register(*PSH, "MultSwitch", TOGGLESWITCH_UP);
+	MultSwitch.SetSideways(2);
+	DsCamSwitch.Register(*PSH, "DsCamSwitch", TOGGLESWITCH_DOWN);
+	DsCamSwitch.SetSideways(2);
+	//Switches Row 4
+	PanoramicCamera1Switch.Register(*PSH, "PanoramicCamera1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	PanoramicCamera1Switch.SetSideways(2);
+	PanoramicCamera2Switch.Register(*PSH, "PanoramicCamera2Switch", TOGGLESWITCH_DOWN);
+	PanoramicCamera2Switch.SetSideways(2);
+	AlphaRaySwitch.Register(*PSH, "AlphaRaySwitch", THREEPOSSWITCH_CENTER);
+	AlphaRaySwitch.SetSideways(2);
+	//Switches Row 5
+	SubSatSwitch.Register(*PSH, "SubSatSwitch", THREEPOSSWITCH_CENTER);
+	SubSatSwitch.SetSideways(2);
+	PanoramicCameraModeSwitch.Register(*PSH, "PanoramicCameraModeSwitch", TOGGLESWITCH_UP);
+	PanoramicCameraModeSwitch.SetSideways(2);
+	PanoramicCameraPWRSwitch.Register(*PSH, "PanoramicCameraPWRSwitch", THREEPOSSWITCH_DOWN);
+	PanoramicCameraPWRSwitch.SetSideways(2);
+	PanoramicCameraExposureSwitch.Register(*PSH, "PanoramicCameraExposureSwitch", THREEPOSSWITCH_CENTER);
+	PanoramicCameraExposureSwitch.SetSideways(2);
+	XRaySwitch.Register(*PSH, "XRaySwitch", THREEPOSSWITCH_CENTER);
+	XRaySwitch.SetSideways(2);
+
+}
+
+void SaturnPanel230CSM114::Register(PanelSwitchScenarioHandler* PSH)
+{
+	//Switches Row 1
+	MappingCamera1Switch.Register(*PSH, "MappingCamera1Switch", THREEPOSSWITCH_DOWN);
+	MappingCamera1Switch.SetSideways(2);
+	MappingCamera2Switch.Register(*PSH, "MappingCamera2Switch", THREEPOSSWITCH_CENTER);
+	MappingCamera2Switch.SetSideways(2);
+	LunarSounderSwitch.Register(*PSH, "LunarSounderSwitch", TOGGLESWITCH_UP);
+	LunarSounderSwitch.SetSideways(2);
+	HFAntenna1Switch.Register(*PSH, "HFAntenna1Switch", THREEPOSSWITCH_CENTER);
+	HFAntenna1Switch.SetSideways(2);
+	HFAntenna2Switch.Register(*PSH, "HFAntenna2Switch", THREEPOSSWITCH_CENTER);
+	HFAntenna2Switch.SetSideways(2);
+	HFAntennaJettSwitch.Register(*PSH, "HFAntennaJettSwitch", TOGGLESWITCH_UP, SPRINGLOADEDSWITCH_UP);
+	HFAntennaJettSwitch.SetSideways(2);
+	//Switches Row 2
+	ImageMtnSwitch.Register(*PSH, "ImageMtnSwitch", THREEPOSSWITCH_DOWN, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	ImageMtnSwitch.SetSideways(2);
+	LaserAltmSwitch.Register(*PSH, "LaserAltmSwitch", TOGGLESWITCH_UP);
+	LaserAltmSwitch.SetSideways(2);
+	RCDRSwitch.Register(*PSH, "RCDRSwitch", THREEPOSSWITCH_CENTER);
+	RCDRSwitch.SetSideways(2);
+	RadarSwitch.Register(*PSH, "RadarSwitch", TOGGLESWITCH_UP);
+	RadarSwitch.SetSideways(2);
+	ModeSwitch.Register(*PSH, "ModeSwitch", THREEPOSSWITCH_DOWN);
+	ModeSwitch.SetSideways(2);
+	//Switches Row 3
+	DataSys1Switch.Register(*PSH, "DataSys1Switch", TOGGLESWITCH_UP);
+	DataSys1Switch.SetSideways(2);
+	DataSys2Switch.Register(*PSH, "DataSys2Switch", TOGGLESWITCH_UP);
+	DataSys2Switch.SetSideways(2);
+	IRSwitch.Register(*PSH, "IRSwitch", TOGGLESWITCH_UP);
+	IRSwitch.SetSideways(2);
+	//Switches Row 4
+	PanoramicCamera1Switch.Register(*PSH, "PanoramicCamera1Switch", THREEPOSSWITCH_CENTER, SPRINGLOADEDSWITCH_CENTER_SPRINGUP);
+	PanoramicCamera1Switch.SetSideways(2);
+	PanoramicCamera2Switch.Register(*PSH, "PanoramicCamera2Switch", TOGGLESWITCH_DOWN);
+	PanoramicCamera2Switch.SetSideways(2);
+	//Switches Row 5
+	PanoramicCameraModeSwitch.Register(*PSH, "PanoramicCameraModeSwitch", TOGGLESWITCH_UP);
+	PanoramicCameraModeSwitch.SetSideways(2);
+	PanoramicCameraPWRSwitch.Register(*PSH, "PanoramicCameraPWRSwitch", THREEPOSSWITCH_DOWN);
+	PanoramicCameraPWRSwitch.SetSideways(2);
+	PanoramicCameraVHOVRDSwitch.Register(*PSH, "PanoramicCameraVHOVRDSwitch", THREEPOSSWITCH_CENTER);
+	PanoramicCameraVHOVRDSwitch.SetSideways(2);
+	UVSpectSwitch.Register(*PSH, "UVSpectSwitch", TOGGLESWITCH_UP);
+	UVSpectSwitch.SetSideways(2);
+
+}
+
 void SaturnPanel277::Register(PanelSwitchScenarioHandler *PSH)
 {
 	SPSPressIndFuelSwitch.Register(*PSH, "SPSPressIndFuelSwitch", TOGGLESWITCH_UP);
@@ -2599,6 +2707,8 @@ void SaturnPanel278J::Register(PanelSwitchScenarioHandler *PSH)
 	ExperimentCovers1Switch.SetSideways(2);
 	ExperimentCovers2Switch.Register(*PSH, "ExperimentCovers2Switch", THREEPOSSWITCH_CENTER);
 	ExperimentCovers2Switch.SetSideways(2);
+	ExperimentCovers3Switch.Register(*PSH, "ExperimentCovers3Switch", THREEPOSSWITCH_CENTER);
+	ExperimentCovers3Switch.SetSideways(2);
 	SMPowerSourceSwitch.Register(*PSH, "SMPowerSourceSwitch", THREEPOSSWITCH_DOWN, false);
 	SMPowerSourceSwitch.SetSideways(2);
 	SMPowerSourceSwitch.SetGuardResetsState(false);
