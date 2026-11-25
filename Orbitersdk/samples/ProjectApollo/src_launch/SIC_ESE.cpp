@@ -27,13 +27,14 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "LCCPadInterface.h"
 #include "SIC_ESE.h"
 
-SIC_ESE::SIC_ESE(TailUmbilical *TSMUmb, LCCPadInterface *p) : SI_ESE(TSMUmb, p)
+SIC_ESE::SIC_ESE(LCCPadInterface *p) : SI_ESE(p)
 {
 	for (int i = 0;i < 5;i++)
 	{
 		for (int j = 0;j < 3;j++)
 		{
 			SICThrustOKSimulate[i][j] = false;
+			SICThrustOK[i * 3 + j] = false;
 		}
 	}
 }
@@ -54,6 +55,7 @@ void SIC_ESE::Timestep()
 			}
 		}
 	}
+	siESEToSICommandConnector.GetSIThrustOK(SICThrustOK, 15);
 }
 
 void SIC_ESE::SaveState(FILEHANDLE scn)

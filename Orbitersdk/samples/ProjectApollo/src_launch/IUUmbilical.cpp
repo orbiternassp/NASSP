@@ -26,283 +26,507 @@ See http://nassp.sourceforge.net/license/ for more details.
 #include "iu.h"
 #include "IUUmbilicalInterface.h"
 #include "IUUmbilical.h"
+#include "IU_ESE.h"
 
-IUUmbilical::IUUmbilical(IUUmbilicalInterface *ml)
+IUESEToIUCommandConnector::IUESEToIUCommandConnector()
 {
-	IuUmb = ml;
-	iu = NULL;
+	type = IUESE_IU_COMMAND;
+	ourIU_ESE = NULL;
 }
 
-IUUmbilical::~IUUmbilical()
+IUESEToIUCommandConnector::~IUESEToIUCommandConnector()
 {
-	Disconnect();
+
 }
 
-void IUUmbilical::Connect(IU *iu)
+bool IUESEToIUCommandConnector::ReceiveMessage(Connector *from, ConnectorMessage &m)
 {
-	if (iu)
+	//
+	// Sanity check.
+	//
+
+	if (m.destination != type)
 	{
-		iu->IuUmb = this;
+		return false;
 	}
-	this->iu = iu;
-}
 
-void IUUmbilical::Disconnect()
-{
-	if (iu)
+	IUESEMessageType messageType;
+
+	messageType = (IUESEMessageType)m.messageType;
+
+	switch (messageType)
 	{
-		iu->IuUmb = NULL;
-		iu = NULL;
+	case IU_IUESE_GET_COMMAND_VEHICLE_LIFTOFF_INDICATION_INHIBIT:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetCommandVehicleLiftoffIndicationInhibit();
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_EXCESSIVE_ROLL_RATE_AUTO_ABORT_INHIBIT:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetExcessiveRollRateAutoAbortInhibit(m.val1.iValue);
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_EXCESSIVE_PITCH_YAW_RATE_AUTO_ABORT_INHIBIT:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetExcessivePitchYawRateAutoAbortInhibit(m.val1.iValue);
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_TWO_ENGINE_OUT_AUTO_ABORT_INHIBIT:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetTwoEngineOutAutoAbortInhibit(m.val1.iValue);
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_GSE_OVERRATE_SIMULATE:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetOverrateSimulate(m.val1.iValue);
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_EDS_POWER_INHIBIT:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetEDSPowerInhibit();
+			return true;
+		}
+		break;
+	case IU_IUESE_PAD_ABORT_REQUEST:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetEDSPadAbortRequest();
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_ENGINE_THRUST_INDICATION_ENABLE_INHIBIT_A:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetThrustOKIndicateEnableInhibitA();
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_ENGINE_THRUST_INDICATION_ENABLE_INHIBIT_B:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetThrustOKIndicateEnableInhibitB();
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_EDS_LIFTOFF_INHIBIT_A:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetEDSLiftoffInhibitA();
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_EDS_LIFTOFF_INHIBIT_B:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetEDSLiftoffInhibitB();
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_SI_BURN_MODE_SUBSTITUTE:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetSIBurnModeSubstitute();
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_GUIDANCE_REFERENCE_RELEASE:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetGuidanceReferenceRelease();
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_Q_BALL_SIMULATE_CMD:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetQBallSimulateCmd();
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_EDS_AUTO_ABORT_SIMULATE:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetEDSAutoAbortSimulate(m.val1.iValue);
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_EDS_LV_CUTOFF_SIMULATE:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetEDSLVCutoffSimulate(m.val1.iValue);
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_SIC_OUTBOARD_ENGINES_CANT_INHIBIT:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetSICOutboardEnginesCantInhibit();
+			return true;
+		}
+		break;
+	case IU_IUESE_GET_SIC_OUTBOARD_ENGINES_CANT_SIMULATE:
+		if (ourIU_ESE)
+		{
+			m.val1.bValue = ourIU_ESE->GetSICOutboardEnginesCantSimulate();
+			return true;
+		}
+		break;
 	}
+	return false;
 }
 
-bool IUUmbilical::ESEGetCommandVehicleLiftoffIndicationInhibit()
+void IUESEToIUCommandConnector::SetEDSLiftoffEnableA()
 {
-	return IuUmb->ESEGetCommandVehicleLiftoffIndicationInhibit();
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_SET_EDS_LIFTOFF_ENABLE_A;
+
+	SendMessage(cm);
 }
 
-bool IUUmbilical::ESEGetSICOutboardEnginesCantInhibit()
+void IUESEToIUCommandConnector::SetEDSLiftoffEnableB()
 {
-	return IuUmb->ESEGetSICOutboardEnginesCantInhibit();
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_SET_EDS_LIFTOFF_ENABLE_B;
+
+	SendMessage(cm);
 }
 
-bool IUUmbilical::ESEGetSICOutboardEnginesCantSimulate()
+void IUESEToIUCommandConnector::EDSLiftoffEnableReset()
 {
-	return IuUmb->ESEGetSICOutboardEnginesCantSimulate();
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_EDS_LIFTOFF_ENABLE_RESET;
+
+	SendMessage(cm);
 }
 
-bool IUUmbilical::ESEGetExcessiveRollRateAutoAbortInhibit(int n)
+void IUESEToIUCommandConnector::SwitchFCCPowerOn()
 {
-	return IuUmb->ESEGetExcessiveRollRateAutoAbortInhibit(n);
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_SET_FCC_POWER;
+	cm.val1.bValue = true;
+
+	SendMessage(cm);
 }
 
-bool IUUmbilical::ESEGetExcessivePitchYawRateAutoAbortInhibit(int n)
+void IUESEToIUCommandConnector::SwitchFCCPowerOff()
 {
-	return IuUmb->ESEGetExcessivePitchYawRateAutoAbortInhibit(n);
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_SET_FCC_POWER;
+	cm.val1.bValue = false;
+
+	SendMessage(cm);
 }
 
-bool IUUmbilical::ESEGetTwoEngineOutAutoAbortInhibit(int n)
+void IUESEToIUCommandConnector::SwitchQBallPowerOn()
 {
-	return IuUmb->ESEGetTwoEngineOutAutoAbortInhibit(n);
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_SET_Q_BALL_POWER;
+	cm.val1.bValue = true;
+
+	SendMessage(cm);
 }
 
-bool IUUmbilical::ESEGetGSEOverrateSimulate(int n)
+void IUESEToIUCommandConnector::SwitchQBallPowerOff()
 {
-	return IuUmb->ESEGetGSEOverrateSimulate(n);
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_SET_Q_BALL_POWER;
+	cm.val1.bValue = false;
+
+	SendMessage(cm);
 }
 
-bool IUUmbilical::ESEGetEDSPowerInhibit()
+void IUESEToIUCommandConnector::SetControlSignalProcessorPower(bool set)
 {
-	return IuUmb->ESEGetEDSPowerInhibit();
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_SET_CONTROL_SIGNAL_PROCESSOR_POWER;
+	cm.val1.bValue = set;
+
+	SendMessage(cm);
 }
 
-bool IUUmbilical::ESEPadAbortRequest()
+void IUESEToIUCommandConnector::EDSGroupNo1Reset()
 {
-	return IuUmb->ESEPadAbortRequest();
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_EDS_GROUP_NO_1_RESET;
+
+	SendMessage(cm);
 }
 
-bool IUUmbilical::ESEGetThrustOKIndicateEnableInhibitA()
+void IUESEToIUCommandConnector::EDSGroupNo2Reset()
 {
-	return IuUmb->ESEGetThrustOKIndicateEnableInhibitA();
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_EDS_GROUP_NO_2_RESET;
+
+	SendMessage(cm);
 }
 
-bool IUUmbilical::ESEGetThrustOKIndicateEnableInhibitB()
+bool IUESEToIUCommandConnector::AllSIEnginesRunning()
 {
-	return IuUmb->ESEGetThrustOKIndicateEnableInhibitB();
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_ALL_SI_ENGINES_RUNNING;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-bool IUUmbilical::ESEEDSLiftoffInhibitA()
+bool IUESEToIUCommandConnector::IsEDSUnsafeA()
 {
-	return IuUmb->ESEEDSLiftoffInhibitA();
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_IS_EDS_UNSAFE_A;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-bool IUUmbilical::ESEEDSLiftoffInhibitB()
+bool IUESEToIUCommandConnector::IsEDSUnsafeB()
 {
-	return IuUmb->ESEEDSLiftoffInhibitB();
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_IS_EDS_UNSAFE_B;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-bool IUUmbilical::ESEGetSIBurnModeSubstitute()
+bool IUESEToIUCommandConnector::GetEDSSCCutoff1()
 {
-	return IuUmb->ESEGetSIBurnModeSubstitute();
+	return GetEDSSCCutoff(1);
 }
 
-bool IUUmbilical::ESEGetGuidanceReferenceRelease()
+bool IUESEToIUCommandConnector::GetEDSSCCutoff2()
 {
-	return IuUmb->ESEGetGuidanceReferenceRelease();
+	return GetEDSSCCutoff(2);
 }
 
-bool IUUmbilical::ESEGetQBallSimulateCmd()
+bool IUESEToIUCommandConnector::GetEDSSCCutoff3()
 {
-	return IuUmb->ESEGetQBallSimulateCmd();
+	return GetEDSSCCutoff(3);
 }
 
-bool IUUmbilical::ESEGetEDSAutoAbortSimulate(int n)
+bool IUESEToIUCommandConnector::GetEDSSCCutoff(int n)
 {
-	return IuUmb->ESEGetEDSAutoAbortSimulate(n);
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_GET_EDS_SC_CUTOFF;
+	cm.val1.iValue = n;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-bool IUUmbilical::ESEGetEDSLVCutoffSimulate(int n)
+bool IUESEToIUCommandConnector::GetEDSAutoAbortBus()
 {
-	return IuUmb->ESEGetEDSLVCutoffSimulate(n);
+	ConnectorMessage cm;
+
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_GET_EDS_AUTO_ABORT_BUS;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-void IUUmbilical::SetEDSLiftoffEnableA()
+bool IUESEToIUCommandConnector::GetEDSExcessiveRollRateIndication()
 {
-	if (!iu) return;
+	ConnectorMessage cm;
 
-	iu->GetEDS()->SetEDSLiftoffEnableA();
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_GET_EDS_EXCESSIVE_ROLL_RATE_INDICATION;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-void IUUmbilical::SetEDSLiftoffEnableB()
+bool IUESEToIUCommandConnector::GetEDSExcessivePitchYawRateIndication()
 {
-	if (!iu) return;
+	ConnectorMessage cm;
 
-	iu->GetEDS()->SetEDSLiftoffEnableB();
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_GET_EDS_EXCESSIVE_PITCH_YAW_RATE_INDICATION;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-void IUUmbilical::EDSLiftoffEnableReset()
+bool IUESEToIUCommandConnector::GetLVDCOutputRegisterDiscrete(int bit)
 {
-	if (!iu) return;
+	ConnectorMessage cm;
 
-	iu->GetEDS()->LiftoffEnableReset();
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_GET_LVDC_OUTPUT_REGISTER_DISCRETE;
+	cm.val1.iValue = bit;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-void IUUmbilical::SwitchFCCPowerOn()
+bool IUESEToIUCommandConnector::FCCPowerIsOn()
 {
-	if (!iu) return;
+	ConnectorMessage cm;
 
-	iu->GetControlDistributor()->SetFCCPower(true);
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_FCC_POWER_IS_ON;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-void IUUmbilical::SwitchFCCPowerOff()
+void IUESEToIUCommandConnector::SwitchSelector(int stage, int channel)
 {
-	if (!iu) return;
+	ConnectorMessage cm;
 
-	iu->GetControlDistributor()->SetFCCPower(false);
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_SWITCH_SELECTOR;
+	cm.val1.iValue = stage;
+	cm.val2.iValue = channel;
+
+	SendMessage(cm);
 }
 
-void IUUmbilical::SwitchQBallPowerOn()
+void IUESEToIUCommandConnector::LVDCPrepareToLaunch()
 {
-	if (!iu) return;
+	ConnectorMessage cm;
 
-	iu->GetControlDistributor()->SetQBallPower(true);
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_LVDC_PREPARE_TO_LAUNCH;
+
+	SendMessage(cm);
 }
 
-void IUUmbilical::SwitchQBallPowerOff()
+bool IUESEToIUCommandConnector::GetSCCutoffEnabledA()
 {
-	if (!iu) return;
+	ConnectorMessage cm;
 
-	iu->GetControlDistributor()->SetQBallPower(false);
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_EDS_SC_CUTOFF_ENABLE_A;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-bool IUUmbilical::AllSIEnginesRunning()
+bool IUESEToIUCommandConnector::GetSCCutoffEnabledB()
 {
-	if (!iu) return false;
+	ConnectorMessage cm;
 
-	return iu->GetEDS()->GetAllSIEnginesRunning();
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_EDS_SC_CUTOFF_ENABLE_B;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-bool IUUmbilical::IsEDSUnsafeA()
+bool IUESEToIUCommandConnector::GetLiftoffEnableA()
 {
-	if (!iu) return false;
+	ConnectorMessage cm;
 
-	return iu->GetEDS()->IsEDSUnsafeA();
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_EDS_GET_LIFTOFF_ENABLE_A;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-bool IUUmbilical::IsEDSUnsafeB()
+bool IUESEToIUCommandConnector::GetLiftoffEnableB()
 {
-	if (!iu) return false;
+	ConnectorMessage cm;
 
-	return iu->GetEDS()->IsEDSUnsafeB();
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_EDS_GET_LIFTOFF_ENABLE_B;
+
+	if (SendMessage(cm))
+	{
+		return cm.val1.bValue;
+	}
+	return false;
 }
 
-bool IUUmbilical::GetEDSSCCutoff1()
+void IUESEToIUCommandConnector::GetEDSAbortCommandToSC(bool *abort)
 {
-	if (!iu) return false;
+	ConnectorMessage cm;
 
-	return iu->GetEDS()->GetLVEnginesCutoffFromSC1();
-}
+	cm.destination = IUESE_IU_COMMAND;
+	cm.messageType = IUESE_IU_EDS_GET_ABORT_TO_SC;
+	cm.val1.pValue = abort;
 
-bool IUUmbilical::GetEDSSCCutoff2()
-{
-	if (!iu) return false;
-
-	return iu->GetEDS()->GetLVEnginesCutoffFromSC2();
-}
-
-bool IUUmbilical::GetEDSSCCutoff3()
-{
-	if (!iu) return false;
-
-	return iu->GetEDS()->GetLVEnginesCutoffFromSC3();
-}
-
-bool IUUmbilical::GetEDSAutoAbortBus()
-{
-	if (!iu) return false;
-
-	return iu->GetEDS()->GetAutoAbort();
-}
-
-bool IUUmbilical::GetEDSExcessiveRollRateIndication()
-{
-	if (!iu) return false;
-
-	return iu->GetEDS()->GetExcessiveRollRateIndication();
-}
-
-bool IUUmbilical::GetEDSExcessivePitchYawRateIndication()
-{
-	if (!iu) return false;
-
-	return iu->GetEDS()->GetExcessivePitchYawRateIndication();
-}
-
-bool IUUmbilical::GetLVDCOutputRegisterDiscrete(int bit)
-{
-	if (!iu) return false;
-
-	return iu->GetLVDA()->GetOutputRegisterBit(bit);
-}
-
-bool IUUmbilical::FCCPowerIsOn()
-{
-	if (!iu) return false;
-
-	return iu->GetControlDistributor()->GetFCCPowerOn();
-}
-
-void IUUmbilical::SetControlSignalProcessorPower(bool set)
-{
-	if (!iu) return;
-
-	iu->GetControlDistributor()->SetControlSignalProcessorPowerOn(set);
-}
-
-void IUUmbilical::EDSGroupNo1Reset()
-{
-	if (!iu) return;
-
-	iu->GetControlDistributor()->ResetBus1();
-}
-
-void IUUmbilical::EDSGroupNo2Reset()
-{
-	if (!iu) return;
-
-	iu->GetControlDistributor()->ResetBus2();
-}
-
-void IUUmbilical::SwitchSelector(int stage, int channel)
-{
-	if (!iu) return;
-
-	iu->GetControlDistributor()->SwitchSelector(stage, channel);
-}
-
-void IUUmbilical::LVDCPrepareToLaunch()
-{
-	if (!iu) return;
-
-	iu->GetLVDA()->PrepareToLaunch();
+	if (SendMessage(cm))
+	{
+		return;
+	}
+	
+	for (int i = 0; i < 6; i++)
+	{
+		abort[i] = false;
+	}
 }

@@ -24,8 +24,9 @@ See http://nassp.sourceforge.net/license/ for more details.
 
 #pragma once
 
-class IUUmbilical;
 class LCCPadInterface;
+
+#include "IUUmbilical.h"
 
 #define LCC_EDS_MODE_OFF 0
 #define LCC_EDS_MODE_MONITOR 1
@@ -35,7 +36,8 @@ class LCCPadInterface;
 class IU_ESE
 {
 public:
-	IU_ESE(IUUmbilical *IuUmb, LCCPadInterface *p);
+	IU_ESE(LCCPadInterface *p);
+	virtual ~IU_ESE();
 
 	void Timestep(double MissionTime, double simdt);
 	void SaveState(FILEHANDLE scn);
@@ -58,6 +60,17 @@ public:
 	bool GetQBallSimulateCmd() { return QBallSimulateCmd; }
 	bool GetEDSAutoAbortSimulate(int n);
 	bool GetEDSLVCutoffSimulate(int n);
+	virtual bool GetSICOutboardEnginesCantInhibit() { return false; }
+	virtual bool GetSICOutboardEnginesCantSimulate() { return false; }
+
+	//IU ESE to ML
+	bool GetOneEngineOutA() { return OneEngineOutA; }
+	bool GetSCCutoffEnableA() { return SCCutoffEnableA; }
+	bool GetSCCutoffEnableB() { return SCCutoffEnableB; }
+	bool GetLiftoffReset() { return LiftoffReset; }
+	bool GetLiftoffEnableA() { return LiftoffEnableA; }
+	bool GetLiftoffEnableB() { return LiftoffEnableB; }
+	bool GetEDSAbortCommandToSC(int n) { return EDSAbortCommandToSC[n]; }
 
 	void SetGuidanceReferenceRelease(bool set) { GuidanceReferenceRelease = set; }
 	void SetEDSPowerInhibit(bool set) { EDSPowerInhibit = set; }
@@ -66,6 +79,8 @@ public:
 	void SetEDSCutoffFromSC(int n, bool set) { EDSCutoffFromSC[n - 1] = set; }
 	void SetThrustOKIndicateEnableInhibitA(bool set) { ThrustOKIndicateEnableInhibitA = set; }
 	void SetThrustOKIndicateEnableInhibitB(bool set) { ThrustOKIndicateEnableInhibitB = set; }
+
+	IUESEToIUCommandConnector* GetIUESEToIUCommandConnector() { return &iuESEToIUCommandConnector; }
 protected:
 	void SetEDSMode(int mode);
 
@@ -88,6 +103,13 @@ protected:
 	bool SwitchFCCPowerOff;
 	bool QBallSimulateCmd;
 	bool EDSAutoAbortSimulate[6];
+	bool EDSAbortCommandToSC[6];
+	bool OneEngineOutA;
+	bool SCCutoffEnableA;
+	bool SCCutoffEnableB;
+	bool LiftoffReset;
+	bool LiftoffEnableA;
+	bool LiftoffEnableB;
 
 	//Signals from LV
 	bool FCCPowerIsOn;
@@ -97,14 +119,14 @@ protected:
 
 	double LastMissionTime = 0.0;
 
-	IUUmbilical *Umbilical;
 	LCCPadInterface *Pad;
+	IUESEToIUCommandConnector iuESEToIUCommandConnector;
 };
 
 class IUSV_ESE : public IU_ESE
 {
 public:
-	IUSV_ESE(IUUmbilical *IuUmb, LCCPadInterface *p);
+	IUSV_ESE(LCCPadInterface *p);
 
 	bool GetSICOutboardEnginesCantInhibit() { return SICOutboardEnginesCantInhibit; }
 	bool GetSICOutboardEnginesCantSimulate() { return SICOutboardEnginesCantSimulate; }

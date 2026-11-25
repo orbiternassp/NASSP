@@ -33,7 +33,7 @@ enum ConnectorType
 {
 	NO_CONNECTION,				///< Dummy.
 	CSM_IU_COMMAND,				///< Passes commands and data between CSM and IU.
-	LV_IU_COMMAND,				///< Passes commands between launch vehicle and IU.
+	LV_IU_COMMAND,				///< Passes commands between launch vehicle and IU. (GET RID OF THS)
 	CSM_LEM_DOCKING,			///< Docking connector between CSM and LEM.
 	LEM_CSM_POWER,				///< Power connection from CSM to LEM.
 	MFD_PANEL_INTERFACE,		///< Connector from an MFD to a panel.
@@ -41,10 +41,14 @@ enum ConnectorType
 	CHECKLIST_DATA_INTERFACE,	///< Data connector from checklist controller to vessel
 	PAYLOAD_SLA_CONNECT,		///< Passes commands and data between payload and SIVb.
 	CSM_PAYLOAD_COMMAND,		///< Docking connector between CSM and Payload
-	SIVB_SI_COMMAND,			///< Docking connector between S-IVB and S-IB/S-II
-	SII_SIC_COMMAND,			///< Docking connector between S-II and S-IC
+	SIVB_SIX_COMMAND,			///< Docking connector between S-IVB and S-IB/S-II
+	SII_SII_IS_COMMAND,			///< Docking connector between S-II and S-II Interstage
+	SII_IS_SIC_COMMAND,			///< Docking connector between S-II Interstage and S-IC
 	RADAR_RF_SIGNAL,			///< Radar connector betwen LM rendezvous radar amd CSM rendezvous radar transponder
 	VHF_RNG,
+	SIVB_IU_COMMAND,			///< Passes commands between S-IVB and IU.
+	IUESE_IU_COMMAND,			///< Passes commands between IU ESE and IU
+	SIESE_SI_COMMAND,			///< Passes commands between SI ESE and S-I
 };
 
 #define VIRTUAL_CONNECTOR_PORT	(0xffff)		///< Port ID for 'virtual' connectors which don't physically exist.
@@ -272,8 +276,14 @@ public:
 	{
 		int port;
 		Connector *c;
+		///
+		/// True if the connector is not a class member but is only managed by ProjectApolloConnectorVessel. These connectors
+		/// are not disconnected in the ProjectApolloConnectorVessel destructor because they might already be deleted. The class
+		/// that owns the connector has to take care of disconnecting it its destructor.
+		///
+		bool IsManagedConnector;
 
-		ConnectorDefinition() { port = 0; c = 0; };
+		ConnectorDefinition() { port = 0; c = 0; IsManagedConnector = false; };
 	};
 
 	///
@@ -322,9 +332,10 @@ protected:
 	/// \brief Register a connector for use by other vessels.
 	/// \param port Docking port number.
 	/// \param c Pointer to a connector.
+	/// \param isManaged Connector is not a vessel class member and will not be disconnected in the destructor.
 	/// \return True if registered, false if not (e.g. too many registered already).
 	///
-	bool RegisterConnector(int port, Connector *c);
+	bool RegisterConnector(int port, Connector *c, bool isManaged = false);
 
 #define PACV_N_VALIDATION	0x5a715a75
 

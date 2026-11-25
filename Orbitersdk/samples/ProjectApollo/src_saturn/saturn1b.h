@@ -63,18 +63,6 @@ public:
 	///
 	void clbkPostStep (double simt, double simdt, double mjd);
 
-	/// 
-	/// \brief LVDC "Switch Selector" staging support utility function
-	/// 
-	void SISwitchSelector(int channel);
-
-	void SIEDSCutoff(bool cut);
-	void GetSIThrustOK(bool *ok);
-	bool GetSIInboardEngineOut();
-	bool GetSIOutboardEngineOut();
-	bool GetSIPropellantDepletionEngineCutoff();
-	bool GetSIBLowLevelSensorsDry();
-	void SetSIThrusterDir(int n, double yaw, double pitch);
 	double GetSIThrustLevel();
 
 	void ActivatePrelaunchVenting();
