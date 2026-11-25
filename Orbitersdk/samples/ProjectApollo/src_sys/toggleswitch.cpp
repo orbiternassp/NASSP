@@ -3750,6 +3750,18 @@ void IndicatorSwitch::Init(int xp, int yp, int w, int h, SURFHANDLE surf, Switch
 	
 	row.AddSwitch(this);
 	switchRow = &row;
+
+	prevDisplayState = displayState;
+	initialized = false;
+	InitSound(switchRow->panelSwitches->soundlib);
+}
+
+void IndicatorSwitch::InitSound(SoundLib* s) {
+
+	if (!Stbgrey.isValid())
+		s->LoadSound(Stbgrey, TBGREY_SOUND);
+	if (!Stbbp.isValid())
+		s->LoadSound(Stbbp, TBBP_SOUND);
 }
 
 bool IndicatorSwitch::CheckMouseClick(int event, int mx, int my) {
@@ -3838,6 +3850,22 @@ void IndicatorSwitch::DrawSwitchVC(int id, int event, SURFHANDLE drawSurface) {
 	}
 
 	oapiBlt(drawSurface, switchsurfacevc, x*TexMul, y*TexMul, width * (int)displayState*TexMul, 0, width*TexMul, height*TexMul);
+
+	if (!initialized) {
+		prevDisplayState = displayState;
+		initialized = true;
+	}
+	else {
+		if (prevDisplayState > 0.0 && displayState <= 0.0) {
+			Stbbp.play();
+		}
+
+		if (prevDisplayState < 3.0 && displayState >= 3.0) {
+			Stbgrey.play();
+		}
+
+		prevDisplayState = displayState;
+	}
 }
 
 void IndicatorSwitch::SaveState(FILEHANDLE scn) {
