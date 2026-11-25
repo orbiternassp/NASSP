@@ -1,0 +1,13 @@
+How to configure Project Apollo:
+
+1. You will still need to install OrbiterSound for there to be any audio from Project Apollo. to do this, go to http://orbiter.dansteph.com/forum/index.php?page=download and follow the installer. Then, go to "Modules" in Orbiter and activate the module. You can also run the SoundConfig application to adjust the settings to your liking.
+
+2. Go to the "Parameters" tab and make sure that at least Complex flight model, Limited fuel and Nonspherical gravity sources are enabled. Note: At this time, it is recommended to leave "Gravity-gradient torque" and "Atmospheric wind effects" disabled as in some occasions they can cause CTDs with NASSP. Go to "Visual effects" tab and configure to your liking. Make sure to have a check on surface elevation, using LINEAR interpolation in order to not have the landed LM seem sunken into/floating over the lunar terrain. You can also check "Particle streams" to see the various particle/dust effects in NASSP and "Local light sources" for the night-time launch pad lighting.
+
+3. Go to the "Modules" tab and activate the "ProjectApolloMFD" and "ApolloRTCCMFD" modules.
+
+4. Go to the Launchpad Configuration Options on the "Extra" tab. If you have a joystick, this is where you can configure your joystick for use in NASSP. Do not use the normal Orbiter controls page to configure your joystick, there it should be <Disabled>. In the "Miscellaneous" tab, make sure "Multi-Threading in time acceleration" is checked. It is also recommended to set a limit for time acceleration, NASSP runs best at 50x or less depending on the hardware you are using.
+
+OPTIONAL: Download "Apollo Landing Sites for Orbiter 2016" by ggalfi here: http://absimp.org/orbitersim/apollolandingsites.html. The scenery is breathtaking but be aware there can sometimes be a mismatch between the visible terrain and the physical terrain in the Orbiter engine, so the LM can sometimes be floating above or sunken into the surface after landing. If you try and land exactly at the historical landing site, the mismatch should be minimal.
+
+And that is it! Enjoy!
