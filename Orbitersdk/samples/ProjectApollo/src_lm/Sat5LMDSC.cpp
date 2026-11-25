@@ -33,6 +33,7 @@ See http://nassp.sourceforge.net/license/ for more details.
 static int refcount = 0;
 static MESHHANDLE LM_Descent;
 static MESHHANDLE LM_DescentNoLeg;
+static MESHHANDLE LM_DescentJ;
 
 //
 // Spew out particles to simulate the junk thrown out by stage
@@ -147,6 +148,10 @@ void Sat5LMDSC::Setup()
 
 	if (!pMission->LMHasLegs()) {
 		InsertMesh(LM_DescentNoLeg, dscidx);
+	}
+
+	if (pMission->IsJMission()) {
+		InsertMesh(LM_DescentJ, dscidx);
 	}
 
 	if (state > 0)
@@ -311,8 +316,10 @@ void Sat5LMDSC::HideDeflectors()
 
 void Sat5LMDSC::HideCask()
 {
+
 	if (!desstg_devmesh)
 		return;
+
 	if (!pMission->LMHasCask()) {
 		static UINT meshgroup_cask[4] = { DS_GRP_Cask, DS_GRP_CaskFoil, DS_GRP_CaskMount, DS_GRP_Cask_Handle };
 
@@ -386,6 +393,7 @@ DLLCLBK VESSEL *ovcInit(OBJHANDLE hvessel, int flightmodel)
 	if (!refcount++) {
 		LM_Descent = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStage");
 		LM_DescentNoLeg = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStageNoLeg");
+		LM_DescentJ = oapiLoadMeshGlobal("ProjectApollo/LM_DescentStage-J");
 		seperation_junk.tex = oapiRegisterParticleTexture("ProjectApollo/junk");
 	}
 	return new Sat5LMDSC(hvessel, flightmodel);
@@ -400,6 +408,13 @@ void Sat5LMDSC::clbkSetClassCaps(FILEHANDLE cfg)
 {
 	VESSEL2::clbkSetClassCaps(cfg);
 	init();
-	dscidx = AddMesh(LM_Descent);
+
+	if (pMission->IsJMission()) {
+		dscidx = AddMesh(LM_DescentJ);
+	}
+	else {
+		dscidx = AddMesh(LM_Descent);
+	}
+	
 }
 
