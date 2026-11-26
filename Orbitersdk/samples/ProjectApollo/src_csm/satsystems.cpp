@@ -1210,7 +1210,10 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 	//sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f", LeftFloodLights.GetCombinedOutput(), RightFloodLights.GetCombinedOutput(), LEBFloodLights.GetCombinedOutput());
 	//sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f PWR: LH %.2f RH %.2f LEB %.2f", LeftIntegralLights.GetOutput(), RightIntegralLights.GetOutput(), LEBIntegralLights.GetOutput(), LightingNumIntLMDCCB.PowerLoad(), LightingNumIntRMDCCB.PowerLoad(), LightingNumIntLEBCB.PowerLoad());
-	//sprintf(oapiDebugString(), "LH %.2f LEB %.2f PWR: LH %.2f LEB %.2f", LeftNumericLights.GetOutput(), LEBNumericLights.GetOutput(), LightingNumIntLMDCCB.PowerLoad(), LightingNumIntLEBCB.PowerLoad());
+
+	//sprintf(oapiDebugString(), "LH: NumOutput: %.4f NumPos: %.2f NumVolts: %.2f FloodOutput: %.2f FloodPos: %.2f IntOutput: %.4f IntPos: %.2f IntVolts: %.2f", NumericRotarySwitch.GetOutput(), NumericRotarySwitch.GetOutput() * 320.0, LeftNumericLights.Variable_115_5VAC_Output.Voltage(), FloodRotarySwitch.GetOutput(), FloodRotarySwitch.GetOutput() * 320.0, LeftIntegralLights.GetOutput(), IntegralRotarySwitch.GetOutput() * 320.0, LeftIntegralLights.Variable_0_115VAC_Int_Output.Voltage());
+	//sprintf(oapiDebugString(), "RH: FloodOutput: %.2f FloodPos: %.2f IntOutput: %.4f IntPos: %.2f IntVolts: %.2f", RightFloodRotarySwitch.GetOutput(), RightFloodRotarySwitch.GetOutput() * 320.0, RightIntegralRotarySwitch.GetOutput(), RightIntegralRotarySwitch.GetOutput() * 320.0, RightIntegralLights.Variable_0_115VAC_Int_Output.Voltage());
+	//sprintf(oapiDebugString(), "LEB: NumOutput: %.4f NumPos: %.2f NumVolts: %.2f FloodOutput: %.2f FloodPos: %.2f IntOutput: %.4f IntPos: %.2f IntVolts: %.2f", Panel100NumericRotarySwitch.GetOutput(), Panel100NumericRotarySwitch.GetOutput() * 320.0, LEBNumericLights.Variable_115_5VAC_Output.Voltage(), Panel100FloodRotarySwitch.GetOutput(), Panel100FloodRotarySwitch.GetOutput() * 320.0, Panel100IntegralRotarySwitch.GetOutput(), Panel100IntegralRotarySwitch.GetOutput() * 320.0, LEBIntegralLights.Variable_0_115VAC_Int_Output.Voltage());
 
 	//sprintf(oapiDebugString(), "DSKY1 VAC: %lf NUM: %lf DSKY2 VAC %lf", dsky.Variable_250VAC_Output.Voltage(), LeftNumericLights.GetOutput(), dsky2.Variable_250VAC_Output.Voltage());
 	*/
