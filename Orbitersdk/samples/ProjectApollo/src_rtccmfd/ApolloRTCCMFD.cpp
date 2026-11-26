@@ -7825,7 +7825,7 @@ void ApolloRTCCMFD::menuDKIMILine()
 
 void ApolloRTCCMFD::menuDKIAdditionalMLines()
 {
-	GenericIntInput(&GC->rtcc->med_k00.IDM, "Enter number of additional M-lines desired (0-6):", NULL, 0, 6);
+	GenericIntInput(&GC->rtcc->med_k00.IDM, "Enter number of additional M-lines desired (0-6):", "%d", NULL, 0, 6);
 }
 
 void ApolloRTCCMFD::menuDKINHPlacement()
