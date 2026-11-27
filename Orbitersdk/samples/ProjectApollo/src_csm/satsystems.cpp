@@ -1201,7 +1201,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 //------------------------------------------------------------------------------------
 
 //Lighting Debug Lines   
-	///*
+	/*
 	//sprintf(oapiDebugString(), "LH Prim %.2f LH Sec %.2f RH Prim %.2f RH Sec %.2f LEB Prim %.2f LEB Sec %.2f", LeftFloodLights.GetPrimOutput(), LeftFloodLights.GetSecOutput(),
 		//RightFloodLights.GetPrimOutput(), RightFloodLights.GetSecOutput(), LEBFloodLights.GetPrimOutput(), LEBFloodLights.GetSecOutput());
 
@@ -1216,7 +1216,7 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 	//sprintf(oapiDebugString(), "LEB: NumOutput: %.4f NumPos: %.2f NumVolts: %.2f FloodOutput: %.2f FloodPos: %.2f IntOutput: %.4f IntPos: %.2f IntVolts: %.2f", Panel100NumericRotarySwitch.GetOutput(), Panel100NumericRotarySwitch.GetOutput() * 320.0, LEBNumericLights.Variable_115_5VAC_Output.Voltage(), Panel100FloodRotarySwitch.GetOutput(), Panel100FloodRotarySwitch.GetOutput() * 320.0, Panel100IntegralRotarySwitch.GetOutput(), Panel100IntegralRotarySwitch.GetOutput() * 320.0, LEBIntegralLights.Variable_0_115VAC_Int_Output.Voltage());
 
 	//sprintf(oapiDebugString(), "DSKY1 VAC: %lf NUM: %lf DSKY2 VAC %lf", dsky.Variable_250VAC_Output.Voltage(), LeftNumericLights.GetOutput(), dsky2.Variable_250VAC_Output.Voltage());
-	//*/
+	*/
 
 //Scaling Debug Lines
 	/*
