@@ -5673,9 +5673,9 @@ void Saturn::InitSwitches() {
 	EcsGlycolPumpsSwitch.Register(PSH, "EcsGlycolPumpsSwitch", 2);
 
 	RightIntegralRotarySwitch.Register(PSH, "RightIntegralRotarySwitch", 0.0, 0.0, 10.0);
-	RightIntegralRotarySwitch.SetRotationRange(320.0*RAD);
-	RightIntegralRotarySwitch.SetOffset(-160.0*RAD);
-	RightIntegralRotarySwitch.SetLowerLimit(0.0515); //Used for mechanical stop
+	RightIntegralRotarySwitch.SetRotationRange(300.0*RAD);
+	RightIntegralRotarySwitch.SetOffset(-150.0*RAD);
+	RightIntegralRotarySwitch.SetLowerLimit(10.0 / 300.0); //Used for mechanical stop
 
 	RightFloodRotarySwitch.Register(PSH, "RightFloodRotarySwitch", 0.0, 0.0, 10.0);
 	RightFloodRotarySwitch.SetRotationRange(300.0*RAD);
@@ -5772,7 +5772,7 @@ void Saturn::InitSwitches() {
 	NumericRotarySwitch.Register(PSH, "NumericRotarySwitch", 4.0, 0.0, 10.0);
 	NumericRotarySwitch.SetRotationRange(320.0*RAD);
 	NumericRotarySwitch.SetOffset(-160.0*RAD);
-	NumericRotarySwitch.SetLowerLimit(0.0285); //Used for mechanical stop
+	NumericRotarySwitch.SetLowerLimit(10.0 / 320.0); //Used for mechanical stop
 
 	FloodRotarySwitch.Register(PSH, "FloodRotarySwitch", 10.0, 0.0, 10.0);
 	FloodRotarySwitch.SetRotationRange(320.0*RAD);
@@ -5781,7 +5781,7 @@ void Saturn::InitSwitches() {
 	IntegralRotarySwitch.Register(PSH, "IntegralRotarySwitch", 4.0, 0.0, 10.0);
 	IntegralRotarySwitch.SetRotationRange(320.0*RAD);
 	IntegralRotarySwitch.SetOffset(-160.0*RAD);
-	IntegralRotarySwitch.SetLowerLimit(0.0285); //Used for mechanical stop
+	IntegralRotarySwitch.SetLowerLimit(10.0 / 320.0); //Used for mechanical stop
 
 	FDAIPowerRotarySwitch.AddPosition(0, 355);
 	FDAIPowerRotarySwitch.AddPosition(1,  25);
@@ -5862,7 +5862,7 @@ void Saturn::InitSwitches() {
 	Panel100NumericRotarySwitch.Register(PSH, "Panel100NumericRotarySwitch", 4.0, 0.0, 10.0);
 	Panel100NumericRotarySwitch.SetRotationRange(320.0*RAD);
 	Panel100NumericRotarySwitch.SetOffset(-160.0*RAD);
-	Panel100NumericRotarySwitch.SetLowerLimit(0.0285); //Used for mechanical stop
+	Panel100NumericRotarySwitch.SetLowerLimit(10.0 / 320.0); //Used for mechanical stop
 
 	Panel100FloodRotarySwitch.Register(PSH, "Panel100FloodRotarySwitch", 0.0, 0.0, 10.0);
 	Panel100FloodRotarySwitch.SetRotationRange(320.0*RAD);
@@ -5871,7 +5871,7 @@ void Saturn::InitSwitches() {
 	Panel100IntegralRotarySwitch.Register(PSH, "Panel100IntegralRotarySwitch", 4.0, 0.0, 10.0);
 	Panel100IntegralRotarySwitch.SetRotationRange(320.0*RAD);
 	Panel100IntegralRotarySwitch.SetOffset(-160.0*RAD);
-	Panel100IntegralRotarySwitch.SetLowerLimit(0.0285); //Used for mechanical stop
+	Panel100IntegralRotarySwitch.SetLowerLimit(10.0 / 320.0); //Used for mechanical stop
 
 	OxygenSurgeTankValveRotary.AddPosition(0,  330);
 	OxygenSurgeTankValveRotary.AddPosition(1,    0);
