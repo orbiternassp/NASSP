@@ -1213,6 +1213,11 @@ public:
 
 	void SetRotationRange(double _range);
 	void SetWraparound(bool _Wraparound);
+
+	//Set lower limit on state
+	void SetLowerLimit(double val);
+	//Set upper limit on state
+	void SetUpperLimit(double val);
 protected:
 	void SetValue(double newAngle);
 	double DisplayToAngle(double value) const;
@@ -1228,6 +1233,8 @@ protected:
 	double slope;			//Slope of function converting displayed state to angle
 	bool Wraparound;		//Switch can wrap around limits of animation state, rotation range should be set to 360 degres for that
 	double RotationRange;	//Range of rotation in radians
+	double LowerLimit;		//Lower limit on state due to e.g. a mechanical stop (does not apply with Wraparound)
+	double UpperLimit;		//Upper limit on state due to e.g. a mechanical stop (does not apply with Wraparound)
 
 	//2D
 	int	x;

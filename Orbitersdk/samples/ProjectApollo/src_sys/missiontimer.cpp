@@ -165,7 +165,7 @@ bool MissionTimer::IsPowered()
 
 bool MissionTimer::IsDisplayPowered()
 {
-	if (Voltage() < 20.0) { return false; }
+	if (Voltage() < 30.0) { return false; }
 
 	return true;
 }
@@ -174,12 +174,8 @@ void MissionTimer::SystemTimestep(double simdt)
 {
 	if (IsPowered())
 	{
-		DCPower.DrawPower(11.2);
-	}
-
-	if (IsDisplayPowered())
-	{
-		DrawPower((7.0 * 7.0 * 0.022) * (Voltage() / 115.0));
+		DCPower.DrawPower(11.2); //DC Draw
+		DrawPower((7.0 * 7.0 * 0.022) * (Voltage() / 115.0)); //Display draw (still drawing power based on input voltage even if not bright enough to make out)
 	}
 }
 
@@ -198,11 +194,7 @@ void LEMEventTimer::SystemTimestep(double simdt)
 	if (IsPowered())
 	{
 		DCPower.DrawPower(11.2);
-	}
-
-	if (IsDisplayPowered())
-	{
-		DrawPower((4.0 * 7.0 * 0.022) * (Voltage() / 115.0));
+		DrawPower((4.0 * 7.0 * 0.022) * (Voltage() / 115.0)); //Display draw (still drawing power based on input voltage even if not bright enough to make out)
 	}
 }
 

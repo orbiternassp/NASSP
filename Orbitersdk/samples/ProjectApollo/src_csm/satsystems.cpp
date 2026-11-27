@@ -357,9 +357,13 @@ void Saturn::SystemsInit() {
 	LogicPowerSwitch.WireSourcesToBuses(1, &SCSLogicBus2Feeder, &SCSLogicBus2);
 	LogicPowerSwitch.WireSourcesToBuses(2, &SCSLogicBus3Feeder, &SCSLogicBus3);
 
+	//
 	// Lighting
-	Panelsdk.AddElectrical(&dsky.Variable_250VAC_Output, false);
+	//
+
+	Panelsdk.AddElectrical(&dsky.Variable_250VAC_Output, false); //DSKY Segment Transformers
 	Panelsdk.AddElectrical(&dsky2.Variable_250VAC_Output, false);
+	Panelsdk.AddElectrical(&ems.Fixed_115_6VAC_Output, false); //EMS: RSI & Scroll Transformer
 
 	//
 	// Generic power source for switches, tied to both Bus A and
@@ -492,7 +496,7 @@ void Saturn::SystemsInit() {
 	rjec.Init(this);
 	eca.Init(this);
 	tvsa.Init(this);
-	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &NumericRotarySwitch, &LightingNumIntLMDCCB);
+	ems.Init(this, &EMSMnACircuitBraker, &EMSMnBCircuitBraker, &LeftNumericLights.Variable_0_115VAC_Num_Output, &LightingNumIntLEBCB);
 	ordeal.Init(&ORDEALEarthSwitch, &OrdealAc2CircuitBraker, &OrdealMnBCircuitBraker, &ORDEALAltSetRotary, &ORDEALModeSwitch, &ORDEALSlewSwitch, &ORDEALFDAI1Switch, &ORDEALFDAI2Switch, &ORDEALLightingSwitch);
 	mechanicalAccelerometer.Init(this);
 
@@ -1206,7 +1210,10 @@ void Saturn::SystemsTimestep(double simt, double simdt, double mjd) {
 
 	//sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f", LeftFloodLights.GetCombinedOutput(), RightFloodLights.GetCombinedOutput(), LEBFloodLights.GetCombinedOutput());
 	//sprintf(oapiDebugString(), "LH %.2f RH %.2f LEB %.2f PWR: LH %.2f RH %.2f LEB %.2f", LeftIntegralLights.GetOutput(), RightIntegralLights.GetOutput(), LEBIntegralLights.GetOutput(), LightingNumIntLMDCCB.PowerLoad(), LightingNumIntRMDCCB.PowerLoad(), LightingNumIntLEBCB.PowerLoad());
-	//sprintf(oapiDebugString(), "LH %.2f LEB %.2f PWR: LH %.2f LEB %.2f", LeftNumericLights.GetOutput(), LEBNumericLights.GetOutput(), LightingNumIntLMDCCB.PowerLoad(), LightingNumIntLEBCB.PowerLoad());
+
+	//sprintf(oapiDebugString(), "LH: NumOutput: %.4f NumPos: %.2f NumVolts: %.2f FloodOutput: %.2f FloodPos: %.2f IntOutput: %.4f IntPos: %.2f IntVolts: %.2f", NumericRotarySwitch.GetOutput(), NumericRotarySwitch.GetOutput() * 320.0, LeftNumericLights.Variable_115_5VAC_Output.Voltage(), FloodRotarySwitch.GetOutput(), FloodRotarySwitch.GetOutput() * 320.0, LeftIntegralLights.GetOutput(), IntegralRotarySwitch.GetOutput() * 320.0, LeftIntegralLights.Variable_0_115VAC_Int_Output.Voltage());
+	//sprintf(oapiDebugString(), "RH: FloodOutput: %.2f FloodPos: %.2f IntOutput: %.4f IntPos: %.2f IntVolts: %.2f", RightFloodRotarySwitch.GetOutput(), RightFloodRotarySwitch.GetOutput() * 300.0, RightIntegralRotarySwitch.GetOutput(), RightIntegralRotarySwitch.GetOutput() * 300.0, RightIntegralLights.Variable_0_115VAC_Int_Output.Voltage());
+	//sprintf(oapiDebugString(), "LEB: NumOutput: %.4f NumPos: %.2f NumVolts: %.2f FloodOutput: %.2f FloodPos: %.2f IntOutput: %.4f IntPos: %.2f IntVolts: %.2f", Panel100NumericRotarySwitch.GetOutput(), Panel100NumericRotarySwitch.GetOutput() * 320.0, LEBNumericLights.Variable_115_5VAC_Output.Voltage(), Panel100FloodRotarySwitch.GetOutput(), Panel100FloodRotarySwitch.GetOutput() * 320.0, Panel100IntegralRotarySwitch.GetOutput(), Panel100IntegralRotarySwitch.GetOutput() * 320.0, LEBIntegralLights.Variable_0_115VAC_Int_Output.Voltage());
 
 	//sprintf(oapiDebugString(), "DSKY1 VAC: %lf NUM: %lf DSKY2 VAC %lf", dsky.Variable_250VAC_Output.Voltage(), LeftNumericLights.GetOutput(), dsky2.Variable_250VAC_Output.Voltage());
 	*/

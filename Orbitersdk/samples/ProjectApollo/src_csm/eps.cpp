@@ -362,9 +362,9 @@ void IntegralLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *r
 	Variable_0_115VAC_Int_Output.WireTo(Integralcb);
 }
 
-double IntegralLights::GetOutput() //Provides scaling for VC lighting and power draw
+double IntegralLights::GetOutput() //Provides scaling for VC lighting, visible voltage about 30 VAC based on testing and seeing it start at 28 and fully visible at 36
 {
-	return Variable_0_115VAC_Int_Output.Voltage() / 115.0;
+	return (std::max)(0.0, ((Variable_0_115VAC_Int_Output.Voltage() - 30.0) / 85.0));
 }
 
 void IntegralLights::SystemTimestep(double simdt)
@@ -405,9 +405,9 @@ void NumericLights::Init(Saturn *s, e_object *cb, ContinuousRotationalSwitch *rt
 	Variable_0_115VAC_Num_Output.WireTo(Numericscb);
 }
 
-double NumericLights::GetOutput() //Provides scaling for VC lighting and power draw
+double NumericLights::GetOutput() //Provides scaling for VC lighting, visible voltage about 30 VAC based on testing and seeing it start at 28 and fully visible at 36
 {
-	return (Variable_0_115VAC_Num_Output.Voltage() / 115.0); //returns bus voltage scaled by rotary position (0-1)
+	return (std::max)(0.0, ((Variable_0_115VAC_Num_Output.Voltage() - 30.0) / 85.0));
 }
 
 void NumericLights::SystemTimestep(double simdt)

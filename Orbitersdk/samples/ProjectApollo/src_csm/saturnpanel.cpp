@@ -49,10 +49,11 @@
 
 extern GDIParams g_Param;
 
+// This is moved in saturn.h for using it in also in saturnvc.cpp
 // CSM Optics base direction, as given in the Colossus code CSM_GEOMETRY.agc
 // All flown Colossus versions use these values
-#define OPTICS_BASE_COS  0.8431756920
-#define OPTICS_BASE_SIN  0.5376381241
+//#define OPTICS_BASE_COS  0.8431756920
+//#define OPTICS_BASE_SIN  0.5376381241
 
 void BaseInit() 
 
@@ -4618,11 +4619,6 @@ bool Saturn::clbkPanelRedrawEvent(int id, int event, SURFHANDLE surf)
 			if(errors.y > 41){ errors.y = 41; }else{ if(errors.y < -41){ errors.y = -41; }}
 			if(errors.z > 41){ errors.z = 41; }else{ if(errors.z < -41){ errors.z = -41; }}
 			fdaiLeft.PaintMe(euler_rates, errors, surf, srf[SRF_FDAI], srf[SRF_FDAIROLL], srf[SRF_FDAIOFFFLAG], srf[SRF_FDAINEEDLES], fdaiSmooth);
-
-// TODO by Jordan 
-//			oapiBlt(srfFDAICamTexture, surf, 0, 0, 0, 0, 186, 186);	// 533, 612
-//			oapiBlt(srfFDAICamTexture, surf, 0, 0, 563, 642, 186, 186);
-			
 		}
 		return true;
 
@@ -5678,11 +5674,12 @@ void Saturn::InitSwitches() {
 
 	RightIntegralRotarySwitch.Register(PSH, "RightIntegralRotarySwitch", 0.0, 0.0, 10.0);
 	RightIntegralRotarySwitch.SetRotationRange(300.0*RAD);
-	RightIntegralRotarySwitch.SetOffset(-160.0*RAD);
+	RightIntegralRotarySwitch.SetOffset(-150.0*RAD);
+	RightIntegralRotarySwitch.SetLowerLimit(10.0 / 300.0); //Used for mechanical stop
 
 	RightFloodRotarySwitch.Register(PSH, "RightFloodRotarySwitch", 0.0, 0.0, 10.0);
 	RightFloodRotarySwitch.SetRotationRange(300.0*RAD);
-	RightFloodRotarySwitch.SetOffset(-160.0*RAD);
+	RightFloodRotarySwitch.SetOffset(-150.0*RAD);
 
 	HighGainAntennaPitchPositionSwitch.Register(PSH, "HighGainAntennaPitchPositionSwitch", 6.0, 0.0, 12.0); //For now retain the 0-12 scaling of the bitmaps for checklist backwards compatibility
 	HighGainAntennaPitchPositionSwitch.SetRotationRange(PI);
@@ -5773,16 +5770,18 @@ void Saturn::InitSwitches() {
 	DockingProbeBIndicator.Register(PSH, "DockingProbeBIndicator", false);
 
 	NumericRotarySwitch.Register(PSH, "NumericRotarySwitch", 4.0, 0.0, 10.0);
-	NumericRotarySwitch.SetRotationRange(300.0*RAD);
-	NumericRotarySwitch.SetOffset(-150.0*RAD);
+	NumericRotarySwitch.SetRotationRange(320.0*RAD);
+	NumericRotarySwitch.SetOffset(-160.0*RAD);
+	NumericRotarySwitch.SetLowerLimit(10.0 / 320.0); //Used for mechanical stop
 
 	FloodRotarySwitch.Register(PSH, "FloodRotarySwitch", 10.0, 0.0, 10.0);
-	FloodRotarySwitch.SetRotationRange(300.0*RAD);
-	FloodRotarySwitch.SetOffset(-150.0*RAD);
+	FloodRotarySwitch.SetRotationRange(320.0*RAD);
+	FloodRotarySwitch.SetOffset(-160.0*RAD);
 
 	IntegralRotarySwitch.Register(PSH, "IntegralRotarySwitch", 4.0, 0.0, 10.0);
-	IntegralRotarySwitch.SetRotationRange(300.0*RAD);
-	IntegralRotarySwitch.SetOffset(-150.0*RAD);
+	IntegralRotarySwitch.SetRotationRange(320.0*RAD);
+	IntegralRotarySwitch.SetOffset(-160.0*RAD);
+	IntegralRotarySwitch.SetLowerLimit(10.0 / 320.0); //Used for mechanical stop
 
 	FDAIPowerRotarySwitch.AddPosition(0, 355);
 	FDAIPowerRotarySwitch.AddPosition(1,  25);
@@ -5863,6 +5862,7 @@ void Saturn::InitSwitches() {
 	Panel100NumericRotarySwitch.Register(PSH, "Panel100NumericRotarySwitch", 4.0, 0.0, 10.0);
 	Panel100NumericRotarySwitch.SetRotationRange(320.0*RAD);
 	Panel100NumericRotarySwitch.SetOffset(-160.0*RAD);
+	Panel100NumericRotarySwitch.SetLowerLimit(10.0 / 320.0); //Used for mechanical stop
 
 	Panel100FloodRotarySwitch.Register(PSH, "Panel100FloodRotarySwitch", 0.0, 0.0, 10.0);
 	Panel100FloodRotarySwitch.SetRotationRange(320.0*RAD);
@@ -5871,6 +5871,7 @@ void Saturn::InitSwitches() {
 	Panel100IntegralRotarySwitch.Register(PSH, "Panel100IntegralRotarySwitch", 4.0, 0.0, 10.0);
 	Panel100IntegralRotarySwitch.SetRotationRange(320.0*RAD);
 	Panel100IntegralRotarySwitch.SetOffset(-160.0*RAD);
+	Panel100IntegralRotarySwitch.SetLowerLimit(10.0 / 320.0); //Used for mechanical stop
 
 	OxygenSurgeTankValveRotary.AddPosition(0,  330);
 	OxygenSurgeTankValveRotary.AddPosition(1,    0);

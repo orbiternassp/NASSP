@@ -90,12 +90,14 @@ MESHHANDLE hFHO2;
 MESHHANDLE hCMPEVA;
 MESHHANDLE hopticscover;
 MESHHANDLE hcmdocktgt;
+MESHHANDLE hcmdocktgt_vc;
 MESHHANDLE hcmseatsfolded;
 MESHHANDLE hcmseatsunfolded;
 MESHHANDLE hcmCOAScdr;
 MESHHANDLE hcmCOAScdrreticle;
 MESHHANDLE hcmCueCardsArrows;
 MESHHANDLE hcmPointingArrow;
+MESHHANDLE hCMVCOptics;
 
 #define LOAD_MESH(var, name) var = oapiLoadMeshGlobal(name);
 
@@ -664,12 +666,14 @@ void SaturnInitMeshes()
 	LOAD_MESH(hCMPEVA, "ProjectApollo/CM-CMPEVA");
 	LOAD_MESH(hopticscover, "ProjectApollo/CM-OpticsCover");
 	LOAD_MESH(hcmdocktgt, "ProjectApollo/CM-Docktgt");
+	LOAD_MESH(hcmdocktgt_vc, "ProjectApollo/CM-Docktgt_VC");
 	LOAD_MESH(hcmseatsfolded, "ProjectApollo/CM-VC-SeatsFolded");
 	LOAD_MESH(hcmseatsunfolded, "ProjectApollo/CM-VC-SeatsUnfolded");
 	LOAD_MESH(hcmCOAScdr, "ProjectApollo/CM-COAS-CDR");
 	LOAD_MESH(hcmCOAScdrreticle, "ProjectApollo/CM-COAS-CDR_Reticle");
 	LOAD_MESH(hcmCueCardsArrows, "ProjectApollo/Helpers/CM-CueCardsArrows");
 	LOAD_MESH(hcmPointingArrow, "ProjectApollo/Helpers/PointingArrow");
+	LOAD_MESH(hCMVCOptics, "ProjectApollo/CMVC_Optics");
 
 	SURFHANDLE contrail_tex = oapiRegisterParticleTexture("Contrail2");
 	lem_exhaust.tex = contrail_tex;
@@ -1063,6 +1067,7 @@ void Saturn::SetCSMStage (VECTOR3 cg_ofs)
 	//CM docking target
 	VECTOR3 dt_dir = _V(0.66, 1.07, 2.1);
 	cmdocktgtidx = AddMesh(hcmdocktgt, &dt_dir);
+	cmdocktgtvcidx = AddMesh(hcmdocktgt_vc, &dt_dir);
 	SetCMdocktgtMesh();
 
 	//Don't Forget the Hatch
@@ -1340,15 +1345,17 @@ void Saturn::SetOpticsCoverMesh() {
 }
 
 void Saturn::SetCMdocktgtMesh() {
-
-	if (cmdocktgtidx == -1)
+	if (cmdocktgtidx == -1 || cmdocktgtvcidx == -1)
 		return;
 
 	if (CMdocktgt && ApexCoverAttached) {
-		SetMeshVisibilityMode(cmdocktgtidx, MESHVIS_VCEXTERNAL);
+		bool inLMVC = (oapiGetFocusObject() != GetHandle()) && (oapiCockpitMode() == COCKPIT_VIRTUAL);
+		SetMeshVisibilityMode(cmdocktgtvcidx, inLMVC ? MESHVIS_VCEXTERNAL : MESHVIS_NEVER);
+		SetMeshVisibilityMode(cmdocktgtidx,   inLMVC ? MESHVIS_NEVER      : MESHVIS_VCEXTERNAL);
 	}
 	else {
-		SetMeshVisibilityMode(cmdocktgtidx, MESHVIS_NEVER);
+		SetMeshVisibilityMode(cmdocktgtidx,   MESHVIS_NEVER);
+		SetMeshVisibilityMode(cmdocktgtvcidx, MESHVIS_NEVER);
 	}
 }
 
@@ -1598,6 +1605,7 @@ void Saturn::SetReentryMeshes() {
 	//CM docking target
 	VECTOR3 dt_dir = _V(0.66, 1.07, 0);
 	cmdocktgtidx = AddMesh(hcmdocktgt, &dt_dir);
+	cmdocktgtvcidx = AddMesh(hcmdocktgt_vc, &dt_dir);
 	SetCMdocktgtMesh();
 
 	// Hatch
@@ -1924,6 +1932,9 @@ void Saturn::SetRecovery()
 	cmvccuecardsarrowsidx = AddMesh(hcmCueCardsArrows, &mesh_dir);
 	SetVCCueCardsArrows();
 
+	//Add CM meshes. More to be added here...
+	AddCMMeshes(mesh_dir);
+
 	if (Crewed) {
 		//old values 2.7,1.8,-1.5
 		mesh_dir =_V(0,0,-1.5);
@@ -2135,7 +2146,9 @@ void Saturn::JettisonOpticsCover()
 	char VName[256];
 
 	// Use VC offset to calculate the optics cover offset
-	VECTOR3 ofs = _V(0, 0, CurrentViewOffset + 0.25);
+	VECTOR3 ofs;
+	if(!InVC) ofs = _V(0, 0, CurrentViewOffset + 0.25);	// 2D
+	else ofs = _V(0, -0.4, CurrentViewOffset);			// VC
 	VECTOR3 vel = {0.0, -0.16, 0.1};
 	VESSELSTATUS vs4b;
 	GetStatus (vs4b);
@@ -2301,9 +2314,13 @@ void Saturn::AddCMMeshes(const VECTOR3 &mesh_dir)
 		probeextidx = -1;
 	}
 
-	// Optics Cover
+	// External Optics Cover
 	opticscoveridx = AddMesh(hopticscover, &mesh_dir);
 	SetOpticsCoverMesh();
+
+	// VC Optics Cover
+	hCMVCOpticsidx = AddMesh(hCMVCOptics, &mesh_dir);
+	SetVCOpticsCoverMesh();
 
 	//Reload cue cards, if required
 	CueCards.ResetCueCards();
